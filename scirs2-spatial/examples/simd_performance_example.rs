@@ -204,7 +204,7 @@ fn knn_performance_example() -> Result<(), Box<dyn std::error::Error>> {
 
     for &k in &k_values {
         let start = Instant::now();
-        let (_indices_distances) =
+        let (_indicesdistances) =
             simd_knn_search(&query_points.view(), &data_points.view(), k, "euclidean")?;
         let elapsed = start.elapsed().as_millis();
 
@@ -223,7 +223,7 @@ fn knn_performance_example() -> Result<(), Box<dyn std::error::Error>> {
     let mut base_time = 0;
     for (i, &metric) in metrics.iter().enumerate() {
         let start = Instant::now();
-        let (_indices_distances) =
+        let (_indicesdistances) =
             simd_knn_search(&query_points.view(), &data_points.view(), 5, metric)?;
         let elapsed = start.elapsed().as_millis();
 

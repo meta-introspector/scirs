@@ -1866,9 +1866,9 @@ impl InteractiveDashboard {
             event_system: Arc::new(Mutex::new(EventSystem::new())),
             layout_manager: Arc::new(Mutex::new(LayoutManager::new(config.layout.clone()))),
             renderer: Arc::new(Mutex::new(Box::new(DefaultRenderingEngine::new()))),
-            update_manager: Arc::new(Mutex::new(
-                UpdateManager::new(config.realtime_config.clone()),
-            )),
+            update_manager: Arc::new(Mutex::new(UpdateManager::new(
+                config.realtime_config.clone(),
+            ))),
             collaboration: Arc::new(Mutex::new(CollaborationManager::new(
                 config.collaboration_config.clone(),
             ))),
@@ -2191,7 +2191,8 @@ impl LayoutManager {
         self.validate_layout(&layout)?;
 
         // Add widget to layout map
-        self.widget_layouts.insert(widget_id.clone(), layout.clone());
+        self.widget_layouts
+            .insert(widget_id.clone(), layout.clone());
 
         // Apply layout constraints
         self.apply_constraints(&widget_id, &layout)?;
@@ -2242,16 +2243,18 @@ impl LayoutManager {
             let cell_width = (viewport.width
                 - (grid_config.columns + 1) as f64 * grid_config.gap as f64)
                 / grid_config.columns as f64;
-            let cell_height = (viewport.height - (grid_config.rows + 1) as f64 * grid_config.gap as f64)
+            let cell_height = (viewport.height
+                - (grid_config.rows + 1) as f64 * grid_config.gap as f64)
                 / grid_config.rows as f64;
 
             let mut current_row = 0;
             let mut current_col = 0;
 
             for (widget_id, widget_layout) in &self.widget_layouts {
-                let x = current_col as f64 * (cell_width + grid_config.gap as f64) + grid_config.gap as f64;
-                let y =
-                    current_row as f64 * (cell_height + grid_config.gap as f64) + grid_config.gap as f64;
+                let x = current_col as f64 * (cell_width + grid_config.gap as f64)
+                    + grid_config.gap as f64;
+                let y = current_row as f64 * (cell_height + grid_config.gap as f64)
+                    + grid_config.gap as f64;
 
                 let (span_cols, span_rows) = if let Some(grid_pos) = &widget_layout.grid_position {
                     (
@@ -2556,7 +2559,10 @@ impl RenderingEngine for DefaultRenderingEngine {
         html.push_str(
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
         );
-        html.push_str(&format!("<title>{}</title>\n", dashboard_state.config.title));
+        html.push_str(&format!(
+            "<title>{}</title>\n",
+            dashboard_state.config.title
+        ));
         html.push_str("<style id=\"dashboard-styles\"></style>\n");
         html.push_str("</head>\n<body>\n");
 

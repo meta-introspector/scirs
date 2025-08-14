@@ -53,12 +53,12 @@
 //! let (q, r) = extended_qr::<_, f64>(&a.view()).unwrap();
 //!
 //! // Cholesky decomposition with extended precision
-//! let spd_matrix = array![
+//! let spdmatrix = array![
 //!     [4.0_f32, 1.0_f32, 1.0_f32],
 //!     [1.0_f32, 5.0_f32, 2.0_f32],
 //!     [1.0_f32, 2.0_f32, 6.0_f32]
 //! ];
-//! let l = extended_cholesky::<_, f64>(&spd_matrix.view()).unwrap();
+//! let l = extended_cholesky::<_, f64>(&spdmatrix.view()).unwrap();
 //! ```
 
 pub mod eigen;

@@ -266,7 +266,7 @@ impl AdvancedMemoryManager {
         &self,
         data_stream: &mut dyn Iterator<Item = ArrayBase<D, Ix1>>,
         operation: StreamingMemoryOp<F, R>,
-        window_size: usize,
+        windowsize: usize,
     ) -> StatsResult<R>
     where
         F: Float + NumCast + Copy + Send + Sync,
@@ -274,7 +274,7 @@ impl AdvancedMemoryManager {
         R: Send + Sync
         + std::fmt::Display,
     {
-        let streaming_config = self.optimize_streaming_memory_config(window_size, &operation)?;
+        let streaming_config = self.optimize_streaming_memory_config(windowsize, &operation)?;
 
         // Create optimized streaming buffer
         let mut streaming_buffer =
@@ -379,7 +379,7 @@ impl AdvancedMemoryManager {
         Ok(AllocationCharacteristics {
             size_bytes: bytes_required,
             element_count: size,
-            element_size: std::mem::size_of::<T>(),
+            elementsize: std::mem::size_of::<T>(),
             alignment_requirement: std::mem::align_of::<T>(),
             access_pattern: usage_hint.access_pattern,
             lifetime_hint: usage_hint.lifetime,
@@ -477,7 +477,7 @@ impl AdvancedMemoryManager {
             batch_count: batches.len(),
             total_elements,
             total_bytes,
-            size_distribution: self.calculate_batch_size_distribution(batches),
+            size_distribution: self.calculate_batchsize_distribution(batches),
             memory_fragmentation_risk: self.estimate_memory_fragmentation_risk(batches),
             parallel_memory_efficiency: self.estimate_parallel_memory_efficiency(batches),
         }
@@ -533,7 +533,7 @@ impl AdvancedMemoryManager {
         }
     }
 
-    fn calculate_batch_size_distribution<F, D>(
+    fn calculate_batchsize_distribution<F, D>(
         &self,
         batches: &[ArrayBase<D, Ix1>],
     ) -> SizeDistribution
@@ -572,7 +572,7 @@ impl AdvancedMemoryManager {
         + std::fmt::Display,
     {
         // Simplified fragmentation risk estimation
-        let size_variance = self.calculate_batch_size_variance(batches);
+        let size_variance = self.calculate_batchsize_variance(batches);
 
         if size_variance > 1.0 {
             0.70 // High fragmentation risk
@@ -590,18 +590,18 @@ impl AdvancedMemoryManager {
         + std::fmt::Display,
     {
         // Estimate how efficiently memory can be used in parallel processing
-        let total_size: usize = batches.iter().map(|b| b.len()).sum();
+        let totalsize: usize = batches.iter().map(|b| b.len()).sum();
         let thread_count = num_threads();
-        let avg_size_per_thread = total_size / thread_count;
+        let avgsize_per_thread = totalsize / thread_count;
 
         // Consider cache efficiency per thread
         let cache_efficiency =
-            self.estimate_cache_efficiency(avg_size_per_thread * std::mem::size_of::<F>());
+            self.estimate_cache_efficiency(avgsize_per_thread * std::mem::size_of::<F>());
 
         cache_efficiency * 0.9 // Account for parallel overhead
     }
 
-    fn calculate_batch_size_variance<F, D>(&self, batches: &[ArrayBase<D, Ix1>]) -> f64
+    fn calculate_batchsize_variance<F, D>(&self, batches: &[ArrayBase<D, Ix1>]) -> f64
     where
         F: Float + NumCast + Copy + Send + Sync,
         D: Data<Elem = F> + Sync
@@ -792,10 +792,10 @@ impl AdvancedMemoryManager {
         + std::fmt::Display,
     {
         Ok(StreamingMemoryConfig {
-            buffer_size: window_size,
+            buffersize: windowsize,
             double_buffering: true,
-            prefetch_size: _window_size / 4,
-            memory_pool_size: _window_size * 2,
+            prefetchsize: _windowsize / 4,
+            memory_poolsize: _windowsize * 2,
         })
     }
 
@@ -807,11 +807,11 @@ impl AdvancedMemoryManager {
         D: Data<Elem = F> + Sync
         + std::fmt::Display,
     {
-        Ok(OptimizedStreamingBuffer::new(_config.buffer_size))
+        Ok(OptimizedStreamingBuffer::new(_config.buffersize))
     }
 
     fn execute_memory_optimized_streaming<F, D, R>(
-        &self, _data_stream: &mut dyn Iterator<Item = ArrayBase<D, Ix1>>, _operation: StreamingMemoryOp<F, R>, _buffer: &mut OptimizedStreamingBuffer<F, D>, _config: &StreamingMemoryConfig,
+        &self, data_stream: &mut dyn Iterator<Item = ArrayBase<D, Ix1>>, _operation: StreamingMemoryOp<F, R>, _buffer: &mut OptimizedStreamingBuffer<F, D>, _config: &StreamingMemoryConfig,
     ) -> StatsResult<R>
     where
         F: Float + NumCast + Copy + Send + Sync,
@@ -928,7 +928,7 @@ pub enum CacheImportance {
 pub struct AllocationCharacteristics {
     pub size_bytes: usize,
     pub element_count: usize,
-    pub element_size: usize,
+    pub elementsize: usize,
     pub alignment_requirement: usize,
     pub access_pattern: AccessPattern,
     pub lifetime_hint: LifetimeHint,
@@ -1072,10 +1072,10 @@ pub struct NumaLayout {
 
 #[derive(Debug, Clone)]
 pub struct StreamingMemoryConfig {
-    pub buffer_size: usize,
+    pub buffersize: usize,
     pub double_buffering: bool,
-    pub prefetch_size: usize,
-    pub memory_pool_size: usize,
+    pub prefetchsize: usize,
+    pub memory_poolsize: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -1331,10 +1331,10 @@ impl CacheOptimizer {
 
 #[derive(Debug, Clone)]
 pub struct CacheHierarchy {
-    pub l1_size: usize,
-    pub l2_size: usize,
-    pub l3_size: usize,
-    pub cache_line_size: usize,
+    pub l1size: usize,
+    pub l2size: usize,
+    pub l3size: usize,
+    pub cache_linesize: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -1379,7 +1379,7 @@ pub struct NumaTopology {
 #[derive(Debug, Clone)]
 pub struct NumaNode {
     pub id: usize,
-    pub memory_size: usize,
+    pub memorysize: usize,
     pub cpu_cores: Vec<usize>,
 }
 
@@ -1593,7 +1593,7 @@ impl Default for RealTimeMemoryMetrics {
 
 impl RealTimeMemoryMetrics {
     pub fn update_allocation_metrics(
-        &mut self_size_bytes: usize, _allocation_time: Duration, _strategy: &AllocationStrategy,
+        &mut selfsize_bytes: usize, _allocation_time: Duration, _strategy: &AllocationStrategy,
     ) {
         // Placeholder for updating metrics based on allocation
         self.last_updated = Instant::now();
@@ -1602,7 +1602,7 @@ impl RealTimeMemoryMetrics {
 
 pub struct OptimizedStreamingBuffer<F, D: ndarray::RawData> {
     data: VecDeque<ArrayBase<D, Ix1>>,
-    max_size: usize,
+    maxsize: usize,
     current_memory_usage: usize, _phantom: std::marker::PhantomData<F>,
 }
 
@@ -1614,14 +1614,14 @@ where
 {
     pub fn new(_maxsize: usize) -> Self {
         Self {
-            data: VecDeque::with_capacity(_max_size),
-            max_size,
+            data: VecDeque::with_capacity(_maxsize),
+            maxsize,
             current_memory_usage: 0, _phantom: std::marker::PhantomData,
         }
     }
 
     pub fn push(&mut self, item: ArrayBase<D, Ix1>) {
-        if self.data.len() >= self.max_size {
+        if self.data.len() >= self.maxsize {
             if let Some(removed) = self.data.pop_front() {
                 self.current_memory_usage -= removed.len() * std::mem::size_of::<F>();
             }
@@ -1631,7 +1631,7 @@ where
     }
 
     pub fn is_ready(&self) -> bool {
-        self.data.len() >= self.max_size
+        self.data.len() >= self.maxsize
     }
 
     pub fn memory_usage(&self) -> usize {
@@ -1646,7 +1646,7 @@ fn detect_numa_topology() -> NumaTopology {
     NumaTopology {
         nodes: vec![NumaNode {
             id: 0,
-            memory_size: 64 * 1024 * 1024 * 1024, // 64GB
+            memorysize: 64 * 1024 * 1024 * 1024, // 64GB
             cpu_cores: (0..8).collect(),
         }],
         distance_matrix: Array2::eye(1),
@@ -1656,10 +1656,10 @@ fn detect_numa_topology() -> NumaTopology {
 #[allow(dead_code)]
 fn detect_cache_hierarchy() -> CacheHierarchy {
     CacheHierarchy {
-        l1_size: 32 * 1024,       // 32KB
-        l2_size: 256 * 1024,      // 256KB
-        l3_size: 8 * 1024 * 1024, // 8MB
-        cache_line_size: 64,      // 64 bytes
+        l1size: 32 * 1024,       // 32KB
+        l2size: 256 * 1024,      // 256KB
+        l3size: 8 * 1024 * 1024, // 8MB
+        cache_linesize: 64,      // 64 bytes
     }
 }
 
@@ -1681,7 +1681,7 @@ pub fn create_configured_advanced_think_memory_manager(
 
 /// Create high-performance memory manager for large datasets
 #[allow(dead_code)]
-pub fn create_large_dataset_memory_manager() -> AdvancedMemoryManager {
+pub fn create_largedataset_memory_manager() -> AdvancedMemoryManager {
     let config = AdvancedMemoryConfig {
         enable_memory_profiling: true,
         enable_memory_pooling: true,
@@ -1759,7 +1759,7 @@ mod tests {
             .analyze_allocation_requirements::<f64>(1000, &hint)
             .unwrap();
         assert_eq!(characteristics.element_count, 1000);
-        assert_eq!(characteristics.element_size, std::mem::size_of::<f64>());
+        assert_eq!(characteristics.elementsize, std::mem::size_of::<f64>());
         assert_eq!(
             characteristics.size_bytes,
             1000 * std::mem::size_of::<f64>()
@@ -1799,7 +1799,7 @@ mod tests {
         let characteristics = AllocationCharacteristics {
             size_bytes: 1024, // Small allocation
             element_count: 128,
-            element_size: 8,
+            elementsize: 8,
             alignment_requirement: 8,
             access_pattern: AccessPattern::Sequential,
             lifetime_hint: LifetimeHint::Short,
@@ -1814,14 +1814,14 @@ mod tests {
     }
 
     #[test]
-    fn test_batch_size_variance_calculation() {
+    fn test_batchsize_variance_calculation() {
         let manager = create_advanced_think_memory_manager();
         let batch1 = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let batch2 = Array1::from_vec(vec![4.0, 5.0, 6.0, 7.0]);
         let batch3 = Array1::from_vec(vec![8.0, 9.0]);
 
         let batches = vec![batch1.view(), batch2.view(), batch3.view()];
-        let variance = manager.calculate_batch_size_variance(&batches);
+        let variance = manager.calculate_batchsize_variance(&batches);
 
         assert!(variance > 0.0);
     }
@@ -1852,12 +1852,12 @@ mod tests {
 
     #[test]
     fn test_specialized_memory_manager_creation() {
-        let large_dataset_manager = create_large_dataset_memory_manager();
+        let largedataset_manager = create_largedataset_memory_manager();
         assert_eq!(
-            large_dataset_manager.config.optimization_level,
+            largedataset_manager.config.optimization_level,
             MemoryOptimizationLevel::Expert
         );
-        assert!(large_dataset_manager.config.enable_memory_compression);
+        assert!(largedataset_manager.config.enable_memory_compression);
 
         let streaming_manager = create_streaming_memory_manager();
         assert_eq!(
@@ -1886,8 +1886,8 @@ mod tests {
         assert!(!numa_topology.nodes.is_empty());
 
         let cache_hierarchy = detect_cache_hierarchy();
-        assert!(cache_hierarchy.l1_size > 0);
-        assert!(cache_hierarchy.l2_size > cache_hierarchy.l1_size);
-        assert!(cache_hierarchy.l3_size > cache_hierarchy.l2_size);
+        assert!(cache_hierarchy.l1size > 0);
+        assert!(cache_hierarchy.l2size > cache_hierarchy.l1size);
+        assert!(cache_hierarchy.l3size > cache_hierarchy.l2size);
     }
 }

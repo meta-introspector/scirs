@@ -62,7 +62,7 @@ impl TraversalOrder {
 /// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
 ///
 /// // Perform BFS from vertex 0
-/// let (order_, _) = traversegraph(&graph, 0, false, "bfs", false).unwrap();
+/// let (order, _) = traversegraph(&graph, 0, false, "bfs", false).unwrap();
 /// ```
 #[allow(dead_code)]
 pub fn traversegraph<T, S>(
@@ -85,9 +85,9 @@ where
         )));
     }
 
-    let traversal_order_ = TraversalOrder::from_str(order)?;
+    let traversal_order = TraversalOrder::from_str(order)?;
 
-    match traversal_order_ {
+    match traversal_order {
         TraversalOrder::BreadthFirst => {
             breadth_first_search(graph, start, directed, return_predecessors)
         }
@@ -114,7 +114,7 @@ where
 
     let mut visited = vec![false; n];
     let mut queue = VecDeque::new();
-    let mut traversal_order_ = Vec::new();
+    let mut traversal_order = Vec::new();
     let mut predecessors = if return_predecessors {
         Some(Array1::from_elem(n, -1isize))
     } else {
@@ -126,7 +126,7 @@ where
     visited[start] = true;
 
     while let Some(current) = queue.pop_front() {
-        traversal_order_.push(current);
+        traversal_order.push(current);
 
         // Visit all unvisited neighbors
         for &(neighbor, _) in &adj_list[current] {
@@ -141,7 +141,7 @@ where
         }
     }
 
-    Ok((traversal_order_, predecessors))
+    Ok((traversal_order, predecessors))
 }
 
 /// Depth-first search traversal
@@ -161,7 +161,7 @@ where
 
     let mut visited = vec![false; n];
     let mut stack = Vec::new();
-    let mut traversal_order_ = Vec::new();
+    let mut traversal_order = Vec::new();
     let mut predecessors = if return_predecessors {
         Some(Array1::from_elem(n, -1isize))
     } else {
@@ -177,7 +177,7 @@ where
         }
 
         visited[current] = true;
-        traversal_order_.push(current);
+        traversal_order.push(current);
 
         // Add all unvisited neighbor_s to the stack (in reverse order for consistent ordering)
         let mut neighbor_s: Vec<_> = adj_list[current]
@@ -199,7 +199,7 @@ where
         }
     }
 
-    Ok((traversal_order_, predecessors))
+    Ok((traversal_order, predecessors))
 }
 
 /// Recursive depth-first search traversal
@@ -218,7 +218,7 @@ where
     let adj_list = to_adjacency_list(graph, directed)?;
 
     let mut visited = vec![false; n];
-    let mut traversal_order_ = Vec::new();
+    let mut traversal_order = Vec::new();
     let mut predecessors = if return_predecessors {
         Some(Array1::from_elem(n, -1isize))
     } else {
@@ -229,11 +229,11 @@ where
         start,
         &adj_list,
         &mut visited,
-        &mut traversal_order_,
+        &mut traversal_order,
         &mut predecessors,
     );
 
-    Ok((traversal_order_, predecessors))
+    Ok((traversal_order, predecessors))
 }
 
 /// Helper function for recursive DFS
@@ -242,20 +242,20 @@ fn dfs_recursive_helper<T>(
     node: usize,
     adj_list: &[Vec<(usize, T)>],
     visited: &mut [bool],
-    traversal_order_: &mut Vec<usize>,
+    traversal_order: &mut Vec<usize>,
     predecessors: &mut Option<Array1<isize>>,
 ) where
     T: Float + Debug + Copy + 'static,
 {
     visited[node] = true;
-    traversal_order_.push(node);
+    traversal_order.push(node);
 
     for &(neighbor_, _) in &adj_list[node] {
         if !visited[neighbor_] {
             if let Some(ref mut preds) = predecessors {
                 preds[neighbor_] = node as isize;
             }
-            dfs_recursive_helper(neighbor_, adj_list, visited, traversal_order_, predecessors);
+            dfs_recursive_helper(neighbor_, adj_list, visited, traversal_order, predecessors);
         }
     }
 }
@@ -348,12 +348,7 @@ where
 /// assert!(has_path(&graph, 0, 2, false).unwrap());
 /// ```
 #[allow(dead_code)]
-pub fn has_path<T, S>(
-    graph: &S,
-    source: usize,
-    target: usize,
-    directed: bool,
-) -> SparseResult<bool>
+pub fn has_path<T, S>(graph: &S, source: usize, target: usize, directed: bool) -> SparseResult<bool>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
@@ -370,8 +365,8 @@ where
         return Ok(true);
     }
 
-    let (traversal_order_, _) = breadth_first_search(graph, source, directed, false)?;
-    Ok(traversal_order_.contains(&target))
+    let (traversal_order, _) = breadth_first_search(graph, source, directed, false)?;
+    Ok(traversal_order.contains(&target))
 }
 
 /// Find all vertices reachable from a source vertex
@@ -409,8 +404,8 @@ where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (traversal_order_, _) = breadth_first_search(graph, source, directed, false)?;
-    Ok(traversal_order_)
+    let (traversal_order, _) = breadth_first_search(graph, source, directed, false)?;
+    Ok(traversal_order)
 }
 
 /// Topological sort of a directed acyclic graph (DAG)
@@ -518,14 +513,14 @@ mod tests {
         let (order, predecessors) = breadth_first_search(&graph, 0, false, true).unwrap();
 
         // Should visit all vertices
-        assert_eq!(order_.len(), 4);
-        assert!(order_.contains(&0));
-        assert!(order_.contains(&1));
-        assert!(order_.contains(&2));
-        assert!(order_.contains(&3));
+        assert_eq!(order.len(), 4);
+        assert!(order.contains(&0));
+        assert!(order.contains(&1));
+        assert!(order.contains(&2));
+        assert!(order.contains(&3));
 
         // First vertex should be the start
-        assert_eq!(order_[0], 0);
+        assert_eq!(order[0], 0);
 
         // Check predecessors
         let preds = predecessors.unwrap();
@@ -537,33 +532,33 @@ mod tests {
     #[test]
     fn test_dfs() {
         let graph = create_testgraph();
-        let (order_, _) = depth_first_search(&graph, 0, false, false).unwrap();
+        let (order, _) = depth_first_search(&graph, 0, false, false).unwrap();
 
         // Should visit all vertices
-        assert_eq!(order_.len(), 4);
-        assert!(order_.contains(&0));
-        assert!(order_.contains(&1));
-        assert!(order_.contains(&2));
-        assert!(order_.contains(&3));
+        assert_eq!(order.len(), 4);
+        assert!(order.contains(&0));
+        assert!(order.contains(&1));
+        assert!(order.contains(&2));
+        assert!(order.contains(&3));
 
         // First vertex should be the start
-        assert_eq!(order_[0], 0);
+        assert_eq!(order[0], 0);
     }
 
     #[test]
     fn test_dfs_recursive() {
         let graph = create_testgraph();
-        let (order_, _) = depth_first_search_recursive(&graph, 0, false, false).unwrap();
+        let (order, _) = depth_first_search_recursive(&graph, 0, false, false).unwrap();
 
         // Should visit all vertices
-        assert_eq!(order_.len(), 4);
-        assert!(order_.contains(&0));
-        assert!(order_.contains(&1));
-        assert!(order_.contains(&2));
-        assert!(order_.contains(&3));
+        assert_eq!(order.len(), 4);
+        assert!(order.contains(&0));
+        assert!(order.contains(&1));
+        assert!(order.contains(&2));
+        assert!(order.contains(&3));
 
         // First vertex should be the start
-        assert_eq!(order_[0], 0);
+        assert_eq!(order[0], 0);
     }
 
     #[test]
@@ -571,14 +566,14 @@ mod tests {
         let graph = create_testgraph();
 
         // Test BFS
-        let (bfs_order_, _) = traversegraph(&graph, 0, false, "bfs", false).unwrap();
-        assert_eq!(bfs_order_[0], 0);
-        assert_eq!(bfs_order_.len(), 4);
+        let (bfs_order, _) = traversegraph(&graph, 0, false, "bfs", false).unwrap();
+        assert_eq!(bfs_order[0], 0);
+        assert_eq!(bfs_order.len(), 4);
 
         // Test DFS
-        let (dfs_order_, _) = traversegraph(&graph, 0, false, "dfs", false).unwrap();
-        assert_eq!(dfs_order_[0], 0);
-        assert_eq!(dfs_order_.len(), 4);
+        let (dfs_order, _) = traversegraph(&graph, 0, false, "dfs", false).unwrap();
+        assert_eq!(dfs_order[0], 0);
+        assert_eq!(dfs_order.len(), 4);
     }
 
     #[test]

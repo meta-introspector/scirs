@@ -69,7 +69,7 @@ impl HttpClient {
     /// Create a new HTTP client with the given configuration
     pub fn new(config: NetworkConfig) -> Self {
         let client = Self {
-            config: config,
+            config,
             #[cfg(feature = "reqwest")]
             client: None,
         };

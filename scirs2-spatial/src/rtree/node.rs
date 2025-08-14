@@ -42,7 +42,7 @@ impl Rectangle {
             }
         }
 
-        Ok(Rectangle { min: min, max })
+        Ok(Rectangle { min, max })
     }
 
     /// Create a rectangle from a point (zero-area rectangle)
@@ -381,7 +381,7 @@ impl<T: Clone> Node<T> {
     pub fn new(_isleaf: bool, level: usize) -> Self {
         Node {
             entries: Vec::new(),
-            _isleaf: _isleaf,
+            _isleaf,
             level,
         }
     }
@@ -536,7 +536,7 @@ impl<T: Clone> RTree<T> {
 
         Ok(RTree {
             root: Node::new(true, 0),
-            ndim: ndim,
+            ndim,
             min_entries,
             maxentries,
             size: 0,

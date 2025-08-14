@@ -187,7 +187,7 @@ impl CircuitBreaker {
         F: FnOnce() -> Result<T>,
     {
         use crate::error::CoreError;
-        
+
         // Check if we can execute
         if !self.is_allowed() {
             return Err(CoreError::ValueError(ErrorContext::new(

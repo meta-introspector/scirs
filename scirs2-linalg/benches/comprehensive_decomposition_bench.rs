@@ -13,7 +13,7 @@ use std::time::Duration;
 
 /// Create a well-conditioned test matrix
 #[allow(dead_code)]
-fn create_test_matrix(n: usize) -> Array2<f64> {
+fn create_testmatrix(n: usize) -> Array2<f64> {
     let mut matrix = Array2::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
@@ -29,14 +29,14 @@ fn create_test_matrix(n: usize) -> Array2<f64> {
 
 /// Create a symmetric positive definite matrix
 #[allow(dead_code)]
-fn create_spd_matrix(n: usize) -> Array2<f64> {
+fn create_spdmatrix(n: usize) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     a.t().dot(&a) + Array2::<f64>::eye(n) * (n as f64)
 }
 
 /// Create a rectangular matrix for testing overdetermined/underdetermined systems
 #[allow(dead_code)]
-fn create_rect_matrix(m: usize, n: usize) -> Array2<f64> {
+fn create_rectmatrix(m: usize, n: usize) -> Array2<f64> {
     Array2::from_shape_fn((m, n), |(i, j)| {
         ((i + j + 1) as f64 * 0.1).sin() + 0.01 * (i as f64)
     })
@@ -44,7 +44,7 @@ fn create_rect_matrix(m: usize, n: usize) -> Array2<f64> {
 
 /// Create a complex matrix for complex decomposition benchmarks
 #[allow(dead_code)]
-fn create_complex_matrix(n: usize) -> Array2<num_complex::Complex64> {
+fn create_complexmatrix(n: usize) -> Array2<num_complex::Complex64> {
     use num__complex::Complex64;
     Array2::from_shape_fn((n, n), |(i, j)| {
         Complex64::new(
@@ -58,11 +58,11 @@ fn create_complex_matrix(n: usize) -> Array2<num_complex::Complex64> {
 #[allow(dead_code)]
 fn bench_lu_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("lu_decomposition");
-    group.sample_size(20);
+    group.samplesize(20);
     group.measurement_time(Duration::from_secs(30));
 
     for &size in &[20, 50, 100, 200] {
-        let matrix = create_test_matrix(size);
+        let matrix = create_testmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -104,44 +104,42 @@ fn bench_lu_decomposition(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_qr_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("qr_decomposition");
-    group.sample_size(20);
+    group.samplesize(20);
     group.measurement_time(Duration::from_secs(30));
 
     for &size in &[20, 50, 100, 200] {
-        let square_matrix = create_test_matrix(size);
-        let tall_matrix = create_rect_matrix(size + 20, size);
-        let wide_matrix = create_rect_matrix(size, size + 20);
+        let squarematrix = create_testmatrix(size);
+        let tallmatrix = create_rectmatrix(size + 20, size);
+        let widematrix = create_rectmatrix(size, size + 20);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
         // Standard QR decomposition (square)
         group.bench_with_input(
             BenchmarkId::new("qr_square", size),
-            &square_matrix,
+            &squarematrix,
             |b, m| b.iter(|| qr(black_box(&m.view()), None).unwrap()),
         );
 
         // QR decomposition (tall matrix)
-        group.bench_with_input(BenchmarkId::new("qr_tall", size), &tall_matrix, |b, m| {
+        group.bench_with_input(BenchmarkId::new("qr_tall", size), &tallmatrix, |b, m| {
             b.iter(|| qr(black_box(&m.view()), None).unwrap())
         });
 
         // QR decomposition (wide matrix)
-        group.bench_with_input(BenchmarkId::new("qr_wide", size), &wide_matrix, |b, m| {
+        group.bench_with_input(BenchmarkId::new("qr_wide", size), &widematrix, |b, m| {
             b.iter(|| qr(black_box(&m.view()), None).unwrap())
         });
 
         // Economy QR decomposition
-        group.bench_with_input(
-            BenchmarkId::new("qr_economy", size),
-            &tall_matrix,
-            |b, m| b.iter(|| qr(black_box(&m.view()), None).unwrap()),
-        );
+        group.bench_with_input(BenchmarkId::new("qr_economy", size), &tallmatrix, |b, m| {
+            b.iter(|| qr(black_box(&m.view()), None).unwrap())
+        });
 
         // Rank-revealing QR
         group.bench_with_input(
             BenchmarkId::new("qr_rank_revealing", size),
-            &square_matrix,
+            &squarematrix,
             |b, m| b.iter(|| rank_revealing_qr(black_box(&m.view()), 1e-12).unwrap()),
         );
     }
@@ -153,45 +151,45 @@ fn bench_qr_decomposition(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_svd_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("svd_decomposition");
-    group.sample_size(10); // SVD is expensive
+    group.samplesize(10); // SVD is expensive
     group.measurement_time(Duration::from_secs(45));
 
     for &size in &[20, 50, 100] {
         // Limit size for SVD due to computational cost
-        let square_matrix = create_test_matrix(size);
-        let tall_matrix = create_rect_matrix(size + 10, size);
-        let wide_matrix = create_rect_matrix(size, size + 10);
+        let squarematrix = create_testmatrix(size);
+        let tallmatrix = create_rectmatrix(size + 10, size);
+        let widematrix = create_rectmatrix(size, size + 10);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
         // Full SVD (square)
         group.bench_with_input(
             BenchmarkId::new("svd_full_square", size),
-            &square_matrix,
+            &squarematrix,
             |b, m| b.iter(|| svd(black_box(&m.view()), false, None).unwrap()),
         );
 
         // Thin SVD (square)
         group.bench_with_input(
             BenchmarkId::new("svd_thin_square", size),
-            &square_matrix,
+            &squarematrix,
             |b, m| b.iter(|| svd(black_box(&m.view()), true, None).unwrap()),
         );
 
         // SVD (tall matrix)
-        group.bench_with_input(BenchmarkId::new("svd_tall", size), &tall_matrix, |b, m| {
+        group.bench_with_input(BenchmarkId::new("svd_tall", size), &tallmatrix, |b, m| {
             b.iter(|| svd(black_box(&m.view()), true, None).unwrap())
         });
 
         // SVD (wide matrix)
-        group.bench_with_input(BenchmarkId::new("svd_wide", size), &wide_matrix, |b, m| {
+        group.bench_with_input(BenchmarkId::new("svd_wide", size), &widematrix, |b, m| {
             b.iter(|| svd(black_box(&m.view()), true, None).unwrap())
         });
 
         // SVD values only
         group.bench_with_input(
             BenchmarkId::new("svd_values_only", size),
-            &square_matrix,
+            &squarematrix,
             |b, m| b.iter(|| svd(black_box(&m.view()), true, None).unwrap().1),
         );
     }
@@ -203,17 +201,17 @@ fn bench_svd_decomposition(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_cholesky_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("cholesky_decomposition");
-    group.sample_size(25);
+    group.samplesize(25);
 
     for &size in &[20, 50, 100, 200, 500] {
-        let spd_matrix = create_spd_matrix(size);
+        let spdmatrix = create_spdmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
         // Standard Cholesky decomposition
         group.bench_with_input(
             BenchmarkId::new("cholesky_standard", size),
-            &spd_matrix,
+            &spdmatrix,
             |b, m| b.iter(|| cholesky(black_box(&m.view()), None).unwrap()),
         );
 
@@ -221,7 +219,7 @@ fn bench_cholesky_decomposition(c: &mut Criterion) {
         let rhs = Array1::from_shape_fn(size, |i| ((i + 1) as f64 * 0.1).sin());
         group.bench_with_input(
             BenchmarkId::new("cholesky_solve", size),
-            &(&spd_matrix, &rhs),
+            &(&spdmatrix, &rhs),
             |b, (m, r)| {
                 b.iter(|| {
                     let l = cholesky(black_box(&m.view()), None).unwrap();
@@ -235,7 +233,7 @@ fn bench_cholesky_decomposition(c: &mut Criterion) {
         //     let update_vec = Array1::from_shape_fn(size, |i| ((i as f64 + 1.0) * 0.01).sin());
         //     group.bench_with_input(
         //         BenchmarkId::new("cholesky_update", size),
-        //         &(&spd_matrix, &update_vec),
+        //         &(&spdmatrix, &update_vec),
         //         |b, (m, v)| {
         //             b.iter(|| {
         //                 let l = cholesky(black_box(&m.view()), None).unwrap();
@@ -253,40 +251,40 @@ fn bench_cholesky_decomposition(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_eigenvalue_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("eigenvalue_decomposition");
-    group.sample_size(10); // Eigenvalue problems are expensive
+    group.samplesize(10); // Eigenvalue problems are expensive
     group.measurement_time(Duration::from_secs(40));
 
     for &size in &[20, 50, 100] {
-        let general_matrix = create_test_matrix(size);
-        let symmetric_matrix = create_spd_matrix(size);
+        let generalmatrix = create_testmatrix(size);
+        let symmetricmatrix = create_spdmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
         // General eigenvalue problem (eigenvalues only)
         group.bench_with_input(
             BenchmarkId::new("eigvals_general", size),
-            &general_matrix,
+            &generalmatrix,
             |b, m| b.iter(|| eigvals(black_box(&m.view()), None).unwrap()),
         );
 
         // General eigenvalue problem (values and vectors)
         group.bench_with_input(
             BenchmarkId::new("eig_general", size),
-            &general_matrix,
+            &generalmatrix,
             |b, m| b.iter(|| eig(black_box(&m.view()), None).unwrap()),
         );
 
         // Symmetric eigenvalue problem (eigenvalues only)
         group.bench_with_input(
             BenchmarkId::new("eigvalsh_symmetric", size),
-            &symmetric_matrix,
+            &symmetricmatrix,
             |b, m| b.iter(|| eigvalsh(black_box(&m.view()), None).unwrap()),
         );
 
         // Symmetric eigenvalue problem (values and vectors)
         group.bench_with_input(
             BenchmarkId::new("eigh_symmetric", size),
-            &symmetric_matrix,
+            &symmetricmatrix,
             |b, m| b.iter(|| eigh(black_box(&m.view()), None).unwrap()),
         );
 
@@ -294,7 +292,7 @@ fn bench_eigenvalue_decomposition(c: &mut Criterion) {
         if size >= 50 {
             group.bench_with_input(
                 BenchmarkId::new("eigvals_partial", size),
-                &symmetric_matrix,
+                &symmetricmatrix,
                 |b, m| {
                     b.iter(|| {
                         // eigvals_range doesn't exist, use smallest_k_eigh with proper parameters
@@ -312,11 +310,11 @@ fn bench_eigenvalue_decomposition(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_schur_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("schur_decomposition");
-    group.sample_size(10);
+    group.samplesize(10);
     group.measurement_time(Duration::from_secs(40));
 
     for &size in &[20, 50, 100] {
-        let matrix = create_test_matrix(size);
+        let matrix = create_testmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -349,10 +347,10 @@ fn bench_schur_decomposition(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_polar_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("polar_decomposition");
-    group.sample_size(15);
+    group.samplesize(15);
 
     for &size in &[20, 50, 100] {
-        let matrix = create_test_matrix(size);
+        let matrix = create_testmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -391,12 +389,12 @@ fn bench_polar_decomposition(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_qz_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("qz_decomposition");
-    group.sample_size(10);
+    group.samplesize(10);
     group.measurement_time(Duration::from_secs(40));
 
     for &size in &[20, 50, 100] {
-        let matrix_a = create_test_matrix(size);
-        let matrix_b = create_spd_matrix(size); // Use SPD for B to ensure stability
+        let matrix_a = create_testmatrix(size);
+        let matrix_b = create_spdmatrix(size); // Use SPD for B to ensure stability
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -445,24 +443,24 @@ fn bench_qz_decomposition(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_complex_decompositions(c: &mut Criterion) {
     let mut group = c.benchmark_group("complex_decompositions");
-    group.sample_size(15);
+    group.samplesize(15);
 
     for &size in &[20, 50, 100] {
-        let complex_matrix = create_complex_matrix(size);
+        let complexmatrix = create_complexmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
         // Complex LU decomposition
         group.bench_with_input(
             BenchmarkId::new("complex_lu", size),
-            &complex_matrix,
+            &complexmatrix,
             |b, m| b.iter(|| complex_lu(black_box(&m.view())).unwrap()),
         );
 
         // Complex QR decomposition
         group.bench_with_input(
             BenchmarkId::new("complex_qr", size),
-            &complex_matrix,
+            &complexmatrix,
             |b, m| b.iter(|| complex_qr(black_box(&m.view())).unwrap()),
         );
 
@@ -470,7 +468,7 @@ fn bench_complex_decompositions(c: &mut Criterion) {
         if size <= 50 {
             group.bench_with_input(
                 BenchmarkId::new("complex_svd", size),
-                &complex_matrix,
+                &complexmatrix,
                 |b, m| b.iter(|| complex_svd(black_box(&m.view()), true).unwrap()),
             );
         }
@@ -478,7 +476,7 @@ fn bench_complex_decompositions(c: &mut Criterion) {
         // Complex eigenvalue decomposition
         group.bench_with_input(
             BenchmarkId::new("complex_eig", size),
-            &complex_matrix,
+            &complexmatrix,
             |b, m| b.iter(|| complex_eig(black_box(&m.view())).unwrap()),
         );
     }
@@ -490,10 +488,10 @@ fn bench_complex_decompositions(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_specialized_factorizations(c: &mut Criterion) {
     let mut group = c.benchmark_group("specialized_factorizations");
-    group.sample_size(15);
+    group.samplesize(15);
 
     for &size in &[20, 50, 100] {
-        let matrix = create_test_matrix(size);
+        let matrix = create_testmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -516,10 +514,10 @@ fn bench_specialized_factorizations(c: &mut Criterion) {
         });
 
         // Tridiagonal decomposition (for symmetric matrices)
-        let symmetric_matrix = create_spd_matrix(size);
+        let symmetricmatrix = create_spdmatrix(size);
         group.bench_with_input(
             BenchmarkId::new("tridiagonal", size),
-            &symmetric_matrix,
+            &symmetricmatrix,
             |b, m| {
                 b.iter(|| {
                     // tridiagonal not available as standalone function
@@ -537,10 +535,10 @@ fn bench_specialized_factorizations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_decomposition_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("decomposition_memory_efficiency");
-    group.sample_size(20);
+    group.samplesize(20);
 
     for &size in &[50, 100, 200] {
-        let matrix = create_test_matrix(size);
+        let matrix = create_testmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -560,11 +558,11 @@ fn bench_decomposition_memory_efficiency(c: &mut Criterion) {
         );
 
         // In-place vs out-of-place Cholesky
-        let spd_matrix = create_spd_matrix(size);
+        let spdmatrix = create_spdmatrix(size);
         // In-place cholesky not implemented yet
         // group.bench_with_input(
         //     BenchmarkId::new("cholesky_in_place", size),
-        //     &spd_matrix,
+        //     &spdmatrix,
         //     |b, m| {
         //         b.iter(|| {
         //             let mut m_copy = m.clone();
@@ -575,7 +573,7 @@ fn bench_decomposition_memory_efficiency(c: &mut Criterion) {
 
         group.bench_with_input(
             BenchmarkId::new("cholesky_out_of_place", size),
-            &spd_matrix,
+            &spdmatrix,
             |b, m| b.iter(|| cholesky(black_box(&m.view()), None).unwrap()),
         );
     }

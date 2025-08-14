@@ -509,7 +509,10 @@ pub struct MaxPool1D {
 impl MaxPool1D {
     /// Create new max pooling layer
     pub fn new(poolsize: usize, stride: usize) -> Self {
-        Self { pool_size: poolsize, stride }
+        Self {
+            pool_size: poolsize,
+            stride,
+        }
     }
 
     /// Forward pass through max pooling
@@ -660,9 +663,7 @@ impl ResidualBlock1D {
         for ch in 0..input.shape()[1] {
             let channel_data = input.column(ch);
             let mean = channel_data.mean();
-            let var = channel_data
-                .mapv(|x| (x - mean).powi(2))
-                .mean();
+            let var = channel_data.mapv(|x| (x - mean).powi(2)).mean();
             let std = (var + eps).sqrt();
 
             let mut normalized = channel_data.mapv(|x| (x - mean) / std);
@@ -781,9 +782,7 @@ impl MultiScaleCNN {
         for ch in 0..input.shape()[1] {
             let channel_data = input.column(ch);
             let mean = channel_data.mean();
-            let var = channel_data
-                .mapv(|x| (x - mean).powi(2))
-                .mean();
+            let var = channel_data.mapv(|x| (x - mean).powi(2)).mean();
             let std = (var + eps).sqrt();
 
             let mut normalized = channel_data.mapv(|x| (x - mean) / std);
@@ -1445,18 +1444,14 @@ impl MultiHeadAttention {
         let d_k = _dmodel / num_heads;
         let scale = (2.0 / _dmodel as f64).sqrt();
 
-        let w_q = Array2::from_shape_fn((_dmodel, _dmodel), |_| {
-            rand::rng().gen_range(-scale..scale)
-        });
-        let w_k = Array2::from_shape_fn((_dmodel, _dmodel), |_| {
-            rand::rng().gen_range(-scale..scale)
-        });
-        let w_v = Array2::from_shape_fn((_dmodel, _dmodel), |_| {
-            rand::rng().gen_range(-scale..scale)
-        });
-        let w_o = Array2::from_shape_fn((_dmodel, _dmodel), |_| {
-            rand::rng().gen_range(-scale..scale)
-        });
+        let w_q =
+            Array2::from_shape_fn((_dmodel, _dmodel), |_| rand::rng().gen_range(-scale..scale));
+        let w_k =
+            Array2::from_shape_fn((_dmodel, _dmodel), |_| rand::rng().gen_range(-scale..scale));
+        let w_v =
+            Array2::from_shape_fn((_dmodel, _dmodel), |_| rand::rng().gen_range(-scale..scale));
+        let w_o =
+            Array2::from_shape_fn((_dmodel, _dmodel), |_| rand::rng().gen_range(-scale..scale));
 
         Ok(Self {
             num_heads,

@@ -513,7 +513,7 @@ impl AdvancedGpuOptimizer {
         let _grid_size = total_elements.div_ceil(block_size);
 
         // Execute distribution-specific kernel
-        let kernel_name = match distribution {
+        let kernelname = match distribution {
             "normal" => "curand_normal_kernel",
             "uniform" => "curand_uniform_kernel",
             "exponential" => "curand_exponential_kernel",
@@ -521,7 +521,7 @@ impl AdvancedGpuOptimizer {
         };
 
         // Simulate kernel execution with realistic timing
-        let execution_time = self.estimate_cuda_kernel_time(total_elements, kernel_name);
+        let execution_time = self.estimate_cuda_kernel_time(total_elements, kernelname);
         std::thread::sleep(std::time::Duration::from_nanos(
             (execution_time * 1_000_000.0) as u64,
         ));
@@ -557,7 +557,7 @@ impl AdvancedGpuOptimizer {
 
     /// Estimate CUDA kernel execution time based on operation
     fn estimate_cuda_kernel_time(&self, elements: usize, kernelname: &str) -> f64 {
-        let base_time_per_element = match kernel_name {
+        let base_time_per_element = match kernelname {
             "curand_normal_kernel" => 0.001, // microseconds per element
             "curand_uniform_kernel" => 0.0008,
             "curand_exponential_kernel" => 0.0012,
@@ -825,7 +825,7 @@ impl AdvancedGpuOptimizer {
         distribution: &str,
     ) -> Result<Array2<f64>> {
         use rand::Rng;
-        use rand__distr::{Distribution, Normal, Uniform};
+        use rand_distr::{Distribution, Normal, Uniform};
 
         let _rng = rand::rng();
         let total_elements = rows * cols;
@@ -855,7 +855,7 @@ impl AdvancedGpuOptimizer {
             })
             .collect();
 
-        Array2::fromshape_vec((rows, cols), data)
+        Array2::from_shape_vec((rows, cols), data)
             .map_err(|e| DatasetsError::Other(format!("Failed to create array: {e}")))
     }
 
@@ -1374,9 +1374,7 @@ impl RealTimePerformanceMonitor {
     /// Create with custom configuration
     pub fn with_config(config: MonitoringConfig) -> Self {
         Self {
-            performance_history: std::collections::VecDeque::with_capacity(
-                config.max_history_size,
-            ),
+            performance_history: std::collections::VecDeque::with_capacity(config.max_history_size),
             current_optimization: AdaptiveOptimizationState {
                 trend: PerformanceTrend::Unknown,
                 adjustments: Vec::new(),

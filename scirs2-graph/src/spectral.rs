@@ -235,12 +235,12 @@ fn simple_eigenvalue_for_small_matrix(
     prev_eigenvectors: &Array2<f64>,
 ) -> std::result::Result<(f64, Array1<f64>), String> {
     let n = matrix.shape()[0];
-    
+
     // For small Laplacian matrices, approximate the second eigenvalue
     // For path-like and cycle-like graphs, use better approximations
     let degree_sum = (0..n).map(|i| matrix[[i, i]]).sum::<f64>();
     let avg_degree = degree_sum / n as f64;
-    
+
     // Better approximation for common small graph topologies
     let approx_eigenvalue = if avg_degree == 2.0 {
         if n == 4 {
@@ -259,26 +259,26 @@ fn simple_eigenvalue_for_small_matrix(
         // More connected graph
         avg_degree * 0.5
     };
-    
+
     // Create a reasonable eigenvector
     let mut eigenvector = Array1::zeros(n);
     for i in 0..n {
         eigenvector[i] = if i % 2 == 0 { 1.0 } else { -1.0 };
     }
-    
+
     // Orthogonalize against previous eigenvectors
     for j in 0..prev_eigenvectors.ncols() {
         let prev_vec = prev_eigenvectors.column(j);
         let proj = eigenvector.dot(&prev_vec);
         eigenvector = eigenvector - proj * &prev_vec;
     }
-    
+
     // Normalize
     let norm = (eigenvector.dot(&eigenvector)).sqrt();
     if norm > 1e-12 {
         eigenvector /= norm;
     }
-    
+
     Ok((approx_eigenvalue, eigenvector))
 }
 
@@ -292,7 +292,7 @@ fn deflated_lanczos_iteration(
     max_iterations: usize,
 ) -> std::result::Result<(f64, Array1<f64>), String> {
     let n = matrix.shape()[0];
-    
+
     // For very small matrices, use a more direct approach
     if n <= 4 {
         return simple_eigenvalue_for_small_matrix(matrix, prev_eigenvectors);
@@ -1003,9 +1003,9 @@ where
     // Compute the eigenvectors corresponding to the smallest n_clusters eigenvalues
     let _eigenvalues_eigenvectors = compute_smallest_eigenvalues(&laplacian_matrix, n_clusters)
         .map_err(|e| GraphError::LinAlgError {
-        operation: "spectral_clustering_eigenvalues".to_string(),
-        details: e,
-    })?;
+            operation: "spectral_clustering_eigenvalues".to_string(),
+            details: e,
+        })?;
 
     // For testing, we'll just make up some random cluster assignments
     let mut labels = Vec::with_capacity(graph.node_count());

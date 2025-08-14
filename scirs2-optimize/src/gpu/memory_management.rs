@@ -211,7 +211,7 @@ impl GpuMemoryBlock {
             // Safe casting through scirs2-_core's type system
             // Since cast_type doesn't exist, return an error for now
             Err(ScirsError::ComputationError(
-                scirs2_core::error::ErrorContext::new("Type casting not supported".to_string())
+                scirs2_core::error::ErrorContext::new("Type casting not supported".to_string()),
             ))
         } else {
             Err(ScirsError::InvalidInput(
@@ -276,7 +276,7 @@ impl GpuWorkspace {
         // Convert buffer to array using scirs2-_core's reshape functionality
         // Since from_buffer doesn't exist, return an error for now
         Err(ScirsError::ComputationError(
-            scirs2_core::error::ErrorContext::new("Array creation not supported".to_string())
+            scirs2_core::error::ErrorContext::new("Array creation not supported".to_string()),
         ))
     }
 

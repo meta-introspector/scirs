@@ -211,23 +211,23 @@ where
     // For each eigenvalue, compute the corresponding eigenvector using inverse iteration
     for (k, lambda) in eigenvalues.iter().enumerate() {
         // Create (A - λI) matrix in extended precision as complex numbers
-        let mut shifted_matrix: Array2<num_complex::Complex<I>> = Array2::zeros((n, n));
+        let mut shiftedmatrix: Array2<num_complex::Complex<I>> = Array2::zeros((n, n));
         let lambda_high = num_complex::Complex::new(lambda.re.promote(), lambda.im.promote());
 
         // Convert real matrix to complex and subtract eigenvalue from diagonal
         for i in 0..n {
             for j in 0..n {
-                shifted_matrix[[i, j]] = num_complex::Complex::new(a_high[[i, j]], I::zero());
+                shiftedmatrix[[i, j]] = num_complex::Complex::new(a_high[[i, j]], I::zero());
             }
         }
 
         for i in 0..n {
-            shifted_matrix[[i, i]] = shifted_matrix[[i, i]] - lambda_high;
+            shiftedmatrix[[i, i]] = shiftedmatrix[[i, i]] - lambda_high;
         }
 
         // Compute eigenvector using inverse iteration with extended precision
         let eigenvector_high = compute_eigenvector_inverse_iteration(
-            &shifted_matrix,
+            &shiftedmatrix,
             lambda_high,
             max_iter.unwrap_or(100),
             I::from(tol.unwrap_or(A::epsilon().sqrt()).promote()).unwrap(),
@@ -1419,7 +1419,7 @@ where
 #[allow(dead_code)]
 fn newton_eigenvalue_correction<A>(
     eigenvalues: &mut Array1<A>,
-    original_matrix: &Array2<A>,
+    originalmatrix: &Array2<A>,
     tolerance: A,
 ) -> LinalgResult<()>
 where
@@ -1433,8 +1433,8 @@ where
         for _ in 0..10 {
             // Maximum 10 Newton iterations
             // Compute f(lambda) = det(A - lambda*I) and f'(lambda)
-            let f_val = compute_characteristic_polynomial_value(original_matrix, lambda)?;
-            let f_prime = compute_characteristic_polynomial_derivative(original_matrix, lambda)?;
+            let f_val = compute_characteristic_polynomial_value(originalmatrix, lambda)?;
+            let f_prime = compute_characteristic_polynomial_derivative(originalmatrix, lambda)?;
 
             if f_prime.abs() < A::epsilon() {
                 break; // Avoid division by zero
@@ -1474,17 +1474,14 @@ where
 
 /// Compute characteristic polynomial derivative at lambda
 #[allow(dead_code)]
-fn compute_characteristic_polynomial_derivative<A>(
-    _matrix: &Array2<A>,
-    lambda: A,
-) -> LinalgResult<A>
+fn compute_characteristic_polynomial_derivative<A>(matrix: &Array2<A>, lambda: A) -> LinalgResult<A>
 where
     A: Float + Zero + One + Copy,
 {
     // Numerical derivative approximation
     let h = A::from(1e-8).unwrap();
-    let f_plus = compute_characteristic_polynomial_value(_matrix, lambda + h)?;
-    let f_minus = compute_characteristic_polynomial_value(_matrix, lambda - h)?;
+    let f_plus = compute_characteristic_polynomial_value(matrix, lambda + h)?;
+    let f_minus = compute_characteristic_polynomial_value(matrix, lambda - h)?;
 
     Ok((f_plus - f_minus) / (A::from(2.0).unwrap() * h))
 }
@@ -1555,7 +1552,7 @@ where
 fn final_residual_verification<A>(
     eigenvalues: &mut Array1<A>,
     eigenvectors: &mut Array2<A>,
-    original_matrix: &Array2<A>,
+    originalmatrix: &Array2<A>,
     tolerance: A,
 ) -> LinalgResult<()>
 where
@@ -1572,7 +1569,7 @@ where
         for i in 0..n {
             let mut av_i = A::zero();
             for k in 0..n {
-                av_i += original_matrix[[i, k]] * v[k];
+                av_i += originalmatrix[[i, k]] * v[k];
             }
             residual[i] = av_i - lambda * v[i];
         }
@@ -1592,7 +1589,7 @@ where
         // If residual is too large, apply correction
         if residual_norm > tolerance {
             // Apply inverse iteration for eigenvector refinement
-            inverse_iteration_refinement(eigenvectors, original_matrix, eigenvalues[j], j)?;
+            inverse_iteration_refinement(eigenvectors, originalmatrix, eigenvalues[j], j)?;
         }
     }
 
@@ -1625,11 +1622,11 @@ fn estimate_condition_number<A>(matrix: &ArrayView2<A>) -> LinalgResult<A>
 where
     A: Float + Zero + One + Copy + std::ops::AddAssign,
 {
-    // Simplified condition number estimation using _matrix norm ratio
+    // Simplified condition number estimation using matrix norm ratio
     // In practice, would use more sophisticated methods like SVD
     let n = matrix.nrows();
 
-    // Estimate largest eigenvalue (_matrix norm)
+    // Estimate largest eigenvalue (matrix norm)
     let mut max_row_sum = A::zero();
     for i in 0..n {
         let mut row_sum = A::zero();
@@ -1803,7 +1800,7 @@ mod tests {
 /// Compute eigenvector using inverse iteration in extended precision
 #[allow(dead_code)]
 fn compute_eigenvector_inverse_iteration<I>(
-    shifted_matrix: &Array2<num_complex::Complex<I>>,
+    shiftedmatrix: &Array2<num_complex::Complex<I>>,
     _lambda: num_complex::Complex<I>,
     max_iter: usize,
     tol: I,
@@ -1818,7 +1815,7 @@ where
         + std::ops::SubAssign
         + std::ops::DivAssign,
 {
-    let n = shifted_matrix.nrows();
+    let n = shiftedmatrix.nrows();
 
     // Start with a random vector
     let mut v = Array1::zeros(n);
@@ -1826,7 +1823,7 @@ where
 
     for _ in 0..max_iter {
         // Solve (A - λI)u = v for u using LU decomposition
-        let mut u = solve_linear_system_complex(shifted_matrix, &v);
+        let mut u = solve_linear_system_complex(shiftedmatrix, &v);
 
         // Normalize u
         let norm = compute_complex_norm(&u);

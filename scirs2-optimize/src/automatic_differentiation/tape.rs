@@ -176,7 +176,10 @@ impl ComputationTape {
                     partial,
                 } => {
                     // Propagate gradient: ∂L/∂input += ∂L/∂result * ∂result/∂input
-                    gradients[*input] += gradients[*result] * partial;
+                    // Skip constants (which have index usize::MAX)
+                    if *input != usize::MAX && *input < gradients.len() {
+                        gradients[*input] += gradients[*result] * partial;
+                    }
                 }
                 TapeNode::BinaryOp {
                     op_type: _,
@@ -187,8 +190,13 @@ impl ComputationTape {
                     right_partial,
                 } => {
                     // Propagate gradients to both inputs
-                    gradients[*left] += gradients[*result] * left_partial;
-                    gradients[*right] += gradients[*result] * right_partial;
+                    // Skip constants (which have index usize::MAX)
+                    if *left != usize::MAX && *left < gradients.len() {
+                        gradients[*left] += gradients[*result] * left_partial;
+                    }
+                    if *right != usize::MAX && *right < gradients.len() {
+                        gradients[*right] += gradients[*result] * right_partial;
+                    }
                 }
                 TapeNode::NAryOp {
                     inputs,
@@ -196,8 +204,11 @@ impl ComputationTape {
                     partials,
                 } => {
                     // Propagate gradient to all inputs
+                    // Skip constants (which have index usize::MAX)
                     for (input_id, partial) in inputs.iter().zip(partials.iter()) {
-                        gradients[*input_id] += gradients[*result] * partial;
+                        if *input_id != usize::MAX && *input_id < gradients.len() {
+                            gradients[*input_id] += gradients[*result] * partial;
+                        }
                     }
                 }
             }

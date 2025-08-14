@@ -179,7 +179,7 @@ impl PRMNode {
     /// Create a new PRM node
     fn new(id: usize, config: Array1<f64>) -> Self {
         PRMNode {
-            id: id,
+            id,
             config,
             neighbors: Vec::new(),
         }

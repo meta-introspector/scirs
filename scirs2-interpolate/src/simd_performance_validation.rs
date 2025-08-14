@@ -642,7 +642,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
                 data.push(value);
             }
         }
-        Array2::fromshape_vec((n_points, dimensions), data)
+        Array2::from_shape_vec((n_points, dimensions), data)
             .map_err(|e| InterpolateError::ShapeError(e.to_string()))
     }
 

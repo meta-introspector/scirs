@@ -20,13 +20,12 @@ pub struct AdaptiveMethodState<F: IntegrateFloat> {
 impl<F: IntegrateFloat> AdaptiveMethodState<F> {
     /// Create with configuration
     pub fn with_config(config: crate::ode::utils::stiffness::StiffnessDetectionConfig<F>) -> Self {
-        let detector =
-            crate::ode::utils::stiffness::StiffnessDetector::with_config(config.clone());
+        let detector = crate::ode::utils::stiffness::StiffnessDetector::with_config(config.clone());
         Self {
             method_type: AdaptiveMethodType::Adams,
             steps_since_switch: 0,
             order: 1, // Start with order 1
-            config: config,
+            config,
             detector,
         }
     }

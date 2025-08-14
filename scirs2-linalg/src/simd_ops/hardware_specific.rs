@@ -596,7 +596,7 @@ where
 
     // Determine optimal block size based on hardware capabilities
     let simd_width = capabilities.optimal_vector_width();
-    let cache_block_size = if capabilities.has_avx2 {
+    let cache_blocksize = if capabilities.has_avx2 {
         256 // Medium blocks for AVX2
     } else {
         128 // Smaller blocks for SSE/Neon
@@ -615,7 +615,7 @@ where
 
     let results: Vec<Array2<F>> = parallel_map(&chunks, |(start_row, end_row)| {
         let a_block = a.slice(s![*start_row..*end_row, ..]);
-        hardware_optimized_gemm_block(&a_block, b, capabilities, cache_block_size, simd_width)
+        hardware_optimized_gemm_block(&a_block, b, capabilities, cache_blocksize, simd_width)
             .unwrap()
     });
 
@@ -646,15 +646,15 @@ where
     let (_, n) = b.dim();
 
     let mut result = Array2::zeros((m, n));
-    let cache_block_size = capabilities.optimal_vector_width() * 4;
+    let cache_blocksize = capabilities.optimal_vector_width() * 4;
 
     // Blocked GEMM with SIMD optimization
-    for ii in (0..m).step_by(cache_block_size) {
-        for jj in (0..n).step_by(cache_block_size) {
-            for kk in (0..k).step_by(cache_block_size) {
-                let i_end = (ii + cache_block_size).min(m);
-                let j_end = (jj + cache_block_size).min(n);
-                let k_end = (kk + cache_block_size).min(k);
+    for ii in (0..m).step_by(cache_blocksize) {
+        for jj in (0..n).step_by(cache_blocksize) {
+            for kk in (0..k).step_by(cache_blocksize) {
+                let i_end = (ii + cache_blocksize).min(m);
+                let j_end = (jj + cache_blocksize).min(n);
+                let k_end = (kk + cache_blocksize).min(k);
 
                 // Process each block using SIMD operations
                 for i in ii..i_end {
@@ -680,7 +680,7 @@ fn hardware_optimized_gemm_block<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
     capabilities: &HardwareCapabilities,
-    cache_block_size: usize,
+    cache_blocksize: usize,
     _simd_width: usize,
 ) -> LinalgResult<Array2<F>>
 where
@@ -692,12 +692,12 @@ where
     let mut result = Array2::zeros((m, n));
 
     // Optimized block multiplication
-    for ii in (0..m).step_by(cache_block_size) {
-        for jj in (0..n).step_by(cache_block_size) {
-            for kk in (0..k).step_by(cache_block_size) {
-                let i_end = (ii + cache_block_size).min(m);
-                let j_end = (jj + cache_block_size).min(n);
-                let k_end = (kk + cache_block_size).min(k);
+    for ii in (0..m).step_by(cache_blocksize) {
+        for jj in (0..n).step_by(cache_blocksize) {
+            for kk in (0..k).step_by(cache_blocksize) {
+                let i_end = (ii + cache_blocksize).min(m);
+                let j_end = (jj + cache_blocksize).min(n);
+                let k_end = (kk + cache_blocksize).min(k);
 
                 for i in ii..i_end {
                     for j in jj..j_end {

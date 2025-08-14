@@ -1036,7 +1036,7 @@ where
         let z_inv = match solve_multiple(&z.view(), &Array2::eye(n).view(), None) {
             Ok(inv) => inv,
             Err(_) => {
-                return Err(LinalgError::singular_matrix_with_suggestions(
+                return Err(LinalgError::singularmatrix_with_suggestions(
                     "Matrix square root (Denman-Beavers iteration)",
                     (n, n),
                     None,
@@ -1047,7 +1047,7 @@ where
         let y_inv = match solve_multiple(&y.view(), &Array2::eye(n).view(), None) {
             Ok(inv) => inv,
             Err(_) => {
-                return Err(LinalgError::singular_matrix_with_suggestions(
+                return Err(LinalgError::singularmatrix_with_suggestions(
                     "Matrix square root (Denman-Beavers iteration)",
                     (n, n),
                     None,
@@ -1207,7 +1207,7 @@ where
         let z_inv = match solve_multiple(&z.view(), &Array2::eye(n).view(), None) {
             Ok(inv) => inv,
             Err(_) => {
-                return Err(LinalgError::singular_matrix_with_suggestions(
+                return Err(LinalgError::singularmatrix_with_suggestions(
                     "Matrix square root (Denman-Beavers iteration)",
                     (n, n),
                     None,
@@ -1218,7 +1218,7 @@ where
         let y_inv = match solve_multiple(&y.view(), &Array2::eye(n).view(), None) {
             Ok(inv) => inv,
             Err(_) => {
-                return Err(LinalgError::singular_matrix_with_suggestions(
+                return Err(LinalgError::singularmatrix_with_suggestions(
                     "Matrix square root (Denman-Beavers iteration)",
                     (n, n),
                     None,
@@ -1901,13 +1901,13 @@ where
 ///
 /// ```no_run
 /// use ndarray::array;
-/// use scirs2_linalg::matrix_functions::fractional_matrix_power;
+/// use scirs2_linalg::matrix_functions::fractionalmatrix_power;
 ///
 /// let a = array![[4.0_f64, 0.0], [0.0, 9.0]];
-/// let sqrt_a = fractional_matrix_power(&a.view(), 0.5, "eigen").unwrap();
+/// let sqrt_a = fractionalmatrix_power(&a.view(), 0.5, "eigen").unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn fractional_matrix_power<F>(a: &ArrayView2<F>, p: F, method: &str) -> LinalgResult<Array2<F>>
+pub fn fractionalmatrix_power<F>(a: &ArrayView2<F>, p: F, method: &str) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,
 {
@@ -1947,8 +1947,8 @@ where
             });
 
             // Reconstruct matrix: V * Λ^p * V^T
-            let lambda_matrix = Array2::from_diag(&powered_eigenvals);
-            let temp = eigenvecs.dot(&lambda_matrix);
+            let lambdamatrix = Array2::from_diag(&powered_eigenvals);
+            let temp = eigenvecs.dot(&lambdamatrix);
             Ok(temp.dot(&eigenvecs.t()))
         }
         "schur" => {
@@ -1987,7 +1987,7 @@ where
 ///
 /// * f(A) computed using SPD-optimized algorithms
 #[allow(dead_code)]
-pub fn spd_matrix_function<F>(
+pub fn spdmatrix_function<F>(
     a: &ArrayView2<F>,
     func: &str,
     param: Option<F>,
@@ -2041,16 +2041,16 @@ where
                 }
 
                 let log_eigenvals = eigenvals.mapv(|x| x.ln());
-                let lambda_matrix = Array2::from_diag(&log_eigenvals);
-                let temp = eigenvecs.dot(&lambda_matrix);
+                let lambdamatrix = Array2::from_diag(&log_eigenvals);
+                let temp = eigenvecs.dot(&lambdamatrix);
                 Ok(temp.dot(&eigenvecs.t()))
             }
             "exp" => {
                 // Use eigendecomposition for exp
                 let (eigenvals, eigenvecs) = crate::eigen::eigh(a, None)?;
                 let exp_eigenvals = eigenvals.mapv(|x| x.exp());
-                let lambda_matrix = Array2::from_diag(&exp_eigenvals);
-                let temp = eigenvecs.dot(&lambda_matrix);
+                let lambdamatrix = Array2::from_diag(&exp_eigenvals);
+                let temp = eigenvecs.dot(&lambdamatrix);
                 Ok(temp.dot(&eigenvecs.t()))
             }
             "power" => {
@@ -2059,7 +2059,7 @@ where
                         "Power parameter required for 'power' function".to_string(),
                     )
                 })?;
-                fractional_matrix_power(a, p, "eigen")
+                fractionalmatrix_power(a, p, "eigen")
             }
             _ => Err(LinalgError::InvalidInputError(format!(
                 "Unknown SPD function '{func}'. Use 'log', 'sqrt', 'inv_sqrt', 'exp', or 'power'"
@@ -2098,8 +2098,8 @@ where
             }
         };
 
-        let lambda_matrix = Array2::from_diag(&transformed_eigenvals);
-        let temp = eigenvecs.dot(&lambda_matrix);
+        let lambdamatrix = Array2::from_diag(&transformed_eigenvals);
+        let temp = eigenvecs.dot(&lambdamatrix);
         Ok(temp.dot(&eigenvecs.t()))
     }
 }
@@ -2354,7 +2354,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_power_identity() {
+    fn testmatrix_power_identity() {
         // I^p = I for any p
         let a = array![[1.0, 0.0], [0.0, 1.0]];
         let a_pow = matrix_power(&a.view(), 3.5).unwrap();
@@ -2366,7 +2366,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_power_integer() {
+    fn testmatrix_power_integer() {
         // Test integer powers
         let a = array![[1.0, 2.0], [3.0, 4.0]];
 
@@ -2379,7 +2379,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cosm_zero_matrix() {
+    fn test_cosm_zeromatrix() {
         // cos(0) = I
         let a = array![[0.0, 0.0], [0.0, 0.0]];
         let cos_a = cosm(&a.view()).unwrap();
@@ -2404,7 +2404,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sinm_zero_matrix() {
+    fn test_sinm_zeromatrix() {
         // sin(0) = 0
         let a = array![[0.0, 0.0], [0.0, 0.0]];
         let sin_a = sinm(&a.view()).unwrap();
@@ -2429,7 +2429,7 @@ mod tests {
     }
 
     #[test]
-    fn test_tanm_zero_matrix() {
+    fn test_tanm_zeromatrix() {
         // tan(0) = 0
         let a = array![[0.0, 0.0], [0.0, 0.0]];
         let tan_a = tanm(&a.view()).unwrap();
@@ -3091,15 +3091,15 @@ where
     let (u_svd, s, vt) = crate::decomposition::svd(a, true, workers)?;
 
     // Construct H = VΣV* (positive semidefinite part)
-    let mut sigma_matrix = Array2::zeros((n, n));
+    let mut sigmamatrix = Array2::zeros((n, n));
     for (i, &sigma) in s.iter().enumerate() {
         if i < n {
-            sigma_matrix[[i, i]] = sigma;
+            sigmamatrix[[i, i]] = sigma;
         }
     }
 
     let v = vt.t();
-    let temp = v.dot(&sigma_matrix);
+    let temp = v.dot(&sigmamatrix);
     let h = temp.dot(&vt);
 
     // Construct U = UV* (orthogonal part)
@@ -3197,15 +3197,15 @@ where
     // General case: use the formula G = A^(1/2) * (A^(-1/2) * B * A^(-1/2))^(1/2) * A^(1/2)
 
     // Compute A^(1/2) and A^(-1/2)
-    let a_sqrt = spd_matrix_function(a, "sqrt", None)?;
-    let a_inv_sqrt = spd_matrix_function(a, "inv_sqrt", None)?;
+    let a_sqrt = spdmatrix_function(a, "sqrt", None)?;
+    let a_inv_sqrt = spdmatrix_function(a, "inv_sqrt", None)?;
 
     // Compute A^(-1/2) * B * A^(-1/2)
     let temp1 = a_inv_sqrt.dot(b);
     let normalized_b = temp1.dot(&a_inv_sqrt);
 
     // Compute (A^(-1/2) * B * A^(-1/2))^(1/2)
-    let normalized_b_sqrt = spd_matrix_function(&normalized_b.view(), "sqrt", None)?;
+    let normalized_b_sqrt = spdmatrix_function(&normalized_b.view(), "sqrt", None)?;
 
     // Final result: A^(1/2) * (A^(-1/2) * B * A^(-1/2))^(1/2) * A^(1/2)
     let temp2 = a_sqrt.dot(&normalized_b_sqrt);
@@ -3323,7 +3323,7 @@ mod hyperbolic_tests {
     use ndarray::array;
 
     #[test]
-    fn test_coshm_zero_matrix() {
+    fn test_coshm_zeromatrix() {
         // cosh(0) = I
         let a = array![[0.0, 0.0], [0.0, 0.0]];
         let cosh_a = coshm(&a.view()).unwrap();
@@ -3335,7 +3335,7 @@ mod hyperbolic_tests {
     }
 
     #[test]
-    fn test_sinhm_zero_matrix() {
+    fn test_sinhm_zeromatrix() {
         // sinh(0) = 0
         let a = array![[0.0, 0.0], [0.0, 0.0]];
         let sinh_a = sinhm(&a.view()).unwrap();
@@ -3347,7 +3347,7 @@ mod hyperbolic_tests {
     }
 
     #[test]
-    fn test_tanhm_zero_matrix() {
+    fn test_tanhm_zeromatrix() {
         // tanh(0) = 0
         let a = array![[0.0, 0.0], [0.0, 0.0]];
         let tanh_a = tanhm(&a.view()).unwrap();

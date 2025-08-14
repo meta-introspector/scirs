@@ -703,7 +703,7 @@ impl NeuromorphicProcessor {
             // Generate output spike if current exceeds threshold
             if output_current > 0.5 {
                 let output_event = SpikeEvent {
-                    neuron_id: rows + col,             // Offset for output neurons
+                    neuron_id: rows + col,            // Offset for output neurons
                     timestamp: event.timestamp + 0.1, // Small delay
                     amplitude: output_current,
                     spatial_coords: event.spatial_coords.clone(),
@@ -1075,7 +1075,7 @@ impl HomeostaticNeuralClusterer {
         let multi_timescale = MultiTimescaleAdaptation::new();
 
         Self {
-            _num_clusters: _num_clusters,
+            _num_clusters,
             inputdim,
             output_neurons,
             weights,
@@ -1100,11 +1100,7 @@ impl HomeostaticNeuralClusterer {
     }
 
     /// Fit homeostatic clustering model
-    pub fn fit(
-        &mut self,
-        points: &ArrayView2<f64>,
-        epochs: usize,
-    ) -> SpatialResult<Array1<usize>> {
+    pub fn fit(&mut self, points: &ArrayView2<f64>, epochs: usize) -> SpatialResult<Array1<usize>> {
         let (n_samples, n_features) = points.dim();
 
         if n_features != self.inputdim {
@@ -1427,11 +1423,7 @@ impl MetaplasticityController {
 
     /// Compute metaplastic modulation
     fn compute_modulation(&self, _neuronidx: usize, error: f64) -> f64 {
-        let meta_var_avg = self
-            .metaplastic_variables
-            .row(_neuronidx)
-            .to_owned()
-            .mean();
+        let meta_var_avg = self.metaplastic_variables.row(_neuronidx).to_owned().mean();
 
         // Higher metaplastic variable means lower plasticity (harder to change)
         let modulation = 1.0 / (1.0 + meta_var_avg);
@@ -1614,7 +1606,7 @@ impl DendriticSpatialClusterer {
         let global_learning_params = GlobalLearningParams::new();
 
         Self {
-            _numneurons: _numneurons,
+            _numneurons,
             inputdim,
             neurons,
             lateral_connections,
@@ -1623,11 +1615,7 @@ impl DendriticSpatialClusterer {
     }
 
     /// Fit dendritic clustering model
-    pub fn fit(
-        &mut self,
-        points: &ArrayView2<f64>,
-        epochs: usize,
-    ) -> SpatialResult<Array1<usize>> {
+    pub fn fit(&mut self, points: &ArrayView2<f64>, epochs: usize) -> SpatialResult<Array1<usize>> {
         let (n_samples, n_features) = points.dim();
 
         if n_features != self.inputdim {
@@ -1846,11 +1834,7 @@ impl DendriticCompartment {
     }
 
     /// Update compartment weights
-    fn update_weights(
-        &mut self,
-        input: &ArrayView1<f64>,
-        learning_rate: f64,
-    ) -> SpatialResult<()> {
+    fn update_weights(&mut self, input: &ArrayView1<f64>, learning_rate: f64) -> SpatialResult<()> {
         for (weight, &input_val) in self.weights.iter_mut().zip(input.iter()) {
             // Activity-dependent learning with local modulation
             let local_modulation = self.activation * self.local_learning_params.activity_scaling;
@@ -3210,7 +3194,7 @@ impl PlasticityMechanism {
         };
 
         Self {
-            _mechanismtype: _mechanismtype,
+            _mechanismtype,
             time_constants,
             learning_rates,
             thresholds,

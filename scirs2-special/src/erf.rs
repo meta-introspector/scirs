@@ -538,10 +538,10 @@ pub mod complex {
     pub fn faddeeva_complex(z: Complex64) -> Complex64 {
         // w(z) = e^(-z²) * erfc(-iz)
         let minus_iz = Complex64::new(z.im, -z.re);
-        let erfc_minus_iz = erfc_complex(minus_iz);
-        let exp_minus_z2 = (-z * z).exp();
+        let erfcminus_iz = erfc_complex(minus_iz);
+        let expminus_z2 = (-z * z).exp();
 
-        exp_minus_z2 * erfc_minus_iz
+        expminus_z2 * erfcminus_iz
     }
 
     /// Series expansion for erf(z) for small |z|
@@ -577,7 +577,7 @@ pub mod complex {
         // erf(z) ≈ z / √z^2 - (e^(-z²))/(√π * z) * [1 - 1/(2z²) + 3/(4z⁴) - ...]
         let sqrt_pi = PI.sqrt();
         let z_squared = z * z;
-        let exp_minus_z2 = (-z_squared).exp();
+        let expminus_z2 = (-z_squared).exp();
 
         let z_inv = Complex64::new(1.0, 0.0) / z;
         let z_inv_2 = z_inv * z_inv;
@@ -591,7 +591,7 @@ pub mod complex {
         series += Complex64::new(105.0, 0.0) * z_inv_2 * z_inv_2 * z_inv_2 * z_inv_2
             / Complex64::new(16.0, 0.0);
 
-        z / z_squared.sqrt() - exp_minus_z2 / Complex64::new(sqrt_pi, 0.0) * z_inv * series
+        z / z_squared.sqrt() - expminus_z2 / Complex64::new(sqrt_pi, 0.0) * z_inv * series
     }
 
     /// Asymptotic expansion for erfcx(z) for large |z|
@@ -707,10 +707,10 @@ pub mod complex {
 
             for &z in &test_values {
                 let erf_z = erf_complex(z);
-                let erf_minus_z = erf_complex(-z);
+                let erfminus_z = erf_complex(-z);
 
-                assert_relative_eq!(erf_minus_z.re, -erf_z.re, epsilon = 1e-10);
-                assert_relative_eq!(erf_minus_z.im, -erf_z.im, epsilon = 1e-10);
+                assert_relative_eq!(erfminus_z.re, -erf_z.re, epsilon = 1e-10);
+                assert_relative_eq!(erfminus_z.im, -erf_z.im, epsilon = 1e-10);
             }
         }
 

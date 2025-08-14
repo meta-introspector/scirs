@@ -770,9 +770,7 @@ fn transformation_recipes() -> NdimageResult<()> {
 
     println!("```rust");
     println!("// Method 1: Translation-only registration");
-    println!(
-        "fn find_translation(reference: &Array2<f64>, moving: &Array2<f64>) -> (f64, f64) {{"
-    );
+    println!("fn find_translation(reference: &Array2<f64>, moving: &Array2<f64>) -> (f64, f64) {{");
     println!("    let mut best_correlation = -1.0;");
     println!("    let mut best_shift = (0.0, 0.0);");
     println!("    ");

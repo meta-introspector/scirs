@@ -1092,13 +1092,13 @@ pub mod utils {
     /// Estimate memory usage for sparse vs dense operations
     pub fn estimate_memory_usage<T>(shape: (usize, usize), nnz: usize) -> (usize, usize) {
         let (rows, cols) = shape;
-        let element_size = std::mem::size_of::<T>();
+        let elementsize = std::mem::size_of::<T>();
 
         // Dense matrix memory
-        let dense_memory = rows * cols * element_size;
+        let dense_memory = rows * cols * elementsize;
 
         // Sparse matrix memory (CSR format)
-        let sparse_memory = nnz * element_size + // data
+        let sparse_memory = nnz * elementsize + // data
                           nnz * std::mem::size_of::<usize>() + // indices
                           (rows + 1) * std::mem::size_of::<usize>(); // indptr
 

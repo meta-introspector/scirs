@@ -589,10 +589,8 @@ impl MultiGpuCommunicator {
         for i in 0..num_devices {
             for j in 0..num_devices {
                 if i != j {
-                    let (connected, bandwidth, latency) = Self::probe_device_connection(
-                        devices[i].device_id,
-                        devices[j].device_id,
-                    )?;
+                    let (connected, bandwidth, latency) =
+                        Self::probe_device_connection(devices[i].device_id, devices[j].device_id)?;
 
                     connectivity_matrix[i][j] = connected;
                     bandwidth_matrix[i][j] = bandwidth;

@@ -38,7 +38,7 @@ where
     }
 
     // Set output size based on mode
-    let out_size = match mode {
+    let outsize = match mode {
         "full" => na + nb - 1,
         "same" => na,
         "valid" => {
@@ -56,7 +56,7 @@ where
     };
 
     // If there's no valid output, return empty array
-    if out_size == 0 {
+    if outsize == 0 {
         return Ok(Array1::zeros(0));
     }
 
@@ -64,8 +64,8 @@ where
     match mode {
         "full" => {
             // Full convolution: output length is na + nb - 1
-            let mut result = Array1::zeros(out_size);
-            for i in 0..out_size {
+            let mut result = Array1::zeros(outsize);
+            for i in 0..outsize {
                 let k_min = i.saturating_sub(nb - 1);
                 let k_max = if i < na { i } else { na - 1 };
 
@@ -95,9 +95,9 @@ where
         }
         "valid" => {
             // Valid convolution: output size is max(na - nb + 1, 0)
-            let mut result = Array1::zeros(out_size);
+            let mut result = Array1::zeros(outsize);
 
-            for i in 0..out_size {
+            for i in 0..outsize {
                 for j in 0..nb {
                     result[i] += a[i + j] * b[j];
                 }
@@ -863,7 +863,7 @@ where
 ///
 /// Result of multiplying the input vector by the DFT matrix
 #[allow(dead_code)]
-pub fn dft_matrix_multiply<A>(x: &ArrayView1<A>) -> LinalgResult<Array1<A>>
+pub fn dftmatrix_multiply<A>(x: &ArrayView1<A>) -> LinalgResult<Array1<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
 {

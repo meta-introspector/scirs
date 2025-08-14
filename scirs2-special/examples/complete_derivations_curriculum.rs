@@ -35,7 +35,7 @@
 //!
 //! Run with: cargo run --example complete_derivations_curriculum
 
-use scirs2__special::*;
+use scirs2_special::*;
 use std::collections::HashMap;
 use std::f64::consts::{E, PI};
 use std::io::{self, Write};

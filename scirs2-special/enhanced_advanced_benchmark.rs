@@ -6,7 +6,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::time::Instant;
-use scirs2__special::{
+use scirs2_special::{
     // Functions we've improved
     polygamma, dawsn, gamma,
     // New functions we've added
@@ -30,7 +30,7 @@ fn bench_polygamma_improvements(c: &mut Criterion) {
     ];
     
     for (n, x) in test_cases {
-        group.bench_with_input(
+        group.bench_withinput(
             BenchmarkId::new("polygamma_fixed", format!("n{}_x{}", n, x)), 
             &(n, x), 
             |b, &(n, x)| {
@@ -72,7 +72,7 @@ fn bench_dawson_improvements(c: &mut Criterion) {
     
     for (range_name, values) in test_ranges {
         for x in values {
-            group.bench_with_input(
+            group.bench_withinput(
                 BenchmarkId::new("dawson_enhanced", format!("{}_{}", range_name, x)), 
                 &x, 
                 |b, &x| {
@@ -122,7 +122,7 @@ fn bench_new_bessel_derivatives(c: &mut Criterion) {
     
     for (name, func) in functions {
         for x in &test_values {
-            group.bench_with_input(
+            group.bench_withinput(
                 BenchmarkId::new(name, x), 
                 x, 
                 |b, &x| {
@@ -138,7 +138,7 @@ fn bench_new_bessel_derivatives(c: &mut Criterion) {
     let orders = vec![0.5, 1.5, 2.5];
     for v in orders {
         for x in &test_values {
-            group.bench_with_input(
+            group.bench_withinput(
                 BenchmarkId::new("iv_prime", format!("v{}_x{}", v, x)), 
                 &(v, *x), 
                 |b, &(v, x)| {
@@ -148,7 +148,7 @@ fn bench_new_bessel_derivatives(c: &mut Criterion) {
                 }
             );
             
-            group.bench_with_input(
+            group.bench_withinput(
                 BenchmarkId::new("kv_prime", format!("v{}_x{}", v, x)), 
                 &(v, *x), 
                 |b, &(v, x)| {

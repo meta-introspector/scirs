@@ -763,7 +763,8 @@ impl AdvancedTextCoordinator {
 
         // Step 6: Performance tracking and metrics
         let performance_metrics = self.calculate_performance_metrics(texts.len(), total_time)?;
-        let confidence_scores = AdvancedTextCoordinator::calculate_confidence_scores(&primary_result, &analytics)?;
+        let confidence_scores =
+            AdvancedTextCoordinator::calculate_confidence_scores(&primary_result, &analytics)?;
         let timing_breakdown = self.calculate_timing_breakdown(total_time)?;
 
         Ok(AdvancedTextResult {
@@ -837,7 +838,8 @@ impl AdvancedTextCoordinator {
         drop(neural_ensemble);
 
         // Advanced confidence estimation
-        let confidence_estimates = AdvancedTextCoordinator::calculate_classification_confidence(&classifications)?;
+        let confidence_estimates =
+            AdvancedTextCoordinator::calculate_classification_confidence(&classifications)?;
 
         // Performance analytics
         let performance_metrics = TextPerformanceMetrics {
@@ -885,7 +887,8 @@ impl AdvancedTextCoordinator {
             TextAnalyticsEngine::analyze_topic_quality(&enhanced_topics, documents)?;
         drop(analytics_engine);
 
-        let quality_metrics = AdvancedTextCoordinator::calculate_topic_quality_metrics(&enhanced_topics)?;
+        let quality_metrics =
+            AdvancedTextCoordinator::calculate_topic_quality_metrics(&enhanced_topics)?;
 
         Ok(AdvancedTopicModelingResult {
             topics: enhanced_topics,

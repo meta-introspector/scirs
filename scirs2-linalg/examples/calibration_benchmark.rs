@@ -74,9 +74,9 @@ fn generate_uniform_data(size: usize) -> Array2<f32> {
     let mut rng = rand::rng();
     let uniform = Uniform::new(-1.0, 1.0).unwrap();
 
-    let mut data = Array2::zeros((_size, size));
-    for i in 0.._size {
-        for j in 0.._size {
+    let mut data = Array2::zeros((size, size));
+    for i in 0..size {
+        for j in 0..size {
             data[[i, j]] = uniform.sample(&mut rng);
         }
     }
@@ -90,9 +90,9 @@ fn generate_normal_data(size: usize) -> Array2<f32> {
     let mut rng = rand::rng();
     let normal = Normal::new(0.0, 1.0).unwrap();
 
-    let mut data = Array2::zeros((_size, size));
-    for i in 0.._size {
-        for j in 0.._size {
+    let mut data = Array2::zeros((size, size));
+    for i in 0..size {
+        for j in 0..size {
             data[[i, j]] = normal.sample(&mut rng);
         }
     }
@@ -106,9 +106,9 @@ fn generate_lognormal_data(size: usize) -> Array2<f32> {
     let mut rng = rand::rng();
     let lognormal = LogNormal::new(0.0, 1.0).unwrap();
 
-    let mut data = Array2::zeros((_size, size));
-    for i in 0.._size {
-        for j in 0.._size {
+    let mut data = Array2::zeros((size, size));
+    for i in 0..size {
+        for j in 0..size {
             data[[i, j]] = lognormal.sample(&mut rng);
         }
     }
@@ -123,9 +123,9 @@ fn generate_bimodal_data(size: usize) -> Array2<f32> {
     let normal1 = Normal::new(-2.0, 0.5).unwrap();
     let normal2 = Normal::new(2.0, 0.5).unwrap();
 
-    let mut data = Array2::zeros((_size, size));
-    for i in 0.._size {
-        for j in 0.._size {
+    let mut data = Array2::zeros((size, size));
+    for i in 0..size {
+        for j in 0..size {
             // 50% chance of coming from each distribution
             if rng.random::<bool>() {
                 data[[i, j]] = normal1.sample(&mut rng);
@@ -143,35 +143,35 @@ fn generate_bimodal_data(size: usize) -> Array2<f32> {
 fn generate_mixed_scale_data(size: usize) -> Array2<f32> {
     let mut rng = rand::rng();
 
-    let mut data = Array2::zeros((_size, size));
+    let mut data = Array2::zeros((size, size));
 
     // Divide the matrix into regions with different scales
-    let region_size = _size / 4;
+    let regionsize = size / 4;
 
     // Region 1: small values around 0.1
-    for i in 0..region_size {
-        for j in 0.._size {
+    for i in 0..regionsize {
+        for j in 0..size {
             data[[i, j]] = 0.1 + 0.05 * rng.random::<f32>();
         }
     }
 
     // Region 2: medium values around 1.0
-    for i in region_size..(2 * region_size) {
-        for j in 0.._size {
+    for i in regionsize..(2 * regionsize) {
+        for j in 0..size {
             data[[i, j]] = 1.0 + 0.5 * rng.random::<f32>();
         }
     }
 
     // Region 3: large values around 10.0
-    for i in (2 * region_size)..(3 * region_size) {
-        for j in 0.._size {
+    for i in (2 * regionsize)..(3 * regionsize) {
+        for j in 0..size {
             data[[i, j]] = 10.0 + 5.0 * rng.random::<f32>();
         }
     }
 
     // Region 4: very large values around 100.0
-    for i in (3 * region_size).._size {
-        for j in 0.._size {
+    for i in (3 * regionsize)..size {
+        for j in 0..size {
             data[[i, j]] = 100.0 + 50.0 * rng.random::<f32>();
         }
     }
@@ -185,9 +185,9 @@ fn generate_heavy_tailed_data(size: usize) -> Array2<f32> {
     let mut rng = rand::rng();
     let cauchy = Cauchy::new(0.0, 1.0).unwrap();
 
-    let mut data = Array2::zeros((_size, size));
-    for i in 0.._size {
-        for j in 0.._size {
+    let mut data = Array2::zeros((size, size));
+    for i in 0..size {
+        for j in 0..size {
             // The Cauchy distribution can generate extreme outliers
             // We'll clamp the values to avoid numerical issues
             let val: f32 = cauchy.sample(&mut rng);
@@ -247,8 +247,8 @@ fn benchmark_methods(
             let avg_mse = total_mse / NUM_ITERATIONS as f32;
 
             // Calculate memory savings
-            let fp32_size = 32;
-            let size_reduction = (1.0 - (BITS as f32 / fp32_size as f32)) * 100.0;
+            let fp32size = 32;
+            let size_reduction = (1.0 - (BITS as f32 / fp32size as f32)) * 100.0;
 
             println!(
                 "{:^15} | {:^20} | {:^15.6} | {:^15.2} | {:^15.1}%",
@@ -303,8 +303,8 @@ fn benchmark_bit_widths(distributions: &[(&str, &Array2<f32>)]) {
             let rel_error = diff_abs.sum() / data.mapv(|x| x.abs()).sum() * 100.0;
 
             // Calculate memory savings
-            let fp32_size = 32;
-            let size_reduction = (1.0 - (bits as f32 / fp32_size as f32)) * 100.0;
+            let fp32size = 32;
+            let size_reduction = (1.0 - (bits as f32 / fp32size as f32)) * 100.0;
 
             println!(
                 "{:^15} | {:^10} | {:^15.6} | {:^15.6} | {:^15.1}%",
@@ -363,8 +363,8 @@ fn benchmark_hardware_friendly(distributions: &[(&str, &Array2<f32>)]) {
             let rel_error = diff_abs.sum() / data.mapv(|x| x.abs()).sum() * 100.0;
 
             // Calculate memory savings
-            let fp32_size = 32;
-            let size_reduction = (1.0 - (bits as f32 / fp32_size as f32)) * 100.0;
+            let fp32size = 32;
+            let size_reduction = (1.0 - (bits as f32 / fp32size as f32)) * 100.0;
 
             println!(
                 "{:^15} | {:^20} | {:^15.6} | {:^15.6} | {:^15.1}%",

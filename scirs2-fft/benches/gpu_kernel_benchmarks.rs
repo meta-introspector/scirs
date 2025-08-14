@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use rand::Rng;
-use scirs2__fft::{
+use scirs2_fft::{
     sparse_fft::{sparse_fft, SparseFFTAlgorithm, WindowFunction},
     sparse_fft_gpu::{gpu_sparse_fft, GPUBackend},
     sparse_fft_gpu_cuda::cuda_sparse_fft,
@@ -24,7 +24,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 
 // Helper to add noise to a signal
 #[allow(dead_code)]
-fn add_noise(_signal: &[f64], noiselevel: f64) -> Vec<f64> {
+fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
     let mut rng = rand::rng();
     _signal
         .iter()

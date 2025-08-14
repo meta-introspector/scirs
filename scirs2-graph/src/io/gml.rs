@@ -59,8 +59,8 @@
 //! use std::fs::File;
 //! use std::io::Write;
 //! use tempfile::NamedTempFile;
-//! use scirs2__graph::base::Graph;
-//! use scirs2__graph::io::gml::{read_gml_format, write_gml_format};
+//! use scirs2_graph::base::Graph;
+//! use scirs2_graph::io::gml::{read_gml_format, write_gml_format};
 //!
 //! // Create a temporary file with GML data
 //! let mut temp_file = NamedTempFile::new().unwrap();
@@ -606,11 +606,7 @@ where
 /// * `Ok(())` - If the graph was written successfully
 /// * `Err(GraphError)` - If there was an error writing the file
 #[allow(dead_code)]
-pub fn write_gml_format<N, E, Ix, P>(
-    graph: &Graph<N, E, Ix>,
-    path: P,
-    weighted: bool,
-) -> Result<()>
+pub fn write_gml_format<N, E, Ix, P>(graph: &Graph<N, E, Ix>, path: P, weighted: bool) -> Result<()>
 where
     N: Node + std::fmt::Debug + std::fmt::Display + Clone,
     E: EdgeWeight

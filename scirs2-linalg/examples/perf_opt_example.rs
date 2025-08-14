@@ -48,7 +48,7 @@ fn demo_blocked_matmul() -> Result<(), Box<dyn std::error::Error>> {
 
     // Blocked matrix multiplication
     let config = OptConfig::default()
-        .with_block_size(64)
+        .with_blocksize(64)
         .with_parallel_threshold(256);
 
     let start = Instant::now();
@@ -207,7 +207,7 @@ fn demo_parallel_control() -> Result<(), Box<dyn std::error::Error>> {
 
     // Force serial execution
     let config_serial = OptConfig::default()
-        .with_block_size(64)
+        .with_blocksize(64)
         .with_parallel_threshold(size * 2); // Threshold higher than matrix size
 
     let start = Instant::now();
@@ -216,7 +216,7 @@ fn demo_parallel_control() -> Result<(), Box<dyn std::error::Error>> {
 
     // Force parallel execution
     let config_parallel = OptConfig::default()
-        .with_block_size(64)
+        .with_blocksize(64)
         .with_parallel_threshold(0); // Always use parallel
 
     let start = Instant::now();

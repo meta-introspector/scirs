@@ -78,10 +78,7 @@ impl Halfspace {
     /// let hs = Halfspace::new(array![1.0, 1.0], 1.0);
     /// ```
     pub fn new(normal: Array1<f64>, offset: f64) -> Self {
-        Self {
-            normal: normal,
-            offset,
-        }
+        Self { normal, offset }
     }
 
     /// Get the normal vector
@@ -793,10 +790,7 @@ impl HalfspaceIntersection {
     }
 
     /// Check if a polytope is bounded by examining vertices
-    fn check_boundedness(
-        vertices: &Array2<f64>,
-        halfspaces: &[Halfspace],
-    ) -> SpatialResult<bool> {
+    fn check_boundedness(vertices: &Array2<f64>, halfspaces: &[Halfspace]) -> SpatialResult<bool> {
         if vertices.nrows() == 0 {
             return Ok(false);
         }

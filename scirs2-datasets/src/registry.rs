@@ -18,9 +18,9 @@ pub struct DatasetMetadata {
     /// Whether this is a classification or regression dataset
     pub task_type: String,
     /// Optional target names for classification problems
-    pub target_names: Option<Vec<String>>,
+    pub targetnames: Option<Vec<String>>,
     /// Optional feature names
-    pub feature_names: Option<Vec<String>>,
+    pub featurenames: Option<Vec<String>>,
     /// Optional download URL
     pub url: Option<String>,
     /// Optional checksum for verification
@@ -78,12 +78,12 @@ impl DatasetRegistry {
                 n_samples: 150,
                 n_features: 4,
                 task_type: "classification".to_string(),
-                target_names: Some(vec![
+                targetnames: Some(vec![
                     "setosa".to_string(),
                     "versicolor".to_string(),
                     "virginica".to_string(),
                 ]),
-                feature_names: Some(vec![
+                featurenames: Some(vec![
                     "sepal_length".to_string(),
                     "sepal_width".to_string(),
                     "petal_length".to_string(),
@@ -98,8 +98,8 @@ impl DatasetRegistry {
                 n_samples: 506,
                 n_features: 13,
                 task_type: "regression".to_string(),
-                target_names: None,
-                feature_names: None,
+                targetnames: None,
+                featurenames: None,
                 url: None,
                 checksum: None,
             }),
@@ -109,7 +109,7 @@ impl DatasetRegistry {
                 n_samples: 1797,
                 n_features: 64,
                 task_type: "classification".to_string(),
-                target_names: Some(vec![
+                targetnames: Some(vec![
                     "0".to_string(),
                     "1".to_string(),
                     "2".to_string(),
@@ -121,7 +121,7 @@ impl DatasetRegistry {
                     "8".to_string(),
                     "9".to_string(),
                 ]),
-                feature_names: None,
+                featurenames: None,
                 url: None,
                 checksum: None,
             }),
@@ -131,12 +131,12 @@ impl DatasetRegistry {
                 n_samples: 178,
                 n_features: 13,
                 task_type: "classification".to_string(),
-                target_names: Some(vec![
+                targetnames: Some(vec![
                     "class_0".to_string(),
                     "class_1".to_string(),
                     "class_2".to_string(),
                 ]),
-                feature_names: None,
+                featurenames: None,
                 url: None,
                 checksum: None,
             }),
@@ -146,8 +146,8 @@ impl DatasetRegistry {
                 n_samples: 569,
                 n_features: 30,
                 task_type: "classification".to_string(),
-                target_names: Some(vec!["malignant".to_string(), "benign".to_string()]),
-                feature_names: None,
+                targetnames: Some(vec!["malignant".to_string(), "benign".to_string()]),
+                featurenames: None,
                 url: None,
                 checksum: None,
             }),
@@ -157,8 +157,8 @@ impl DatasetRegistry {
                 n_samples: 442,
                 n_features: 10,
                 task_type: "regression".to_string(),
-                target_names: None,
-                feature_names: None,
+                targetnames: None,
+                featurenames: None,
                 url: None,
                 checksum: None,
             }),
@@ -269,14 +269,14 @@ pub fn get_registry() -> DatasetRegistry {
 /// Load a dataset by name from the registry
 #[cfg(feature = "download")]
 #[allow(dead_code)]
-pub fn load_dataset_by_name(_name: &str, forcedownload: bool) -> Result<crate::utils::Dataset> {
+pub fn load_dataset_byname(name: &str, forcedownload: bool) -> Result<crate::utils::Dataset> {
     let registry = get_registry();
 
-    if let Some(entry) = registry.get(_name) {
+    if let Some(entry) = registry.get(name) {
         // Handle different URL schemes
         if entry.url.starts_with("builtin://") {
             // Built-in toy datasets
-            match _name {
+            match name {
                 "iris" => crate::toy::load_iris(),
                 "boston" => crate::toy::load_boston(),
                 "digits" => crate::toy::load_digits(),
@@ -285,22 +285,22 @@ pub fn load_dataset_by_name(_name: &str, forcedownload: bool) -> Result<crate::u
                 "diabetes" => crate::toy::load_diabetes(),
                 _ => Err(DatasetsError::Other(format!(
                     "Built-in dataset '{}' not implemented",
-                    _name
+                    name
                 ))),
             }
         } else if entry.url.starts_with("file://") {
             // Local file datasets
-            load_local_dataset(_name, &entry.url[7..], entry.sha256) // Remove "file://" prefix
+            load_local_dataset(name, &entry.url[7..], entry.sha256) // Remove "file://" prefix
         } else if entry.url.starts_with("http") {
             // Remote datasets (when available)
-            match _name {
+            match name {
                 "california_housing" => crate::sample::load_california_housing(force_download),
                 "electrocardiogram" => crate::time_series::electrocardiogram(),
                 "stock_market" => crate::time_series::stock_market(false),
                 "weather" => crate::time_series::weather(None),
                 _ => Err(DatasetsError::Other(format!(
                     "Remote dataset '{}' not yet implemented for loading",
-                    _name
+                    name
                 ))),
             }
         } else {
@@ -323,26 +323,26 @@ pub fn load_dataset_by_name(_name: &str, forcedownload: bool) -> Result<crate::u
 #[allow(dead_code)]
 fn load_local_dataset(
     name: &str,
-    relative_path: &str,
+    relativepath: &str,
     expected_sha256: &str,
 ) -> Result<crate::utils::Dataset> {
     use crate::loaders::{load_csv, CsvConfig};
-    use std::_path::Path;
+    use std::path::Path;
 
-    // Build absolute _path from workspace root
+    // Build absolute path from workspace root
     let workspace_root = env!("CARGO_MANIFEST_DIR");
-    let file_path = Path::new(workspace_root).join(relative_path);
+    let filepath = Path::new(workspace_root).join(relativepath);
 
-    if !file_path.exists() {
+    if !filepath.exists() {
         return Err(DatasetsError::Other(format!(
             "Local dataset file not found: {}",
-            file_path.display()
+            filepath.display()
         )));
     }
 
     // Verify SHA256 hash
     if expected_sha256 != "builtin" {
-        if let Ok(actual_hash) = crate::cache::sha256_hash_file(&file_path) {
+        if let Ok(actual_hash) = crate::cache::sha256_hash_file(&filepath) {
             if actual_hash != expected_sha256 {
                 return Err(DatasetsError::Other(format!(
                     "Hash verification failed for dataset '{}'. Expected: {}, Got: {}",
@@ -354,7 +354,7 @@ fn load_local_dataset(
 
     // Load the CSV file
     let config = CsvConfig::default().with_header(true);
-    let mut dataset = load_csv(&file_path, config)?;
+    let mut dataset = load_csv(&filepath, config)?;
 
     // Add metadata
     dataset = dataset.with_description(format!("Local dataset: {}", name));
@@ -365,7 +365,7 @@ fn load_local_dataset(
 #[cfg(not(feature = "download"))]
 /// Load a dataset by name from the registry (stub for when download feature is disabled)
 #[allow(dead_code)]
-pub fn load_dataset_by_name(_name: &str, _forcedownload: bool) -> Result<crate::utils::Dataset> {
+pub fn load_dataset_byname(name: &str, _forcedownload: bool) -> Result<crate::utils::Dataset> {
     Err(DatasetsError::Other(
         "Download feature is not enabled. Recompile with --features _download".to_string(),
     ))

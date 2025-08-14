@@ -4,7 +4,7 @@
 //! of the same size.
 
 use rustfft::FftPlanner;
-use scirs2__fft::{fft, get_global_cache, init_global_cache};
+use scirs2_fft::{fft, get_global_cache, init_global_cache};
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]

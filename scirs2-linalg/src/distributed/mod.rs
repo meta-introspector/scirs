@@ -32,10 +32,10 @@
 //! // Create a distributed matrix
 //! let matrix = Array2::from_shape_fn((1000, 1000), |(i, j)| (i + j) as f64);
 //! let config = DistributedConfig::default().with_num_nodes(4);
-//! let dist_matrix = DistributedMatrix::from_local(matrix, config)?;
+//! let distmatrix = DistributedMatrix::from_local(matrix, config)?;
 //!
 //! // Perform distributed matrix multiplication
-//! let result = dist_matrix.distributed_matmul(&dist_matrix)?;
+//! let result = distmatrix.distributed_matmul(&distmatrix)?;
 //!
 //! // Gather results back to local matrix
 //! let local_result = result.gather()?;
@@ -82,7 +82,7 @@ pub struct DistributedConfig {
     pub distribution: DistributionStrategy,
     
     /// Block size for tiled operations
-    pub block_size: usize,
+    pub blocksize: usize,
     
     /// Enable SIMD acceleration for local computations
     pub enable_simd: bool,
@@ -113,7 +113,7 @@ impl Default for DistributedConfig {
             node_rank: 0,
             backend: CommunicationBackend::InMemory,
             distribution: DistributionStrategy::RowWise,
-            block_size: 256,
+            blocksize: 256,
             enable_simd: true,
             threads_per_node: num_cpus::get(),
             comm_timeout_ms: 30000,
@@ -147,8 +147,8 @@ impl DistributedConfig {
         self
     }
     
-    pub fn with_block_size(mut self, size: usize) -> Self {
-        self.block_size = size;
+    pub fn with_blocksize(mut self, size: usize) -> Self {
+        self.blocksize = size;
         self
     }
     
@@ -204,14 +204,14 @@ impl DistributedConfig {
                 allgather_algorithm: None,
                 broadcast_algorithm: None,
                 enable_pipelining: true,
-                pipeline_chunk_size: 64 * 1024,
+                pipeline_chunksize: 64 * 1024,
                 enable_hierarchical: true,
             },
             error_handling: MPIErrorHandling::FaultTolerant,
             performance_tuning: MPIPerformanceTuning {
                 eager_threshold: 8192,
                 rendezvous_threshold: 65536,
-                max_segment_size: 1024 * 1024,
+                max_segmentsize: 1024 * 1024,
                 comm_threads: 1,
                 numa_binding: true,
                 cpu_affinity: Vec::new(),
@@ -235,7 +235,7 @@ pub struct CompressionConfig {
     pub level: u8,
     
     /// Minimum data size to compress (bytes)
-    pub min_size_bytes: usize,
+    pub minsize_bytes: usize,
 }
 
 impl Default for CompressionConfig {
@@ -244,7 +244,7 @@ impl Default for CompressionConfig {
             enabled: false,
             algorithm: CompressionAlgorithm::LZ4,
             level: 3,
-            min_size_bytes: 1024,
+            minsize_bytes: 1024,
         }
     }
 }
@@ -585,7 +585,7 @@ pub enum CheckpointStorage {
     LocalFileSystem { path: std::path::PathBuf },
     DistributedFileSystem { endpoint: String },
     ObjectStorage { bucket: String, credentials: String },
-    InMemory { max_size: usize },
+    InMemory { maxsize: usize },
 }
 
 /// Configuration for checkpointing
@@ -609,7 +609,7 @@ pub struct CheckpointMetadata {
     checkpoint_id: String,
     timestamp: std::time::Instant,
     operation_state: String,
-    data_size: usize,
+    datasize: usize,
     compression_ratio: f64,
     integrity_hash: String,
     recovery_instructions: RecoveryInstructions,
@@ -876,7 +876,7 @@ pub struct BandwidthPredictor {
 pub struct BandwidthMeasurement {
     timestamp: std::time::Instant,
     bandwidth: f64,
-    message_size: usize,
+    messagesize: usize,
     latency: f64,
     context: MeasurementContext,
 }
@@ -910,7 +910,7 @@ pub struct LinearRegressionModel {
 /// Moving average model
 #[derive(Debug)]
 pub struct MovingAverageModel {
-    window_size: usize,
+    windowsize: usize,
     weights: Vec<f64>,
 }
 
@@ -1016,7 +1016,7 @@ pub struct AggregationTimingConfig {
     /// Maximum wait time before sending
     max_wait_time: std::time::Duration,
     /// Maximum message size before sending
-    max_message_size: usize,
+    max_messagesize: usize,
     /// Maximum number of messages to aggregate
     max_message_count: usize,
     /// Adaptive timing based on network conditions
@@ -1043,7 +1043,7 @@ pub struct CompressionProfile {
     avg_decompression_speed: f64,
     cpu_usage: f64,
     memory_usage: usize,
-    optimal_data_sizes: Vec<(usize, usize)>, // (min_size, max_size)
+    optimal_datasizes: Vec<(usize, usize)>, // (minsize, maxsize)
 }
 
 /// Model for selecting compression algorithms
@@ -1091,7 +1091,7 @@ pub struct CostWeights {
 #[derive(Debug, Clone)]
 pub struct CompressionPerformanceRecord {
     algorithm: CompressionAlgorithm,
-    data_size: usize,
+    datasize: usize,
     compression_ratio: f64,
     compression_time: f64,
     decompression_time: f64,
@@ -1193,7 +1193,7 @@ pub struct ResourceModel {
 #[derive(Debug, Clone)]
 pub struct OperationPerformanceData {
     operation_id: String,
-    problem_size: usize,
+    problemsize: usize,
     num_nodes: usize,
     execution_time: f64,
     resource_usage: ResourceUsage,
@@ -1235,7 +1235,7 @@ pub struct SystemPerformanceBaseline {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PredictionKey {
     operation_type: String,
-    problem_size: usize,
+    problemsize: usize,
     num_nodes: usize,
     system_hash: u64,
 }
@@ -1295,7 +1295,7 @@ pub enum MitigationStrategyType {
 #[derive(Debug, Clone)]
 pub struct PerformanceRecommendation {
     optimal_node_count: usize,
-    recommended_block_size: usize,
+    recommended_blocksize: usize,
     suggested_distribution: DistributionStrategy,
     compression_recommendation: Option<CompressionAlgorithm>,
     priority_adjustments: Vec<PriorityAdjustment>,
@@ -1718,7 +1718,7 @@ pub struct MetricPoint {
 /// Policy for rotating metric files
 #[derive(Debug, Clone)]
 pub struct FileRotationPolicy {
-    max_file_size: usize,
+    max_filesize: usize,
     max_files: usize,
     rotation_frequency: std::time::Duration,
     compression: bool,
@@ -1772,7 +1772,7 @@ pub struct DemandDataPoint {
 pub struct DemandContext {
     workload_type: String,
     user_count: usize,
-    data_size: usize,
+    datasize: usize,
     external_factors: HashMap<String, f64>,
 }
 
@@ -2069,12 +2069,12 @@ mod tests {
         let config = DistributedConfig::default()
             .with_num_nodes(4)
             .with_node_rank(0)
-            .with_block_size(512)
+            .with_blocksize(512)
             .with_simd(true);
             
         assert_eq!(config.num_nodes, 4);
         assert_eq!(config.node_rank, 0);
-        assert_eq!(config.block_size, 512);
+        assert_eq!(config.blocksize, 512);
         assert!(config.enable_simd);
     }
     

@@ -31,21 +31,21 @@ pub trait ProposalDistribution: Send + Sync {
 #[derive(Debug, Clone)]
 pub struct RandomWalkProposal {
     /// Step size (standard deviation)
-    pub step_size: f64,
+    pub stepsize: f64,
 }
 
 impl RandomWalkProposal {
     /// Create a new random walk proposal
     pub fn new(stepsize: f64) -> Result<Self> {
         check_positive(stepsize, "stepsize")?;
-        Ok(Self { step_size: stepsize })
+        Ok(Self { stepsize })
     }
 }
 
 impl ProposalDistribution for RandomWalkProposal {
     fn sample<R: rand::Rng + ?Sized>(&self, current: &Array1<f64>, rng: &mut R) -> Array1<f64> {
         use rand_distr::Normal;
-        let normal = Normal::new(0.0, self.step_size).unwrap();
+        let normal = Normal::new(0.0, self.stepsize).unwrap();
         current + Array1::from_shape_fn(current.len(), |_| normal.sample(rng))
     }
 }
@@ -173,9 +173,9 @@ pub struct AdaptiveMetropolisHastings<T: TargetDistribution> {
     /// Adaptation rate
     pub adaptation_rate: f64,
     /// Minimum step size
-    pub min_step_size: f64,
+    pub min_stepsize: f64,
     /// Maximum step size
-    pub max_step_size: f64,
+    pub max_stepsize: f64,
 }
 
 impl<T: TargetDistribution> AdaptiveMetropolisHastings<T> {
@@ -183,21 +183,21 @@ impl<T: TargetDistribution> AdaptiveMetropolisHastings<T> {
     pub fn new(
         target: T,
         initial: Array1<f64>,
-        initial_step_size: f64,
+        initial_stepsize: f64,
         target_rate: f64,
     ) -> Result<Self> {
         check_probability(target_rate, "target_rate")?;
-        check_positive(initial_step_size, "initial_step_size")?;
+        check_positive(initial_stepsize, "initial_stepsize")?;
 
-        let proposal = RandomWalkProposal::new(initial_step_size)?;
+        let proposal = RandomWalkProposal::new(initial_stepsize)?;
         let sampler = MetropolisHastings::new(target, proposal, initial)?;
 
         Ok(Self {
             sampler,
             target_rate,
             adaptation_rate: 0.05,
-            min_step_size: 1e-6,
-            max_step_size: 10.0,
+            min_stepsize: 1e-6,
+            max_stepsize: 10.0,
         })
     }
 
@@ -210,11 +210,11 @@ impl<T: TargetDistribution> AdaptiveMetropolisHastings<T> {
             let current_rate = self.sampler.acceptance_rate();
             let adjustment = 1.0 + self.adaptation_rate * (current_rate - self.target_rate);
 
-            let new_step_size = (self.sampler.proposal.step_size * adjustment)
-                .max(self.min_step_size)
-                .min(self.max_step_size);
+            let new_stepsize = (self.sampler.proposal.stepsize * adjustment)
+                .max(self.min_stepsize)
+                .min(self.max_stepsize);
 
-            self.sampler.proposal.step_size = new_step_size;
+            self.sampler.proposal.stepsize = new_stepsize;
         }
 
         sample

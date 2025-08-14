@@ -2616,8 +2616,8 @@ pub mod advanced_ensemble {
 
     fn calculate_advanced_meta_feature(_data: &Array2<f64>, featureidx: usize) -> f64 {
         match feature_idx {
-            0 => data.mean().unwrap_or(0.0),          // Overall mean
-            1 => data.std(0.0),                       // Overall std
+            0 => data.mean().unwrap_or(0.0),           // Overall mean
+            1 => data.std(0.0),                        // Overall std
             2 => calculate_skewness(_data),            // Skewness
             3 => calculate_kurtosis(_data),            // Kurtosis
             4 => calculate_outlier_ratio(_data),       // Outlier ratio

@@ -107,7 +107,7 @@ where
     }
 
     // Preprocess x and y
-    let (x_processed, y_mean, x_mean, x_std) = preprocess_data(x, y, fit_intercept, normalize)?;
+    let (x_processed, y_mean, x_mean, x_std) = preprocessdata(x, y, fit_intercept, normalize)?;
 
     // Total number of coefficients (including _intercept if fitted)
     let p = if fit_intercept {
@@ -127,8 +127,8 @@ where
     // We solve the linear system [X; sqrt(alpha)I] beta = [y; 0]
 
     // Create the regularization matrix sqrt(alpha)I
-    let ridge_size = if fit_intercept { p_features } else { p };
-    let mut x_ridge = Array2::zeros((n + ridge_size, p));
+    let ridgesize = if fit_intercept { p_features } else { p };
+    let mut x_ridge = Array2::zeros((n + ridgesize, p));
 
     // Copy X to the top part of the augmented matrix
     for i in 0..n {
@@ -139,13 +139,13 @@ where
 
     // Add sqrt(alpha)I to the bottom part
     let sqrt_alpha = num_traits::Float::sqrt(alpha);
-    for i in 0..ridge_size {
+    for i in 0..ridgesize {
         let j = if fit_intercept { i + 1 } else { i }; // Skip _intercept if present
         x_ridge[[n + i, j]] = sqrt_alpha;
     }
 
     // Create the augmented target vector [y; 0]
-    let mut y_ridge = Array1::zeros(n + ridge_size);
+    let mut y_ridge = Array1::zeros(n + ridgesize);
     for i in 0..n {
         y_ridge[i] = y[i];
     }
@@ -280,7 +280,7 @@ where
 
 /// Preprocess data for regularized regression
 #[allow(dead_code)]
-fn preprocess_data<F>(
+fn preprocessdata<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
     fit_intercept: bool,
@@ -557,7 +557,7 @@ where
     }
 
     // Preprocess x and y
-    let (x_processed, y_mean, x_mean, x_std) = preprocess_data(x, y, fit_intercept, normalize)?;
+    let (x_processed, y_mean, x_mean, x_std) = preprocessdata(x, y, fit_intercept, normalize)?;
 
     // Total number of coefficients (including _intercept if fitted)
     let p = if fit_intercept {
@@ -954,7 +954,7 @@ where
     }
 
     // Preprocess x and y
-    let (x_processed, y_mean, x_mean, x_std) = preprocess_data(x, y, fit_intercept, normalize)?;
+    let (x_processed, y_mean, x_mean, x_std) = preprocessdata(x, y, fit_intercept, normalize)?;
 
     // Total number of coefficients (including _intercept if fitted)
     let p = if fit_intercept {
@@ -1341,7 +1341,7 @@ where
     }
 
     // Preprocess x and y
-    let (x_processed, y_mean, x_mean, x_std) = preprocess_data(x, y, fit_intercept, normalize)?;
+    let (x_processed, y_mean, x_mean, x_std) = preprocessdata(x, y, fit_intercept, normalize)?;
 
     // Total number of coefficients (including _intercept if fitted)
     let p = if fit_intercept {
@@ -1517,8 +1517,8 @@ where
     }
 
     for &g in &nonzero_groups {
-        let group_size = groups.iter().filter(|&&group| group == g).count();
-        nonzero_coefs += group_size;
+        let groupsize = groups.iter().filter(|&&group| group == g).count();
+        nonzero_coefs += groupsize;
     }
 
     if fit_intercept

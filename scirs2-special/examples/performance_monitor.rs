@@ -38,7 +38,7 @@ impl PerformanceMonitor {
         }
     }
 
-    fn benchmark_function<F>(&mut self, name: &str, _inputsize: usize, mut f: F)
+    fn benchmark_function<F>(&mut self, name: &str, inputsize: usize, mut f: F)
     where
         F: FnMut() -> f64,
     {
@@ -103,11 +103,11 @@ impl PerformanceMonitor {
         F: FnMut(&Array1<f64>) -> Array1<f64>,
     {
         println!(
-            "Benchmarking {} with array _size {}: {} iterations...",
-            name, array_size, self.measurement_iterations
+            "Benchmarking {} with array size {}: {} iterations...",
+            name, arraysize, self.measurement_iterations
         );
 
-        let input_array = Array1::linspace(0.1, 10.0, array_size);
+        let input_array = Array1::linspace(0.1, 10.0, arraysize);
 
         // Warmup
         for _ in 0..self.warmup_iterations {
@@ -138,10 +138,10 @@ impl PerformanceMonitor {
         let std_dev_ns = variance.sqrt();
         let min_time_ns = times.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max_time_ns = times.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let throughput_elements_per_sec = (array_size as f64) * 1_000_000_000.0 / mean_time_ns;
+        let throughput_elements_per_sec = (arraysize as f64) * 1_000_000_000.0 / mean_time_ns;
 
         let result = BenchmarkResult {
-            function_name: format!("{}_{}_elements", name, array_size),
+            function_name: format!("{}_{}_elements", name, arraysize),
             mean_time_ns,
             std_dev_ns,
             min_time_ns,
@@ -302,9 +302,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Benchmark array operations
     println!("\n📈 Benchmarking array operations...");
 
-    let array_sizes = vec![100, 1000, 10000];
+    let arraysizes = vec![100, 1000, 10000];
 
-    for &size in &array_sizes {
+    for &size in &arraysizes {
         monitor.benchmark_array_function("gamma", size, |arr| arr.mapv(|x| gamma(x)));
 
         monitor.benchmark_array_function("bessel_j0", size, |arr| arr.mapv(|x| j0(x)));

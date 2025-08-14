@@ -797,9 +797,9 @@ pub fn validate_parallel_filtering_accuracy(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::f64::consts::PI;
-    use num_complex::Complex64;
     use approx::assert_relative_eq;
+    use num_complex::Complex64;
+    use std::f64::consts::PI;
     #[test]
     fn test_parallel_multirate_filter_bank() {
         // Create simple 2-band filter bank

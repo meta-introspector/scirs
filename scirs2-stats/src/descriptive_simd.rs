@@ -80,7 +80,7 @@ where
 {
     let n = x.len();
     if n <= ddof {
-        return Err(ErrorMessages::insufficient_data(
+        return Err(ErrorMessages::insufficientdata(
             "variance calculation",
             ddof + 1,
             n,

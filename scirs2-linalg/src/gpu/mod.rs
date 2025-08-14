@@ -63,17 +63,17 @@ pub struct GpuDeviceInfo {
     /// Whether the device supports half precision
     pub supports_fp16: bool,
     /// Maximum work group size
-    pub max_work_group_size: usize,
+    pub max_work_groupsize: usize,
     /// Memory bandwidth in GB/s
     pub memory_bandwidth: f64,
     /// L2 cache size in bytes
-    pub l2_cache_size: usize,
+    pub l2_cachesize: usize,
     /// Shared memory per work group in bytes
     pub shared_memory_per_block: usize,
     /// Number of registers per work group
     pub registers_per_block: u32,
     /// Warp/wavefront size
-    pub warp_size: u32,
+    pub warpsize: u32,
     /// Maximum number of threads per multiprocessor
     pub max_threads_per_mp: u32,
     /// Number of multiprocessors
@@ -98,7 +98,7 @@ pub struct GpuPerformanceProfile {
     /// Compute efficiency (0.0 to 1.0)
     pub compute_efficiency: f64,
     /// Optimal work group sizes for different operations
-    pub optimal_work_group_sizes: std::collections::HashMap<GpuOperation, usize>,
+    pub optimal_work_groupsizes: std::collections::HashMap<GpuOperation, usize>,
     /// Thread occupancy targets
     pub target_occupancy: f64,
 }
@@ -150,9 +150,9 @@ pub enum GpuPrecisionMode {
 #[derive(Debug, Clone)]
 pub struct GpuAccelerationStrategy {
     /// Minimum matrix size for GPU acceleration
-    pub min_size_threshold: usize,
+    pub minsize_threshold: usize,
     /// Maximum matrix size for single GPU
-    pub max_single_gpu_size: usize,
+    pub max_single_gpusize: usize,
     /// Preferred memory strategy
     pub memory_strategy: GpuMemoryStrategy,
     /// Preferred precision mode
@@ -170,8 +170,8 @@ pub struct GpuAccelerationStrategy {
 impl Default for GpuAccelerationStrategy {
     fn default() -> Self {
         Self {
-            min_size_threshold: 512,
-            max_single_gpu_size: 50000,
+            minsize_threshold: 512,
+            max_single_gpusize: 50000,
             memory_strategy: GpuMemoryStrategy::Adaptive,
             precision_mode: GpuPrecisionMode::Double,
             multi_gpu_enabled: true,
@@ -354,14 +354,14 @@ impl GpuManager {
     pub fn recommend_gpu_usage(
         &self,
         operation: GpuOperation,
-        matrix_size: usize,
-        data_type_size: usize,
+        matrixsize: usize,
+        data_typesize: usize,
     ) -> GpuRecommendation {
-        let total_elements = matrix_size * matrix_size;
-        let memory_required = total_elements * data_type_size;
+        let total_elements = matrixsize * matrixsize;
+        let memory_required = total_elements * data_typesize;
 
         // Check if matrix is large enough for GPU acceleration
-        if matrix_size < self.strategy.min_size_threshold {
+        if matrixsize < self.strategy.minsize_threshold {
             return GpuRecommendation::UseCpu {
                 reason: "Matrix too small for GPU acceleration".to_string(),
             };
@@ -385,7 +385,7 @@ impl GpuManager {
         // Select best device based on operation type and performance
         let best_device = self.select_best_device(&suitable_devices, operation);
 
-        if matrix_size > self.strategy.max_single_gpu_size && self.strategy.multi_gpu_enabled {
+        if matrixsize > self.strategy.max_single_gpusize && self.strategy.multi_gpu_enabled {
             GpuRecommendation::UseMultiGpu {
                 devices: suitable_devices,
                 primary_device: best_device,

@@ -146,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn test_convert_empty_arrays() {
+    fn test_convert_emptyarrays() {
         let arr_f64 = Array1::<f64>::zeros(0);
         let arr_f32 = convert::<f64, f32>(&arr_f64.view());
         assert_eq!(arr_f32.len(), 0);

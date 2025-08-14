@@ -328,7 +328,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterGroup<A, D> {
     /// Create a new parameter group
     pub fn new(id: usize, params: Vec<Array<A, D>>, config: ParameterGroupConfig<A>) -> Self {
         Self {
-            id: id,
+            id,
             params,
             config,
             state: HashMap::new(),
@@ -803,8 +803,7 @@ pub mod checkpointing {
                         OptimError::InvalidConfig("Invalid step format".to_string())
                     })?;
                 } else if line.starts_with("# Optimizer Version: ") {
-                    optimizerversion =
-                        line.trim_start_matches("# Optimizer Version: ").to_string();
+                    optimizerversion = line.trim_start_matches("# Optimizer Version: ").to_string();
                 } else if line.starts_with("# Timestamp: ") {
                     timestamp = line.trim_start_matches("# Timestamp: ").to_string();
                 } else if line.starts_with("[METADATA]") {
@@ -1133,7 +1132,7 @@ pub mod checkpointing {
         pub fn with_max_checkpoints(_maxcheckpoints: usize) -> Self {
             Self {
                 checkpoints: HashMap::new(),
-                _maxcheckpoints: _maxcheckpoints,
+                _maxcheckpoints,
                 checkpoint_keys: Vec::new(),
             }
         }

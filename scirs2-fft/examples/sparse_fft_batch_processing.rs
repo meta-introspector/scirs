@@ -1,10 +1,10 @@
 use rand::Rng;
-use scirs2__fft::sparse_fft::SparseFFTAlgorithm;
+use scirs2_fft::sparse_fft::SparseFFTAlgorithm;
 /// Batch Processing Example for Sparse FFT
 ///
 /// This example demonstrates the batch processing capabilities for sparse FFT,
 /// which can significantly improve performance when processing multiple signals.
-use scirs2__fft::{
+use scirs2_fft::{
     batch_sparse_fft, gpu_batch_sparse_fft, spectral_flatness_batch_sparse_fft, BatchConfig,
     GPUBackend, WindowFunction,
 };
@@ -26,7 +26,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 
 // Helper to add noise to signals
 #[allow(dead_code)]
-fn add_noise(_signal: &[f64], noiselevel: f64) -> Vec<f64> {
+fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
     let mut rng = rand::rng();
     _signal
         .iter()

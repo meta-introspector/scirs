@@ -204,7 +204,7 @@ impl ColumnTransformer {
     pub fn new(remainder: RemainderOption) -> Self {
         ColumnTransformer {
             transformers: Vec::new(),
-            remainder: remainder,
+            remainder,
             fitted: false,
         }
     }

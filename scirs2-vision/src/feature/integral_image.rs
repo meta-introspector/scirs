@@ -166,13 +166,7 @@ pub fn compute_tilted_integral_image(img: &DynamicImage) -> Result<Array2<u64>> 
 ///
 /// * Sum of pixel values in the rectangle
 #[allow(dead_code)]
-pub fn compute_rect_sum(
-    integral: &Array2<u64>,
-    x1: usize,
-    y1: usize,
-    x2: usize,
-    y2: usize,
-) -> u64 {
+pub fn compute_rect_sum(integral: &Array2<u64>, x1: usize, y1: usize, x2: usize, y2: usize) -> u64 {
     let (height, width) = integral.dim();
 
     // Clamp coordinates

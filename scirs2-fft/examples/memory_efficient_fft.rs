@@ -4,8 +4,8 @@
 //! for handling large arrays.
 
 use ndarray::array;
-use num__complex::Complex64;
-use scirs2__fft::{
+use num_complex::Complex64;
+use scirs2_fft::{
     fft,
     memory_efficient::{fft2_efficient, fft_inplace, fft_streaming, process_in_chunks, FftMode},
 };

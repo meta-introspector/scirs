@@ -571,9 +571,7 @@ impl WorkStealingPool {
                 #[cfg(target_os = "linux")]
                 {
                     if let Err(e) = Self::set_numa_affinity_linux(numa_node) {
-                        eprintln!(
-                            "Warning: Failed to set NUMA affinity for node {numa_node}: {e}"
-                        );
+                        eprintln!("Warning: Failed to set NUMA affinity for node {numa_node}: {e}");
                     }
                 }
                 #[cfg(target_os = "windows")]

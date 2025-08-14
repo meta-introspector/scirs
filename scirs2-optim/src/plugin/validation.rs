@@ -282,7 +282,7 @@ impl<A: Float + std::fmt::Debug> ThreadSafetyTestSuite<A> {
     /// Create a new thread safety test suite
     pub fn new(config: ValidationConfig) -> Self {
         Self {
-            config: config,
+            config,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -339,7 +339,7 @@ impl<A: Float + std::fmt::Debug> MemoryTestSuite<A> {
     /// Create a new memory test suite
     pub fn new(config: ValidationConfig) -> Self {
         Self {
-            config: config,
+            config,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -396,7 +396,7 @@ impl<A: Float + std::fmt::Debug> ConvergenceTestSuite<A> {
     /// Create a new convergence test suite
     pub fn new(config: ValidationConfig) -> Self {
         Self {
-            config: config,
+            config,
             test_problems: Vec::new(),
         }
     }

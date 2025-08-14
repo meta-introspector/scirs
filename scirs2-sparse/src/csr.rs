@@ -154,7 +154,7 @@ where
             rows,
             cols,
             indptr,
-            indices: indices,
+            indices,
             data: data_out,
         })
     }

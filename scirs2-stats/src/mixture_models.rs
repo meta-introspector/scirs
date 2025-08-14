@@ -194,7 +194,7 @@ pub struct ModelSelectionCriteria<F> {
 #[derive(Debug, Clone)]
 pub struct ComponentDiagnostics<F> {
     /// Effective sample size
-    pub effective_sample_size: F,
+    pub effective_samplesize: F,
     /// Condition number of covariance
     pub condition_number: F,
     /// Determinant of covariance
@@ -348,7 +348,7 @@ where
             },
             component_diagnostics: vec![
                 ComponentDiagnostics {
-                    effective_sample_size: F::zero(),
+                    effective_samplesize: F::zero(),
                     condition_number: F::one(),
                     covariance_determinant: F::one(),
                     component_separation: F::zero(),
@@ -794,7 +794,7 @@ pub struct KernelDensityEstimator<F> {
     /// Configuration
     pub config: KDEConfig,
     /// Training data
-    pub training_data: Option<Array2<F>>,
+    pub trainingdata: Option<Array2<F>>,
     _phantom: PhantomData<F>,
 }
 
@@ -864,10 +864,10 @@ where
     /// Create new KDE
     pub fn new(kernel: KernelType, bandwidth: F, config: KDEConfig) -> Self {
         Self {
-            kernel: kernel,
+            kernel,
             bandwidth,
             config,
-            training_data: None,
+            trainingdata: None,
             _phantom: PhantomData,
         }
     }
@@ -887,7 +887,7 @@ where
             self.bandwidth = self.select_bandwidth_scalar(data)?;
         }
 
-        self.training_data = Some(data.to_owned());
+        self.trainingdata = Some(data.to_owned());
         Ok(())
     }
 
@@ -933,22 +933,22 @@ where
 
     /// Evaluate density at given points
     pub fn score_samples(&self, points: &ArrayView2<F>) -> StatsResult<Array1<F>> {
-        let training_data = self.training_data.as_ref().ok_or_else(|| {
+        let trainingdata = self.trainingdata.as_ref().ok_or_else(|| {
             StatsError::InvalidArgument("KDE must be fitted before evaluation".to_string())
         })?;
 
         checkarray_finite(points, "points")?;
 
-        if points.ncols() != training_data.ncols() {
+        if points.ncols() != trainingdata.ncols() {
             return Err(StatsError::DimensionMismatch(format!(
                 "Points dimension ({}) must match training data dimension ({})",
                 points.ncols(),
-                training_data.ncols()
+                trainingdata.ncols()
             )));
         }
 
         let n_points = points.nrows();
-        let n_train = training_data.nrows();
+        let n_train = trainingdata.nrows();
         let mut densities = Array1::zeros(n_points);
 
         for i in 0..n_points {
@@ -956,7 +956,7 @@ where
             let mut density = F::zero();
 
             for j in 0..n_train {
-                let train_point = training_data.row(j);
+                let train_point = trainingdata.row(j);
                 let distance = self.compute_distance(&point, &train_point);
                 let bandwidth_val = self.bandwidth;
                 let kernel_value = self.evaluate_kernel(distance / bandwidth_val);
@@ -966,7 +966,7 @@ where
             // Normalize
             let bandwidth_val = self.bandwidth;
             let normalization = F::from(n_train as f64).unwrap()
-                * bandwidth_val.powf(F::from(training_data.ncols()).unwrap());
+                * bandwidth_val.powf(F::from(trainingdata.ncols()).unwrap());
             densities[i] = density / normalization;
         }
 
@@ -1179,80 +1179,86 @@ where
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&GMMParameters<F>> {
         // First fit the regular GMM
         self.gmm.fit(data)?;
-        
+
         // Compute outlier scores for robust EM
         let outlier_scores = self.compute_outlier_scores(data)?;
-        
+
         // Update parameters with outlier scores
         if let Some(ref mut params) = self.gmm.parameters {
             params.outlier_scores = Some(outlier_scores);
         }
-        
+
         Ok(self.gmm.parameters.as_ref().unwrap())
     }
-    
+
     /// Compute outlier scores based on negative log-likelihood
     fn compute_outlier_scores(&self, data: &ArrayView2<F>) -> StatsResult<Array1<F>> {
-        let params = self.gmm.parameters.as_ref().ok_or_else(|| {
-            StatsError::InvalidArgument("Model must be fitted first".to_string())
-        })?;
-        
+        let params =
+            self.gmm.parameters.as_ref().ok_or_else(|| {
+                StatsError::InvalidArgument("Model must be fitted first".to_string())
+            })?;
+
         let (n_samples, _) = data.dim();
         let mut outlier_scores = Array1::zeros(n_samples);
-        
+
         for (i, sample) in data.rows().into_iter().enumerate() {
             // Compute log-likelihood for this sample under the fitted model
             let mut log_likelihood = F::neg_infinity();
-            
+
             for j in 0..self.gmm.n_components {
                 let weight = params.weights[j];
                 let mean = params.means.row(j);
                 let cov = &params.covariances[j];
-                
+
                 // Compute log probability density for this component
                 let log_prob = self.log_multivariate_normal_pdf(&sample, &mean, cov)?;
                 let weighted_log_prob = weight.ln() + log_prob;
-                
+
                 // Log-sum-exp to combine components
                 if log_likelihood == F::neg_infinity() {
                     log_likelihood = weighted_log_prob;
                 } else {
-                    log_likelihood = log_likelihood + (weighted_log_prob - log_likelihood).exp().ln_1p();
+                    log_likelihood =
+                        log_likelihood + (weighted_log_prob - log_likelihood).exp().ln_1p();
                 }
             }
-            
+
             // Outlier score is negative log-likelihood (higher = more outlier-like)
             outlier_scores[i] = -log_likelihood;
         }
-        
+
         Ok(outlier_scores)
     }
-    
+
     /// Compute log probability density function for multivariate normal distribution
     fn log_multivariate_normal_pdf(
-        &self, 
-        x: &ArrayView1<F>, 
-        mean: &ArrayView1<F>, 
-        cov: &Array2<F>
+        &self,
+        x: &ArrayView1<F>,
+        mean: &ArrayView1<F>,
+        cov: &Array2<F>,
     ) -> StatsResult<F> {
         let diff = x - mean;
         let k = F::from(x.len()).unwrap();
-        
+
         // Simple case: assume diagonal covariance for numerical stability
         let mut log_prob = F::zero();
         let pi = F::from(std::f64::consts::PI).unwrap();
-        
+
         for i in 0..x.len() {
             let variance = cov[[i, i]];
             if variance <= F::zero() {
-                return Err(StatsError::ComputationError("Invalid covariance".to_string()));
+                return Err(StatsError::ComputationError(
+                    "Invalid covariance".to_string(),
+                ));
             }
-            
+
             let term = diff[i] * diff[i] / variance;
-            log_prob = log_prob - (F::from(0.5).unwrap() * term) - (F::from(0.5).unwrap() * variance.ln()) 
-                      - (F::from(0.5).unwrap() * (F::from(2.0).unwrap() * pi).ln());
+            log_prob = log_prob
+                - (F::from(0.5).unwrap() * term)
+                - (F::from(0.5).unwrap() * variance.ln())
+                - (F::from(0.5).unwrap() * (F::from(2.0).unwrap() * pi).ln());
         }
-        
+
         Ok(log_prob)
     }
 
@@ -1341,7 +1347,7 @@ where
 
     /// Update model with new batch of data
     pub fn partial_fit(&mut self, batch: &ArrayView2<F>) -> StatsResult<()> {
-        let batch_size = batch.nrows();
+        let batchsize = batch.nrows();
 
         if self.n_samples_seen == 0 {
             // Initialize with first batch
@@ -1355,7 +1361,7 @@ where
             self.online_update(batch)?;
         }
 
-        self.n_samples_seen += batch_size;
+        self.n_samples_seen += batchsize;
         Ok(())
     }
 
@@ -1458,15 +1464,15 @@ where
         + ndarray::ScalarOperand,
 {
     let (n_samples_, _) = data.dim();
-    let fold_size = n_samples_ / n_folds;
+    let foldsize = n_samples_ / n_folds;
     let mut cv_scores = Vec::with_capacity(n_folds);
 
     for fold in 0..n_folds {
-        let val_start = fold * fold_size;
+        let val_start = fold * foldsize;
         let val_end = if fold == n_folds - 1 {
             n_samples_
         } else {
-            (fold + 1) * fold_size
+            (fold + 1) * foldsize
         };
 
         // Create training and validation sets
@@ -1477,19 +1483,19 @@ where
             }
         }
 
-        let train_data = Array2::from_shape_fn((train_indices.len(), data.ncols()), |(i, j)| {
+        let traindata = Array2::from_shape_fn((train_indices.len(), data.ncols()), |(i, j)| {
             data[[train_indices[i], j]]
         });
 
-        let val_data = data.slice(ndarray::s![val_start..val_end, ..]);
+        let valdata = data.slice(ndarray::s![val_start..val_end, ..]);
 
         // Fit model on training data
         let mut gmm = GaussianMixtureModel::new(n_components, config.clone())?;
-        let params = gmm.fit(&train_data.view())?.clone();
+        let params = gmm.fit(&traindata.view())?.clone();
 
         // Evaluate on validation data
         let val_likelihood = gmm.compute_log_likelihood(
-            &val_data,
+            &valdata,
             &params.weights,
             &params.means,
             &params.covariances,

@@ -170,7 +170,7 @@ fn wright_bessel_complex_asymptotic(
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::wright_bessel;
+/// use scirs2_special::wright_bessel;
 ///
 /// // Wright Bessel function with rho=1, beta=1 at z=1
 /// // This equals J_0(2) where J_0 is the ordinary Bessel function

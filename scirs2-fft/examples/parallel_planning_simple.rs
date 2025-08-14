@@ -3,8 +3,8 @@
 // This is a simplified example showing how to use the parallel planning features
 // to create and execute FFT plans in parallel.
 
-use num__complex::Complex64;
-use scirs2__fft::{ParallelExecutor, ParallelPlanner, ParallelPlanningConfig};
+use num_complex::Complex64;
+use scirs2_fft::{ParallelExecutor, ParallelPlanner, ParallelPlanningConfig};
 use std::time::Instant;
 
 #[allow(dead_code)]

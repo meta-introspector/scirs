@@ -331,7 +331,7 @@ pub trait ParallelInterpolator<T: InterpolationFloat>: Interpolator<T> + Sync + 
     }
 
     /// Get the recommended number of threads for this interpolator
-    fn recommended_thread_count(&self, querysize: usize) -> usize {
+    fn recommended_thread_count(&self, query_size: usize) -> usize {
         (query_size / 1000).max(1).min(num_cpus::get())
     }
 }

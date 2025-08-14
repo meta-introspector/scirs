@@ -51,7 +51,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
 
         match RandUniform::new_inclusive(low_f64, high_f64) {
             Ok(rand_distr) => Ok(Uniform {
-                low: low,
+                low,
                 high,
                 rand_distr,
             }),

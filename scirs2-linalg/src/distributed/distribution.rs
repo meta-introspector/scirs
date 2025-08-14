@@ -38,7 +38,7 @@ pub struct DataDistribution {
     /// Mapping of global indices to owning nodes
     pub index_map: HashMap<(usize, usize), usize>,
     /// Block size for block-based distributions
-    pub block_size: (usize, usize),
+    pub blocksize: (usize, usize),
 }
 
 /// Range of indices owned by a node
@@ -136,7 +136,7 @@ impl DataDistribution {
             localshape,
             owned_indices,
             index_map,
-            block_size: (1, global_cols),
+            blocksize: (1, global_cols),
         })
     }
     
@@ -195,7 +195,7 @@ impl DataDistribution {
             localshape,
             owned_indices,
             index_map,
-            block_size: (global_rows, 1),
+            blocksize: (global_rows, 1),
         })
     }
     
@@ -204,10 +204,10 @@ impl DataDistribution {
         globalshape: (usize, usize),
         num_nodes: usize,
         node_rank: usize,
-        block_size: (usize, usize),
+        blocksize: (usize, usize),
     ) -> LinalgResult<Self> {
         let (global_rows, global_cols) = globalshape;
-        let (block_rows, block_cols) = block_size;
+        let (block_rows, block_cols) = blocksize;
         
         // Calculate grid dimensions
         let grid_rows = (global_rows + block_rows - 1) / block_rows;
@@ -281,7 +281,7 @@ impl DataDistribution {
             localshape,
             owned_indices,
             index_map,
-            block_size,
+            blocksize,
         })
     }
     
@@ -505,9 +505,9 @@ impl MatrixPartitioner {
         
         // Extract local partition
         let IndexRange { rows, columns } = &distribution.owned_indices;
-        let local_matrix = matrix.slice(ndarray::s![rows.0..rows.1, columns.0..columns.1]);
+        let localmatrix = matrix.slice(ndarray::s![rows.0..rows.1, columns.0..columns.1]);
         
-        Ok(local_matrix.to_owned())
+        Ok(localmatrix.to_owned())
     }
     
     /// Reconstruct global matrix from distributed partitions
@@ -518,13 +518,13 @@ impl MatrixPartitioner {
     where
         T: Clone + Default,
     {
-        let mut global_matrix = Array2::default(distribution.globalshape);
+        let mut globalmatrix = Array2::default(distribution.globalshape);
         
         // Place each partition in the correct location
         for (&node_rank, partition) in partitions {
             // Find this node's index range (simplified)
             if let Some(range) = Self::get_node_range(node_rank, distribution) {
-                let target_slice = global_matrix.slice_mut(ndarray::s![
+                let target_slice = globalmatrix.slice_mut(ndarray::s![
                     range.rows.0..range.rows.1,
                     range.columns.0..range.columns.1
                 ]);
@@ -536,7 +536,7 @@ impl MatrixPartitioner {
             }
         }
         
-        Ok(global_matrix)
+        Ok(globalmatrix)
     }
     
     /// Get index range for a specific node (helper method)
@@ -610,7 +610,7 @@ mod tests {
     }
     
     #[test]
-    fn test_matrix_partitioner() {
+    fn testmatrix_partitioner() {
         let matrix = Array2::from_shape_fn((10, 8), |(i, j)| (i * 8 + j) as f64);
         let distribution = DataDistribution::row_wise((10, 8), 2, 0).unwrap();
         

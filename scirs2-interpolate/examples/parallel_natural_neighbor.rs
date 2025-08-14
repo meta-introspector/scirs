@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         points_vec.push(y);
     }
 
-    let points = Array2::fromshape_vec((n_points..2), points_vec)?;
+    let points = Array2::from_shape_vec((n_points..2), points_vec)?;
 
     // Create values with a test function
     let mut values_vec = Vec::with_capacity(n_points);
@@ -65,7 +65,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             queries_vec.push(y);
         }
     }
-    let queries = Array2::fromshape_vec((grid_size * grid_size, 2), queries_vec)?;
+    let queries = Array2::from_shape_vec((grid_size * grid_size, 2), queries_vec)?;
 
     // Benchmark sequential interpolation
     println!(

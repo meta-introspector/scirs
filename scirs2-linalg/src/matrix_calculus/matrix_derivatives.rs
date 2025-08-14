@@ -874,7 +874,7 @@ pub mod differential_operators {
         use approx::assert_abs_diff_eq;
 
         #[test]
-        fn test_matrix_divergence() {
+        fn testmatrix_divergence() {
             // Create a simple 2x2 matrix field with 5 spatial points
             let mut field = Array3::zeros((2, 2, 5));
 
@@ -895,7 +895,7 @@ pub mod differential_operators {
         }
 
         #[test]
-        fn test_matrix_laplacian() {
+        fn testmatrix_laplacian() {
             // Create a quadratic field
             let mut field = Array3::zeros((2, 2, 5));
 
@@ -913,7 +913,7 @@ pub mod differential_operators {
         }
 
         #[test]
-        fn test_matrix_gradient() {
+        fn testmatrix_gradient() {
             // Create a linear field
             let mut field = Array3::zeros((2, 2, 5));
 

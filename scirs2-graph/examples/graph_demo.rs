@@ -1,8 +1,8 @@
 //! Comprehensive example demonstrating scirs2-graph capabilities
 
-use scirs2__graph::algorithms::*;
-use scirs2__graph::generators::*;
-use scirs2__graph::Hypergraph;
+use scirs2_graph::algorithms::*;
+use scirs2_graph::generators::*;
+use scirs2_graph::Hypergraph;
 
 #[allow(dead_code)]
 fn main() {

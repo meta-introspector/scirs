@@ -22,9 +22,9 @@ pub struct AdaptiveSimdConfig {
     /// Enable performance profiling for optimization selection
     pub enable_profiling: bool,
     /// Minimum data size for SIMD optimization
-    pub min_simd_size: usize,
+    pub min_simdsize: usize,
     /// Performance cache size
-    pub cache_size: usize,
+    pub cachesize: usize,
     /// Benchmarking sample size for algorithm selection
     pub benchmark_samples: usize,
     /// Enable hybrid CPU-GPU processing
@@ -44,8 +44,8 @@ impl Default for AdaptiveSimdConfig {
         Self {
             auto_detect_hardware: true,
             enable_profiling: true,
-            min_simd_size: 64,
-            cache_size: 1000,
+            min_simdsize: 64,
+            cachesize: 1000,
             benchmark_samples: 10,
             enable_hybrid_processing: false,
             alignment_requirements: SimdAlignment::Optimal,
@@ -132,13 +132,13 @@ pub enum SimdInstructionSet {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheHierarchy {
     /// L1 cache size (bytes)
-    pub l1_size: usize,
+    pub l1size: usize,
     /// L2 cache size (bytes)
-    pub l2_size: usize,
+    pub l2size: usize,
     /// L3 cache size (bytes)
-    pub l3_size: usize,
+    pub l3size: usize,
     /// Cache line size (bytes)
-    pub cache_line_size: usize,
+    pub cache_linesize: usize,
     /// Cache associativity
     pub associativity: Vec<usize>,
 }
@@ -204,9 +204,9 @@ pub enum MemoryAccessPattern {
     /// Random access
     Random,
     /// Blocked access
-    Blocked { block_size: usize },
+    Blocked { blocksize: usize },
     /// Tiled access
-    Tiled { tile_size: (usize, usize) },
+    Tiled { tilesize: (usize, usize) },
 }
 
 /// Alignment strategies
@@ -284,7 +284,7 @@ pub struct DataCharacteristics {
     /// Data size
     pub size: usize,
     /// Data type size (bytes)
-    pub element_size: usize,
+    pub elementsize: usize,
     /// Memory alignment
     pub alignment: usize,
     /// Access pattern
@@ -334,7 +334,7 @@ impl AdaptiveSimdOptimizer {
         let hardware_capabilities = Self::detect_hardware_capabilities()?;
 
         Ok(Self {
-            config: config,
+            config,
             hardware_capabilities,
             strategy_cache: Arc::new(Mutex::new(HashMap::new())),
             performance_cache: Arc::new(Mutex::new(HashMap::new())),
@@ -358,7 +358,7 @@ impl AdaptiveSimdOptimizer {
         F: Float + NumCast + SimdUnifiedOps + Send + Sync + std::fmt::Display,
         T: Send + Sync + std::fmt::Display,
     {
-        let data_characteristics = self.analyze_data_characteristics(&data)?;
+        let data_characteristics = self.analyzedata_characteristics(&data)?;
 
         // Get or select optimal strategy
         let strategy = self.select_optimal_strategy(operation_name, &data_characteristics)?;
@@ -450,10 +450,10 @@ impl AdaptiveSimdOptimizer {
             vector_width: 256, // AVX2
             simd_units: 2,
             cache_info: CacheHierarchy {
-                l1_size: 32 * 1024,       // 32KB
-                l2_size: 256 * 1024,      // 256KB
-                l3_size: 8 * 1024 * 1024, // 8MB
-                cache_line_size: 64,
+                l1size: 32 * 1024,       // 32KB
+                l2size: 256 * 1024,      // 256KB
+                l3size: 8 * 1024 * 1024, // 8MB
+                cache_linesize: 64,
                 associativity: vec![8, 8, 16],
             },
             memory_bandwidth: 50.0, // 50 GB/s
@@ -466,7 +466,7 @@ impl AdaptiveSimdOptimizer {
     }
 
     /// Analyze data characteristics
-    fn analyze_data_characteristics<F>(
+    fn analyzedata_characteristics<F>(
         &self,
         data: &ArrayView1<F>,
     ) -> StatsResult<DataCharacteristics>
@@ -474,7 +474,7 @@ impl AdaptiveSimdOptimizer {
         F: Float + NumCast + std::fmt::Display,
     {
         let size = data.len();
-        let element_size = std::mem::size_of::<F>();
+        let elementsize = std::mem::size_of::<F>();
 
         // Check alignment
         let alignment = (data.as_ptr() as usize) % 32; // Check 32-byte alignment
@@ -512,7 +512,7 @@ impl AdaptiveSimdOptimizer {
 
         Ok(DataCharacteristics {
             size,
-            element_size,
+            elementsize,
             alignment,
             access_pattern: MemoryAccessPattern::Sequential,
             locality_score: 1.0, // Assume good locality for contiguous arrays
@@ -530,7 +530,7 @@ impl AdaptiveSimdOptimizer {
         F: Float + NumCast + std::fmt::Display,
     {
         let size = data.len();
-        let element_size = std::mem::size_of::<F>();
+        let elementsize = std::mem::size_of::<F>();
 
         // Check if matrix is C-contiguous or Fortran-contiguous
         let access_pattern = if data.is_standard_layout() {
@@ -551,7 +551,7 @@ impl AdaptiveSimdOptimizer {
 
         Ok(DataCharacteristics {
             size,
-            element_size,
+            elementsize,
             alignment: (data.as_ptr() as usize) % 32,
             access_pattern,
             locality_score: if data.is_standard_layout() { 1.0 } else { 0.5 },
@@ -576,7 +576,7 @@ impl AdaptiveSimdOptimizer {
     ) -> StatsResult<SimdStrategy> {
         let cache_key = format!(
             "{}_{}_{}",
-            operation_name, characteristics.size, characteristics.element_size
+            operation_name, characteristics.size, characteristics.elementsize
         );
 
         // Check cache first
@@ -597,7 +597,7 @@ impl AdaptiveSimdOptimizer {
             cache.insert(cache_key, best_strategy.clone());
 
             // Maintain cache size
-            if cache.len() > self.config.cache_size {
+            if cache.len() > self.config.cachesize {
                 let oldest_key = cache.keys().next().cloned();
                 if let Some(key) = oldest_key {
                     cache.remove(&key);
@@ -620,15 +620,13 @@ impl AdaptiveSimdOptimizer {
         // Adjust for matrix-specific optimizations
         if characteristics.size > 1000000 {
             // Large matrices
-            strategy.memory_pattern = MemoryAccessPattern::Tiled {
-                tile_size: (64, 64),
-            };
+            strategy.memory_pattern = MemoryAccessPattern::Tiled { tilesize: (64, 64) };
             strategy.prefetch_strategy = PrefetchStrategy::Software { distance: 8 };
         } else if matches!(
             characteristics.access_pattern,
             MemoryAccessPattern::Strided { .. }
         ) {
-            strategy.memory_pattern = MemoryAccessPattern::Blocked { block_size: 256 };
+            strategy.memory_pattern = MemoryAccessPattern::Blocked { blocksize: 256 };
         }
 
         Ok(strategy)
@@ -721,7 +719,7 @@ impl AdaptiveSimdOptimizer {
         let mut score = strategy.expected_speedup;
 
         // Adjust score based on data characteristics
-        if characteristics.size < self.config.min_simd_size {
+        if characteristics.size < self.config.min_simdsize {
             score *= 0.5; // Penalty for small data
         }
 
@@ -762,12 +760,12 @@ impl AdaptiveSimdOptimizer {
         let throughput = characteristics.size as f64 / execution_time.as_secs_f64();
 
         // Estimate bandwidth utilization
-        let bytes_processed = characteristics.size * characteristics.element_size;
+        let bytes_processed = characteristics.size * characteristics.elementsize;
         let bandwidth_used = bytes_processed as f64 / execution_time.as_secs_f64() / 1e9; // GB/s
         let bandwidth_utilization = bandwidth_used / self.hardware_capabilities.memory_bandwidth;
 
         // Estimate SIMD efficiency
-        let theoretical_max = strategy.vector_width / (characteristics.element_size * 8); // elements per vector
+        let theoretical_max = strategy.vector_width / (characteristics.elementsize * 8); // elements per vector
         let actual_vectors = characteristics.size / theoretical_max;
         let simd_efficiency = if actual_vectors > 0 {
             characteristics.size as f64 / (actual_vectors * theoretical_max) as f64
@@ -835,7 +833,7 @@ impl AdaptiveSimdOptimizer {
         match operation(&data, &fallback_strategy) {
             Ok(result) => {
                 let execution_time = start_time.elapsed();
-                let characteristics = self.analyze_data_characteristics(&data)?;
+                let characteristics = self.analyzedata_characteristics(&data)?;
                 let metrics = self.calculate_performance_metrics(
                     &characteristics,
                     &fallback_strategy,
@@ -1045,7 +1043,7 @@ mod tests {
         let config = AdaptiveSimdConfig::default();
         assert!(config.auto_detect_hardware);
         assert!(config.enable_profiling);
-        assert!(config.min_simd_size > 0);
+        assert!(config.min_simdsize > 0);
     }
 
     #[test]
@@ -1056,15 +1054,13 @@ mod tests {
     }
 
     #[test]
-    fn test_data_characteristics_analysis() {
+    fn testdata_characteristics_analysis() {
         let optimizer = AdaptiveSimdOptimizer::default().unwrap();
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 
-        let characteristics = optimizer
-            .analyze_data_characteristics(&data.view())
-            .unwrap();
+        let characteristics = optimizer.analyzedata_characteristics(&data.view()).unwrap();
         assert_eq!(characteristics.size, 5);
-        assert_eq!(characteristics.element_size, 8); // f64
+        assert_eq!(characteristics.elementsize, 8); // f64
     }
 
     #[test]
@@ -1072,7 +1068,7 @@ mod tests {
         let optimizer = AdaptiveSimdOptimizer::default().unwrap();
         let characteristics = DataCharacteristics {
             size: 1000,
-            element_size: 8,
+            elementsize: 8,
             alignment: 0,
             access_pattern: MemoryAccessPattern::Sequential,
             locality_score: 1.0,
@@ -1099,7 +1095,7 @@ mod tests {
         let optimizer = AdaptiveSimdOptimizer::default().unwrap();
         let characteristics = DataCharacteristics {
             size: 1000,
-            element_size: 8,
+            elementsize: 8,
             alignment: 0,
             access_pattern: MemoryAccessPattern::Sequential,
             locality_score: 1.0,
@@ -1127,7 +1123,7 @@ mod tests {
         let optimizer = AdaptiveSimdOptimizer::default().unwrap();
         let characteristics = DataCharacteristics {
             size: 1000,
-            element_size: 8,
+            elementsize: 8,
             alignment: 0,
             access_pattern: MemoryAccessPattern::Sequential,
             locality_score: 1.0,

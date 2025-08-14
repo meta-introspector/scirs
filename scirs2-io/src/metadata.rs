@@ -863,10 +863,7 @@ impl MetadataVersionControl {
             .get_version(versionid)
             .ok_or_else(|| IoError::NotFound(format!("Version {versionid} not found")))?;
 
-        self.commit(
-            version.metadata.clone(),
-            format!("Rollback to {versionid}"),
-        )?;
+        self.commit(version.metadata.clone(), format!("Rollback to {versionid}"))?;
         Ok(())
     }
 
@@ -940,7 +937,7 @@ pub struct MetadataTemplate {
 impl MetadataTemplate {
     pub fn new(base: Metadata) -> Self {
         Self {
-            base: base,
+            base,
             overridable: HashSet::new(),
             required: HashSet::new(),
             defaults: IndexMap::new(),

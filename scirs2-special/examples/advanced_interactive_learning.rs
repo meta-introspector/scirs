@@ -12,8 +12,8 @@
 //! Run with: cargo run --example advanced_interactive_learning
 
 use ndarray::Array1;
-use num__complex::Complex64;
-use scirs2__special::*;
+use num_complex::Complex64;
+use scirs2_special::*;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 use std::io::{self, Write};
@@ -1609,10 +1609,10 @@ fn visualize_gamma_function() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎲 Gamma Function Visualization");
     println!("===============================\n");
 
-    let x_min = get_user_input("Enter x minimum (e.g., 0.1): ")?
+    let xmin = get_user_input("Enter x minimum (e.g., 0.1): ")?
         .parse::<f64>()
         .unwrap_or(0.1);
-    let x_max = get_user_input("Enter x maximum (e.g., 5.0): ")?
+    let xmax = get_user_input("Enter x maximum (e.g., 5.0): ")?
         .parse::<f64>()
         .unwrap_or(5.0);
     let points = get_user_input("Number of points (e.g., 50): ")?
@@ -1624,7 +1624,7 @@ fn visualize_gamma_function() -> Result<(), Box<dyn std::error::Error>> {
     println!("─────────────");
 
     for i in 0..points {
-        let x = x_min + (x_max - x_min) * i as f64 / (points - 1) as f64;
+        let x = xmin + (xmax - xmin) * i as f64 / (points - 1) as f64;
         let gamma_val = gamma(x);
 
         // Simple ASCII visualization
@@ -1655,7 +1655,7 @@ fn visualize_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
     let order = get_user_input("Enter Bessel function order (0, 1, 2): ")?
         .parse::<i32>()
         .unwrap_or(0);
-    let x_max = get_user_input("Enter maximum x value (e.g., 20): ")?
+    let xmax = get_user_input("Enter maximum x value (e.g., 20): ")?
         .parse::<f64>()
         .unwrap_or(20.0);
 
@@ -1664,7 +1664,7 @@ fn visualize_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("─────────────────────────────────────");
 
     for i in 0..40 {
-        let x = i as f64 * x_max / 40.0;
+        let x = i as f64 * xmax / 40.0;
         let j_val = match order {
             0 => j0(x),
             1 => j1(x),
@@ -2089,8 +2089,8 @@ fn adjust_learning_preferences(
         _ => println!("Invalid choice, keeping current setting"),
     }
 
-    let speed_input = get_user_input("Reading speed (WPM, current: {:.0}): ")?;
-    if let Ok(speed) = speed_input.parse::<f64>() {
+    let speedinput = get_user_input("Reading speed (WPM, current: {:.0}): ")?;
+    if let Ok(speed) = speedinput.parse::<f64>() {
         if speed > 0.0 && speed < 1000.0 {
             profile.learning_speed = speed;
         }

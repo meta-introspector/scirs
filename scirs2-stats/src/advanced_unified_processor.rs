@@ -32,7 +32,7 @@ pub struct MovingWindowResult<F> {
     pub variances: Array1<F>,
     pub mins: Array1<F>,
     pub maxs: Array1<F>,
-    pub window_size: usize,
+    pub windowsize: usize,
 }
 
 /// Comprehensive Advanced processing configuration
@@ -164,7 +164,7 @@ impl AdvancedUnifiedProcessor {
 
         // Performance monitoring
         let metrics = ProcessingMetrics {
-            data_size: n,
+            datasize: n,
             processing_time: duration,
             strategy_used: strategy,
             simd_enabled: strategy.uses_simd(),
@@ -256,7 +256,7 @@ impl AdvancedUnifiedProcessor {
         let duration = start_time.elapsed();
 
         let metrics = ProcessingMetrics {
-            data_size: n_rows * n_cols,
+            datasize: n_rows * n_cols,
             processing_time: duration,
             strategy_used: strategy,
             simd_enabled: strategy.uses_simd(),
@@ -277,7 +277,7 @@ impl AdvancedUnifiedProcessor {
     pub fn process_time_series<F, D>(
         &mut self,
         data: &ArrayBase<D, Ix1>,
-        window_size: usize,
+        windowsize: usize,
         operations: &[AdvancedTimeSeriesOperation],
     ) -> StatsResult<AdvancedTimeSeriesResult<F>>
     where
@@ -292,42 +292,42 @@ impl AdvancedUnifiedProcessor {
             return Err(ErrorMessages::empty_array("data"));
         }
 
-        if window_size == 0 {
+        if windowsize == 0 {
             return Err(ErrorMessages::non_positive_value(
-                "window_size",
-                window_size as f64,
+                "windowsize",
+                windowsize as f64,
             ));
         }
 
-        if window_size > n {
-            return Err(ErrorMessages::insufficient_data(
+        if windowsize > n {
+            return Err(ErrorMessages::insufficientdata(
                 "time series analysis",
-                window_size,
+                windowsize,
                 n,
             ));
         }
 
-        let strategy = self.determine_time_series_strategy(n, window_size)?;
+        let strategy = self.determine_time_series_strategy(n, windowsize)?;
 
         let mut results = Vec::new();
 
         for &operation in operations {
             let result = match (strategy, operation) {
                 (ProcessingStrategy::SimdOnly, AdvancedTimeSeriesOperation::MovingWindow) => {
-                    advanced_moving_window_stats(data, window_size, &self.config.simd_config)?
+                    advanced_moving_window_stats(data, windowsize, &self.config.simd_config)?
                 }
                 (ProcessingStrategy:: ParallelOnly) => {
                     let ts_operations = self.convert_to_parallel_ts_operations(operations);
                     let parallel_result = self.parallel_processor.process_time_series(
                         data,
-                        window_size,
+                        windowsize,
                         &ts_operations,
                     )?;
                     self.convert_parallel_ts_result(parallel_result)?
                 }
                 _ => {
                     // Standard processing fallback
-                    self.process_time_series_standard(data, window_size, operation)?
+                    self.process_time_series_standard(data, windowsize, operation)?
                 }
             };
 
@@ -337,7 +337,7 @@ impl AdvancedUnifiedProcessor {
         let duration = start_time.elapsed();
 
         let metrics = ProcessingMetrics {
-            data_size: n,
+            datasize: n,
             processing_time: duration,
             strategy_used: strategy,
             simd_enabled: strategy.uses_simd(),
@@ -348,7 +348,7 @@ impl AdvancedUnifiedProcessor {
 
         Ok(AdvancedTimeSeriesResult {
             results,
-            window_size,
+            windowsize,
             operations: operations.to_vec(),
             processing_metrics: metrics,
         })
@@ -382,10 +382,10 @@ impl AdvancedUnifiedProcessor {
             .count() as f64
             / total_operations as f64;
 
-        let avg_data_size = self
+        let avgdatasize = self
             .performance_history
             .iter()
-            .map(|m| m.data_size)
+            .map(|m| m.datasize)
             .sum::<usize>() as f64
             / total_operations as f64;
 
@@ -394,7 +394,7 @@ impl AdvancedUnifiedProcessor {
             average_processing_time_ms: avg_processing_time,
             simd_usage_rate,
             parallel_usage_rate,
-            average_data_size: avg_data_size,
+            averagedatasize: avgdatasize,
             optimization_effectiveness: self.calculate_optimization_effectiveness(),
             recommendations: self.generate_performance_recommendations(),
         }
@@ -404,13 +404,13 @@ impl AdvancedUnifiedProcessor {
 
     fn determine_processing_strategy(
         &self,
-        data_size: usize, _context: &crate::advanced_error_enhancements_v2::AdvancedErrorContext,
+        datasize: usize, _context: &crate::advanced_error_enhancements_v2::AdvancedErrorContext,
     ) -> StatsResult<ProcessingStrategy> {
         match self.config.optimization_mode {
             OptimizationMode::Performance => {
-                if data_size > 10000 && self.capabilities.has_avx2() {
+                if datasize > 10000 && self.capabilities.has_avx2() {
                     Ok(ProcessingStrategy::SimdParallel)
-                } else if data_size > 1000 {
+                } else if datasize > 1000 {
                     Ok(ProcessingStrategy::ParallelOnly)
                 } else if self.capabilities.has_avx2() {
                     Ok(ProcessingStrategy::SimdOnly)
@@ -420,16 +420,16 @@ impl AdvancedUnifiedProcessor {
             }
             OptimizationMode::Accuracy => {
                 // Prioritize stability - use less aggressive optimizations
-                if data_size > 5000 {
+                if datasize > 5000 {
                     Ok(ProcessingStrategy::ParallelOnly)
                 } else {
                     Ok(ProcessingStrategy::Standard)
                 }
             }
             OptimizationMode::Balanced => {
-                if data_size > 5000 && self.capabilities.has_avx2() {
+                if datasize > 5000 && self.capabilities.has_avx2() {
                     Ok(ProcessingStrategy::SimdParallel)
-                } else if data_size > 1000 {
+                } else if datasize > 1000 {
                     Ok(ProcessingStrategy::ParallelOnly)
                 } else {
                     Ok(ProcessingStrategy::Standard)
@@ -437,7 +437,7 @@ impl AdvancedUnifiedProcessor {
             }
             OptimizationMode::Adaptive => {
                 // Use performance history to make adaptive decisions
-                self.determine_adaptive_strategy(data_size)
+                self.determine_adaptive_strategy(datasize)
             }
         }
     }
@@ -448,7 +448,7 @@ impl AdvancedUnifiedProcessor {
             .performance_history
             .iter()
             .filter(|m| {
-                let size_ratio = (m.data_size as f64) / (data_size as f64);
+                let size_ratio = (m.datasize as f64) / (datasize as f64);
                 size_ratio >= 0.5 && size_ratio <= 2.0
             })
             .collect();
@@ -456,15 +456,15 @@ impl AdvancedUnifiedProcessor {
         if similar_operations.is_empty() {
             // No history, use default heuristics
             return self.determine_processing_strategy(
-                data_size,
-                &AdvancedContextBuilder::new(data_size).build(),
+                datasize,
+                &AdvancedContextBuilder::new(datasize).build(),
             );
         }
 
         // Find the strategy with the best average performance
         let mut strategy_performance = HashMap::new();
         for metrics in similar_operations {
-            let throughput = metrics.data_size as f64 / metrics.processing_time.as_secs_f64();
+            let throughput = metrics.datasize as f64 / metrics.processing_time.as_secs_f64();
             strategy_performance
                 .entry(metrics.strategy_used)
                 .or_insert_with(Vec::new)
@@ -506,16 +506,16 @@ impl AdvancedUnifiedProcessor {
 
     fn determine_time_series_strategy(
         &self,
-        data_size: usize,
-        window_size: usize,
+        datasize: usize,
+        windowsize: usize,
     ) -> StatsResult<ProcessingStrategy> {
-        let num_windows = data_size - window_size + 1;
+        let num_windows = datasize - windowsize + 1;
 
-        if num_windows > 1000 && window_size > 64 && self.capabilities.has_avx2() {
+        if num_windows > 1000 && windowsize > 64 && self.capabilities.has_avx2() {
             Ok(ProcessingStrategy::SimdParallel)
         } else if num_windows > 500 {
             Ok(ProcessingStrategy::ParallelOnly)
-        } else if window_size > 32 && self.capabilities.has_avx2() {
+        } else if windowsize > 32 && self.capabilities.has_avx2() {
             Ok(ProcessingStrategy::SimdOnly)
         } else {
             Ok(ProcessingStrategy::Standard)
@@ -532,8 +532,8 @@ impl AdvancedUnifiedProcessor {
         n_cols: usize,
         operation: &AdvancedMatrixOperation,
     ) -> f64 {
-        let base_size = (n_rows * n_cols * std::mem::size_of::<F>()) as f64;
-        let result_size = match operation {
+        let basesize = (n_rows * n_cols * std::mem::size_of::<F>()) as f64;
+        let resultsize = match operation {
             AdvancedMatrixOperation::Covariance | AdvancedMatrixOperation::Correlation => {
                 (n_cols * n_cols * std::mem::size_of::<F>()) as f64
             }
@@ -541,7 +541,7 @@ impl AdvancedUnifiedProcessor {
                 (n_rows * n_rows * std::mem::size_of::<F>()) as f64
             }
         };
-        (base_size + result_size) / (1024.0 * 1024.0)
+        (basesize + resultsize) / (1024.0 * 1024.0)
     }
 
     fn calculate_optimization_effectiveness(&self) -> f64 {
@@ -554,14 +554,14 @@ impl AdvancedUnifiedProcessor {
             .performance_history
             .iter()
             .filter(|m| m.simd_enabled || m.parallel_enabled)
-            .map(|m| m.data_size as f64 / m.processing_time.as_secs_f64())
+            .map(|m| m.datasize as f64 / m.processing_time.as_secs_f64())
             .collect();
 
         let standard_throughput: Vec<f64> = self
             .performance_history
             .iter()
             .filter(|m| !m.simd_enabled && !m.parallel_enabled)
-            .map(|m| m.data_size as f64 / m.processing_time.as_secs_f64())
+            .map(|m| m.datasize as f64 / m.processing_time.as_secs_f64())
             .collect();
 
         if optimized_throughput.is_empty() || standard_throughput.is_empty() {
@@ -738,12 +738,12 @@ impl AdvancedUnifiedProcessor {
             variances: Array1::zeros(0),
             mins: Array1::zeros(0),
             maxs: Array1::zeros(0),
-            window_size: 0,
+            windowsize: 0,
         })
     }
 
     fn process_time_series_standard<F, D>(
-        &self, &ArrayBase<D, Ix1>, _window_size: usize, _operation: AdvancedTimeSeriesOperation,
+        &self, &ArrayBase<D, Ix1>, _windowsize: usize, _operation: AdvancedTimeSeriesOperation,
     ) -> StatsResult<MovingWindowResult<F>>
     where
         F: Float + NumCast + Copy,
@@ -756,7 +756,7 @@ impl AdvancedUnifiedProcessor {
             variances: Array1::zeros(0),
             mins: Array1::zeros(0),
             maxs: Array1::zeros(0),
-            window_size: window_size,
+            windowsize: windowsize,
         })
     }
 
@@ -765,12 +765,12 @@ impl AdvancedUnifiedProcessor {
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
 
-        if metrics.data_size > 10000 && !_metrics.parallel_enabled {
+        if metrics.datasize > 10000 && !_metrics.parallel_enabled {
             recommendations
                 .push("Consider enabling parallel processing for large datasets".to_string());
         }
 
-        if metrics.data_size > 1000 && !_metrics.simd_enabled && self.capabilities.has_avx2() {
+        if metrics.datasize > 1000 && !_metrics.simd_enabled && self.capabilities.has_avx2() {
             recommendations.push("SIMD optimizations could improve performance".to_string());
         }
 
@@ -840,7 +840,7 @@ pub enum AdvancedTimeSeriesOperation {
 /// Processing metrics for performance monitoring
 #[derive(Debug, Clone)]
 pub struct ProcessingMetrics {
-    pub data_size: usize,
+    pub datasize: usize,
     pub processing_time: std::time::Duration,
     pub strategy_used: ProcessingStrategy,
     pub simd_enabled: bool,
@@ -872,7 +872,7 @@ pub struct AdvancedMatrixResult<F> {
 #[derive(Debug, Clone)]
 pub struct AdvancedTimeSeriesResult<F> {
     pub results: Vec<MovingWindowResult<F>>,
-    pub window_size: usize,
+    pub windowsize: usize,
     pub operations: Vec<AdvancedTimeSeriesOperation>,
     pub processing_metrics: ProcessingMetrics,
 }
@@ -884,7 +884,7 @@ pub struct AdvancedPerformanceAnalytics {
     pub average_processing_time_ms: f64,
     pub simd_usage_rate: f64,
     pub parallel_usage_rate: f64,
-    pub average_data_size: f64,
+    pub averagedatasize: f64,
     pub optimization_effectiveness: f64,
     pub recommendations: Vec<String>,
 }

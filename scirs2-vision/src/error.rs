@@ -462,6 +462,10 @@ impl ErrorRecoveryManager {
             }
             VisionError::LinAlgError(_) | VisionError::DimensionMismatch(_) => ErrorSeverity::High,
             VisionError::IoError(_) | VisionError::Other(_) => ErrorSeverity::Critical,
+            VisionError::ImageLoadError(_) => ErrorSeverity::High,
+            VisionError::NdimageError(_) => ErrorSeverity::Medium,
+            VisionError::ShapeError(_) => ErrorSeverity::Medium,
+            VisionError::GpuError(_) => ErrorSeverity::High,
         }
     }
 

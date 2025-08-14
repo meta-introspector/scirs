@@ -3,7 +3,7 @@
 //! This example demonstrates device enumeration, selection, and workload
 //! distribution across multiple GPU devices for high-performance sparse FFT.
 
-use scirs2__fft::{
+use scirs2_fft::{
     sparse_fft_multi_gpu::{MultiGPUConfig, MultiGPUSparseFFT, WorkloadDistribution},
     FFTResult,
 };

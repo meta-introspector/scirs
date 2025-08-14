@@ -14,8 +14,8 @@
 //! Run with: cargo run --example comprehensive_validation_framework
 
 use ndarray::Array1;
-use num__complex::Complex64;
-use scirs2__special::*;
+use num_complex::Complex64;
+use scirs2_special::*;
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -179,12 +179,12 @@ fn validate_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
     for &nu in &orders {
         for &x in &x_values {
             if nu > 0 {
-                let j_minus = jv(nu as f64 - 1.0, x);
+                let jminus = jv(nu as f64 - 1.0, x);
                 let j_plus = jv(nu as f64 + 1.0, x);
                 let j_nu = jv(nu as f64, x);
 
                 // Test: J_{ν-1}(x) + J_{ν+1}(x) = (2ν/x) J_ν(x)
-                let left_side = j_minus + j_plus;
+                let left_side = jminus + j_plus;
                 let right_side = 2.0 * nu as f64 / x * j_nu;
                 let error = (left_side - right_side).abs();
 
@@ -344,13 +344,13 @@ fn validate_orthogonal_polynomials() -> Result<(), Box<dyn std::error::Error>> {
 
     for &x in &x_values {
         for n in 1..6 {
-            let h_n_minus = hermite(n - 1, x);
+            let h_nminus = hermite(n - 1, x);
             let h_n = hermite(n, x);
             let h_n_plus = hermite(n + 1, x);
 
             // Test: H_{n+1}(x) = 2x H_n(x) - 2n H_{n-1}(x)
             let left_side = h_n_plus;
-            let right_side = 2.0 * x * h_n - 2.0 * n as f64 * h_n_minus;
+            let right_side = 2.0 * x * h_n - 2.0 * n as f64 * h_nminus;
             let error = (left_side - right_side).abs();
 
             if error > 1e-12 {
@@ -518,13 +518,13 @@ fn validate_zeta_functions() -> Result<(), Box<dyn std::error::Error>> {
         if s != 1.0 {
             // Avoid pole
             let zeta_s = zeta(s).unwrap_or(0.0);
-            let zeta_1_minus_s = zeta(1.0 - s).unwrap_or(0.0);
+            let zeta_1minus_s = zeta(1.0 - s).unwrap_or(0.0);
 
             let functional_right = 2.0_f64.powf(s)
                 * PI.powf(s - 1.0)
                 * (PI * s / 2.0).sin()
                 * gamma(1.0 - s)
-                * zeta_1_minus_s;
+                * zeta_1minus_s;
 
             let error = (zeta_s - functional_right).abs();
             let relative_error = error / zeta_s.abs();
@@ -955,9 +955,9 @@ fn educational_demonstrations() -> Result<(), Box<dyn std::error::Error>> {
 
     // Central Limit Theorem demonstration
     println!("Central Limit Theorem Visualization:");
-    let sample_sizes = vec![1, 5, 10, 50];
+    let samplesizes = vec![1, 5, 10, 50];
 
-    for &n in &sample_sizes {
+    for &n in &samplesizes {
         let std_dev = 1.0 / (n as f64).sqrt();
         let prob_in_one_sigma = erf(1.0 / (std_dev * 2.0_f64.sqrt()));
 

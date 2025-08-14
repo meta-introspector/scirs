@@ -327,7 +327,7 @@ where
     let b_dyn = b.view().into_dyn();
 
     // Flatten batch dimensions
-    let batch_size: usize = outshape.iter().take(batch_dims).product();
+    let batchsize: usize = outshape.iter().take(batch_dims).product();
     let m = a.shape()[batch_dims]; // rows in A
     let k = a.shape()[batch_dims + 1]; // cols in A, rows in B
     let n = b.shape()[batch_dims + 1]; // cols in B
@@ -337,7 +337,7 @@ where
     let result = Arc::new(Mutex::new(result));
 
     // Generate all batch indices
-    let mut all_batch_indices = Vec::with_capacity(batch_size);
+    let mut all_batch_indices = Vec::with_capacity(batchsize);
 
     fn generate_batch_indices(
         shape: &[usize],
@@ -533,10 +533,10 @@ where
         }
 
         let current_dim = if depth > mode { depth - 1 } else { depth };
-        let dim_size = shape[current_dim];
+        let dimsize = shape[current_dim];
 
         let mut current = current;
-        for i in 0..dim_size {
+        for i in 0..dimsize {
             current.push(i);
             generate_indices_without_mode(
                 shape,
@@ -698,16 +698,16 @@ where
 
     // First pass: collect all dimension sizes and check consistency
     for (tensor, indices) in tensors.iter().zip(input_indices.iter()) {
-        for (&dim_size, &idx) in tensor.shape().iter().zip(indices.iter()) {
+        for (&dimsize, &idx) in tensor.shape().iter().zip(indices.iter()) {
             if let Some(&existing_dim) = index_to_dim.get(&idx) {
-                if existing_dim != dim_size {
+                if existing_dim != dimsize {
                     return Err(LinalgError::ShapeError(format!(
                         "Inconsistent dimensions for index '{}': {} and {}",
-                        idx, existing_dim, dim_size
+                        idx, existing_dim, dimsize
                     )));
                 }
             } else {
-                index_to_dim.insert(idx, dim_size);
+                index_to_dim.insert(idx, dimsize);
             }
         }
     }
@@ -1089,7 +1089,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_matrix_multiplication() {
+    fn testmatrix_multiplication() {
         // 2x3 matrix
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
 
@@ -1145,7 +1145,7 @@ mod tests {
     }
 
     #[test]
-    fn test_einsum_matrix_multiplication() {
+    fn test_einsummatrix_multiplication() {
         // Matrix multiplication: "ij,jk->ik"
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let b = array![[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]];

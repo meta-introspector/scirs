@@ -342,11 +342,12 @@ pub fn suggest_optimizations(
         .max()
         .copied()
         .unwrap_or(0);
-    let avg_degree = if fragmentation.total_used > 0 && !fragmentation.degree_distribution.is_empty() {
-        fragmentation.total_used as f64 / fragmentation.degree_distribution.len() as f64
-    } else {
-        0.0
-    };
+    let avg_degree =
+        if fragmentation.total_used > 0 && !fragmentation.degree_distribution.is_empty() {
+            fragmentation.total_used as f64 / fragmentation.degree_distribution.len() as f64
+        } else {
+            0.0
+        };
 
     if max_degree > avg_degree as usize * 10 {
         suggestions.push(
@@ -463,7 +464,10 @@ impl RealTimeMemoryProfiler {
             while *is_monitoring.lock().unwrap() {
                 {
                     let mut sys = system.lock().unwrap();
-                    sys.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[(pid as usize).into()]), false);
+                    sys.refresh_processes(
+                        sysinfo::ProcessesToUpdate::Some(&[(pid as usize).into()]),
+                        false,
+                    );
 
                     if let Some(process) = sys.process((pid as usize).into()) {
                         let physical_memory = process.memory() * 1024; // Convert KB to bytes

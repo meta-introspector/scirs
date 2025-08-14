@@ -27,7 +27,7 @@ fn create_test_tensor_4d(d1: usize, d2: usize, d3: usize, d4: usize) -> Array4<f
 
 /// Create a random-like matrix for tensor operations
 #[allow(dead_code)]
-fn create_test_matrix(m: usize, n: usize) -> Array2<f64> {
+fn create_testmatrix(m: usize, n: usize) -> Array2<f64> {
     Array2::from_shape_fn((m, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin())
 }
 
@@ -41,12 +41,12 @@ fn create_test_vector(n: usize) -> Array1<f64> {
 #[allow(dead_code)]
 fn bench_tensor_contraction(c: &mut Criterion) {
     let mut group = c.benchmark_group("tensor_contraction");
-    group.sample_size(20);
+    group.samplesize(20);
 
     for &size in &[10, 20, 30, 50] {
         let tensor_3d = create_test_tensor_3d(size, size, size);
         let tensor_4d = create_test_tensor_4d(size, size, size, size);
-        let matrix = create_test_matrix(size, size);
+        let matrix = create_testmatrix(size, size);
         let vector = create_test_vector(size);
 
         let total_elements = size * size * size;
@@ -133,11 +133,11 @@ fn bench_tensor_contraction(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_einsum_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("einsum_operations");
-    group.sample_size(20);
+    group.samplesize(20);
 
     for &size in &[10, 20, 30, 50] {
-        let matrix_a = create_test_matrix(size, size);
-        let matrix_b = create_test_matrix(size, size);
+        let matrix_a = create_testmatrix(size, size);
+        let matrix_b = create_testmatrix(size, size);
         let vector = create_test_vector(size);
         let tensor_3d = create_test_tensor_3d(size, size, size);
 
@@ -256,7 +256,7 @@ fn bench_einsum_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_hosvd_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("hosvd_operations");
-    group.sample_size(10); // HOSVD is expensive
+    group.samplesize(10); // HOSVD is expensive
     group.measurement_time(Duration::from_secs(45));
 
     for &size in &[10, 20, 30] {
@@ -316,7 +316,7 @@ fn bench_hosvd_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_tucker_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("tucker_decomposition");
-    group.sample_size(10);
+    group.samplesize(10);
     group.measurement_time(Duration::from_secs(40));
 
     for &size in &[10, 20, 30] {
@@ -371,7 +371,7 @@ fn bench_tucker_decomposition(c: &mut Criterion) {
         );
 
         // Tucker tensor-times-matrix (TTM)
-        let matrix = create_test_matrix(size / 2, size);
+        let matrix = create_testmatrix(size / 2, size);
         group.bench_with_input(
             BenchmarkId::new("tucker_ttm", size),
             &(&tensor_3d, &tucker_ranks, &matrix),
@@ -392,7 +392,7 @@ fn bench_tucker_decomposition(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_tensor_train_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("tensor_train_decomposition");
-    group.sample_size(10);
+    group.samplesize(10);
     group.measurement_time(Duration::from_secs(40));
 
     for &size in &[10, 20, 30] {
@@ -475,7 +475,7 @@ fn bench_tensor_train_decomposition(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_cp_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("cp_decomposition");
-    group.sample_size(10);
+    group.samplesize(10);
     group.measurement_time(Duration::from_secs(40));
 
     for &size in &[10, 20, 30] {
@@ -524,7 +524,7 @@ fn bench_cp_decomposition(c: &mut Criterion) {
         );
 
         // CP tensor-times-matrix
-        let matrix = create_test_matrix(size, size / 2);
+        let matrix = create_testmatrix(size, size / 2);
         group.bench_with_input(
             BenchmarkId::new("cp_ttm", size),
             &(&tensor_3d, cp_rank, &matrix),
@@ -556,11 +556,11 @@ fn bench_cp_decomposition(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_tensor_networks(c: &mut Criterion) {
     let mut group = c.benchmark_group("tensor_networks");
-    group.sample_size(15);
+    group.samplesize(15);
 
     for &size in &[10, 20, 30] {
         let tensor_3d = create_test_tensor_3d(size, size, size);
-        let matrix = create_test_matrix(size, size);
+        let matrix = create_testmatrix(size, size);
 
         group.throughput(Throughput::Elements(
             size as u64 * size as u64 * size as u64,
@@ -592,7 +592,7 @@ fn bench_tensor_networks(c: &mut Criterion) {
 
         // PEPS (Projected Entangled Pair States) operations (2D only)
         if size <= 20 {
-            let matrix_2d = create_test_matrix(size, size);
+            let matrix_2d = create_testmatrix(size, size);
             group.bench_with_input(
                 BenchmarkId::new("peps_contraction", size),
                 &matrix_2d,
@@ -613,24 +613,24 @@ fn bench_tensor_networks(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_batch_tensor_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("batch_tensor_operations");
-    group.sample_size(20);
+    group.samplesize(20);
 
-    for &batch_size in &[10, 50, 100] {
+    for &batchsize in &[10, 50, 100] {
         for &size in &[10, 20, 30] {
-            let batch_tensor = create_test_tensor_4d(batch_size, size, size, size);
-            let weight_matrix = create_test_matrix(size, size);
+            let batch_tensor = create_test_tensor_4d(batchsize, size, size, size);
+            let weightmatrix = create_testmatrix(size, size);
 
             group.throughput(Throughput::Elements(
-                batch_size as u64 * size as u64 * size as u64 * size as u64,
+                batchsize as u64 * size as u64 * size as u64 * size as u64,
             ));
 
             // Batch tensor-matrix multiplication
             group.bench_with_input(
-                BenchmarkId::new(format!("batch_tmm_{}x{}", batch_size, size), size),
-                &(&batch_tensor, &weight_matrix),
+                BenchmarkId::new(format!("batch_tmm_{}x{}", batchsize, size), size),
+                &(&batch_tensor, &weightmatrix),
                 |b, (t, w)| {
                     b.iter(|| {
-                        batch_tensor_matrix_multiply(black_box(&t.view()), black_box(&w.view()))
+                        batch_tensormatrix_multiply(black_box(&t.view()), black_box(&w.view()))
                             .unwrap()
                     })
                 },
@@ -638,15 +638,15 @@ fn bench_batch_tensor_operations(c: &mut Criterion) {
 
             // Batch tensor contraction
             group.bench_with_input(
-                BenchmarkId::new(format!("batch_contract_{}x{}", batch_size, size), size),
+                BenchmarkId::new(format!("batch_contract_{}x{}", batchsize, size), size),
                 &batch_tensor,
                 |b, t| b.iter(|| batch_tensor_contract(black_box(&t.view())).unwrap()),
             );
 
             // Batch mode-n product
             group.bench_with_input(
-                BenchmarkId::new(format!("batch_mode_n_{}x{}", batch_size, size), size),
-                &(&batch_tensor, &weight_matrix),
+                BenchmarkId::new(format!("batch_mode_n_{}x{}", batchsize, size), size),
+                &(&batch_tensor, &weightmatrix),
                 |b, (t, w)| {
                     b.iter(|| {
                         batch_mode_n_product(black_box(&t.view()), black_box(&w.view()), 1).unwrap()
@@ -656,7 +656,7 @@ fn bench_batch_tensor_operations(c: &mut Criterion) {
 
             // Batch tensor normalization
             group.bench_with_input(
-                BenchmarkId::new(format!("batch_normalize_{}x{}", batch_size, size), size),
+                BenchmarkId::new(format!("batch_normalize_{}x{}", batchsize, size), size),
                 &batch_tensor,
                 |b, t| b.iter(|| batch_tensor_normalize(black_box(&t.view())).unwrap()),
             );
@@ -670,7 +670,7 @@ fn bench_batch_tensor_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_tensor_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("tensor_memory_efficiency");
-    group.sample_size(15);
+    group.samplesize(15);
 
     for &size in &[20, 30, 50] {
         let tensor_3d = create_test_tensor_3d(size, size, size);

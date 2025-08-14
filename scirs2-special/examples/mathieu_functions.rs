@@ -1,4 +1,4 @@
-use scirs2__special::{
+use scirs2_special::{
     mathieu_a, mathieu_b, mathieu_cem, mathieu_even_coef, mathieu_odd_coef, mathieu_sem,
 };
 use std::f64::consts::PI;
@@ -96,8 +96,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // We need the second derivative. We can approximate it:
     let h = 1e-6;
     let (ce_plus_) = mathieu_cem(m, q, x + h)?;
-    let (ce_minus_) = mathieu_cem(m, q, x - h)?;
-    let ce_second_deriv = (ce_plus - 2.0 * ce + ce_minus) / (h * h);
+    let (ceminus_) = mathieu_cem(m, q, x - h)?;
+    let ce_second_deriv = (ce_plus - 2.0 * ce + ceminus) / (h * h);
 
     // Term of differential equation: d²y/dx² + [a - 2q cos(2x)]y = 0
     let diff_eq_term = ce_second_deriv + (a - 2.0 * q * (2.0 * x).cos()) * ce;
@@ -117,8 +117,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Verify the differential equation for se
     let (se_plus_) = mathieu_sem(m, q, x + h)?;
-    let (se_minus_) = mathieu_sem(m, q, x - h)?;
-    let se_second_deriv = (se_plus - 2.0 * se + se_minus) / (h * h);
+    let (seminus_) = mathieu_sem(m, q, x - h)?;
+    let se_second_deriv = (se_plus - 2.0 * se + seminus) / (h * h);
 
     // Term of differential equation: d²y/dx² + [b - 2q cos(2x)]y = 0
     let diff_eq_term = se_second_deriv + (b - 2.0 * q * (2.0 * x).cos()) * se;

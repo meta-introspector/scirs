@@ -66,7 +66,7 @@ impl ReedsSheppSegment {
     /// Create a new Reeds-Shepp segment
     pub fn new(motion: Motion, turn: Turn, length: f64) -> Self {
         Self {
-            motion: motion,
+            motion,
             turn,
             length,
         }

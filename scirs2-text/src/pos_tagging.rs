@@ -1557,7 +1557,12 @@ impl ContextualDisambiguator {
     }
 
     /// Apply contextual disambiguation to a sequence
-    pub fn disambiguate(&self, selftokens: &[String], tags: &mut [PosTag], confidences: &mut [f64]) {
+    pub fn disambiguate(
+        &self,
+        selftokens: &[String],
+        tags: &mut [PosTag],
+        confidences: &mut [f64],
+    ) {
         for i in 0..tags.len() {
             let left = if i > 0 {
                 Some(tags[i - 1].clone())

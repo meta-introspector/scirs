@@ -1,5 +1,5 @@
-use num__complex::Complex64;
-use scirs2__fft::plan_serialization::{create_and_time_plan, PlanSerializationManager};
+use num_complex::Complex64;
+use scirs2_fft::plan_serialization::{create_and_time_plan, PlanSerializationManager};
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]

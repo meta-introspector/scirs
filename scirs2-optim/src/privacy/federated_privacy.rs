@@ -2552,7 +2552,7 @@ impl<
         let composition_analyzer = FederatedCompositionAnalyzer::new(config.composition_method);
 
         Ok(Self {
-            config: config,
+            config,
             client_accountants: HashMap::new(),
             global_accountant,
             secure_aggregator,
@@ -2618,8 +2618,7 @@ impl<
             amplificationfactor,
             client_privacy_allocations,
             aggregation_plan,
-            privacy_analysis: self
-                .analyze_round_privacy(&selectedclients, amplificationfactor)?,
+            privacy_analysis: self.analyze_round_privacy(&selectedclients, amplificationfactor)?,
         };
 
         // Record participation
@@ -2991,10 +2990,13 @@ impl<
             .map(|clientid| {
                 let reputation = T::from(*reputation_scores.get(clientid).unwrap_or(&0.5)).unwrap();
                 let fairness = T::from(*fairness_weights.get(clientid).unwrap_or(&1.0)).unwrap();
-                let communication = T::from(*communication_scores.get(clientid).unwrap_or(&1.0)).unwrap();
+                let communication =
+                    T::from(*communication_scores.get(clientid).unwrap_or(&1.0)).unwrap();
 
                 // Weighted combination
-                let weight = reputation * T::from(0.4).unwrap() + fairness * T::from(0.3).unwrap() + communication * T::from(0.3).unwrap();
+                let weight = reputation * T::from(0.4).unwrap()
+                    + fairness * T::from(0.3).unwrap()
+                    + communication * T::from(0.3).unwrap();
                 (clientid.clone(), weight.to_f64().unwrap_or(0.0))
             })
             .collect();
@@ -3626,7 +3628,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SecureAggregator<T> {
     fn new(config: SecureAggregationConfig) -> Result<Self> {
         let min_clients = config.min_clients;
         Ok(Self {
-            config: config,
+            config,
             client_masks: HashMap::new(),
             shared_randomness: Arc::new(std::sync::Mutex::new(Random::default())),
             aggregation_threshold: min_clients,
@@ -3700,7 +3702,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SecureAggregator<T> {
 impl PrivacyAmplificationAnalyzer {
     fn new(config: AmplificationConfig) -> Self {
         Self {
-            config: config,
+            config,
             subsampling_history: VecDeque::with_capacity(1000),
             amplification_factors: HashMap::new(),
         }
@@ -3777,7 +3779,7 @@ impl PrivacyAmplificationAnalyzer {
 impl<T: Float + Send + Sync> CrossDevicePrivacyManager<T> {
     fn new(config: CrossDeviceConfig) -> Self {
         Self {
-            config: config,
+            config,
             user_clusters: HashMap::new(),
             device_profiles: HashMap::new(),
             temporal_correlations: HashMap::new(),
@@ -3792,7 +3794,7 @@ impl<T: Float + Send + Sync> CrossDevicePrivacyManager<T> {
             // Create new profile
             let profile = DeviceProfile {
                 device_id: clientid.clone(),
-                user_id: clientid.clone(),      // Simplified
+                user_id: clientid.clone(),       // Simplified
                 device_type: DeviceType::Mobile, // Default
                 location_cluster: "default".to_string(),
                 participation_frequency: 1.0,
@@ -3817,7 +3819,7 @@ impl<T: Float + Send + Sync> CrossDevicePrivacyManager<T> {
 impl FederatedCompositionAnalyzer {
     fn new(method: FederatedCompositionMethod) -> Self {
         Self {
-            method: method,
+            method,
             round_compositions: Vec::new(),
             client_compositions: HashMap::new(),
         }
@@ -4932,7 +4934,7 @@ pub mod secure_aggregation_protocols {
 
             Ok(Self {
                 active_protocol: config.protocol,
-                config: config,
+                config,
                 key_manager,
                 fault_detector,
                 metrics: SecureAggregationMetrics::default(),
@@ -5657,7 +5659,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> CompressionEngin
     /// Create new compression engine
     pub fn new(strategy: CompressionStrategy) -> Self {
         Self {
-            strategy: strategy,
+            strategy,
             compression_history: VecDeque::with_capacity(100),
             error_feedback_memory: HashMap::new(),
         }

@@ -290,12 +290,12 @@ fn main() {
             let x_val = j as f64 / 3.0;
 
             // Check if there's a data point
-            let mut is_data = false;
+            let mut isdata = false;
             let mut is_outlier = false;
 
             for k in 0..x.len() {
                 if (x[k] - x_val).abs() < 0.2 && (y[k] - y_val).abs() < 0.5 {
-                    is_data = true;
+                    isdata = true;
                     if k == x.len() - 1 {
                         // Last point is our outlier
                         is_outlier = true;
@@ -315,7 +315,7 @@ fn main() {
             let near_ransac = (ransac_y - y_val).abs() < 0.3;
             let near_huber = (huber_y - y_val).abs() < 0.3;
 
-            if is_data {
+            if isdata {
                 if is_outlier {
                     line.push('X'); // Outlier
                 } else {

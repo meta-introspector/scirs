@@ -60,10 +60,10 @@ where
             // SIMD path: process multiple elements at once
             // Find elements smaller than pivot from left
             while i < j {
-                let chunk_size = (j - i).min(8);
+                let chunksize = (j - i).min(8);
                 let mut found = false;
 
-                for offset in 0..chunk_size {
+                for offset in 0..chunksize {
                     if arr[i + offset] >= pivot {
                         i += offset;
                         found = true;
@@ -72,7 +72,7 @@ where
                 }
 
                 if !found {
-                    i += chunk_size;
+                    i += chunksize;
                 } else {
                     break;
                 }
@@ -80,10 +80,10 @@ where
 
             // Find elements larger than pivot from right
             while i < j {
-                let chunk_size = (j - i).min(8);
+                let chunksize = (j - i).min(8);
                 let mut found = false;
 
-                for offset in 0..chunk_size {
+                for offset in 0..chunksize {
                     if arr[j - offset] <= pivot {
                         j -= offset;
                         found = true;
@@ -92,7 +92,7 @@ where
                 }
 
                 if !found {
-                    j -= chunk_size;
+                    j -= chunksize;
                 } else {
                     break;
                 }

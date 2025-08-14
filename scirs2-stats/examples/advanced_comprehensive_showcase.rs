@@ -54,9 +54,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Statistical test
     println!("\n4. 🧪 Statistical Tests");
-    let test_data = Array1::from_vec(vec![-0.5, 0.2, 1.1, -0.8, 0.3, 0.9, -0.2, 0.7, -0.4, 0.6]);
+    let testdata = Array1::from_vec(vec![-0.5, 0.2, 1.1, -0.8, 0.3, 0.9, -0.2, 0.7, -0.4, 0.6]);
     let test_result = ttest_1samp(
-        &test_data.view(),
+        &testdata.view(),
         0.0,
         scirs2_stats::tests::ttest::Alternative::TwoSided,
         "omit",

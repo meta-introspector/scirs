@@ -53,7 +53,7 @@ fn benchmark_nearest_neighbor(
 
         // Sort by distance and take k nearest
         distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
-        let (_indices_distances): (Vec<_>, Vec<_>) = distances.into_iter().take(k).unzip();
+        let (_indicesdistances): (Vec<_>, Vec<_>) = distances.into_iter().take(k).unzip();
     }
     let brute_force_time = start.elapsed();
 
@@ -78,26 +78,26 @@ fn compare_distance_metrics(_data: &Array2<f64>, querypoint: &[f64], k: usize) {
         "\nComparing results with different distance metrics for query _point: {query_point:?}"
     );
 
-    let (indices_euclidean, Some(distances_euclidean)) =
+    let (indiceseuclidean, Some(distances_euclidean)) =
         ball_tree_euclidean.query(query_point, k, true).unwrap()
     else {
         unreachable!()
     };
 
-    let (indices_manhattan, Some(distances_manhattan)) =
+    let (indicesmanhattan, Some(distances_manhattan)) =
         ball_tree_manhattan.query(query_point, k, true).unwrap()
     else {
         unreachable!()
     };
 
-    let (indices_chebyshev, Some(distances_chebyshev)) =
+    let (indiceschebyshev, Some(distances_chebyshev)) =
         ball_tree_chebyshev.query(query_point, k, true).unwrap()
     else {
         unreachable!()
     };
 
     println!("Euclidean distances:");
-    for (i, (&idx, &dist)) in indices_euclidean
+    for (i, (&idx, &dist)) in indiceseuclidean
         .iter()
         .zip(distances_euclidean.iter())
         .enumerate()
@@ -112,7 +112,7 @@ fn compare_distance_metrics(_data: &Array2<f64>, querypoint: &[f64], k: usize) {
     }
 
     println!("\nManhattan distances:");
-    for (i, (&idx, &dist)) in indices_manhattan
+    for (i, (&idx, &dist)) in indicesmanhattan
         .iter()
         .zip(distances_manhattan.iter())
         .enumerate()
@@ -127,7 +127,7 @@ fn compare_distance_metrics(_data: &Array2<f64>, querypoint: &[f64], k: usize) {
     }
 
     println!("\nChebyshev distances:");
-    for (i, (&idx, &dist)) in indices_chebyshev
+    for (i, (&idx, &dist)) in indiceschebyshev
         .iter()
         .zip(distances_chebyshev.iter())
         .enumerate()

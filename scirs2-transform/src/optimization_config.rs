@@ -428,10 +428,7 @@ impl OptimizationConfig {
     }
 
     /// Get estimated execution time for this configuration
-    pub fn estimated_execution_time(
-        &self,
-        datachars: &DataCharacteristics,
-    ) -> std::time::Duration {
+    pub fn estimated_execution_time(&self, datachars: &DataCharacteristics) -> std::time::Duration {
         use std::time::Duration;
 
         let base_ops = datachars.n_samples as u64 * datachars.nfeatures as u64;

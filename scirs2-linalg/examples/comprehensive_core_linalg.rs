@@ -17,7 +17,7 @@ fn main() -> LinalgResult<()> {
     println!("=== Comprehensive Linear Algebra Example ===\n");
 
     // Basic matrix operations
-    basic_matrix_operations()?;
+    basicmatrix_operations()?;
 
     // Matrix decompositions
     matrix_decompositions()?;
@@ -40,7 +40,7 @@ fn main() -> LinalgResult<()> {
 
 /// Demonstrates basic matrix operations
 #[allow(dead_code)]
-fn basic_matrix_operations() -> LinalgResult<()> {
+fn basicmatrix_operations() -> LinalgResult<()> {
     println!("📊 Basic Matrix Operations");
     println!("{}", "=".repeat(50));
 
@@ -277,7 +277,7 @@ fn parallel_processing_examples() -> LinalgResult<()> {
     let config = WorkerConfig::new()
         .with_workers(4)
         .with_threshold(100) // Use parallel for matrices with 100+ elements
-        .with_chunk_size(32);
+        .with_chunksize(32);
 
     println!("Worker configuration: {:?}", config);
 
@@ -376,9 +376,9 @@ fn error_handling_demonstration() {
 
     // Non-finite values
     println!("\n🔹 Non-finite Value Errors");
-    let invalid_matrix = array![[1.0, f64::NAN], [f64::INFINITY, 4.0]];
+    let invalidmatrix = array![[1.0, f64::NAN], [f64::INFINITY, 4.0]];
 
-    match det(&invalid_matrix.view(), None) {
+    match det(&invalidmatrix.view(), None) {
         Ok(_) => println!("Unexpected success!"),
         Err(e) => println!("Expected error: {}", e),
     }

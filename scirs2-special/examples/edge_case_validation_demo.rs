@@ -3,7 +3,7 @@
 //! This example demonstrates comprehensive edge case testing for special functions,
 //! covering extreme values, boundary conditions, and numerical precision validation.
 
-use scirs2__special::edge_case_tests::{
+use scirs2_special::edge_case_tests::{
     run_comprehensive_edge_case_tests, test_array_edge_cases, test_numerical_precision,
     EdgeCaseConfig,
 };
@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate custom edge case scenarios
 #[allow(dead_code)]
 fn demonstrate_custom_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
-    use scirs2__special::{bessel, erf, erfc, gamma};
+    use scirs2_special::{bessel, erf, erfc, gamma};
 
     println!("Testing challenging numerical scenarios:");
 
@@ -122,7 +122,7 @@ fn demonstrate_custom_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
 /// Analyze performance impact of edge cases
 #[allow(dead_code)]
 fn analyze_edge_case_performance() -> Result<(), Box<dyn std::error::Error>> {
-    use scirs2__special::gamma;
+    use scirs2_special::gamma;
     use std::time::Instant;
 
     println!("Measuring performance for different value ranges:");
@@ -161,7 +161,7 @@ fn analyze_edge_case_performance() -> Result<(), Box<dyn std::error::Error>> {
 /// Test robustness against various inputs
 #[allow(dead_code)]
 fn test_robustness() -> Result<(), Box<dyn std::error::Error>> {
-    use scirs2__special::{bessel, erf, gamma};
+    use scirs2_special::{bessel, erf, gamma};
 
     println!("Testing robustness against various challenging inputs:");
 
@@ -217,7 +217,7 @@ fn test_robustness() -> Result<(), Box<dyn std::error::Error>> {
 /// Test gamma function monotonicity in valid ranges
 #[allow(dead_code)]
 fn test_gamma_monotonicity() -> Result<(), Box<dyn std::error::Error>> {
-    use scirs2__special::gamma;
+    use scirs2_special::gamma;
 
     println!("  Testing gamma function monotonicity:");
 
@@ -249,7 +249,7 @@ fn test_gamma_monotonicity() -> Result<(), Box<dyn std::error::Error>> {
 /// Test error function monotonicity
 #[allow(dead_code)]
 fn test_erf_monotonicity() -> Result<(), Box<dyn std::error::Error>> {
-    use scirs2__special::erf;
+    use scirs2_special::erf;
 
     println!("  Testing error function monotonicity:");
 
@@ -280,7 +280,7 @@ fn test_erf_monotonicity() -> Result<(), Box<dyn std::error::Error>> {
 /// Test error function symmetry: erf(-x) = -erf(x)
 #[allow(dead_code)]
 fn test_erf_symmetry() -> Result<(), Box<dyn std::error::Error>> {
-    use scirs2__special::erf;
+    use scirs2_special::erf;
 
     println!("  Testing error function symmetry:");
 

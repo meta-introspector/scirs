@@ -195,11 +195,7 @@ pub fn waverec(coeffs: &[Vec<f64>], wavelet: Wavelet) -> SignalResult<Vec<f64>> 
 // Compatibility wrapper functions for old API style
 
 /// Compatibility wrapper for wavedec with 3 parameters (old API)
-pub fn wavedec_compat<T>(
-    data: &[T],
-    wavelet: Wavelet,
-    level: usize,
-) -> SignalResult<Vec<Vec<f64>>>
+pub fn wavedec_compat<T>(data: &[T], wavelet: Wavelet, level: usize) -> SignalResult<Vec<Vec<f64>>>
 where
     T: Float + NumCast + Debug,
 {
@@ -207,10 +203,6 @@ where
 }
 
 /// Compatibility wrapper for waverec with DecompositionResult input
-pub fn waverec_compat(
-    coeffs: &[Vec<f64>],
-    wavelet: Wavelet,
-) -> SignalResult<Vec<f64>>
-{
+pub fn waverec_compat(coeffs: &[Vec<f64>], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
     waverec(coeffs, wavelet)
 }

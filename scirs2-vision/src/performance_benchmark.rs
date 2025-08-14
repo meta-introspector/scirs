@@ -607,7 +607,7 @@ impl AdvancedBenchmarkSuite {
     /// Calculate quality metrics from quality scores
     fn calculate_quality_metrics(&self, qualityscores: &[f64]) -> QualityMetrics {
         QualityMetrics {
-            quality_scores: self.calculate_statistical_summary(quality_scores),
+            quality_scores: self.calculate_statistical_summary(qualityscores),
             accuracy: AccuracyMetrics::default(),
             consistency: ConsistencyMetrics::default(),
             error_rates: ErrorRateMetrics::default(),
@@ -615,7 +615,7 @@ impl AdvancedBenchmarkSuite {
     }
 
     /// Calculate scalability metrics
-    fn calculate_scalability_metrics(selflatencies: &[f64]) -> ScalabilityMetrics {
+    fn calculate_scalability_metrics(&self, latencies: &[f64]) -> ScalabilityMetrics {
         ScalabilityMetrics {
             batch_scaling: vec![(1, 1.0), (4, 0.9), (8, 0.85), (16, 0.8)],
             input_size_scaling: vec![(240, 1.0), (480, 0.95), (720, 0.9), (1080, 0.85)],
@@ -756,7 +756,7 @@ impl StatisticalAnalyzer {
             performance_predictor: PerformancePredictor,
         }
     }
-    fn analyze_trends(&mut selfresults: &[BenchmarkResult]) {}
+    fn analyze_trends(&mut self, results: &[BenchmarkResult]) {}
 }
 
 impl WorkloadGenerators {

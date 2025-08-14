@@ -50,7 +50,7 @@ impl<A: Float + ScalarOperand + Debug> InPlaceSGD<A> {
     /// Create a new in-place SGD optimizer
     pub fn new(_learningrate: A) -> Self {
         Self {
-            _learningrate: _learningrate,
+            _learningrate,
             momentum: A::zero(),
             weight_decay: A::zero(),
         }
@@ -105,7 +105,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> InPlaceAdam<A, D> {
     /// Create a new in-place Adam optimizer
     pub fn new(_learningrate: A) -> Self {
         Self {
-            _learningrate: _learningrate,
+            _learningrate,
             beta1: A::from(0.9).unwrap(),
             beta2: A::from(0.999).unwrap(),
             epsilon: A::from(1e-8).unwrap(),
@@ -595,7 +595,7 @@ pub mod gradient_checkpointing {
         /// Create a new gradient checkpointer
         pub fn new(strategy: CheckpointStrategy) -> Self {
             Self {
-                strategy: strategy,
+                strategy,
                 checkpoints: std::collections::HashMap::new(),
                 memory_tracker: MemoryTracker::new(),
                 current_depth: 0,
@@ -947,8 +947,7 @@ pub mod gradient_checkpointing {
             // Optimize strategy if we're significantly off target
             let deviation = (recent_avg - self.target_memoryratio).abs();
             if deviation > 0.1 {
-                self.checkpointer
-                    .optimize_strategy(self.target_memoryratio);
+                self.checkpointer.optimize_strategy(self.target_memoryratio);
             }
         }
 
@@ -1032,7 +1031,7 @@ pub mod adaptive {
         /// Create a new memory-aware batch sizer
         pub fn new(_initial_batchsize: usize) -> Self {
             Self {
-                _initial_batchsize: _initial_batchsize,
+                _initial_batchsize,
                 max_batch_size: _initial_batchsize * 4,
                 min_batch_size: _initial_batchsize.max(1) / 4,
                 current_batch_size: _initial_batchsize,

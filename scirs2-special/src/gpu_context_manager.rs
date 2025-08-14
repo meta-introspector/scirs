@@ -14,9 +14,9 @@ use std::time::Duration;
 pub struct GpuDeviceInfo {
     pub device_id: usize,
     pub device_name: String,
-    pub memory_size: u64,
+    pub memorysize: u64,
     pub compute_units: u32,
-    pub max_workgroup_size: u32,
+    pub max_workgroupsize: u32,
     pub backend_type: GpuBackend,
     pub is_available: bool,
 }
@@ -41,7 +41,7 @@ pub struct GpuPerformanceStats {
 #[derive(Debug, Clone)]
 pub struct GpuProductionConfig {
     /// Minimum array size to consider GPU acceleration (default: 1000)
-    pub min_gpu_array_size: usize,
+    pub min_gpu_arraysize: usize,
     /// Maximum GPU memory usage percentage (default: 80%)
     pub max_memory_usage_percent: f32,
     /// Enable automatic GPU/CPU switching based on performance (default: true)
@@ -59,7 +59,7 @@ pub struct GpuProductionConfig {
 impl Default for GpuProductionConfig {
     fn default() -> Self {
         Self {
-            min_gpu_array_size: 1000,
+            min_gpu_arraysize: 1000,
             max_memory_usage_percent: 80.0,
             enable_adaptive_switching: true,
             warmup_iterations: 3,
@@ -170,9 +170,9 @@ impl GpuContextPool {
                 let info = GpuDeviceInfo {
                     device_id: 0,
                     device_name: "WebGPU Device".to_string(),
-                    memory_size: 1024 * 1024 * 1024, // Assume 1GB
-                    compute_units: 32,               // Conservative estimate
-                    max_workgroup_size: 256,
+                    memorysize: 1024 * 1024 * 1024, // Assume 1GB
+                    compute_units: 32,              // Conservative estimate
+                    max_workgroupsize: 256,
                     backend_type: GpuBackend::Wgpu,
                     is_available: true,
                 };
@@ -208,9 +208,9 @@ impl GpuContextPool {
                     GpuDeviceInfo {
                         device_id: 0,
                         device_name: "OpenCL Device".to_string(),
-                        memory_size: 2 * 1024 * 1024 * 1024, // 2GB assumption
-                        compute_units: 16,                   // Conservative estimate
-                        max_workgroup_size: 256,
+                        memorysize: 2 * 1024 * 1024 * 1024, // 2GB assumption
+                        compute_units: 16,                  // Conservative estimate
+                        max_workgroupsize: 256,
                         backend_type: GpuBackend::OpenCL,
                         is_available: true,
                     }
@@ -252,9 +252,9 @@ impl GpuContextPool {
                     GpuDeviceInfo {
                         device_id: 0,
                         device_name: "NVIDIA CUDA Device".to_string(),
-                        memory_size: 4 * 1024 * 1024 * 1024, // 4GB assumption for CUDA
-                        compute_units: 64,                   // Higher for CUDA devices
-                        max_workgroup_size: 1024,            // CUDA supports larger workgroups
+                        memorysize: 4 * 1024 * 1024 * 1024, // 4GB assumption for CUDA
+                        compute_units: 64,                  // Higher for CUDA devices
+                        max_workgroupsize: 1024,            // CUDA supports larger workgroups
                         backend_type: GpuBackend::Cuda,
                         is_available: true,
                     }
@@ -349,7 +349,7 @@ impl GpuContextPool {
         backend_type: GpuBackend,
         execution_time: Duration,
         success: bool,
-        data_size: usize,
+        datasize: usize,
     ) {
         let mut stats = self.performance_stats.write().unwrap();
         if let Some(stat) = stats.get_mut(&backend_type) {
@@ -360,7 +360,7 @@ impl GpuContextPool {
                 stat.total_execution_time += execution_time;
                 stat.average_execution_time =
                     stat.total_execution_time / stat.successful_operations as u32;
-                stat.total_data_transferred += data_size as u64;
+                stat.total_data_transferred += datasize as u64;
             } else {
                 stat.failed_operations += 1;
             }
@@ -381,15 +381,15 @@ impl GpuContextPool {
     }
 
     /// Check if GPU acceleration should be used for given array size
-    pub fn should_use_gpu(&self, array_size: usize, data_typesize: usize) -> bool {
+    pub fn should_use_gpu(&self, arraysize: usize, data_typesize: usize) -> bool {
         // Only use GPU for sufficiently large arrays
-        let min_elements = match data_type_size {
+        let min_elements = match data_typesize {
             4 => 512,  // f32
             8 => 256,  // f64
             _ => 1024, // other types
         };
 
-        if array_size < min_elements {
+        if arraysize < min_elements {
             return false;
         }
 
@@ -425,9 +425,9 @@ impl GpuContextPool {
         Ok(GpuDeviceInfo {
             device_id: 0,
             device_name: format!("OpenCL GPU Device ({})", self.detect_gpu_vendor()),
-            memory_size: estimated_memory,
+            memorysize: estimated_memory,
             compute_units: estimated_compute_units,
-            max_workgroup_size: 256,
+            max_workgroupsize: 256,
             backend_type: GpuBackend::OpenCL,
             is_available: true,
         })
@@ -444,9 +444,9 @@ impl GpuContextPool {
         Ok(GpuDeviceInfo {
             device_id: 0,
             device_name: format!("NVIDIA CUDA Device ({})", self.detect_nvidia_architecture()),
-            memory_size: estimated_memory,
+            memorysize: estimated_memory,
             compute_units: estimated_compute_units,
-            max_workgroup_size: 1024,
+            max_workgroupsize: 1024,
             backend_type: GpuBackend::Cuda,
             is_available: true,
         })
@@ -471,7 +471,7 @@ impl GpuContextPool {
     fn detect_nvidia_architecture(&self) -> String {
         "Unknown Architecture".to_string()
     }
-    fn get_system_memory_size(&self) -> u64 {
+    fn get_system_memorysize(&self) -> u64 {
         8 * 1024 * 1024 * 1024
     }
     fn is_likely_integrated_gpu(&self) -> bool {
@@ -537,14 +537,11 @@ impl GpuContextPool {
             for (backend_type, info) in device_info.iter() {
                 report.push_str(&format!("Backend: {:?}\n", backend_type));
                 report.push_str(&format!("  Device: {}\n", info.device_name));
-                report.push_str(&format!(
-                    "  Memory: {} MB\n",
-                    info.memory_size / 1024 / 1024
-                ));
+                report.push_str(&format!("  Memory: {} MB\n", info.memorysize / 1024 / 1024));
                 report.push_str(&format!("  Compute Units: {}\n", info.compute_units));
                 report.push_str(&format!(
                     "  Max Workgroup Size: {}\n",
-                    info.max_workgroup_size
+                    info.max_workgroupsize
                 ));
                 report.push_str(&format!("  Available: {}\n", info.is_available));
 
@@ -604,8 +601,8 @@ pub fn get_best_gpu_context() -> SpecialResult<Arc<GpuContext>> {
 
 /// Check if GPU should be used for computation
 #[allow(dead_code)]
-pub fn should_use_gpu_computation(_array_size: usize, elementsize: usize) -> bool {
-    get_gpu_pool().should_use_gpu(_array_size, element_size)
+pub fn should_use_gpu_computation(_arraysize: usize, elementsize: usize) -> bool {
+    get_gpu_pool().should_use_gpu(_arraysize, elementsize)
 }
 
 /// Record GPU operation performance
@@ -614,9 +611,9 @@ pub fn record_gpu_performance(
     backend_type: GpuBackend,
     execution_time: Duration,
     success: bool,
-    data_size: usize,
+    datasize: usize,
 ) {
-    get_gpu_pool().record_operation(backend_type, execution_time, success, data_size);
+    get_gpu_pool().record_operation(backend_type, execution_time, success, datasize);
 }
 
 /// Validate GPU infrastructure for production use
@@ -638,7 +635,7 @@ pub fn validate_gpu_production_readiness() -> SpecialResult<String> {
 
         // Check memory capacity
         for (backend, info) in device_info.iter() {
-            let memory_gb = info.memory_size as f64 / (1024.0 * 1024.0 * 1024.0);
+            let memory_gb = info.memorysize as f64 / (1024.0 * 1024.0 * 1024.0);
             validation_report.push_str(&format!(
                 "   {:?}: {:.1} GB memory, {} compute units\n",
                 backend, memory_gb, info.compute_units
@@ -667,7 +664,7 @@ pub fn validate_gpu_production_readiness() -> SpecialResult<String> {
     validation_report.push_str("⚙️  Configuration:\n");
     validation_report.push_str(&format!(
         "   Min array size for GPU: {}\n",
-        config.min_gpu_array_size
+        config.min_gpu_arraysize
     ));
     validation_report.push_str(&format!(
         "   Max memory usage: {:.0}%\n",
@@ -690,7 +687,7 @@ pub fn validate_gpu_production_readiness() -> SpecialResult<String> {
     } else {
         validation_report.push_str("   • GPU infrastructure ready for production use\n");
         validation_report.push_str("   • Monitor performance with get_system_report()\n");
-        validation_report.push_str("   • Adjust min_gpu_array_size based on workload\n");
+        validation_report.push_str("   • Adjust min_gpu_arraysize based on workload\n");
     }
 
     Ok(validation_report)
@@ -728,7 +725,7 @@ pub fn get_gpu_resource_utilization() -> String {
 
     for (backend, info) in device_info.iter() {
         if let Some(stat) = stats.get(backend) {
-            let memory_usage = (stat.peak_memory_usage as f64 / info.memory_size as f64) * 100.0;
+            let memory_usage = (stat.peak_memory_usage as f64 / info.memorysize as f64) * 100.0;
             let efficiency = if stat.total_operations > 0 {
                 (stat.successful_operations as f64 / stat.total_operations as f64) * 100.0
             } else {

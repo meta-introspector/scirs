@@ -30,7 +30,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::mathieu_a;
+/// use scirs2_special::mathieu_a;
 ///
 /// // Evaluate characteristic value for m=0, q=0.1
 /// let a_value = mathieu_a(0, 0.1f64).unwrap();
@@ -73,7 +73,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::mathieu_b;
+/// use scirs2_special::mathieu_b;
 ///
 /// // Evaluate characteristic value for m=1, q=0.1
 /// let b_value = mathieu_b(1, 0.1f64).unwrap();
@@ -121,7 +121,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::mathieu_even_coef;
+/// use scirs2_special::mathieu_even_coef;
 ///
 /// // Get Fourier coefficients for m=0, q=1.0
 /// let coeffs = mathieu_even_coef(0, 1.0f64).unwrap();
@@ -158,7 +158,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::mathieu_odd_coef;
+/// use scirs2_special::mathieu_odd_coef;
 ///
 /// // Get Fourier coefficients for m=1, q=1.0
 /// let coeffs = mathieu_odd_coef(1, 1.0f64).unwrap();
@@ -198,7 +198,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::mathieu_cem;
+/// use scirs2_special::mathieu_cem;
 /// use std::f64::consts::PI;
 ///
 /// // Evaluate ce_0(π/4, 1.0) and its derivative
@@ -238,7 +238,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::mathieu_sem;
+/// use scirs2_special::mathieu_sem;
 /// use std::f64::consts::PI;
 ///
 /// // Evaluate se_1(π/4, 1.0) and its derivative

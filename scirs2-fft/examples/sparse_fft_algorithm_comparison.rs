@@ -4,8 +4,8 @@ use plotly::{
 };
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use rand__distr::{Distribution, Normal};
-use scirs2__fft::{
+use rand_distr::{Distribution, Normal};
+use scirs2_fft::{
     sparse_fft::{SparseFFTAlgorithm, SparseFFTResult, WindowFunction},
     sparse_fft_gpu::GPUBackend,
     sparse_fft_gpu_cuda::{cuda_sparse_fft, get_cuda_devices},

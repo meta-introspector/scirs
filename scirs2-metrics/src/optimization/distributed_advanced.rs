@@ -1651,7 +1651,9 @@ impl AdvancedDistributedCoordinator {
         Ok(Self {
             config: config.clone(),
             consensus: Arc::new(Mutex::new(consensus)),
-            shard_manager: Arc::new(Mutex::new(ShardManager::new(config.sharding_config.clone()))),
+            shard_manager: Arc::new(Mutex::new(ShardManager::new(
+                config.sharding_config.clone(),
+            ))),
             fault_manager: Arc::new(Mutex::new(FaultRecoveryManager::new(
                 config.fault_tolerance.clone(),
             ))),
@@ -1897,7 +1899,7 @@ impl AdvancedDistributedCoordinator {
                         end_index,
                     } => end_index - start_index,
                     DataRange::Hash { .. } => 1000, // Default sample count for hash partitioning
-                    DataRange::Key { .. } => 1000, // Default sample count for key partitioning  
+                    DataRange::Key { .. } => 1000,  // Default sample count for key partitioning
                     DataRange::Custom { .. } => 1000, // Default sample count for custom partitioning
                 };
 

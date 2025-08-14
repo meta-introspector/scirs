@@ -1117,7 +1117,7 @@ impl FitsTableReader {
     /// Create a new table reader
     pub fn new(hdu: HDU) -> Result<Self> {
         match hdu.hdu_type {
-            HDUType::AsciiTable | HDUType::BinaryTable => Ok(Self { hdu: hdu }),
+            HDUType::AsciiTable | HDUType::BinaryTable => Ok(Self { hdu }),
             _ => Err(IoError::ParseError("HDU is not a table".to_string())),
         }
     }

@@ -293,7 +293,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
         }
 
         Self {
-            strategy: strategy,
+            strategy,
             performance_history: HashMap::new(),
             problem_optimizer_map: Vec::new(),
             current_problem: None,

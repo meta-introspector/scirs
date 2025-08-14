@@ -23,12 +23,12 @@ pub use attention::{
 ///
 /// # Arguments
 ///
-/// * `batch_a` - 3D array of shape (batch_size, m, k) representing the batch of matrices
+/// * `batch_a` - 3D array of shape (batchsize, m, k) representing the batch of matrices
 /// * `b` - 2D array of shape (k, n) representing the right-hand side matrix
 ///
 /// # Returns
 ///
-/// * 3D array of shape (batch_size, m, n) containing the result of each batch multiplication
+/// * 3D array of shape (batchsize, m, n) containing the result of each batch multiplication
 ///
 /// # Examples
 ///
@@ -65,7 +65,7 @@ where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Check dimensions compatibility
-    let (batch_size, m, k1) = batch_a.dim();
+    let (batchsize, m, k1) = batch_a.dim();
     let (k2, n) = b.dim();
 
     if k1 != k2 {
@@ -75,10 +75,10 @@ where
     }
 
     // Initialize result array
-    let mut result = Array::zeros((batch_size, m, n));
+    let mut result = Array::zeros((batchsize, m, n));
 
     // Perform batch matrix multiplication
-    for batch_idx in 0..batch_size {
+    for batch_idx in 0..batchsize {
         for i in 0..m {
             for j in 0..n {
                 // Compute the dot product between row i of matrix from batch_a and column j of b
@@ -100,12 +100,12 @@ where
 ///
 /// # Arguments
 ///
-/// * `batch_a` - 3D array of shape (batch_size, m, n) representing the batch of matrices
+/// * `batch_a` - 3D array of shape (batchsize, m, n) representing the batch of matrices
 /// * `x` - Vector of length n
 ///
 /// # Returns
 ///
-/// * 2D array of shape (batch_size, m) containing the result of each matrix-vector multiplication
+/// * 2D array of shape (batchsize, m) containing the result of each matrix-vector multiplication
 ///
 /// # Examples
 ///
@@ -142,7 +142,7 @@ where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Check dimensions compatibility
-    let (batch_size, m, n) = batch_a.dim();
+    let (batchsize, m, n) = batch_a.dim();
     let x_len = x.len();
 
     if n != x_len {
@@ -152,10 +152,10 @@ where
     }
 
     // Initialize result array
-    let mut result = Array::zeros((batch_size, m));
+    let mut result = Array::zeros((batchsize, m));
 
     // Perform batch matrix-vector multiplication
-    for batch_idx in 0..batch_size {
+    for batch_idx in 0..batchsize {
         for i in 0..m {
             // Compute the dot product between row i of matrix from batch_a and vector x
             let mut sum = F::zero();
@@ -176,13 +176,13 @@ where
 ///
 /// # Arguments
 ///
-/// * `batch_a` - 3D array of shape (batch_size, m, n) representing the batch of matrices
+/// * `batch_a` - 3D array of shape (batchsize, m, n) representing the batch of matrices
 /// * `v` - Vector to add to each matrix in the batch
 /// * `axis` - Axis along which to add the vector (0 for column-wise, 1 for row-wise)
 ///
 /// # Returns
 ///
-/// * 3D array of shape (batch_size, m, n) containing the result
+/// * 3D array of shape (batchsize, m, n) containing the result
 ///
 /// # Examples
 ///
@@ -227,7 +227,7 @@ where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Check dimensions compatibility
-    let (batch_size, m, n) = batch_a.dim();
+    let (batchsize, m, n) = batch_a.dim();
 
     // Check if vector dimension is compatible with the specified axis
     match axis {
@@ -263,7 +263,7 @@ where
     match axis {
         0 => {
             // Column-wise addition (add to each column)
-            for batch_idx in 0..batch_size {
+            for batch_idx in 0..batchsize {
                 for i in 0..m {
                     for j in 0..n {
                         result[[batch_idx, i, j]] += v[i];
@@ -273,7 +273,7 @@ where
         }
         1 => {
             // Row-wise addition (add to each row)
-            for batch_idx in 0..batch_size {
+            for batch_idx in 0..batchsize {
                 for i in 0..m {
                     for j in 0..n {
                         result[[batch_idx, i, j]] += v[j];
@@ -293,7 +293,7 @@ where
 ///
 /// # Arguments
 ///
-/// * `batch_a` - 3D array of shape (batch_size, m, n) representing the batch of matrices
+/// * `batch_a` - 3D array of shape (batchsize, m, n) representing the batch of matrices
 ///
 /// # Returns
 ///

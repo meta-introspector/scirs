@@ -152,7 +152,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 JacobianStrategy::AutoDiff => 1,
                 JacobianStrategy::Adaptive => 1,
             },
-            strategy: strategy,
+            strategy,
             structure,
             condition_estimate: None,
             factorized: false,

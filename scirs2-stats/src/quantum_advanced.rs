@@ -355,7 +355,7 @@ pub struct QuantumTrainingConfig<F> {
     /// Number of epochs
     pub epochs: usize,
     /// Batch size
-    pub batch_size: usize,
+    pub batchsize: usize,
     /// Parameter shift rule for gradients
     pub use_parameter_shift: bool,
     /// Regularization strength
@@ -626,7 +626,7 @@ where
         };
 
         Self {
-            config: config,
+            config,
             cache,
             performance: QuantumPerformanceMetrics {
                 circuit_times: HashMap::new(),
@@ -1121,7 +1121,7 @@ where
                 training_config: QuantumTrainingConfig {
                     learning_rate: F::from(0.01).unwrap(),
                     epochs: 100,
-                    batch_size: 32,
+                    batchsize: 32,
                     use_parameter_shift: true,
                     regularization: F::from(0.001).unwrap(),
                 },
@@ -1249,7 +1249,7 @@ where
     fn quantum_quasi_random(&self, t: F, dim: usize) -> F {
         // Simplified van der Corput sequence with quantum enhancement
         let _phi = F::from((1.0 + 5.0_f64.sqrt()) / 2.0).unwrap(); // Golden ratio
-        let _base = F::from(2.0 + dim as f64).unwrap();
+        let base = F::from(2.0 + dim as f64).unwrap();
 
         // Quantum-inspired modification using Hadamard-like transformation
         let quantum_phase = (t * F::from(std::f64::consts::PI).unwrap()).sin();
@@ -1721,7 +1721,7 @@ where
     fn compute_quantum_model_weight(
         &self,
         model: &QuantumModel<F>,
-        _data: &ArrayView2<F>,
+        data: &ArrayView2<F>,
         _labels: &ArrayView1<F>,
     ) -> StatsResult<F> {
         // Weight based on training fidelity and quantum advantages
@@ -1902,27 +1902,27 @@ impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
     /// Advanced quantum teleportation-based data transfer
     pub fn quantum_teleportation_transfer(
         &mut self,
-        source_data: &ArrayView2<F>,
+        sourcedata: &ArrayView2<F>,
         _target_encoding: QuantumFeatureEncoding,
     ) -> StatsResult<Array2<F>> {
-        let (n_samples_, n_features) = source_data.dim();
-        let mut transferred_data = Array2::zeros((n_samples_, n_features));
+        let (n_samples_, n_features) = sourcedata.dim();
+        let mut transferreddata = Array2::zeros((n_samples_, n_features));
 
-        // Simulate quantum teleportation protocol for each _data point
+        // Simulate quantum teleportation protocol for each data point
         for i in 0..n_samples_ {
             for j in 0..n_features {
-                let original_value = source_data[[i, j]];
+                let original_value = sourcedata[[i, j]];
 
                 // Quantum teleportation with fidelity loss
                 let fidelity = F::from(0.95).unwrap(); // 95% teleportation fidelity
                 let noise = F::from(0.01).unwrap() * self.generate_quantum_noise();
 
                 let teleported_value = original_value * fidelity + noise;
-                transferred_data[[i, j]] = teleported_value;
+                transferreddata[[i, j]] = teleported_value;
             }
         }
 
-        Ok(transferred_data)
+        Ok(transferreddata)
     }
 
     /// Quantum entanglement-based correlation analysis

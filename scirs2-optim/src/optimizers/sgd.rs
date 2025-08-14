@@ -67,7 +67,7 @@ impl<A: Float + ScalarOperand + Debug> SGD<A> {
     /// * `weight_decay` - The weight decay factor (L2 regularization)
     pub fn new_with_config(learning_rate: A, momentum: A, weight_decay: A) -> Self {
         Self {
-            learning_rate: learning_rate,
+            learning_rate,
             momentum,
             weight_decay,
             velocity: None,

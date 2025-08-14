@@ -706,8 +706,8 @@ impl ActivityRecognitionEngine {
 
     // Helper methods (real implementations)
     fn extract_motion_features(&self, frame: &ArrayView3<f32>) -> Result<Array3<f32>> {
-        let (height, width_channels) = frame.dim();
-        let mut motion_features = Array3::zeros((height, width_, 10));
+        let (height, width, _channels) = frame.dim();
+        let mut motion_features = Array3::zeros((height, width, 10));
 
         // Extract basic motion features
         // Feature 0-1: Optical flow (x, y components)
@@ -723,7 +723,7 @@ impl ActivityRecognitionEngine {
 
         // Feature 2: Motion magnitude
         for y in 0..height {
-            for x in 0..width_ {
+            for x in 0..width {
                 let fx = motion_features[[y, x, 0]];
                 let fy = motion_features[[y, x, 1]];
                 motion_features[[y, x, 2]] = (fx * fx + fy * fy).sqrt();
@@ -732,7 +732,7 @@ impl ActivityRecognitionEngine {
 
         // Feature 3: Motion direction
         for y in 0..height {
-            for x in 0..width_ {
+            for x in 0..width {
                 let fx = motion_features[[y, x, 0]];
                 let fy = motion_features[[y, x, 1]];
                 motion_features[[y, x, 3]] = fy.atan2(fx);
@@ -742,7 +742,7 @@ impl ActivityRecognitionEngine {
         // Features 4-5: Temporal gradient
         if let Some(ref prev_frame) = self.get_previous_frame() {
             for y in 0..height {
-                for x in 0..width_ {
+                for x in 0..width {
                     let current = frame[[y, x, 0]];
                     let previous = prev_frame[[y, x, 0]];
                     motion_features[[y, x, 4]] = current - previous;
@@ -753,7 +753,7 @@ impl ActivityRecognitionEngine {
 
         // Features 6-9: Spatial gradients and motion boundaries
         for y in 1..height - 1 {
-            for x in 1..width_ - 1 {
+            for x in 1..width - 1 {
                 let mag = motion_features[[y, x, 2]];
                 let mag_left = motion_features[[y, x - 1, 2]];
                 let mag_right = motion_features[[y, x + 1, 2]];
@@ -772,6 +772,7 @@ impl ActivityRecognitionEngine {
     }
 
     fn detect_actions(
+        &self,
         self_frame: &ArrayView3<f32>,
         scene_analysis: &SceneAnalysisResult,
         motion_features: &Array3<f32>,
@@ -1082,13 +1083,13 @@ impl ActivitySequenceAnalyzer {
         let mut current_sequence: Option<ActivitySequence> = None;
 
         for frame_result in frame_activities.iter() {
-            for activity_ in &frame_result._activities {
+            for activity_ in &frame_result.activities {
                 match &mut current_sequence {
                     None => {
                         // Start new sequence
                         current_sequence = Some(ActivitySequence {
                             sequence_id: format!("seq_{}", sequences.len()),
-                            _activities: vec![activity_.clone()],
+                            activities: vec![activity_.clone()],
                             sequence_type: activity_.activity_class.clone(),
                             confidence: activity_.confidence,
                             transitions: Vec::new(),
@@ -1098,17 +1099,17 @@ impl ActivitySequenceAnalyzer {
                     Some(ref mut seq) => {
                         if activity_.activity_class == seq.sequence_type {
                             // Continue existing sequence
-                            seq._activities.push(activity_.clone());
+                            seq.activities.push(activity_.clone());
                             seq.confidence = (seq.confidence + activity_.confidence) / 2.0;
                         } else {
                             // End current sequence and start new one
                             seq.completeness =
-                                seq._activities.len() as f32 / frame_activities.len() as f32;
+                                seq.activities.len() as f32 / frame_activities.len() as f32;
                             sequences.push(seq.clone());
 
                             current_sequence = Some(ActivitySequence {
                                 sequence_id: format!("seq_{}", sequences.len()),
-                                _activities: vec![activity_.clone()],
+                                activities: vec![activity_.clone()],
                                 sequence_type: activity_.activity_class.clone(),
                                 confidence: activity_.confidence,
                                 transitions: vec![ActivityTransition {
@@ -1127,7 +1128,7 @@ impl ActivitySequenceAnalyzer {
 
         // Add final sequence
         if let Some(mut seq) = current_sequence {
-            seq.completeness = seq._activities.len() as f32 / frame_activities.len() as f32;
+            seq.completeness = seq.activities.len() as f32 / frame_activities.len() as f32;
             sequences.push(seq);
         }
 
@@ -1443,7 +1444,7 @@ pub fn monitor_activities_realtime(
 
     // Apply temporal smoothing if _history is available
     if let Some(_history) = activity_history {
-        result = apply_temporal_smoothing(result_history)?;
+        result = apply_temporal_smoothing(_history)?;
     }
 
     Ok(result)
@@ -1471,12 +1472,12 @@ impl ActivityRecognitionEngine {
         current_frame: &ArrayView3<f32>,
         previous_frame: &Array3<f32>,
     ) -> Result<Array3<f32>> {
-        let (height, width_) = current_frame.dim();
-        let mut flow = Array3::zeros((height, width_, 2));
+        let (height, width) = current_frame.dim();
+        let mut flow = Array3::zeros((height, width, 2));
 
         // Simple optical flow computation using _frame difference
         for y in 1..height - 1 {
-            for x in 1..width_ - 1 {
+            for x in 1..width - 1 {
                 let current = current_frame[[y, x, 0]];
                 let previous = previous_frame[[y, x, 0]];
 
@@ -1520,8 +1521,8 @@ impl ActivityRecognitionEngine {
 
         for _y in bbox_y..end_y {
             for _x in bbox_x..end_x {
-                let magnitude = motion_features[[_y, x, 2]];
-                let direction = motion_features[[_y, x, 3]];
+                let magnitude = motion_features[[_y, _x, 2]];
+                let direction = motion_features[[_y, _x, 3]];
 
                 sum_velocity += magnitude;
                 sum_magnitude += magnitude;
@@ -1589,10 +1590,10 @@ impl ActivityRecognitionEngine {
         );
 
         for _object in &scene_analysis.objects {
-            if object.class != "person" {
+            if _object.class != "person" {
                 let object_center = (
-                    object.bbox.0 + object.bbox.2 / 2.0,
-                    object.bbox.1 + object.bbox.3 / 2.0,
+                    _object.bbox.0 + _object.bbox.2 / 2.0,
+                    _object.bbox.1 + _object.bbox.3 / 2.0,
                 );
                 let distance = ((person_center.0 - object_center.0).powi(2)
                     + (person_center.1 - object_center.1).powi(2))
@@ -1600,7 +1601,7 @@ impl ActivityRecognitionEngine {
 
                 // If person is close to object, consider it an interaction
                 if distance < 100.0 {
-                    interactions.push(format!("{}:unknown", object.class));
+                    interactions.push(format!("{}:unknown", _object.class));
                 }
             }
         }

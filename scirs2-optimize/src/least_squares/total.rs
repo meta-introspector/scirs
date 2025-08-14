@@ -617,7 +617,12 @@ mod tests {
         let mut options_iter = TotalLeastSquaresOptions::default();
         options_iter.method = TLSMethod::Iterative;
 
-        let result_svd = total_least_squares::<ndarray::OwnedRepr<f64>, ndarray::OwnedRepr<f64>, ndarray::OwnedRepr<f64>, ndarray::OwnedRepr<f64>>(
+        let result_svd = total_least_squares::<
+            ndarray::OwnedRepr<f64>,
+            ndarray::OwnedRepr<f64>,
+            ndarray::OwnedRepr<f64>,
+            ndarray::OwnedRepr<f64>,
+        >(
             &x_measured,
             &y_measured,
             None::<&Array1<f64>>,
@@ -626,7 +631,12 @@ mod tests {
         )
         .unwrap();
 
-        let result_iter = total_least_squares::<ndarray::OwnedRepr<f64>, ndarray::OwnedRepr<f64>, ndarray::OwnedRepr<f64>, ndarray::OwnedRepr<f64>>(
+        let result_iter = total_least_squares::<
+            ndarray::OwnedRepr<f64>,
+            ndarray::OwnedRepr<f64>,
+            ndarray::OwnedRepr<f64>,
+            ndarray::OwnedRepr<f64>,
+        >(
             &x_measured,
             &y_measured,
             None::<&Array1<f64>>,

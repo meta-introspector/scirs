@@ -40,13 +40,13 @@ pub struct CpuCapabilities {
     /// Vector register width in bits
     pub vector_width: usize,
     /// Cache line size
-    pub cache_line_size: usize,
+    pub cache_linesize: usize,
     /// L1 cache size
-    pub l1_cache_size: usize,
+    pub l1_cachesize: usize,
     /// L2 cache size  
-    pub l2_cache_size: usize,
+    pub l2_cachesize: usize,
     /// L3 cache size
-    pub l3_cache_size: usize,
+    pub l3_cachesize: usize,
     /// Number of cores
     pub num_cores: usize,
     /// Memory bandwidth (GB/s)
@@ -195,7 +195,7 @@ pub struct PerformanceStatistics {
     /// Algorithm selection counts
     pub algorithm_usage: HashMap<String, u64>,
     /// Performance by data size
-    pub performance_by_size: HashMap<usize, f64>,
+    pub performance_bysize: HashMap<usize, f64>,
     /// Memory bandwidth utilization
     pub memory_bandwidth_utilization: f64,
 }
@@ -268,7 +268,7 @@ where
 
         Ok(Self {
             cpu_features,
-            config: config,
+            config,
             performance_stats: Arc::new(RwLock::new(PerformanceStatistics::default())),
             algorithm_cache: Arc::new(RwLock::new(HashMap::new())),
             _phantom: PhantomData,
@@ -287,10 +287,10 @@ where
                 InstructionSet::AVX2,
             ],
             vector_width: 256, // AVX2
-            cache_line_size: 64,
-            l1_cache_size: 32 * 1024,
-            l2_cache_size: 256 * 1024,
-            l3_cache_size: 8 * 1024 * 1024,
+            cache_linesize: 64,
+            l1_cachesize: 32 * 1024,
+            l2_cachesize: 256 * 1024,
+            l3_cachesize: 8 * 1024 * 1024,
             num_cores: num_cpus::get(),
             memory_bandwidth: 50.0, // GB/s estimate
         })
@@ -351,15 +351,15 @@ where
         }
 
         // Determine best algorithm based on data characteristics
-        let data_size = data.len();
-        let data_size_bytes = data_size * std::mem::size_of::<F>();
+        let datasize = data.len();
+        let datasize_bytes = datasize * std::mem::size_of::<F>();
 
-        let algorithm = if data_size < self.config.scalar_fallback_threshold {
+        let algorithm = if datasize < self.config.scalar_fallback_threshold {
             OptimalAlgorithm {
                 name: "scalar".to_string(),
                 instruction_set: InstructionSet::SSE2, // Fallback
                 performance_score: 0.6,
-                memory_requirements: data_size_bytes,
+                memory_requirements: datasize_bytes,
                 accuracy_score: 1.0,
                 last_used: std::time::Instant::now(),
             }
@@ -367,13 +367,13 @@ where
             .cpu_features
             .instruction_sets
             .contains(&InstructionSet::AVX512F)
-            && data_size > 10000
+            && datasize > 10000
         {
             OptimalAlgorithm {
                 name: "mean_avx512".to_string(),
                 instruction_set: InstructionSet::AVX512F,
                 performance_score: 1.0,
-                memory_requirements: data_size_bytes,
+                memory_requirements: datasize_bytes,
                 accuracy_score: 0.95,
                 last_used: std::time::Instant::now(),
             }
@@ -386,7 +386,7 @@ where
                 name: "mean_avx2".to_string(),
                 instruction_set: InstructionSet::AVX2,
                 performance_score: 0.9,
-                memory_requirements: data_size_bytes,
+                memory_requirements: datasize_bytes,
                 accuracy_score: 0.98,
                 last_used: std::time::Instant::now(),
             }
@@ -399,7 +399,7 @@ where
                 name: "mean_avx".to_string(),
                 instruction_set: InstructionSet::AVX,
                 performance_score: 0.8,
-                memory_requirements: data_size_bytes,
+                memory_requirements: datasize_bytes,
                 accuracy_score: 0.98,
                 last_used: std::time::Instant::now(),
             }
@@ -408,7 +408,7 @@ where
                 name: "mean_sse2".to_string(),
                 instruction_set: InstructionSet::SSE2,
                 performance_score: 0.7,
-                memory_requirements: data_size_bytes,
+                memory_requirements: datasize_bytes,
                 accuracy_score: 0.99,
                 last_used: std::time::Instant::now(),
             }
@@ -704,28 +704,24 @@ where
         + SimdUnifiedOps,
 {
     /// Predict optimal algorithm based on data characteristics
-    pub fn predict_optimal_algorithm(
-        &self,
-        data_size: usize,
-        data_variance: F,
-    ) -> OptimalAlgorithm {
+    pub fn predict_optimal_algorithm(&self, datasize: usize, data_variance: F) -> OptimalAlgorithm {
         // Simple ML-inspired decision tree for algorithm selection
-        if data_size < 100 {
+        if datasize < 100 {
             OptimalAlgorithm {
                 name: "Scalar".to_string(),
                 instruction_set: InstructionSet::SSE2,
                 performance_score: 1.0,
-                memory_requirements: data_size * std::mem::size_of::<F>(),
+                memory_requirements: datasize * std::mem::size_of::<F>(),
                 accuracy_score: 1.0,
                 last_used: std::time::Instant::now(),
             }
-        } else if data_size < 1000 {
+        } else if datasize < 1000 {
             if data_variance < F::from(1.0).unwrap() {
                 OptimalAlgorithm {
                     name: "SimdBasic".to_string(),
                     instruction_set: InstructionSet::AVX,
                     performance_score: 2.0,
-                    memory_requirements: data_size * std::mem::size_of::<F>(),
+                    memory_requirements: datasize * std::mem::size_of::<F>(),
                     accuracy_score: 0.95,
                     last_used: std::time::Instant::now(),
                 }
@@ -734,17 +730,17 @@ where
                     name: "SimdStable".to_string(),
                     instruction_set: InstructionSet::AVX2,
                     performance_score: 1.8,
-                    memory_requirements: data_size * std::mem::size_of::<F>(),
+                    memory_requirements: datasize * std::mem::size_of::<F>(),
                     accuracy_score: 1.0,
                     last_used: std::time::Instant::now(),
                 }
             }
-        } else if data_size < 10000 {
+        } else if datasize < 10000 {
             OptimalAlgorithm {
                 name: "SimdOptimized".to_string(),
                 instruction_set: InstructionSet::AVX512F,
                 performance_score: 3.0,
-                memory_requirements: data_size * std::mem::size_of::<F>(),
+                memory_requirements: datasize * std::mem::size_of::<F>(),
                 accuracy_score: 0.98,
                 last_used: std::time::Instant::now(),
             }
@@ -754,7 +750,7 @@ where
                 name: "ParallelSimd".to_string(),
                 instruction_set: InstructionSet::AVX512F,
                 performance_score: 4.0,
-                memory_requirements: data_size * std::mem::size_of::<F>(),
+                memory_requirements: datasize * std::mem::size_of::<F>(),
                 accuracy_score: 0.95,
                 last_used: std::time::Instant::now(),
             }
@@ -763,8 +759,8 @@ where
 
     /// Advanced cache-aware statistical computation
     pub fn cache_aware_mean(&self, data: &ArrayView1<F>) -> StatsResult<F> {
-        let cache_line_size = 64; // bytes
-        let elements_per_line = cache_line_size / std::mem::size_of::<F>();
+        let cache_linesize = 64; // bytes
+        let elements_per_line = cache_linesize / std::mem::size_of::<F>();
 
         if data.len() < elements_per_line {
             // Data fits in one cache line, use simple algorithm
@@ -820,7 +816,7 @@ where
 
     /// Auto-tuning for SIMD parameters based on runtime characteristics
     pub fn auto_tune_parameters(&mut self, sampledata: &ArrayView1<F>) -> StatsResult<()> {
-        let _data_size = sampledata.len();
+        let datasize = sampledata.len();
 
         // Benchmark different vectorization levels
         let start = std::time::Instant::now();

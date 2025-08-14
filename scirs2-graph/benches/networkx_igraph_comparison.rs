@@ -13,7 +13,7 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use scirs2__graph::{
+use scirs2_graph::{
     algorithms::shortest_path::k_shortest_paths as shortest_path,
     // Core algorithms for comparison
     barabasi_albert_graph,
@@ -621,7 +621,7 @@ where
     N: Clone + std::hash::Hash + Eq,
     Ix: petgraph::graph::IndexType,
 {
-    use scirs2__graph::advanced::{
+    use scirs2_graph::advanced::{
         create_performance_advanced_processor, execute_with_enhanced_advanced,
     };
 

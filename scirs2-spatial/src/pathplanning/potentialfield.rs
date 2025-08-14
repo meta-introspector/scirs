@@ -172,10 +172,7 @@ pub struct CircularObstacle {
 impl CircularObstacle {
     /// Create a new circular obstacle
     pub fn new(center: Array1<f64>, radius: f64) -> Self {
-        Self {
-            center: center,
-            radius,
-        }
+        Self { center, radius }
     }
 }
 
@@ -209,9 +206,7 @@ pub struct PolygonObstacle {
 impl PolygonObstacle {
     /// Create a new polygon obstacle
     pub fn new(vertices: Vec<Array1<f64>>) -> Self {
-        Self {
-            vertices: vertices,
-        }
+        Self { vertices }
     }
 
     /// Check if a point is inside the polygon using the ray casting algorithm
@@ -434,7 +429,7 @@ impl PotentialFieldPlanner {
     /// Create a new 2D potential field planner
     pub fn new_2d(config: PotentialConfig) -> Self {
         Self {
-            config: config,
+            config,
             obstacles: Vec::new(),
             dim: 2,
         }

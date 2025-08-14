@@ -1015,7 +1015,7 @@ impl SecurityAuditor {
     /// Create a new security auditor
     pub fn new(config: SecurityAuditConfig) -> Result<Self> {
         Ok(Self {
-            config: config,
+            config,
             input_validator: InputValidationAnalyzer::new(),
             privacy_analyzer: PrivacyGuaranteesAnalyzer::new(),
             memory_analyzer: MemorySafetyAnalyzer::new(),

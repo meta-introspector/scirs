@@ -165,7 +165,7 @@ pub struct DependencyEdge {
     /// Data dependency type
     pub dependency_type: DependencyType,
     /// Memory transfer size
-    pub transfer_size: usize,
+    pub transfersize: usize,
 }
 
 /// Types of dependencies between operations
@@ -323,9 +323,9 @@ pub struct GpuTopologyMap {
     /// Inter-GPU connections
     pub connections: Vec<GpuConnection>,
     /// Memory bandwidth matrix
-    pub bandwidth_matrix: Array2<f64>,
+    pub bandwidthmatrix: Array2<f64>,
     /// Latency matrix
-    pub latency_matrix: Array2<f64>,
+    pub latencymatrix: Array2<f64>,
 }
 
 /// GPU information
@@ -336,7 +336,7 @@ pub struct GpuInfo {
     /// GPU type
     pub gpu_type: GpuDeviceType,
     /// Memory size in bytes
-    pub memory_size: usize,
+    pub memorysize: usize,
     /// Compute capability
     pub compute_capability: (u32, u32),
     /// Number of SMs/CUs
@@ -432,7 +432,7 @@ pub struct WorkloadCharacteristics {
     /// Operation types
     pub operation_types: Vec<GpuOperationType>,
     /// Data sizes
-    pub data_sizes: Vec<TensorShape>,
+    pub datasizes: Vec<TensorShape>,
     /// Computation intensity
     pub computation_intensity: f64,
     /// Memory intensity
@@ -534,7 +534,7 @@ pub struct CommunicationPattern {
     /// Destination GPU
     pub destination: usize,
     /// Data size
-    pub data_size: usize,
+    pub datasize: usize,
     /// Frequency
     pub frequency: f64,
     /// Latency sensitivity
@@ -800,7 +800,7 @@ pub struct BandwidthMeasurement {
     /// Operation type
     pub operation_type: GpuOperationType,
     /// Data size
-    pub data_size: usize,
+    pub datasize: usize,
     /// GPU utilization at measurement
     pub gpu_utilization: f64,
 }
@@ -866,12 +866,12 @@ where
     pub fn predict_bandwidth_utilization(
         &self,
         operations: &[GpuOperationType],
-        data_sizes: &[usize],
+        datasizes: &[usize],
     ) -> LinalgResult<f64> {
         let predictor = self.bandwidth_predictor.lock()
             .map_err(|_| LinalgError::InvalidInput("Failed to acquire predictor lock".to_string()))?;
         
-        predictor.predict_bandwidth(operations, data_sizes)
+        predictor.predict_bandwidth(operations, datasizes)
     }
 
     /// Schedule tensor core operations
@@ -914,16 +914,16 @@ impl<T> OperationDependencyGraph<T> {
             .collect();
         
         // Estimate memory requirements
-        let total_input_size: usize = inputshapes.iter()
+        let total_inputsize: usize = inputshapes.iter()
             .map(|shape| shape.dimensions.iter().product::<usize>() * 4) // 4 bytes per f32
             .sum();
-        let output_size = outputshape.dimensions.iter().product::<usize>() * 4;
+        let outputsize = outputshape.dimensions.iter().product::<usize>() * 4;
         
         let memory_requirements = MemoryRequirements {
-            input_memory: total_input_size,
-            output_memory: output_size,
-            temp_memory: (total_input_size + output_size) / 4, // Estimate
-            bandwidth_requirement: (total_input_size + output_size) as f64 / 1e9, // GB/s estimate
+            input_memory: total_inputsize,
+            output_memory: outputsize,
+            temp_memory: (total_inputsize + outputsize) / 4, // Estimate
+            bandwidth_requirement: (total_inputsize + outputsize) as f64 / 1e9, // GB/s estimate
         };
         
         let node = OperationNode {
@@ -1083,8 +1083,8 @@ impl GpuTopologyMap {
         Ok(Self {
             gpus: Vec::new(),
             connections: Vec::new(),
-            bandwidth_matrix: Array2::zeros((0, 0)),
-            latency_matrix: Array2::zeros((0, 0)),
+            bandwidthmatrix: Array2::zeros((0, 0)),
+            latencymatrix: Array2::zeros((0, 0)),
         })
     }
 }
@@ -1478,25 +1478,25 @@ impl BandwidthPredictor {
     fn predict_bandwidth(
         &self,
         operations: &[GpuOperationType],
-        data_sizes: &[usize],
+        datasizes: &[usize],
     ) -> LinalgResult<f64> {
         // Advanced MODE: Advanced ML-based bandwidth prediction
         
         // 1. Calculate operation complexity score
         let complexity_score = operations.iter().enumerate().map(|(i, op)| {
-            let data_size = data_sizes.get(i).unwrap_or(&1);
+            let datasize = datasizes.get(i).unwrap_or(&1);
             match op {
-                GpuOperationType::MatrixMultiplication => (*data_size as f64).powf(1.5) * 0.8,
-                GpuOperationType::ElementwiseAddition => *data_size as f64 * 0.2,
-                GpuOperationType::Convolution => (*data_size as f64).powf(1.3) * 1.2,
-                GpuOperationType::Reduction => (*data_size as f64).log2() * 0.5,
-                GpuOperationType::Transpose => *data_size as f64 * 0.3,
-                GpuOperationType::Normalization => *data_size as f64 * 0.4_ => *data_size as f64 * 0.1,
+                GpuOperationType::MatrixMultiplication => (*datasize as f64).powf(1.5) * 0.8,
+                GpuOperationType::ElementwiseAddition => *datasize as f64 * 0.2,
+                GpuOperationType::Convolution => (*datasize as f64).powf(1.3) * 1.2,
+                GpuOperationType::Reduction => (*datasize as f64).log2() * 0.5,
+                GpuOperationType::Transpose => *datasize as f64 * 0.3,
+                GpuOperationType::Normalization => *datasize as f64 * 0.4_ => *datasize as f64 * 0.1,
             }
         }).sum::<f64>();
         
         // 2. Memory hierarchy analysis
-        let total_data = data_sizes.iter().sum::<usize>() as f64;
+        let total_data = datasizes.iter().sum::<usize>() as f64;
         let memory_pressure = if total_data < 1e6 { 1.0 } // L1/L2 cache friendly
                               else if total_data < 1e9 { 0.7 } // GPU memory
                               else { 0.4 }; // PCIe bottleneck
@@ -1554,15 +1554,15 @@ impl BandwidthPredictor {
     fn get_model_prediction(&self, complexity: f64, datasize: f64) -> LinalgResult<f64> {
         match self.models.first() {
             Some(BandwidthPredictionModel::LinearRegression) => {
-                // Linear regression model: bandwidth = a * complexity + b * log(data_size) + c
+                // Linear regression model: bandwidth = a * complexity + b * log(datasize) + c
                 let a = 2.3;  // Complexity coefficient
-                let b = 15.7; // Data _size coefficient  
+                let b = 15.7; // Data size coefficient  
                 let c = 45.2; // Base bandwidth
-                Ok(a * complexity + b * data_size.log10() + c)
+                Ok(a * complexity + b * datasize.log10() + c)
             },
             Some(BandwidthPredictionModel::NeuralNetwork) => {
                 // Simplified neural network prediction
-                let input = [complexity / 1e6, data_size.log10() / 10.0];
+                let input = [complexity / 1e6, datasize.log10() / 10.0];
                 let hidden = [
                     (input[0] * 0.8 + input[1] * 0.3 + 0.1).tanh(),
                     (input[0] * 0.2 + input[1] * 0.9 - 0.1).tanh(),
@@ -1573,8 +1573,8 @@ impl BandwidthPredictor {
             },
             Some(BandwidthPredictionModel::EnsembleMethod) => {
                 // Ensemble of multiple models
-                let linear_pred = self.get_linear_prediction(complexity, data_size)?;
-                let nn_pred = self.get_neural_prediction(complexity, data_size)?;
+                let linear_pred = self.get_linear_prediction(complexity, datasize)?;
+                let nn_pred = self.get_neural_prediction(complexity, datasize)?;
                 let ensemble_pred = 0.6 * linear_pred + 0.4 * nn_pred;
                 Ok(ensemble_pred)
             }_ => Ok(120.0), // Fallback bandwidth
@@ -1595,14 +1595,14 @@ impl BandwidthPredictor {
     
     /// Linear regression prediction helper
     fn get_linear_prediction(&self, complexity: f64, datasize: f64) -> LinalgResult<f64> {
-        Ok(2.1 * complexity + 18.4 * data_size.log10() + 42.7)
+        Ok(2.1 * complexity + 18.4 * datasize.log10() + 42.7)
     }
     
     /// Neural network prediction helper  
     fn get_neural_prediction(&self, complexity: f64, datasize: f64) -> LinalgResult<f64> {
         let normalized_complexity = (complexity / 1e6).tanh();
-        let normalized_size = (data_size.log10() / 15.0).tanh();
-        let prediction = 150.0 * (0.7 * normalized_complexity + 0.3 * normalized_size + 0.2).tanh() + 80.0;
+        let normalizedsize = (datasize.log10() / 15.0).tanh();
+        let prediction = 150.0 * (0.7 * normalized_complexity + 0.3 * normalizedsize + 0.2).tanh() + 80.0;
         Ok(prediction)
     }
 }
@@ -1674,9 +1674,9 @@ mod tests {
         let fusion_engine = AdvancedGpuKernelFusion::<f32>::new().unwrap();
         
         let operations = vec![GpuOperationType::MatrixMultiplication];
-        let data_sizes = vec![1000];
+        let datasizes = vec![1000];
         
-        let result = fusion_engine.predict_bandwidth_utilization(&operations, &data_sizes);
+        let result = fusion_engine.predict_bandwidth_utilization(&operations, &datasizes);
         assert!(result.is_ok());
         assert!(result.unwrap() > 0.0);
     }

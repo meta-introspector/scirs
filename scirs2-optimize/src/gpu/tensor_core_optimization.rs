@@ -197,10 +197,14 @@ impl TensorCoreOptimizer {
             "tensor_core_gemm_fp32"
         };
 
-        context.execute(|compiler| compiler.compile(&kernel_source))
-            .map_err(|e| ScirsError::ComputationError(
-                scirs2_core::error::ErrorContext::new(format!("Failed to compile kernel: {}", e))
-            ))
+        context
+            .execute(|compiler| compiler.compile(&kernel_source))
+            .map_err(|e| {
+                ScirsError::ComputationError(scirs2_core::error::ErrorContext::new(format!(
+                    "Failed to compile kernel: {}",
+                    e
+                )))
+            })
     }
 
     /// Create batch GEMM kernel for multiple matrix multiplications
@@ -277,10 +281,14 @@ impl TensorCoreOptimizer {
             }
         "#;
 
-        context.execute(|compiler| compiler.compile(kernel_source))
-            .map_err(|e| ScirsError::ComputationError(
-                scirs2_core::error::ErrorContext::new(format!("Failed to compile batch kernel: {}", e))
-            ))
+        context
+            .execute(|compiler| compiler.compile(kernel_source))
+            .map_err(|e| {
+                ScirsError::ComputationError(scirs2_core::error::ErrorContext::new(format!(
+                    "Failed to compile batch kernel: {}",
+                    e
+                )))
+            })
     }
 
     /// Create gradient computation kernel with Tensor Core acceleration
@@ -335,10 +343,14 @@ impl TensorCoreOptimizer {
             }
         "#;
 
-        context.execute(|compiler| compiler.compile(kernel_source))
-            .map_err(|e| ScirsError::ComputationError(
-                scirs2_core::error::ErrorContext::new(format!("Failed to compile gradient kernel: {}", e))
-            ))
+        context
+            .execute(|compiler| compiler.compile(kernel_source))
+            .map_err(|e| {
+                ScirsError::ComputationError(scirs2_core::error::ErrorContext::new(format!(
+                    "Failed to compile gradient kernel: {}",
+                    e
+                )))
+            })
     }
 
     /// Perform optimized matrix multiplication using Tensor Cores
@@ -382,7 +394,9 @@ impl TensorCoreOptimizer {
     ) -> ScirsResult<Array1<f64>> {
         // TODO: Implement when GPU API supports gradient computation
         Err(ScirsError::NotImplementedError(
-            scirs2_core::error::ErrorContext::new("Gradient computation not yet implemented".to_string()),
+            scirs2_core::error::ErrorContext::new(
+                "Gradient computation not yet implemented".to_string(),
+            ),
         ))
     }
 

@@ -902,7 +902,7 @@ mod tests {
         assert_eq!(coo.shape(), (3, 3));
 
         // Test that find() returns the full matrix elements
-        let (rows_cols_data) = sym_csr.find();
+        let (rowscols_data) = sym_csr.find();
         assert!(rows.len() > sym_csr.nnz_stored()); // Should include symmetric pairs
     }
 

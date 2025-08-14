@@ -1213,7 +1213,7 @@ mod tests {
         let mut cache = DistanceMatrixCache::<f64>::new(config);
 
         // Create test points
-        let points = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
 
         // First computation should be a cache miss
         let result1 = cache.get_or_compute_distance_matrix(&points, |pts| {
@@ -1242,7 +1242,7 @@ mod tests {
         assert_eq!(cache.stats().hits, 1);
 
         // Different points should be a cache miss
-        let different_points = Array2::fromshape_vec((2, 2), vec![2.0, 2.0, 3.0, 3.0]).unwrap();
+        let different_points = Array2::from_shape_vec((2, 2), vec![2.0, 2.0, 3.0, 3.0]).unwrap();
         let _result3 = cache.get_or_compute_distance_matrix(&different_points, |pts| {
             let n = pts.nrows();
             Array2::zeros((n, n))

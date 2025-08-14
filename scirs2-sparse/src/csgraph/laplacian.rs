@@ -463,7 +463,7 @@ where
         max_subspace_size: (rows / 4).clamp(10, 50), // Reasonable subspace size
         tol: 1e-12,
         numeigenvalues: 3.min(rows), // Find 3 smallest eigenvalues (or fewer if matrix is small)
-        compute_eigenvectors: false,  // We only need eigenvalues
+        compute_eigenvectors: false, // We only need eigenvalues
     };
 
     // Use Lanczos algorithm to find smallest eigenvalues

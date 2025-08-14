@@ -511,7 +511,7 @@ impl ValidationRules {
 impl<T: Float + Send + Sync> DiversityMaintainer<T> {
     fn new(_diversityweight: T) -> Self {
         Self {
-            _diversityweight: _diversityweight,
+            _diversityweight,
             min_distance_threshold: T::from(0.1).unwrap(),
             diversity_metrics: vec![
                 DiversityMetric::StructuralDistance,
@@ -2189,7 +2189,7 @@ impl<
             adaptation_engine: ContinuousAdaptationEngine::new(&config)?,
             quality_assessor: ArchitectureQualityAssessor::new(&config)?,
             state_tracker: NASSystemStateTracker::new()?,
-            config: config,
+            config,
         })
     }
 
@@ -3536,8 +3536,8 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
                         *value *= scirs2_core::random::rng().gen_range(0.8..1.2);
                     }
                     LayerParameter::Integer(ref mut value) => {
-                        *value = (*value as f64 * scirs2_core::random::rng().gen_range(0.9..1.1))
-                            as i64;
+                        *value =
+                            (*value as f64 * scirs2_core::random::rng().gen_range(0.9..1.1)) as i64;
                     }
                     _ => {}
                 }
@@ -5059,7 +5059,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> PredictorQualityTracker<T> {
     fn new(_confidencethreshold: T) -> Self {
         Self {
             predictor_scores: vec![T::one(); 3], // Initialize with 3 predictors
-            _confidencethreshold: _confidencethreshold,
+            _confidencethreshold,
             error_history: VecDeque::new(),
         }
     }
@@ -5122,7 +5122,7 @@ pub struct QualityThresholdManager<T: Float> {
 impl<T: Float + Send + Sync> QualityThresholdManager<T> {
     fn new(_minperformance: T) -> Self {
         Self {
-            _minperformance: _minperformance,
+            _minperformance,
             min_efficiency: T::from(0.3).unwrap(),
             max_complexity: T::from(0.8).unwrap(),
             adaptive_thresholds: true,

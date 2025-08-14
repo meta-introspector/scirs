@@ -33,7 +33,7 @@ pub struct AdvancedParallelConfig {
     /// Performance monitoring
     pub performance_monitoring: bool,
     /// Minimum work size per thread
-    pub min_work_size: usize,
+    pub min_worksize: usize,
     /// Maximum parallelization depth
     pub max_parallel_depth: usize,
     /// Enable vectorized operations within parallel tasks
@@ -53,7 +53,7 @@ impl Default for AdvancedParallelConfig {
             thread_pool_config: ThreadPoolConfig::default(),
             memory_strategy: ParallelMemoryStrategy::CacheAware,
             performance_monitoring: true,
-            min_work_size: 1000,
+            min_worksize: 1000,
             max_parallel_depth: 3,
             enable_simd_in_parallel: true,
             cache_optimization: CacheOptimizationLevel::Aggressive,
@@ -103,7 +103,7 @@ pub struct ThreadPoolConfig {
     /// Thread affinity strategy
     pub affinity_strategy: ThreadAffinityStrategy,
     /// Stack size per thread
-    pub stack_size: Option<usize>,
+    pub stacksize: Option<usize>,
     /// Idle thread timeout
     pub idle_timeout: Duration,
     /// Thread pool scaling strategy
@@ -116,7 +116,7 @@ impl Default for ThreadPoolConfig {
             num_workers: None, // Auto-detect
             thread_priority: ThreadPriority::Normal,
             affinity_strategy: ThreadAffinityStrategy::NUMA,
-            stack_size: Some(2 * 1024 * 1024), // 2MB
+            stacksize: Some(2 * 1024 * 1024), // 2MB
             idle_timeout: Duration::from_secs(60),
             scaling_strategy: ScalingStrategy::Adaptive,
         }
@@ -291,7 +291,7 @@ pub struct MemoryPool {
     /// Available block indices
     available: Vec<usize>,
     /// Block size
-    block_size: usize,
+    blocksize: usize,
     /// Total allocations
     total_allocations: usize,
 }
@@ -303,14 +303,14 @@ impl MemoryPool {
         let mut available = Vec::with_capacity(_num_blocks);
 
         for i in 0.._num_blocks {
-            blocks.push(vec![0u8; block_size]);
+            blocks.push(vec![0u8; blocksize]);
             available.push(i);
         }
 
         Self {
             blocks,
             available,
-            block_size,
+            blocksize,
             total_allocations: 0,
         }
     }
@@ -778,9 +778,9 @@ impl AdvancedParallelStatsProcessor {
     fn select_optimization_strategy(
         &self,
         operation: &str,
-        data_size: usize,
+        datasize: usize,
     ) -> StatsResult<OptimizationStrategy> {
-        let cache_key = format!("{}_{}", operation, data_size / 1000); // Granular caching
+        let cache_key = format!("{}_{}", operation, datasize / 1000); // Granular caching
 
         // Check cache first
         if let Ok(cache) = self.optimization_cache.read() {
@@ -790,10 +790,10 @@ impl AdvancedParallelStatsProcessor {
         }
 
         // Generate new strategy based on data characteristics
-        let optimal_threads = self.calculate_optimal_thread_count(data_size);
-        let work_distribution = if data_size > 1_000_000 {
+        let optimal_threads = self.calculate_optimal_thread_count(datasize);
+        let work_distribution = if datasize > 1_000_000 {
             WorkDistributionMethod::CostBased
-        } else if data_size > 100_000 {
+        } else if datasize > 100_000 {
             WorkDistributionMethod::SizeBased
         } else {
             WorkDistributionMethod::EqualChunks
@@ -812,7 +812,7 @@ impl AdvancedParallelStatsProcessor {
             thread_count: optimal_threads,
             work_distribution,
             memory_layout,
-            expected_performance: self.estimate_performance(optimal_threads, data_size),
+            expected_performance: self.estimate_performance(optimal_threads, datasize),
         };
 
         // Cache the strategy
@@ -826,10 +826,10 @@ impl AdvancedParallelStatsProcessor {
     /// Calculate optimal thread count for given data size
     fn calculate_optimal_thread_count(&self, datasize: usize) -> usize {
         let available_threads = self.execution_contexts.len();
-        let min_work_per_thread = self.config.min_work_size;
+        let min_work_per_thread = self.config.min_worksize;
 
         // Don't use more threads than can be effectively utilized
-        let max_useful_threads = (data_size / min_work_per_thread).max(1);
+        let max_useful_threads = (datasize / min_work_per_thread).max(1);
 
         // Consider NUMA topology
         let numa_optimal = if self.config.numa_aware {
@@ -845,7 +845,7 @@ impl AdvancedParallelStatsProcessor {
     /// Estimate performance for given configuration
     fn estimate_performance(&self, thread_count: usize, datasize: usize) -> f64 {
         // Simplified performance model
-        let sequential_time = data_size as f64;
+        let sequential_time = datasize as f64;
         let parallel_efficiency = 0.8; // Account for overhead
         let parallel_time = sequential_time / (thread_count as f64 * parallel_efficiency);
 
@@ -862,18 +862,18 @@ impl AdvancedParallelStatsProcessor {
         F: Float + NumCast + std::fmt::Display,
     {
         let mut work_units = Vec::new();
-        let data_size = data.len();
-        let chunk_size = data_size / strategy.thread_count;
+        let datasize = data.len();
+        let chunksize = datasize / strategy.thread_count;
 
         for i in 0..strategy.thread_count {
-            let start = i * chunk_size;
+            let start = i * chunksize;
             let end = if i == strategy.thread_count - 1 {
-                data_size
+                datasize
             } else {
-                (i + 1) * chunk_size
+                (i + 1) * chunksize
             };
 
-            let chunk_data: Vec<f64> = data
+            let chunkdata: Vec<f64> = data
                 .slice(s![start..end])
                 .iter()
                 .map(|&x| x.to_f64().unwrap_or(0.0))
@@ -881,7 +881,7 @@ impl AdvancedParallelStatsProcessor {
 
             work_units.push(WorkUnit {
                 id: i,
-                data: chunk_data,
+                data: chunkdata,
                 cost: (end - start) as f64,
                 dependencies: Vec::new(),
                 priority: WorkPriority::Normal,
@@ -907,19 +907,19 @@ impl AdvancedParallelStatsProcessor {
         F: Float + NumCast + std::fmt::Display,
     {
         let mut work_units = Vec::new();
-        let data_size = data.len();
-        let chunk_size = data_size / strategy.thread_count;
+        let datasize = data.len();
+        let chunksize = datasize / strategy.thread_count;
         let mean_f64 = mean_val.to_f64().unwrap_or(0.0);
 
         for i in 0..strategy.thread_count {
-            let start = i * chunk_size;
+            let start = i * chunksize;
             let end = if i == strategy.thread_count - 1 {
-                data_size
+                datasize
             } else {
-                (i + 1) * chunk_size
+                (i + 1) * chunksize
             };
 
-            let chunk_data: Vec<f64> = data
+            let chunkdata: Vec<f64> = data
                 .slice(s![start..end])
                 .iter()
                 .map(|&x| {
@@ -931,7 +931,7 @@ impl AdvancedParallelStatsProcessor {
 
             work_units.push(WorkUnit {
                 id: i,
-                data: chunk_data,
+                data: chunkdata,
                 cost: (end - start) as f64,
                 dependencies: Vec::new(),
                 priority: WorkPriority::Normal,
@@ -1277,7 +1277,7 @@ where
     F: Float + NumCast + Send + Sync + Zero + std::iter::Sum + std::fmt::Display,
 {
     let processor = AdvancedParallelStatsProcessor::default()?;
-    processor.mean_advanced_parallel(_data)
+    processor.mean_advanced_parallel(data)
 }
 
 #[allow(dead_code)]

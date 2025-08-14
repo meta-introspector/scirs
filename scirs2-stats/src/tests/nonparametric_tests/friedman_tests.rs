@@ -5,7 +5,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_friedman_same_data() {
+    fn test_friedman_samedata() {
         // When all observations are the same, the chi-square statistic should be 0
         // and the p-value should be 1.0
         let data = array![
@@ -21,7 +21,7 @@ mod tests {
     }
 
     #[test]
-    fn test_friedman_different_data() {
+    fn test_friedman_differentdata() {
         // Example from "Bioestadistica para las ciencias de la salud"
         // This is expected to show a significant difference
         let data = array![

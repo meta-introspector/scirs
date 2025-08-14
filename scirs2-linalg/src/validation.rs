@@ -20,13 +20,13 @@ use num_traits::Float;
 /// * `Ok(())` if the matrix is not empty
 /// * `Err(LinalgError)` if the matrix is empty
 #[allow(dead_code)]
-pub fn validate_not_empty_matrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_not_emptymatrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
     if matrix.is_empty() {
         return Err(LinalgError::ShapeError(format!(
-            "{operation} failed: Input _matrix cannot be empty"
+            "{operation} failed: Input matrix cannot be empty"
         )));
     }
     Ok(())
@@ -68,7 +68,7 @@ where
 /// * `Ok(())` if the matrix is square
 /// * `Err(LinalgError)` if the matrix is not square
 #[allow(dead_code)]
-pub fn validate_square_matrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_squarematrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
@@ -76,7 +76,7 @@ where
         let rows = matrix.nrows();
         let cols = matrix.ncols();
         return Err(LinalgError::ShapeError(format!(
-            "{operation} failed: Matrix must be square\\nMatrix shape: {rows}×{cols}\\nExpected: Square _matrix (n×n)"
+            "{operation} failed: Matrix must be square\\nMatrix shape: {rows}×{cols}\\nExpected: Square matrix (n×n)"
         )));
     }
     Ok(())
@@ -95,7 +95,7 @@ where
 /// * `Ok(())` if dimensions are compatible
 /// * `Err(LinalgError)` if dimensions are incompatible
 #[allow(dead_code)]
-pub fn validate_matrix_vector_dimensions<F>(
+pub fn validatematrix_vector_dimensions<F>(
     matrix: &ArrayView2<F>,
     vector: &ArrayView1<F>,
     operation: &str,
@@ -128,7 +128,7 @@ where
 /// * `Ok(())` if dimensions are compatible
 /// * `Err(LinalgError)` if dimensions are incompatible
 #[allow(dead_code)]
-pub fn validate_matrix_matrix_dimensions<F>(
+pub fn validatematrixmatrix_dimensions<F>(
     matrix_a: &ArrayView2<F>,
     matrix_b: &ArrayView2<F>,
     operation: &str,
@@ -161,7 +161,7 @@ where
 /// * `Ok(())` if all values are finite
 /// * `Err(LinalgError)` if any value is non-finite
 #[allow(dead_code)]
-pub fn validate_finite_matrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_finitematrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
@@ -228,11 +228,11 @@ pub fn validate_linear_system<F>(
 where
     F: Float,
 {
-    validate_not_empty_matrix(matrix, operation)?;
+    validate_not_emptymatrix(matrix, operation)?;
     validate_not_empty_vector(vector, operation)?;
-    validate_square_matrix(matrix, operation)?;
-    validate_matrix_vector_dimensions(matrix, vector, operation)?;
-    validate_finite_matrix(matrix, operation)?;
+    validate_squarematrix(matrix, operation)?;
+    validatematrix_vector_dimensions(matrix, vector, operation)?;
+    validate_finitematrix(matrix, operation)?;
     validate_finite_vector(vector, operation)?;
     Ok(())
 }
@@ -263,10 +263,10 @@ pub fn validate_least_squares<F>(
 where
     F: Float,
 {
-    validate_not_empty_matrix(matrix, operation)?;
+    validate_not_emptymatrix(matrix, operation)?;
     validate_not_empty_vector(vector, operation)?;
-    validate_matrix_vector_dimensions(matrix, vector, operation)?;
-    validate_finite_matrix(matrix, operation)?;
+    validatematrix_vector_dimensions(matrix, vector, operation)?;
+    validate_finitematrix(matrix, operation)?;
     validate_finite_vector(vector, operation)?;
     Ok(())
 }
@@ -297,11 +297,11 @@ pub fn validate_decomposition<F>(
 where
     F: Float,
 {
-    validate_not_empty_matrix(matrix, operation)?;
+    validate_not_emptymatrix(matrix, operation)?;
     if require_square {
-        validate_square_matrix(matrix, operation)?;
+        validate_squarematrix(matrix, operation)?;
     }
-    validate_finite_matrix(matrix, operation)?;
+    validate_finitematrix(matrix, operation)?;
     Ok(())
 }
 
@@ -315,8 +315,8 @@ where
 ///
 /// # Arguments
 ///
-/// * `coeff_matrix` - The coefficient matrix A
-/// * `rhs_matrix` - The right-hand sides matrix B
+/// * `coeffmatrix` - The coefficient matrix A
+/// * `rhsmatrix` - The right-hand sides matrix B
 /// * `operation` - Name of the operation being performed (for error messages)
 ///
 /// # Returns
@@ -325,19 +325,19 @@ where
 /// * `Err(LinalgError)` if any validation fails
 #[allow(dead_code)]
 pub fn validate_multiple_linear_systems<F>(
-    coeff_matrix: &ArrayView2<F>,
-    rhs_matrix: &ArrayView2<F>,
+    coeffmatrix: &ArrayView2<F>,
+    rhsmatrix: &ArrayView2<F>,
     operation: &str,
 ) -> LinalgResult<()>
 where
     F: Float,
 {
-    validate_not_empty_matrix(coeff_matrix, operation)?;
-    validate_not_empty_matrix(rhs_matrix, operation)?;
-    validate_square_matrix(coeff_matrix, operation)?;
-    validate_matrix_matrix_dimensions(coeff_matrix, rhs_matrix, operation, true)?;
-    validate_finite_matrix(coeff_matrix, operation)?;
-    validate_finite_matrix(rhs_matrix, operation)?;
+    validate_not_emptymatrix(coeffmatrix, operation)?;
+    validate_not_emptymatrix(rhsmatrix, operation)?;
+    validate_squarematrix(coeffmatrix, operation)?;
+    validatematrixmatrix_dimensions(coeffmatrix, rhsmatrix, operation, true)?;
+    validate_finitematrix(coeffmatrix, operation)?;
+    validate_finitematrix(rhsmatrix, operation)?;
     Ok(())
 }
 
@@ -443,8 +443,8 @@ where
 /// # Arguments
 ///
 /// * `matrix` - The matrix to validate
-/// * `min_size` - Minimum required size (None = no minimum)
-/// * `max_size` - Maximum allowed size (None = no maximum)  
+/// * `minsize` - Minimum required size (None = no minimum)
+/// * `maxsize` - Maximum allowed size (None = no maximum)  
 /// * `required_square` - Whether the matrix must be square
 /// * `operation` - Name of the operation being performed (for error messages)
 ///
@@ -453,41 +453,41 @@ where
 /// * `Ok(())` if all validations pass
 /// * `Err(LinalgError)` if any validation fails
 #[allow(dead_code)]
-pub fn validate_matrix_size_requirements<F>(
+pub fn validatematrixsize_requirements<F>(
     matrix: &ArrayView2<F>,
-    min_size: Option<usize>,
-    max_size: Option<usize>,
+    minsize: Option<usize>,
+    maxsize: Option<usize>,
     required_square: bool,
     operation: &str,
 ) -> LinalgResult<()>
 where
     F: Float,
 {
-    validate_not_empty_matrix(matrix, operation)?;
+    validate_not_emptymatrix(matrix, operation)?;
 
     if required_square {
-        validate_square_matrix(matrix, operation)?;
+        validate_squarematrix(matrix, operation)?;
     }
 
     let (rows, cols) = matrix.dim();
-    let _size = if required_square {
+    let size = if required_square {
         rows
     } else {
         std::cmp::max(rows, cols)
     };
 
-    if let Some(min) = min_size {
-        if _size < min {
+    if let Some(min) = minsize {
+        if size < min {
             return Err(LinalgError::InvalidInputError(format!(
-                "{operation} failed: Matrix _size {_size} is below minimum required _size {min}"
+                "{operation} failed: Matrix size {size} is below minimum required size {min}"
             )));
         }
     }
 
-    if let Some(max) = max_size {
-        if _size > max {
+    if let Some(max) = maxsize {
+        if size > max {
             return Err(LinalgError::InvalidInputError(format!(
-                "{operation} failed: Matrix _size {_size} exceeds maximum allowed _size {max}"
+                "{operation} failed: Matrix size {size} exceeds maximum allowed size {max}"
             )));
         }
     }
@@ -501,35 +501,35 @@ mod tests {
     use ndarray::{array, Array2};
 
     #[test]
-    fn test_validate_not_empty_matrix() {
-        let empty_matrix = Array2::<f64>::zeros((0, 0));
-        let result = validate_not_empty_matrix(&empty_matrix.view(), "test operation");
+    fn test_validate_not_emptymatrix() {
+        let emptymatrix = Array2::<f64>::zeros((0, 0));
+        let result = validate_not_emptymatrix(&emptymatrix.view(), "test operation");
         assert!(result.is_err());
 
-        let valid_matrix = array![[1.0, 2.0], [3.0, 4.0]];
-        let result = validate_not_empty_matrix(&valid_matrix.view(), "test operation");
+        let validmatrix = array![[1.0, 2.0], [3.0, 4.0]];
+        let result = validate_not_emptymatrix(&validmatrix.view(), "test operation");
         assert!(result.is_ok());
     }
 
     #[test]
-    fn test_validate_square_matrix() {
+    fn test_validate_squarematrix() {
         let non_square = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
-        let result = validate_square_matrix(&non_square.view(), "test operation");
+        let result = validate_squarematrix(&non_square.view(), "test operation");
         assert!(result.is_err());
 
         let square = array![[1.0, 2.0], [3.0, 4.0]];
-        let result = validate_square_matrix(&square.view(), "test operation");
+        let result = validate_squarematrix(&square.view(), "test operation");
         assert!(result.is_ok());
     }
 
     #[test]
-    fn test_validate_finite_matrix() {
-        let invalid_matrix = array![[1.0, f64::NAN], [3.0, 4.0]];
-        let result = validate_finite_matrix(&invalid_matrix.view(), "test operation");
+    fn test_validate_finitematrix() {
+        let invalidmatrix = array![[1.0, f64::NAN], [3.0, 4.0]];
+        let result = validate_finitematrix(&invalidmatrix.view(), "test operation");
         assert!(result.is_err());
 
-        let valid_matrix = array![[1.0, 2.0], [3.0, 4.0]];
-        let result = validate_finite_matrix(&valid_matrix.view(), "test operation");
+        let validmatrix = array![[1.0, 2.0], [3.0, 4.0]];
+        let result = validate_finitematrix(&validmatrix.view(), "test operation");
         assert!(result.is_ok());
     }
 

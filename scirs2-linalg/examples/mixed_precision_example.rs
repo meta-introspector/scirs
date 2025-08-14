@@ -284,7 +284,7 @@ fn main() {
 
     // Create a larger matrix and vector for meaningful benchmarks
     let size = 500; // 500x500 matrix
-    let large_matrix =
+    let largematrix =
         Array2::<f32>::from_shape_fn((size, size), |(i, j)| if i == j { 1.0 } else { 0.01 });
 
     let large_vector = Array1::<f32>::from_shape_fn(size, |i| (i % 10) as f32 / 10.0);
@@ -296,15 +296,13 @@ fn main() {
     println!("\nMatrix-vector multiplication:");
 
     let f32_time = benchmark_fn("Standard f32", || {
-        let _ = large_matrix.dot(&large_vector);
+        let _ = largematrix.dot(&large_vector);
     });
 
     let mp_time = benchmark_fn("Mixed precision (f32->f64->f32)", || {
-        let _ = mixed_precision_matvec::<f32, f32, f32, f64>(
-            &large_matrix.view(),
-            &large_vector.view(),
-        )
-        .unwrap();
+        let _ =
+            mixed_precision_matvec::<f32, f32, f32, f64>(&largematrix.view(), &large_vector.view())
+                .unwrap();
     });
 
     let speedup = f32_time.as_nanos() as f64 / mp_time.as_nanos() as f64;
@@ -314,24 +312,24 @@ fn main() {
     println!("\nLinear system solving (ill-conditioned):");
 
     // Create a simple, slightly ill-conditioned matrix
-    let matrix_size = 10;
-    let mut test_matrix = Array2::<f32>::eye(matrix_size);
+    let matrixsize = 10;
+    let mut testmatrix = Array2::<f32>::eye(matrixsize);
     // Add small off-diagonal elements to make it slightly ill-conditioned
     // but not singular
-    for i in 0..matrix_size - 1 {
-        test_matrix[[i, i + 1]] = 0.1;
-        test_matrix[[i + 1, i]] = 0.1;
+    for i in 0..matrixsize - 1 {
+        testmatrix[[i, i + 1]] = 0.1;
+        testmatrix[[i + 1, i]] = 0.1;
     }
 
-    let b_large = Array1::<f32>::from_shape_fn(matrix_size, |i| if i == 0 { 1.0 } else { 0.0 });
+    let b_large = Array1::<f32>::from_shape_fn(matrixsize, |i| if i == 0 { 1.0 } else { 0.0 });
 
     let f32_solve_time = benchmark_fn("Pure f32 solver", || {
-        let _ = mixed_precision_solve::<f32, f32, f32, f32>(&test_matrix.view(), &b_large.view())
+        let _ = mixed_precision_solve::<f32, f32, f32, f32>(&testmatrix.view(), &b_large.view())
             .unwrap();
     });
 
     let mp_solve_time = benchmark_fn("Mixed precision solver (f64 internal)", || {
-        let _ = mixed_precision_solve::<f32, f32, f32, f64>(&test_matrix.view(), &b_large.view())
+        let _ = mixed_precision_solve::<f32, f32, f32, f64>(&testmatrix.view(), &b_large.view())
             .unwrap();
     });
 
@@ -357,8 +355,8 @@ fn main() {
         let b_vec = Array1::<f32>::from_shape_fn(size, |i| if i % 2 == 0 { 1.0e6 } else { 1.0e-6 });
 
         // Create smaller matrices for matmul demonstration
-        let mat_size = 100;
-        let a_mat = Array2::<f32>::from_shape_fn((mat_size, mat_size), |(i, j)| {
+        let matsize = 100;
+        let a_mat = Array2::<f32>::from_shape_fn((matsize, matsize), |(i, j)| {
             if (i + j) % 2 == 0 {
                 1.0e-6
             } else {
@@ -366,7 +364,7 @@ fn main() {
             }
         });
 
-        let b_mat = Array2::<f32>::from_shape_fn((mat_size, mat_size), |(i, j)| {
+        let b_mat = Array2::<f32>::from_shape_fn((matsize, matsize), |(i, j)| {
             if (i + j) % 3 == 0 {
                 1.0e6
             } else {
@@ -410,7 +408,7 @@ fn main() {
 
         println!(
             "\nMatrix-vector multiplication ({}x{} matrix):",
-            mat_size, mat_size
+            matsize, matsize
         );
 
         let standard_mv_time = benchmark_fn("Standard f32 matrix-vector multiplication", || {
@@ -447,7 +445,7 @@ fn main() {
         // Benchmark matrix multiplication
         println!(
             "\nMatrix multiplication ({}x{} matrices):",
-            mat_size, mat_size
+            matsize, matsize
         );
 
         let standard_mm_time = benchmark_fn("Standard f32 matrix multiplication", || {

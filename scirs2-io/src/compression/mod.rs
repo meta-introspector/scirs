@@ -110,10 +110,7 @@ impl CompressionAlgorithm {
 
 /// Convert a compression level (0-9) to the appropriate internal level for each algorithm
 #[allow(dead_code)]
-fn normalize__level(
-    level: Option<u32>,
-    algorithm: CompressionAlgorithm,
-) -> Result<u32> {
+fn normalize__level(level: Option<u32>, algorithm: CompressionAlgorithm) -> Result<u32> {
     let _level = level.unwrap_or(6); // Default compression level
 
     if _level > 9 {

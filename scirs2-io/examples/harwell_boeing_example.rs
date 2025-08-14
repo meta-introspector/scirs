@@ -264,9 +264,7 @@ fn demonstrate_different_matrix_types(
 }
 
 #[allow(dead_code)]
-fn verifymatrix_structure(
-    matrix: &HBSparseMatrix<f64>,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn verifymatrix_structure(matrix: &HBSparseMatrix<f64>) -> Result<(), Box<dyn std::error::Error>> {
     // Basic structural checks
     assert_eq!(
         matrix.colptr.len(),

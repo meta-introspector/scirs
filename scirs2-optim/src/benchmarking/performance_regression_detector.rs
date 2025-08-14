@@ -536,7 +536,7 @@ impl PerformanceRegressionDetector {
         let alert_system = AlertSystem::new(AlertConfig::default());
 
         Ok(Self {
-            config: config,
+            config,
             historical_data,
             statistical_analyzer,
             regression_analyzer,
@@ -772,8 +772,7 @@ impl PerformanceRegressionDetector {
     fn update_trends(&mut self) -> Result<()> {
         for metrictype in &self.config.tracked_metrics.clone() {
             let recent_measurements = self.historical_data.get_recent_measurements_for_metric(
-                metrictype,
-                50, // Last 50 measurements
+                metrictype, 50, // Last 50 measurements
             )?;
 
             if recent_measurements.len() >= 10 {
@@ -788,11 +787,7 @@ impl PerformanceRegressionDetector {
     }
 
     /// Calculate performance trend
-    fn calculate_trend(
-        &self,
-        metrictype: &MetricType,
-        values: &[f64],
-    ) -> Result<PerformanceTrend> {
+    fn calculate_trend(&self, metrictype: &MetricType, values: &[f64]) -> Result<PerformanceTrend> {
         let direction = self.determine_trend_direction(values);
         let strength = self.calculate_trend_strength(values);
         let significance = self.calculate_trend_significance(values);
@@ -1336,7 +1331,7 @@ impl PerformanceDatabase {
 
 impl StatisticalAnalyzer {
     fn new(config: StatisticalConfig) -> Self {
-        Self { config: config }
+        Self { config }
     }
 
     fn perform_regression_test(
@@ -1404,7 +1399,7 @@ impl RegressionAnalyzer {
     fn new(config: RegressionAnalysisConfig) -> Self {
         Self {
             current_results: Vec::new(),
-            config: config,
+            config,
         }
     }
 }
@@ -1412,7 +1407,7 @@ impl RegressionAnalyzer {
 impl AlertSystem {
     fn new(config: AlertConfig) -> Self {
         Self {
-            config: config,
+            config,
             alert_history: VecDeque::new(),
         }
     }

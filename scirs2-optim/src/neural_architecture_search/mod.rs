@@ -1300,7 +1300,7 @@ impl<
         };
 
         Ok(Self {
-            config: config,
+            config,
             search_strategy,
             evaluator,
             multi_objective_optimizer,
@@ -1700,12 +1700,8 @@ impl<
             }
             _ => {
                 // Default to evolutionary search for other types
-                let strategy = search_strategies::EvolutionarySearch::new(
-                    config.population_size,
-                    0.1,
-                    0.8,
-                    3,
-                );
+                let strategy =
+                    search_strategies::EvolutionarySearch::new(config.population_size, 0.1, 0.8, 3);
                 Ok(Box::new(strategy))
             }
         }

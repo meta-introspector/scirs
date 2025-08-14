@@ -3,8 +3,8 @@
 //! This example showcases the complex number support for error functions
 //! in scirs2-special, including erf, erfc, erfcx, and Faddeeva functions.
 
-use num__complex::Complex64;
-use scirs2__special::{erf_complex, erfc_complex, erfcx_complex, faddeeva_complex};
+use num_complex::Complex64;
+use scirs2_special::{erf_complex, erfc_complex, erfcx_complex, faddeeva_complex};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -178,8 +178,8 @@ fn demo_mathematical_properties() -> Result<(), Box<dyn std::error::Error>> {
     println!("Property: erf(-z) = -erf(z) (odd function)");
     for &z in &test_values {
         let erf_z = erf_complex(z);
-        let erf_minus_z = erf_complex(-z);
-        let error = (erf_minus_z + erf_z).norm();
+        let erfminus_z = erf_complex(-z);
+        let error = (erfminus_z + erf_z).norm();
 
         println!("  z = {:.1} + {:.1}i: error = {:.2e}", z.re, z.im, error);
     }

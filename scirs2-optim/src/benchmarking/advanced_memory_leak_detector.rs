@@ -632,7 +632,7 @@ impl AdvancedMemoryLeakDetector {
         let statistics = MemoryStatistics::default();
 
         Ok(Self {
-            config: config,
+            config,
             memory_history,
             active_sessions,
             leak_analyzer,
@@ -1086,7 +1086,7 @@ pub struct MemoryLeakReport {
 impl LeakAnalysisEngine {
     fn new(config: AnalysisConfig) -> Self {
         Self {
-            config: config,
+            config,
             statistical_analyzer: StatisticalAnalyzer::new(StatisticalConfig::default()),
             pattern_detector: PatternDetector::new(PatternConfig::default()),
             anomaly_detector: AnomalyDetector::new(AnomalyConfig::default()),
@@ -1136,26 +1136,26 @@ impl LeakAnalysisEngine {
 
 impl StatisticalAnalyzer {
     fn new(config: StatisticalConfig) -> Self {
-        Self { config: config }
+        Self { config }
     }
 }
 
 impl PatternDetector {
     fn new(config: PatternConfig) -> Self {
-        Self { config: config }
+        Self { config }
     }
 }
 
 impl AnomalyDetector {
     fn new(config: AnomalyConfig) -> Self {
-        Self { config: config }
+        Self { config }
     }
 }
 
 impl MemoryAlertSystem {
     fn new(config: AlertConfig) -> Self {
         Self {
-            config: config,
+            config,
             alert_history: VecDeque::new(),
             alert_handlers: Vec::new(),
         }

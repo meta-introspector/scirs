@@ -313,7 +313,7 @@ pub mod blackbody {
 
     /// Wien's displacement law: wavelength of maximum emission
     ///
-    /// λ_max = b / T
+    /// λmax = b / T
     ///
     /// # Arguments
     /// * `temperature` - Temperature in Kelvin

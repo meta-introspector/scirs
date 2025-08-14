@@ -574,7 +574,7 @@ pub struct RetryErrorHandler {
 impl RetryErrorHandler {
     pub fn new(max_retries: usize) -> Self {
         Self {
-            max_retries: max_retries,
+            max_retries,
             retry_delay: Duration::from_secs(1),
         }
     }
@@ -638,9 +638,7 @@ pub struct FallbackErrorHandler<T: Any + Send + Sync + Clone + 'static> {
 
 impl<T: Any + Send + Sync + Clone + 'static> FallbackErrorHandler<T> {
     pub fn new(fallback_value: T) -> Self {
-        Self {
-            fallback_value: fallback_value,
-        }
+        Self { fallback_value }
     }
 }
 

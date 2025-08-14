@@ -648,7 +648,7 @@ impl DistributedSpatialCluster {
         };
 
         Ok(Self {
-            config: config,
+            config,
             nodes,
             master_node_id: 0,
             partitions: Arc::new(TokioRwLock::new(HashMap::new())),

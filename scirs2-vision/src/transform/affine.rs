@@ -17,7 +17,7 @@ pub struct AffineTransform {
 impl AffineTransform {
     /// Create a new affine transformation matrix from raw data
     pub fn new(a: f64, b: f64, c: f64, d: f64, e: f64, f: f64) -> Self {
-        let matrix = Array2::fromshape_vec((2, 3), vec![a, b, c, d, e, f]).unwrap();
+        let matrix = Array2::from_shape_vec((2, 3), vec![a, b, c, d, e, f]).unwrap();
         Self { matrix }
     }
 
@@ -33,7 +33,7 @@ impl AffineTransform {
 
     /// Create scaling transformation
     pub fn scaling(sx: f64, sy: f64) -> Self {
-        Self::new(_sx, 0.0, 0.0, 0.0, sy, 0.0)
+        Self::new(sx, 0.0, 0.0, 0.0, sy, 0.0)
     }
 
     /// Create rotation transformation
@@ -177,7 +177,7 @@ fn sample_pixel(src: &DynamicImage, x: f64, y: f64, bordermode: BorderMode) -> O
     let height = src.height() as f64;
 
     // Handle border cases
-    let (x_adj, y_adj) = match border_mode {
+    let (x_adj, y_adj) = match bordermode {
         BorderMode::Transparent => {
             // Return None for out-of-bounds pixels
             if x < 0.0 || x >= width || y < 0.0 || y >= height {

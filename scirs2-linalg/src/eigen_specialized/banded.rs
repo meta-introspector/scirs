@@ -59,7 +59,7 @@ where
     }
 
     // Convert to BandedMatrix structure for efficient operations
-    let _banded = BandedMatrix::from_matrix(a, bandwidth, bandwidth)?;
+    let _banded = BandedMatrix::frommatrix(a, bandwidth, bandwidth)?;
 
     // If bandwidth is 1, the matrix is already tridiagonal
     if bandwidth == 1 {

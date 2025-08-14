@@ -1940,11 +1940,8 @@ impl RLAgent {
                 for (i, experience) in batch.iter().enumerate() {
                     // Update value network
                     let value_target = vec![returns[i]];
-                    let value_loss = value_net.train_single(
-                        &experience.state,
-                        &value_target,
-                        self.learningrate,
-                    );
+                    let value_loss =
+                        value_net.train_single(&experience.state, &value_target, self.learningrate);
                     _total_value_loss += value_loss;
 
                     // Update policy network with PPO clipping
@@ -2101,7 +2098,7 @@ impl ExperienceBuffer {
     fn new(capacity: usize) -> Self {
         Self {
             buffer: VecDeque::with_capacity(capacity),
-            capacity: capacity,
+            capacity,
             priority_weights: Vec::new(),
         }
     }

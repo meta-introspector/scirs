@@ -253,8 +253,7 @@ fn save_spectrogram_sample(spectrogram: &ndarray::Array2<f64>, filename: &str) {
 
     for f in (0.._spectrogram.shape()[0]).step_by(freq_step.max(1)) {
         for t in (0.._spectrogram.shape()[1]).step_by(time_step) {
-            writeln!(file, "{},{},{:.6}", f, t, spectrogram[[f, t]])
-                .expect("Failed to write data");
+            writeln!(file, "{},{},{:.6}", f, t, spectrogram[[f, t]]).expect("Failed to write data");
         }
     }
 }

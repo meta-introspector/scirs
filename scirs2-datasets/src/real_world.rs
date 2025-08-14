@@ -216,8 +216,8 @@ impl RealWorldDatasets {
             n_samples: 4521,
             n_features: 16,
             task_type: "classification".to_string(),
-            target_names: Some(vec!["no".to_string(), "yes".to_string()]),
-            feature_names: None,
+            targetnames: Some(vec!["no".to_string(), "yes".to_string()]),
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -250,8 +250,8 @@ impl RealWorldDatasets {
             n_samples: 891,
             n_features: 7,
             task_type: "classification".to_string(),
-            target_names: Some(vec!["died".to_string(), "survived".to_string()]),
-            feature_names: None,
+            targetnames: Some(vec!["died".to_string(), "survived".to_string()]),
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -276,8 +276,8 @@ impl RealWorldDatasets {
             n_samples: 1000,
             n_features: 20,
             task_type: "classification".to_string(),
-            target_names: Some(vec!["bad_credit".to_string(), "good_credit".to_string()]),
-            feature_names: None,
+            targetnames: Some(vec!["bad_credit".to_string(), "good_credit".to_string()]),
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -300,8 +300,8 @@ impl RealWorldDatasets {
             n_samples: 20640,
             n_features: 8,
             task_type: "regression".to_string(),
-            target_names: None, // Regression task
-            feature_names: None,
+            targetnames: None, // Regression task
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -320,8 +320,8 @@ impl RealWorldDatasets {
             n_samples: 1599,
             n_features: 11,
             task_type: "regression".to_string(),
-            target_names: None, // Regression task
-            feature_names: None,
+            targetnames: None, // Regression task
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -340,8 +340,8 @@ impl RealWorldDatasets {
             n_samples: 768,
             n_features: 8,
             task_type: "regression".to_string(),
-            target_names: None, // Regression task
-            feature_names: None,
+            targetnames: None, // Regression task
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -363,8 +363,8 @@ impl RealWorldDatasets {
             n_samples: 144,
             n_features: 1,
             task_type: "time_series".to_string(),
-            target_names: None, // Time series data
-            feature_names: None,
+            targetnames: None, // Time series data
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -383,8 +383,8 @@ impl RealWorldDatasets {
             n_samples: 1000,
             n_features: 6,
             task_type: "time_series".to_string(),
-            target_names: None, // Time series data
-            feature_names: None,
+            targetnames: None, // Time series data
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -406,8 +406,8 @@ impl RealWorldDatasets {
             n_samples: 303,
             n_features: 13,
             task_type: "classification".to_string(),
-            target_names: Some(vec!["no_disease".to_string(), "disease".to_string()]),
-            feature_names: None,
+            targetnames: Some(vec!["no_disease".to_string(), "disease".to_string()]),
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -426,11 +426,11 @@ impl RealWorldDatasets {
             n_samples: 101766,
             n_features: 49,
             task_type: "classification".to_string(),
-            target_names: Some(vec![
+            targetnames: Some(vec![
                 "no_readmission".to_string(),
                 "readmission".to_string(),
             ]),
-            feature_names: None,
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -572,8 +572,8 @@ impl RealWorldDatasets {
             n_samples: 392,
             n_features: 7,
             task_type: "regression".to_string(),
-            target_names: None, // Regression task
-            feature_names: None,
+            targetnames: None, // Regression task
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -606,8 +606,8 @@ impl RealWorldDatasets {
             n_samples: 1030,
             n_features: 8,
             task_type: "regression".to_string(),
-            target_names: None, // Regression task
-            feature_names: None,
+            targetnames: None, // Regression task
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -639,8 +639,8 @@ impl RealWorldDatasets {
             n_samples: 4898,
             n_features: 11,
             task_type: "regression".to_string(),
-            target_names: None, // Regression task
-            feature_names: None,
+            targetnames: None, // Regression task
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -673,8 +673,8 @@ impl RealWorldDatasets {
             n_samples: 26304,
             n_features: 3,
             task_type: "time_series".to_string(),
-            target_names: None, // Regression/time series task
-            feature_names: None,
+            targetnames: None, // Regression/time series task
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -706,8 +706,8 @@ impl RealWorldDatasets {
             n_samples: 1260,
             n_features: 5,
             task_type: "time_series".to_string(),
-            target_names: None, // Regression/time series task
-            feature_names: None,
+            targetnames: None, // Regression/time series task
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -739,7 +739,7 @@ impl RealWorldDatasets {
             n_samples: 1000,
             n_features: 3072,
             task_type: "classification".to_string(),
-            target_names: Some(vec![
+            targetnames: Some(vec![
                 "airplane".to_string(),
                 "automobile".to_string(),
                 "bird".to_string(),
@@ -751,7 +751,7 @@ impl RealWorldDatasets {
                 "ship".to_string(),
                 "truck".to_string(),
             ]),
-            feature_names: None,
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -784,7 +784,7 @@ impl RealWorldDatasets {
             n_samples: 1000,
             n_features: 784,
             task_type: "classification".to_string(),
-            target_names: Some(vec![
+            targetnames: Some(vec![
                 "T-shirt/top".to_string(),
                 "Trouser".to_string(),
                 "Pullover".to_string(),
@@ -796,7 +796,7 @@ impl RealWorldDatasets {
                 "Bag".to_string(),
                 "Ankle boot".to_string(),
             ]),
-            feature_names: None,
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -828,8 +828,8 @@ impl RealWorldDatasets {
             n_samples: 5000,
             n_features: 1000,
             task_type: "classification".to_string(),
-            target_names: Some(vec!["negative".to_string(), "positive".to_string()]),
-            feature_names: None,
+            targetnames: Some(vec!["negative".to_string(), "positive".to_string()]),
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -861,14 +861,14 @@ impl RealWorldDatasets {
             n_samples: 2000,
             n_features: 500,
             task_type: "classification".to_string(),
-            target_names: Some(vec![
+            targetnames: Some(vec![
                 "business".to_string(),
                 "entertainment".to_string(),
                 "politics".to_string(),
                 "sport".to_string(),
                 "tech".to_string(),
             ]),
-            feature_names: None,
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -901,8 +901,8 @@ impl RealWorldDatasets {
             n_samples: 284807,
             n_features: 28,
             task_type: "classification".to_string(),
-            target_names: Some(vec!["legitimate".to_string(), "fraud".to_string()]),
-            feature_names: None,
+            targetnames: Some(vec!["legitimate".to_string(), "fraud".to_string()]),
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -935,8 +935,8 @@ impl RealWorldDatasets {
             n_samples: 10000,
             n_features: 15,
             task_type: "classification".to_string(),
-            target_names: Some(vec!["no_default".to_string(), "default".to_string()]),
-            feature_names: None,
+            targetnames: Some(vec!["no_default".to_string(), "default".to_string()]),
+            featurenames: None,
             url: None,
             checksum: None,
         };
@@ -984,7 +984,7 @@ impl RealWorldDatasets {
             "adult" => {
                 let (data, target) = self.create_synthetic_adult_dataset(32561, 14)?;
 
-                let feature_names = vec![
+                let featurenames = vec![
                     "age".to_string(),
                     "workclass".to_string(),
                     "fnlwgt".to_string(),
@@ -1008,8 +1008,8 @@ impl RealWorldDatasets {
                     n_samples: 32561,
                     n_features: 14,
                     task_type: "classification".to_string(),
-                    target_names: Some(vec!["<=50K".to_string(), ">50K".to_string()]),
-                    feature_names: Some(feature_names),
+                    targetnames: Some(vec!["<=50K".to_string(), ">50K".to_string()]),
+                    featurenames: Some(featurenames),
                     url: Some(url.to_string()),
                     checksum: None,
                 };
@@ -1022,7 +1022,7 @@ impl RealWorldDatasets {
                 let (data, target) =
                     self.create_generic_synthetic_dataset(1000, n_features, has_categorical)?;
 
-                let feature_names: Vec<String> = columns
+                let featurenames: Vec<String> = columns
                     .iter()
                     .filter(|&&_col| Some(_col) != target_col)
                     .map(|&_col| col.to_string())
@@ -1039,8 +1039,8 @@ impl RealWorldDatasets {
                         "regression"
                     }
                     .to_string(),
-                    target_names: None,
-                    feature_names: Some(feature_names),
+                    targetnames: None,
+                    featurenames: Some(featurenames),
                     url: Some(url.to_string()),
                     checksum: None,
                 };
@@ -1168,7 +1168,7 @@ impl RealWorldDatasets {
         }
 
         // Create feature names (excluding target)
-        let feature_names: Vec<String> = columns
+        let featurenames: Vec<String> = columns
             .iter()
             .filter(|&&_col| Some(_col) != target_col)
             .map(|&_col| col.to_string())
@@ -1185,8 +1185,8 @@ impl RealWorldDatasets {
             } else {
                 "unsupervised".to_string()
             },
-            target_names: None,
-            feature_names: Some(feature_names),
+            targetnames: None,
+            featurenames: Some(featurenames),
             url: Some(url.to_string()),
             checksum: None,
         };
@@ -1231,7 +1231,7 @@ impl RealWorldDatasets {
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
-        let feature_names = vec![
+        let featurenames = vec![
             "credit_score".to_string(),
             "annual_income".to_string(),
             "debt_to_income_ratio".to_string(),
@@ -1309,8 +1309,8 @@ impl RealWorldDatasets {
             n_samples,
             n_features,
             task_type: "classification".to_string(),
-            target_names: Some(vec!["denied".to_string(), "approved".to_string()]),
-            feature_names: Some(feature_names),
+            targetnames: Some(vec!["denied".to_string(), "approved".to_string()]),
+            featurenames: Some(featurenames),
             url: None,
             checksum: None,
         };
@@ -1329,7 +1329,7 @@ impl RealWorldDatasets {
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
-        let feature_names = vec![
+        let featurenames = vec![
             "capshape".to_string(),
             "cap_surface".to_string(),
             "cap_color".to_string(),
@@ -1441,8 +1441,8 @@ impl RealWorldDatasets {
             n_samples,
             n_features,
             task_type: "classification".to_string(),
-            target_names: Some(vec!["edible".to_string(), "poisonous".to_string()]),
-            feature_names: Some(feature_names),
+            targetnames: Some(vec!["edible".to_string(), "poisonous".to_string()]),
+            featurenames: Some(featurenames),
             url: None,
             checksum: None,
         };
@@ -1462,7 +1462,7 @@ impl RealWorldDatasets {
         let mut target = Array1::zeros(n_samples);
 
         // Generate feature names for the spam dataset
-        let mut feature_names = Vec::with_capacity(n_features);
+        let mut featurenames = Vec::with_capacity(n_features);
 
         // Word frequency features (first 54 features)
         let spam_words = vec![
@@ -1527,13 +1527,13 @@ impl RealWorldDatasets {
 
         for (i, word) in spam_words.iter().enumerate() {
             if i < n_features {
-                feature_names.push(format!("word_freq_{word}"));
+                featurenames.push(format!("word_freq_{word}"));
             }
         }
 
         // Fill remaining feature names if needed
-        while feature_names.len() < n_features {
-            feature_names.push(format!("feature_{}", feature_names.len()));
+        while featurenames.len() < n_features {
+            featurenames.push(format!("feature_{}", featurenames.len()));
         }
 
         for i in 0..n_samples {
@@ -1579,8 +1579,8 @@ impl RealWorldDatasets {
             n_samples,
             n_features,
             task_type: "classification".to_string(),
-            target_names: Some(vec!["ham".to_string(), "spam".to_string()]),
-            feature_names: Some(feature_names),
+            targetnames: Some(vec!["ham".to_string(), "spam".to_string()]),
+            featurenames: Some(featurenames),
             url: None,
             checksum: None,
         };

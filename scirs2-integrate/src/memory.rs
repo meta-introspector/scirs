@@ -190,7 +190,7 @@ impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
         let data = vec![F::zero(); rows * cols];
         Self {
             data,
-            rows: rows,
+            rows,
             cols,
             layout,
         }

@@ -198,10 +198,7 @@ where
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in DFS order
 #[allow(dead_code)]
-pub fn depth_first_search_digraph<N, E, Ix>(
-    graph: &DiGraph<N, E, Ix>,
-    source: &N,
-) -> Result<Vec<N>>
+pub fn depth_first_search_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,

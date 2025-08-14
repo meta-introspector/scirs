@@ -141,11 +141,7 @@ pub struct BlockId {
 
 impl std::fmt::Display for BlockId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}_{}-{}",
-            self.matrixid, self.block_row, self.block_col
-        )
+        write!(f, "{}_{}-{}", self.matrixid, self.block_row, self.block_col)
     }
 }
 
@@ -390,7 +386,7 @@ impl AdaptiveMemoryCompressor {
         };
 
         Ok(Self {
-            config: config,
+            config,
             memory_usage: AtomicUsize::new(0),
             compression_stats: Arc::new(Mutex::new(CompressionStats::default())),
             block_cache: Arc::new(Mutex::new(block_cache)),
@@ -2007,7 +2003,7 @@ impl BlockCache {
         Self {
             cache: HashMap::new(),
             access_order: VecDeque::new(),
-            _maxsize: _maxsize,
+            _maxsize,
             current_size: 0,
         }
     }
@@ -2107,11 +2103,7 @@ impl OutOfCoreManager {
 
     /// Create memory-mapped file for large blocks
     #[allow(dead_code)]
-    fn create_memory_mapped_file(
-        &mut self,
-        blockid: BlockId,
-        size: usize,
-    ) -> SparseResult<String> {
+    fn create_memory_mapped_file(&mut self, blockid: BlockId, size: usize) -> SparseResult<String> {
         let file_id = self.file_counter.fetch_add(1, Ordering::Relaxed);
         let file_name = format!("mmap_{blockid}_{file_id}.dat");
         let filepath = Path::new(&self.temp_dir).join(&file_name);
@@ -2173,9 +2165,8 @@ impl OutOfCoreManager {
             self.memory_mapped_files.remove(&file_name);
 
             // Remove file from disk
-            std::fs::remove_file(&filepath).map_err(|e| {
-                SparseError::Io(format!("Failed to remove file {filepath:?}: {e}"))
-            })?;
+            std::fs::remove_file(&filepath)
+                .map_err(|e| SparseError::Io(format!("Failed to remove file {filepath:?}: {e}")))?;
         }
         Ok(())
     }

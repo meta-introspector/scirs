@@ -465,7 +465,7 @@ impl AdvancedMemoryProfiler {
             name if name.contains("community") => 2048 * 1024, // 2MB for community detection
             name if name.contains("centrality") => 512 * 1024, // 512KB for centrality
             name if name.contains("shortest") => 1536 * 1024, // 1.5MB for shortest paths
-            _ => 256 * 1024,                                   // 256KB default
+            _ => 256 * 1024,                                  // 256KB default
         }
     }
 

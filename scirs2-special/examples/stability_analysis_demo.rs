@@ -3,7 +3,7 @@
 //! This example shows how to analyze the numerical stability of special functions
 //! across extreme parameter ranges and identify potential issues.
 
-use scirs2__special::stability_analysis::run_stability_tests;
+use scirs2_special::stability_analysis::run_stability_tests;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn demonstrate_edge_cases() {
-    use scirs2__special::{bessel::j0, erf, erfc, gamma, gamma_safe};
+    use scirs2_special::{bessel::j0, erf, erfc, gamma, gamma_safe};
 
     println!("\n\nEdge Cases and Numerical Issues");
     println!("================================\n");
@@ -81,7 +81,7 @@ fn demonstrate_edge_cases() {
 
 #[allow(dead_code)]
 fn demonstrate_safe_usage() {
-    use scirs2__special::{beta_safe, digamma_safe, gamma_safe};
+    use scirs2_special::{beta_safe, digamma_safe, gamma_safe};
 
     println!("\n\nSafe Usage Patterns");
     println!("===================\n");

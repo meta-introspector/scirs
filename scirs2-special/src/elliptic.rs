@@ -181,7 +181,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::elliptic_k;
+/// use scirs2_special::elliptic_k;
 /// use approx::assert_relative_eq;
 ///
 /// let m = 0.5; // m = k² where k is the modulus
@@ -236,7 +236,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::elliptic_e;
+/// use scirs2_special::elliptic_e;
 /// use approx::assert_relative_eq;
 ///
 /// let m = 0.5; // m = k² where k is the modulus
@@ -294,7 +294,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::elliptic_f;
+/// use scirs2_special::elliptic_f;
 /// use approx::assert_relative_eq;
 /// use std::f64::consts::PI;
 ///
@@ -371,7 +371,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::elliptic_e_inc;
+/// use scirs2_special::elliptic_e_inc;
 /// use approx::assert_relative_eq;
 /// use std::f64::consts::PI;
 ///
@@ -446,7 +446,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::elliptic_pi;
+/// use scirs2_special::elliptic_pi;
 /// use approx::assert_relative_eq;
 /// use std::f64::consts::PI;
 ///
@@ -509,7 +509,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::jacobi_sn;
+/// use scirs2_special::jacobi_sn;
 /// use approx::assert_relative_eq;
 ///
 /// let u = 0.5;
@@ -569,7 +569,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::jacobi_cn;
+/// use scirs2_special::jacobi_cn;
 /// use approx::assert_relative_eq;
 ///
 /// let u = 0.5;
@@ -626,7 +626,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::jacobi_dn;
+/// use scirs2_special::jacobi_dn;
 /// use approx::assert_relative_eq;
 ///
 /// let u = 0.5;
@@ -866,7 +866,7 @@ fn jacobi_sn_approx(u: f64, m: f64) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::ellipj;
+/// use scirs2_special::ellipj;
 /// use approx::assert_relative_eq;
 ///
 /// let u = 0.5;
@@ -903,7 +903,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::ellipkm1;
+/// use scirs2_special::ellipkm1;
 /// use approx::assert_relative_eq;
 ///
 /// let m = 0.99; // Close to 1
@@ -919,8 +919,8 @@ where
         return F::nan();
     }
 
-    let one_minus_m = F::one() - m;
-    elliptic_k(one_minus_m)
+    let oneminus_m = F::one() - m;
+    elliptic_k(oneminus_m)
 }
 
 /// Complete elliptic integral of the first kind (alternative interface)
@@ -939,7 +939,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::ellipk;
+/// use scirs2_special::ellipk;
 /// use approx::assert_relative_eq;
 ///
 /// let result = ellipk(0.5);
@@ -969,7 +969,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::ellipe;
+/// use scirs2_special::ellipe;
 /// use approx::assert_relative_eq;
 ///
 /// let result = ellipe(0.5);
@@ -1000,7 +1000,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::ellipkinc;
+/// use scirs2_special::ellipkinc;
 /// use std::f64::consts::PI;
 /// use approx::assert_relative_eq;
 ///
@@ -1032,7 +1032,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::ellipeinc;
+/// use scirs2_special::ellipeinc;
 /// use std::f64::consts::PI;
 /// use approx::assert_relative_eq;
 ///

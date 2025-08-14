@@ -317,7 +317,7 @@ mod tests {
 
     #[test]
     fn test_quick_quality_assessment() {
-        let data = Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let dataset = Dataset::new(data, None);
 
         let quality = quick_quality_assessment(&dataset).unwrap();
@@ -326,7 +326,7 @@ mod tests {
 
     #[test]
     fn test_advanced_dataset_analyzer() {
-        let data = Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let dataset = Dataset::new(data, None);
 
         let analyzer = AdvancedDatasetAnalyzer::new()
@@ -342,7 +342,7 @@ mod tests {
 
     #[test]
     fn test_normality_assessment() {
-        let data = Array2::fromshape_vec((20, 2), (0..40).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((20, 2), (0..40).map(|x| x as f64).collect()).unwrap();
         let dataset = Dataset::new(data, None);
 
         let analyzer = AdvancedDatasetAnalyzer::new();
@@ -355,7 +355,7 @@ mod tests {
 
     #[test]
     fn test_correlation_insights() {
-        let data = Array2::fromshape_vec((15, 3), (0..45).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((15, 3), (0..45).map(|x| x as f64).collect()).unwrap();
         let dataset = Dataset::new(data, None);
 
         let analyzer = AdvancedDatasetAnalyzer::new();

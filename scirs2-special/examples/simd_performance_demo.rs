@@ -7,12 +7,12 @@ use ndarray::Array1;
 use std::time::Instant;
 
 #[cfg(feature = "simd")]
-use scirs2__special::{
+use scirs2_special::{
     benchmark_simd_performance, exp_f32_simd, gamma_f32_simd, gamma_f64_simd, j0_f32_simd,
     vectorized_special_ops,
 };
 
-use scirs2__special::{gamma, j0};
+use scirs2_special::{gamma, j0};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -63,9 +63,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn benchmark_gamma_performance(size: usize) -> Result<(), Box<dyn std::error::Error>> {
     // Create test data
     let data_f32: Array1<f32> =
-        Array1::from_vec((0.._size).map(|i| (i as f32) * 0.01 + 1.0).collect());
+        Array1::from_vec((0..size).map(|i| (i as f32) * 0.01 + 1.0).collect());
     let data_f64: Array1<f64> =
-        Array1::from_vec((0.._size).map(|i| (i as f64) * 0.01 + 1.0).collect());
+        Array1::from_vec((0..size).map(|i| (i as f64) * 0.01 + 1.0).collect());
 
     // Benchmark scalar implementation
     let start = Instant::now();
@@ -112,7 +112,7 @@ fn benchmark_gamma_performance(size: usize) -> Result<(), Box<dyn std::error::Er
 #[allow(dead_code)]
 fn benchmark_j0_performance(size: usize) -> Result<(), Box<dyn std::error::Error>> {
     // Create test data
-    let data_f32: Array1<f32> = Array1::from_vec((0.._size).map(|i| (i as f32) * 0.1).collect());
+    let data_f32: Array1<f32> = Array1::from_vec((0..size).map(|i| (i as f32) * 0.1).collect());
 
     // Benchmark scalar implementation
     let start = Instant::now();

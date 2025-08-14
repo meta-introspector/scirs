@@ -21,7 +21,7 @@ mod transform;
 
 // Re-export public items from submodules
 pub use filters::{Wavelet, WaveletFilters};
-pub use multiscale::{wavedec, waverec, wavedec_compat, waverec_compat};
+pub use multiscale::{wavedec, wavedec_compat, waverec, waverec_compat};
 pub use transform::{dwt_decompose, dwt_reconstruct};
 
 // Export types - DecompositionResult is defined below

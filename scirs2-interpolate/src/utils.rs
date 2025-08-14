@@ -179,7 +179,7 @@ where
 ///
 /// * `x` - Point at which to evaluate the derivative
 /// * `h` - Step size for the finite difference (smaller = more accurate, but numerical issues)
-/// * `eval_fn` - Function that evaluates the interpolant at a point
+/// * `evalfn` - Function that evaluates the interpolant at a point
 ///
 /// # Returns
 ///
@@ -216,8 +216,8 @@ where
     Func: Fn(F) -> InterpolateResult<F>,
 {
     // Use central difference for better accuracy
-    let f_plus = eval_fn(x + h)?;
-    let f_minus = eval_fn(x - h)?;
+    let f_plus = evalfn(x + h)?;
+    let f_minus = evalfn(x - h)?;
 
     let two = F::from_f64(2.0).ok_or_else(|| {
         InterpolateError::ComputationError(
@@ -246,7 +246,7 @@ where
 /// * `a` - Lower bound of integration
 /// * `b` - Upper bound of integration  
 /// * `n` - Number of intervals for the quadrature (must be even and >= 2)
-/// * `eval_fn` - Function that evaluates the interpolant at a point
+/// * `evalfn` - Function that evaluates the interpolant at a point
 ///
 /// # Returns
 ///
@@ -283,7 +283,7 @@ where
     Func: Fn(F) -> InterpolateResult<F>,
 {
     if a > b {
-        return integrate(b, a, n, eval_fn).map(|result| -result);
+        return integrate(b, a, n, evalfn).map(|result| -result);
     }
 
     // Use composite Simpson's rule for integration
@@ -311,7 +311,7 @@ where
         )
     })?;
 
-    let mut sum = eval_fn(a)? + eval_fn(b)?;
+    let mut sum = evalfn(a)? + evalfn(b)?;
 
     // Even-indexed points (except endpoints)
     let two = F::from_f64(2.0).ok_or_else(|| {
@@ -328,7 +328,7 @@ where
                 )
             })?;
             let x_i = a + i_f * h;
-            sum = sum + two * eval_fn(x_i)?;
+            sum = sum + two * evalfn(x_i)?;
         }
     }
 
@@ -347,7 +347,7 @@ where
                 )
             })?;
             let x_i = a + i_f * h;
-            sum = sum + four * eval_fn(x_i)?;
+            sum = sum + four * evalfn(x_i)?;
         }
     }
 
@@ -375,7 +375,7 @@ where
 /// * `a` - Left boundary of search interval
 /// * `b` - Right boundary of search interval  
 /// * `tolerance` - Tolerance for root finding accuracy
-/// * `eval_fn` - Function to evaluate
+/// * `evalfn` - Function to evaluate
 ///
 /// # Returns
 ///
@@ -386,7 +386,7 @@ pub fn find_roots_bisection<F, Func>(
     a: F,
     b: F,
     tolerance: F,
-    eval_fn: Func,
+    evalfn: Func,
 ) -> InterpolateResult<Vec<F>>
 where
     F: Float + FromPrimitive + Debug + Display,
@@ -399,8 +399,8 @@ where
     }
 
     // Evaluate at endpoints
-    let fa = eval_fn(a)?;
-    let fb = eval_fn(b)?;
+    let fa = evalfn(a)?;
+    let fb = evalfn(b)?;
 
     // If either endpoint is close to zero, it's a root
     if fa.abs() < tolerance {
@@ -423,7 +423,7 @@ where
 
     while (right - left).abs() > tolerance {
         let mid = left + (right - left) / F::from_f64(2.0).unwrap();
-        let f_mid = eval_fn(mid)?;
+        let f_mid = evalfn(mid)?;
 
         if f_mid.abs() < tolerance {
             roots.push(mid);
@@ -442,7 +442,7 @@ where
     // If we didn't find exact root, add the midpoint
     if roots.is_empty() {
         let root = left + (right - left) / F::from_f64(2.0).unwrap();
-        let f_root = eval_fn(root)?;
+        let f_root = evalfn(root)?;
         if f_root.abs() < tolerance * F::from_f64(10.0).unwrap() {
             roots.push(root);
         }
@@ -461,7 +461,7 @@ where
 /// * `b` - Right boundary of search interval
 /// * `tolerance` - Tolerance for root finding accuracy
 /// * `subdivisions` - Number of subdivisions to search
-/// * `eval_fn` - Function to evaluate
+/// * `evalfn` - Function to evaluate
 ///
 /// # Returns
 ///
@@ -473,7 +473,7 @@ pub fn find_multiple_roots<F, Func>(
     b: F,
     tolerance: F,
     subdivisions: usize,
-    eval_fn: Func,
+    evalfn: Func,
 ) -> InterpolateResult<Vec<F>>
 where
     F: Float + FromPrimitive + Debug + Display,
@@ -491,7 +491,7 @@ where
         let left = a + F::from_usize(i).unwrap() * step;
         let right = a + F::from_usize(i + 1).unwrap() * step;
 
-        match find_roots_bisection(left, right, tolerance, eval_fn) {
+        match find_roots_bisection(left, right, tolerance, evalfn) {
             Ok(mut roots) => all_roots.append(&mut roots),
             Err(_) => continue,
         }

@@ -3718,8 +3718,7 @@ pub mod import {
         model: &T,
         path: &Path,
     ) -> Result<()> {
-        let sklearn_format =
-            crate::serialization::compatibility::to_sklearn_format(model)?;
+        let sklearn_format = crate::serialization::compatibility::to_sklearn_format(model)?;
         let json_string = serde_json::to_string_pretty(&sklearn_format).map_err(|e| {
             ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e))
         })?;

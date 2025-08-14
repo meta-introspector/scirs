@@ -58,7 +58,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientFlowAnalyzer<A, D> 
             gradient_directions: VecDeque::with_capacity(_maxhistory),
             parameter_updates: VecDeque::with_capacity(_maxhistory),
             step_count: 0,
-            _maxhistory: _maxhistory,
+            _maxhistory,
             stats_cache: None,
             cache_valid: false,
         }
@@ -793,7 +793,7 @@ pub mod visualization {
                 state_history: VecDeque::with_capacity(_maxhistory),
                 learning_rate_history: VecDeque::with_capacity(_maxhistory),
                 loss_history: VecDeque::with_capacity(_maxhistory),
-                _maxhistory: _maxhistory,
+                _maxhistory,
                 step_count: 0,
             }
         }

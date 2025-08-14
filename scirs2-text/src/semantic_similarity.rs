@@ -18,7 +18,7 @@ pub struct WordMoversDistance {
 impl WordMoversDistance {
     /// Create a new WMD calculator from pre-computed embeddings
     pub fn fromembeddings(embeddings: HashMap<String, Array1<f64>>) -> Self {
-        Self { embeddings: embeddings }
+        Self { embeddings }
     }
 
     /// Create from a trained Word2Vec model
@@ -160,7 +160,9 @@ pub struct SoftCosineSimilarity {
 impl SoftCosineSimilarity {
     /// Create from pre-computed word similarities
     pub fn new(_similaritymatrix: HashMap<(String, String), f64>) -> Self {
-        Self { similarity_matrix: _similaritymatrix }
+        Self {
+            similarity_matrix: _similaritymatrix,
+        }
     }
 
     /// Create from word embeddings by computing cosine similarities

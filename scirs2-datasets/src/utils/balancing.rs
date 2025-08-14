@@ -46,7 +46,7 @@ pub enum BalancingStrategy {
 /// use ndarray::{Array1, Array2};
 /// use scirs2__datasets::utils::random_oversample;
 ///
-/// let data = Array2::fromshape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
+/// let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]); // Imbalanced: 2 vs 4
 /// let (balanced_data, balanced_targets) = random_oversample(&data, &targets, Some(42)).unwrap();
 /// // Now both classes have 4 samples each
@@ -134,7 +134,7 @@ pub fn random_oversample(
 /// use ndarray::{Array1, Array2};
 /// use scirs2__datasets::utils::random_undersample;
 ///
-/// let data = Array2::fromshape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
+/// let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]); // Imbalanced: 2 vs 4
 /// let (balanced_data, balanced_targets) = random_undersample(&data, &targets, Some(42)).unwrap();
 /// // Now both classes have 2 samples each
@@ -220,7 +220,7 @@ pub fn random_undersample(
 /// use ndarray::{Array1, Array2};
 /// use scirs2__datasets::utils::generate_synthetic_samples;
 ///
-/// let data = Array2::fromshape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5]).unwrap();
+/// let data = Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5]).unwrap();
 /// let targets = Array1::from(vec![0.0, 0.0, 0.0, 1.0]);
 /// let (synthetic_data, synthetic_targets) = generate_synthetic_samples(&data, &targets, 0.0, 2, 2, Some(42)).unwrap();
 /// assert_eq!(synthetic_data.nrows(), 2);
@@ -345,7 +345,7 @@ pub fn generate_synthetic_samples(
 /// use ndarray::{Array1, Array2};
 /// use scirs2__datasets::utils::{create_balanced_dataset, BalancingStrategy};
 ///
-/// let data = Array2::fromshape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
+/// let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
 /// let (balanced_data, balanced_targets) = create_balanced_dataset(&data, &targets, BalancingStrategy::RandomOversample, Some(42)).unwrap();
 /// ```
@@ -413,7 +413,7 @@ mod tests {
 
     #[test]
     fn test_random_oversample() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
@@ -441,7 +441,7 @@ mod tests {
 
     #[test]
     fn test_random_oversample_invalid_params() {
-        let data = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let targets = Array1::from(vec![0.0, 1.0]);
 
         // Mismatched data and targets
@@ -455,7 +455,7 @@ mod tests {
 
     #[test]
     fn test_random_undersample() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
@@ -483,7 +483,7 @@ mod tests {
 
     #[test]
     fn test_random_undersample_invalid_params() {
-        let data = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let targets = Array1::from(vec![0.0, 1.0]);
 
         // Mismatched data and targets
@@ -498,7 +498,7 @@ mod tests {
     #[test]
     fn test_generate_synthetic_samples() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5]).unwrap();
         let targets = Array1::from(vec![0.0, 0.0, 0.0, 1.0]);
 
         let (synthetic_data, synthetic_targets) =
@@ -528,7 +528,7 @@ mod tests {
     #[test]
     fn test_generate_synthetic_samples_invalid_params() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5]).unwrap();
         let targets = Array1::from(vec![0.0, 0.0, 0.0, 1.0]);
 
         // Mismatched data and targets
@@ -550,7 +550,7 @@ mod tests {
 
     #[test]
     fn test_create_balanced_dataset_random_oversample() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
@@ -576,7 +576,7 @@ mod tests {
 
     #[test]
     fn test_create_balanced_dataset_random_undersample() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
@@ -602,7 +602,7 @@ mod tests {
 
     #[test]
     fn test_create_balanced_dataset_smote() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (8, 2),
             vec![
                 1.0, 1.0, 1.5, 1.5, 2.0, 2.0, 2.5, 2.5, 5.0, 5.0, 6.0, 6.0, 7.0, 7.0, 8.0, 8.0,
@@ -629,7 +629,7 @@ mod tests {
     #[test]
     fn test_balancing_strategy_with_multiple_classes() {
         // Test with 3 classes of different sizes
-        let data = Array2::fromshape_vec((9, 2), (0..18).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((9, 2), (0..18).map(|x| x as f64).collect()).unwrap();
         let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0]);
         // Class distribution: 0 (2 samples), 1 (4 samples), 2 (3 samples)
 

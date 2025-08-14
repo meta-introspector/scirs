@@ -102,14 +102,14 @@ impl<T> ErrorContextExt<T> for SpecialResult<T> {
 /// Standard validation trait for special functions
 pub trait ValidatedFunction<Input, Output> {
     /// Validate inputs before computation
-    fn validate_inputs(&self, input: &Input) -> SpecialResult<()>;
+    fn validateinputs(&self, input: &Input) -> SpecialResult<()>;
 
     /// Compute the function with validated inputs
     fn compute_validated(&self, input: Input) -> SpecialResult<Output>;
 
     /// Main entry point that combines validation and computation
     fn evaluate(&self, input: Input) -> SpecialResult<Output> {
-        self.validate_inputs(&input)?;
+        self.validateinputs(&input)?;
         self.compute_validated(input)
     }
 }

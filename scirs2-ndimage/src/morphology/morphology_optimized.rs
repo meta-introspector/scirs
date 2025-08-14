@@ -1017,7 +1017,8 @@ where
 {
     match method {
         MorphOperation::Dilation => geodesic_dilation_2d(marker, mask, structure, None),
-        MorphOperation::Erosion => geodesic_erosion_2d(marker, mask, structure, None, _ => Err(crate::error::NdimageError::InvalidInput(
+        MorphOperation::Erosion => geodesic_erosion_2d(marker, mask, structure, None),
+        _ => Err(crate::error::NdimageError::InvalidInput(
             "Only dilation and erosion methods are supported for reconstruction".into(),
         )),
     }

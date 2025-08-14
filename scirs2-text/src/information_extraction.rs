@@ -970,7 +970,9 @@ impl ConfidenceScorer {
         feature_weights.insert("length_score".to_string(), 0.1);
         feature_weights.insert("position_score".to_string(), 0.1);
 
-        Self { featureweights: feature_weights }
+        Self {
+            featureweights: feature_weights,
+        }
     }
 
     /// Calculate confidence score for an entity

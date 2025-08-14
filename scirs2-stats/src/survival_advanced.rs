@@ -448,7 +448,7 @@ pub struct PosteriorSummary<F> {
     pub stds: Array1<F>,
     pub quantiles: Array2<F>,
     pub credible_intervals: Array2<F>,
-    pub effective_sample_size: Array1<F>,
+    pub effective_samplesize: Array1<F>,
     pub rhat: Array1<F>,
 }
 
@@ -625,7 +625,7 @@ where
     /// Create new advanced survival analysis
     pub fn new(config: AdvancedSurvivalConfig<F>) -> Self {
         Self {
-            config: config,
+            config,
             models: HashMap::new(),
             performance: ModelPerformance {
                 concordance_indices: HashMap::new(),

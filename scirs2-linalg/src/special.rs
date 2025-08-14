@@ -319,7 +319,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_function_redirects() {
+    fn testmatrix_function_redirects() {
         // Test that the special module functions correctly redirect to matrix_functions
         let a = array![[4.0, 0.0], [0.0, 9.0]];
 
@@ -342,7 +342,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_sign_function() {
+    fn testmatrix_sign_function() {
         // Test matrix sign function with various cases
 
         // Case 1: Positive definite matrix - sign(A) = I

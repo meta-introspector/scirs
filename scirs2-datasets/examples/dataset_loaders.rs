@@ -13,22 +13,22 @@ fn main() {
         return;
     }
 
-    let file_path = &args[1];
+    let filepath = &args[1];
 
     // Verify the file exists
-    if !Path::new(file_path).exists() {
-        println!("Error: File '{file_path}' does not exist");
+    if !Path::new(filepath).exists() {
+        println!("Error: File '{filepath}' does not exist");
         return;
     }
 
     // Load CSV file
-    println!("Loading CSV file: {file_path}");
+    println!("Loading CSV file: {filepath}");
     let csv_config = loaders::CsvConfig {
         has_header: true,
         target_column: None,
         ..Default::default()
     };
-    match loaders::load_csv(file_path, csv_config) {
+    match loaders::load_csv(filepath, csv_config) {
         Ok(dataset) => {
             print_dataset_info(&dataset, "Loaded CSV");
 
@@ -40,16 +40,16 @@ fn main() {
                     println!("Test set: {} samples", test.n_samples());
 
                     // Save as JSON for demonstration
-                    let json_path = format!("{file_path}.json");
-                    println!("\nSaving training dataset to JSON: {json_path}");
-                    if let Err(e) = loaders::save_json(&train, &json_path) {
+                    let jsonpath = format!("{filepath}.json");
+                    println!("\nSaving training dataset to JSON: {jsonpath}");
+                    if let Err(e) = loaders::save_json(&train, &jsonpath) {
                         println!("Error saving JSON: {e}");
                     } else {
                         println!("Successfully saved JSON file");
 
                         // Load back the JSON file
                         println!("\nLoading back from JSON file...");
-                        match loaders::load_json(&json_path) {
+                        match loaders::load_json(&jsonpath) {
                             Ok(loaded) => {
                                 print_dataset_info(&loaded, "Loaded JSON");
                             }
@@ -70,21 +70,21 @@ fn print_dataset_info(dataset: &Dataset, name: &str) {
     println!("Number of samples: {}", dataset.n_samples());
     println!("Number of features: {}", dataset.n_features());
 
-    if let Some(feature_names) = &_dataset.feature_names {
+    if let Some(featurenames) = &_dataset.featurenames {
         println!(
             "Features: {:?}",
-            &feature_names[0..std::cmp::min(5, feature_names.len())]
+            &featurenames[0..std::cmp::min(5, featurenames.len())]
         );
-        if feature_names.len() > 5 {
-            println!("... and {} more", feature_names.len() - 5);
+        if featurenames.len() > 5 {
+            println!("... and {} more", featurenames.len() - 5);
         }
     }
 
     if let Some(target) = &_dataset.target {
         println!("Target shape: {}", target.len());
 
-        if let Some(target_names) = &_dataset.target_names {
-            println!("Target classes: {target_names:?}");
+        if let Some(targetnames) = &_dataset.targetnames {
+            println!("Target classes: {targetnames:?}");
         }
     }
 

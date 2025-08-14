@@ -129,7 +129,7 @@ where
     }
 
     // Get the batch dimension
-    let batch_size = ashape[0].max(bshape[0]);
+    let batchsize = ashape[0].max(bshape[0]);
 
     // Check if batch dimensions can be broadcast
     if ashape[0] != bshape[0] && ashape[0] != 1 && bshape[0] != 1 {
@@ -141,13 +141,13 @@ where
     // Compute output shape
     let a_rows = ashape[1];
     let b_cols = bshape[2];
-    let outputshape = [batch_size, a_rows, b_cols];
+    let outputshape = [batchsize, a_rows, b_cols];
 
     // Create output array
     let mut output = Array::zeros(outputshape);
 
     // Perform batched matrix multiplication
-    for i in 0..batch_size {
+    for i in 0..batchsize {
         let a_idx = if ashape[0] == 1 { 0 } else { i };
         let b_idx = if bshape[0] == 1 { 0 } else { i };
 

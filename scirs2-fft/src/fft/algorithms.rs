@@ -46,7 +46,7 @@ pub fn parse_norm_mode(_norm: Option<&str>, isinverse: bool) -> NormMode {
     match _norm {
         Some(s) => NormMode::from(s),
         None if isinverse => NormMode::Backward, // Default for _inverse transforms
-        None => NormMode::None,                   // Default for forward transforms
+        None => NormMode::None,                  // Default for forward transforms
     }
 }
 

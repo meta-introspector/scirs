@@ -600,7 +600,10 @@ pub mod distributed {
     impl NodeId {
         /// Create a new node identifier
         pub fn new(name: String, instanceid: String) -> Self {
-            Self { name, instance_id: instanceid }
+            Self {
+                name,
+                instance_id: instanceid,
+            }
         }
 
         /// Create from hostname and process ID

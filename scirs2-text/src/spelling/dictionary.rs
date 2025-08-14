@@ -12,7 +12,7 @@
 //! # Example
 //!
 //! ```
-//! use scirs2text::spelling::{DictionaryCorrector, SpellingCorrector};
+//! use scirs2_text::spelling::{DictionaryCorrector, SpellingCorrector};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a dictionary-based spelling corrector with default settings

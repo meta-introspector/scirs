@@ -802,9 +802,8 @@ fn plot_scatter_3d_png<P: AsRef<Path>>(
         }
     }
 
-    root.present().map_err(|e| {
-        ClusteringError::ComputationError(format!("Failed to save 3D plot: {}", e))
-    })?;
+    root.present()
+        .map_err(|e| ClusteringError::ComputationError(format!("Failed to save 3D plot: {}", e)))?;
 
     Ok(())
 }
@@ -899,9 +898,8 @@ fn plot_scatter_3d_svg<P: AsRef<Path>>(
         }
     }
 
-    root.present().map_err(|e| {
-        ClusteringError::ComputationError(format!("Failed to save 3D plot: {}", e))
-    })?;
+    root.present()
+        .map_err(|e| ClusteringError::ComputationError(format!("Failed to save 3D plot: {}", e)))?;
 
     Ok(())
 }

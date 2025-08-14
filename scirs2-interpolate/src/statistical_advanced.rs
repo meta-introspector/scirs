@@ -691,13 +691,13 @@ where
     F: Float + FromPrimitive + Debug + Display + std::iter::Sum,
 {
     /// Create new advanced bootstrap
-    pub fn new(_method: BootstrapMethod, n_samples: usize, blocksize: usize) -> Self {
+    pub fn new(method: BootstrapMethod, n_samples: usize, blocksize: usize) -> Self {
         Self {
-            block_size,
+            block_size: blocksize,
             method,
             n_samples,
             seed: None,
-            phantom: PhantomData,
+            _phantom: PhantomData,
         }
     }
 
@@ -897,7 +897,7 @@ mod tests {
     #[test]
     fn test_variational_sparse_gp() {
         // Generate simple test data
-        let x_train = Array2::fromshape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
+        let x_train = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
         let y_train = Array1::from(vec![0.0, 1.0, 4.0, 9.0, 16.0]); // y = x^2
 
         // Create kernel parameters
@@ -908,7 +908,7 @@ mod tests {
         };
 
         // Create sparse GP with 3 inducing points
-        let inducing_points = Array2::fromshape_vec((3, 1), vec![0.0, 2.0, 4.0]).unwrap();
+        let inducing_points = Array2::from_shape_vec((3, 1), vec![0.0, 2.0, 4.0]).unwrap();
         let mut sparse_gp = VariationalSparseGP::new(
             inducing_points,
             kernel_params,
@@ -920,7 +920,7 @@ mod tests {
         assert!(result.is_ok());
 
         // Make predictions
-        let x_test = Array2::fromshape_vec((3, 1), vec![0.5, 1.5, 2.5]).unwrap();
+        let x_test = Array2::from_shape_vec((3, 1), vec![0.5, 1.5, 2.5]).unwrap();
         let (mean, variance) = sparse_gp.predict(&x_test.view()).unwrap();
 
         // Check that predictions are reasonable
@@ -1053,7 +1053,8 @@ where
         Ok(Self {
             window_length,
             polynomial_order,
-            derivative_order_phantom: PhantomData,
+            derivative_order: 0,
+            _phantom: PhantomData,
         })
     }
 

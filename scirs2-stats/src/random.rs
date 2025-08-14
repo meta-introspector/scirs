@@ -56,7 +56,7 @@ where
             let mut seed_bytes = [0u8; 32];
             seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
             SeedableRng::from_seed(seed_bytes)
-        },
+        }
         None => {
             // Use system entropy
             {
@@ -213,7 +213,7 @@ pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
             let mut seed_bytes = [0u8; 32];
             seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
             SeedableRng::from_seed(seed_bytes)
-        },
+        }
         None => {
             // Use system entropy
             {
@@ -301,7 +301,7 @@ where
             let mut seed_bytes = [0u8; 32];
             seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
             SeedableRng::from_seed(seed_bytes)
-        },
+        }
         None => {
             // Use system entropy
             {
@@ -482,7 +482,7 @@ where
             let mut seed_bytes = [0u8; 32];
             seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
             SeedableRng::from_seed(seed_bytes)
-        },
+        }
         None => {
             // Use system entropy
             {
@@ -546,7 +546,7 @@ pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>
             let mut seed_bytes = [0u8; 32];
             seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
             SeedableRng::from_seed(seed_bytes)
-        },
+        }
         None => {
             // Use system entropy
             {
@@ -623,7 +623,7 @@ pub fn random_binary_matrix(
             let mut seed_bytes = [0u8; 32];
             seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
             SeedableRng::from_seed(seed_bytes)
-        },
+        }
         None => {
             // Use system entropy
             {
@@ -703,7 +703,7 @@ where
             let mut seed_bytes = [0u8; 32];
             seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
             SeedableRng::from_seed(seed_bytes)
-        },
+        }
         None => {
             // Use system entropy
             {

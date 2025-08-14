@@ -66,7 +66,7 @@ pub struct VariogramBin<F: Float> {
 /// use scirs2__interpolate::advanced::fast_kriging::variogram::compute_empirical_variogram;
 ///
 /// // Create a simple 2D dataset
-/// let points = Array2::fromshape_vec((5, 2), vec![
+/// let points = Array2::from_shape_vec((5, 2), vec![
 ///     0.0, 0.0,
 ///     1.0, 0.0,
 ///     0.0, 1.0,
@@ -224,7 +224,7 @@ where
 /// };
 ///
 /// // Create sample data
-/// let points = Array2::fromshape_vec((10, 2), vec![
+/// let points = Array2::from_shape_vec((10, 2), vec![
 ///     0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 4.0, 0.0,
 ///     0.0, 1.0, 1.0, 1.0, 2.0, 1.0, 3.0, 1.0, 4.0, 1.0,
 /// ]).unwrap();

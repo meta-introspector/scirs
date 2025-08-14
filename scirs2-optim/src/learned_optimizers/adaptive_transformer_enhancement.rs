@@ -1762,7 +1762,7 @@ impl<T: Float + Send + Sync> PredictorNetwork<T> {
             weights,
             biases,
             activations,
-            architecture: architecture,
+            architecture,
         })
     }
 }
@@ -1782,7 +1782,7 @@ impl<T: Float + Send + Sync> PredictionCache<T> {
         Self {
             predictions: HashMap::new(),
             hit_rate: 0.0,
-            capacity: capacity,
+            capacity,
         }
     }
 }

@@ -120,10 +120,7 @@ impl DtcwtProcessor {
     pub fn new(config: DtcwtConfig) -> SignalResult<Self> {
         let filters = create_dtcwt_filters(config.filter_set)?;
 
-        Ok(Self {
-            config,
-            filters,
-        })
+        Ok(Self { config, filters })
     }
 
     /// Forward 1D Dual-Tree Complex Wavelet Transform

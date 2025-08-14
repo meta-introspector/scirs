@@ -1356,7 +1356,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
             evaluation_cache: EvaluationCache::new(),
             statistical_analyzer: StatisticalAnalyzer::new(),
             resource_monitor: ResourceMonitor::new(),
-            config: config,
+            config,
         })
     }
 

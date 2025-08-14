@@ -4,8 +4,8 @@
 //! measuring their performance across various scenarios.
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use num__complex::Complex64;
-use scirs2__fft::planning::{
+use num_complex::Complex64;
+use scirs2_fft::planning::{
     AdvancedFftPlanner, FftPlanExecutor, PlanBuilder, PlanningConfig, PlanningStrategy,
 };
 use std::time::Duration;

@@ -375,10 +375,7 @@ pub fn polygon_symmetric_difference(
 
 /// Find intersections between edges of two polygons
 #[allow(dead_code)]
-fn find_intersections(
-    poly1: &mut LabeledPolygon,
-    poly2: &mut LabeledPolygon,
-) -> SpatialResult<()> {
+fn find_intersections(poly1: &mut LabeledPolygon, poly2: &mut LabeledPolygon) -> SpatialResult<()> {
     for (i, edge1) in poly1.edges.iter_mut().enumerate() {
         for (j, edge2) in poly2.edges.iter_mut().enumerate() {
             if let Some((intersectionpoint, t1, t2)) =

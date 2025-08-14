@@ -681,10 +681,8 @@ fn estimate_homography_transform(matches: &[PointMatch]) -> Result<TransformMatr
     // This avoids SVD issues while still providing full 8-parameter homography
 
     // First normalize the points for numerical stability
-    let (norm_source, t1) =
-        normalize_points_homography(matches.iter().map(|m| m.source).collect());
-    let (norm_target, t2) =
-        normalize_points_homography(matches.iter().map(|m| m.target).collect());
+    let (norm_source, t1) = normalize_points_homography(matches.iter().map(|m| m.source).collect());
+    let (norm_target, t2) = normalize_points_homography(matches.iter().map(|m| m.target).collect());
 
     // Build the constraint matrix for DLT
     // For each correspondence, we get 2 equations
@@ -779,8 +777,7 @@ fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
     }
 
     // Compute determinant
-    let det = matrix[[0, 0]]
-        * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
+    let det = matrix[[0, 0]] * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
         - matrix[[0, 1]] * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
         + matrix[[0, 2]] * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
 

@@ -312,7 +312,7 @@ where
     /// let slope_at_2_5 = derivative_spline.evaluate(2.5).unwrap();
     /// # }
     /// ```
-    pub fn derivative_spline(&selforder: usize) -> InterpolateResult<BSpline<T>> {
+    pub fn derivative_spline(&self, order: usize) -> InterpolateResult<BSpline<T>> {
         Err(crate::error::InterpolateError::NotImplemented(
             "derivative_spline method is not available for constrained splines".to_string(),
         ))

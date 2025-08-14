@@ -40,8 +40,8 @@
 //! use std::fs::File;
 //! use std::io::Write;
 //! use tempfile::NamedTempFile;
-//! use scirs2__graph::base::Graph;
-//! use scirs2__graph::io::graphml::{read_graphml_format, write_graphml_format};
+//! use scirs2_graph::base::Graph;
+//! use scirs2_graph::io::graphml::{read_graphml_format, write_graphml_format};
 //!
 //! // Create a temporary file with GraphML data
 //! let mut temp_file = NamedTempFile::new().unwrap();

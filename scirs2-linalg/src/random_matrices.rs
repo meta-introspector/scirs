@@ -57,7 +57,7 @@ pub enum MatrixType {
 
 /// Generate a random matrix of the specified type
 #[allow(dead_code)]
-pub fn random_matrix<F, R>(
+pub fn randommatrix<F, R>(
     rows: usize,
     cols: usize,
     matrix_type: MatrixType,
@@ -370,7 +370,7 @@ where
 
 /// Generate a random complex matrix
 #[allow(dead_code)]
-pub fn random_complex_matrix<F, R>(
+pub fn random_complexmatrix<F, R>(
     rows: usize,
     cols: usize,
     real_dist: Distribution1D,
@@ -406,7 +406,7 @@ where
     F: Float,
     R: Rng + ?Sized,
 {
-    let mut matrix = random_complex_matrix(size, size, real_dist, imag_dist, rng)?;
+    let mut matrix = random_complexmatrix(size, size, real_dist, imag_dist, rng)?;
 
     // Make it Hermitian: A = (A + A^H) / 2
     for i in 0..size {
@@ -431,9 +431,9 @@ mod tests {
     use rand_chacha::ChaCha8Rng;
 
     #[test]
-    fn test_symmetric_matrix() {
+    fn test_symmetricmatrix() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let matrix = random_matrix::<f64, ChaCha8Rng>(
+        let matrix = randommatrix::<f64, ChaCha8Rng>(
             5,
             5,
             MatrixType::Symmetric(Distribution1D::StandardNormal),
@@ -450,9 +450,9 @@ mod tests {
     }
 
     #[test]
-    fn test_orthogonal_matrix() {
+    fn test_orthogonalmatrix() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let q = random_matrix::<f64, ChaCha8Rng>(4, 4, MatrixType::Orthogonal, &mut rng).unwrap();
+        let q = randommatrix::<f64, ChaCha8Rng>(4, 4, MatrixType::Orthogonal, &mut rng).unwrap();
 
         // Check Q^T * Q = I
         let qt = q.t();
@@ -469,7 +469,7 @@ mod tests {
     #[test]
     fn test_positive_definite() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let matrix = random_matrix::<f64, ChaCha8Rng>(
+        let matrix = randommatrix::<f64, ChaCha8Rng>(
             3,
             3,
             MatrixType::PositiveDefinite {
@@ -494,9 +494,10 @@ mod tests {
     }
 
     #[test]
-    fn test_correlation_matrix() {
+    fn test_correlationmatrix() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let matrix = random_matrix::<f64, ChaCha8Rng>(4, 4, MatrixType::Correlation, &mut rng).unwrap();
+        let matrix =
+            randommatrix::<f64, ChaCha8Rng>(4, 4, MatrixType::Correlation, &mut rng).unwrap();
 
         // Check diagonal elements are 1
         for i in 0..4 {

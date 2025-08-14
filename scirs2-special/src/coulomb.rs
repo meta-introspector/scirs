@@ -8,7 +8,7 @@
 //! * `coulomb_f` - Regular Coulomb wave function F_L(η,ρ)
 //! * `coulomb_g` - Irregular Coulomb wave function G_L(η,ρ)
 //! * `coulomb_h_plus` - Outgoing Coulomb wave function H⁺_L(η,ρ)
-//! * `coulomb_h_minus` - Incoming Coulomb wave function H⁻_L(η,ρ)
+//! * `coulomb_hminus` - Incoming Coulomb wave function H⁻_L(η,ρ)
 //! * `coulomb_phase_shift` - Coulomb phase shift σ_L(η)
 //!
 //! ## References
@@ -42,7 +42,7 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::coulomb_phase_shift;
+/// use scirs2_special::coulomb_phase_shift;
 ///
 /// // Basic usage
 /// let sigma = coulomb_phase_shift(0.0, 1.0).unwrap();
@@ -177,8 +177,8 @@ fn coulomb_phase_shift_intermediate(eta: f64) -> SpecialResult<f64> {
     let pi_z = PI * z;
     let sin_pi_z = pi_z.sin();
     let reflection_correction = if sin_pi_z.norm() > 1e-15 {
-        let gamma_one_minus_z = gamma_complex(Complex64::new(1.0, 0.0) - z);
-        let product = gamma_z * gamma_one_minus_z;
+        let gamma_oneminus_z = gamma_complex(Complex64::new(1.0, 0.0) - z);
+        let product = gamma_z * gamma_oneminus_z;
         let expected = PI / sin_pi_z;
 
         // Use the fact that the product should equal π/sin(πz)
@@ -288,7 +288,7 @@ fn coulomb_phase_shift_improved_asymptotic(eta: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::coulomb_f;
+/// use scirs2_special::coulomb_f;
 ///
 /// let f = coulomb_f(0.0, 0.0, 1.0).unwrap();
 /// // For η=0, F_L(0,ρ) = ρ j_L(ρ) where j_L is the spherical Bessel function
@@ -471,7 +471,7 @@ fn confluent_hypergeometric_asymptotic_complex(
 
     // Compute the gamma functions
     let gamma_b = gamma(b);
-    let gamma_b_minus_a = gamma_complex(Complex64::new(b, 0.0) - a);
+    let gamma_bminus_a = gamma_complex(Complex64::new(b, 0.0) - a);
 
     // Compute (-z)^(-a) = exp(-a * ln(-z))
     let neg_z = -z;
@@ -482,7 +482,7 @@ fn confluent_hypergeometric_asymptotic_complex(
     let exp_z = z.exp();
 
     // Leading term of asymptotic expansion
-    let leading_coeff = gamma_b / gamma_b_minus_a;
+    let leading_coeff = gamma_b / gamma_bminus_a;
     let result = leading_coeff * neg_z_power_neg_a * exp_z;
 
     // Add first-order correction term for better accuracy
@@ -590,7 +590,7 @@ fn coulomb_f_continued_fraction(l: f64, eta: f64, rho: f64) -> SpecialResult<f64
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::coulomb_g;
+/// use scirs2_special::coulomb_g;
 ///
 /// // Test for the special case η=0
 /// match coulomb_g(0.0, 0.0, 1.0) {
@@ -798,7 +798,7 @@ pub fn coulomb_h_plus(l: f64, eta: f64, rho: f64) -> SpecialResult<Complex64> {
 ///
 /// * `SpecialResult<Complex64>` - The incoming Coulomb wave function
 #[allow(dead_code)]
-pub fn coulomb_h_minus(l: f64, eta: f64, rho: f64) -> SpecialResult<Complex64> {
+pub fn coulomb_hminus(l: f64, eta: f64, rho: f64) -> SpecialResult<Complex64> {
     // Get real and imaginary parts
     let real_part = coulomb_g(l, eta, rho)?;
     let imag_part = -coulomb_f(l, eta, rho)?; // Note the negative sign here

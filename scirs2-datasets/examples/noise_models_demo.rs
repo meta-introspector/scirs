@@ -41,7 +41,7 @@ fn main() {
 fn demonstrate_missing_data_patterns() {
     println!("Testing different missing data patterns on a sample dataset:");
 
-    let original_data = Array2::fromshape_vec(
+    let original_data = Array2::from_shape_vec(
         (8, 4),
         vec![
             1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0, 4.0, 8.0, 12.0, 16.0, 5.0,
@@ -165,7 +165,7 @@ fn demonstrate_time_series_noise() {
         vec![("gaussian", 0.1), ("spikes", 0.05), ("drift", 0.2)], // Combined noise
     ];
 
-    let noise_names = [
+    let noisenames = [
         "Gaussian White Noise",
         "Impulse Spikes",
         "Linear Drift",
@@ -175,7 +175,7 @@ fn demonstrate_time_series_noise() {
         "Combined Noise",
     ];
 
-    for (config, name) in noise_configs.iter().zip(noise_names.iter()) {
+    for (config, name) in noise_configs.iter().zip(noisenames.iter()) {
         let mut noisy_data = clean_ts.data.clone();
         let original_stats = calculate_basic_stats(&noisy_data);
 

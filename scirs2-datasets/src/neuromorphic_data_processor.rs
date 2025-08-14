@@ -717,7 +717,7 @@ mod tests {
 
     #[test]
     fn test_neuromorphic_dataset_transformation() {
-        let data = Array2::fromshape_vec((10, 4), (0..40).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 4), (0..40).map(|x| x as f64).collect()).unwrap();
         let targets = Array1::from((0..10).map(|x| (x % 2) as f64).collect::<Vec<_>>());
         let dataset = Dataset::new(data, Some(targets));
 
@@ -749,7 +749,7 @@ mod tests {
     #[test]
     fn test_temporal_sequence_processing() {
         let processor = NeuromorphicProcessor::default();
-        let sequence = Array3::fromshape_fn((5, 10, 4), |(t, s, f)| {
+        let sequence = Array3::from_shape_fn((5, 10, 4), |(t, s, f)| {
             (t as f64 + s as f64 + f as f64) * 0.1
         });
 

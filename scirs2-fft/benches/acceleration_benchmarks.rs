@@ -4,7 +4,7 @@
 //! features including multi-GPU processing and specialized hardware support.
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use scirs2__fft::{
+use scirs2_fft::{
     // GPU backends
     gpu_sparse_fft,
     is_cuda_available,

@@ -4,6 +4,7 @@
 //! capabilities added to the scirs2-autograd system.
 
 use ndarray::{Array, IxDyn};
+use scirs2_autograd as ag;
 use scirs2_autograd::optimization::{
     memory_optimization::{MemoryOptimizationConfig, MemoryOptimizer},
     ConstantFolder, ExpressionSimplifier, GraphOptimizer, OptimizationConfig, OptimizationLevel,
@@ -12,7 +13,6 @@ use scirs2_autograd::tensor_ops as T;
 use scirs2_autograd::visualization::{
     GraphDebugger, GraphExplorer, GraphVisualizer, OutputFormat, VisualizationConfig,
 };
-use scirs2_autograd as ag;
 
 /// Test graph visualization functionality
 #[cfg(test)]

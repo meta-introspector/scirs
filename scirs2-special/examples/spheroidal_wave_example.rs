@@ -1,4 +1,4 @@
-use scirs2__special::{
+use scirs2_special::{
     obl_ang1, obl_cv, obl_rad1, obl_rad2, pro_ang1, pro_cv, pro_cv_seq, pro_rad1, pro_rad2,
 };
 use std::error::Error;
@@ -36,12 +36,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Sequence of Prolate Spheroidal Characteristic Values");
     println!("--------------------------------------------------");
     let m = 1; // Order
-    let n_max = 5; // Maximum degree
+    let nmax = 5; // Maximum degree
     let c = 0.0;
 
-    match pro_cv_seq(m, n_max, c) {
+    match pro_cv_seq(m, nmax, c) {
         Ok(values) => {
-            println!("For m = {}, c = {}, and n = {}..{}", m, c, m, n_max);
+            println!("For m = {}, c = {}, and n = {}..{}", m, c, m, nmax);
             for (i, val) in values.iter().enumerate() {
                 println!("λ_{{{},{}}}({}) = {:.6}", m, m + i as i32, c, val);
             }

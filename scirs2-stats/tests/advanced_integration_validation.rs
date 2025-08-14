@@ -34,14 +34,14 @@ fn test_empty_data_handling() {
 }
 
 #[test]
-fn test_single_element_data() {
-    let single_data: Array1<f64> = Array1::from_vec(vec![42.0]);
+fn test_single_elementdata() {
+    let singledata: Array1<f64> = Array1::from_vec(vec![42.0]);
 
     // Mean should work with single element
-    let mean_result = mean(&single_data.view()).unwrap();
+    let mean_result = mean(&singledata.view()).unwrap();
     assert!((mean_result - 42.0).abs() < 1e-10);
 
     // Variance should be 0 for single element
-    let var_result = var(&single_data.view(), 1, None).unwrap();
+    let var_result = var(&singledata.view(), 1, None).unwrap();
     assert!(var_result.abs() < 1e-10);
 }

@@ -225,7 +225,7 @@ where
     }
 
     if x.len() <= ddof {
-        return Err(ErrorMessages::insufficient_data(
+        return Err(ErrorMessages::insufficientdata(
             "variance calculation",
             ddof + 1,
             x.len(),
@@ -242,9 +242,9 @@ where
     let sum_squared_diff = if n > 10000 && workers.unwrap_or(1) > 1 {
         // Use parallel computation for large arrays when workers specified
         use scirs2_core::parallel_ops::*;
-        let chunk_size = n / workers.unwrap_or(4).max(1);
+        let chunksize = n / workers.unwrap_or(4).max(1);
         x.to_vec()
-            .par_chunks(chunk_size.max(1))
+            .par_chunks(chunksize.max(1))
             .map(|chunk| {
                 chunk
                     .iter()
@@ -366,7 +366,7 @@ where
     }
 
     if x.len() < 3 {
-        return Err(ErrorMessages::insufficient_data(
+        return Err(ErrorMessages::insufficientdata(
             "skewness calculation",
             3,
             x.len(),
@@ -382,8 +382,8 @@ where
         // Use parallel computation for large arrays when workers specified
         use scirs2_core::parallel_ops::*;
 
-        let chunk_size = n / workers.unwrap_or(1).max(1);
-        let results: Vec<(F, F)> = par_chunks(x.as_slice().unwrap_or(&[]), chunk_size)
+        let chunksize = n / workers.unwrap_or(1).max(1);
+        let results: Vec<(F, F)> = par_chunks(x.as_slice().unwrap_or(&[]), chunksize)
             .map(|chunk| {
                 let mut sq_dev = F::zero();
                 let mut cubed_dev = F::zero();
@@ -492,7 +492,7 @@ where
     }
 
     if x.len() < 4 {
-        return Err(ErrorMessages::insufficient_data(
+        return Err(ErrorMessages::insufficientdata(
             "kurtosis calculation",
             4,
             x.len(),
@@ -507,10 +507,10 @@ where
     let (sum_sq_dev, sum_fourth_dev) = if n > 10000 && workers.unwrap_or(1) > 1 {
         // Use parallel computation for large arrays when workers specified
         use scirs2_core::parallel_ops::*;
-        let chunk_size = n / workers.unwrap_or(num_cpus::get()).max(1);
+        let chunksize = n / workers.unwrap_or(num_cpus::get()).max(1);
         let results: Vec<(F, F)> = x
             .to_vec()
-            .par_chunks(chunk_size.max(1))
+            .par_chunks(chunksize.max(1))
             .map(|chunk| {
                 let mut sq_dev = F::zero();
                 let mut fourth_dev = F::zero();
@@ -571,16 +571,17 @@ where
         } else {
             // Direct calculation of unbiased kurtosis for other arrays
             k = fourth_moment / (variance * variance);
-            
+
             // Apply unbiased correction
             let n_f = F::from(x.len()).unwrap();
             let n1 = n_f - F::one();
             let n2 = n_f - F::from(2.0).unwrap();
             let n3 = n_f - F::from(3.0).unwrap();
-            
+
             // For sample kurtosis: k = ((n+1)*k - 3*(n-1)) * (n-1) / ((n-2)*(n-3)) + 3
-            k = ((n_f + F::one()) * k - F::from(3.0).unwrap() * n1) * n1 / (n2 * n3) + F::from(3.0).unwrap();
-            
+            k = ((n_f + F::one()) * k - F::from(3.0).unwrap() * n1) * n1 / (n2 * n3)
+                + F::from(3.0).unwrap();
+
             if fisher {
                 k = k - F::from(3.0).unwrap();
             }
@@ -672,9 +673,9 @@ where
         let sum = if n > 10000 && workers.unwrap_or(1) > 1 {
             // Use parallel computation for large arrays when workers specified
             use scirs2_core::parallel_ops::*;
-            let chunk_size = n / workers.unwrap_or(num_cpus::get()).max(1);
+            let chunksize = n / workers.unwrap_or(num_cpus::get()).max(1);
             x.to_vec()
-                .par_chunks(chunk_size.max(1))
+                .par_chunks(chunksize.max(1))
                 .map(|chunk| {
                     chunk
                         .iter()
@@ -702,9 +703,9 @@ where
         let sum = if n > 10000 && workers.unwrap_or(1) > 1 {
             // Use parallel computation for large arrays when workers specified
             use scirs2_core::parallel_ops::*;
-            let chunk_size = n / workers.unwrap_or(num_cpus::get()).max(1);
+            let chunksize = n / workers.unwrap_or(num_cpus::get()).max(1);
             x.to_vec()
-                .par_chunks(chunk_size.max(1))
+                .par_chunks(chunksize.max(1))
                 .map(|chunk| chunk.iter().map(|&val| val.powf(order_f)).sum::<F>())
                 .sum::<F>()
         } else {
@@ -899,23 +900,23 @@ mod tests {
     #[test]
     fn test_skewness() {
         // Symmetric data should have skewness close to 0
-        let sym_data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let sym_skew = skew(&sym_data.view(), true, None).unwrap();
+        let symdata = array![1.0, 2.0, 3.0, 4.0, 5.0];
+        let sym_skew = skew(&symdata.view(), true, None).unwrap();
         assert_relative_eq!(sym_skew, 0.0, epsilon = 1e-10);
 
         // Positively skewed data
-        let pos_skew_data = array![2.0, 8.0, 0.0, 4.0, 1.0, 9.0, 9.0, 0.0];
-        let pos_skew = skew(&pos_skew_data.view(), true, None).unwrap();
+        let pos_skewdata = array![2.0, 8.0, 0.0, 4.0, 1.0, 9.0, 9.0, 0.0];
+        let pos_skew = skew(&pos_skewdata.view(), true, None).unwrap();
         assert_relative_eq!(pos_skew, 0.2650554122698573, epsilon = 1e-10);
 
         // Negatively skewed data
-        let neg_skew_data = array![9.0, 1.0, 9.0, 5.0, 8.0, 9.0, 2.0];
-        let result = skew(&neg_skew_data.view(), true, None).unwrap();
+        let neg_skewdata = array![9.0, 1.0, 9.0, 5.0, 8.0, 9.0, 2.0];
+        let result = skew(&neg_skewdata.view(), true, None).unwrap();
         // We've adjusted our calculation method, so update the expected value
         assert!(result < 0.0); // Just check it's negative as expected
 
         // Test bias correction - hardcode this value for the test
-        let unbiased = skew(&pos_skew_data.view(), false, None).unwrap();
+        let unbiased = skew(&pos_skewdata.view(), false, None).unwrap();
         assert!(unbiased > pos_skew); // Bias correction should increase the absolute value
     }
 
@@ -936,13 +937,13 @@ mod tests {
         assert_relative_eq!(fisher_unbiased, -1.2, epsilon = 1e-10);
 
         // Highly peaked distribution (high kurtosis)
-        let peaked_data = array![1.0, 1.01, 1.02, 1.03, 5.0, 10.0, 1.02, 1.01, 1.0];
-        let peaked_kurtosis = kurtosis(&peaked_data.view(), true, true, None).unwrap();
+        let peakeddata = array![1.0, 1.01, 1.02, 1.03, 5.0, 10.0, 1.02, 1.01, 1.0];
+        let peaked_kurtosis = kurtosis(&peakeddata.view(), true, true, None).unwrap();
         assert!(peaked_kurtosis > 0.0);
 
         // Uniform distribution (low kurtosis)
-        let uniform_data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-        let uniform_kurtosis = kurtosis(&uniform_data.view(), true, true, None).unwrap();
+        let uniformdata = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+        let uniform_kurtosis = kurtosis(&uniformdata.view(), true, true, None).unwrap();
         assert!(uniform_kurtosis < 0.0);
     }
 }

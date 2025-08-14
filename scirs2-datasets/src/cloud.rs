@@ -67,7 +67,7 @@ pub enum CloudCredentials {
     /// Azure storage account key
     AzureKey {
         /// Azure storage account name
-        account_name: String,
+        accountname: String,
         /// Azure storage account key
         account_key: String,
     },
@@ -88,10 +88,10 @@ pub struct CloudClient {
 impl CloudClient {
     /// Create a new cloud client
     pub fn new(config: CloudConfig) -> Result<Self> {
-        let cache_dir = dirs::cache_dir()
+        let cachedir = dirs::cachedir()
             .ok_or_else(|| DatasetsError::Other("Could not determine cache directory".to_string()))?
             .join("scirs2-datasets");
-        let cache = DatasetCache::new(cache_dir);
+        let cache = DatasetCache::new(cachedir);
         let external_client = ExternalClient::new()?;
 
         Ok(Self {
@@ -185,8 +185,8 @@ impl CloudClient {
                 self.config.bucket, key
             )),
             CloudProvider::Azure => {
-                let account_name = match &self.config.credentials {
-                    CloudCredentials::AzureKey { account_name, .. } => account_name,
+                let accountname = match &self.config.credentials {
+                    CloudCredentials::AzureKey { accountname, .. } => accountname,
                     _ => {
                         return Err(DatasetsError::InvalidFormat(
                             "Azure requires account name in credentials".to_string(),
@@ -195,7 +195,7 @@ impl CloudClient {
                 };
                 Ok(format!(
                     "https://{}.blob.core.windows.net/{}/{}",
-                    account_name, self.config.bucket, key
+                    accountname, self.config.bucket, key
                 ))
             }
         }
@@ -239,12 +239,12 @@ impl CloudClient {
             (
                 CloudProvider::Azure,
                 CloudCredentials::AzureKey {
-                    account_name,
+                    accountname,
                     account_key,
                 },
             ) => {
                 // Azure uses shared key authentication
-                let auth_header = self.create_azure_auth_header(account_name, account_key)?;
+                let auth_header = self.create_azure_auth_header(accountname, account_key)?;
                 config
                     .headers
                     .insert("Authorization".to_string(), auth_header);
@@ -328,7 +328,7 @@ impl CloudClient {
     }
 
     #[allow(dead_code)]
-    fn create_azure_auth_header(&self, account_name: &str, accountkey: &str) -> Result<String> {
+    fn create_azure_auth_header(&self, accountname: &str, accountkey: &str) -> Result<String> {
         // Azure Blob Storage Shared Key authentication requires:
         // 1. Canonicalized headers
         // 2. Canonicalized resources
@@ -357,7 +357,7 @@ impl CloudClient {
         // Create string-to-sign for LIST operation
         // Format: VERB\nContent-Encoding\nContent-Language\nContent-Length\nContent-MD5\nContent-Type\nDate\nIf-Modified-Since\nIf-Match\nIf-None-Match\nIf-Unmodified-Since\nRange\nCanonicalizedHeaders\nCanonicalizedResource
         let string_to_sign = format!(
-            "GET\n\n\n\n\n\n\n\n\n\n\n\nx-ms-date:{timestamp}\nx-ms-version:2020-04-08\n/{account_name}"
+            "GET\n\n\n\n\n\n\n\n\n\n\n\nx-ms-date:{timestamp}\nx-ms-version:2020-04-08\n/{accountname}"
         );
 
         // Implement HMAC-SHA256 signing with the account _key
@@ -368,7 +368,7 @@ impl CloudClient {
         let signature_b64 = base64_encode(&signature);
 
         // Format as "SharedKey <account>:<signature>"
-        let auth_header = format!("SharedKey {account_name}:{signature_b64}");
+        let auth_header = format!("SharedKey {accountname}:{signature_b64}");
 
         Ok(auth_header)
     }
@@ -570,8 +570,8 @@ impl CloudClient {
     }
 
     fn list_azure_objects(&self, prefix: Option<&str>) -> Result<Vec<String>> {
-        let account_name = match &self.config.credentials {
-            CloudCredentials::AzureKey { account_name, .. } => account_name,
+        let accountname = match &self.config.credentials {
+            CloudCredentials::AzureKey { accountname, .. } => accountname,
             _ => {
                 return Err(DatasetsError::InvalidFormat(
                     "Azure requires account name".to_string(),
@@ -581,7 +581,7 @@ impl CloudClient {
 
         let list_url = format!(
             "https://{}.blob.core.windows.net/{}?restype=container&comp=list",
-            account_name, self.config.bucket
+            accountname, self.config.bucket
         );
 
         let _url_with_prefix = if let Some(prefix) = prefix {
@@ -591,12 +591,12 @@ impl CloudClient {
         };
 
         // Validate Azure credentials
-        let (account_name_account_key) = match &self.config.credentials {
+        let (accountname_account_key) = match &self.config.credentials {
             CloudCredentials::AzureKey {
-                account_name,
+                accountname,
                 account_key,
             } => {
-                if account_name.is_empty() {
+                if accountname.is_empty() {
                     return Err(DatasetsError::AuthenticationError(
                         "Azure account name cannot be empty".to_string(),
                     ));
@@ -614,7 +614,7 @@ impl CloudClient {
                     )));
                 }
 
-                (account_name, account_key)
+                (accountname, account_key)
             }
             _ => {
                 return Err(DatasetsError::AuthenticationError(
@@ -651,7 +651,7 @@ impl CloudClient {
             "MOCK AZURE LIST: {} blobs in container '{}' (account: {}) with prefix '{}'",
             mock_objects.len(),
             self.config.bucket,
-            account_name,
+            accountname,
             prefix.unwrap_or("(none)")
         );
 
@@ -721,10 +721,10 @@ impl CloudClient {
             }
             CloudProvider::Azure => match &self.config.credentials {
                 CloudCredentials::AzureKey {
-                    account_name,
+                    accountname,
                     account_key,
                 } => {
-                    if account_name.is_empty() || account_key.is_empty() {
+                    if accountname.is_empty() || account_key.is_empty() {
                         return Err(DatasetsError::AuthenticationError(
                             "Azure credentials missing".to_string(),
                         ));
@@ -793,16 +793,8 @@ fn base64_encode(input: &[u8]) -> String {
 
     while i < input.len() {
         let b1 = input[i];
-        let b2 = if i + 1 < input.len() {
-            input[i + 1]
-        } else {
-            0
-        };
-        let b3 = if i + 2 < input.len() {
-            input[i + 2]
-        } else {
-            0
-        };
+        let b2 = if i + 1 < input.len() { input[i + 1] } else { 0 };
+        let b3 = if i + 2 < input.len() { input[i + 2] } else { 0 };
 
         let triple = ((b1 as u32) << 16) | ((b2 as u32) << 8) | (b3 as u32);
 
@@ -917,7 +909,7 @@ pub mod presets {
 
     /// Create an Azure Blob Storage client
     pub fn azure_client(
-        account_name: &str,
+        accountname: &str,
         account_key: &str,
         container: &str,
     ) -> Result<CloudClient> {
@@ -926,7 +918,7 @@ pub mod presets {
             region: None,
             bucket: container.to_string(),
             credentials: CloudCredentials::AzureKey {
-                account_name: account_name.to_string(),
+                accountname: accountname.to_string(),
                 account_key: account_key.to_string(),
             },
             endpoint: None,
@@ -1028,13 +1020,13 @@ pub mod public_datasets {
 
     impl AzureOpenData {
         /// Load COVID-19 tracking data
-        pub fn covid19_tracking(_account_name: &str, accountkey: &str) -> Result<CloudClient> {
-            azure_client(_account_name, account_key, "covid19-tracking")
+        pub fn covid19_tracking(_accountname: &str, accountkey: &str) -> Result<CloudClient> {
+            azure_client(_accountname, account_key, "covid19-tracking")
         }
 
         /// Load US Census data
-        pub fn us_census(_account_name: &str, accountkey: &str) -> Result<CloudClient> {
-            azure_client(_account_name, account_key, "us-census")
+        pub fn us_census(_accountname: &str, accountkey: &str) -> Result<CloudClient> {
+            azure_client(_accountname, account_key, "us-census")
         }
     }
 }
@@ -1071,7 +1063,7 @@ mod tests {
     }
 
     #[test]
-    fn test_s3_path_style_url() {
+    fn test_s3path_style_url() {
         let config = CloudConfig {
             provider: CloudProvider::S3,
             region: Some("us-east-1".to_string()),

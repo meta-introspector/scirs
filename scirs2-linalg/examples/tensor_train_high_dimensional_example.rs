@@ -52,13 +52,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("      - Dimensions: {:?}", tt_tensor.shape());
     println!("      - TT ranks: {:?}", tt_tensor.ranks);
     println!("      - Max rank: {}", tt_tensor.max_rank());
-    println!(
-        "      - Storage size: {} elements",
-        tt_tensor.storage_size()
-    );
+    println!("      - Storage size: {} elements", tt_tensor.storagesize());
 
-    let full_size: usize = tt_tensor.shape().iter().product();
-    println!("      - Full tensor size: {} elements", full_size);
+    let fullsize: usize = tt_tensor.shape().iter().product();
+    println!("      - Full tensor size: {} elements", fullsize);
     println!(
         "      - Compression ratio: {:.1}x",
         tt_tensor.compression_ratio()
@@ -107,14 +104,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n   ✅ TT Decomposition Results:");
     println!("      - Decomposition time: {:?}", decomp_time);
     println!("      - TT ranks: {:?}", tt_result.ranks);
-    println!("      - TT storage: {} elements", tt_result.storage_size());
+    println!("      - TT storage: {} elements", tt_result.storagesize());
     println!(
         "      - Compression ratio: {:.1}x",
         tt_result.compression_ratio()
     );
     println!(
         "      - Memory savings: {:.1}%",
-        (1.0 - tt_result.storage_size() as f64 / dense_tensor.len() as f64) * 100.0
+        (1.0 - tt_result.storagesize() as f64 / dense_tensor.len() as f64) * 100.0
     );
 
     // Verify decomposition accuracy
@@ -151,28 +148,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dimensions = vec![6, 7, 8, 9, 10];
 
     for &d in &dimensions {
-        let mode_size: usize = 3;
-        let full_size = mode_size.pow(d as u32);
-        let estimated_tt_size = d * mode_size * 4 * 4; // Assuming max rank ~4
-        let compression = full_size as f64 / estimated_tt_size as f64;
+        let modesize: usize = 3;
+        let fullsize = modesize.pow(d as u32);
+        let estimated_ttsize = d * modesize * 4 * 4; // Assuming max rank ~4
+        let compression = fullsize as f64 / estimated_ttsize as f64;
 
-        println!("   🎯 {}-Dimensional Tensor ({}^{}):", d, mode_size, d);
+        println!("   🎯 {}-Dimensional Tensor ({}^{}):", d, modesize, d);
         println!(
             "      - Full size: {} elements ({:.1} GB)",
-            full_size,
-            full_size as f64 * 8.0 / 1e9
+            fullsize,
+            fullsize as f64 * 8.0 / 1e9
         );
         println!(
             "      - TT size estimate: {} elements ({:.1} MB)",
-            estimated_tt_size,
-            estimated_tt_size as f64 * 8.0 / 1e6
+            estimated_ttsize,
+            estimated_ttsize as f64 * 8.0 / 1e6
         );
         println!("      - Compression ratio: {:.0e}x", compression);
 
         if d >= 10 {
             println!(
                 "      - Full tensor would require {:.1} TB!",
-                full_size as f64 * 8.0 / 1e12
+                fullsize as f64 * 8.0 / 1e12
             );
         }
     }
@@ -242,7 +239,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("      - Ranks: {:?}", high_rank_tensor.ranks);
     println!(
         "      - Storage: {} elements",
-        high_rank_tensor.storage_size()
+        high_rank_tensor.storagesize()
     );
 
     let tolerances = vec![1e-1, 1e-2, 1e-3, 1e-6];
@@ -260,10 +257,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("\n   🔄 Rounding (tolerance: {:.0e}):", tol);
         println!("      - New ranks: {:?}", rounded.ranks);
-        println!("      - New storage: {} elements", rounded.storage_size());
+        println!("      - New storage: {} elements", rounded.storagesize());
         println!(
             "      - Compression: {:.1}x",
-            high_rank_tensor.storage_size() as f64 / rounded.storage_size() as f64
+            high_rank_tensor.storagesize() as f64 / rounded.storagesize() as f64
         );
         println!("      - Max error: {:.2e}", max_error);
         println!("      - Rounding time: {:?}", round_time);
@@ -302,9 +299,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("----------------------");
 
     // Demonstrate scalability of TT operations
-    let tensor_sizes = vec![(3, 3), (4, 4), (5, 5)];
+    let tensorsizes = vec![(3, 3), (4, 4), (5, 5)];
 
-    for &(d, n) in &tensor_sizes {
+    for &(d, n) in &tensorsizes {
         // Create a random-like structured tensor
         let shape: Vec<usize> = vec![n; d];
         let total_elements: usize = shape.iter().product();
@@ -332,7 +329,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("   📈 {}D Tensor ({}^{}):", d, n, d);
         println!("      - Original size: {} elements", dense_tensor.len());
-        println!("      - TT storage: {} elements", tt_tensor.storage_size());
+        println!("      - TT storage: {} elements", tt_tensor.storagesize());
         println!("      - Compression: {:.1}x", tt_tensor.compression_ratio());
         println!("      - TT ranks: {:?}", tt_tensor.ranks);
         println!("      - Decomposition time: {:?}", decomp_time);

@@ -25,7 +25,7 @@ fn main() {
     println!("=====================================================\n");
 
     // Example 1: Basic matrix operations
-    demo_basic_matrix_ops();
+    demo_basicmatrix_ops();
 
     // Example 2: Trace and matrix functions
     demo_trace_and_functions();
@@ -36,7 +36,7 @@ fn main() {
 
 #[cfg(feature = "autograd")]
 #[allow(dead_code)]
-fn demo_basic_matrix_ops() {
+fn demo_basicmatrix_ops() {
     println!("1. Basic Matrix Operations");
     println!("-------------------------");
 

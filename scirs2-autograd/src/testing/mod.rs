@@ -210,8 +210,14 @@ impl<F: Float> NumericalStabilityTester<F> {
         };
 
         // Test sensitivity to small input perturbations
-        for perturbation_magnitude in [F::from(1e-8).unwrap(), F::from(1e-6).unwrap(), F::from(1e-4).unwrap(), F::from(1e-2).unwrap()] {
-            let sensitivity = self.measure_perturbation_sensitivity(perturbation_magnitude.to_f64().unwrap_or(0.0))?;
+        for perturbation_magnitude in [
+            F::from(1e-8).unwrap(),
+            F::from(1e-6).unwrap(),
+            F::from(1e-4).unwrap(),
+            F::from(1e-2).unwrap(),
+        ] {
+            let sensitivity = self
+                .measure_perturbation_sensitivity(perturbation_magnitude.to_f64().unwrap_or(0.0))?;
 
             results.perturbation_tests.push(PerturbationTest {
                 perturbation_magnitude: perturbation_magnitude.to_f64().unwrap_or(0.0),

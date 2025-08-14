@@ -22,20 +22,20 @@ pub struct MemoryConfig {
     /// Maximum memory to use in bytes
     pub max_memory: usize,
     /// Chunk size for streaming operations
-    pub chunk_size: usize,
+    pub chunksize: usize,
     /// Whether to use memory pooling
     pub use_pooling: bool,
     /// Cache line size (typically 64 bytes)
-    pub cache_line_size: usize,
+    pub cache_linesize: usize,
 }
 
 impl Default for MemoryConfig {
     fn default() -> Self {
         Self {
             max_memory: 1 << 30, // 1 GB default
-            chunk_size: 8192,    // 8K elements
+            chunksize: 8192,     // 8K elements
             use_pooling: true,
-            cache_line_size: 64,
+            cache_linesize: 64,
         }
     }
 }
@@ -52,7 +52,7 @@ impl<F: Float> MemoryPool<F> {
         let pools = vec![VecDeque::new(); 20]; // Up to 2^20 elements
         Self {
             pools: RefCell::new(pools),
-            config: config,
+            config,
         }
     }
 
@@ -140,7 +140,7 @@ where
     }
 
     let config = config.unwrap_or_default();
-    let cache_elements = config.cache_line_size / std::mem::size_of::<F>();
+    let cache_elements = config.cache_linesize / std::mem::size_of::<F>();
 
     // First pass: compute mean with cache-friendly access
     let mean = mean_zero_copy(x)?;
@@ -149,11 +149,11 @@ where
     let mut sum_sq_dev = F::zero();
     let mut c = F::zero(); // Kahan compensation
 
-    let chunk_size = cache_elements.min(n); // Ensure we don't have empty chunks
-    
+    let chunksize = cache_elements.min(n); // Ensure we don't have empty chunks
+
     // Process complete chunks
     let mut processed = 0;
-    for chunk in x.exact_chunks(chunk_size) {
+    for chunk in x.exact_chunks(chunksize) {
         for &val in chunk.iter() {
             let dev = val - mean;
             let sq_dev = dev * dev;
@@ -166,7 +166,7 @@ where
             processed += 1;
         }
     }
-    
+
     // Process remainder elements
     for i in processed..n {
         let val = x[i];
@@ -204,7 +204,7 @@ where
 {
     pub fn new(data: &'a ArrayBase<D, Ix1>) -> Self {
         Self {
-            data: data,
+            data,
             mean: RefCell::new(None),
             variance: RefCell::new(None),
             min: RefCell::new(None),
@@ -368,7 +368,7 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingCovariance<F> {
 #[cfg(feature = "memmap")]
 pub struct MemoryMappedStats {
     mmap: Mmap,
-    element_size: usize,
+    elementsize: usize,
     n_elements: usize,
 }
 
@@ -386,9 +386,9 @@ impl MemoryMappedStats {
             .metadata()
             .map_err(|e| StatsError::computation(format!("Failed to get metadata: {}", e)))?;
 
-        let file_size = metadata.len() as usize;
-        let element_size = std::mem::size_of::<f64>(); // Assume f64 for now
-        let n_elements = file_size / element_size;
+        let filesize = metadata.len() as usize;
+        let elementsize = std::mem::size_of::<f64>(); // Assume f64 for now
+        let n_elements = filesize / elementsize;
 
         unsafe {
             let mmap = Mmap::map(&file)
@@ -396,7 +396,7 @@ impl MemoryMappedStats {
 
             Ok(Self {
                 mmap,
-                element_size,
+                elementsize,
                 n_elements,
             })
         }
@@ -409,10 +409,10 @@ impl MemoryMappedStats {
         };
 
         // Process in chunks for cache efficiency
-        let chunk_size = 8192;
+        let chunksize = 8192;
         let mut sum = 0.0;
 
-        for chunk in data.chunks(chunk_size) {
+        for chunk in data.chunks(chunksize) {
             sum += chunk.iter().sum::<f64>();
         }
 

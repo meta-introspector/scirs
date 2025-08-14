@@ -841,8 +841,8 @@ impl TimeSeriesAnomalyMetrics {
                             self.nab_weights.true_positive + self.nab_weights.early_detection_bonus;
                     } else {
                         // Late detection penalty
-                        score +=
-                            self.nab_weights.true_positive + self.nab_weights.late_detection_penalty;
+                        score += self.nab_weights.true_positive
+                            + self.nab_weights.late_detection_penalty;
                     }
                     range_detected = true;
                     // Additional detections in same range don't add score

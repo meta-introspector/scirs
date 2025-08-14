@@ -250,7 +250,7 @@ where
 {
     #[cfg(feature = "linalg")]
     {
-        use scirs2__linalg::svd;
+        use scirs2_linalg::svd;
 
         // Convert to f64 for SVD computation
         let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
@@ -858,7 +858,7 @@ where
 {
     #[cfg(feature = "linalg")]
     {
-        use scirs2__linalg::solve;
+        use scirs2_linalg::solve;
 
         // Convert to f64 for solve
         let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
@@ -2024,9 +2024,9 @@ mod tests {
 
     #[test]
     fn test_symmetry_check() {
-        let symmetric = Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 2.0, 3.0])
+        let symmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 2.0, 3.0])
             .expect("Failed to create symmetric matrix");
-        let asymmetric = Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0])
+        let asymmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0])
             .expect("Failed to create asymmetric matrix");
 
         assert!(check_symmetry(&symmetric.view()));
@@ -2067,7 +2067,7 @@ mod tests {
     #[test]
     #[cfg(feature = "linalg")]
     fn test_solve_with_monitoring() {
-        let matrix = Array2::fromshape_vec((2, 2), vec![2.0, 1.0, 1.0, 1.0])
+        let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 1.0])
             .expect("Failed to create matrix");
         let rhs = Array1::from_vec(vec![3.0, 2.0]);
 
@@ -2090,7 +2090,7 @@ mod tests {
     #[test]
     fn test_enhanced_stability() {
         // Test enhanced matrix conditioning
-        let matrix = Array2::fromshape_vec((2, 2), vec![1e-15, 0.0, 0.0, 1.0]).unwrap();
+        let matrix = Array2::from_shape_vec((2, 2), vec![1e-15, 0.0, 0.0, 1.0]).unwrap();
         let assessment = assess_enhanced_matrix_condition(&matrix.view());
         assert!(assessment.is_ok());
 

@@ -3,7 +3,7 @@ use scirs2_linalg::{inv, solve};
 
 #[test]
 #[allow(dead_code)]
-fn test_enhanced_error_singular_matrix() {
+fn test_enhanced_error_singularmatrix() {
     // Test enhanced error messages for singular matrix
     let singular = array![[1.0, 2.0], [2.0, 4.0]];
 

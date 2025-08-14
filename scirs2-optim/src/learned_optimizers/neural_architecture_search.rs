@@ -1235,7 +1235,7 @@ impl<
         let multi_objective_optimizer = MultiObjectiveOptimizer::new(&config)?;
 
         Ok(Self {
-            config: config,
+            config,
             searchspace,
             search_strategy,
             evaluator,
@@ -2074,9 +2074,8 @@ impl<
                 &self.search_strategy.state
             {
                 for i in 0..generation_batch_size {
-                    let architecture_spec = self
-                        .generate_architecture_with_controller(&rlstate)
-                        .await?;
+                    let architecture_spec =
+                        self.generate_architecture_with_controller(&rlstate).await?;
 
                     let candidate = ArchitectureCandidate {
                         id: format!("rl_gen_{}_{}", self.search_history.current_iteration(), i),
@@ -2678,13 +2677,12 @@ impl<
         let generation_batch_size = 6;
 
         // Collect parent architectures first (separate scope for borrowing)
-        let parent_architectures = if let SearchStrategyState::MultiObjective(ref mostate) =
-            &self.search_strategy.state
-        {
-            self.select_pareto_parents(mostate)?
-        } else {
-            Vec::new()
-        };
+        let parent_architectures =
+            if let SearchStrategyState::MultiObjective(ref mostate) = &self.search_strategy.state {
+                self.select_pareto_parents(mostate)?
+            } else {
+                Vec::new()
+            };
 
         if let SearchStrategyState::MultiObjective(_) = &self.search_strategy.state {
             // Use NSGA-II style approach for multi-objective optimization
@@ -2840,12 +2838,10 @@ impl<
                 });
 
             // Update biases
-            rlstate.controller.biases[layer_idx] =
-                rlstate.controller.biases[layer_idx].mapv(|b| {
-                    b + gradient_scale
-                        * T::from(scirs2_core::random::Random::seed(42).gen_range(-0.1..0.1))
-                            .unwrap()
-                });
+            rlstate.controller.biases[layer_idx] = rlstate.controller.biases[layer_idx].mapv(|b| {
+                b + gradient_scale
+                    * T::from(scirs2_core::random::Random::seed(42).gen_range(-0.1..0.1)).unwrap()
+            });
         }
 
         // Update exploration rate (epsilon decay)

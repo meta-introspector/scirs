@@ -26,7 +26,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::legendre;
+/// use scirs2_special::legendre;
 ///
 /// // P₀(x) = 1
 /// assert!((legendre(0, 0.5f64) - 1.0).abs() < 1e-10);
@@ -48,7 +48,7 @@ pub fn legendre<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
     // Use recurrence relation:
     // (n+1) P_{n+1}(x) = (2n+1) x P_n(x) - n P_{n-1}(x)
 
-    let mut p_n_minus_1 = F::one(); // P₀(x)
+    let mut p_nminus_1 = F::one(); // P₀(x)
     let mut p_n = x; // P₁(x)
 
     for k in 1..n {
@@ -56,8 +56,8 @@ pub fn legendre<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
         let k_plus_1 = k_f + F::one();
         let two_k_plus_1 = k_f + k_f + F::one();
 
-        let p_n_plus_1 = (two_k_plus_1 * x * p_n - k_f * p_n_minus_1) / k_plus_1;
-        p_n_minus_1 = p_n;
+        let p_n_plus_1 = (two_k_plus_1 * x * p_n - k_f * p_nminus_1) / k_plus_1;
+        p_nminus_1 = p_n;
         p_n = p_n_plus_1;
     }
 
@@ -83,7 +83,7 @@ pub fn legendre<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::{legendre, legendre_assoc};
+/// use scirs2_special::{legendre, legendre_assoc};
 ///
 /// // P₀⁰(x) = P₀(x) = 1
 /// assert!((legendre_assoc(0, 0, 0.5f64) - legendre(0, 0.5f64)).abs() < 1e-10);
@@ -146,8 +146,8 @@ pub fn legendre_assoc<F: Float + FromPrimitive + Debug>(n: usize, m: i32, x: F) 
     // P_n^m(x) = (2m-1)!! * (1-x²)^(m/2) * d^m P_n(x)/dx^m
 
     // First, calculate (1-x²)^(m/2)
-    let one_minus_x2 = F::one() - x * x;
-    let one_minus_x2_pow_m_half = one_minus_x2.powf(F::from(m as f64 / 2.0).unwrap());
+    let oneminus_x2 = F::one() - x * x;
+    let oneminus_x2_pow_m_half = oneminus_x2.powf(F::from(m as f64 / 2.0).unwrap());
 
     // Calculate the double factorial (2m-1)!!
     let double_factorial = (1..=m)
@@ -162,7 +162,7 @@ pub fn legendre_assoc<F: Float + FromPrimitive + Debug>(n: usize, m: i32, x: F) 
         }
 
         let sign = if (n % 2) != 0 { -F::one() } else { F::one() };
-        return sign * double_factorial * one_minus_x2_pow_m_half;
+        return sign * double_factorial * oneminus_x2_pow_m_half;
     }
 
     // For m = n-1, use explicit formula
@@ -177,52 +177,51 @@ pub fn legendre_assoc<F: Float + FromPrimitive + Debug>(n: usize, m: i32, x: F) 
         } else {
             F::one()
         };
-        return sign * double_factorial * x * one_minus_x2_pow_m_half;
+        return sign * double_factorial * x * oneminus_x2_pow_m_half;
     }
 
     // Use recurrence relation for the general case:
     // (n-m) P_n^m(x) = x (2n-1) P_{n-1}^m(x) - (n+m-1) P_{n-2}^m(x)
 
     // Initialize variables that will be used in the recurrence relation
-    let mut p_n_minus_2; // Will be set before use in all code paths
-    let mut p_n_minus_1; // Will be set before use in all code paths
+    let mut p_nminus_2; // Will be set before use in all code paths
+    let mut p_nminus_1; // Will be set before use in all code paths
 
     // Initialize for m = n-1 and m = n cases
     if m_abs == n - 1 {
-        p_n_minus_1 = double_factorial * x * one_minus_x2_pow_m_half;
+        p_nminus_1 = double_factorial * x * oneminus_x2_pow_m_half;
     } else if m_abs == n {
-        p_n_minus_1 = double_factorial * one_minus_x2_pow_m_half;
+        p_nminus_1 = double_factorial * oneminus_x2_pow_m_half;
     } else {
         // Start with appropriate base cases - initializing with dummy values
         // that will be immediately overwritten in the next lines
-        p_n_minus_1 = double_factorial * one_minus_x2_pow_m_half; // P_m^m(x)
+        p_nminus_1 = double_factorial * oneminus_x2_pow_m_half; // P_m^m(x)
 
         // Calculate P_{m+1}^m(x) using recurrence
         let m_f = F::from(m).unwrap();
         let _m_plus_1 = m_f + F::one();
         let two_m_plus_1 = m_f + m_f + F::one();
 
-        let p_m_plus_1 = two_m_plus_1 * x * p_n_minus_1;
-        p_n_minus_2 = p_n_minus_1; // Now we have P_m^m(x) in p_n_minus_2
-        p_n_minus_1 = p_m_plus_1; // And P_{m+1}^m(x) in p_n_minus_1
+        let p_m_plus_1 = two_m_plus_1 * x * p_nminus_1;
+        p_nminus_2 = p_nminus_1; // Now we have P_m^m(x) in p_nminus_2
+        p_nminus_1 = p_m_plus_1; // And P_{m+1}^m(x) in p_nminus_1
 
         // Now compute up to P_n^m(x) using recurrence relation
         for k in (m as usize + 2)..=n {
             let k_f = F::from(k).unwrap();
-            let k_minus_1 = k_f - F::one();
+            let kminus_1 = k_f - F::one();
             let m_f = F::from(m).unwrap();
 
-            let two_k_minus_1 = k_f + k_f - F::one();
+            let two_kminus_1 = k_f + k_f - F::one();
 
-            let p_n =
-                (two_k_minus_1 * x * p_n_minus_1 - (k_minus_1 + m_f) * p_n_minus_2) / (k_f - m_f);
+            let p_n = (two_kminus_1 * x * p_nminus_1 - (kminus_1 + m_f) * p_nminus_2) / (k_f - m_f);
 
-            p_n_minus_2 = p_n_minus_1;
-            p_n_minus_1 = p_n;
+            p_nminus_2 = p_nminus_1;
+            p_nminus_1 = p_n;
         }
     }
 
-    p_n_minus_1
+    p_nminus_1
 }
 
 /// Computes the value of the Laguerre polynomial L_n(x) of degree n.
@@ -244,7 +243,7 @@ pub fn legendre_assoc<F: Float + FromPrimitive + Debug>(n: usize, m: i32, x: F) 
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::laguerre;
+/// use scirs2_special::laguerre;
 ///
 /// // L₀(x) = 1
 /// assert!((laguerre(0, 0.5f64) - 1.0).abs() < 1e-10);
@@ -266,7 +265,7 @@ pub fn laguerre<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
     // Use recurrence relation:
     // (n+1) L_{n+1}(x) = (2n+1-x) L_n(x) - n L_{n-1}(x)
 
-    let mut l_n_minus_1 = F::one(); // L₀(x)
+    let mut l_nminus_1 = F::one(); // L₀(x)
     let mut l_n = F::one() - x; // L₁(x)
 
     for k in 1..n {
@@ -274,8 +273,8 @@ pub fn laguerre<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
         let k_plus_1 = k_f + F::one();
         let two_k_plus_1 = k_f + k_f + F::one();
 
-        let l_n_plus_1 = ((two_k_plus_1 - x) * l_n - k_f * l_n_minus_1) / k_plus_1;
-        l_n_minus_1 = l_n;
+        let l_n_plus_1 = ((two_k_plus_1 - x) * l_n - k_f * l_nminus_1) / k_plus_1;
+        l_nminus_1 = l_n;
         l_n = l_n_plus_1;
     }
 
@@ -302,7 +301,7 @@ pub fn laguerre<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::{laguerre, laguerre_generalized};
+/// use scirs2_special::{laguerre, laguerre_generalized};
 ///
 /// // L₀⁽⁰⁾(x) = L₀(x) = 1
 /// assert!((laguerre_generalized(0, 0.0f64, 0.5f64) - laguerre(0, 0.5f64)).abs() < 1e-10f64);
@@ -324,7 +323,7 @@ pub fn laguerre_generalized<F: Float + FromPrimitive + Debug>(n: usize, alpha: F
     // Use recurrence relation:
     // (n+1) L_{n+1}^(α)(x) = (2n+1+α-x) L_n^(α)(x) - (n+α) L_{n-1}^(α)(x)
 
-    let mut l_n_minus_1 = F::one(); // L₀^(α)(x)
+    let mut l_nminus_1 = F::one(); // L₀^(α)(x)
     let mut l_n = F::one() + alpha - x; // L₁^(α)(x)
 
     for k in 1..n {
@@ -332,9 +331,8 @@ pub fn laguerre_generalized<F: Float + FromPrimitive + Debug>(n: usize, alpha: F
         let k_plus_1 = k_f + F::one();
         let two_k_plus_1 = k_f + k_f + F::one();
 
-        let l_n_plus_1 =
-            ((two_k_plus_1 + alpha - x) * l_n - (k_f + alpha) * l_n_minus_1) / k_plus_1;
-        l_n_minus_1 = l_n;
+        let l_n_plus_1 = ((two_k_plus_1 + alpha - x) * l_n - (k_f + alpha) * l_nminus_1) / k_plus_1;
+        l_nminus_1 = l_n;
         l_n = l_n_plus_1;
     }
 
@@ -360,7 +358,7 @@ pub fn laguerre_generalized<F: Float + FromPrimitive + Debug>(n: usize, alpha: F
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::hermite;
+/// use scirs2_special::hermite;
 ///
 /// // H₀(x) = 1
 /// assert!((hermite(0, 0.5f64) - 1.0).abs() < 1e-10);
@@ -385,7 +383,7 @@ pub fn hermite<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
     // Use recurrence relation:
     // H_{n+1}(x) = 2x H_n(x) - 2n H_{n-1}(x)
 
-    let mut h_n_minus_1 = F::one(); // H₀(x)
+    let mut h_nminus_1 = F::one(); // H₀(x)
     let mut h_n = x + x; // H₁(x)
 
     for k in 1..n {
@@ -410,8 +408,8 @@ pub fn hermite<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
             break;
         }
 
-        let h_n_plus_1 = x + x * h_n - k_times_2 * h_n_minus_1;
-        h_n_minus_1 = h_n;
+        let h_n_plus_1 = x + x * h_n - k_times_2 * h_nminus_1;
+        h_nminus_1 = h_n;
         h_n = h_n_plus_1;
     }
 
@@ -437,7 +435,7 @@ pub fn hermite<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::hermite_prob;
+/// use scirs2_special::hermite_prob;
 ///
 /// // He₀(x) = 1
 /// assert!((hermite_prob(0, 0.5f64) - 1.0).abs() < 1e-10);
@@ -462,14 +460,14 @@ pub fn hermite_prob<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
     // Use recurrence relation:
     // He_{n+1}(x) = x He_n(x) - n He_{n-1}(x)
 
-    let mut he_n_minus_1 = F::one(); // He₀(x)
+    let mut he_nminus_1 = F::one(); // He₀(x)
     let mut he_n = x; // He₁(x)
 
     for k in 1..n {
         let k_f = F::from(k).unwrap();
 
-        let he_n_plus_1 = x * he_n - k_f * he_n_minus_1;
-        he_n_minus_1 = he_n;
+        let he_n_plus_1 = x * he_n - k_f * he_nminus_1;
+        he_nminus_1 = he_n;
         he_n = he_n_plus_1;
     }
 
@@ -495,7 +493,7 @@ pub fn hermite_prob<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::chebyshev;
+/// use scirs2_special::chebyshev;
 ///
 /// // T₀(x) = 1
 /// assert!((chebyshev(0, 0.5f64, true) - 1.0).abs() < 1e-10);
@@ -547,15 +545,15 @@ pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, firstkind: bo
         // Use recurrence relation:
         // T_{n+1}(x) = 2x T_n(x) - T_{n-1}(x)
 
-        let mut t_n_minus_1 = F::one(); // T₀(x)
+        let mut t_nminus_1 = F::one(); // T₀(x)
         */
         // This code is unreachable, but left for documentation
         /*
         let mut t_n = x; // T₁(x)
 
         for _ in 1..n {
-            let t_n_plus_1 = x + x * t_n - t_n_minus_1;
-            t_n_minus_1 = t_n;
+            let t_n_plus_1 = x + x * t_n - t_nminus_1;
+            t_nminus_1 = t_n;
             t_n = t_n_plus_1;
         }
 
@@ -589,12 +587,12 @@ pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, firstkind: bo
         // Use recurrence relation:
         // U_{n+1}(x) = 2x U_n(x) - U_{n-1}(x)
 
-        let mut u_n_minus_1 = F::one(); // U₀(x)
+        let mut u_nminus_1 = F::one(); // U₀(x)
         let mut u_n = x + x; // U₁(x)
 
         for _ in 1..n {
-            let u_n_plus_1 = x + x * u_n - u_n_minus_1;
-            u_n_minus_1 = u_n;
+            let u_n_plus_1 = x + x * u_n - u_nminus_1;
+            u_nminus_1 = u_n;
             u_n = u_n_plus_1;
         }
 
@@ -622,7 +620,7 @@ pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, firstkind: bo
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::{gegenbauer, chebyshev};
+/// use scirs2_special::{gegenbauer, chebyshev};
 ///
 /// // C₂⁽¹⁾(x) = 2T₂(x) = 2(2x² - 1) = 4x² - 2
 /// let x = 0.5f64;
@@ -662,7 +660,7 @@ pub fn gegenbauer<F: Float + FromPrimitive + Debug>(n: usize, lambda: F, x: F) -
     // Use recurrence relation:
     // (n+1) C_{n+1}^(λ)(x) = 2(n+λ) x C_n^(λ)(x) - (n+2λ-1) C_{n-1}^(λ)(x)
 
-    let mut c_n_minus_1 = F::one(); // C₀^(λ)(x)
+    let mut c_nminus_1 = F::one(); // C₀^(λ)(x)
     let mut c_n = lambda + lambda * x; // C₁^(λ)(x) = 2λx
 
     for k in 1..n {
@@ -680,11 +678,11 @@ pub fn gegenbauer<F: Float + FromPrimitive + Debug>(n: usize, lambda: F, x: F) -
         }
 
         let two_k_plus_lambda = k_f + k_f + lambda;
-        let k_plus_two_lambda_minus_1 = k_f + lambda + lambda - F::one();
+        let k_plus_two_lambdaminus_1 = k_f + lambda + lambda - F::one();
 
         let c_n_plus_1 =
-            (two_k_plus_lambda * x * c_n - k_plus_two_lambda_minus_1 * c_n_minus_1) / k_plus_1;
-        c_n_minus_1 = c_n;
+            (two_k_plus_lambda * x * c_n - k_plus_two_lambdaminus_1 * c_nminus_1) / k_plus_1;
+        c_nminus_1 = c_n;
         c_n = c_n_plus_1;
     }
 
@@ -712,7 +710,7 @@ pub fn gegenbauer<F: Float + FromPrimitive + Debug>(n: usize, lambda: F, x: F) -
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::{jacobi, legendre};
+/// use scirs2_special::{jacobi, legendre};
 ///
 /// // For α = β = 0, Jacobi polynomials become Legendre polynomials
 /// let x = 0.5f64;
@@ -760,7 +758,7 @@ pub fn jacobi<F: Float + FromPrimitive + Debug>(n: usize, alpha: F, beta: F, x: 
     // Use recurrence relation
     // Here we use a version of the three-term recurrence relation
 
-    let mut p_n_minus_1 = F::one(); // P₀^(α,β)(x)
+    let mut p_nminus_1 = F::one(); // P₀^(α,β)(x)
 
     let a_plus_1 = alpha + F::one();
     let p_n =
@@ -770,23 +768,23 @@ pub fn jacobi<F: Float + FromPrimitive + Debug>(n: usize, alpha: F, beta: F, x: 
 
     for k in 2..=n {
         let k_f = F::from(k).unwrap();
-        let k_minus_1 = k_f - F::one();
-        let two_k_minus_1 = k_f + k_f - F::one();
+        let kminus_1 = k_f - F::one();
+        let two_kminus_1 = k_f + k_f - F::one();
 
         // Compute factors for the recurrence relation
-        let a_plus_b_plus_2k_minus_1 = alpha + beta + two_k_minus_1;
-        let a_plus_b_plus_k_minus_1 = alpha + beta + k_minus_1;
-        let a_plus_k_minus_1 = alpha + k_minus_1;
-        let b_plus_k_minus_1 = beta + k_minus_1;
+        let a_plus_b_plus_2kminus_1 = alpha + beta + two_kminus_1;
+        let a_plus_b_plus_kminus_1 = alpha + beta + kminus_1;
+        let a_plus_kminus_1 = alpha + kminus_1;
+        let b_plus_kminus_1 = beta + kminus_1;
 
-        let a_factor = two_k_minus_1 * a_plus_b_plus_2k_minus_1;
-        let b_factor = a_plus_b_plus_k_minus_1 * a_plus_b_plus_2k_minus_1;
-        let c_factor = F::from(2.0).unwrap() * a_plus_k_minus_1 * b_plus_k_minus_1;
+        let a_factor = two_kminus_1 * a_plus_b_plus_2kminus_1;
+        let b_factor = a_plus_b_plus_kminus_1 * a_plus_b_plus_2kminus_1;
+        let c_factor = F::from(2.0).unwrap() * a_plus_kminus_1 * b_plus_kminus_1;
 
-        let p_n_plus_1 = ((a_factor * x + b_factor) * p_n_current - c_factor * p_n_minus_1)
-            / (k_f * a_plus_b_plus_2k_minus_1);
+        let p_n_plus_1 = ((a_factor * x + b_factor) * p_n_current - c_factor * p_nminus_1)
+            / (k_f * a_plus_b_plus_2kminus_1);
 
-        p_n_minus_1 = p_n_current;
+        p_nminus_1 = p_n_current;
         p_n_current = p_n_plus_1;
     }
 

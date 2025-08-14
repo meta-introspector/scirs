@@ -10,24 +10,24 @@ fn main() {
     println!("==========================\n");
 
     // Basic data for testing
-    let test_data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+    let testdata = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 
-    println!("✅ Test data created: {:?}", test_data);
+    println!("✅ Test data created: {:?}", testdata);
 
     // Basic statistical functions
     println!("1. 📊 Basic Statistics");
 
-    match mean(&test_data.view()) {
+    match mean(&testdata.view()) {
         Ok(mean_val) => println!("   ✅ Mean: {:.6}", mean_val),
         Err(e) => println!("   ❌ Mean failed: {}", e),
     }
 
-    match var(&test_data.view(), 1, None) {
+    match var(&testdata.view(), 1, None) {
         Ok(var_val) => println!("   ✅ Variance: {:.6}", var_val),
         Err(e) => println!("   ❌ Variance failed: {}", e),
     }
 
-    match std(&test_data.view(), 1, None) {
+    match std(&testdata.view(), 1, None) {
         Ok(std_val) => println!("   ✅ Standard Deviation: {:.6}", std_val),
         Err(e) => println!("   ❌ Standard Deviation failed: {}", e),
     }

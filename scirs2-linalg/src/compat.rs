@@ -515,7 +515,7 @@ pub use crate::eigen_specialized::tridiagonal_eigh as eigh_tridiagonal;
 pub use crate::eigen_specialized::tridiagonal_eigvalsh as eigvalsh_tridiagonal;
 
 // Matrix functions
-pub use crate::basic::matrix_power as fractional_matrix_power;
+pub use crate::basic::matrix_power as fractionalmatrix_power;
 pub use crate::matrix_functions::expm;
 pub use crate::matrix_functions::logm;
 // Re-export with SciPy-compatible wrapper

@@ -317,7 +317,7 @@ where
 ///
 /// # Arguments
 /// * `x` - Input time series array
-/// * `block_size` - Size of each block to sample
+/// * `blocksize` - Size of each block to sample
 /// * `n_resamples` - Number of bootstrap samples to generate
 /// * `circular` - Whether to allow wrapping around the end of the series
 /// * `seed` - Optional seed for reproducibility
@@ -341,7 +341,7 @@ where
 #[allow(dead_code)]
 pub fn block_bootstrap<T>(
     x: &ArrayView1<T>,
-    block_size: usize,
+    blocksize: usize,
     n_resamples: usize,
     circular: bool,
     seed: Option<u64>,
@@ -355,15 +355,15 @@ where
         ));
     }
 
-    if block_size == 0 {
+    if blocksize == 0 {
         return Err(StatsError::InvalidArgument(
-            "Block _size must be positive".to_string(),
+            "Block size must be positive".to_string(),
         ));
     }
 
-    if block_size > x.len() {
+    if blocksize > x.len() {
         return Err(StatsError::InvalidArgument(
-            "Block _size cannot exceed array length".to_string(),
+            "Block size cannot exceed array length".to_string(),
         ));
     }
 
@@ -387,7 +387,7 @@ where
     let max_start_pos = if circular {
         data_len
     } else {
-        data_len - block_size + 1
+        data_len - blocksize + 1
     };
 
     let mut samples = Array2::zeros((n_resamples, data_len));
@@ -401,7 +401,7 @@ where
             let start_pos = rng.gen_range(0..max_start_pos);
 
             // Copy the block (with wrapping if circular)
-            for block_offset in 0..block_size {
+            for block_offset in 0..blocksize {
                 if sample_pos >= data_len {
                     break;
                 }
@@ -428,7 +428,7 @@ where
 ///
 /// # Arguments
 /// * `x` - Input time series array
-/// * `block_size` - Size of each block to sample
+/// * `blocksize` - Size of each block to sample
 /// * `n_resamples` - Number of bootstrap samples to generate
 /// * `seed` - Optional seed for reproducibility
 ///
@@ -437,7 +437,7 @@ where
 #[allow(dead_code)]
 pub fn moving_block_bootstrap<T>(
     x: &ArrayView1<T>,
-    block_size: usize,
+    blocksize: usize,
     n_resamples: usize,
     seed: Option<u64>,
 ) -> StatsResult<Array2<T>>
@@ -450,17 +450,17 @@ where
         ));
     }
 
-    if block_size == 0 || block_size > x.len() {
+    if blocksize == 0 || blocksize > x.len() {
         return Err(StatsError::InvalidArgument(
-            "Block _size must be positive and not exceed array length".to_string(),
+            "Block size must be positive and not exceed array length".to_string(),
         ));
     }
 
     // Generate all possible overlapping blocks
     let mut blocks = Vec::new();
-    for i in 0..=(x.len() - block_size) {
-        let mut block = Vec::with_capacity(block_size);
-        for j in i..(i + block_size) {
+    for i in 0..=(x.len() - blocksize) {
+        let mut block = Vec::with_capacity(blocksize);
+        for j in i..(i + blocksize) {
             block.push(x[j]);
         }
         blocks.push(block);
@@ -477,7 +477,7 @@ where
     };
 
     let data_len = x.len();
-    let n_blocks_needed = (data_len + block_size - 1) / block_size; // Ceiling division
+    let n_blocks_needed = (data_len + blocksize - 1) / blocksize; // Ceiling division
     let mut samples = Array2::zeros((n_resamples, data_len));
 
     for resample_idx in 0..n_resamples {

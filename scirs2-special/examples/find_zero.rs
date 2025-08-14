@@ -1,6 +1,6 @@
 #[allow(dead_code)]
 fn main() {
-    use scirs2__special::j0;
+    use scirs2_special::j0;
 
     // Search for a more accurate zero
     let mut low = 2.3f64;

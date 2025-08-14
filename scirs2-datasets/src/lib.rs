@@ -81,8 +81,8 @@
 //!
 //! // Access dataset properties
 //! println!("Dataset: {} samples, {} features", iris.n_samples(), iris.n_features());
-//! if let Some(feature_names) = iris.feature_names() {
-//!     println!("Features: {:?}", feature_names);
+//! if let Some(featurenames) = iris.featurenames() {
+//!     println!("Features: {:?}", featurenames);
 //! }
 //! ```
 
@@ -178,7 +178,7 @@ pub use ml_integration::{
 };
 
 pub use cache::{
-    get_cache_dir, BatchOperations, BatchResult, CacheFileInfo, CacheManager, CacheStats,
+    get_cachedir, BatchOperations, BatchResult, CacheFileInfo, CacheManager, CacheStats,
     DatasetCache, DetailedCacheStats,
 };
 #[cfg(feature = "download")]
@@ -223,7 +223,7 @@ pub use real_world::{
     list_real_world_datasets, load_adult, load_california_housing, load_heart_disease,
     load_red_wine_quality, load_titanic, RealWorldConfig, RealWorldDatasets,
 };
-pub use registry::{get_registry, load_dataset_by_name, DatasetMetadata, DatasetRegistry};
+pub use registry::{get_registry, load_dataset_byname, DatasetMetadata, DatasetRegistry};
 pub use sample::*;
 pub use streaming::{
     stream_classification, stream_csv, stream_regression, DataChunk, StreamConfig, StreamProcessor,

@@ -4,8 +4,8 @@
 //! algorithm compared to the standard decomposition method, particularly for the
 //! additivity property.
 
-use num__complex::Complex64;
-use scirs2__fft::{frft, frft_dft, frft_stable};
+use num_complex::Complex64;
+use scirs2_fft::{frft, frft_dft, frft_stable};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

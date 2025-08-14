@@ -48,7 +48,7 @@ impl<T> PipelineData<T> {
     /// Create new pipeline data
     pub fn new(data: T) -> Self {
         Self {
-            data: data,
+            data,
             metadata: Metadata::new(),
             context: PipelineContext::new(),
         }
@@ -57,7 +57,7 @@ impl<T> PipelineData<T> {
     /// Create with metadata
     pub fn with_metadata(data: T, metadata: Metadata) -> Self {
         Self {
-            data: data,
+            data,
             metadata,
             context: PipelineContext::new(),
         }
@@ -533,10 +533,7 @@ where
     O: 'static + Send + Sync,
 {
     pub fn new(first: Pipeline<I, M>, second: Pipeline<M, O>) -> Self {
-        Self {
-            first: first,
-            second,
-        }
+        Self { first, second }
     }
 
     pub fn execute(&self, input: I) -> Result<O> {
@@ -728,7 +725,7 @@ pub enum AlertSeverity {
 impl PipelineMonitor {
     pub fn new(thresholds: MonitoringThresholds) -> Self {
         Self {
-            thresholds: thresholds,
+            thresholds,
             alerts: Vec::new(),
         }
     }

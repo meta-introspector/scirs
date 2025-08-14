@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 #[derive(Debug, Clone)]
 pub struct BenchmarkConfig {
     /// Array sizes to test
-    pub array_sizes: Vec<usize>,
+    pub arraysizes: Vec<usize>,
     /// Number of iterations per test
     pub iterations: usize,
     /// Warmup iterations
@@ -33,7 +33,7 @@ pub struct BenchmarkConfig {
 impl Default for BenchmarkConfig {
     fn default() -> Self {
         Self {
-            array_sizes: vec![100, 1000, 10000, 100000],
+            arraysizes: vec![100, 1000, 10000, 100000],
             iterations: 10,
             warmup_iterations: 3,
             test_gpu: cfg!(feature = "gpu"),
@@ -50,7 +50,7 @@ impl Default for BenchmarkConfig {
 pub struct BenchmarkResult {
     pub function_name: String,
     pub implementation: String,
-    pub array_size: usize,
+    pub arraysize: usize,
     pub average_time: Duration,
     pub min_time: Duration,
     pub max_time: Duration,
@@ -166,11 +166,11 @@ impl GammaBenchmarks {
         println!("Features: {:?}", system_info.feature_flags);
         println!();
 
-        for &array_size in &config.array_sizes {
-            println!("Testing array size: {array_size}");
+        for &arraysize in &config.arraysizes {
+            println!("Testing array size: {arraysize}");
 
             // Generate test data
-            let test_data = Array1::linspace(0.1, 10.0, array_size);
+            let test_data = Array1::linspace(0.1, 10.0, arraysize);
             let mut _reference_result = None;
 
             // CPU baseline
@@ -276,7 +276,7 @@ impl GammaBenchmarks {
         Ok(BenchmarkResult {
             function_name: "gamma".to_string(),
             implementation: "CPU".to_string(),
-            array_size: data.len(),
+            arraysize: data.len(),
             average_time: stats.average_time,
             min_time: stats.min_time,
             max_time: stats.max_time,
@@ -316,7 +316,7 @@ impl GammaBenchmarks {
         Ok(BenchmarkResult {
             function_name: "gamma".to_string(),
             implementation: "SIMD".to_string(),
-            array_size: data.len(),
+            arraysize: data.len(),
             average_time: stats.average_time,
             min_time: stats.min_time,
             max_time: stats.max_time,
@@ -356,7 +356,7 @@ impl GammaBenchmarks {
         Ok(BenchmarkResult {
             function_name: "gamma".to_string(),
             implementation: "Parallel".to_string(),
-            array_size: data.len(),
+            arraysize: data.len(),
             average_time: stats.average_time,
             min_time: stats.min_time,
             max_time: stats.max_time,
@@ -407,7 +407,7 @@ impl GammaBenchmarks {
             return Ok(BenchmarkResult {
                 function_name: "gamma".to_string(),
                 implementation: "GPU".to_string(),
-                array_size: data.len(),
+                arraysize: data.len(),
                 average_time: Duration::ZERO,
                 min_time: Duration::ZERO,
                 max_time: Duration::ZERO,
@@ -426,7 +426,7 @@ impl GammaBenchmarks {
         Ok(BenchmarkResult {
             function_name: "gamma".to_string(),
             implementation: "GPU".to_string(),
-            array_size: data.len(),
+            arraysize: data.len(),
             average_time: stats.average_time,
             min_time: stats.min_time,
             max_time: stats.max_time,
@@ -480,7 +480,7 @@ impl GammaBenchmarks {
 
         for result in results.iter_mut() {
             size_groups
-                .entry(result.array_size)
+                .entry(result.arraysize)
                 .or_default()
                 .push(result);
         }
@@ -550,7 +550,7 @@ impl GammaBenchmarks {
         println!("Validating benchmarking infrastructure...");
 
         let test_config = BenchmarkConfig {
-            array_sizes: vec![100],
+            arraysizes: vec![100],
             iterations: 3,
             warmup_iterations: 1,
             test_gpu: false, // Disable for validation
@@ -613,7 +613,7 @@ impl GammaBenchmarks {
         println!("Running advanced benchmarking infrastructure validation...");
 
         let test_config = BenchmarkConfig {
-            array_sizes: vec![100, 1000],
+            arraysizes: vec![100, 1000],
             iterations: 3,
             warmup_iterations: 1,
             test_gpu: false,
@@ -701,7 +701,7 @@ impl BenchmarkSuite {
         let mut size_groups: HashMap<usize, Vec<&BenchmarkResult>> = HashMap::new();
         for result in &self.results {
             size_groups
-                .entry(result.array_size)
+                .entry(result.arraysize)
                 .or_default()
                 .push(result);
         }
@@ -796,7 +796,7 @@ impl BenchmarkSuite {
         let mut csv = String::new();
 
         // Header
-        csv.push_str("function,implementation,array_size,avg_time_ms,min_time_ms,max_time_ms,");
+        csv.push_str("function,implementation,arraysize,avg_time_ms,min_time_ms,max_time_ms,");
         csv.push_str("std_dev_ms,throughput_ops_per_sec,speedup_factor,success,error\n");
 
         // Data rows
@@ -805,7 +805,7 @@ impl BenchmarkSuite {
                 "{},{},{},{},{},{},{},{},{},{},{}\n",
                 result.function_name,
                 result.implementation,
-                result.array_size,
+                result.arraysize,
                 result.average_time.as_millis(),
                 result.min_time.as_millis(),
                 result.max_time.as_millis(),
@@ -828,7 +828,7 @@ impl BenchmarkSuite {
 #[allow(dead_code)]
 pub fn quick_benchmark() -> SpecialResult<BenchmarkSuite> {
     let config = BenchmarkConfig {
-        array_sizes: vec![1000, 10000],
+        arraysizes: vec![1000, 10000],
         iterations: 5,
         warmup_iterations: 2,
         ..Default::default()
@@ -851,7 +851,7 @@ mod tests {
     #[test]
     fn test_benchmark_config_creation() {
         let config = BenchmarkConfig::default();
-        assert!(!config.array_sizes.is_empty());
+        assert!(!config.arraysizes.is_empty());
         assert!(config.iterations > 0);
     }
 

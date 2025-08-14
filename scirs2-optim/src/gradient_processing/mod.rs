@@ -60,7 +60,7 @@ impl<A: Float + ScalarOperand + Debug> GradientProcessor<A> {
 
     /// Create a new gradient processor with a specific configuration
     pub fn with_config(config: GradientClipConfig<A>) -> Self {
-        Self { config: config }
+        Self { config }
     }
 
     /// Set max value clipping
@@ -180,10 +180,7 @@ where
 
 /// Clip gradient L2 norm (global gradient clipping)
 #[allow(dead_code)]
-pub fn clip_gradient_norm<A, D>(
-    gradients: &mut Array<A, D>,
-    maxnorm: A,
-) -> Result<&mut Array<A, D>>
+pub fn clip_gradient_norm<A, D>(gradients: &mut Array<A, D>, maxnorm: A) -> Result<&mut Array<A, D>>
 where
     A: Float + ScalarOperand,
     D: Dimension,
@@ -467,7 +464,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientMask<A, D> {
     /// * `mask` - Boolean mask indicating which parameters to update
     pub fn new(mask: Array<bool, D>) -> Self {
         Self {
-            mask: mask,
+            mask,
             lr_multipliers: None,
         }
     }

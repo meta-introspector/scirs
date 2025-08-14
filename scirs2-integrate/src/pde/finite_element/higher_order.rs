@@ -106,7 +106,7 @@ impl ShapeFunctions {
     fn linearshape_functions(xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
         Array1::from_vec(vec![
             zeta, // N1 = 1 - xi - eta
-            xi,  // N2 = xi
+            xi,   // N2 = xi
             eta,  // N3 = eta
         ])
     }
@@ -123,10 +123,10 @@ impl ShapeFunctions {
     fn quadraticshape_functions(xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
         Array1::from_vec(vec![
             zeta * (2.0 * zeta - 1.0), // N1: corner node 1
-            xi * (2.0 * xi - 1.0),   // N2: corner node 2
+            xi * (2.0 * xi - 1.0),     // N2: corner node 2
             eta * (2.0 * eta - 1.0),   // N3: corner node 3
-            4.0 * xi * zeta,          // N4: mid-edge node 1-2
-            4.0 * xi * eta,           // N5: mid-edge node 2-3
+            4.0 * xi * zeta,           // N4: mid-edge node 1-2
+            4.0 * xi * eta,            // N5: mid-edge node 2-3
             4.0 * eta * zeta,          // N6: mid-edge node 3-1
         ])
     }
@@ -134,20 +134,20 @@ impl ShapeFunctions {
     /// Quadratic shape function derivatives
     fn quadraticshape_derivatives(xi: f64, eta: f64, zeta: f64) -> (Array1<f64>, Array1<f64>) {
         let dxi = Array1::from_vec(vec![
-            1.0 - 4.0 * zeta,   // dN1/dxi
+            1.0 - 4.0 * zeta,  // dN1/dxi
             4.0 * xi - 1.0,    // dN2/dxi
-            0.0,                // dN3/dxi
+            0.0,               // dN3/dxi
             4.0 * (zeta - xi), // dN4/dxi
-            4.0 * eta,          // dN5/dxi
-            -4.0 * eta,         // dN6/dxi
+            4.0 * eta,         // dN5/dxi
+            -4.0 * eta,        // dN6/dxi
         ]);
 
         let deta = Array1::from_vec(vec![
             1.0 - 4.0 * zeta,   // dN1/deta
             0.0,                // dN2/deta
             4.0 * eta - 1.0,    // dN3/deta
-            -4.0 * xi,         // dN4/deta
-            4.0 * xi,          // dN5/deta
+            -4.0 * xi,          // dN4/deta
+            4.0 * xi,           // dN5/deta
             4.0 * (zeta - eta), // dN6/deta
         ]);
 
@@ -160,14 +160,14 @@ impl ShapeFunctions {
         Array1::from_vec(vec![
             // Corner nodes
             zeta * (3.0 * zeta - 1.0) * (3.0 * zeta - 2.0) / 2.0, // N1
-            xi * (3.0 * xi - 1.0) * (3.0 * xi - 2.0) / 2.0,    // N2
+            xi * (3.0 * xi - 1.0) * (3.0 * xi - 2.0) / 2.0,       // N2
             eta * (3.0 * eta - 1.0) * (3.0 * eta - 2.0) / 2.0,    // N3
             // Edge nodes (2 nodes per edge)
             9.0 * xi * zeta * (3.0 * zeta - 1.0) / 2.0, // N4: edge 1-2, node 1
-            9.0 * xi * zeta * (3.0 * xi - 1.0) / 2.0,  // N5: edge 1-2, node 2
-            9.0 * xi * eta * (3.0 * xi - 1.0) / 2.0,   // N6: edge 2-3, node 1
+            9.0 * xi * zeta * (3.0 * xi - 1.0) / 2.0,   // N5: edge 1-2, node 2
+            9.0 * xi * eta * (3.0 * xi - 1.0) / 2.0,    // N6: edge 2-3, node 1
             9.0 * xi * eta * (3.0 * eta - 1.0) / 2.0,   // N7: edge 2-3, node 2
-            9.0 * eta * zeta * (3.0 * eta - 1.0) / 2.0,  // N8: edge 3-1, node 1
+            9.0 * eta * zeta * (3.0 * eta - 1.0) / 2.0, // N8: edge 3-1, node 1
             9.0 * eta * zeta * (3.0 * zeta - 1.0) / 2.0, // N9: edge 3-1, node 2
             // Internal node
             27.0 * xi * eta * zeta, // N10: internal node

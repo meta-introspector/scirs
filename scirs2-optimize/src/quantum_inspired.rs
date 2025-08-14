@@ -103,7 +103,10 @@ impl QuantumState {
 
         // Initialize random amplitudes (normalized)
         let mut amplitudes = Array1::from_shape_fn(actual_states, |_| {
-            Complex::new(rand::rng().gen_range(-1.0..1.0), rand::rng().gen_range(-1.0..1.0))
+            Complex::new(
+                rand::rng().gen_range(-1.0..1.0),
+                rand::rng().gen_range(-1.0..1.0),
+            )
         });
 
         // Normalize amplitudes

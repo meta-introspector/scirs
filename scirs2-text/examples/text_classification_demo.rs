@@ -81,7 +81,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _unique_labels = train_dataset.unique_labels();
 
     // Create binary labels (0 for negative, 1 for positive) for this demo
-    let mut _train_labels = Vec::new();
+    let mut train_labels = Vec::new();
     let mut test_labels = Vec::new();
 
     for label in &train_dataset.labels {

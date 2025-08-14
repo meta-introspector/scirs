@@ -11,7 +11,7 @@
 //!
 //! Run with: cargo run --example comprehensive_interactive_tutorial
 
-use scirs2__special::*;
+use scirs2_special::*;
 use std::collections::HashMap;
 use std::io::{self, Write};
 use std::time::{Duration, Instant, SystemTime};
@@ -421,7 +421,7 @@ struct UserInteraction {
     timestamp: Instant,
     interaction_type: InteractionType,
     context: String,
-    user_input: String,
+    userinput: String,
     system_response: String,
     correctness: Option<f64>,
 }
@@ -1824,7 +1824,7 @@ impl TutorialSystem {
                 break;
             }
 
-            let (x_min, x_max) = match func_name.as_str() {
+            let (xmin, xmax) = match func_name.as_str() {
                 "gamma" => (0.1, 5.0),
                 "j0" | "j1" => (0.0, 20.0),
                 "erf" | "erfc" => (-3.0, 3.0),
@@ -1834,14 +1834,14 @@ impl TutorialSystem {
                 }
             };
 
-            println!("\n📊 Plot of {}(x) from {} to {}:", func_name, x_min, x_max);
+            println!("\n📊 Plot of {}(x) from {} to {}:", func_name, xmin, xmax);
 
             match func_name.as_str() {
-                "gamma" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| gamma(x)),
-                "j0" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| j0(x)),
-                "j1" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| j1(x)),
-                "erf" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| erf(x)),
-                "erfc" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| erfc(x)),
+                "gamma" => self.ascii_plot_function_2d(xmin, xmax, 60, |x| gamma(x)),
+                "j0" => self.ascii_plot_function_2d(xmin, xmax, 60, |x| j0(x)),
+                "j1" => self.ascii_plot_function_2d(xmin, xmax, 60, |x| j1(x)),
+                "erf" => self.ascii_plot_function_2d(xmin, xmax, 60, |x| erf(x)),
+                "erfc" => self.ascii_plot_function_2d(xmin, xmax, 60, |x| erfc(x)),
                 _ => {}
             }
             println!();
@@ -2270,7 +2270,7 @@ impl TutorialSystem {
         println!("7. 🧬 Biology");
         println!("8. 📡 Signal Processing");
 
-        let _input =
+        let input =
             self.get_user_input("Enter your choices separated by commas (e.g., 1,3,4): ")?;
 
         // Parse and update preferences
@@ -2575,44 +2575,44 @@ impl TutorialSystem {
     }
 
     // Utility methods for ASCII visualization
-    fn ascii_plot_function_2d<F>(&self, x_min: f64, xmax: f64, width: usize, func: F)
+    fn ascii_plot_function_2d<F>(&self, xmin: f64, xmax: f64, width: usize, func: F)
     where
         F: Fn(f64) -> f64,
     {
         let height = 20;
         let mut values = Vec::new();
-        let mut y_min = f64::INFINITY;
-        let mut y_max = f64::NEG_INFINITY;
+        let mut ymin = f64::INFINITY;
+        let mut ymax = f64::NEG_INFINITY;
 
         // Collect function values
         for i in 0..width {
-            let x = x_min + (x_max - x_min) * i as f64 / (width - 1) as f64;
+            let x = xmin + (xmax - xmin) * i as f64 / (width - 1) as f64;
             let y = func(x);
             if y.is_finite() {
                 values.push((x, y));
-                y_min = y_min._min(y);
-                y_max = y_max._max(y);
+                ymin = ymin.min(y);
+                ymax = ymax.max(y);
             } else {
                 values.push((x, f64::NAN));
             }
         }
 
         // Ensure reasonable y-range
-        if (y_max - y_min).abs() < 1e-10 {
-            y_min -= 1.0;
-            y_max += 1.0;
+        if (ymax - ymin).abs() < 1e-10 {
+            ymin -= 1.0;
+            ymax += 1.0;
         }
 
         // Plot grid
         for row in 0..height {
-            let y_level = y_max - (y_max - y_min) * row as f64 / (height - 1) as f64;
+            let y_level = ymax - (ymax - ymin) * row as f64 / (height - 1) as f64;
             print!("{:8.2} |", y_level);
 
             for (_, y) in &values {
                 if y.is_nan() {
                     print!(" ");
                 } else {
-                    let distance = ((y - y_level) / (y_max - y_min) * height as f64).abs();
+                    let distance = ((y - y_level) / (ymax - ymin) * height as f64).abs();
                     if distance < 0.5 {
                         print!("*");
                     } else {
@@ -2633,7 +2633,7 @@ impl TutorialSystem {
         // X-axis labels
         print!("         ");
         for i in [0, width / 4, width / 2, 3 * width / 4, width - 1] {
-            let x = x_min + (x_max - x_min) * i as f64 / (width - 1) as f64;
+            let x = xmin + (xmax - xmin) * i as f64 / (width - 1) as f64;
             print!("{:^8.1}", x);
         }
         println!("\n");

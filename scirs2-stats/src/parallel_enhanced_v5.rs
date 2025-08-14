@@ -53,9 +53,9 @@ pub enum LoadBalancingStrategy {
 #[derive(Debug, Clone)]
 pub struct TaskGranularity {
     /// Minimum task size to consider parallel processing
-    pub min_parallel_size: usize,
+    pub min_parallelsize: usize,
     /// Preferred chunk size per thread
-    pub preferred_chunk_size: usize,
+    pub preferred_chunksize: usize,
     /// Maximum number of chunks
     pub max_chunks: usize,
     /// Adaptive chunk sizing enabled
@@ -84,8 +84,8 @@ impl Default for AdvancedParallelConfig {
             work_stealing: true,
             load_balancing: LoadBalancingStrategy::Adaptive,
             task_granularity: TaskGranularity {
-                min_parallel_size: 1000,
-                preferred_chunk_size: 8192,
+                min_parallelsize: 1000,
+                preferred_chunksize: 8192,
                 max_chunks: num_cpus * 4,
                 adaptive_chunking: true,
             },
@@ -220,7 +220,7 @@ where
 
         // Determine optimal parallelization strategy
         let total_ops = m * n * k;
-        if total_ops < self.config.task_granularity.min_parallel_size {
+        if total_ops < self.config.task_granularity.min_parallelsize {
             return self.sequential_matrix_multiply(a, b);
         }
 
@@ -279,20 +279,20 @@ where
         }
 
         let num_threads = self.config.num_threads.unwrap_or_else(|| num_cpus::get());
-        let chunk_size = (n_bootstrap + num_threads - 1) / num_threads;
+        let chunksize = (n_bootstrap + num_threads - 1) / num_threads;
 
         let results = match sampling_strategy {
             BootstrapSamplingStrategy::Standard => {
-                self.parallel_standardbootstrap(data, statistic_fn, n_bootstrap, chunk_size)?
+                self.parallel_standardbootstrap(data, statistic_fn, n_bootstrap, chunksize)?
             }
             BootstrapSamplingStrategy::Stratified => {
-                self.parallel_stratifiedbootstrap(data, statistic_fn, n_bootstrap, chunk_size)?
+                self.parallel_stratifiedbootstrap(data, statistic_fn, n_bootstrap, chunksize)?
             }
             BootstrapSamplingStrategy::Block => {
-                self.parallel_blockbootstrap(data, statistic_fn, n_bootstrap, chunk_size)?
+                self.parallel_blockbootstrap(data, statistic_fn, n_bootstrap, chunksize)?
             }
             BootstrapSamplingStrategy::Bayesian => {
-                self.parallel_bayesianbootstrap(data, statistic_fn, n_bootstrap, chunk_size)?
+                self.parallel_bayesianbootstrap(data, statistic_fn, n_bootstrap, chunksize)?
             }
         };
 
@@ -496,11 +496,11 @@ where
         let n = b.ncols();
         let mut result = Array2::zeros((m, n));
         
-        let chunk_size = (m + num_cpus::get - 1) / num, _cpus::get;
+        let chunksize = (m + num_cpus::get - 1) / num, _cpus::get;
         
         parallel_for(0..num_cpus::get, |thread_id| {
-            let start_row = thread_id * chunk_size;
-            let end_row = ((thread_id + 1) * chunk_size).min(m);
+            let start_row = thread_id * chunksize;
+            let end_row = ((thread_id + 1) * chunksize).min(m);
             
             for i in start_row..end_row {
                 for j in 0..n {
@@ -528,13 +528,13 @@ where
         let mut result = Array2::zeros((m, n));
         
         // Use smaller chunks for dynamic distribution
-        let chunk_size = self.config.task_granularity.preferred_chunk_size.min(m / (num_cpus::get * 2));
-        let chunk_size = chunk_size.max(1);
+        let chunksize = self.config.task_granularity.preferred_chunksize.min(m / (num_cpus::get * 2));
+        let chunksize = chunksize.max(1);
         
-        let chunks: Vec<_> = (0..m).step_by(chunk_size).collect();
+        let chunks: Vec<_> = (0..m).step_by(chunksize).collect();
         
         parallel_for_each(&chunks, |&start_row| {
-            let end_row = (start_row + chunk_size).min(m);
+            let end_row = (start_row + chunksize).min(m);
             
             for i in start_row..end_row {
                 for j in 0..n {
@@ -561,14 +561,14 @@ where
         let mut result = Array2::zeros((m, n));
         
         // Create work items
-        let chunk_size = 8; // Small chunks for work stealing
+        let chunksize = 8; // Small chunks for work stealing
         let work_items: Vec<_> = (0..m)
-            .step_by(chunk_size)
+            .step_by(chunksize)
             .enumerate()
             .map(|(id, start_row)| WorkItem {
                 id,
-                data: (start_row, (start_row + chunk_size).min(m)),
-                estimated_cost: (chunk_size * n * k) as f64,
+                data: (start_row, (start_row + chunksize).min(m)),
+                estimated_cost: (chunksize * n * k) as f64,
                 dependencies: vec![],
             })
             .collect();
@@ -630,14 +630,14 @@ where
         data: &ArrayView1<F>,
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,
         n_bootstrap: usize,
-        chunk_size: usize,
+        chunksize: usize,
     ) -> StatsResult<Array1<F>> {
         let results = Arc::new(Mutex::new(Vec::with_capacity(n_bootstrap)));
         let data_len = data.len();
         
-        parallel_for(0..n_bootstrap.div_ceil(chunk_size), |chunk_id| {
-            let start_idx = chunk_id * chunk_size;
-            let end_idx = (start_idx + chunk_size).min(n_bootstrap);
+        parallel_for(0..n_bootstrap.div_ceil(chunksize), |chunk_id| {
+            let start_idx = chunk_id * chunksize;
+            let end_idx = (start_idx + chunksize).min(n_bootstrap);
             let mut chunk_results = Vec::with_capacity(end_idx - start_idx);
             
             // Use thread-local RNG for better performance
@@ -670,10 +670,10 @@ where
         &self..data: &ArrayView1<F>,
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,
         n_bootstrap: usize,
-        chunk_size: usize,
+        chunksize: usize,
     ) -> StatsResult<Array1<F>> {
         // Simplified stratified _bootstrap - would stratify by data value ranges
-        self.parallel_standardbootstrap(data, statistic_fn, n_bootstrap, chunk_size)
+        self.parallel_standardbootstrap(data, statistic_fn, n_bootstrap, chunksize)
     }
 
     fn parallel_blockbootstrap(
@@ -681,16 +681,16 @@ where
         data: &ArrayView1<F>,
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,
         n_bootstrap: usize,
-        chunk_size: usize,
+        chunksize: usize,
     ) -> StatsResult<Array1<F>> {
         // Block _bootstrap for time series data
         let data_len = data.len();
-        let block_size = (data_len as f64).sqrt() as usize; // Typical block _size
+        let blocksize = (data_len as f64).sqrt() as usize; // Typical block size
         let results = Arc::new(Mutex::new(Vec::with_capacity(n_bootstrap)));
         
-        parallel_for(0..n_bootstrap.div_ceil(chunk_size), |chunk_id| {
-            let start_idx = chunk_id * chunk_size;
-            let end_idx = (start_idx + chunk_size).min(n_bootstrap);
+        parallel_for(0..n_bootstrap.div_ceil(chunksize), |chunk_id| {
+            let start_idx = chunk_id * chunksize;
+            let end_idx = (start_idx + chunksize).min(n_bootstrap);
             let mut chunk_results = Vec::with_capacity(end_idx - start_idx);
             
             use rand::{rngs::StdRng, SeedableRng, Rng};
@@ -700,11 +700,11 @@ where
                 let mut bootstrap_sample = Vec::new();
                 
                 while bootstrap_sample.len() < data_len {
-                    let block_start = rng.gen_range(0..(data_len - block_size + 1));
+                    let block_start = rng.gen_range(0..(data_len - blocksize + 1));
                     let remaining = data_len - bootstrap_sample.len();
-                    let current_block_size = block_size.min(remaining);
+                    let current_blocksize = blocksize.min(remaining);
                     
-                    for i in 0..current_block_size {
+                    for i in 0..current_blocksize {
                         bootstrap_sample.push(data[block_start + i]);
                     }
                 }
@@ -727,15 +727,15 @@ where
         &self..data: &ArrayView1<F>,
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,
         n_bootstrap: usize,
-        chunk_size: usize,
+        chunksize: usize,
     ) -> StatsResult<Array1<F>> {
         // Bayesian _bootstrap using Dirichlet weights
         let data_len = data.len();
         let results = Arc::new(Mutex::new(Vec::with_capacity(n_bootstrap)));
         
-        parallel_for(0..n_bootstrap.div_ceil(chunk_size), |chunk_id| {
-            let start_idx = chunk_id * chunk_size;
-            let end_idx = (start_idx + chunk_size).min(n_bootstrap);
+        parallel_for(0..n_bootstrap.div_ceil(chunksize), |chunk_id| {
+            let start_idx = chunk_id * chunksize;
+            let end_idx = (start_idx + chunksize).min(n_bootstrap);
             let mut chunk_results = Vec::with_capacity(end_idx - start_idx);
             
             use rand::{rngs::StdRng, SeedableRng};
@@ -763,7 +763,7 @@ where
                     }
                 }
                 
-                // Ensure we have the right sample _size
+                // Ensure we have the right sample size
                 while weighted_sample.len() < data_len {
                     weighted_sample.push(data[0]);
                 }
@@ -889,13 +889,13 @@ where
         k: usize, shuffle: bool,
     ) -> StatsResult<CrossValidationResult<F>> {
         let n = data.nrows();
-        let fold_size = n / k;
+        let foldsize = n / k;
         
         let mut scores = Vec::new();
         
         for fold in 0..k {
-            let test_start = fold * fold_size;
-            let test_end = if fold == k - 1 { n } else { (fold + 1) * fold_size };
+            let test_start = fold * foldsize;
+            let test_end = if fold == k - 1 { n } else { (fold + 1) * foldsize };
             
             // Create train/test splits
             let mut train_indices = Vec::new();
@@ -910,12 +910,12 @@ where
             }
             
             // Extract train and test data (simplified - would use proper indexing)
-            let train_data = data.slice(ndarray::s![0..train_indices.len(), ..]);
+            let traindata = data.slice(ndarray::s![0..train_indices.len(), ..]);
             let train_labels = labels.slice(ndarray::s![0..train_indices.len()]);
-            let test_data = data.slice(ndarray::s![test_start..test_end, ..]);
+            let testdata = data.slice(ndarray::s![test_start..test_end, ..]);
             
             // Train and evaluate model
-            if let Ok(predictions) = model_fn(&train_data, &train_labels, &test_data) {
+            if let Ok(predictions) = model_fn(&traindata, &train_labels, &testdata) {
                 let test_labels = labels.slice(ndarray::s![test_start..test_end]);
                 let mse = self.compute_mse(&predictions.view(), &test_labels)?;
                 scores.push(mse);
@@ -1245,7 +1245,7 @@ mod tests {
         let config = AdvancedParallelConfig::default();
         assert!(config.num_cpus::get.unwrap() > 0);
         assert!(config.work_stealing);
-        assert!(config.task_granularity.min_parallel_size > 0);
+        assert!(config.task_granularity.min_parallelsize > 0);
     }
 
     #[test]

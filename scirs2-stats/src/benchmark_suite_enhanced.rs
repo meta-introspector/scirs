@@ -28,7 +28,7 @@ pub struct EnhancedBenchmarkConfig {
     /// Enable intelligent optimization recommendations
     pub enable_optimization_recommendations: bool,
     /// Performance baseline database path
-    pub baseline_database_path: Option<String>,
+    pub baselinedatabase_path: Option<String>,
     /// Machine learning model for performance prediction
     pub ml_model_config: MLModelConfig,
     /// Cross-platform testing targets
@@ -45,7 +45,7 @@ impl Default for EnhancedBenchmarkConfig {
             enable_cross_platform: true,
             enable_regression_detection: true,
             enable_optimization_recommendations: true,
-            baseline_database_path: None,
+            baselinedatabase_path: None,
             ml_model_config: MLModelConfig::default(),
             platform_targets: vec![
                 PlatformTarget::x86_64_linux(),
@@ -171,35 +171,35 @@ impl PlatformTarget {
 #[allow(dead_code)]
 pub struct MemoryHierarchy {
     /// L1 data cache size in bytes
-    pub l1_cache_size: usize,
+    pub l1_cachesize: usize,
     /// L2 cache size in bytes
-    pub l2_cache_size: usize,
+    pub l2_cachesize: usize,
     /// L3 cache size in bytes
-    pub l3_cache_size: usize,
+    pub l3_cachesize: usize,
     /// Memory bandwidth in GB/s
     pub memory_bandwidth: f64,
     /// Cache line size in bytes
-    pub cache_line_size: usize,
+    pub cache_linesize: usize,
 }
 
 impl MemoryHierarchy {
     pub fn typical_x86_64() -> Self {
         Self {
-            l1_cache_size: 32 * 1024,       // 32KB
-            l2_cache_size: 256 * 1024,      // 256KB
-            l3_cache_size: 8 * 1024 * 1024, // 8MB
-            memory_bandwidth: 25.6,         // 25.6 GB/s typical DDR4
-            cache_line_size: 64,
+            l1_cachesize: 32 * 1024,       // 32KB
+            l2_cachesize: 256 * 1024,      // 256KB
+            l3_cachesize: 8 * 1024 * 1024, // 8MB
+            memory_bandwidth: 25.6,        // 25.6 GB/s typical DDR4
+            cache_linesize: 64,
         }
     }
 
     pub fn apple_silicon() -> Self {
         Self {
-            l1_cache_size: 128 * 1024,       // 128KB
-            l2_cache_size: 4 * 1024 * 1024,  // 4MB
-            l3_cache_size: 32 * 1024 * 1024, // 32MB
-            memory_bandwidth: 68.25,         // 68.25 GB/s M1
-            cache_line_size: 64,
+            l1_cachesize: 128 * 1024,       // 128KB
+            l2_cachesize: 4 * 1024 * 1024,  // 4MB
+            l3_cachesize: 32 * 1024 * 1024, // 32MB
+            memory_bandwidth: 68.25,        // 68.25 GB/s M1
+            cache_linesize: 64,
         }
     }
 }
@@ -332,7 +332,7 @@ pub struct PerformanceAnomaly {
     /// Operation where anomaly was detected
     pub operation: String,
     /// Data size where anomaly occurred
-    pub data_size: usize,
+    pub datasize: usize,
     /// Anomaly severity
     pub severity: f64,
     /// Detailed description
@@ -564,7 +564,7 @@ pub struct PerformancePrediction {
 #[allow(dead_code)]
 pub struct WorkloadCharacteristics {
     /// Data size
-    pub data_size: usize,
+    pub datasize: usize,
     /// Operation type
     pub operation_type: String,
     /// Data distribution characteristics
@@ -579,7 +579,7 @@ pub struct WorkloadCharacteristics {
 pub struct EnhancedBenchmarkSuite {
     config: EnhancedBenchmarkConfig,
     #[allow(dead_code)]
-    performance_database: Arc<Mutex<PerformanceDatabase>>,
+    performancedatabase: Arc<Mutex<PerformanceDatabase>>,
     #[allow(dead_code)]
     ml_model: Arc<Mutex<Option<PerformanceMLModel>>>,
 }
@@ -588,7 +588,7 @@ impl EnhancedBenchmarkSuite {
     /// Create new enhanced benchmark suite
     pub fn new(config: EnhancedBenchmarkConfig) -> Self {
         Self {
-            performance_database: Arc::new(Mutex::new(PerformanceDatabase::new())),
+            performancedatabase: Arc::new(Mutex::new(PerformanceDatabase::new())),
             ml_model: Arc::new(Mutex::new(None)),
             config,
         }
@@ -597,7 +597,7 @@ impl EnhancedBenchmarkSuite {
     /// Run comprehensive enhanced benchmark suite
     pub fn run_enhanced_benchmarks(&mut self) -> StatsResult<EnhancedBenchmarkReport> {
         // Run base benchmarks
-        let _base_suite =
+        let base_suite =
             crate::benchmark_suite::BenchmarkSuite::with_config(self.config.base_config.clone());
 
         // For now, create a placeholder base report until we can run the actual benchmarks
@@ -694,16 +694,13 @@ impl EnhancedBenchmarkSuite {
             }],
             algorithm_recommendations: HashMap::from([
                 (
-                    "large_datasets".to_string(),
+                    "largedatasets".to_string(),
                     "parallel_processing".to_string(),
                 ),
-                (
-                    "small_datasets".to_string(),
-                    "simd_optimization".to_string(),
-                ),
+                ("smalldatasets".to_string(), "simd_optimization".to_string()),
             ]),
             feature_importance: HashMap::from([
-                ("data_size".to_string(), 0.65),
+                ("datasize".to_string(), 0.65),
                 ("algorithm_type".to_string(), 0.45),
                 ("memory_bandwidth".to_string(), 0.35),
                 ("simd_capabilities".to_string(), 0.55),
@@ -842,7 +839,7 @@ impl EnhancedBenchmarkSuite {
     fn generate_performance_predictions(&self) -> StatsResult<Vec<PerformancePrediction>> {
         Ok(vec![PerformancePrediction {
             workload_characteristics: WorkloadCharacteristics {
-                data_size: 1_000_000,
+                datasize: 1_000_000,
                 operation_type: "correlation_matrix".to_string(),
                 data_distribution: "normal".to_string(),
                 accuracy_requirement: "high".to_string(),
@@ -853,7 +850,7 @@ impl EnhancedBenchmarkSuite {
             confidence_score: 0.87,
             recommended_configuration: HashMap::from([
                 ("algorithm".to_string(), "parallel_simd".to_string()),
-                ("chunk_size".to_string(), "8192".to_string()),
+                ("chunksize".to_string(), "8192".to_string()),
                 ("num_threads".to_string(), "auto".to_string()),
             ]),
         }])
@@ -863,13 +860,13 @@ impl EnhancedBenchmarkSuite {
 /// Performance database for storing historical benchmarks
 #[allow(dead_code)]
 struct PerformanceDatabase {
-    historical_data: BTreeMap<String, Vec<BenchmarkMetrics>>,
+    historicaldata: BTreeMap<String, Vec<BenchmarkMetrics>>,
 }
 
 impl PerformanceDatabase {
     fn new() -> Self {
         Self {
-            historical_data: BTreeMap::new(),
+            historicaldata: BTreeMap::new(),
         }
     }
 }
@@ -908,12 +905,12 @@ pub fn create_configured_enhanced_benchmark_suite(
 /// Run quick performance analysis with AI insights
 #[allow(dead_code)]
 pub fn run_quick_ai_analysis(
-    data_size: usize,
+    datasize: usize,
     _operation: &str,
 ) -> StatsResult<Vec<IntelligentRecommendation>> {
     let config = EnhancedBenchmarkConfig {
         base_config: BenchmarkConfig {
-            data_sizes: vec![data_size],
+            datasizes: vec![datasize],
             iterations: 10,
             ..Default::default()
         },

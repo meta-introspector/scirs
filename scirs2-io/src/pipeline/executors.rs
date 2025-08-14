@@ -48,9 +48,7 @@ pub struct StreamingExecutor {
 
 impl StreamingExecutor {
     pub fn new(chunk_size: usize) -> Self {
-        Self {
-            chunk_size: chunk_size,
-        }
+        Self { chunk_size }
     }
 }
 
@@ -183,9 +181,7 @@ pub struct DistributedExecutor {
 
 impl DistributedExecutor {
     pub fn new(num_workers: usize) -> Self {
-        Self {
-            num_workers: num_workers,
-        }
+        Self { num_workers }
     }
 }
 
@@ -337,7 +333,7 @@ pub struct BackpressureStreamingExecutor {
 impl BackpressureStreamingExecutor {
     pub fn new(chunk_size: usize, max_pending_chunks: usize) -> Self {
         Self {
-            chunk_size: chunk_size,
+            chunk_size,
             max_pending_chunks,
             timeout: Duration::from_secs(30),
         }
@@ -427,7 +423,7 @@ pub struct StageMetrics {
 impl<E> MonitoringExecutor<E> {
     pub fn new(inner: E) -> Self {
         Self {
-            inner: inner,
+            inner,
             metrics_collector: Arc::new(Mutex::new(PipelineMetrics::default())),
         }
     }
@@ -485,7 +481,7 @@ pub struct RetryExecutor<E> {
 impl<E> RetryExecutor<E> {
     pub fn new(inner: E, max_retries: usize) -> Self {
         Self {
-            inner: inner,
+            inner,
             max_retries,
             retry_delay: Duration::from_secs(1),
             exponential_backoff: true,
@@ -552,9 +548,7 @@ pub enum Event {
 
 impl EventDrivenExecutor {
     pub fn new(event_receiver: Receiver<Event>) -> Self {
-        Self {
-            event_receiver: event_receiver,
-        }
+        Self { event_receiver }
     }
 }
 
@@ -598,9 +592,7 @@ pub struct ParallelStageExecutor {
 
 impl ParallelStageExecutor {
     pub fn new(max_parallelism: usize) -> Self {
-        Self {
-            max_parallelism: max_parallelism,
-        }
+        Self { max_parallelism }
     }
 }
 

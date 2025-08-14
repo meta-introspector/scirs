@@ -37,7 +37,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::first_kind::j0;
+/// use scirs2_special::bessel::first_kind::j0;
 ///
 /// // J₀(0) = 1
 /// assert!((j0(0.0f64) - 1.0).abs() < 1e-10);
@@ -160,7 +160,7 @@ fn enhanced_asymptotic_j0<F: Float + FromPrimitive>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::first_kind::j1;
+/// use scirs2_special::bessel::first_kind::j1;
 ///
 /// // J₁(0) = 0
 /// assert!(j1(0.0f64).abs() < 1e-10);
@@ -292,7 +292,7 @@ fn enhanced_asymptotic_j1<F: Float + FromPrimitive>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::first_kind::{j0, j1, jn};
+/// use scirs2_special::bessel::first_kind::{j0, j1, jn};
 ///
 /// // J₀(x) comparison
 /// let x = 3.0f64;
@@ -382,9 +382,9 @@ pub fn jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 
     for k in (1..=m).rev() {
         let k_f = F::from(k).unwrap();
-        let j_n_minus_1 = (k_f + k_f) / abs_x * j_n - j_n_plus_1;
+        let j_nminus_1 = (k_f + k_f) / abs_x * j_n - j_n_plus_1;
         j_n_plus_1 = j_n;
-        j_n = j_n_minus_1;
+        j_n = j_nminus_1;
 
         // Accumulate sum for normalization
         if (k - 1) <= n && (k - 1 - n) % 2 == 0 {
@@ -424,7 +424,7 @@ pub fn jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::first_kind::{j0, j1, jv};
+/// use scirs2_special::bessel::first_kind::{j0, j1, jv};
 ///
 /// // Integer order comparisons
 /// let x = 2.0f64;
@@ -592,7 +592,7 @@ fn enhanced_asymptotic_jv<F: Float + FromPrimitive>(v: F, x: F) -> F {
 
     // Calculate asymptotic series terms
     let mu = F::from(4.0).unwrap() * v * v;
-    let mu_minus_1 = mu - F::one();
+    let muminus_1 = mu - F::one();
 
     // For extremely large x, use leading term only
     if abs_x > F::from(100.0).unwrap() {
@@ -615,11 +615,11 @@ fn enhanced_asymptotic_jv<F: Float + FromPrimitive>(v: F, x: F) -> F {
     // Using abs_x directly for calculations
 
     // Calculate higher-order correction terms
-    let term1 = mu_minus_1 / (F::from(8.0).unwrap() * abs_x);
-    let term2 = mu_minus_1 * (mu_minus_1 - F::from(8.0).unwrap())
-        / (F::from(128.0).unwrap() * abs_x * abs_x);
+    let term1 = muminus_1 / (F::from(8.0).unwrap() * abs_x);
+    let term2 =
+        muminus_1 * (muminus_1 - F::from(8.0).unwrap()) / (F::from(128.0).unwrap() * abs_x * abs_x);
     let term3 =
-        mu_minus_1 * (mu_minus_1 - F::from(8.0).unwrap()) * (mu_minus_1 - F::from(24.0).unwrap())
+        muminus_1 * (muminus_1 - F::from(8.0).unwrap()) * (muminus_1 - F::from(24.0).unwrap())
             / (F::from(3072.0).unwrap() * abs_x * abs_x * abs_x);
 
     // Combine all terms
@@ -689,12 +689,12 @@ fn enhanced_asymptotic_jn<F: Float + FromPrimitive>(n: i32, x: F) -> F {
 
     // Calculate leading terms of asymptotic expansion
     let mu = F::from(4.0).unwrap() * n_f * n_f;
-    let mu_minus_1 = mu - F::one();
+    let muminus_1 = mu - F::one();
 
     // Enhanced formula for large x and moderate to large n
-    let term_1 = mu_minus_1 / (F::from(8.0).unwrap() * abs_x);
-    let term_2 = mu_minus_1 * (mu_minus_1 - F::from(8.0).unwrap())
-        / (F::from(128.0).unwrap() * abs_x * abs_x);
+    let term_1 = muminus_1 / (F::from(8.0).unwrap() * abs_x);
+    let term_2 =
+        muminus_1 * (muminus_1 - F::from(8.0).unwrap()) / (F::from(128.0).unwrap() * abs_x * abs_x);
 
     // Result with enhanced precision
     let ampl = F::one() + term_1 + term_2;
@@ -726,7 +726,7 @@ fn enhanced_asymptotic_jn<F: Float + FromPrimitive>(n: i32, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::first_kind::j0e;
+/// use scirs2_special::bessel::first_kind::j0e;
 ///
 /// // For real arguments, j0e(x) = j0(x)
 /// let x = 2.0f64;
@@ -758,7 +758,7 @@ pub fn j0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::first_kind::j1e;
+/// use scirs2_special::bessel::first_kind::j1e;
 ///
 /// // For real arguments, j1e(x) = j1(x)
 /// let x = 2.0f64;
@@ -791,7 +791,7 @@ pub fn j1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::first_kind::jne;
+/// use scirs2_special::bessel::first_kind::jne;
 ///
 /// // For real arguments, jne(n, x) = jn(n, x)
 /// let x = 2.0f64;
@@ -824,7 +824,7 @@ pub fn jne<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::first_kind::jve;
+/// use scirs2_special::bessel::first_kind::jve;
 ///
 /// // For real arguments, jve(v, x) = jv(v, x)
 /// let x = 2.0f64;

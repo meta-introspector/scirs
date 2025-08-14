@@ -48,7 +48,7 @@ where
     }
 
     if x.len() < 3 && !bias {
-        return Err(ErrorMessages::insufficient_data(
+        return Err(ErrorMessages::insufficientdata(
             "unbiased skewness calculation",
             3,
             x.len(),

@@ -130,11 +130,11 @@ pub fn bdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign +
 
     // Use the regularized incomplete beta function
     // P(X <= k) = I_{1-p}(n-k, k+1)
-    let n_minus_k = T::from_usize(n - k).unwrap();
+    let nminus_k = T::from_usize(n - k).unwrap();
     let k_plus_1 = T::from_usize(k + 1).unwrap();
-    let one_minus_p = T::one() - p;
+    let oneminus_p = T::one() - p;
 
-    betainc_regularized(n_minus_k, k_plus_1, one_minus_p)
+    betainc_regularized(nminus_k, k_plus_1, oneminus_p)
 }
 
 /// Binomial survival function (complement of CDF)
@@ -160,9 +160,9 @@ pub fn bdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign 
 
     // P(X > k) = I_p(k+1, n-k)
     let k_plus_1 = T::from_usize(k + 1).unwrap();
-    let n_minus_k = T::from_usize(n - k).unwrap();
+    let nminus_k = T::from_usize(n - k).unwrap();
 
-    betainc_regularized(k_plus_1, n_minus_k, p)
+    betainc_regularized(k_plus_1, nminus_k, p)
 }
 
 /// Inverse of binomial CDF with respect to k
@@ -536,9 +536,9 @@ fn kolmogorov_inverse_initial_guess<T: Float + FromPrimitive>(p: T) -> SpecialRe
         }
     } else if p >= T::from_f64(0.9).unwrap() {
         // For large p (close to 1), use the approximation: x ≈ sqrt(-ln(2(1-p)))
-        let one_minus_p = one - p;
-        if one_minus_p > T::from_f64(1e-15).unwrap() {
-            let ln_arg = two * one_minus_p;
+        let oneminus_p = one - p;
+        if oneminus_p > T::from_f64(1e-15).unwrap() {
+            let ln_arg = two * oneminus_p;
             let arg = -ln_arg.ln();
             if arg > zero {
                 Ok(arg.sqrt())
@@ -585,10 +585,10 @@ fn kolmogorov_inverse_halley<T: Float + FromPrimitive + Display>(
         // Compute f'(_x) and f''(_x) using finite differences for accuracy
         let h = T::from_f64(1e-8).unwrap();
         let f_plus = kolmogorov(_x + h) - target_p;
-        let f_minus = kolmogorov(_x - h) - target_p;
+        let fminus = kolmogorov(_x - h) - target_p;
 
-        let fprime = (f_plus - f_minus) / (T::from_f64(2.0).unwrap() * h);
-        let f2prime = (f_plus - T::from_f64(2.0).unwrap() * fx + f_minus) / (h * h);
+        let fprime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * h);
+        let f2prime = (f_plus - T::from_f64(2.0).unwrap() * fx + fminus) / (h * h);
 
         // Check for zero derivative
         if fprime.abs() < T::from_f64(1e-15).unwrap() {
@@ -648,8 +648,8 @@ fn kolmogorov_inverse_newton_improved<T: Float + FromPrimitive + Display>(
         // Compute derivative using central difference with adaptive step size
         let h = T::from_f64(1e-8).unwrap() * (T::one() + _x.abs());
         let f_plus = kolmogorov(_x + h);
-        let f_minus = kolmogorov(_x - h);
-        let fprime = (f_plus - f_minus) / (T::from_f64(2.0).unwrap() * h);
+        let fminus = kolmogorov(_x - h);
+        let fprime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * h);
 
         // Check for zero derivative
         if fprime.abs() < T::from_f64(1e-15).unwrap() {
@@ -721,8 +721,8 @@ fn kolmogorov_inverse_bracketed_newton<T: Float + FromPrimitive + Display>(
         // Compute derivative for Newton step
         let h = T::from_f64(1e-8).unwrap() * (T::one() + mid.abs());
         let f_plus = kolmogorov(mid + h) - target_p;
-        let f_minus = kolmogorov(mid - h) - target_p;
-        let fprime = (f_plus - f_minus) / (T::from_f64(2.0).unwrap() * h);
+        let fminus = kolmogorov(mid - h) - target_p;
+        let fprime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * h);
 
         if fprime.abs() > T::from_f64(1e-15).unwrap() {
             // Try Newton step
@@ -1026,8 +1026,8 @@ where
         // Approximate derivative using finite differences
         let delta = T::from_f64(1e-6).unwrap();
         let f_plus = betainc_regularized(a + delta, b, x)?;
-        let f_minus = betainc_regularized(a - delta, b, x)?;
-        let f_prime = (f_plus - f_minus) / (T::from_f64(2.0).unwrap() * delta);
+        let fminus = betainc_regularized(a - delta, b, x)?;
+        let f_prime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;
@@ -1074,8 +1074,8 @@ where
         // Approximate derivative using finite differences
         let delta = T::from_f64(1e-6).unwrap();
         let f_plus = betainc_regularized(a, b + delta, x)?;
-        let f_minus = betainc_regularized(a, b - delta, x)?;
-        let f_prime = (f_plus - f_minus) / (T::from_f64(2.0).unwrap() * delta);
+        let fminus = betainc_regularized(a, b - delta, x)?;
+        let f_prime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;
@@ -1121,8 +1121,8 @@ where
         // Approximate derivative
         let delta = T::from_f64(1e-6).unwrap();
         let f_plus = fdtr(dfn + delta, dfd, x)?;
-        let f_minus = fdtr(dfn - delta, dfd, x)?;
-        let f_prime = (f_plus - f_minus) / (T::from_f64(2.0).unwrap() * delta);
+        let fminus = fdtr(dfn - delta, dfd, x)?;
+        let f_prime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;
@@ -1168,8 +1168,8 @@ where
         // Approximate derivative
         let delta = T::from_f64(1e-6).unwrap();
         let f_plus = gdtr(a + delta, x)?;
-        let f_minus = gdtr(a - delta, x)?;
-        let f_prime = (f_plus - f_minus) / (T::from_f64(2.0).unwrap() * delta);
+        let fminus = gdtr(a - delta, x)?;
+        let f_prime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;
@@ -1216,8 +1216,8 @@ where
         // Approximate derivative
         let delta = T::from_f64(1e-6).unwrap() * (T::one() + x.abs());
         let f_plus = gdtr(a, x + delta)?;
-        let f_minus = gdtr(a, x - delta)?;
-        let f_prime = (f_plus - f_minus) / (T::from_f64(2.0).unwrap() * delta);
+        let fminus = gdtr(a, x - delta)?;
+        let f_prime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;
@@ -1264,8 +1264,8 @@ where
         // Approximate derivative (PDF of gamma distribution)
         let delta = T::from_f64(1e-6).unwrap() * (T::one() + x.abs());
         let f_plus = gdtr(a, x + delta)?;
-        let f_minus = gdtr(a, x - delta)?;
-        let f_prime = (f_plus - f_minus) / (T::from_f64(2.0).unwrap() * delta);
+        let fminus = gdtr(a, x - delta)?;
+        let f_prime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;

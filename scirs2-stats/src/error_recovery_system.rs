@@ -52,7 +52,7 @@ pub struct DataCharacteristics {
     /// Data range information
     pub range_info: Option<RangeInfo>,
     /// Missing data information
-    pub missing_data_info: Option<MissingDataInfo>,
+    pub missingdata_info: Option<MissingDataInfo>,
     /// Data distribution characteristics
     pub distribution_info: Option<DistributionInfo>,
 }
@@ -246,7 +246,7 @@ pub enum RecoveryAction {
     /// Enable parallel processing
     EnableParallelProcessing { num_threads: usize },
     /// Use chunked processing for large data
-    UseChunkedProcessing { chunk_size: usize },
+    UseChunkedProcessing { chunksize: usize },
     /// Apply regularization
     ApplyRegularization { regularization_strength: f64 },
     /// Reduce precision for speed
@@ -348,7 +348,7 @@ pub struct ErrorRecoverySystem {
 #[derive(Debug, Clone)]
 pub struct ErrorRecoveryConfig {
     /// Maximum number of errors to keep in history
-    pub max_history_size: usize,
+    pub max_historysize: usize,
     /// Enable detailed diagnostics
     pub detailed_diagnostics: bool,
     /// Enable automatic recovery suggestions
@@ -362,7 +362,7 @@ pub struct ErrorRecoveryConfig {
 impl Default for ErrorRecoveryConfig {
     fn default() -> Self {
         Self {
-            max_history_size: 100,
+            max_historysize: 100,
             detailed_diagnostics: true,
             auto_suggestions: true,
             performance_analysis: true,
@@ -377,7 +377,7 @@ impl ErrorRecoverySystem {
         Self {
             error_history: Vec::new(),
             recovery_success_rates: HashMap::new(),
-            config: config,
+            config,
         }
     }
 
@@ -420,7 +420,7 @@ impl ErrorRecoverySystem {
 
         // Add to history
         self.error_history.push(enhanced_error.clone());
-        if self.error_history.len() > self.config.max_history_size {
+        if self.error_history.len() > self.config.max_historysize {
             self.error_history.drain(0..1);
         }
 
@@ -434,7 +434,7 @@ impl ErrorRecoverySystem {
         module_path: &str,
         error: &StatsError,
     ) -> ErrorContext {
-        let data_characteristics = self.infer_data_characteristics(error);
+        let data_characteristics = self.inferdata_characteristics(error);
         let system_info = self.gather_system_info();
         let computation_state = self.infer_computation_state(error, function_name);
 
@@ -448,13 +448,13 @@ impl ErrorRecoverySystem {
     }
 
     /// Infer data characteristics from error
-    fn infer_data_characteristics(&self, error: &StatsError) -> DataCharacteristics {
+    fn inferdata_characteristics(&self, error: &StatsError) -> DataCharacteristics {
         // This would analyze the _error to infer data properties
         DataCharacteristics {
             size_info: None,
             type_info: "unknown".to_string(),
             range_info: None,
-            missing_data_info: None,
+            missingdata_info: None,
             distribution_info: None,
         }
     }
@@ -881,7 +881,7 @@ pub fn enhance_error_with_recovery(
                         size_info: None,
                         type_info: "unknown".to_string(),
                         range_info: None,
-                        missing_data_info: None,
+                        missingdata_info: None,
                         distribution_info: None,
                     },
                     system_info: SystemInfo {

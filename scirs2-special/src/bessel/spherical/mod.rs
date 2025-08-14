@@ -143,7 +143,7 @@ pub fn spherical_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     // For higher orders, use a recurrence relation
     // j_{n+1} = (2n+1)/x * j_n - j_{n-1}
     // Initialize j_0 with special case handling for small arguments
-    let mut j_n_minus_2 = if x.abs() < F::from(0.01).unwrap() {
+    let mut j_nminus_2 = if x.abs() < F::from(0.01).unwrap() {
         // Series expansion: j0(x) = 1 - x²/6 + x⁴/120 - ...
         let x2 = x * x;
         F::one() - x2 / F::from(6.0).unwrap() + x2 * x2 / F::from(120.0).unwrap()
@@ -151,7 +151,7 @@ pub fn spherical_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
         x.sin() / x
     }; // j_0
        // Initialize j_1 with special case handling for small arguments
-    let mut j_n_minus_1 = if x.abs() < F::from(0.01).unwrap() {
+    let mut j_nminus_1 = if x.abs() < F::from(0.01).unwrap() {
         // Series expansion: j1(x) = x/3 - x³/30 + ...
         let x2 = x * x;
         x / F::from(3.0).unwrap() - x * x2 / F::from(30.0).unwrap()
@@ -160,12 +160,12 @@ pub fn spherical_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     }; // j_1
 
     for k in 2..=max_n {
-        let j_n = F::from(2.0 * k as f64 - 1.0).unwrap() / x * j_n_minus_1 - j_n_minus_2;
-        j_n_minus_2 = j_n_minus_1;
-        j_n_minus_1 = j_n;
+        let j_n = F::from(2.0 * k as f64 - 1.0).unwrap() / x * j_nminus_1 - j_nminus_2;
+        j_nminus_2 = j_nminus_1;
+        j_nminus_1 = j_n;
     }
 
-    j_n_minus_1
+    j_nminus_1
 }
 
 /// Spherical Bessel function of the second kind with enhanced stability.
@@ -227,16 +227,16 @@ pub fn spherical_yn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 
     // For higher orders, use a recurrence relation
     // y_{n+1} = (2n+1)/x * y_n - y_{n-1}
-    let mut y_n_minus_2 = -x.cos() / x; // y_0
-    let mut y_n_minus_1 = -(x.cos() / x + x.sin()) / x; // y_1
+    let mut y_nminus_2 = -x.cos() / x; // y_0
+    let mut y_nminus_1 = -(x.cos() / x + x.sin()) / x; // y_1
 
     for k in 2..=max_n {
-        let y_n = F::from(2.0 * k as f64 - 1.0).unwrap() / x * y_n_minus_1 - y_n_minus_2;
-        y_n_minus_2 = y_n_minus_1;
-        y_n_minus_1 = y_n;
+        let y_n = F::from(2.0 * k as f64 - 1.0).unwrap() / x * y_nminus_1 - y_nminus_2;
+        y_nminus_2 = y_nminus_1;
+        y_nminus_1 = y_n;
     }
 
-    y_n_minus_1
+    y_nminus_1
 }
 
 /// Scaled spherical Bessel function of the first kind.
@@ -333,17 +333,17 @@ pub fn spherical_jn_scaled<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F 
     // We use Miller's algorithm with downward recurrence for stability
 
     // Start with a higher order than needed (with limit to prevent overflows)
-    let n_max = (n * 2).min(100);
+    let nmax = (n * 2).min(100);
 
     // Initialize with arbitrary values (will be rescaled later)
     let mut j_n_plus_1 = F::from(1e-100).unwrap();
     let mut j_n = F::from(1e-100).unwrap();
 
     // Apply recurrence relation backward for better numerical stability
-    for k in (0..=n_max).rev() {
-        let j_n_minus_1 = F::from(2.0 * k as f64 + 1.0).unwrap() / x * j_n - j_n_plus_1;
+    for k in (0..=nmax).rev() {
+        let j_nminus_1 = F::from(2.0 * k as f64 + 1.0).unwrap() / x * j_n - j_n_plus_1;
         j_n_plus_1 = j_n;
-        j_n = j_n_minus_1;
+        j_n = j_nminus_1;
 
         // Normalize occasionally to avoid overflow/underflow
         if j_n.abs() > F::from(1e50).unwrap() {

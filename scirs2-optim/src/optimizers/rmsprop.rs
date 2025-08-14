@@ -72,7 +72,7 @@ impl<A: Float + ScalarOperand + Debug> RMSprop<A> {
     /// * `weight_decay` - Weight decay factor for L2 regularization (default: 0.0)
     pub fn new_with_config(learning_rate: A, rho: A, epsilon: A, weight_decay: A) -> Self {
         Self {
-            learning_rate: learning_rate,
+            learning_rate,
             rho,
             epsilon,
             weight_decay,

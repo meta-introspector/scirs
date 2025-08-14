@@ -74,7 +74,7 @@ impl<G: ExponentialMap> LieGroupIntegrator<G> {
     /// Create a new Lie group integrator
     pub fn new(dt: f64, method: LieGroupMethod) -> Self {
         Self {
-            dt: dt,
+            dt,
             method,
             _phantom: std::marker::PhantomData,
         }
@@ -416,24 +416,15 @@ impl SO3Integrator {
         }
 
         let mut inv = Array2::zeros((3, 3));
-        inv[[0, 0]] =
-            (inertia[[1, 1]] * inertia[[2, 2]] - inertia[[1, 2]] * inertia[[2, 1]]) / det;
-        inv[[0, 1]] =
-            (inertia[[0, 2]] * inertia[[2, 1]] - inertia[[0, 1]] * inertia[[2, 2]]) / det;
-        inv[[0, 2]] =
-            (inertia[[0, 1]] * inertia[[1, 2]] - inertia[[0, 2]] * inertia[[1, 1]]) / det;
-        inv[[1, 0]] =
-            (inertia[[1, 2]] * inertia[[2, 0]] - inertia[[1, 0]] * inertia[[2, 2]]) / det;
-        inv[[1, 1]] =
-            (inertia[[0, 0]] * inertia[[2, 2]] - inertia[[0, 2]] * inertia[[2, 0]]) / det;
-        inv[[1, 2]] =
-            (inertia[[0, 2]] * inertia[[1, 0]] - inertia[[0, 0]] * inertia[[1, 2]]) / det;
-        inv[[2, 0]] =
-            (inertia[[1, 0]] * inertia[[2, 1]] - inertia[[1, 1]] * inertia[[2, 0]]) / det;
-        inv[[2, 1]] =
-            (inertia[[0, 1]] * inertia[[2, 0]] - inertia[[0, 0]] * inertia[[2, 1]]) / det;
-        inv[[2, 2]] =
-            (inertia[[0, 0]] * inertia[[1, 1]] - inertia[[0, 1]] * inertia[[1, 0]]) / det;
+        inv[[0, 0]] = (inertia[[1, 1]] * inertia[[2, 2]] - inertia[[1, 2]] * inertia[[2, 1]]) / det;
+        inv[[0, 1]] = (inertia[[0, 2]] * inertia[[2, 1]] - inertia[[0, 1]] * inertia[[2, 2]]) / det;
+        inv[[0, 2]] = (inertia[[0, 1]] * inertia[[1, 2]] - inertia[[0, 2]] * inertia[[1, 1]]) / det;
+        inv[[1, 0]] = (inertia[[1, 2]] * inertia[[2, 0]] - inertia[[1, 0]] * inertia[[2, 2]]) / det;
+        inv[[1, 1]] = (inertia[[0, 0]] * inertia[[2, 2]] - inertia[[0, 2]] * inertia[[2, 0]]) / det;
+        inv[[1, 2]] = (inertia[[0, 2]] * inertia[[1, 0]] - inertia[[0, 0]] * inertia[[1, 2]]) / det;
+        inv[[2, 0]] = (inertia[[1, 0]] * inertia[[2, 1]] - inertia[[1, 1]] * inertia[[2, 0]]) / det;
+        inv[[2, 1]] = (inertia[[0, 1]] * inertia[[2, 0]] - inertia[[0, 0]] * inertia[[2, 1]]) / det;
+        inv[[2, 2]] = (inertia[[0, 0]] * inertia[[1, 1]] - inertia[[0, 1]] * inertia[[1, 0]]) / det;
 
         Ok(inv)
     }
@@ -462,8 +453,7 @@ impl LieAlgebra for Se3 {
             omega: other.omega.clone(),
         });
 
-        let v_bracket =
-            self.cross_3d(&self.omega, &other.v) - self.cross_3d(&other.omega, &self.v);
+        let v_bracket = self.cross_3d(&self.omega, &other.v) - self.cross_3d(&other.omega, &self.v);
 
         Se3 {
             v: v_bracket,

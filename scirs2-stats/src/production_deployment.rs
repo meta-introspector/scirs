@@ -618,11 +618,11 @@ impl ProductionDeploymentValidator {
         let start_time = Instant::now();
 
         // Test actual SIMD operations
-        let test_data = Array1::from_vec((0..1000).map(|i| i as f64).collect::<Vec<_>>());
+        let testdata = Array1::from_vec((0..1000).map(|i| i as f64).collect::<Vec<_>>());
 
         // Test SIMD mean calculation
         let simd_mean_result =
-            std::panic::catch_unwind(|| crate::descriptive_simd::mean_simd(&test_data.view()));
+            std::panic::catch_unwind(|| crate::descriptive_simd::mean_simd(&testdata.view()));
 
         let (status, message) = match simd_mean_result {
             Ok(Ok(_)) => (
@@ -650,11 +650,11 @@ impl ProductionDeploymentValidator {
         let start_time = Instant::now();
 
         // Test parallel operations
-        let test_data = Array1::from_vec((0..10000).map(|i| i as f64).collect::<Vec<_>>());
+        let testdata = Array1::from_vec((0..10000).map(|i| i as f64).collect::<Vec<_>>());
 
         // Test parallel mean calculation
         let parallel_result =
-            std::panic::catch_unwind(|| crate::parallel_stats::mean_parallel(&test_data.view()));
+            std::panic::catch_unwind(|| crate::parallel_stats::mean_parallel(&testdata.view()));
 
         let (status, message) = match parallel_result {
             Ok(Ok(_)) => {
@@ -771,9 +771,9 @@ impl ProductionDeploymentValidator {
         let start_time = Instant::now();
 
         // Test statistical operation latency
-        let test_data = Array1::from_vec((0..1000).map(|i| i as f64).collect::<Vec<_>>());
+        let testdata = Array1::from_vec((0..1000).map(|i| i as f64).collect::<Vec<_>>());
         let op_start = Instant::now();
-        let _ = crate::descriptive::mean(&test_data.view())?;
+        let _ = crate::descriptive::mean(&testdata.view())?;
         let latency_ms = op_start.elapsed().as_secs_f64() * 1000.0;
 
         let max_latency = self.config.performance_requirements.max_latency_ms;
@@ -800,16 +800,16 @@ impl ProductionDeploymentValidator {
         let start_time = Instant::now();
 
         // Test throughput with batch operations
-        let test_data = Array1::from_vec((0..10000).map(|i| i as f64).collect::<Vec<_>>());
+        let testdata = Array1::from_vec((0..10000).map(|i| i as f64).collect::<Vec<_>>());
         let batch_start = Instant::now();
-        let batch_size = 100;
+        let batchsize = 100;
 
-        for _ in 0..batch_size {
-            let _ = crate::descriptive::mean(&test_data.view())?;
+        for _ in 0..batchsize {
+            let _ = crate::descriptive::mean(&testdata.view())?;
         }
 
         let elapsed_secs = batch_start.elapsed().as_secs_f64();
-        let throughput = batch_size as f64 / elapsed_secs;
+        let throughput = batchsize as f64 / elapsed_secs;
         let min_throughput = self.config.performance_requirements.min_throughput;
 
         let status = if throughput >= min_throughput {
@@ -860,9 +860,9 @@ impl ProductionDeploymentValidator {
         let start_time = Instant::now();
 
         // Test CPU-intensive operation
-        let test_data = Array1::from_vec((0..50000).map(|i| (i as f64).sin()).collect::<Vec<_>>());
+        let testdata = Array1::from_vec((0..50000).map(|i| (i as f64).sin()).collect::<Vec<_>>());
         let cpu_start = Instant::now();
-        let _ = crate::descriptive::var(&test_data.view(), 1, None)?;
+        let _ = crate::descriptive::var(&testdata.view(), 1, None)?;
         let cpu_time_ms = cpu_start.elapsed().as_secs_f64() * 1000.0;
 
         let status = if cpu_time_ms < 50.0 {
@@ -1290,10 +1290,10 @@ pub struct ServerlessConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheHierarchy {
-    pub l1_size_kb: usize,
-    pub l2_size_kb: usize,
-    pub l3_size_mb: usize,
-    pub cache_line_size: usize,
+    pub l1size_kb: usize,
+    pub l2size_kb: usize,
+    pub l3size_mb: usize,
+    pub cache_linesize: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1511,10 +1511,10 @@ impl Default for CpuFeatures {
 impl Default for CacheHierarchy {
     fn default() -> Self {
         Self {
-            l1_size_kb: 32,
-            l2_size_kb: 256,
-            l3_size_mb: 8,
-            cache_line_size: 64,
+            l1size_kb: 32,
+            l2size_kb: 256,
+            l3size_mb: 8,
+            cache_linesize: 64,
         }
     }
 }
@@ -1788,9 +1788,7 @@ pub fn create_cloud_production_config(cloud_provider: CloudProvider) -> Producti
 }
 
 #[allow(dead_code)]
-pub fn create_container_production_config(
-    container_runtime: ContainerRuntime,
-) -> ProductionConfig {
+pub fn create_container_production_config(container_runtime: ContainerRuntime) -> ProductionConfig {
     let mut config = ProductionConfig::default();
 
     config.environment.environment_type = EnvironmentType::Container {

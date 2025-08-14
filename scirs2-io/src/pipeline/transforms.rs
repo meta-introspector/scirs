@@ -32,7 +32,7 @@ where
 {
     pub fn new(method: NormalizationMethod) -> Self {
         Self {
-            method: method,
+            method,
             _phantom: PhantomData,
         }
     }
@@ -230,10 +230,7 @@ pub enum AggregationMethod {
 
 impl AggregateTransform {
     pub fn new(method: AggregationMethod, axis: Option<Axis>) -> Self {
-        Self {
-            method: method,
-            axis,
-        }
+        Self { method, axis }
     }
 }
 
@@ -278,7 +275,7 @@ pub enum EncodingMethod {
 
 impl EncodingTransform {
     pub fn new(method: EncodingMethod) -> Self {
-        Self { method: method }
+        Self { method }
     }
 }
 
@@ -361,9 +358,7 @@ pub enum ImputationStrategy {
 
 impl ImputeTransform {
     pub fn new(strategy: ImputationStrategy) -> Self {
-        Self {
-            strategy: strategy,
-        }
+        Self { strategy }
     }
 }
 
@@ -417,10 +412,7 @@ pub enum OutlierMethod {
 
 impl OutlierTransform {
     pub fn new(method: OutlierMethod, threshold: f64) -> Self {
-        Self {
-            method: method,
-            threshold,
-        }
+        Self { method, threshold }
     }
 }
 
@@ -604,9 +596,7 @@ pub enum BinningStrategy {
 
 impl FeatureEngineeringTransform {
     pub fn new(operations: Vec<FeatureOperation>) -> Self {
-        Self {
-            operations: operations,
-        }
+        Self { operations }
     }
 }
 
@@ -714,9 +704,7 @@ pub enum TextOperation {
 
 impl TextProcessingTransform {
     pub fn new(operations: Vec<TextOperation>) -> Self {
-        Self {
-            operations: operations,
-        }
+        Self { operations }
     }
 }
 

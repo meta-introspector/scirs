@@ -434,10 +434,10 @@ where
 
     // Combine all _samples into a single vector, keeping track of the group
     let mut all_values = Vec::new();
-    let mut group_sizes = Vec::with_capacity(samples.len());
+    let mut groupsizes = Vec::with_capacity(samples.len());
 
     for (group_idx, sample) in samples.iter().enumerate() {
-        group_sizes.push(sample.len());
+        groupsizes.push(sample.len());
         for &value in sample.iter() {
             all_values.push((value, group_idx));
         }
@@ -482,7 +482,7 @@ where
     let mut h = F::zero();
 
     for (i, &rank_sum) in rank_sums.iter().enumerate() {
-        let n_i = F::from(group_sizes[i]).unwrap();
+        let n_i = F::from(groupsizes[i]).unwrap();
         h = h + (rank_sum * rank_sum) / n_i;
     }
 
@@ -578,7 +578,7 @@ where
         ));
     }
 
-    // Rank _data within each subject (row)
+    // Rank data within each subject (row)
     let mut ranks = ndarray::Array2::<F>::zeros((n, k));
 
     for i in 0..n {
@@ -586,22 +586,22 @@ where
         let row = data.row(i);
 
         // Create a vector of (value, column_index) pairs
-        let mut row_data = Vec::with_capacity(k);
+        let mut rowdata = Vec::with_capacity(k);
         for j in 0..k {
-            row_data.push((row[j], j));
+            rowdata.push((row[j], j));
         }
 
         // Sort by value
-        row_data.sort_by(|a_, b_| a_.partial_cmp(b_).unwrap_or(Ordering::Equal));
+        rowdata.sort_by(|a_, b_| a_.partial_cmp(b_).unwrap_or(Ordering::Equal));
 
         // Assign ranks, handling ties
         let mut rank_idx = 0;
         while rank_idx < k {
-            let current_value = row_data[rank_idx].0;
+            let current_value = rowdata[rank_idx].0;
             let mut tied_idx = rank_idx;
 
             // Find the end of the tie group
-            while tied_idx < k - 1 && row_data[tied_idx + 1].0 == current_value {
+            while tied_idx < k - 1 && rowdata[tied_idx + 1].0 == current_value {
                 tied_idx += 1;
             }
 
@@ -610,7 +610,7 @@ where
             let avg_rank = F::from(rank_idx + tied_idx).unwrap() / F::from(2.0).unwrap() + F::one();
 
             // Assign average rank to all tied values
-            for data_item in row_data.iter().take(tied_idx + 1).skip(rank_idx) {
+            for data_item in rowdata.iter().take(tied_idx + 1).skip(rank_idx) {
                 let col_idx = data_item.1;
                 ranks[[i, col_idx]] = avg_rank;
             }

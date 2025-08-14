@@ -6,7 +6,7 @@
 //! robust statistical computing operations across all numerical conditions.
 
 use crate::error::StatsResult;
-use crate::property_based_validation::ValidationReport;
+use crate::propertybased_validation::ValidationReport;
 use ndarray::{Array1, ArrayBase, ArrayView1, Data, Ix1};
 use num_traits::{Float, NumCast};
 use rand::Rng;
@@ -167,7 +167,7 @@ impl AdvancedNumericalStabilityTester {
         &self,
         function_name: &str,
         test_function: F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<ComprehensiveStabilityResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -182,7 +182,7 @@ impl AdvancedNumericalStabilityTester {
             results.edge_case_results = Some(self.test_edge_case_stability(
                 function_name,
                 test_function.clone(),
-                test_data,
+                testdata,
             )?);
         }
 
@@ -191,7 +191,7 @@ impl AdvancedNumericalStabilityTester {
             results.precision_results = Some(self.analyze_precision_stability(
                 function_name,
                 test_function.clone(),
-                test_data,
+                testdata,
             )?);
         }
 
@@ -200,7 +200,7 @@ impl AdvancedNumericalStabilityTester {
             results.invariant_results = Some(self.validate_mathematical_invariants(
                 function_name,
                 test_function.clone(),
-                test_data,
+                testdata,
             )?);
         }
 
@@ -209,7 +209,7 @@ impl AdvancedNumericalStabilityTester {
             results.cancellation_results = Some(self.detect_catastrophic_cancellation(
                 function_name,
                 test_function.clone(),
-                test_data,
+                testdata,
             )?);
         }
 
@@ -218,7 +218,7 @@ impl AdvancedNumericalStabilityTester {
             results.overflow_results = Some(self.monitor_overflow_underflow(
                 function_name,
                 test_function.clone(),
-                test_data,
+                testdata,
             )?);
         }
 
@@ -227,7 +227,7 @@ impl AdvancedNumericalStabilityTester {
             results.condition_results = Some(self.analyze_condition_numbers(
                 function_name,
                 test_function.clone(),
-                test_data,
+                testdata,
             )?);
         }
 
@@ -236,7 +236,7 @@ impl AdvancedNumericalStabilityTester {
             results.convergence_results = Some(self.test_convergence_stability(
                 function_name,
                 test_function.clone(),
-                test_data,
+                testdata,
             )?);
         }
 
@@ -245,7 +245,7 @@ impl AdvancedNumericalStabilityTester {
             results.monte_carlo_results = Some(self.test_monte_carlo_stability(
                 function_name,
                 test_function.clone(),
-                test_data,
+                testdata,
             )?);
         }
 
@@ -254,7 +254,7 @@ impl AdvancedNumericalStabilityTester {
             results.regression_results = Some(self.test_numerical_regression(
                 function_name,
                 test_function.clone(),
-                test_data,
+                testdata,
             )?);
         }
 
@@ -288,7 +288,7 @@ impl AdvancedNumericalStabilityTester {
         &self,
         _function_name: &str,
         test_function: F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<EdgeCaseStabilityResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -296,7 +296,7 @@ impl AdvancedNumericalStabilityTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let generator = self.edge_case_generator.read().unwrap();
-        let edge_cases = generator.generate_comprehensive_edge_cases(test_data)?;
+        let edge_cases = generator.generate_comprehensive_edge_cases(testdata)?;
 
         let mut results = EdgeCaseStabilityResult::new();
 
@@ -314,7 +314,7 @@ impl AdvancedNumericalStabilityTester {
         &self,
         _function_name: &str,
         test_function: F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<PrecisionStabilityResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -322,7 +322,7 @@ impl AdvancedNumericalStabilityTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let analyzer = self.precision_analyzer.read().unwrap();
-        analyzer.analyze_multi_precision_stability(&test_function, test_data)
+        analyzer.analyze_multi_precision_stability(&test_function, testdata)
     }
 
     /// Validate mathematical invariants
@@ -330,7 +330,7 @@ impl AdvancedNumericalStabilityTester {
         &self,
         function_name: &str,
         test_function: F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<InvariantValidationResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -338,7 +338,7 @@ impl AdvancedNumericalStabilityTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let validator = self.invariant_validator.read().unwrap();
-        validator.validate_statistical_invariants(function_name, &test_function, test_data)
+        validator.validate_statistical_invariants(function_name, &test_function, testdata)
     }
 
     /// Detect catastrophic cancellation
@@ -346,7 +346,7 @@ impl AdvancedNumericalStabilityTester {
         &self,
         _function_name: &str,
         test_function: F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<CancellationDetectionResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -354,7 +354,7 @@ impl AdvancedNumericalStabilityTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let detector = self.cancellation_detector.read().unwrap();
-        detector.detect_cancellation_patterns(&test_function, test_data)
+        detector.detect_cancellation_patterns(&test_function, testdata)
     }
 
     /// Monitor overflow and underflow
@@ -362,7 +362,7 @@ impl AdvancedNumericalStabilityTester {
         &self,
         _function_name: &str,
         test_function: F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<OverflowMonitoringResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -370,7 +370,7 @@ impl AdvancedNumericalStabilityTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let monitor = self.overflow_monitor.read().unwrap();
-        monitor.monitor_numerical_limits(&test_function, test_data)
+        monitor.monitor_numerical_limits(&test_function, testdata)
     }
 
     /// Analyze condition numbers
@@ -378,7 +378,7 @@ impl AdvancedNumericalStabilityTester {
         &self,
         _function_name: &str,
         test_function: F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<ConditionAnalysisResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -386,7 +386,7 @@ impl AdvancedNumericalStabilityTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let analyzer = self.condition_analyzer.read().unwrap();
-        analyzer.analyze_numerical_conditioning(&test_function, test_data)
+        analyzer.analyze_numerical_conditioning(&test_function, testdata)
     }
 
     /// Test convergence stability
@@ -394,7 +394,7 @@ impl AdvancedNumericalStabilityTester {
         &self,
         _function_name: &str,
         test_function: F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<ConvergenceStabilityResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -402,7 +402,7 @@ impl AdvancedNumericalStabilityTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let tester = self.convergence_tester.read().unwrap();
-        tester.test_iterative_stability(&test_function, test_data)
+        tester.test_iterative_stability(&test_function, testdata)
     }
 
     /// Test Monte Carlo stability
@@ -410,7 +410,7 @@ impl AdvancedNumericalStabilityTester {
         &self,
         _function_name: &str,
         test_function: F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<MonteCarloStabilityResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -418,7 +418,7 @@ impl AdvancedNumericalStabilityTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let tester = self.monte_carlo_tester.read().unwrap();
-        tester.test_statistical_stability(&test_function, test_data)
+        tester.test_statistical_stability(&test_function, testdata)
     }
 
     /// Test numerical regression
@@ -426,7 +426,7 @@ impl AdvancedNumericalStabilityTester {
         &self,
         function_name: &str,
         test_function: F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<RegressionTestResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -434,7 +434,7 @@ impl AdvancedNumericalStabilityTester {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let tester = self.regression_tester.read().unwrap();
-        tester.test_against_historical_results(function_name, &test_function, test_data)
+        tester.test_against_historical_results(function_name, &test_function, testdata)
     }
 
     /// Execute edge case test
@@ -696,7 +696,7 @@ impl EdgeCaseGenerator {
 
     pub fn generate_comprehensive_edge_cases<D, R>(
         &self,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<Vec<EdgeCase<R>>>
     where
         D: Data<Elem = R>,
@@ -705,33 +705,33 @@ impl EdgeCaseGenerator {
         let mut edge_cases = Vec::new();
 
         // Generate basic edge cases
-        edge_cases.extend(self.generate_basic_edge_cases(test_data)?);
+        edge_cases.extend(self.generate_basic_edge_cases(testdata)?);
 
         // Generate boundary edge cases
-        edge_cases.extend(self.generate_boundary_edge_cases(test_data)?);
+        edge_cases.extend(self.generate_boundary_edge_cases(testdata)?);
 
         // Generate scaling edge cases
-        edge_cases.extend(self.generate_scaling_edge_cases(test_data)?);
+        edge_cases.extend(self.generate_scaling_edge_cases(testdata)?);
 
         // Generate special value edge cases
-        edge_cases.extend(self.generate_special_value_edge_cases(test_data)?);
+        edge_cases.extend(self.generate_special_value_edge_cases(testdata)?);
 
         Ok(edge_cases)
     }
 
     fn generate_basic_edge_cases<D, R>(
         &self,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<Vec<EdgeCase<R>>>
     where
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut cases = Vec::new();
-        let data_size = test_data.len();
+        let datasize = testdata.len();
 
         // Empty array
-        if data_size > 0 {
+        if datasize > 0 {
             let empty_data = Array1::<R>::zeros(0);
             cases.push(EdgeCase {
                 edge_case_type: EdgeCaseType::EmptyArray,
@@ -741,28 +741,28 @@ impl EdgeCaseGenerator {
         }
 
         // Single element
-        if data_size > 1 {
-            let single_data = Array1::from_elem(1, test_data[0]);
+        if datasize > 1 {
+            let singledata = Array1::from_elem(1, testdata[0]);
             cases.push(EdgeCase {
                 edge_case_type: EdgeCaseType::SingleElement,
-                data: single_data,
+                data: singledata,
                 description: "Single element array".to_string(),
             });
         }
 
         // All zeros
-        let zero_data = Array1::zeros(data_size);
+        let zerodata = Array1::zeros(datasize);
         cases.push(EdgeCase {
             edge_case_type: EdgeCaseType::AllZeros,
-            data: zero_data,
+            data: zerodata,
             description: "All zeros array".to_string(),
         });
 
         // All ones
-        let ones_data = Array1::ones(data_size);
+        let onesdata = Array1::ones(datasize);
         cases.push(EdgeCase {
             edge_case_type: EdgeCaseType::AllOnes,
-            data: ones_data,
+            data: onesdata,
             description: "All ones array".to_string(),
         });
 
@@ -771,31 +771,31 @@ impl EdgeCaseGenerator {
 
     fn generate_boundary_edge_cases<D, R>(
         &self,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<Vec<EdgeCase<R>>>
     where
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut cases = Vec::new();
-        let data_size = test_data.len();
+        let datasize = testdata.len();
 
         // Very small values
-        let small_data = Array1::from_elem(
-            data_size,
+        let smalldata = Array1::from_elem(
+            datasize,
             R::from(1e-100).unwrap_or(R::min_positive_value()),
         );
         cases.push(EdgeCase {
             edge_case_type: EdgeCaseType::VerySmallValues,
-            data: small_data,
+            data: smalldata,
             description: "Very small positive values".to_string(),
         });
 
         // Very large values
-        let large_data = Array1::from_elem(data_size, R::from(1e100).unwrap_or(R::max_value()));
+        let largedata = Array1::from_elem(datasize, R::from(1e100).unwrap_or(R::max_value()));
         cases.push(EdgeCase {
             edge_case_type: EdgeCaseType::VeryLargeValues,
-            data: large_data,
+            data: largedata,
             description: "Very large values".to_string(),
         });
 
@@ -804,7 +804,7 @@ impl EdgeCaseGenerator {
 
     fn generate_scaling_edge_cases<D, R>(
         &self,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<Vec<EdgeCase<R>>>
     where
         D: Data<Elem = R>,
@@ -812,15 +812,15 @@ impl EdgeCaseGenerator {
     {
         let mut cases = Vec::new();
 
-        // Scaled versions of original _data
+        // Scaled versions of original data
         let scales = vec![1e-10, 1e-5, 1e5, 1e10];
 
         for scale in scales {
             if let Some(scale_val) = R::from(scale) {
-                let scaled_data = test_data.mapv(|x| x * scale_val);
+                let scaleddata = testdata.mapv(|x| x * scale_val);
                 cases.push(EdgeCase {
                     edge_case_type: EdgeCaseType::ScaledData,
-                    data: scaled_data,
+                    data: scaleddata,
                     description: format!("Data scaled by {}", scale),
                 });
             }
@@ -831,46 +831,46 @@ impl EdgeCaseGenerator {
 
     fn generate_special_value_edge_cases<D, R>(
         &self,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<Vec<EdgeCase<R>>>
     where
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut cases = Vec::new();
-        let data_size = test_data.len();
+        let datasize = testdata.len();
 
         // Array with NaN values
-        let mut nan_data = test_data.to_owned();
-        if data_size > 0 {
-            nan_data[0] = R::nan();
+        let mut nandata = testdata.to_owned();
+        if datasize > 0 {
+            nandata[0] = R::nan();
             cases.push(EdgeCase {
                 edge_case_type: EdgeCaseType::ContainsNaN,
-                data: nan_data,
+                data: nandata,
                 description: "Array containing NaN values".to_string(),
             });
         }
 
         // Array with infinite values
-        let mut inf_data = test_data.to_owned();
-        if data_size > 0 {
-            inf_data[0] = R::infinity();
+        let mut infdata = testdata.to_owned();
+        if datasize > 0 {
+            infdata[0] = R::infinity();
             cases.push(EdgeCase {
                 edge_case_type: EdgeCaseType::ContainsInfinity,
-                data: inf_data,
+                data: infdata,
                 description: "Array containing infinite values".to_string(),
             });
         }
 
         // Array with mixed special values
-        if data_size >= 3 {
-            let mut mixed_data = test_data.to_owned();
-            mixed_data[0] = R::nan();
-            mixed_data[1] = R::infinity();
-            mixed_data[2] = R::neg_infinity();
+        if datasize >= 3 {
+            let mut mixeddata = testdata.to_owned();
+            mixeddata[0] = R::nan();
+            mixeddata[1] = R::infinity();
+            mixeddata[2] = R::neg_infinity();
             cases.push(EdgeCase {
                 edge_case_type: EdgeCaseType::MixedSpecialValues,
-                data: mixed_data,
+                data: mixeddata,
                 description: "Array with mixed special values".to_string(),
             });
         }
@@ -894,7 +894,7 @@ impl PrecisionAnalyzer {
     pub fn analyze_multi_precision_stability<F, D, R>(
         &self,
         test_function: &F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<PrecisionStabilityResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -904,7 +904,7 @@ impl PrecisionAnalyzer {
         let mut result = PrecisionStabilityResult::new();
 
         // Test with current precision
-        let current_result = test_function(&test_data.view());
+        let current_result = test_function(&testdata.view());
         result.add_precision_test(format!("{:?}", std::any::type_name::<R>()), current_result);
 
         // Additional precision analysis would go here
@@ -930,7 +930,7 @@ impl InvariantValidator {
         &self,
         function_name: &str,
         test_function: &F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<InvariantValidationResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -940,10 +940,10 @@ impl InvariantValidator {
         let mut result = InvariantValidationResult::new();
 
         // Validate basic mathematical properties
-        self.validate_basic_properties(function_name, test_function, test_data, &mut result)?;
+        self.validate_basic_properties(function_name, test_function, testdata, &mut result)?;
 
         // Validate statistical properties
-        self.validate_statistical_properties(function_name, test_function, test_data, &mut result)?;
+        self.validate_statistical_properties(function_name, test_function, testdata, &mut result)?;
 
         Ok(result)
     }
@@ -952,7 +952,7 @@ impl InvariantValidator {
         &self,
         _function_name: &str,
         test_function: &F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
         result: &mut InvariantValidationResult,
     ) -> StatsResult<()>
     where
@@ -961,8 +961,8 @@ impl InvariantValidator {
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         // Test determinism
-        let result1 = test_function(&test_data.view());
-        let result2 = test_function(&test_data.view());
+        let result1 = test_function(&testdata.view());
+        let result2 = test_function(&testdata.view());
 
         match (result1, result2) {
             (Ok(v1), Ok(v2)) => {
@@ -995,7 +995,7 @@ impl InvariantValidator {
         &self,
         _function_name: &str,
         _test_function: &F,
-        _data: &ArrayBase<D, Ix1>,
+        data: &ArrayBase<D, Ix1>,
         _result: &mut InvariantValidationResult,
     ) -> StatsResult<()>
     where
@@ -1024,7 +1024,7 @@ impl CancellationDetector {
     pub fn detect_cancellation_patterns<F, D, R>(
         &self,
         test_function: &F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<CancellationDetectionResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -1033,8 +1033,8 @@ impl CancellationDetector {
     {
         let mut result = CancellationDetectionResult::new();
 
-        // Test with _data that might cause cancellation
-        let test_cases = self.generate_cancellation_test_cases(test_data)?;
+        // Test with data that might cause cancellation
+        let test_cases = self.generate_cancellation_test_cases(testdata)?;
 
         for test_case in test_cases {
             let computation_result = test_function(&test_case.view());
@@ -1056,7 +1056,7 @@ impl CancellationDetector {
 
     fn generate_cancellation_test_cases<D, R>(
         &self,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<Vec<Array1<R>>>
     where
         D: Data<Elem = R>,
@@ -1065,7 +1065,7 @@ impl CancellationDetector {
         let mut cases = Vec::new();
 
         // Generate cases with values that might cause cancellation
-        if test_data.len() >= 2 {
+        if testdata.len() >= 2 {
             // Case 1: Very similar large values
             let large_val = R::from(1e10).unwrap_or(R::max_value());
             let epsilon = R::from(1e-10).unwrap_or(R::min_positive_value());
@@ -1115,7 +1115,7 @@ impl OverflowMonitor {
     pub fn monitor_numerical_limits<F, D, R>(
         &self,
         test_function: &F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<OverflowMonitoringResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -1125,7 +1125,7 @@ impl OverflowMonitor {
         let mut result = OverflowMonitoringResult::new();
 
         // Test with extreme values
-        let extreme_cases = self.generate_extreme_value_cases(test_data)?;
+        let extreme_cases = self.generate_extreme_value_cases(testdata)?;
 
         for test_case in extreme_cases {
             let computation_result = test_function(&test_case.view());
@@ -1163,29 +1163,29 @@ impl OverflowMonitor {
 
     fn generate_extreme_value_cases<D, R>(
         &self,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<Vec<Array1<R>>>
     where
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
         let mut cases = Vec::new();
-        let data_size = test_data.len();
+        let datasize = testdata.len();
 
         // Very large values
-        let large_data = Array1::from_elem(data_size, R::max_value());
-        cases.push(large_data);
+        let largedata = Array1::from_elem(datasize, R::max_value());
+        cases.push(largedata);
 
         // Very small values
-        let small_data = Array1::from_elem(data_size, R::min_positive_value());
-        cases.push(small_data);
+        let smalldata = Array1::from_elem(datasize, R::min_positive_value());
+        cases.push(smalldata);
 
         // Mixed extreme values
-        if data_size >= 2 {
-            let mut mixed_data = Array1::zeros(data_size);
-            mixed_data[0] = R::max_value();
-            mixed_data[1] = R::min_positive_value();
-            cases.push(mixed_data);
+        if datasize >= 2 {
+            let mut mixeddata = Array1::zeros(datasize);
+            mixeddata[0] = R::max_value();
+            mixeddata[1] = R::min_positive_value();
+            cases.push(mixeddata);
         }
 
         Ok(cases)
@@ -1207,7 +1207,7 @@ impl ConditionAnalyzer {
     pub fn analyze_numerical_conditioning<F, D, R>(
         &self,
         test_function: &F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<ConditionAnalysisResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -1217,16 +1217,16 @@ impl ConditionAnalyzer {
         let mut result = ConditionAnalysisResult::new();
 
         // Analyze condition numbers for different input perturbations
-        let base_result = test_function(&test_data.view());
+        let base_result = test_function(&testdata.view());
 
         if let Ok(base_value) = base_result {
             let perturbation_factor = R::from(1e-8).unwrap_or(R::min_positive_value());
 
-            for i in 0..test_data.len() {
-                let mut perturbed_data = test_data.to_owned();
-                perturbed_data[i] = perturbed_data[i] + perturbation_factor;
+            for i in 0..testdata.len() {
+                let mut perturbeddata = testdata.to_owned();
+                perturbeddata[i] = perturbeddata[i] + perturbation_factor;
 
-                let perturbed_result = test_function(&perturbed_data.view());
+                let perturbed_result = test_function(&perturbeddata.view());
                 if let Ok(perturbed_value) = perturbed_result {
                     let condition_number = self.estimate_condition_number(
                         base_value,
@@ -1291,7 +1291,7 @@ impl ConvergenceTester {
     pub fn test_iterative_stability<F, D, R>(
         &self,
         test_function: &F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<ConvergenceStabilityResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -1305,7 +1305,7 @@ impl ConvergenceTester {
 
         for tolerance in tolerances {
             let convergence_result =
-                self.test_convergence_at_tolerance(test_function, test_data, tolerance)?;
+                self.test_convergence_at_tolerance(test_function, testdata, tolerance)?;
             result.add_convergence_test(tolerance, convergence_result);
         }
 
@@ -1315,7 +1315,7 @@ impl ConvergenceTester {
     fn test_convergence_at_tolerance<F, D, R>(
         &self,
         test_function: &F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
         tolerance: f64,
     ) -> StatsResult<ConvergenceTestResult>
     where
@@ -1327,7 +1327,7 @@ impl ConvergenceTester {
         let mut iterations = 0;
 
         // Simplified convergence test - in practice, this would be more sophisticated
-        let result = test_function(&test_data.view());
+        let result = test_function(&testdata.view());
         iterations += 1;
 
         let convergence_time = start_time.elapsed();
@@ -1358,7 +1358,7 @@ impl MonteCarloStabilityTester {
     pub fn test_statistical_stability<F, D, R>(
         &self,
         test_function: &F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<MonteCarloStabilityResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -1370,8 +1370,8 @@ impl MonteCarloStabilityTester {
 
         // Run Monte Carlo simulations
         for _ in 0..self.config.monte_carlo_samples {
-            let perturbed_data = self.add_small_perturbation(test_data)?;
-            let computation_result = test_function(&perturbed_data.view());
+            let perturbeddata = self.add_small_perturbation(testdata)?;
+            let computation_result = test_function(&perturbeddata.view());
 
             if let Ok(value) = computation_result {
                 results.push(NumCast::from(value).unwrap_or(0.0f64));
@@ -1417,13 +1417,13 @@ impl MonteCarloStabilityTester {
         let mut rng = rand::rng();
         let perturbation_magnitude = R::from(1e-12).unwrap_or(R::min_positive_value());
 
-        let perturbed_data = testdata.mapv(|x| {
+        let perturbeddata = testdata.mapv(|x| {
             let noise: f64 = (rng.random::<f64>() - 0.5) * 2.0; // Random value in [-1, 1]
             let noise_r = R::from(noise).unwrap_or(R::zero());
             x + perturbation_magnitude * noise_r
         });
 
-        Ok(perturbed_data)
+        Ok(perturbeddata)
     }
 }
 
@@ -1445,7 +1445,7 @@ impl RegressionTester {
         &self,
         function_name: &str,
         test_function: &F,
-        test_data: &ArrayBase<D, Ix1>,
+        testdata: &ArrayBase<D, Ix1>,
     ) -> StatsResult<RegressionTestResult>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -1455,7 +1455,7 @@ impl RegressionTester {
         let mut result = RegressionTestResult::new(function_name.to_string());
 
         // Execute current test
-        let current_result = test_function(&test_data.view());
+        let current_result = test_function(&testdata.view());
 
         if let Ok(current_value) = current_result {
             let current_f64: f64 = NumCast::from(current_value).unwrap_or(0.0);
@@ -1480,7 +1480,7 @@ impl RegressionTester {
                 result.regression_detected =
                     relative_deviation > self.config.stability_tolerance.relative_tolerance;
             } else {
-                result.is_baseline = true;
+                result.isbaseline = true;
             }
 
             // Store current result
@@ -1996,7 +1996,7 @@ pub struct RegressionTestResult {
     pub deviation: f64,
     pub relative_deviation: f64,
     pub regression_detected: bool,
-    pub is_baseline: bool,
+    pub isbaseline: bool,
     pub computation_failed: bool,
 }
 
@@ -2009,7 +2009,7 @@ impl RegressionTestResult {
             deviation: 0.0,
             relative_deviation: 0.0,
             regression_detected: false,
-            is_baseline: false,
+            isbaseline: false,
             computation_failed: false,
         }
     }
@@ -2180,13 +2180,13 @@ where
 
     for (min_val, max_val) in input_ranges {
         // Generate test data for this range
-        let test_data = generate_stability_test_data(min_val, max_val, 1000);
+        let testdata = generate_stability_testdata(min_val, max_val, 1000);
 
         // Run comprehensive stability testing
         let range_result = tester.comprehensive_stability_testing(
             function_name,
             test_function.clone(),
-            &test_data,
+            &testdata,
         )?;
 
         // Combine results (simplified - in practice would merge more intelligently)
@@ -2203,7 +2203,7 @@ where
 
 /// Generate test data for numerical stability testing
 #[allow(dead_code)]
-fn generate_stability_test_data(min_val: f64, maxval: f64, size: usize) -> Array1<f64> {
+fn generate_stability_testdata(min_val: f64, maxval: f64, size: usize) -> Array1<f64> {
     use rand::{rngs::StdRng, Rng, SeedableRng};
 
     let mut rng = StdRng::seed_from_u64(42);
@@ -2263,7 +2263,7 @@ pub fn test_variance_stability() -> StatsResult<ComprehensiveStabilityResult> {
 /// Test numerical stability of correlation function specifically
 #[allow(dead_code)]
 pub fn test_correlation_stability() -> StatsResult<ValidationReport> {
-    use crate::property_based_validation::{
+    use crate::propertybased_validation::{
         CorrelationBounds, PropertyBasedValidator, PropertyTestConfig,
     };
 
@@ -2349,10 +2349,10 @@ mod tests {
     fn test_edge_case_generation() {
         let config = AdvancedNumericalStabilityConfig::default();
         let generator = EdgeCaseGenerator::new(&config);
-        let test_data = array![1.0, 2.0, 3.0, 4.0, 5.0];
+        let testdata = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         let edge_cases = generator
-            .generate_comprehensive_edge_cases(&test_data)
+            .generate_comprehensive_edge_cases(&testdata)
             .unwrap();
         assert!(edge_cases.len() > 0);
     }

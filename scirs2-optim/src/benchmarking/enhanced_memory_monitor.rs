@@ -343,7 +343,7 @@ pub struct LruCache<K, V> {
 impl<K: Ord + Clone, V> LruCache<K, V> {
     pub fn new(capacity: usize) -> Self {
         Self {
-            capacity: capacity,
+            capacity,
             data: BTreeMap::new(),
         }
     }
@@ -1201,7 +1201,7 @@ pub struct ImpactEstimate {
 impl SystemProfiler {
     fn new(config: SystemProfilerConfig) -> Result<Self> {
         Ok(Self {
-            config: config,
+            config,
             available_tools: Vec::new(),
             active_sessions: HashMap::new(),
         })
@@ -1255,7 +1255,7 @@ impl SystemProfiler {
 impl MachineLearningDetector {
     fn new(config: MLConfig) -> Result<Self> {
         Ok(Self {
-            config: config,
+            config,
             training_data: VecDeque::new(),
             models: HashMap::new(),
             feature_extractors: Vec::new(),
@@ -1312,7 +1312,7 @@ impl RateLimiter {
         Self {
             alert_counts: VecDeque::new(),
             last_alert_times: HashMap::new(),
-            config: config,
+            config,
         }
     }
 }
@@ -1320,7 +1320,7 @@ impl RateLimiter {
 impl PerformanceMetricsCollector {
     fn new(config: PerformanceConfig) -> Result<Self> {
         Ok(Self {
-            config: config,
+            config,
             metrics: PerformanceMetrics::default(),
             metric_history: VecDeque::new(),
             start_time: Instant::now(),
@@ -1341,7 +1341,7 @@ impl PerformanceMetricsCollector {
 impl StatisticalAnalyzer {
     fn new(config: StatisticalConfig) -> Result<Self> {
         Ok(Self {
-            config: config,
+            config,
             historical_stats: VecDeque::new(),
             current_stats: StatisticalSnapshot::default(),
         })

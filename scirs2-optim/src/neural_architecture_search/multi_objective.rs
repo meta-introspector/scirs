@@ -299,7 +299,7 @@ impl<T: Float + Default + Clone> MOEADOptimizer<T> {
         let neighborhood_size = 20; // Default neighborhood size
 
         Ok(Self {
-            config: config,
+            config,
             weight_vectors: Vec::new(),
             population: Vec::new(),
             neighbors: Vec::new(),
@@ -688,7 +688,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
             pareto_front: ParetoFront::new(),
             generation: 0,
             statistics: MultiObjectiveStatistics::default(),
-            population_size: population_size,
+            population_size,
             crossover_prob,
             mutation_prob,
             rng: Random::seed(42),

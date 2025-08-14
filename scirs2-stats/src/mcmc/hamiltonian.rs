@@ -36,7 +36,7 @@ pub struct HamiltonianMonteCarlo<T: DifferentiableTarget> {
     /// Current log density
     pub current_log_density: f64,
     /// Step size for leapfrog integration
-    pub step_size: f64,
+    pub stepsize: f64,
     /// Number of leapfrog steps
     pub n_steps: usize,
     /// Mass matrix (identity for standard HMC)
@@ -51,9 +51,9 @@ pub struct HamiltonianMonteCarlo<T: DifferentiableTarget> {
 
 impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
     /// Create a new HMC sampler
-    pub fn new(target: T, initial: Array1<f64>, step_size: f64, nsteps: usize) -> Result<Self> {
+    pub fn new(target: T, initial: Array1<f64>, stepsize: f64, nsteps: usize) -> Result<Self> {
         checkarray_finite(&initial, "initial")?;
-        check_positive(step_size, "step_size")?;
+        check_positive(stepsize, "stepsize")?;
         check_positive(nsteps, "nsteps")?;
 
         if initial.len() != target.dim() {
@@ -73,7 +73,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
             target,
             position: initial,
             current_log_density,
-            step_size,
+            stepsize,
             n_steps: nsteps,
             mass_matrix,
             mass_inv,
@@ -86,8 +86,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
     pub fn with_mass_matrix(mut self, massmatrix: Array2<f64>) -> Result<Self> {
         checkarray_finite(&massmatrix, "massmatrix")?;
 
-        if massmatrix.nrows() != self.position.len() || massmatrix.ncols() != self.position.len()
-        {
+        if massmatrix.nrows() != self.position.len() || massmatrix.ncols() != self.position.len() {
             return Err(StatsError::DimensionMismatch(format!(
                 "massmatrix shape ({}, {}) must be ({}, {})",
                 massmatrix.nrows(),
@@ -183,24 +182,24 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
     ) -> Result<(Array1<f64>, Array1<f64>)> {
         // Initial half step for momentum
         let gradient = self.target.gradient(&position);
-        momentum = momentum + 0.5 * self.step_size * gradient;
+        momentum = momentum + 0.5 * self.stepsize * gradient;
 
         // Alternating full steps
         for _ in 0..self.n_steps {
             // Full step for position
             let momentum_update = self.mass_inv.dot(&momentum);
-            position = position + self.step_size * momentum_update;
+            position = position + self.stepsize * momentum_update;
 
             // Full step for momentum (except last iteration)
             if self.n_steps > 1 {
                 let gradient = self.target.gradient(&position);
-                momentum = momentum + self.step_size * gradient;
+                momentum = momentum + self.stepsize * gradient;
             }
         }
 
         // Final half step for momentum
         let gradient = self.target.gradient(&position);
-        momentum = momentum + 0.5 * self.step_size * gradient;
+        momentum = momentum + 0.5 * self.stepsize * gradient;
 
         // Negate momentum for reversibility
         momentum = -momentum;
@@ -271,7 +270,7 @@ pub struct NoUTurnSampler<T: DifferentiableTarget> {
     /// Target acceptance probability
     pub target_accept_prob: f64,
     /// Step size adaptation parameters
-    pub step_size_adaptation: DualAveragingAdaptation,
+    pub stepsize_adaptation: DualAveragingAdaptation,
 }
 
 /// Dual averaging adaptation for step size
@@ -331,13 +330,13 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
     /// Create new NUTS sampler
     pub fn new(target: T, initial: Array1<f64>, initial_stepsize: f64) -> Result<Self> {
         let hmc = HamiltonianMonteCarlo::new(target, initial, initial_stepsize, 1)?;
-        let step_size_adaptation = DualAveragingAdaptation::new(0.8, initial_stepsize.ln());
+        let stepsize_adaptation = DualAveragingAdaptation::new(0.8, initial_stepsize.ln());
 
         Ok(Self {
             hmc,
             max_tree_depth: 10,
             target_accept_prob: 0.8,
-            step_size_adaptation,
+            stepsize_adaptation,
         })
     }
 
@@ -351,8 +350,8 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
             self.build_tree(self.hmc.position.clone(), momentum, 0.0, 1, rng)?;
 
         // Update step size during adaptation
-        let new_step_size = self.step_size_adaptation.update(alpha);
-        self.hmc.step_size = new_step_size;
+        let new_stepsize = self.stepsize_adaptation.update(alpha);
+        self.hmc.stepsize = new_stepsize;
 
         // Update position if different
         if !new_position

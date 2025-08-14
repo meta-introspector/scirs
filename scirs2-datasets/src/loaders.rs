@@ -25,7 +25,7 @@ pub fn load_csv_legacy<P: AsRef<Path>>(
 /// Load a dataset from a JSON file
 #[allow(dead_code)]
 pub fn load_json<P: AsRef<Path>>(path: P) -> Result<Dataset> {
-    let file = File::open(_path).map_err(DatasetsError::IoError)?;
+    let file = File::open(path).map_err(DatasetsError::IoError)?;
     let reader = BufReader::new(file);
 
     let dataset: Dataset = serde_json::from_reader(reader)
@@ -48,7 +48,7 @@ pub fn save_json<P: AsRef<Path>>(dataset: &Dataset, path: P) -> Result<()> {
 /// Load raw data from a file
 #[allow(dead_code)]
 pub fn load_raw<P: AsRef<Path>>(path: P) -> Result<Vec<u8>> {
-    let mut file = File::open(_path).map_err(DatasetsError::IoError)?;
+    let mut file = File::open(path).map_err(DatasetsError::IoError)?;
     let mut buffer = Vec::new();
 
     file.read_to_end(&mut buffer)
@@ -190,7 +190,7 @@ pub struct DatasetChunkIterator {
     reader: csv::Reader<File>,
     chunk_size: usize,
     target_column: Option<usize>,
-    feature_names: Option<Vec<String>>,
+    featurenames: Option<Vec<String>>,
     n_features: usize,
     buffer: Vec<Vec<f64>>,
     finished: bool,
@@ -199,7 +199,7 @@ pub struct DatasetChunkIterator {
 impl DatasetChunkIterator {
     /// Create a new chunk iterator
     pub fn new<P: AsRef<Path>>(path: P, csv_config: CsvConfig, chunksize: usize) -> Result<Self> {
-        let file = File::open(_path).map_err(DatasetsError::IoError)?;
+        let file = File::open(path).map_err(DatasetsError::IoError)?;
         let mut reader = ReaderBuilder::new()
             .has_headers(csv_config.has_header)
             .delimiter(csv_config.delimiter)
@@ -209,7 +209,7 @@ impl DatasetChunkIterator {
             .from_reader(file);
 
         // Read header if present
-        let feature_names = if csv_config.has_header {
+        let featurenames = if csv_config.has_header {
             let headers = reader.headers().map_err(|e| {
                 DatasetsError::InvalidFormat(format!("Failed to read CSV headers: {e}"))
             })?;
@@ -224,7 +224,7 @@ impl DatasetChunkIterator {
         };
 
         // Determine number of features
-        let n_features = if let Some(ref names) = feature_names {
+        let n_features = if let Some(ref names) = featurenames {
             if csv_config.target_column.is_some() {
                 names.len() - 1
             } else {
@@ -239,7 +239,7 @@ impl DatasetChunkIterator {
             reader,
             chunk_size,
             target_column: csv_config.target_column,
-            feature_names,
+            featurenames,
             n_features,
             buffer: Vec::new(),
             finished: false,
@@ -247,8 +247,8 @@ impl DatasetChunkIterator {
     }
 
     /// Get feature names
-    pub fn feature_names(&self) -> Option<&Vec<String>> {
-        self.feature_names.as_ref()
+    pub fn featurenames(&self) -> Option<&Vec<String>> {
+        self.featurenames.as_ref()
     }
 
     /// Get number of features
@@ -355,8 +355,8 @@ impl Iterator for DatasetChunkIterator {
         let mut dataset = Dataset::new(data, target);
 
         // Set feature names (excluding target column)
-        if let Some(ref names) = self.feature_names {
-            let feature_names = if let Some(target_idx) = self.target_column {
+        if let Some(ref names) = self.featurenames {
+            let featurenames = if let Some(target_idx) = self.target_column {
                 names
                     .iter()
                     .enumerate()
@@ -371,7 +371,7 @@ impl Iterator for DatasetChunkIterator {
             } else {
                 names.clone()
             };
-            dataset = dataset.with_feature_names(feature_names);
+            dataset = dataset.with_featurenames(featurenames);
         }
 
         Some(Ok(dataset))
@@ -402,7 +402,7 @@ pub fn load_csv_parallel<P: AsRef<Path>>(
         .delimiter(csv_config.delimiter)
         .from_reader(file);
 
-    let feature_names = if csv_config.has_header {
+    let featurenames = if csv_config.has_header {
         let headers = reader.headers().map_err(|e| {
             DatasetsError::InvalidFormat(format!("Failed to read CSV headers: {e}"))
         })?;
@@ -485,8 +485,8 @@ pub fn load_csv_parallel<P: AsRef<Path>>(
     let mut dataset = Dataset::new(final_data, final_target);
 
     // Set feature names
-    if let Some(names) = feature_names {
-        let feature_names = if let Some(target_idx) = csv_config.target_column {
+    if let Some(names) = featurenames {
+        let featurenames = if let Some(target_idx) = csv_config.target_column {
             names
                 .iter()
                 .enumerate()
@@ -501,7 +501,7 @@ pub fn load_csv_parallel<P: AsRef<Path>>(
         } else {
             names
         };
-        dataset = dataset.with_feature_names(feature_names);
+        dataset = dataset.with_featurenames(featurenames);
     }
 
     Ok(dataset)
@@ -668,7 +668,7 @@ fn load_csv_sequential<P: AsRef<Path>>(
 /// Enhanced CSV loader with improved configuration
 #[allow(dead_code)]
 pub fn load_csv<P: AsRef<Path>>(path: P, config: CsvConfig) -> Result<Dataset> {
-    let file = File::open(_path).map_err(DatasetsError::IoError)?;
+    let file = File::open(path).map_err(DatasetsError::IoError)?;
     let mut reader = ReaderBuilder::new()
         .has_headers(config.has_header)
         .delimiter(config.delimiter)
@@ -717,7 +717,7 @@ pub fn load_csv<P: AsRef<Path>>(path: P, config: CsvConfig) -> Result<Dataset> {
     let n_rows = records.len();
     let n_cols = records[0].len();
 
-    let (data, target, feature_names_target_name) = if let Some(idx) = config.target_column {
+    let (data, target, featurenames_targetname) = if let Some(idx) = config.target_column {
         if idx >= n_cols {
             return Err(DatasetsError::InvalidFormat(format!(
                 "Target column index {idx} is out of bounds (max: {})",
@@ -740,7 +740,7 @@ pub fn load_csv<P: AsRef<Path>>(path: P, config: CsvConfig) -> Result<Dataset> {
             }
         }
 
-        let feature_names = header.as_ref().map(|h| {
+        let featurenames = header.as_ref().map(|h| {
             let mut names = Vec::new();
             for (j, name) in h.iter().enumerate() {
                 if j != idx {
@@ -753,7 +753,7 @@ pub fn load_csv<P: AsRef<Path>>(path: P, config: CsvConfig) -> Result<Dataset> {
         (
             data_array,
             Some(target_array),
-            feature_names,
+            featurenames,
             header.as_ref().map(|h| h[idx].clone()),
         )
     } else {
@@ -770,8 +770,8 @@ pub fn load_csv<P: AsRef<Path>>(path: P, config: CsvConfig) -> Result<Dataset> {
 
     let mut dataset = Dataset::new(data, target);
 
-    if let Some(names) = feature_names {
-        dataset = dataset.with_feature_names(names);
+    if let Some(names) = featurenames {
+        dataset = dataset.with_featurenames(names);
     }
 
     Ok(dataset)

@@ -144,7 +144,7 @@ impl<F: Float + FromPrimitive + Debug> LagrangeTensorInterpolator<F> {
     ///
     /// A new `LagrangeTensorInterpolator` object
     pub fn new(coords: Vec<Array1<F>>) -> Self {
-        Self { _coords }
+        Self { coords }
     }
 
     /// Evaluate the interpolator at multiple points

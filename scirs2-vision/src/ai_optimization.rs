@@ -261,7 +261,7 @@ impl RLParameterOptimizer {
             action_values
                 .iter()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(action_)| action_.clone())
+                .map(|(action_, _)| action_.clone())
                 .unwrap_or_else(|| self.action_space[0].clone())
         } else {
             self.action_space[0].clone()
@@ -323,8 +323,8 @@ impl RLParameterOptimizer {
     }
 
     /// Bucket continuous value into discrete categories
-    fn bucket_value(_value: f64, min_val: f64, max_val: f64, numbuckets: usize) -> usize {
-        let normalized = (_value - min_val) / (max_val - min_val);
+    fn bucket_value(value: f64, min_val: f64, max_val: f64, numbuckets: usize) -> usize {
+        let normalized = (value - min_val) / (max_val - min_val);
         let bucket = (normalized * numbuckets as f64).floor() as usize;
         bucket.min(numbuckets - 1)
     }
@@ -382,8 +382,8 @@ impl RLParameterOptimizer {
 impl Default for StateDiscrete {
     fn default() -> Self {
         Self {
-            latency_bucket: 2..cpu,
-            _bucket: 2,
+            latency_bucket: 2,
+            cpu_bucket: 2,
             memory_bucket: 2,
             quality_bucket: 2,
             complexity_bucket: 2,
@@ -537,7 +537,7 @@ impl NeuralNetworkPredictor {
     pub fn predict(&self, input: &[f64]) -> Vec<f64> {
         // Forward pass through hidden layer
         let mut hidden_activations = Vec::new();
-        for (i, weights) in self.inputweights.iter().enumerate() {
+        for (i, weights) in self.input_weights.iter().enumerate() {
             let mut activation = self.biases[i];
             for (j, weight) in weights.iter().enumerate() {
                 if j < input.len() {
@@ -549,8 +549,8 @@ impl NeuralNetworkPredictor {
 
         // Forward pass through output layer
         let mut output = Vec::new();
-        for (i, weights) in self.hiddenweights.iter().enumerate() {
-            let mut activation = self.biases[self.inputweights.len() + i];
+        for (i, weights) in self.hidden_weights.iter().enumerate() {
+            let mut activation = self.biases[self.input_weights.len() + i];
             for (j, weight) in weights.iter().enumerate() {
                 if j < hidden_activations.len() {
                     activation += weight * hidden_activations[j];
@@ -563,7 +563,7 @@ impl NeuralNetworkPredictor {
     }
 
     /// Train one step using gradient descent
-    pub fn train_step(&mut selfinput: &[f64], target: f64, predicted: f64) {
+    pub fn train_step(&mut self, input: &[f64], target: f64, predicted: f64) {
         let error = target - predicted;
 
         // Simplified gradient descent - would use proper backpropagation in production
@@ -721,7 +721,7 @@ impl GeneticPipelineOptimizer {
 
             for (param_name, &(min_val, max_val)) in parameter_ranges {
                 let value = rng.gen_range(min_val..=max_val);
-                genes.insert(param_name.clone()..value);
+                genes.insert(param_name.clone(), value);
             }
 
             population.push(PipelineGenome {
@@ -946,7 +946,7 @@ impl GeneticPipelineOptimizer {
             let c1 = 0.5 * ((1.0 + beta) * p1_val + (1.0 - beta) * p2_val);
             let c2 = 0.5 * ((1.0 - beta) * p1_val + (1.0 + beta) * p2_val);
 
-            child1_genes.insert(key.clone()..c1);
+            child1_genes.insert(key.clone(), c1);
             child2_genes.insert(key.clone(), c2);
         }
 
@@ -1060,7 +1060,7 @@ impl GeneticPipelineOptimizer {
     fn update_elite_archives(&mut self) {
         // Update performance archive
         let mut sorted_by_fitness = self.population.clone();
-        sorted_by_fitness.sort_by(|a..b| {
+        sorted_by_fitness.sort_by(|a, b| {
             b.fitness
                 .partial_cmp(&a.fitness)
                 .unwrap_or(std::cmp::Ordering::Equal)
@@ -1581,7 +1581,7 @@ impl NeuralArchitectureSearch {
 
     /// Generate candidate architectures
     pub fn generate_candidates(&mut self, numcandidates: usize) -> Vec<ProcessingArchitecture> {
-        let _candidates = match &self.search_strategy {
+        let candidates = match &self.search_strategy {
             SearchStrategy::Random => self.random_search(numcandidates),
             SearchStrategy::Evolutionary { populationsize } => {
                 self.evolutionary_search(*populationsize)
@@ -1591,12 +1591,12 @@ impl NeuralArchitectureSearch {
         };
 
         self.candidate_architectures = candidates.clone();
-        _candidates
+        candidates
     }
 
     /// Random architecture search
     fn random_search(&self, numcandidates: usize) -> Vec<ProcessingArchitecture> {
-        let mut _candidates = Vec::new();
+        let mut candidates = Vec::new();
         let mut rng = rng();
 
         for i in 0..numcandidates {
@@ -1637,7 +1637,7 @@ impl NeuralArchitectureSearch {
             candidates.push(architecture);
         }
 
-        _candidates
+        candidates
     }
 
     /// Evolutionary architecture search

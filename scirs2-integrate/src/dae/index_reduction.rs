@@ -116,7 +116,7 @@ impl<
     /// Create a new DAE structure for a semi-explicit system
     pub fn new_semi_explicit(n_differential: usize, nalgebraic: usize) -> Self {
         DAEStructure {
-            n_differential: n_differential,
+            n_differential,
             n_algebraic: nalgebraic,
             n_diff_eqs: n_differential,
             n_alg_eqs: nalgebraic,
@@ -273,7 +273,7 @@ impl<
     /// Create a new Pantelides reducer for index reduction
     pub fn new(structure: DAEStructure<F>) -> Self {
         PantelidesReducer {
-            structure: structure,
+            structure,
             max_diff_steps: 5, // Default limit on differentiation
             tol: F::from_f64(1e-10).unwrap(),
         }
@@ -709,7 +709,7 @@ impl<
     /// Create a new dummy derivative reducer
     pub fn new(structure: DAEStructure<F>) -> Self {
         DummyDerivativeReducer {
-            structure: structure,
+            structure,
             dummy_variables: Vec::new(),
             dummy_equations: Vec::new(),
         }
@@ -1106,7 +1106,7 @@ impl<
     /// Create a new projection method for constraint satisfaction
     pub fn new(structure: DAEStructure<F>) -> Self {
         ProjectionMethod {
-            structure: structure,
+            structure,
             project_after_step: true,
             consistent_initialization: true,
             constraint_tol: F::from_f64(1e-8).unwrap(),

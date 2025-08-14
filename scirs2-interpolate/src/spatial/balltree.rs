@@ -17,7 +17,7 @@
 
 use ndarray::Array2;
 use num_traits::{Float, FromPrimitive};
-use ordered__float::OrderedFloat;
+use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -53,7 +53,7 @@ struct BallNode<F: Float> {
 /// use scirs2__interpolate::spatial::balltree::BallTree;
 ///
 /// // Create sample 3D points
-/// let points = Array2::fromshape_vec((5, 3), vec![
+/// let points = Array2::from_shape_vec((5, 3), vec![
 ///     0.0, 0.0, 0.0,
 ///     1.0, 0.0, 0.0,
 ///     0.0, 1.0, 0.0,
@@ -143,7 +143,8 @@ where
                 nodes: Vec::new(),
                 root: None,
                 dim,
-                leaf_size_phantom: PhantomData,
+                leaf_size,
+                _phantom: PhantomData,
             };
 
             if n_points > 0 {
@@ -169,7 +170,8 @@ where
             nodes: Vec::with_capacity(est_nodes),
             root: None,
             dim,
-            leaf_size_phantom: PhantomData,
+            leaf_size,
+            _phantom: PhantomData,
         };
 
         // Build the tree

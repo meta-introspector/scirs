@@ -17,9 +17,9 @@ use std::sync::{Arc, Mutex};
 #[derive(Debug, Clone)]
 pub struct ParallelCorrelationConfig {
     /// Minimum matrix size to trigger parallel processing
-    pub min_parallel_size: usize,
+    pub min_parallelsize: usize,
     /// Chunk size for parallel processing
-    pub chunk_size: Option<usize>,
+    pub chunksize: Option<usize>,
     /// Enable SIMD optimizations
     pub use_simd: bool,
     /// Use work stealing for load balancing
@@ -29,8 +29,8 @@ pub struct ParallelCorrelationConfig {
 impl Default for ParallelCorrelationConfig {
     fn default() -> Self {
         Self {
-            min_parallel_size: 50, // 50x50 matrix threshold
-            chunk_size: None,      // Auto-determine
+            min_parallelsize: 50, // 50x50 matrix threshold
+            chunksize: None,      // Auto-determine
             use_simd: true,
             work_stealing: true,
         }
@@ -127,18 +127,18 @@ where
     }
 
     // Decide whether to use parallel processing
-    let use_parallel = n_vars >= config.min_parallel_size;
+    let use_parallel = n_vars >= config.min_parallelsize;
 
     if use_parallel {
         // Parallel processing with result collection
-        let chunk_size = config
-            .chunk_size
+        let chunksize = config
+            .chunksize
             .unwrap_or(std::cmp::max(1, pairs.len() / 4));
 
         // Process pairs in parallel and collect results
         let results = Arc::new(Mutex::new(Vec::new()));
 
-        pairs.chunks(chunk_size).for_each(|chunk| {
+        pairs.chunks(chunksize).for_each(|chunk| {
             let mut local_results = Vec::new();
 
             for &(i, j) in chunk {
@@ -359,16 +359,16 @@ where
     }
 
     let n_pairs = pairs.len();
-    let use_parallel = n_pairs >= config.min_parallel_size.min(10); // Lower threshold for batch operations
+    let use_parallel = n_pairs >= config.min_parallelsize.min(10); // Lower threshold for batch operations
 
     if use_parallel {
         // Parallel processing with chunking
-        let chunk_size = config.chunk_size.unwrap_or(std::cmp::max(1, n_pairs / 4));
+        let chunksize = config.chunksize.unwrap_or(std::cmp::max(1, n_pairs / 4));
 
         let results = Arc::new(Mutex::new(Vec::new()));
         let error_occurred = Arc::new(Mutex::new(false));
 
-        pairs.chunks(chunk_size).for_each(|chunk| {
+        pairs.chunks(chunksize).for_each(|chunk| {
             let mut local_results = Vec::new();
             let mut has_error = false;
 
@@ -442,7 +442,7 @@ where
 pub fn rolling_correlation_parallel<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
-    window_size: usize,
+    windowsize: usize,
     method: &str,
     config: &ParallelCorrelationConfig,
 ) -> StatsResult<Array1<F>>
@@ -466,22 +466,22 @@ where
             y.len()
         )));
     }
-    check_positive(window_size, "window_size")?;
+    check_positive(windowsize, "windowsize")?;
 
-    if window_size > x.len() {
+    if windowsize > x.len() {
         return Err(StatsError::InvalidArgument(
-            "Window _size cannot be larger than data length".to_string(),
+            "Window size cannot be larger than data length".to_string(),
         ));
     }
 
-    let n_windows = x.len() - window_size + 1;
+    let n_windows = x.len() - windowsize + 1;
     let mut results = Array1::zeros(n_windows);
 
     // Generate window pairs
     let window_pairs: Vec<_> = (0..n_windows)
         .map(|i| {
-            let x_window = x.slice(s![i..i + window_size]);
-            let y_window = y.slice(s![i..i + window_size]);
+            let x_window = x.slice(s![i..i + windowsize]);
+            let y_window = y.slice(s![i..i + windowsize]);
             (x_window, y_window)
         })
         .collect();

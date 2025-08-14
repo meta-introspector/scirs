@@ -143,7 +143,7 @@ impl<
             simd_accelerator,
             adaptive_optimizer,
             neural_rl_controller,
-            config: config,
+            config,
         })
     }
 

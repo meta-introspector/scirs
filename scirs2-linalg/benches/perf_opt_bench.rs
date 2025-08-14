@@ -9,14 +9,14 @@ use std::hint::black_box;
 fn bench_matmul_optimizations(c: &mut Criterion) {
     let sizes = [64, 128, 256, 512, 1024];
     let mut group = c.benchmark_group("matmul_optimizations");
-    group.sample_size(10); // Reduce sample size for large matrices
+    group.samplesize(10); // Reduce sample size for large matrices
 
     let config_blocked = OptConfig::default()
-        .with_block_size(64)
+        .with_blocksize(64)
         .with_parallel_threshold(256);
 
     let config_adaptive = OptConfig::default()
-        .with_block_size(64)
+        .with_blocksize(64)
         .with_parallel_threshold(256)
         .with_algorithm(OptAlgorithm::Adaptive);
 
@@ -125,7 +125,7 @@ fn bench_transpose_optimizations(c: &mut Criterion) {
 fn bench_parallel_vs_serial(c: &mut Criterion) {
     let sizes = [256, 512, 1024, 2048];
     let mut group = c.benchmark_group("parallel_vs_serial");
-    group.sample_size(10);
+    group.samplesize(10);
 
     for size in &sizes {
         let a = Array2::<f64>::random((*size, *size).f(), Uniform::new(-1.0, 1.0));
@@ -133,7 +133,7 @@ fn bench_parallel_vs_serial(c: &mut Criterion) {
 
         // Serial execution
         let config_serial = OptConfig::default()
-            .with_block_size(64)
+            .with_blocksize(64)
             .with_algorithm(OptAlgorithm::Blocked);
 
         group.bench_with_input(BenchmarkId::new("serial", size), size, |bench_| {
@@ -145,7 +145,7 @@ fn bench_parallel_vs_serial(c: &mut Criterion) {
 
         // Parallel execution
         let config_parallel = OptConfig::default()
-            .with_block_size(64)
+            .with_blocksize(64)
             .with_parallel_threshold(0) // Always use parallel
             .with_algorithm(OptAlgorithm::Blocked);
 

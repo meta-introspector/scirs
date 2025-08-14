@@ -125,14 +125,14 @@ pub enum PrefetchHint {
 /// Cache-aware matrix operations with dynamic blocking
 pub struct CacheAwareMatrixOperations {
     /// L1 cache size in bytes
-    l1_cache_size: usize,
+    l1_cachesize: usize,
     /// L2 cache size in bytes
-    l2_cache_size: usize,
+    l2_cachesize: usize,
     /// L3 cache size in bytes
-    l3_cache_size: usize,
+    l3_cachesize: usize,
     /// Cache line size in bytes
     #[allow(dead_code)]
-    cache_line_size: usize,
+    cache_linesize: usize,
     /// Memory access pattern analyzer
     pattern_analyzer: MemoryAccessPatternAnalyzer,
 }
@@ -140,38 +140,38 @@ pub struct CacheAwareMatrixOperations {
 impl CacheAwareMatrixOperations {
     pub fn new() -> Self {
         Self {
-            l1_cache_size: 32 * 1024,       // 32KB L1
-            l2_cache_size: 512 * 1024,      // 512KB L2
-            l3_cache_size: 8 * 1024 * 1024, // 8MB L3
-            cache_line_size: 64,            // 64 bytes per cache line
+            l1_cachesize: 32 * 1024,       // 32KB L1
+            l2_cachesize: 512 * 1024,      // 512KB L2
+            l3_cachesize: 8 * 1024 * 1024, // 8MB L3
+            cache_linesize: 64,            // 64 bytes per cache line
             pattern_analyzer: MemoryAccessPatternAnalyzer::new(),
         }
     }
 
     /// Calculate optimal block sizes for current cache hierarchy
-    pub fn calculate_optimal_block_sizes(&self, elementsize: usize) -> CacheBlockSizes {
+    pub fn calculate_optimal_blocksizes(&self, elementsize: usize) -> CacheBlockSizes {
         // L1 cache blocking: aim to keep working set in L1
-        let l1_elements = (self.l1_cache_size / 3) / elementsize; // Divide by 3 for A, B, C blocks
-        let l1_block_size = (l1_elements as f64).sqrt() as usize;
+        let l1_elements = (self.l1_cachesize / 3) / elementsize; // Divide by 3 for A, B, C blocks
+        let l1_blocksize = (l1_elements as f64).sqrt() as usize;
 
         // L2 cache blocking: intermediate level
-        let l2_elements = (self.l2_cache_size / 3) / elementsize;
-        let l2_block_size = (l2_elements as f64).sqrt() as usize;
+        let l2_elements = (self.l2_cachesize / 3) / elementsize;
+        let l2_blocksize = (l2_elements as f64).sqrt() as usize;
 
         // L3 cache blocking: largest blocks
-        let l3_elements = (self.l3_cache_size / 3) / elementsize;
-        let l3_block_size = (l3_elements as f64).sqrt() as usize;
+        let l3_elements = (self.l3_cachesize / 3) / elementsize;
+        let l3_blocksize = (l3_elements as f64).sqrt() as usize;
 
         CacheBlockSizes {
-            l1_block_m: l1_block_size.min(256),
-            l1_block_n: l1_block_size.min(256),
-            l1_block_k: l1_block_size.min(256),
-            l2_block_m: l2_block_size.min(1024),
-            l2_block_n: l2_block_size.min(1024),
-            l2_block_k: l2_block_size.min(1024),
-            l3_block_m: l3_block_size.min(4096),
-            l3_block_n: l3_block_size.min(4096),
-            l3_block_k: l3_block_size.min(4096),
+            l1_block_m: l1_blocksize.min(256),
+            l1_block_n: l1_blocksize.min(256),
+            l1_block_k: l1_blocksize.min(256),
+            l2_block_m: l2_blocksize.min(1024),
+            l2_block_n: l2_blocksize.min(1024),
+            l2_block_k: l2_blocksize.min(1024),
+            l3_block_m: l3_blocksize.min(4096),
+            l3_block_n: l3_blocksize.min(4096),
+            l3_block_k: l3_blocksize.min(4096),
         }
     }
 
@@ -191,11 +191,11 @@ impl CacheAwareMatrixOperations {
             ));
         }
 
-        let block_sizes = self.calculate_optimal_block_sizes(std::mem::size_of::<f32>());
+        let blocksizes = self.calculate_optimal_blocksizes(std::mem::size_of::<f32>());
         let prefetch_strategy = self.pattern_analyzer.analyze_and_recommend_prefetch((m, n));
 
         // Three-level cache blocking for optimal cache utilization
-        self.three_level_blocked_gemm(a, b, c, &block_sizes, &prefetch_strategy)?;
+        self.three_level_blocked_gemm(a, b, c, &blocksizes, &prefetch_strategy)?;
 
         Ok(())
     }
@@ -206,27 +206,27 @@ impl CacheAwareMatrixOperations {
         a: &ArrayView2<f32>,
         b: &ArrayView2<f32>,
         c: &mut ArrayViewMut2<f32>,
-        block_sizes: &CacheBlockSizes,
+        blocksizes: &CacheBlockSizes,
         prefetch_strategy: &PrefetchStrategy,
     ) -> LinalgResult<()> {
         let (m, k) = a.dim();
         let (_, n) = b.dim();
 
         // L3 blocking (outermost)
-        for ii in (0..m).step_by(block_sizes.l3_block_m) {
-            for jj in (0..n).step_by(block_sizes.l3_block_n) {
-                for kk in (0..k).step_by(block_sizes.l3_block_k) {
-                    let i_end = (ii + block_sizes.l3_block_m).min(m);
-                    let j_end = (jj + block_sizes.l3_block_n).min(n);
-                    let k_end = (kk + block_sizes.l3_block_k).min(k);
+        for ii in (0..m).step_by(blocksizes.l3_block_m) {
+            for jj in (0..n).step_by(blocksizes.l3_block_n) {
+                for kk in (0..k).step_by(blocksizes.l3_block_k) {
+                    let i_end = (ii + blocksizes.l3_block_m).min(m);
+                    let j_end = (jj + blocksizes.l3_block_n).min(n);
+                    let k_end = (kk + blocksizes.l3_block_k).min(k);
 
                     // L2 blocking (middle)
-                    for i2 in (ii..i_end).step_by(block_sizes.l2_block_m) {
-                        for j2 in (jj..j_end).step_by(block_sizes.l2_block_n) {
-                            for k2 in (kk..k_end).step_by(block_sizes.l2_block_k) {
-                                let i2_end = (i2 + block_sizes.l2_block_m).min(i_end);
-                                let j2_end = (j2 + block_sizes.l2_block_n).min(j_end);
-                                let k2_end = (k2 + block_sizes.l2_block_k).min(k_end);
+                    for i2 in (ii..i_end).step_by(blocksizes.l2_block_m) {
+                        for j2 in (jj..j_end).step_by(blocksizes.l2_block_n) {
+                            for k2 in (kk..k_end).step_by(blocksizes.l2_block_k) {
+                                let i2_end = (i2 + blocksizes.l2_block_m).min(i_end);
+                                let j2_end = (j2 + blocksizes.l2_block_n).min(j_end);
+                                let k2_end = (k2 + blocksizes.l2_block_k).min(k_end);
 
                                 // L1 blocking (innermost) with prefetching
                                 self.l1_blocked_gemm_with_prefetch(
@@ -239,7 +239,7 @@ impl CacheAwareMatrixOperations {
                                     j2_end,
                                     k2,
                                     k2_end,
-                                    block_sizes,
+                                    blocksizes,
                                     prefetch_strategy,
                                 )?;
                             }
@@ -264,15 +264,15 @@ impl CacheAwareMatrixOperations {
         j_end: usize,
         k_start: usize,
         k_end: usize,
-        block_sizes: &CacheBlockSizes,
+        blocksizes: &CacheBlockSizes,
         prefetch_strategy: &PrefetchStrategy,
     ) -> LinalgResult<()> {
-        for i in (i_start..i_end).step_by(block_sizes.l1_block_m) {
-            for j in (j_start..j_end).step_by(block_sizes.l1_block_n) {
-                for k_iter in (k_start..k_end).step_by(block_sizes.l1_block_k) {
-                    let i_block_end = (i + block_sizes.l1_block_m).min(i_end);
-                    let j_block_end = (j + block_sizes.l1_block_n).min(j_end);
-                    let k_block_end = (k_iter + block_sizes.l1_block_k).min(k_end);
+        for i in (i_start..i_end).step_by(blocksizes.l1_block_m) {
+            for j in (j_start..j_end).step_by(blocksizes.l1_block_n) {
+                for k_iter in (k_start..k_end).step_by(blocksizes.l1_block_k) {
+                    let i_block_end = (i + blocksizes.l1_block_m).min(i_end);
+                    let j_block_end = (j + blocksizes.l1_block_n).min(j_end);
+                    let k_block_end = (k_iter + blocksizes.l1_block_k).min(k_end);
 
                     // Perform prefetching based on _strategy
                     self.intelligent_prefetch(a, b, c, i, j, k_iter, prefetch_strategy);
@@ -375,15 +375,15 @@ impl CacheAwareMatrixOperations {
         let mut result = Array2::zeros((cols, rows));
 
         // Calculate optimal block size for cache-friendly transpose
-        let element_size = std::mem::size_of::<f32>();
-        let optimal_block_size = ((self.l1_cache_size / 2) / element_size).min(64);
-        let block_size = (optimal_block_size as f64).sqrt() as usize;
+        let elementsize = std::mem::size_of::<f32>();
+        let optimal_blocksize = ((self.l1_cachesize / 2) / elementsize).min(64);
+        let blocksize = (optimal_blocksize as f64).sqrt() as usize;
 
         // Blocked transpose to improve cache locality
-        for i in (0..rows).step_by(block_size) {
-            for j in (0..cols).step_by(block_size) {
-                let i_end = (i + block_size).min(rows);
-                let j_end = (j + block_size).min(cols);
+        for i in (0..rows).step_by(blocksize) {
+            for j in (0..cols).step_by(blocksize) {
+                let i_end = (i + blocksize).min(rows);
+                let j_end = (j + blocksize).min(cols);
 
                 // Transpose block
                 for ii in i..i_end {
@@ -632,7 +632,7 @@ pub struct CpuFeatures {
     pub avx2: bool,
     pub avx512: bool,
     pub fma: bool,
-    pub cache_line_size: usize,
+    pub cache_linesize: usize,
 }
 
 impl AdaptiveVectorizationEngine {
@@ -658,7 +658,7 @@ impl AdaptiveVectorizationEngine {
                 avx2: is_x86_feature_detected!("avx2"),
                 avx512: is_x86_feature_detected!("avx512f"),
                 fma: is_x86_feature_detected!("fma"),
-                cache_line_size: 64, // Common cache line size
+                cache_linesize: 64, // Common cache line size
             }
         }
         #[cfg(not(target_arch = "x86_64"))]
@@ -669,7 +669,7 @@ impl AdaptiveVectorizationEngine {
                 avx2: false,
                 avx512: false,
                 fma: false,
-                cache_line_size: 64,
+                cache_linesize: 64,
             }
         }
     }
@@ -711,7 +711,7 @@ impl AdaptiveVectorizationEngine {
 
     /// Adaptive matrix multiplication with optimal vectorization
     #[allow(dead_code)]
-    pub fn adaptive_matrix_multiply_f32(
+    pub fn adaptivematrix_multiply_f32(
         &mut self,
         a: &ArrayView2<f32>,
         b: &ArrayView2<f32>,
@@ -868,7 +868,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_cache_aware_matrix_operations() {
+    fn test_cache_awarematrix_operations() {
         let mut cache_ops = CacheAwareMatrixOperations::new();
 
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
@@ -945,7 +945,7 @@ mod tests {
 
         // Test CPU feature detection
         let features = &engine.cpu_features;
-        assert!(features.cache_line_size > 0);
+        assert!(features.cache_linesize > 0);
 
         // Test strategy selection for different matrix sizes
         let small_strategy = engine.select_optimal_strategy((10, 10));
@@ -966,7 +966,7 @@ mod tests {
         let b = array![[5.0f32, 6.0], [7.0, 8.0]];
 
         let result = engine
-            .adaptive_matrix_multiply_f32(&a.view(), &b.view())
+            .adaptivematrix_multiply_f32(&a.view(), &b.view())
             .unwrap();
 
         // Verify result correctness

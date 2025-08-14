@@ -68,7 +68,7 @@ const TOLERANCE: f64 = 1e-15;
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::elliprc;
+/// use scirs2_special::elliprc;
 ///
 /// // RC(0, 1) = π/2
 /// let result = elliprc(0.0, 1.0).unwrap();
@@ -161,7 +161,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::elliprf;
+/// use scirs2_special::elliprf;
 ///
 /// // RF(0, 1, 1) = π/2
 /// let result = elliprf(0.0, 1.0, 1.0).unwrap();
@@ -265,7 +265,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::elliprd;
+/// use scirs2_special::elliprd;
 ///
 /// // RD(0, 2, 1) = 3π/(4√2)
 /// let result = elliprd(0.0, 2.0, 1.0).unwrap();
@@ -368,7 +368,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::elliprg;
+/// use scirs2_special::elliprg;
 ///
 /// // Test basic functionality
 /// let result = elliprg(1.0, 2.0, 3.0).unwrap();
@@ -439,7 +439,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::elliprj;
+/// use scirs2_special::elliprj;
 ///
 /// // Test basic functionality
 /// let result = elliprj(1.0, 2.0, 3.0, 4.0).unwrap();

@@ -84,7 +84,7 @@ impl VariogramModel {
     /// * `nugget` - Nugget parameter (variance at zero distance)
     pub fn spherical(range: f64, sill: f64, nugget: f64) -> Self {
         Self::Spherical {
-            range: range,
+            range,
             sill,
             nugget,
         }
@@ -93,7 +93,7 @@ impl VariogramModel {
     /// Create an exponential variogram model
     pub fn exponential(range: f64, sill: f64, nugget: f64) -> Self {
         Self::Exponential {
-            range: range,
+            range,
             sill,
             nugget,
         }
@@ -102,7 +102,7 @@ impl VariogramModel {
     /// Create a Gaussian variogram model
     pub fn gaussian(range: f64, sill: f64, nugget: f64) -> Self {
         Self::Gaussian {
-            range: range,
+            range,
             sill,
             nugget,
         }
@@ -110,16 +110,13 @@ impl VariogramModel {
 
     /// Create a linear variogram model
     pub fn linear(slope: f64, nugget: f64) -> Self {
-        Self::Linear {
-            slope: slope,
-            nugget,
-        }
+        Self::Linear { slope, nugget }
     }
 
     /// Create a power variogram model
     pub fn power(coefficient: f64, exponent: f64, nugget: f64) -> Self {
         Self::Power {
-            coefficient: coefficient,
+            coefficient,
             exponent,
             nugget,
         }
@@ -128,7 +125,7 @@ impl VariogramModel {
     /// Create a Matérn variogram model
     pub fn matern(range: f64, sill: f64, nugget: f64, nu: f64) -> Self {
         Self::Matern {
-            range: range,
+            range,
             sill,
             nugget,
             nu,

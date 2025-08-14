@@ -135,7 +135,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     /// Create a new stiffness detector with specific configuration
     pub fn with_config(config: StiffnessDetectionConfig<F>) -> Self {
         StiffnessDetector {
-            config: config,
+            config,
             step_size_history: Vec::with_capacity(20),
             error_history: Vec::with_capacity(20),
             newton_iter_history: Vec::with_capacity(20),

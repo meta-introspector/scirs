@@ -129,7 +129,7 @@ impl ChunkMetadata {
             id,
             size_bytes,
             shape,
-            file_offset: file_offset,
+            file_offset,
             last_accessed: Instant::now(),
             access_count: 0,
             is_dirty: false,
@@ -611,7 +611,7 @@ where
         let cache = Arc::new(ChunkCache::new(config.clone()));
 
         Self {
-            array_id: array_id,
+            array_id,
             shape,
             cache,
             storage,

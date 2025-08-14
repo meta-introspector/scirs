@@ -14,7 +14,7 @@ fn main() {
     println!("=== Data Balancing Utilities Demonstration ===\n");
 
     // Create an artificially imbalanced dataset for demonstration
-    let data = Array2::fromshape_vec(
+    let data = Array2::from_shape_vec(
         (10, 2),
         vec![
             // Class 0 (minority): 2 samples

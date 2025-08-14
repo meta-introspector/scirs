@@ -161,13 +161,13 @@ fn memory_efficiency_demo() -> LinalgResult<()> {
 
     // Block-wise processing demonstration
     println!("\n🔹 Block-wise Processing");
-    let block_size = 32;
+    let blocksize = 32;
     let mut norm_accumulator = 0.0;
 
-    for i in (0..size).step_by(block_size) {
-        for j in (0..size).step_by(block_size) {
-            let i_end = std::cmp::min(i + block_size, size);
-            let j_end = std::cmp::min(j + block_size, size);
+    for i in (0..size).step_by(blocksize) {
+        for j in (0..size).step_by(blocksize) {
+            let i_end = std::cmp::min(i + blocksize, size);
+            let j_end = std::cmp::min(j + blocksize, size);
 
             let block = a.slice(ndarray::s![i..i_end, j..j_end]);
             let block_norm = matrix_norm(&block, "fro", None)?;
@@ -376,14 +376,14 @@ fn adaptive_algorithms_demo() -> LinalgResult<()> {
             .with_threshold(threshold)
             .with_workers(4);
 
-        let data_size = size * size;
-        let strategy = adaptive::choose_strategy(data_size, &config);
+        let datasize = size * size;
+        let strategy = adaptive::choose_strategy(datasize, &config);
 
-        println!("  Data size: {} elements", data_size);
+        println!("  Data size: {} elements", datasize);
         println!("  Recommended strategy: {:?}", strategy);
 
         // Demonstrate adaptive matrix-vector multiplication
-        let should_parallelize = adaptive::should_use_parallel(data_size, &config);
+        let should_parallelize = adaptive::should_use_parallel(datasize, &config);
         println!("  Use parallel processing: {}", should_parallelize);
 
         let start = Instant::now();
@@ -408,7 +408,7 @@ fn adaptive_algorithms_demo() -> LinalgResult<()> {
     println!("\n🔹 Work-Stealing Effectiveness Demo");
 
     // Create an unbalanced workload
-    let unbalanced_matrix = Array2::from_shape_fn((100, 100), |(i, j)| {
+    let unbalancedmatrix = Array2::from_shape_fn((100, 100), |(i, j)| {
         if i < 50 {
             // Light computation for first half
             (i + j) as f64
@@ -425,12 +425,12 @@ fn adaptive_algorithms_demo() -> LinalgResult<()> {
     let config_balanced = WorkerConfig::new()
         .with_workers(4)
         .with_threshold(1000)
-        .with_chunk_size(25); // Balanced chunks
+        .with_chunksize(25); // Balanced chunks
 
     let config_imbalanced = WorkerConfig::new()
         .with_workers(4)
         .with_threshold(1000)
-        .with_chunk_size(50); // Larger chunks that may cause imbalance
+        .with_chunksize(50); // Larger chunks that may cause imbalance
 
     let vector = Array1::ones(100);
 
@@ -438,15 +438,12 @@ fn adaptive_algorithms_demo() -> LinalgResult<()> {
 
     let start = Instant::now();
     let _result1 =
-        algorithms::parallel_matvec(&unbalanced_matrix.view(), &vector.view(), &config_balanced)?;
+        algorithms::parallel_matvec(&unbalancedmatrix.view(), &vector.view(), &config_balanced)?;
     let balanced_time = start.elapsed();
 
     let start = Instant::now();
-    let _result2 = algorithms::parallel_matvec(
-        &unbalanced_matrix.view(),
-        &vector.view(),
-        &config_imbalanced,
-    )?;
+    let _result2 =
+        algorithms::parallel_matvec(&unbalancedmatrix.view(), &vector.view(), &config_imbalanced)?;
     let imbalanced_time = start.elapsed();
 
     println!("  Balanced chunks time:   {:?}", balanced_time);

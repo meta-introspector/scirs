@@ -59,10 +59,10 @@ pub struct DistributedProcessor {
 impl DistributedProcessor {
     /// Create a new distributed processor
     pub fn new(config: DistributedConfig) -> Result<Self> {
-        let cache_dir = dirs::cache_dir()
+        let cachedir = dirs::cachedir()
             .ok_or_else(|| DatasetsError::Other("Could not determine cache directory".to_string()))?
             .join("scirs2-datasets");
-        let cache = DatasetCache::new(cache_dir);
+        let cache = DatasetCache::new(cachedir);
 
         Ok(Self { config, cache })
     }
@@ -151,8 +151,8 @@ impl DistributedProcessor {
             let chunk = Dataset {
                 data: chunk_data,
                 target: chunk_target,
-                feature_names: dataset.feature_names.clone(),
-                target_names: dataset.target_names.clone(),
+                featurenames: dataset.featurenames.clone(),
+                targetnames: dataset.targetnames.clone(),
                 feature_descriptions: dataset.feature_descriptions.clone(),
                 description: Some(format!("Chunk {start}-{end} of distributed dataset")),
                 metadata: dataset.metadata.clone(),
@@ -475,8 +475,8 @@ impl DistributedProcessor {
         Ok(Dataset {
             data: selected_data,
             target: selected_target,
-            feature_names: dataset.feature_names.clone(),
-            target_names: dataset.target_names.clone(),
+            featurenames: dataset.featurenames.clone(),
+            targetnames: dataset.targetnames.clone(),
             feature_descriptions: dataset.feature_descriptions.clone(),
             description: Some("Distributed sample".to_string()),
             metadata: dataset.metadata.clone(),
@@ -513,7 +513,7 @@ impl DistributedProcessor {
             }
         }
 
-        let data = Array2::fromshape_vec((total_samples, n_features), combined_data)
+        let data = Array2::from_shape_vec((total_samples, n_features), combined_data)
             .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
         let target = combined_target.map(Array1::from_vec);
@@ -521,8 +521,8 @@ impl DistributedProcessor {
         Ok(Dataset {
             data,
             target,
-            feature_names: datasets[0].feature_names.clone(),
-            target_names: datasets[0].target_names.clone(),
+            featurenames: datasets[0].featurenames.clone(),
+            targetnames: datasets[0].targetnames.clone(),
             feature_descriptions: datasets[0].feature_descriptions.clone(),
             description: Some("Combined distributed dataset".to_string()),
             metadata: datasets[0].metadata.clone(),
@@ -664,8 +664,8 @@ impl DistributedProcessor {
         Ok(Dataset {
             data: scaled_data,
             target: dataset.target.clone(),
-            feature_names: dataset.feature_names.clone(),
-            target_names: dataset.target_names.clone(),
+            featurenames: dataset.featurenames.clone(),
+            targetnames: dataset.targetnames.clone(),
             feature_descriptions: dataset.feature_descriptions.clone(),
             description: Some("Distributed scaled _dataset".to_string()),
             metadata: dataset.metadata.clone(),

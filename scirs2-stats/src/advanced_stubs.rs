@@ -127,7 +127,7 @@ impl AdvancedSimdOptimizer {
     }
 
     pub fn advanced_batch_statistics<F, D>(
-        &self, _data_arrays: &[ndarray::ArrayView1<F>], _operations: &[BatchOperation],
+        &self, data_arrays: &[ndarray::ArrayView1<F>], _operations: &[BatchOperation],
     ) -> StatsResult<BatchResults<F>>
     where
         F: Float + Copy,

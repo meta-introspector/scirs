@@ -624,12 +624,7 @@ struct PatternNetwork {
 }
 
 impl PatternNetwork {
-    fn new(
-        pattern_type: &str,
-        input_size: usize,
-        hidden_size: usize,
-        _output_size: usize,
-    ) -> Self {
+    fn new(pattern_type: &str, input_size: usize, hidden_size: usize, _output_size: usize) -> Self {
         // Xavier initialization for weights
         let scale = (2.0 / (input_size + hidden_size) as f32).sqrt();
         let mut rng = rand::thread_rng();

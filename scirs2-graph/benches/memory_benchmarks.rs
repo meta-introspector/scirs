@@ -1,7 +1,7 @@
 //! Memory usage and performance benchmarks for different graph representations
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use scirs2__graph::{
+use scirs2_graph::{
     generators,
     memory::{BitPackedGraph, CSRGraph, CompressedAdjacencyList, HybridGraph, MemoryProfiler},
     Graph,

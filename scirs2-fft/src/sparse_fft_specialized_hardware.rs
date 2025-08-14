@@ -537,7 +537,7 @@ impl SpecializedHardwareManager {
     pub fn new(config: SparseFFTConfig) -> Self {
         Self {
             accelerators: HashMap::new(),
-            config: config,
+            config,
         }
     }
 

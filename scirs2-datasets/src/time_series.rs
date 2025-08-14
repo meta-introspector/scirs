@@ -109,12 +109,12 @@ pub fn electrocardiogram() -> Result<Dataset> {
     let len = ecg_array.len();
 
     // Convert the 1D array to a 2D column vector using reshape which should be safer
-    let data = ecg_array.intoshape_with_order((len, 1)).unwrap();
+    let data = ecg_array.into_shape_with_order((len, 1)).unwrap();
 
     // Create the dataset
     let mut dataset = Dataset::new(data, None);
     dataset = dataset
-        .with_feature_names(vec!["ecg".to_string()])
+        .with_featurenames(vec!["ecg".to_string()])
         .with_description("Electrocardiogram (ECG) data, 5 minutes sampled at 360 Hz".to_string())
         .with_metadata("sampling_rate", "360")
         .with_metadata("units", "mV")
@@ -239,7 +239,7 @@ pub fn stock_market(returns: bool) -> Result<Dataset> {
     // Create the dataset
     let mut dataset = Dataset::new(data, None);
     dataset = dataset
-        .with_feature_names(symbols.clone())
+        .with_featurenames(symbols.clone())
         .with_description(format!(
             "Stock market data for {} companies from {} to {}",
             symbols.len(),
@@ -401,7 +401,7 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
 
             // Feature names are location names in this case
             ds = ds
-                .with_feature_names(locations.clone())
+                .with_featurenames(locations.clone())
                 .with_description(format!(
                     "Weather {} data for {} locations from {} to {}",
                     feat,
@@ -442,17 +442,17 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
             }
 
             // Create _feature names: for each location, add each _feature
-            let mut feature_names = Vec::with_capacity(n_features * locations.len());
+            let mut featurenames = Vec::with_capacity(n_features * locations.len());
             for location in &locations {
                 for feat in &valid_features {
-                    feature_names.push(format!("{location}_{feat}"));
+                    featurenames.push(format!("{location}_{feat}"));
                 }
             }
 
             // Create the dataset
             let mut ds = Dataset::new(data, None);
             ds = ds
-                .with_feature_names(feature_names)
+                .with_featurenames(featurenames)
                 .with_description(format!(
                     "Weather data (all features) for {} locations from {} to {}",
                     locations.len(),

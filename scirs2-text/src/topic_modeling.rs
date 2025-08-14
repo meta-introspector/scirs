@@ -19,6 +19,7 @@
 //! ```rust
 //! use scirs2_text::topic_modeling::{LatentDirichletAllocation, LdaConfig, LdaLearningMethod};
 //! use scirs2_text::vectorize::{CountVectorizer, Vectorizer};
+//! use std::collections::HashMap;
 //!
 //! // Sample documents
 //! let documents = vec![
@@ -31,7 +32,7 @@
 //! ];
 //!
 //! // Vectorize documents
-//! let mut vectorizer = CountVectorizer::new();
+//! let mut vectorizer = CountVectorizer::new(false);
 //! let doc_term_matrix = vectorizer.fit_transform(&documents).unwrap();
 //!
 //! // Configure LDA
@@ -41,17 +42,20 @@
 //!     topic_word_prior: Some(0.01),  // Beta parameter
 //!     learning_method: LdaLearningMethod::Batch,
 //!     maxiter: 100,
-//!     tolerance: 1e-4,
-//!     random_state: Some(42),
+//!     mean_change_tol: 1e-4,
+//!     random_seed: Some(42),
 //!     ..Default::default()
 //! };
 //!
 //! // Train the model
 //! let mut lda = LatentDirichletAllocation::new(config);
-//! lda.fit(&doc_term_matrix, &vectorizer.get_feature_names()).unwrap();
+//! lda.fit(&doc_term_matrix).unwrap();
+//!
+//! // Create vocabulary mapping for topic display
+//! let vocab_map: HashMap<usize, String> = (0..1000).map(|i| (i, format!("word_{}", i))).collect();
 //!
 //! // Get topics
-//! let topics = lda.get_topics(10); // Top 10 words per topic
+//! let topics = lda.get_topics(10, &vocab_map); // Top 10 words per topic
 //! for (i, topic) in topics.iter().enumerate() {
 //!     println!("Topic {}: {:?}", i, topic);
 //! }
@@ -71,9 +75,9 @@
 //! let config = LdaConfig {
 //!     ntopics: 10,
 //!     learning_method: LdaLearningMethod::Online,
-//!     batch_size: Some(64),           // Mini-batch size
-//!     learning_decay: Some(0.7),     // Learning rate decay
-//!     learning_offset: Some(10.0),   // Learning rate offset
+//!     batch_size: 64,                // Mini-batch size
+//!     learning_decay: 0.7,           // Learning rate decay
+//!     learning_offset: 10.0,         // Learning rate offset
 //!     maxiter: 500,
 //!     ..Default::default()
 //! };
@@ -92,9 +96,7 @@
 //!     doc_topic_prior: Some(50.0 / 20.0),  // Symmetric Dirichlet
 //!     topic_word_prior: Some(0.1),         // Sparse topics
 //!     maxiter: 1000,                      // More iterations
-//!     tolerance: 1e-6,                     // Stricter convergence
-//!     evaluate_every: Some(10),            // Monitor convergence
-//!     perp_tolerance: Some(0.1),           // Perplexity tolerance
+//!     mean_change_tol: 1e-6,               // Stricter convergence
 //!     ..Default::default()
 //! };
 //! ```
@@ -102,15 +104,23 @@
 //! ### Model Evaluation
 //!
 //! ```rust
-//! use scirs2_text::topic_coherence::TopicCoherence;
+//! use scirs2_text::topic_modeling::{LatentDirichletAllocation, LdaConfig};
+//! use scirs2_text::vectorize::{CountVectorizer, Vectorizer};
+//! use std::collections::HashMap;
 //!
-//! // Evaluate model coherence
-//! let coherence = TopicCoherence::new();
-//! let cv_score = coherence.coherence_cv(&lda, &documents, &vectorizer.get_feature_names());
-//! let umass_score = coherence.coherence_umass(&lda, &doc_term_matrix);
+//! # let documents = vec!["the quick brown fox", "jumped over the lazy dog"];
+//! # let mut vectorizer = CountVectorizer::new(false);
+//! # let doc_term_matrix = vectorizer.fit_transform(&documents).unwrap();
+//! # let mut lda = LatentDirichletAllocation::new(LdaConfig::default());
+//! # lda.fit(&doc_term_matrix).unwrap();
+//! # let vocab_map: HashMap<usize, String> = (0..100).map(|i| (i, format!("word_{}", i))).collect();
+//! // Get model information
+//! let topics = lda.get_topics(5, &vocab_map); // Top 5 words per topic
+//! println!("Number of topics: {}", topics.unwrap().len());
 //!
-//! println!("CV Coherence: {:.3}", cv_score.unwrap());
-//! println!("UMass Coherence: {:.3}", umass_score.unwrap());
+//! // Get document-topic probabilities
+//! let doc_topic_probs = lda.transform(&doc_term_matrix).unwrap();
+//! println!("Document-topic shape: {:?}", doc_topic_probs.shape());
 //! ```
 //!
 //! ## Parameter Tuning Guide
@@ -547,8 +557,7 @@ impl LatentDirichletAllocation {
                 let batch_docs: Vec<usize> = doc_indices[start_idx..end_idx].to_vec();
 
                 // E-step: Update document-topic distributions for batch
-                let mut batch_gamma =
-                    Array2::<f64>::zeros((batch_docs.len(), self.config.ntopics));
+                let mut batch_gamma = Array2::<f64>::zeros((batch_docs.len(), self.config.ntopics));
                 let mut batch_bound = 0.0;
 
                 for (local_idx, &doc_idx) in batch_docs.iter().enumerate() {

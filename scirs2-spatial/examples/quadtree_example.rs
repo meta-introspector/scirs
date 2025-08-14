@@ -171,14 +171,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let query_point = array![0.0, 0.0];
 
     let start = std::time::Instant::now();
-    let (_indices_) = large_quadtree.query_nearest(&query_point.view(), 10)?;
+    let (_indices) = large_quadtree.query_nearest(&query_point.view(), 10)?;
     let query_time = start.elapsed();
 
     println!("  Found 10 nearest neighbors in {query_time:.2?}");
 
     // Test radius search performance
     let start = std::time::Instant::now();
-    let (indices_) = large_quadtree.query_radius(&query_point.view(), 10.0)?;
+    let (indices) = large_quadtree.query_radius(&query_point.view(), 10.0)?;
     let radius_time = start.elapsed();
 
     println!(

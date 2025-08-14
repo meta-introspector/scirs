@@ -30,7 +30,7 @@ use std::iter::Sum;
 ///     [3.0, 5.0, 6.0]
 /// ];
 ///
-/// let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();
+/// let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
 ///
 /// // Get elements
 /// assert_eq!(sym.get(0, 0).unwrap(), 1.0);
@@ -106,7 +106,7 @@ where
     ///
     /// * `SymmetricMatrix` if the input is symmetric
     /// * `LinalgError` if the input is not symmetric
-    pub fn from_matrix(a: &ArrayView2<A>) -> LinalgResult<Self> {
+    pub fn frommatrix(a: &ArrayView2<A>) -> LinalgResult<Self> {
         if a.nrows() != a.ncols() {
             return Err(LinalgError::ShapeError(format!(
                 "Matrix must be square to be symmetric, got shape {:?}",
@@ -322,7 +322,7 @@ mod tests {
         // Create a symmetric matrix
         let a = array![[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
 
-        let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();
+        let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
 
         assert_eq!(sym.nrows(), 3);
         assert_eq!(sym.ncols(), 3);
@@ -342,7 +342,7 @@ mod tests {
         // Create a non-symmetric matrix
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        let result = SymmetricMatrix::from_matrix(&a.view());
+        let result = SymmetricMatrix::frommatrix(&a.view());
         assert!(result.is_err());
     }
 
@@ -351,7 +351,7 @@ mod tests {
         // Create a symmetric matrix
         let a = array![[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
 
-        let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();
+        let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
 
         let x = array![1.0, 2.0, 3.0];
         let y = sym.matvec(&x.view()).unwrap();
@@ -374,7 +374,7 @@ mod tests {
         // For symmetric matrices, matvec and matvec_transpose should give the same result
         let a = array![[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
 
-        let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();
+        let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
 
         let x = array![1.0, 2.0, 3.0];
         let y1 = sym.matvec(&x.view()).unwrap();
@@ -392,7 +392,7 @@ mod tests {
         // Create a symmetric matrix
         let a = array![[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
 
-        let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();
+        let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
 
         let dense = sym.to_dense().unwrap();
 
@@ -410,7 +410,7 @@ mod tests {
         // Create a symmetric positive definite matrix
         let a = array![[4.0, 2.0, 1.0], [2.0, 3.0, 0.5], [1.0, 0.5, 6.0]];
 
-        let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();
+        let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
 
         let l = sym.cholesky().unwrap();
 
@@ -440,7 +440,7 @@ mod tests {
         // Create a symmetric positive definite matrix
         let a = array![[4.0, 2.0, 1.0], [2.0, 3.0, 0.5], [1.0, 0.5, 6.0]];
 
-        let sym = SymmetricMatrix::from_matrix(&a.view()).unwrap();
+        let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
 
         // Right-hand side b = [1, 2, 3]
         let b = array![1.0, 2.0, 3.0];

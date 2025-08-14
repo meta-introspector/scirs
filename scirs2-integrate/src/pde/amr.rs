@@ -129,7 +129,7 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
     /// Create gradient-based refinement criteria
     pub fn gradient_based(threshold: F) -> Self {
         Self::GradientBased {
-            threshold: threshold,
+            threshold,
             coarsen_threshold: threshold / F::from(4.0).unwrap(),
         }
     }
@@ -137,7 +137,7 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
     /// Create curvature-based refinement criteria
     pub fn curvature_based(threshold: F) -> Self {
         Self::CurvatureBased {
-            threshold: threshold,
+            threshold,
             coarsen_threshold: threshold / F::from(4.0).unwrap(),
         }
     }
@@ -145,7 +145,7 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
     /// Create error-based refinement criteria
     pub fn error_based(threshold: F) -> Self {
         Self::ErrorBased {
-            threshold: threshold,
+            threshold,
             coarsen_threshold: threshold / F::from(16.0).unwrap(),
         }
     }
@@ -214,10 +214,10 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
         }
 
         // Second derivatives using centered differences
-        let d2_dx2 = solution[[i + 1, j]] - F::from(2.0).unwrap() * solution[[i, j]]
-            + solution[[i - 1, j]];
-        let d2_dy2 = solution[[i, j + 1]] - F::from(2.0).unwrap() * solution[[i, j]]
-            + solution[[i, j - 1]];
+        let d2_dx2 =
+            solution[[i + 1, j]] - F::from(2.0).unwrap() * solution[[i, j]] + solution[[i - 1, j]];
+        let d2_dy2 =
+            solution[[i, j + 1]] - F::from(2.0).unwrap() * solution[[i, j]] + solution[[i, j - 1]];
         let d2_dxdy =
             (solution[[i + 1, j + 1]] - solution[[i + 1, j - 1]] - solution[[i - 1, j + 1]]
                 + solution[[i - 1, j - 1]])
@@ -566,7 +566,7 @@ impl<F: IntegrateFloat> AMRSolver<F> {
     /// Create new AMR solver
     pub fn new(grid: AMRGrid<F>, criteria: RefinementCriteria<F>) -> Self {
         Self {
-            grid: grid,
+            grid,
             criteria,
             amr_cycles: 0,
             max_amr_cycles: 5,

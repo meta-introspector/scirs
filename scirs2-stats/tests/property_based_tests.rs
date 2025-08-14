@@ -20,9 +20,9 @@ use statrs::statistics::Statistics;
 
 /// Helper function to generate valid statistical data
 #[allow(dead_code)]
-fn generate_valid_data(size: usize, gen: &mut Gen) -> Array1<f64> {
-    let mut data = Array1::zeros(_size);
-    for i in 0.._size {
+fn generate_validdata(size: usize, gen: &mut Gen) -> Array1<f64> {
+    let mut data = Array1::zeros(size);
+    for i in 0..size {
         data[i] = f64::arbitrary(gen).abs().min(1e6); // Bounded, positive
     }
     data
@@ -30,11 +30,11 @@ fn generate_valid_data(size: usize, gen: &mut Gen) -> Array1<f64> {
 
 /// Helper function to generate valid correlation data (finite, not all equal)
 #[allow(dead_code)]
-fn generate_correlation_data(size: usize, gen: &mut Gen) -> (Array1<f64>, Array1<f64>) {
-    let mut x = Array1::zeros(_size);
-    let mut y = Array1::zeros(_size);
+fn generate_correlationdata(size: usize, gen: &mut Gen) -> (Array1<f64>, Array1<f64>) {
+    let mut x = Array1::zeros(size);
+    let mut y = Array1::zeros(size);
 
-    for i in 0.._size {
+    for i in 0..size {
         x[i] = f64::arbitrary(gen).abs().min(1e6);
         y[i] = f64::arbitrary(gen).abs().min(1e6);
     }
@@ -60,7 +60,7 @@ mod descriptive_stats_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data.clone());
+        let arr = Array1::from_vec(data.clone());
         let mean_val = mean(&arr.view()).unwrap();
         let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -74,7 +74,7 @@ mod descriptive_stats_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data);
+        let arr = Array1::from_vec(data);
         let variance = var(&arr.view(), 0, None).unwrap();
 
         TestResult::from_bool(variance >= 0.0 && variance.is_finite())
@@ -86,7 +86,7 @@ mod descriptive_stats_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data);
+        let arr = Array1::from_vec(data);
         let variance = var(&arr.view(), 0, None).unwrap();
         let std_dev = std(&arr.view(), 0, None).unwrap();
 
@@ -103,7 +103,7 @@ mod descriptive_stats_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data.clone());
+        let arr = Array1::from_vec(data.clone());
         let original_mean = mean(&arr.view()).unwrap();
 
         // Transform: y = a*x + b
@@ -125,7 +125,7 @@ mod descriptive_stats_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data.clone());
+        let arr = Array1::from_vec(data.clone());
         let original_var = var(&arr.view(), 0, None).unwrap();
 
         // Transform: y = a*x
@@ -152,10 +152,10 @@ mod descriptive_stats_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data);
+        let arr = Array1::from_vec(data);
         let skewness = skew(&arr.view(), false, None).unwrap();
 
-        // Skewness should be finite for valid _data
+        // Skewness should be finite for valid data
         TestResult::from_bool(skewness.is_finite())
     }
 
@@ -172,7 +172,7 @@ mod descriptive_stats_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data);
+        let arr = Array1::from_vec(data);
         let kurt = kurtosis(&arr.view(), true, false, None).unwrap(); // Fisher's definition
 
         // Fisher kurtosis should be >= -2 (theoretical minimum)
@@ -185,16 +185,16 @@ mod correlation_properties {
     use super::*;
 
     #[quickcheck]
-    fn correlation_bounds_property(_x_data: Vec<f64>, ydata: Vec<f64>) -> TestResult {
-        if x_data.len() != y_data.len() || x_data.len() < 2 {
+    fn correlation_bounds_property(_xdata: Vec<f64>, y_data: Vec<f64>) -> TestResult {
+        if xdata.len() != y_data.len() || xdata.len() < 2 {
             return TestResult::discard();
         }
 
-        if x_data.iter().any(|x| !x.is_finite()) || y_data.iter().any(|x| !x.is_finite()) {
+        if xdata.iter().any(|x| !x.is_finite()) || y_data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
-        let x = Array1::from_vec(_x_data);
+        let x = Array1::from_vec(_xdata);
         let y = Array1::from_vec(y_data);
 
         // Check for zero variance (would cause division by zero)
@@ -210,16 +210,16 @@ mod correlation_properties {
     }
 
     #[quickcheck]
-    fn correlation_symmetry_property(_x_data: Vec<f64>, ydata: Vec<f64>) -> TestResult {
-        if x_data.len() != y_data.len() || x_data.len() < 2 {
+    fn correlation_symmetry_property(_xdata: Vec<f64>, y_data: Vec<f64>) -> TestResult {
+        if xdata.len() != y_data.len() || xdata.len() < 2 {
             return TestResult::discard();
         }
 
-        if x_data.iter().any(|x| !x.is_finite()) || y_data.iter().any(|x| !x.is_finite()) {
+        if xdata.iter().any(|x| !x.is_finite()) || y_data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
-        let x = Array1::from_vec(_x_data);
+        let x = Array1::from_vec(_xdata);
         let y = Array1::from_vec(y_data);
 
         // Check for zero variance
@@ -245,7 +245,7 @@ mod correlation_properties {
             return TestResult::discard();
         }
 
-        let x = Array1::from_vec(_data);
+        let x = Array1::from_vec(data);
         let y = x.mapv(|val| a * val + b);
 
         // Check for zero variance in x
@@ -268,20 +268,20 @@ mod correlation_properties {
 
         // Ensure all rows have the same length
         let n_cols = data[0].len();
-        if !_data.iter().all(|row| row.len() == n_cols) {
+        if !data.iter().all(|row| row.len() == n_cols) {
             return TestResult::discard();
         }
 
         // Check for finite values and non-zero variance
-        let mut matrix_data = Vec::new();
-        for row in &_data {
+        let mut matrixdata = Vec::new();
+        for row in &data {
             if row.iter().any(|x| !x.is_finite()) {
                 return TestResult::discard();
             }
-            matrix_data.extend_from_slice(row);
+            matrixdata.extend_from_slice(row);
         }
 
-        let matrix = Array2::from_shape_vec((_data.len(), n_cols), matrix_data).unwrap();
+        let matrix = Array2::from_shape_vec((data.len(), n_cols), matrixdata).unwrap();
 
         // Check each column has non-zero variance
         for j in 0..n_cols {
@@ -424,7 +424,7 @@ mod extended_properties {
             return TestResult::discard();
         }
 
-        let _arr = Array1::from_vec(_data.clone());
+        let _arr = Array1::from_vec(data.clone());
         // Calculate range manually since range function doesn't exist
         let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -443,7 +443,7 @@ mod extended_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data);
+        let arr = Array1::from_vec(data);
         let quant1 = quantile(&arr.view(), q1, QuantileInterpolation::Linear).unwrap();
         let quant2 = quantile(&arr.view(), q2, QuantileInterpolation::Linear).unwrap();
 
@@ -460,7 +460,7 @@ mod extended_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data.clone());
+        let arr = Array1::from_vec(data.clone());
         let quant = quantile(&arr.view(), q, QuantileInterpolation::Linear).unwrap();
         let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -474,7 +474,7 @@ mod extended_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data.clone());
+        let arr = Array1::from_vec(data.clone());
         let median_val = median(&arr.view()).unwrap();
         let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -490,7 +490,7 @@ mod extended_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data.clone());
+        let arr = Array1::from_vec(data.clone());
         let original_var = var(&arr.view(), 0, None).unwrap();
 
         // Add constant to all elements
@@ -506,7 +506,7 @@ mod extended_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data);
+        let arr = Array1::from_vec(data);
         let mean_val = mean(&arr.view()).unwrap();
         let std_val = std(&arr.view(), 0, None).unwrap();
 
@@ -530,7 +530,7 @@ mod robust_statistics_properties {
     use super::*;
 
     #[quickcheck]
-    fn median_outlier_resistance(_data: Vec<f64>, outlierfactor: f64) -> TestResult {
+    fn median_outlier_resistance(data: Vec<f64>, outlierfactor: f64) -> TestResult {
         if data.len() < 5 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
@@ -539,7 +539,7 @@ mod robust_statistics_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data.clone());
+        let arr = Array1::from_vec(data.clone());
         let original_median = median(&arr.view()).unwrap();
 
         // Add extreme outlier
@@ -574,7 +574,7 @@ mod robust_statistics_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data);
+        let arr = Array1::from_vec(data);
         let median_val = median(&arr.view()).unwrap();
 
         // Compute MAD manually for verification
@@ -709,7 +709,7 @@ mod simd_consistency_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data.clone());
+        let arr = Array1::from_vec(data.clone());
         let simd_result = mean(&arr.view()).unwrap();
 
         // Compute scalar version manually
@@ -724,25 +724,25 @@ mod simd_consistency_properties {
             return TestResult::discard();
         }
 
-        let arr = Array1::from_vec(_data.clone());
+        let arr = Array1::from_vec(data.clone());
         let simd_result = var(&arr.view(), 0, None).unwrap();
 
         // Compute scalar version manually
         let mean_val = data.iter().sum::<f64>() / data.len() as f64;
         let scalar_result =
-            data.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / (_data.len() - 1) as f64;
+            data.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / (data.len() - 1) as f64;
 
         TestResult::from_bool((simd_result - scalar_result).abs() < 1e-10)
     }
 
     #[quickcheck]
-    fn large_dataset_stability(size: usize) -> TestResult {
-        if _size < 100 || _size > 10000 {
+    fn largedataset_stability(size: usize) -> TestResult {
+        if size < 100 || size > 10000 {
             return TestResult::discard();
         }
 
         // Generate deterministic data for reproducibility
-        let data: Vec<f64> = (0.._size).map(|i| (i as f64).sin()).collect();
+        let data: Vec<f64> = (0..size).map(|i| (i as f64).sin()).collect();
         let arr = Array1::from_vec(data);
 
         let mean_val = mean(&arr.view()).unwrap();
@@ -800,18 +800,18 @@ mod numerical_stability_properties {
     }
 
     #[quickcheck]
-    fn near_identical_values_stability(_base: f64, epsilonexp: i32) -> TestResult {
-        if !_base.is_finite() || base.abs() > 1000.0 || epsilon_exp < -15 || epsilon_exp > -5 {
+    fn near_identical_values_stability(base: f64, epsilon_exp: i32) -> TestResult {
+        if !base.is_finite() || base.abs() > 1000.0 || epsilon_exp < -15 || epsilon_exp > -5 {
             return TestResult::discard();
         }
 
         let epsilon = 10.0_f64.powi(epsilon_exp);
         let data = vec![
             base,
-            _base + epsilon,
-            _base - epsilon,
-            _base + 2.0 * epsilon,
-            _base - 2.0 * epsilon,
+            base + epsilon,
+            base - epsilon,
+            base + 2.0 * epsilon,
+            base - 2.0 * epsilon,
         ];
         let arr = Array1::from_vec(data);
 
@@ -843,23 +843,23 @@ mod multivariate_properties {
 
         // Ensure all rows have the same length
         let n_cols = data[0].len();
-        if !_data.iter().all(|row| row.len() == n_cols) {
+        if !data.iter().all(|row| row.len() == n_cols) {
             return TestResult::discard();
         }
 
         // Check for finite values
-        for row in &_data {
+        for row in &data {
             if row.iter().any(|x| !x.is_finite()) {
                 return TestResult::discard();
             }
         }
 
-        let mut matrix_data = Vec::new();
-        for row in &_data {
-            matrix_data.extend_from_slice(row);
+        let mut matrixdata = Vec::new();
+        for row in &data {
+            matrixdata.extend_from_slice(row);
         }
 
-        let matrix = Array2::from_shape_vec((_data.len(), n_cols), matrix_data).unwrap();
+        let matrix = Array2::from_shape_vec((data.len(), n_cols), matrixdata).unwrap();
 
         // Check each column has non-zero variance
         for j in 0..n_cols {

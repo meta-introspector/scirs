@@ -7,7 +7,7 @@ use ndarray::Array1;
 use ndarray::ArrayView1;
 use scirs2_stats::{
     comprehensive_validation_suite::*, mean, numerical_stability_analyzer::*,
-    property_based_validation::*, scipy_benchmark_framework::*,
+    propertybased_validation::*, scipy_benchmark_framework::*,
 };
 
 #[allow(dead_code)]
@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create comprehensive validation suite
     let mut validation_suite = ComprehensiveValidationSuite::new(ValidationSuiteConfig {
         benchmark_config: BenchmarkConfig {
-            test_sizes: vec![100, 1000],
+            testsizes: vec![100, 1000],
             performance_iterations: 50,
             warmup_iterations: 5,
             absolute_tolerance: 1e-12,
@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Demonstrate SciPy Benchmark Framework
     println!("\n📊 SciPy Benchmark Framework:");
     let mut benchmark_framework = ScipyBenchmarkFramework::new(BenchmarkConfig {
-        test_sizes: vec![1000],
+        testsizes: vec![1000],
         performance_iterations: 100,
         ..Default::default()
     });
@@ -99,7 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         benchmark_framework.benchmark_function("mean_benchmark", |data| mean(data), scipy_mean)?;
 
     for result in &benchmark_results {
-        println!("   ✓ Data size: {}", result.data_size);
+        println!("   ✓ Data size: {}", result.datasize);
         println!(
             "     Accuracy: {} (Grade: {:?})",
             if result.accuracy.passes_tolerance {
@@ -149,11 +149,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     });
 
-    let test_data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 100.0, -50.0]);
+    let testdata = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 100.0, -50.0]);
     let stability_result = stability_analyzer.analyze_function(
         "mean_stability",
         |data| mean(data),
-        &test_data.view(),
+        &testdata.view(),
     )?;
 
     println!(
@@ -279,8 +279,8 @@ mod tests {
 
     #[test]
     fn test_mean_basic_validation() {
-        let test_data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let result = mean(&test_data.view()).unwrap();
+        let testdata = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        let result = mean(&testdata.view()).unwrap();
         assert!((result - 3.0).abs() < 1e-10);
     }
 }

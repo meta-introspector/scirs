@@ -11,8 +11,8 @@
 //! # Examples
 //!
 //! ```rust
-//! use scirs2__graph::io::edge_list::{read_edge_list_format, write_edge_list_format};
-//! use scirs2__graph::base::Graph;
+//! use scirs2_graph::io::edge_list::{read_edge_list_format, write_edge_list_format};
+//! use scirs2_graph::base::Graph;
 //! use std::io::Write;
 //! use tempfile::NamedTempFile;
 //!
@@ -69,8 +69,7 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file =
-        File::open(path).map_err(|e| GraphError::Other(format!("Cannot open file: {e}")))?;
+    let file = File::open(path).map_err(|e| GraphError::Other(format!("Cannot open file: {e}")))?;
     let reader = BufReader::new(file);
     let mut graph = Graph::new();
 
@@ -199,8 +198,7 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file =
-        File::open(path).map_err(|e| GraphError::Other(format!("Cannot open file: {e}")))?;
+    let file = File::open(path).map_err(|e| GraphError::Other(format!("Cannot open file: {e}")))?;
     let reader = BufReader::new(file);
     let mut graph = DiGraph::new();
 

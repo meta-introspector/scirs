@@ -53,12 +53,12 @@ fn regular_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
 }
 
 #[allow(dead_code)]
-fn create_random_array1_f32(size: usize) -> Array1<f32> {
-    Array1::from_iter((0.._size).map(|i| (i % 100) as f32 / 100.0))
+fn create_randomarray1_f32(size: usize) -> Array1<f32> {
+    Array1::from_iter((0..size).map(|i| (i % 100) as f32 / 100.0))
 }
 
 #[allow(dead_code)]
-fn create_random_array2_f32(rows: usize, cols: usize) -> Array2<f32> {
+fn create_randomarray2_f32(rows: usize, cols: usize) -> Array2<f32> {
     Array2::from_shape_fn((_rows, cols), |(i, j)| {
         ((i * cols + j) % 100) as f32 / 100.0
     })
@@ -69,8 +69,8 @@ fn bench_matvec(c: &mut Criterion) {
     let mut group = c.benchmark_group("MatVec");
 
     for size in [100, 500, 1000, 5000].iter() {
-        let matrix = create_random_array2_f32(*size, *size);
-        let vector = create_random_array1_f32(*size);
+        let matrix = create_randomarray2_f32(*size, *size);
+        let vector = create_randomarray1_f32(*size);
 
         group.bench_with_input(BenchmarkId::new("Regular", size), &size, |b_| {
             b.iter(|| {
@@ -109,8 +109,8 @@ fn bench_matmul(c: &mut Criterion) {
     let mut group = c.benchmark_group("MatMul");
 
     for size in [50, 100, 200, 500].iter() {
-        let matrix_a = create_random_array2_f32(*size, *size);
-        let matrix_b = create_random_array2_f32(*size, *size);
+        let matrix_a = create_randomarray2_f32(*size, *size);
+        let matrix_b = create_randomarray2_f32(*size, *size);
 
         group.bench_with_input(BenchmarkId::new("Regular", size), &size, |b_| {
             b.iter(|| {
@@ -152,8 +152,8 @@ fn bench_dot(c: &mut Criterion) {
     let mut group = c.benchmark_group("Dot");
 
     for size in [100, 1_000, 10_000, 100_000, 1_000_000].iter() {
-        let vec_a = create_random_array1_f32(*size);
-        let vec_b = create_random_array1_f32(*size);
+        let vec_a = create_randomarray1_f32(*size);
+        let vec_b = create_randomarray1_f32(*size);
 
         group.bench_with_input(BenchmarkId::new("Regular", size), &size, |b_| {
             b.iter(|| {

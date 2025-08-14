@@ -19,7 +19,7 @@ fn create_test_tensor_3d(d1: usize, d2: usize, d3: usize) -> Array3<f64> {
 
 /// Create a random-like matrix for tensor operations
 #[allow(dead_code)]
-fn create_test_matrix(m: usize, n: usize) -> Array2<f64> {
+fn create_testmatrix(m: usize, n: usize) -> Array2<f64> {
     Array2::from_shape_fn((m, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin())
 }
 
@@ -33,11 +33,11 @@ fn create_test_vector(n: usize) -> Array1<f64> {
 #[allow(dead_code)]
 fn bench_tensor_contraction(c: &mut Criterion) {
     let mut group = c.benchmark_group("tensor_contraction");
-    group.sample_size(20);
+    group.samplesize(20);
 
     for &size in &[10, 20, 30] {
         let tensor_3d = create_test_tensor_3d(size, size, size);
-        let matrix = create_test_matrix(size, size);
+        let matrix = create_testmatrix(size, size);
 
         let total_elements = size * size * size;
         group.throughput(Throughput::Elements(total_elements as u64));
@@ -84,11 +84,11 @@ fn bench_tensor_contraction(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_einsum_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("einsum_operations");
-    group.sample_size(20);
+    group.samplesize(20);
 
     for &size in &[10, 20, 30] {
-        let matrix_a = create_test_matrix(size, size);
-        let matrix_b = create_test_matrix(size, size);
+        let matrix_a = create_testmatrix(size, size);
+        let matrix_b = create_testmatrix(size, size);
         let vector = create_test_vector(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
@@ -149,7 +149,7 @@ fn bench_einsum_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_hosvd_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("hosvd_operations");
-    group.sample_size(10);
+    group.samplesize(10);
     group.measurement_time(Duration::from_secs(30));
 
     for &size in &[8, 12, 16] {
@@ -189,24 +189,24 @@ fn bench_hosvd_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_batch_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("batch_operations");
-    group.sample_size(20);
+    group.samplesize(20);
 
-    for &batch_size in &[4, 8, 16] {
+    for &batchsize in &[4, 8, 16] {
         for &size in &[8, 12, 16] {
-            let batch_a = Array3::from_shape_fn((batch_size, size, size), |(b, i, j)| {
+            let batch_a = Array3::from_shape_fn((batchsize, size, size), |(b, i, j)| {
                 ((b + i + j + 1) as f64 * 0.1).sin()
             });
-            let batch_b = Array3::from_shape_fn((batch_size, size, size), |(b, i, j)| {
+            let batch_b = Array3::from_shape_fn((batchsize, size, size), |(b, i, j)| {
                 ((b + i + j + 1) as f64 * 0.1).cos()
             });
 
             group.throughput(Throughput::Elements(
-                batch_size as u64 * size as u64 * size as u64,
+                batchsize as u64 * size as u64 * size as u64,
             ));
 
             // Batch matrix multiplication
             group.bench_with_input(
-                BenchmarkId::new(format!("batch_matmul_{}x{}", batch_size, size), size),
+                BenchmarkId::new(format!("batch_matmul_{}x{}", batchsize, size), size),
                 &(&batch_a, &batch_b),
                 |b, (a, batch_b)| {
                     b.iter(|| {

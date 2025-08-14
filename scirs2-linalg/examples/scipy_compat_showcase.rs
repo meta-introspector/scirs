@@ -278,7 +278,7 @@ mod tests {
     }
 
     #[test]
-    fn test_scipy_compat_matrix_functions() {
+    fn test_scipy_compatmatrix_functions() {
         let a = array![[1.0, 0.1], [0.1, 1.0]];
 
         // Test matrix exponential

@@ -23,17 +23,17 @@ mod compilation_tests {
         
         // Mock the function signatures we fixed
         fn mock_var(data: &ndarray::ArrayView1<f64>, ddof: usize, workers: Option<usize>) -> Result<f64, String> {
-            let _ = (_data, ddof, workers);
+            let _ = (data, ddof, workers);
             Ok(1.0)
         }
         
         fn mock_std(data: &ndarray::ArrayView1<f64>, ddof: usize, workers: Option<usize>) -> Result<f64, String> {
-            let _ = (_data, ddof, workers);
+            let _ = (data, ddof, workers);
             Ok(1.0)
         }
         
         fn mock_skew(data: &ndarray::ArrayView1<f64>, bias: bool, workers: Option<usize>) -> Result<f64, String> {
-            let _ = (_data, bias, workers);
+            let _ = (data, bias, workers);
             Ok(0.0)
         }
         

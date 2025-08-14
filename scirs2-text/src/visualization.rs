@@ -454,8 +454,7 @@ impl AttentionVisualizer {
         target_tokens: &[String],
         path: P,
     ) -> Result<()> {
-        let svg_content =
-            self.attention_heatmap(attentionweights, source_tokens, target_tokens)?;
+        let svg_content = self.attention_heatmap(attentionweights, source_tokens, target_tokens)?;
         fs::write(path, svg_content)
             .map_err(|e| TextError::IoError(format!("Failed to save attention heatmap: {e}")))?;
         Ok(())

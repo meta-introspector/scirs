@@ -21,7 +21,7 @@ use crate::error::{LinalgError, LinalgResult};
 ///
 /// * Covariance matrix with shape (n_features, n_features)
 #[allow(dead_code)]
-pub fn covariance_matrix<F>(data: &ArrayView2<F>, ddof: Option<usize>) -> LinalgResult<Array2<F>>
+pub fn covariancematrix<F>(data: &ArrayView2<F>, ddof: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + Zero + num_traits::FromPrimitive + Send + Sync + ndarray::ScalarOperand + 'static,
 {
@@ -82,12 +82,12 @@ where
 ///
 /// * Correlation matrix with shape (n_features, n_features)
 #[allow(dead_code)]
-pub fn correlation_matrix<F>(data: &ArrayView2<F>, ddof: Option<usize>) -> LinalgResult<Array2<F>>
+pub fn correlationmatrix<F>(data: &ArrayView2<F>, ddof: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + Zero + num_traits::FromPrimitive + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // Compute covariance matrix
-    let cov = covariance_matrix(data, ddof)?;
+    let cov = covariancematrix(data, ddof)?;
     let n_features = cov.nrows();
 
     // Extract standard deviations (sqrt of diagonal elements)

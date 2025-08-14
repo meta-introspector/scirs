@@ -269,10 +269,10 @@ where
         for self_idx in ndarray::indices(self.data.shape()) {
             for other_idx in ndarray::indices(other.data.shape()) {
                 let mut result_idx = Vec::new();
-                for &i in self_idx.as_array_view().iter() {
+                for &i in self_idx.asarray_view().iter() {
                     result_idx.push(i);
                 }
-                for &i in other_idx.as_array_view().iter() {
+                for &i in other_idx.asarray_view().iter() {
                     result_idx.push(i);
                 }
 

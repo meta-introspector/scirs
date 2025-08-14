@@ -44,7 +44,7 @@ pub struct MonteCarloConfig {
     /// Number of parallel workers
     pub num_workers: usize,
     /// Chunk size for parallel processing
-    pub chunk_size: usize,
+    pub chunksize: usize,
     /// Enable adaptive sampling
     pub adaptive_sampling: bool,
     /// Random seed
@@ -62,7 +62,7 @@ impl Default for MonteCarloConfig {
             confidence_level: 0.95,
             parallel: true,
             num_workers: num_cpus::get(),
-            chunk_size: 1000,
+            chunksize: 1000,
             adaptive_sampling: true,
             seed: None,
             use_gpu: false,
@@ -268,20 +268,20 @@ where
 
         // Adaptive sampling loop
         while total_samples < self.config.max_samples {
-            let batch_size = self
+            let batchsize = self
                 .config
                 .initial_samples
                 .min(self.config.max_samples - total_samples);
 
             // Generate samples for this iteration
             let result = if self.config.parallel {
-                self.parallel_sampling(function, batch_size, &mut main_rng)?
+                self.parallel_sampling(function, batchsize, &mut main_rng)?
             } else {
-                self.sequential_sampling(function, batch_size, &mut main_rng)?
+                self.sequential_sampling(function, batchsize, &mut main_rng)?
             };
 
             // Update estimates
-            total_samples += batch_size;
+            total_samples += batchsize;
             current_estimate = self.update_estimate(result, total_samples)?;
             current_error = self.estimate_error(total_samples)?;
 
@@ -344,8 +344,8 @@ where
     where
         T: IntegrableFunction<F>,
     {
-        let chunk_size = self.config.chunk_size;
-        let num_chunks = (n_samples_ + chunk_size - 1) / chunk_size;
+        let chunksize = self.config.chunksize;
+        let num_chunks = (n_samples_ + chunksize - 1) / chunksize;
 
         // Generate seeds for parallel workers
         let seeds: Vec<u64> = (0..num_chunks).map(|_| rng.random()).collect();
@@ -355,11 +355,11 @@ where
             .iter()
             .enumerate()
             .map(|(chunk_idx, &seed)| {
-                let start = chunk_idx * chunk_size;
-                let end = ((chunk_idx + 1) * chunk_size).min(n_samples_);
-                let actual_chunk_size = end - start;
+                let start = chunk_idx * chunksize;
+                let end = ((chunk_idx + 1) * chunksize).min(n_samples_);
+                let actual_chunksize = end - start;
 
-                self.evaluate_chunk(function, actual_chunk_size, seed)
+                self.evaluate_chunk(function, actual_chunksize, seed)
             })
             .collect();
 
@@ -487,11 +487,11 @@ where
         let mut state = self.adaptive_state.lock().unwrap();
 
         let batch_mean = new_values.mean().unwrap();
-        let batch_size = new_values.len();
+        let batchsize = new_values.len();
 
         if state.n_samples_ == 0 {
             state.running_mean = batch_mean;
-            state.running_variance = if batch_size > 1 {
+            state.running_variance = if batchsize > 1 {
                 new_values.var(F::one())
             } else {
                 F::zero()
@@ -504,19 +504,19 @@ where
 
             // Update mean
             state.running_mean = (old_mean * F::from(old_n).unwrap()
-                + batch_mean * F::from(batch_size).unwrap())
+                + batch_mean * F::from(batchsize).unwrap())
                 / F::from(new_n).unwrap();
 
             // Update variance using Welford's algorithm
-            let batch_var = if batch_size > 1 {
+            let batch_var = if batchsize > 1 {
                 new_values.var(F::one())
             } else {
                 F::zero()
             };
             let mean_diff = batch_mean - old_mean;
             state.running_variance = (state.running_variance * F::from(old_n - 1.0).unwrap()
-                + batch_var * F::from(batch_size - 1).unwrap()
-                + mean_diff * mean_diff * F::from(old_n * batch_size as f64 / new_n).unwrap())
+                + batch_var * F::from(batchsize - 1).unwrap()
+                + mean_diff * mean_diff * F::from(old_n * batchsize as f64 / new_n).unwrap())
                 / F::from(new_n - 1.0).unwrap();
         }
 
@@ -704,7 +704,7 @@ impl GaussianFunction {
         let upper_bounds = Array1::from_elem(dimension, 5.0);
 
         Self {
-            mean: mean,
+            mean,
             covariance,
             lower_bounds,
             upper_bounds,

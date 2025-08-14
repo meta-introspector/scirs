@@ -106,7 +106,7 @@ pub struct CollectiveHints {
     /// Enable pipelined operations
     pub enable_pipelining: bool,
     /// Chunk size for pipelined operations
-    pub pipeline_chunk_size: usize,
+    pub pipeline_chunksize: usize,
     /// Enable hierarchical operations
     pub enable_hierarchical: bool,
 }
@@ -132,7 +132,7 @@ pub struct MPIPerformanceTuning {
     /// Rendezvous protocol threshold  
     pub rendezvous_threshold: usize,
     /// Maximum message segmentation size
-    pub max_segment_size: usize,
+    pub max_segmentsize: usize,
     /// Number of communication threads
     pub comm_threads: usize,
     /// Enable NUMA-aware binding
@@ -157,14 +157,14 @@ impl Default for MPIConfig {
                 allgather_algorithm: None,
                 broadcast_algorithm: None,
                 enable_pipelining: true,
-                pipeline_chunk_size: 64 * 1024, // 64KB
+                pipeline_chunksize: 64 * 1024, // 64KB
                 enable_hierarchical: true,
             },
             error_handling: MPIErrorHandling::FaultTolerant,
             performance_tuning: MPIPerformanceTuning {
                 eager_threshold: 12 * 1024, // 12KB
                 rendezvous_threshold: 64 * 1024, // 64KB
-                max_segment_size: 1024 * 1024, // 1MB
+                max_segmentsize: 1024 * 1024, // 1MB
                 comm_threads: 1,
                 numa_binding: true,
                 cpu_affinity: Vec::new(),
@@ -206,7 +206,7 @@ unsafe impl Sync for MPICommHandle {}
 #[derive(Debug)]
 pub struct MPIDatatype {
     type_handle: *mut c_void,
-    element_size: usize,
+    elementsize: usize,
     is_committed: bool,
 }
 
@@ -235,7 +235,7 @@ pub enum PersistentOperationType {
 #[derive(Debug, Clone)]
 pub struct BufferInfo {
     buffer_ptr: *mut c_void,
-    buffer_size: usize,
+    buffersize: usize,
     element_count: usize,
     datatype: String,
 }
@@ -304,7 +304,7 @@ impl MPICommunicator {
 
         // Get rank and size
         let rank = unsafe { mpi_comm_rank(comm_handle.handle) };
-        let size = unsafe { mpi_comm_size(comm_handle.handle) };
+        let size = unsafe { mpi_commsize(comm_handle.handle) };
 
         if rank < 0 || size <= 0 {
             return Err(LinalgError::InitializationError(
@@ -651,7 +651,7 @@ pub struct MPICollectiveOps {
 #[derive(Debug, Clone)]
 pub struct CollectiveOptimization {
     algorithm: String,
-    chunk_size: usize,
+    chunksize: usize,
     pipeline_depth: usize,
     tree_topology: TreeTopology,
     expected_performance: f64,
@@ -672,7 +672,7 @@ pub enum TreeTopology {
 pub struct CollectivePerformanceRecord {
     operation: String,
     process_count: i32,
-    data_size: usize,
+    datasize: usize,
     execution_time: f64,
     bandwidth: f64,
     algorithm_used: String,
@@ -780,7 +780,7 @@ pub struct MPIPerformanceOptimizer {
 #[derive(Debug, Clone)]
 pub struct BenchmarkResult {
     operation: String,
-    data_size: usize,
+    datasize: usize,
     process_count: i32,
     bandwidth: f64,
     latency: f64,
@@ -792,7 +792,7 @@ pub struct BenchmarkResult {
 #[derive(Debug, Clone)]
 pub struct AdaptiveParameters {
     eager_threshold: usize,
-    pipeline_chunk_size: usize,
+    pipeline_chunksize: usize,
     collective_algorithm_map: HashMap<String, String>,
     message_aggregation_threshold: usize,
 }
@@ -813,7 +813,7 @@ pub struct MPITraceEvent {
     event_type: MPIEventType,
     process_rank: i32,
     communicator: String,
-    data_size: usize,
+    datasize: usize,
     partner_rank: Option<i32>,
     operation_id: String,
 }
@@ -928,7 +928,7 @@ pub struct CheckpointMetadata {
     timestamp: std::time::Instant,
     process_states: HashMap<i32, ProcessState>,
     communication_state: CommunicationState,
-    data_size: usize,
+    datasize: usize,
     integrity_hash: String,
 }
 
@@ -1168,7 +1168,7 @@ pub struct SpareProcess {
 #[derive(Debug, Clone)]
 pub struct ProcessCapabilities {
     cpu_cores: usize,
-    memory_size: usize,
+    memorysize: usize,
     network_bandwidth: f64,
     special_hardware: Vec<String>,
 }
@@ -1424,7 +1424,7 @@ pub struct PerformanceDataPoint {
 pub struct WorkloadCharacteristics {
     computation_pattern: ComputationPattern,
     communication_pattern: CommunicationPattern,
-    data_size: usize,
+    datasize: usize,
     process_count: i32,
 }
 
@@ -1512,7 +1512,7 @@ pub struct MemoryPool {
     memory_type: MPIMemoryType,
     allocated_blocks: HashMap<String, MemoryBlock>,
     free_blocks: Vec<MemoryBlock>,
-    total_size: usize,
+    totalsize: usize,
     fragmentation: f64,
 }
 
@@ -1563,7 +1563,7 @@ pub struct MemoryOptimization {
 #[derive(Debug, Clone)]
 pub struct CompressionStrategy {
     algorithm: CompressionAlgorithm,
-    threshold_size: usize,
+    thresholdsize: usize,
     compression_level: u8,
     decompression_on_access: bool,
 }
@@ -1612,7 +1612,7 @@ pub struct AllocationRecord {
 pub struct UsagePattern {
     pattern_type: UsagePatternType,
     frequency: f64,
-    typical_size: usize,
+    typicalsize: usize,
     typical_lifetime: std::time::Duration,
     access_locality: f64,
 }
@@ -1683,7 +1683,7 @@ extern "C" {
     fn mpi_initialized(flag: *mut c_int) -> c_int;
     fn mpi_comm_world() -> *mut c_void;
     fn mpi_comm_rank(comm: *mut c_void) -> c_int;
-    fn mpi_comm_size(comm: *mut c_void) -> c_int;
+    fn mpi_commsize(comm: *mut c_void) -> c_int;
     fn mpi_isend(buf: *const c_void, count: usize, datatype: c_int, dest: c_int, tag: c_int, comm: *mut c_void) -> *mut c_void;
     fn mpi_irecv(buf: *mut c_void, count: usize, datatype: c_int, source: c_int, tag: c_int, comm: *mut c_void) -> *mut c_void;
     fn mpi_wait(request: *mut c_void, status: *mut c_void) -> c_int;
@@ -1709,14 +1709,14 @@ impl Default for MPIConfig {
                 allgather_algorithm: None,
                 broadcast_algorithm: None,
                 enable_pipelining: true,
-                pipeline_chunk_size: 64 * 1024,
+                pipeline_chunksize: 64 * 1024,
                 enable_hierarchical: true,
             },
             error_handling: MPIErrorHandling::FaultTolerant,
             performance_tuning: MPIPerformanceTuning {
                 eager_threshold: 12 * 1024,
                 rendezvous_threshold: 64 * 1024,
-                max_segment_size: 1024 * 1024,
+                max_segmentsize: 1024 * 1024,
                 _comm_threads: 1,
                 numa_binding: true,
                 cpu_affinity: Vec::new(),
@@ -2086,7 +2086,7 @@ pub struct CommOperation {
     /// Destination process
     pub destination: i32,
     /// Data size in bytes
-    pub data_size: usize,
+    pub datasize: usize,
     /// Operation type
     pub operation_type: CommOperationType,
     /// Scheduled start time
@@ -2422,7 +2422,7 @@ pub struct SystemState {
 #[derive(Debug, Default)]
 pub struct WorkloadPrediction {
     pub expected_operations: Vec<String>,
-    pub data_sizes: Vec<usize>,
+    pub datasizes: Vec<usize>,
     pub completion_deadlines: Vec<f64>,
 }
 

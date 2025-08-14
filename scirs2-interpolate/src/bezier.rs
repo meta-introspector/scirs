@@ -56,16 +56,16 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
     /// // Evaluate the curve at parameter t = 0.5 (midpoint)
     /// let point = curve.evaluate(0.5).unwrap();
     /// ```
-    pub fn new(_controlpoints: &ArrayView2<F>) -> InterpolateResult<Self> {
-        if control_points.is_empty() {
+    pub fn new(controlpoints: &ArrayView2<F>) -> InterpolateResult<Self> {
+        if controlpoints.is_empty() {
             return Err(InterpolateError::invalid_input(
                 "Control _points array cannot be empty".to_string(),
             ));
         }
 
-        let degree = control_points.shape()[0] - 1;
+        let degree = controlpoints.shape()[0] - 1;
         Ok(BezierCurve {
-            control_points: control_points.to_owned(),
+            control_points: controlpoints.to_owned(),
             degree,
         })
     }
@@ -303,8 +303,8 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
     /// // Evaluate the surface at parameters (u,v) = (0.5, 0.5)
     /// let point = surface.evaluate(0.5, 0.5).unwrap();
     /// ```
-    pub fn new(_controlpoints: &ArrayView2<F>, nu: usize, nv: usize) -> InterpolateResult<Self> {
-        if control_points.is_empty() {
+    pub fn new(controlpoints: &ArrayView2<F>, nu: usize, nv: usize) -> InterpolateResult<Self> {
+        if controlpoints.is_empty() {
             return Err(InterpolateError::invalid_input(
                 "Control _points array cannot be empty".to_string(),
             ));
@@ -316,20 +316,20 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
             ));
         }
 
-        if control_points.shape()[0] != nu * nv {
+        if controlpoints.shape()[0] != nu * nv {
             return Err(InterpolateError::invalid_input(format!(
                 "Expected {} control _points for a {}x{} grid, got {}",
                 nu * nv,
                 nu,
                 nv,
-                control_points.shape()[0]
+                controlpoints.shape()[0]
             )));
         }
 
-        let dim = control_points.shape()[1];
+        let dim = controlpoints.shape()[1];
 
         Ok(BezierSurface {
-            control_points: control_points.to_owned(),
+            control_points: controlpoints.to_owned(),
             nu,
             nv,
             dim,

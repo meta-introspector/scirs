@@ -4,7 +4,7 @@
 //! platform-specific cache directories, cache size limits, offline mode, and
 //! detailed cache statistics.
 
-use scirs2__datasets::{get_cache_dir, CacheManager, DatasetCache};
+use scirs2__datasets::{get_cachedir, CacheManager, DatasetCache};
 
 #[allow(dead_code)]
 fn main() {
@@ -12,9 +12,9 @@ fn main() {
 
     // Demonstrate platform-specific cache directory detection
     println!("=== Platform-Specific Cache Directory =========");
-    match get_cache_dir() {
-        Ok(cache_dir) => {
-            println!("Default cache directory: {}", cache_dir.display());
+    match get_cachedir() {
+        Ok(cachedir) => {
+            println!("Default cache directory: {}", cachedir.display());
             println!("Platform: {}", std::env::consts::OS);
         }
         Err(e) => {
@@ -41,13 +41,13 @@ fn main() {
     println!();
 
     // Create a temporary cache for demonstration
-    let temp_dir = tempfile::tempdir().unwrap();
-    let demo_cache_dir = temp_dir.path().join("demo_cache");
+    let tempdir = tempfile::tempdir().unwrap();
+    let demo_cachedir = tempdir.path().join("demo_cache");
 
     // Demonstrate cache with size limits
     println!("=== Cache with Size Limits =====================");
     let mut cache_manager = CacheManager::with_full_config(
-        demo_cache_dir.clone(),
+        demo_cachedir.clone(),
         50,          // 50 items in memory cache
         3600,        // 1 hour TTL
         1024 * 1024, // 1MB disk cache limit
@@ -55,11 +55,10 @@ fn main() {
     );
 
     println!("Created cache with 1MB size limit");
-    println!("Cache directory: {}", demo_cache_dir.display());
+    println!("Cache directory: {}", demo_cachedir.display());
 
     // Add some test data to the cache
-    let cache =
-        DatasetCache::with_full_config(demo_cache_dir.clone(), 50, 3600, 1024 * 1024, false);
+    let cache = DatasetCache::with_full_config(demo_cachedir.clone(), 50, 3600, 1024 * 1024, false);
 
     // Write several files of different sizes
     let small_data = vec![0u8; 1024]; // 1KB
@@ -84,7 +83,7 @@ fn main() {
     println!("=== Detailed Cache Statistics ==================");
     match cache_manager.get_detailed_stats() {
         Ok(detailed_stats) => {
-            println!("Cache Directory: {}", detailed_stats.cache_dir.display());
+            println!("Cache Directory: {}", detailed_stats.cachedir.display());
             println!(
                 "Total Size: {} ({} files)",
                 detailed_stats.formatted_size(),
@@ -216,22 +215,22 @@ fn main() {
     println!();
 
     println!("1. Development (small cache, frequent cleanup):");
-    println!("   CacheManager::with_full_config(cache_dir, 20, 1800, 50*1024*1024, false)");
+    println!("   CacheManager::with_full_config(cachedir, 20, 1800, 50*1024*1024, false)");
     println!("   - 20 items in memory, 30 min TTL, 50MB disk limit");
     println!();
 
     println!("2. Production (large cache, longer retention):");
-    println!("   CacheManager::with_full_config(cache_dir, 500, 86400, 1024*1024*1024, false)");
+    println!("   CacheManager::with_full_config(cachedir, 500, 86400, 1024*1024*1024, false)");
     println!("   - 500 items in memory, 24 hour TTL, 1GB disk limit");
     println!();
 
     println!("3. Offline environment:");
-    println!("   CacheManager::with_full_config(cache_dir, 100, 3600, 0, true)");
+    println!("   CacheManager::with_full_config(cachedir, 100, 3600, 0, true)");
     println!("   - Offline mode enabled, unlimited disk cache");
     println!();
 
     println!("4. Memory-constrained (minimal cache):");
-    println!("   CacheManager::with_full_config(cache_dir, 10, 900, 10*1024*1024, false)");
+    println!("   CacheManager::with_full_config(cachedir, 10, 900, 10*1024*1024, false)");
     println!("   - 10 items in memory, 15 min TTL, 10MB disk limit");
     println!();
 

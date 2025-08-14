@@ -925,7 +925,7 @@ impl AdvancedfastDistanceMatrix {
     /// Create new advancedfast distance matrix computer
     pub fn new(optimizer: ExtremeOptimizer) -> Self {
         Self {
-            optimizer: optimizer,
+            optimizer,
             vectorized_kernels: VectorizedKernels {
                 avx512_kernels: HashMap::new(),
                 avx2_kernels: HashMap::new(),

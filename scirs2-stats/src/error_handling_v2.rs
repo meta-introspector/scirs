@@ -166,7 +166,7 @@ pub struct ErrorBuilder {
 impl ErrorBuilder {
     pub fn new(code: ErrorCode, operation: impl Into<String>) -> Self {
         Self {
-            code: code,
+            code,
             context: ErrorContext::new(operation),
             suggestions: Vec::new(),
             performance_impact: None,

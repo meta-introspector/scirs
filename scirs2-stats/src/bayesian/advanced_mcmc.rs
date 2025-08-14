@@ -29,7 +29,7 @@ pub trait LogDensity {
 #[derive(Debug, Clone)]
 pub struct HamiltonianMonteCarlo {
     /// Step size for leapfrog integration
-    pub step_size: f64,
+    pub stepsize: f64,
     /// Number of leapfrog steps
     pub n_steps: usize,
     /// Mass matrix (inverse covariance of momentum)
@@ -37,7 +37,7 @@ pub struct HamiltonianMonteCarlo {
     /// Random number generator seed
     pub seed: Option<u64>,
     /// Whether to adapt step size
-    pub adapt_step_size: bool,
+    pub adapt_stepsize: bool,
     /// Target acceptance rate for adaptation
     pub target_acceptance: f64,
     /// Adaptation window size
@@ -46,16 +46,16 @@ pub struct HamiltonianMonteCarlo {
 
 impl HamiltonianMonteCarlo {
     /// Create a new HMC sampler
-    pub fn new(step_size: f64, n_steps: usize) -> Result<Self> {
-        check_positive(step_size, "step_size")?;
+    pub fn new(stepsize: f64, n_steps: usize) -> Result<Self> {
+        check_positive(stepsize, "stepsize")?;
         check_positive(n_steps, "n_steps")?;
 
         Ok(Self {
-            step_size,
+            stepsize,
             n_steps,
             mass_matrix: None,
             seed: None,
-            adapt_step_size: true,
+            adapt_stepsize: true,
             target_acceptance: 0.8,
             adaptation_window: 1000,
         })
@@ -76,7 +76,7 @@ impl HamiltonianMonteCarlo {
 
     /// Disable step size adaptation
     pub fn without_adaptation(mut self) -> Self {
-        self.adapt_step_size = false;
+        self.adapt_stepsize = false;
         self
     }
 
@@ -118,7 +118,7 @@ impl HamiltonianMonteCarlo {
         let mut current_state = initial_state.to_owned();
         let mut current_log_prob = target.log_density(&current_state.view())?;
 
-        let mut step_size = self.step_size;
+        let mut stepsize = self.stepsize;
         let mut n_accepted = 0;
 
         for i in 0..n_samples_ {
@@ -126,14 +126,13 @@ impl HamiltonianMonteCarlo {
             let momentum = self.samplemomentum(&mass_matrix, &mut rng)?;
 
             // Hamiltonian dynamics
-            let (proposed_state, proposedmomentum, proposed_log_prob) = self
-                .leapfrog_integration(
-                    &current_state,
-                    &momentum,
-                    target,
-                    &mass_matrix_inv,
-                    step_size,
-                )?;
+            let (proposed_state, proposedmomentum, proposed_log_prob) = self.leapfrog_integration(
+                &current_state,
+                &momentum,
+                target,
+                &mass_matrix_inv,
+                stepsize,
+            )?;
 
             // Metropolis acceptance
             let current_energy =
@@ -155,8 +154,8 @@ impl HamiltonianMonteCarlo {
             log_probs[i] = current_log_prob;
 
             // Adapt step size
-            if self.adapt_step_size && i < self.adaptation_window {
-                step_size = self.adapt_step_size_simple(step_size, accept, self.target_acceptance);
+            if self.adapt_stepsize && i < self.adaptation_window {
+                stepsize = self.adapt_stepsize_simple(stepsize, accept, self.target_acceptance);
             }
         }
 
@@ -167,7 +166,7 @@ impl HamiltonianMonteCarlo {
             log_probabilities: log_probs,
             accepted,
             acceptance_rate,
-            final_step_size: step_size,
+            final_stepsize: stepsize,
             n_samples_,
             ndim,
         })
@@ -205,14 +204,14 @@ impl HamiltonianMonteCarlo {
         initialmomentum: &Array1<f64>,
         target: &D,
         mass_matrix_inv: &Array2<f64>,
-        step_size: f64,
+        stepsize: f64,
     ) -> Result<(Array1<f64>, Array1<f64>, f64)> {
         let mut _position = initial_position.clone();
         let mut momentum = initialmomentum.clone();
 
         // Half step for momentum
         if let Some(grad) = target.gradient(&_position.view())? {
-            momentum = &momentum + &(step_size * 0.5 * &grad);
+            momentum = &momentum + &(stepsize * 0.5 * &grad);
         } else {
             return Err(StatsError::ComputationError(
                 "Gradient required for HMC but not available".to_string(),
@@ -222,17 +221,17 @@ impl HamiltonianMonteCarlo {
         // Full steps
         for _ in 0..self.n_steps {
             // Full step for _position
-            _position = &_position + &(step_size * &mass_matrix_inv.dot(&momentum));
+            _position = &_position + &(stepsize * &mass_matrix_inv.dot(&momentum));
 
             // Full step for momentum (except last)
             if let Some(grad) = target.gradient(&_position.view())? {
-                momentum = &momentum + &(step_size * &grad);
+                momentum = &momentum + &(stepsize * &grad);
             }
         }
 
         // Final half step for momentum
         if let Some(grad) = target.gradient(&_position.view())? {
-            momentum = &momentum + &(step_size * 0.5 * &grad);
+            momentum = &momentum + &(stepsize * 0.5 * &grad);
         }
 
         // Negate momentum for reversibility
@@ -266,9 +265,9 @@ impl HamiltonianMonteCarlo {
     }
 
     /// Simple step size adaptation
-    fn adapt_step_size_simple(
+    fn adapt_stepsize_simple(
         &self,
-        current_step_size: f64,
+        current_stepsize: f64,
         accepted: bool,
         target_rate: f64,
     ) -> f64 {
@@ -276,9 +275,9 @@ impl HamiltonianMonteCarlo {
         let adaptation_rate = 0.01;
 
         if acceptance_rate > target_rate {
-            current_step_size * (1.0 + adaptation_rate)
+            current_stepsize * (1.0 + adaptation_rate)
         } else {
-            current_step_size * (1.0 - adaptation_rate)
+            current_stepsize * (1.0 - adaptation_rate)
         }
     }
 }
@@ -295,7 +294,7 @@ pub struct HMCResult {
     /// Overall acceptance rate
     pub acceptance_rate: f64,
     /// Final adapted step size
-    pub final_step_size: f64,
+    pub final_stepsize: f64,
     /// Number of samples
     pub n_samples_: usize,
     /// Number of dimensions
@@ -309,7 +308,7 @@ pub struct HMCResult {
 #[derive(Debug, Clone)]
 pub struct NoUTurnSampler {
     /// Initial step size
-    pub initial_step_size: f64,
+    pub initial_stepsize: f64,
     /// Maximum tree depth
     pub max_tree_depth: usize,
     /// Target acceptance rate for step size adaptation
@@ -328,7 +327,7 @@ impl NoUTurnSampler {
     /// Create a new NUTS sampler
     pub fn new() -> Self {
         Self {
-            initial_step_size: 1.0,
+            initial_stepsize: 1.0,
             max_tree_depth: 10,
             target_acceptance: 0.8,
             gamma: 0.05,
@@ -339,8 +338,8 @@ impl NoUTurnSampler {
     }
 
     /// Set initial step size
-    pub fn with_step_size(mut self, step_size: f64) -> Self {
-        self.initial_step_size = step_size;
+    pub fn with_stepsize(mut self, stepsize: f64) -> Self {
+        self.initial_stepsize = stepsize;
         self
     }
 
@@ -368,13 +367,13 @@ impl NoUTurnSampler {
         let ndim = target.ndim();
         let mut samples = Array2::zeros((n_samples_, ndim));
         let mut log_probs = Array1::zeros(n_samples_);
-        let mut tree_sizes = Array1::zeros(n_samples_);
+        let mut treesizes = Array1::zeros(n_samples_);
 
         let mut current_state = initial_state.to_owned();
         let mut current_log_prob;
 
-        let mut step_size = self.initial_step_size;
-        let mut step_size_bar = self.initial_step_size;
+        let mut stepsize = self.initial_stepsize;
+        let mut stepsize_bar = self.initial_stepsize;
         let mut h_bar = 0.0;
 
         for i in 0..n_samples_ {
@@ -382,15 +381,15 @@ impl NoUTurnSampler {
             let momentum = self.samplemomentum(ndim, &mut rng);
 
             // Build tree and sample
-            let (new_state, new_log_prob, tree_size) =
-                self.build_tree(&current_state, &momentum, target, step_size, &mut rng)?;
+            let (new_state, new_log_prob, treesize) =
+                self.build_tree(&current_state, &momentum, target, stepsize, &mut rng)?;
 
             current_state = new_state;
             current_log_prob = new_log_prob;
 
             samples.row_mut(i).assign(&current_state);
             log_probs[i] = current_log_prob;
-            tree_sizes[i] = tree_size as f64;
+            treesizes[i] = treesize as f64;
 
             // Adapt step size using dual averaging
             if i < n_samples_ / 2 {
@@ -398,21 +397,21 @@ impl NoUTurnSampler {
                 h_bar = (1.0 - 1.0 / (i as f64 + self.t0)) * h_bar
                     + (self.target_acceptance - acceptance_prob) / (i as f64 + self.t0);
 
-                step_size = self.initial_step_size * (-h_bar).exp();
+                stepsize = self.initial_stepsize * (-h_bar).exp();
 
                 let eta = (i as f64 + 1.0).powf(-self.kappa);
-                step_size_bar = (-eta * h_bar).exp() * (i as f64 + 1.0).powf(-self.kappa)
-                    + (1.0 - (i as f64 + 1.0).powf(-self.kappa)) * step_size_bar;
+                stepsize_bar = (-eta * h_bar).exp() * (i as f64 + 1.0).powf(-self.kappa)
+                    + (1.0 - (i as f64 + 1.0).powf(-self.kappa)) * stepsize_bar;
             } else {
-                step_size = step_size_bar;
+                stepsize = stepsize_bar;
             }
         }
 
         Ok(NUTSResult {
             samples,
             log_probabilities: log_probs,
-            tree_sizes,
-            final_step_size: step_size,
+            treesizes,
+            final_stepsize: stepsize,
             n_samples_,
             ndim,
         })
@@ -436,7 +435,7 @@ impl NoUTurnSampler {
         position: &Array1<f64>,
         momentum: &Array1<f64>,
         target: &D,
-        step_size: f64,
+        stepsize: f64,
         rng: &mut R,
     ) -> Result<(Array1<f64>, f64, usize)> {
         // Simplified tree building - this is a basic implementation
@@ -452,10 +451,10 @@ impl NoUTurnSampler {
         for _ in 0..n_steps {
             // Simplified leapfrog step
             if let Some(grad) = target.gradient(&current_pos.view())? {
-                current_mom = &current_mom + &(step_size * 0.5 * &grad);
-                current_pos = &current_pos + &(step_size * &current_mom);
+                current_mom = &current_mom + &(stepsize * 0.5 * &grad);
+                current_pos = &current_pos + &(stepsize * &current_mom);
                 if let Some(grad) = target.gradient(&current_pos.view())? {
-                    current_mom = &current_mom + &(step_size * 0.5 * &grad);
+                    current_mom = &current_mom + &(stepsize * 0.5 * &grad);
                 }
             }
         }
@@ -474,9 +473,9 @@ pub struct NUTSResult {
     /// Log probabilities for each sample
     pub log_probabilities: Array1<f64>,
     /// Tree sizes for each iteration
-    pub tree_sizes: Array1<f64>,
+    pub treesizes: Array1<f64>,
     /// Final adapted step size
-    pub final_step_size: f64,
+    pub final_stepsize: f64,
     /// Number of samples
     pub n_samples_: usize,
     /// Number of dimensions
@@ -667,7 +666,7 @@ pub struct ParallelTempering {
     /// Temperature ladder
     pub temperatures: Array1<f64>,
     /// Base sampler for each chain
-    pub step_size: f64,
+    pub stepsize: f64,
     /// Number of steps between swap attempts
     pub swap_interval: usize,
     /// Random seed
@@ -676,9 +675,9 @@ pub struct ParallelTempering {
 
 impl ParallelTempering {
     /// Create a new parallel tempering sampler
-    pub fn new(temperatures: Array1<f64>, step_size: f64) -> Result<Self> {
+    pub fn new(temperatures: Array1<f64>, stepsize: f64) -> Result<Self> {
         checkarray_finite(&temperatures, "temperatures")?;
-        check_positive(step_size, "step_size")?;
+        check_positive(stepsize, "stepsize")?;
 
         for &temp in temperatures.iter() {
             if temp <= 0.0 {
@@ -690,7 +689,7 @@ impl ParallelTempering {
 
         Ok(Self {
             temperatures,
-            step_size,
+            stepsize,
             swap_interval: 10,
             seed: None,
         })
@@ -821,7 +820,7 @@ impl ParallelTempering {
             let u1: f64 = rng.random();
             let u2: f64 = rng.random();
             let normal_sample = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-            proposal[i] += self.step_size * normal_sample;
+            proposal[i] += self.stepsize * normal_sample;
         }
 
         let proposal_log_prob = target.log_density(&proposal.view())?;

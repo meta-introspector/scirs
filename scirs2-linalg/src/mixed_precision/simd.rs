@@ -79,10 +79,10 @@ where
 
             // Compute dot product in higher precision using SIMD
             let mut j = 0;
-            let chunk_size = 4; // Process 4 elements at a time
+            let chunksize = 4; // Process 4 elements at a time
             let mut sum = 0.0f64;
 
-            while j + chunk_size <= ncols {
+            while j + chunksize <= ncols {
                 // Load chunks and convert to f64
                 let row_chunk_f64 = [
                     row_slice[j] as f64,
@@ -102,7 +102,7 @@ where
                 let vec_view = ArrayView1::from(&vec_chunk_f64);
                 sum += f64::simd_dot(&row_view, &vec_view);
 
-                j += chunk_size;
+                j += chunksize;
             }
 
             // Process remaining elements
@@ -230,10 +230,10 @@ where
 
                             // Compute dot product in higher precision using SIMD
                             let mut l = 0;
-                            let chunk_size = 4; // Process 4 elements at a time
+                            let chunksize = 4; // Process 4 elements at a time
                             let mut block_sum = 0.0f64;
 
-                            while l + chunk_size <= (k_end - k0) {
+                            while l + chunksize <= (k_end - k0) {
                                 // Extract and convert column slice from B (with stride handling)
                                 let b_col_indices = [
                                     (k0 + l) * n + j,
@@ -261,7 +261,7 @@ where
                                 let b_view = ArrayView1::from(&b_chunk_f64);
                                 block_sum += f64::simd_dot(&a_view, &b_view);
 
-                                l += chunk_size;
+                                l += chunksize;
                             }
 
                             // Process remaining elements
@@ -387,10 +387,10 @@ where
     if let (Some(a_slice), Some(b_slice)) = (a.as_slice(), b.as_slice()) {
         // Process with SIMD in higher precision
         let mut i = 0;
-        let chunk_size = 4; // Process 4 elements at a time
+        let chunksize = 4; // Process 4 elements at a time
         let mut sum = 0.0f64;
 
-        while i + chunk_size <= n {
+        while i + chunksize <= n {
             // Load chunks and convert to f64
             let a_chunk_f64 = [
                 a_slice[i] as f64,
@@ -410,7 +410,7 @@ where
             let b_view = ArrayView1::from(&b_chunk_f64);
             sum += f64::simd_dot(&a_view, &b_view);
 
-            i += chunk_size;
+            i += chunksize;
         }
 
         // Process remaining elements

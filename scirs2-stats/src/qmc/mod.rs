@@ -144,7 +144,7 @@ impl SobolSequence {
         };
 
         Ok(Self {
-            dimension: dimension,
+            dimension,
             direction_numbers,
             current_index: 0,
             scramble,
@@ -320,7 +320,7 @@ impl HaltonSequence {
         };
 
         Ok(Self {
-            dimension: dimension,
+            dimension,
             bases,
             current_index: 0,
             scramble,
@@ -381,11 +381,7 @@ impl HaltonSequence {
     }
 
     /// Compute scrambled radical inverse
-    fn scrambled_radical_inverse(
-        index: usize,
-        base: u32,
-        permutation: &[u32],
-    ) -> StatsResult<f64> {
+    fn scrambled_radical_inverse(index: usize, base: u32, permutation: &[u32]) -> StatsResult<f64> {
         let mut result = 0.0;
         let mut fraction = 1.0 / base as f64;
         let mut i = index;

@@ -4291,9 +4291,7 @@ impl Default for NeuralAdaptiveConfig {
                 weight_decay: 0.0001,
             },
             rl_config: RLConfig {
-                algorithm: RLAlgorithm::DQN {
-                    double_dqn: true,
-                },
+                algorithm: RLAlgorithm::DQN { double_dqn: true },
                 exploration_rate: 0.1,
                 exploration_decay: 0.995,
                 min_exploration: 0.01,

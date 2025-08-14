@@ -463,7 +463,7 @@ impl<
         };
 
         Self {
-            platform: platform,
+            platform,
             config,
             profiler,
             resource_monitor,

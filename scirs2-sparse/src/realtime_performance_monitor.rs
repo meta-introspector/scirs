@@ -470,7 +470,7 @@ impl RealTimePerformanceMonitor {
         };
 
         Self {
-            config: config,
+            config,
             monitoring_active: Arc::new(AtomicBool::new(false)),
             sample_counter: AtomicUsize::new(0),
             performance_history: Arc::new(Mutex::new(performance_history)),
@@ -936,10 +936,7 @@ impl RealTimePerformanceMonitor {
             history.trend_analysis.efficiency_trend = efficiency_trend;
 
             // Update anomaly detection
-            history
-                .trend_analysis
-                .anomaly_detection
-                .update(&efficiency);
+            history.trend_analysis.anomaly_detection.update(&efficiency);
         }
     }
 
@@ -1440,10 +1437,7 @@ impl RealTimePerformanceMonitor {
         models
     }
 
-    fn extract_metric_values(
-        _metricname: &str,
-        samples: &VecDeque<PerformanceSample>,
-    ) -> Vec<f64> {
+    fn extract_metric_values(_metricname: &str, samples: &VecDeque<PerformanceSample>) -> Vec<f64> {
         samples
             .iter()
             .map(|s| match _metricname {

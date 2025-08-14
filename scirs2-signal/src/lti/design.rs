@@ -588,10 +588,7 @@ pub fn subtract_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
 ///
 /// Tuple of (quotient, remainder) polynomial coefficients
 #[allow(dead_code)]
-pub fn divide_polynomials(
-    dividend: &[f64],
-    divisor: &[f64],
-) -> SignalResult<(Vec<f64>, Vec<f64>)> {
+pub fn divide_polynomials(dividend: &[f64], divisor: &[f64]) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     if divisor.is_empty() || divisor.iter().all(|&x: &f64| x.abs() < 1e-10) {
         return Err(SignalError::ValueError(
             "Cannot divide by zero polynomial".to_string(),

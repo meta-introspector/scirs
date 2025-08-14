@@ -445,7 +445,7 @@ where
             // Convert to f64
             let a_f64 = a.mapv(|x| x.to_f64().unwrap());
             let b_f64 = b.mapv(|x| x.to_f64().unwrap());
-            use scirs2__linalg::solve;
+            use scirs2_linalg::solve;
             solve(&a_f64.view(), &b_f64.view(), None)
                 .map_err(|_| {
                     // SVD fallback for ill-conditioned systems
@@ -456,7 +456,7 @@ where
                 .map(|solution| solution.mapv(|x| T::from_f64(x).unwrap()))
                 .or_else(|_| {
                     // If direct solve fails, try SVD approach
-                    use scirs2__linalg::svd;
+                    use scirs2_linalg::svd;
                     let (u, s, vt) = match svd(&a_f64.view(), false, None) {
                         Ok(svd_tuple) => svd_tuple,
                         Err(_) => {

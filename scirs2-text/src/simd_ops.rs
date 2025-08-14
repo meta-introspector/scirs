@@ -355,11 +355,7 @@ impl SimdEditDistance {
             curr_row[0] = i;
 
             for j in 1..=len2 {
-                let cost = if chars1[i - 1] == chars2[j - 1] {
-                    0
-                } else {
-                    1
-                };
+                let cost = if chars1[i - 1] == chars2[j - 1] { 0 } else { 1 };
 
                 curr_row[j] = std::cmp::min(
                     std::cmp::min(

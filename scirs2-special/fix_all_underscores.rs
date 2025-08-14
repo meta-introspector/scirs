@@ -29,11 +29,11 @@ fn main() -> io::Result<()> {
         
         // Replace all double underscore patterns
         let mut new_content = content.clone();
-        new_content = new_content.replace("scirs2__special", "scirs2_special");
+        new_content = new_content.replace("scirs2_special", "scirs2_special");
         new_content = new_content.replace("scirs2__spatial", "scirs2_spatial");
         new_content = new_content.replace("scirs2__datasets", "scirs2_datasets");
         new_content = new_content.replace("scirs2__core", "scirs2_core");
-        new_content = new_content.replace("num__complex", "num_complex");
+        new_content = new_content.replace("num_complex", "num_complex");
         new_content = new_content.replace("serde__json", "serde_json");
         
         // Check if any changes were made

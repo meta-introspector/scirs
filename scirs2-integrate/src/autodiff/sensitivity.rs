@@ -644,7 +644,7 @@ impl<F: IntegrateFloat + std::default::Default> SobolSensitivity<F> {
         SobolSensitivity {
             n_params: param_bounds.len(),
             n_samples,
-            param_bounds: param_bounds,
+            param_bounds,
         }
     }
 
@@ -824,7 +824,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
             n_params: param_bounds.len(),
             n_trajectories,
             delta,
-            param_bounds: param_bounds,
+            param_bounds,
             grid_levels: 4,
         }
     }
@@ -833,7 +833,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
     pub fn new_simple(n_trajectories: usize, param_bounds: Vec<(F, F)>) -> Self {
         MorrisScreening {
             n_params: param_bounds.len(),
-            n_trajectories: n_trajectories,
+            n_trajectories,
             delta: F::from(0.1).unwrap(),
             param_bounds,
             grid_levels: 4,

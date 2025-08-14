@@ -10,7 +10,7 @@ use crate::norm::vector_norm;
 use crate::quantization::quantized_matrixfree::QuantizedMatrixFreeOp;
 use ndarray::ScalarOperand;
 use ndarray::{Array1, Array2, ArrayView1};
-use num_traits::{AsPrimitive, Float, FromPrimitive, NumAssign, One, Zero};
+use num_traits::{AsPrimitive, Float, FromPrimitive, NumAssign, NumCast, One, Zero};
 use std::fmt::Debug;
 use std::iter::Sum;
 
@@ -702,13 +702,13 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_quantized_conjugate_gradient_small_matrix() {
+    fn test_quantized_conjugate_gradient_smallmatrix() {
         // Create a test matrix (symmetric positive definite)
         let matrix = array![[4.0f32, 1.0], [1.0, 3.0]];
 
         // Create a quantized matrix-free operator
         let op =
-            QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
+            QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
                 .unwrap()
                 .symmetric()
                 .positive_definite();
@@ -730,13 +730,13 @@ mod tests {
     }
 
     #[test]
-    fn test_quantized_gmres_small_matrix() {
+    fn test_quantized_gmres_smallmatrix() {
         // Create a test matrix (non-symmetric)
         let matrix = array![[3.0f32, 1.0], [1.0, 2.0]];
 
         // Create a quantized matrix-free operator
         let op =
-            QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
+            QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
                 .unwrap();
 
         // Define the right-hand side
@@ -762,7 +762,7 @@ mod tests {
 
         // Create a quantized matrix-free operator
         let op =
-            QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
+            QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
                 .unwrap()
                 .symmetric()
                 .positive_definite();
@@ -794,7 +794,7 @@ mod tests {
 
         // Create a quantized matrix-free operator
         let op =
-            QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
+            QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
                 .unwrap();
 
         // Create a Jacobi preconditioner
@@ -823,7 +823,7 @@ mod tests {
 
         // Create a quantized matrix-free operator
         let op =
-            QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
+            QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
                 .unwrap()
                 .symmetric()
                 .positive_definite();

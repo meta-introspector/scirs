@@ -276,7 +276,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> ByzantineTolerantAggregato
     pub fn new(config: ByzantineConfig) -> Self {
         let anomaly_threshold = config.anomaly_threshold;
         Self {
-            config: config,
+            config,
             reputation_scores: HashMap::new(),
             behavior_history: HashMap::new(),
             anomaly_detector: AnomalyDetector::new(anomaly_threshold),
@@ -1136,7 +1136,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> AnomalyDetector<T> {
     /// Create new anomaly detector
     pub fn new(threshold: f64) -> Self {
         Self {
-            threshold: threshold,
+            threshold,
             gradient_stats: GradientStatistics::new(),
             pattern_model: PatternModel::new(),
         }

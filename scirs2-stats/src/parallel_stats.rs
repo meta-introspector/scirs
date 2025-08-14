@@ -49,10 +49,10 @@ where
     }
 
     // Parallel sum using chunk processing
-    let chunk_size = (n / num_threads()).max(1000);
+    let chunksize = (n / num_threads()).max(1000);
     let sum: F = if let Some(slice) = x.as_slice() {
         // Array is contiguous, use efficient parallel processing
-        par_chunks(slice, chunk_size)
+        par_chunks(slice, chunksize)
             .map(|chunk| chunk.iter().fold(F::zero(), |acc, &val| acc + val))
             .reduce(|| F::zero(), |a, b| a + b)
     } else {
@@ -100,8 +100,8 @@ where
     let mean_val = mean_parallel(x)?;
 
     // Parallel computation of sum of squared deviations
-    let chunk_size = (n / num_threads()).max(1000);
-    let sum_sq_dev: F = par_chunks(x.as_slice().unwrap(), chunk_size)
+    let chunksize = (n / num_threads()).max(1000);
+    let sum_sq_dev: F = par_chunks(x.as_slice().unwrap(), chunksize)
         .map(|chunk| {
             chunk
                 .iter()

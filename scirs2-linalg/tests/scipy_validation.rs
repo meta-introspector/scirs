@@ -130,21 +130,21 @@ fn test_svd_against_scipy() {
 
     // Test SVD reconstruction: A = U * S * V^T
     // Create diagonal matrix from singular values
-    let mut s_matrix = Array2::zeros((s.len(), s.len()));
+    let mut smatrix = Array2::zeros((s.len(), s.len()));
     for i in 0..s.len() {
-        s_matrix[[i, i]] = s[i];
+        smatrix[[i, i]] = s[i];
     }
 
     // Reconstruct matrix: A = U * S * V^T
     // Handle shape compatibility for thin SVD
     let reconstructed = if u.ncols() == s.len() && vt.nrows() == s.len() {
-        u.dot(&s_matrix).dot(&vt)
+        u.dot(&smatrix).dot(&vt)
     } else {
         // For thin SVD, we might need to handle shapes differently
         // Take only the relevant columns/rows
         let u_thin = u.slice(s![.., ..s.len()]).to_owned();
         let vt_thin = vt.slice(s![..s.len(), ..]).to_owned();
-        u_thin.dot(&s_matrix).dot(&vt_thin)
+        u_thin.dot(&smatrix).dot(&vt_thin)
     };
 
     // Verify reconstruction within tolerance
@@ -255,7 +255,7 @@ fn test_numerical_stability() {
 // Helper test to verify our test matrices match SciPy inputs
 #[test]
 #[allow(dead_code)]
-fn test_matrix_creation() {
+fn testmatrix_creation() {
     let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
     assert_eq!(a.shape(), &[2, 2]);
     assert_eq!(a[[0, 0]], 1.0);

@@ -42,14 +42,14 @@ use crate::error::{LinalgError, LinalgResult};
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_linalg::projection::gaussian_random_matrix;
+/// use scirs2_linalg::projection::gaussian_randommatrix;
 ///
 /// // Generate a 1000x100 random projection matrix (projecting from 1000 to 100 dimensions)
-/// let projection_matrix = gaussian_random_matrix::<f64>(100, 1000).unwrap();
-/// assert_eq!(projection_matrix.shape(), &[1000, 100]);
+/// let projectionmatrix = gaussian_randommatrix::<f64>(100, 1000).unwrap();
+/// assert_eq!(projectionmatrix.shape(), &[1000, 100]);
 /// ```
 #[allow(dead_code)]
-pub fn gaussian_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
+pub fn gaussian_randommatrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
     n_components: usize,
     n_features: usize,
 ) -> LinalgResult<Array2<F>> {
@@ -103,14 +103,14 @@ pub fn gaussian_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_linalg::projection::sparse_random_matrix;
+/// use scirs2_linalg::projection::sparse_randommatrix;
 ///
 /// // Generate a 1000x100 sparse random projection matrix with density 0.1
-/// let projection_matrix = sparse_random_matrix::<f64>(100, 1000, 0.1).unwrap();
-/// assert_eq!(projection_matrix.shape(), &[1000, 100]);
+/// let projectionmatrix = sparse_randommatrix::<f64>(100, 1000, 0.1).unwrap();
+/// assert_eq!(projectionmatrix.shape(), &[1000, 100]);
 /// ```
 #[allow(dead_code)]
-pub fn sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
+pub fn sparse_randommatrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
     n_components: usize,
     n_features: usize,
     density: f64,
@@ -175,14 +175,14 @@ pub fn sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_linalg::projection::very_sparse_random_matrix;
+/// use scirs2_linalg::projection::very_sparse_randommatrix;
 ///
 /// // Generate a 1000x100 very sparse random projection matrix
-/// let projection_matrix = very_sparse_random_matrix::<f64>(100, 1000).unwrap();
-/// assert_eq!(projection_matrix.shape(), &[1000, 100]);
+/// let projectionmatrix = very_sparse_randommatrix::<f64>(100, 1000).unwrap();
+/// assert_eq!(projectionmatrix.shape(), &[1000, 100]);
 /// ```
 #[allow(dead_code)]
-pub fn very_sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
+pub fn very_sparse_randommatrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
     n_components: usize,
     n_features: usize,
 ) -> LinalgResult<Array2<F>> {
@@ -240,7 +240,7 @@ pub fn very_sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOpera
 ///
 /// ```
 /// use ndarray::{Array, Array2};
-/// use scirs2_linalg::projection::{gaussian_random_matrix, project};
+/// use scirs2_linalg::projection::{gaussian_randommatrix, project};
 ///
 /// // Generate sample data
 /// let n_samples = 100;
@@ -249,7 +249,7 @@ pub fn very_sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOpera
 /// let X = Array2::<f64>::ones((n_samples, n_features));
 ///
 /// // Generate random projection matrix
-/// let components = gaussian_random_matrix::<f64>(n_components, n_features).unwrap();
+/// let components = gaussian_randommatrix::<f64>(n_components, n_features).unwrap();
 ///
 /// // Project data
 /// let X_projected = project(&X.view(), &components.view()).unwrap();
@@ -328,7 +328,7 @@ pub fn johnson_lindenstrauss_transform<F: Float + NumAssign + Zero + Sum + Scala
     let n_components = n_components.min(n_features - 1);
 
     // Generate Gaussian random projection matrix
-    let components = gaussian_random_matrix(n_components, n_features)?;
+    let components = gaussian_randommatrix(n_components, n_features)?;
 
     // Project the data
     let x_projected = project(x, &components.view())?;
@@ -381,29 +381,29 @@ mod tests {
     use ndarray::Array2;
 
     #[test]
-    fn test_gaussian_random_matrix() {
+    fn test_gaussian_randommatrix() {
         let n_components = 10;
         let n_features = 100;
 
         // Generate random projection matrix
-        let components = gaussian_random_matrix::<f64>(n_components, n_features).unwrap();
+        let components = gaussian_randommatrix::<f64>(n_components, n_features).unwrap();
 
         // Check dimensions
         assert_eq!(components.shape(), &[n_features, n_components]);
 
         // Check error for invalid dimensions
-        let result = gaussian_random_matrix::<f64>(n_features, n_features);
+        let result = gaussian_randommatrix::<f64>(n_features, n_features);
         assert!(result.is_err());
     }
 
     #[test]
-    fn test_sparse_random_matrix() {
+    fn test_sparse_randommatrix() {
         let n_components = 10;
         let n_features = 100;
         let density = 0.1;
 
         // Generate sparse random projection matrix
-        let components = sparse_random_matrix::<f64>(n_components, n_features, density).unwrap();
+        let components = sparse_randommatrix::<f64>(n_components, n_features, density).unwrap();
 
         // Check dimensions
         assert_eq!(components.shape(), &[n_features, n_components]);
@@ -417,20 +417,20 @@ mod tests {
         assert!(actual_density > density * 0.5 && actual_density < density * 1.5);
 
         // Check error for invalid inputs
-        let result = sparse_random_matrix::<f64>(n_features, n_features, density);
+        let result = sparse_randommatrix::<f64>(n_features, n_features, density);
         assert!(result.is_err());
 
-        let result = sparse_random_matrix::<f64>(n_components, n_features, 1.5);
+        let result = sparse_randommatrix::<f64>(n_components, n_features, 1.5);
         assert!(result.is_err());
     }
 
     #[test]
-    fn test_very_sparse_random_matrix() {
+    fn test_very_sparse_randommatrix() {
         let n_components = 10;
         let n_features = 100;
 
         // Generate very sparse random projection matrix
-        let components = very_sparse_random_matrix::<f64>(n_components, n_features).unwrap();
+        let components = very_sparse_randommatrix::<f64>(n_components, n_features).unwrap();
 
         // Check dimensions
         assert_eq!(components.shape(), &[n_features, n_components]);
@@ -460,7 +460,7 @@ mod tests {
         }
 
         // Create a simple projection matrix
-        let components = gaussian_random_matrix::<f64>(n_components, n_features).unwrap();
+        let components = gaussian_randommatrix::<f64>(n_components, n_features).unwrap();
 
         // Project the data
         let x_projected = project(&x.view(), &components.view()).unwrap();

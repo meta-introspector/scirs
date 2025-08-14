@@ -919,7 +919,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_free_conjugate_gradient() {
+    fn testmatrix_free_conjugate_gradient() {
         // Create a linear operator representing a symmetric positive definite matrix
         // [4.0, 1.0]
         // [1.0, 3.0]
@@ -943,7 +943,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_free_gmres() {
+    fn testmatrix_free_gmres() {
         // Create a linear operator representing a non-symmetric matrix
         // [3.0, 1.0]
         // [1.0, 2.0]

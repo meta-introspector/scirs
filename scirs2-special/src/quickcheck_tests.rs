@@ -240,11 +240,11 @@ mod bessel_properties {
             return true;
         }
 
-        let jn_minus_1 = crate::bessel::jn((n - 1) as i32, x);
+        let jnminus_1 = crate::bessel::jn((n - 1) as i32, x);
         let jn = crate::bessel::jn(n as i32, x);
         let jn_plus_1 = crate::bessel::jn((n + 1) as i32, x);
 
-        let expected = (2.0 * n as f64 / x) * jn - jn_minus_1;
+        let expected = (2.0 * n as f64 / x) * jn - jnminus_1;
 
         if !jn_plus_1.is_finite() || !expected.is_finite() {
             return true;
@@ -364,11 +364,11 @@ mod orthogonal_polynomial_properties {
             return true;
         }
 
-        let h_n_minus_1 = crate::orthogonal::hermite(n - 1, x);
+        let h_nminus_1 = crate::orthogonal::hermite(n - 1, x);
         let h_n = crate::orthogonal::hermite(n, x);
         let h_n_plus_1 = crate::orthogonal::hermite(n + 1, x);
 
-        let expected = 2.0 * x * h_n - 2.0 * n as f64 * h_n_minus_1;
+        let expected = 2.0 * x * h_n - 2.0 * n as f64 * h_nminus_1;
 
         if !h_n_plus_1.is_finite() || !expected.is_finite() {
             return true;

@@ -55,7 +55,7 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::ellip_harm;
+/// use scirs2_special::ellip_harm;
 ///
 /// let h2 = 0.1;
 /// let k2 = 0.2;
@@ -182,7 +182,7 @@ pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::ellip_harm_2;
+/// use scirs2_special::ellip_harm_2;
 ///
 /// let h2 = 0.05;
 /// let k2 = 0.1;
@@ -298,7 +298,7 @@ pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResu
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::ellip_normal;
+/// use scirs2_special::ellip_normal;
 ///
 /// let h2 = 0.1;
 /// let k2 = 0.05;
@@ -365,7 +365,7 @@ pub fn ellip_normal(h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> 
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__special::ellip_harm_array;
+/// use scirs2_special::ellip_harm_array;
 ///
 /// let h2 = 0.1;
 /// let k2 = 0.05;
@@ -402,8 +402,8 @@ pub fn ellip_harm_array(
 ///
 /// * `h2` - Parameter h² (related to the ellipsoid's eccentricity)
 /// * `k2` - Parameter k² (related to the coordinate system)
-/// * `max_degree` - Maximum degree to compute (n_max)
-/// * `max_order` - Maximum order to compute (p_max)
+/// * `max_degree` - Maximum degree to compute (nmax)
+/// * `max_order` - Maximum order to compute (pmax)
 ///
 /// # Returns
 ///
@@ -418,7 +418,7 @@ pub fn ellip_harm_array(
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::ellip_harm_coefficients;
+/// use scirs2_special::ellip_harm_coefficients;
 ///
 /// let h2 = 0.1;
 /// let k2 = 0.05;
@@ -486,7 +486,7 @@ pub fn ellip_harm_coefficients(
 ///
 /// ```
 /// use num_complex::Complex64;
-/// use scirs2__special::ellip_harm_complex;
+/// use scirs2_special::ellip_harm_complex;
 ///
 /// let h2 = Complex64::new(0.1, 0.02);
 /// let k2 = Complex64::new(0.05, 0.01);

@@ -378,8 +378,8 @@ where
 ///
 /// # Arguments
 ///
-/// * `input_acts` - Input activations matrix of shape (batch_size, input_dim)
-/// * `output_grads` - Output gradients matrix of shape (batch_size, output_dim)
+/// * `input_acts` - Input activations matrix of shape (batchsize, input_dim)
+/// * `output_grads` - Output gradients matrix of shape (batchsize, output_dim)
 /// * `damping` - Damping factor for regularization (default: 1e-4)
 ///
 /// # Returns
@@ -420,22 +420,22 @@ pub fn kfac_factorization<F>(
 where
     F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
-    let (batch_size1, input_dim) = input_acts.dim();
-    let (batch_size2, output_dim) = output_grads.dim();
+    let (batchsize1, input_dim) = input_acts.dim();
+    let (batchsize2, output_dim) = output_grads.dim();
 
     // Check dimensions
-    if batch_size1 != batch_size2 {
+    if batchsize1 != batchsize2 {
         return Err(LinalgError::ShapeError(format!(
-            "Batch sizes must match: {batch_size1} vs {batch_size2}"
+            "Batch sizes must match: {batchsize1} vs {batchsize2}"
         )));
     }
 
-    let batch_size = batch_size1;
+    let batchsize = batchsize1;
     let damping_factor = damping.unwrap_or_else(|| F::from(1e-4).unwrap());
 
     // Append 1s to input activations for bias term
-    let mut input_acts_with_bias = Array2::zeros((batch_size, input_dim + 1));
-    for i in 0..batch_size {
+    let mut input_acts_with_bias = Array2::zeros((batchsize, input_dim + 1));
+    for i in 0..batchsize {
         for j in 0..input_dim {
             input_acts_with_bias[[i, j]] = input_acts[[i, j]];
         }
@@ -449,11 +449,11 @@ where
         for j in 0..(input_dim + 1) {
             let mut sum = F::zero();
 
-            for b in 0..batch_size {
+            for b in 0..batchsize {
                 sum += input_acts_with_bias[[b, i]] * input_acts_with_bias[[b, j]];
             }
 
-            a_cov[[i, j]] = sum / F::from(batch_size).unwrap();
+            a_cov[[i, j]] = sum / F::from(batchsize).unwrap();
         }
     }
 
@@ -469,11 +469,11 @@ where
         for j in 0..output_dim {
             let mut sum = F::zero();
 
-            for b in 0..batch_size {
+            for b in 0..batchsize {
                 sum += output_grads[[b, i]] * output_grads[[b, j]];
             }
 
-            s_cov[[i, j]] = sum / F::from(batch_size).unwrap();
+            s_cov[[i, j]] = sum / F::from(batchsize).unwrap();
         }
     }
 
@@ -515,7 +515,7 @@ where
 /// let weights = array![[0.1, 0.2], [0.3, 0.4], [0.05, 0.1]];  // Including bias row
 /// let gradients = array![[0.01, 0.02], [0.03, 0.04], [0.005, 0.01]];  // Including bias gradients
 ///
-/// // Input activations (batch_size x input_dim) and output gradients (batch_size x output_dim)
+/// // Input activations (batchsize x input_dim) and output gradients (batchsize x output_dim)
 /// let input_acts = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
 /// let output_grads = array![[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]];
 ///
@@ -985,7 +985,7 @@ where
             .zip(self.layer_dims.iter())
         {
             // Ensure _gradients have the expected shape
-            let (batch_size, grad_output_dim) = grads.dim();
+            let (batchsize, grad_output_dim) = grads.dim();
             if grad_output_dim != output_dim {
                 return Err(LinalgError::ShapeError(format!(
                     "Gradient output dimension mismatch: expected {output_dim}, got {grad_output_dim}"
@@ -1000,19 +1000,19 @@ where
                 for j in 0..output_dim {
                     // Average _gradients across batch
                     let mut sum = F::zero();
-                    for b in 0..batch_size {
+                    for b in 0..batchsize {
                         sum += grads[[b, j]]; // Accumulate gradient for output j
                     }
-                    extended_grads[[i, j]] = sum / F::from(batch_size).unwrap();
+                    extended_grads[[i, j]] = sum / F::from(batchsize).unwrap();
                 }
             }
             // Bias _gradients are typically the mean of output _gradients
             for j in 0..output_dim {
                 let mut sum = F::zero();
-                for b in 0..batch_size {
+                for b in 0..batchsize {
                     sum += grads[[b, j]];
                 }
-                extended_grads[[input_dim, j]] = sum / F::from(batch_size).unwrap();
+                extended_grads[[input_dim, j]] = sum / F::from(batchsize).unwrap();
             }
 
             // Apply Kronecker-factored preconditioning: P^-1 * G = A^-1 * G * S^-1
@@ -1020,8 +1020,8 @@ where
             let preconditioned_grad = temp.dot(output_inv);
 
             // Extract the weight part (excluding bias) and reshape back to original format
-            let mut result = Array2::zeros((batch_size, output_dim));
-            for b in 0..batch_size {
+            let mut result = Array2::zeros((batchsize, output_dim));
+            for b in 0..batchsize {
                 for j in 0..output_dim {
                     // Use the weight part of the preconditioned gradient
                     result[[b, j]] = preconditioned_grad[[0, j]]; // Use first row as representative
@@ -1115,8 +1115,8 @@ where
     let (input_cov, output_cov) = kfac_optimizer.update_covariances(input_acts, output_grads)?;
 
     // Compute stable inverses
-    let input_inv = stable_matrix_inverse(&input_cov.view(), kfac_optimizer.get_damping())?;
-    let output_inv = stable_matrix_inverse(&output_cov.view(), kfac_optimizer.get_damping())?;
+    let input_inv = stablematrix_inverse(&input_cov.view(), kfac_optimizer.get_damping())?;
+    let output_inv = stablematrix_inverse(&output_cov.view(), kfac_optimizer.get_damping())?;
 
     // Compute natural gradient: G_nat = A^-1 * G * S^-1
     let temp = input_inv.dot(gradients);
@@ -1149,7 +1149,7 @@ where
 
 /// Compute stable matrix inverse with enhanced regularization
 #[allow(dead_code)]
-fn stable_matrix_inverse<F>(matrix: &ArrayView2<F>, damping: F) -> LinalgResult<Array2<F>>
+fn stablematrix_inverse<F>(matrix: &ArrayView2<F>, damping: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
@@ -1519,11 +1519,11 @@ mod tests {
     }
 
     #[test]
-    fn test_stable_matrix_inverse() {
+    fn test_stablematrix_inverse() {
         // Test with a simple positive definite matrix
         let matrix = array![[2.0, 1.0], [1.0, 2.0]];
         let damping = 0.01;
-        let inv = stable_matrix_inverse(&matrix.view(), damping).unwrap();
+        let inv = stablematrix_inverse(&matrix.view(), damping).unwrap();
 
         // Create the regularized matrix (what we actually inverted)
         let mut regularized = matrix.clone();
@@ -1531,7 +1531,7 @@ mod tests {
             regularized[[i, i]] += damping;
         }
 
-        // Check that regularized_matrix * inverse ≈ identity
+        // Check that regularizedmatrix * inverse ≈ identity
         let product = regularized.dot(&inv);
         let identity = Array2::eye(2);
 

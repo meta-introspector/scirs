@@ -17,13 +17,13 @@ use std::time::Instant;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkConfig {
     /// Data sizes to test
-    pub data_sizes: Vec<usize>,
+    pub datasizes: Vec<usize>,
     /// Number of iterations for each benchmark
     pub iterations: usize,
     /// Enable memory usage tracking
     pub track_memory: bool,
     /// Enable comparison with baseline (SciPy-equivalent) implementations
-    pub compare_baseline: bool,
+    pub comparebaseline: bool,
     /// Enable SIMD optimization benchmarks
     pub test_simd: bool,
     /// Enable parallel processing benchmarks
@@ -39,10 +39,10 @@ pub struct BenchmarkConfig {
 impl Default for BenchmarkConfig {
     fn default() -> Self {
         Self {
-            data_sizes: vec![100, 1000, 10000, 100000, 1000000],
+            datasizes: vec![100, 1000, 10000, 100000, 1000000],
             iterations: 100,
             track_memory: true,
-            compare_baseline: true,
+            comparebaseline: true,
             test_simd: true,
             test_parallel: true,
             warmup_iterations: 10,
@@ -58,7 +58,7 @@ pub struct BenchmarkMetrics {
     /// Function name being benchmarked
     pub function_name: String,
     /// Data size used in benchmark
-    pub data_size: usize,
+    pub datasize: usize,
     /// Execution time statistics
     pub timing: TimingStats,
     /// Memory usage statistics
@@ -100,7 +100,7 @@ pub struct MemoryStats {
     /// Memory deallocations count
     pub deallocations: usize,
     /// Average allocation size in bytes
-    pub avg_allocation_size: f64,
+    pub avg_allocationsize: f64,
     /// Memory fragmentation score (0-1, lower is better)
     pub fragmentation_score: f64,
 }
@@ -160,7 +160,7 @@ pub struct PerformanceRegression {
     /// Function name with regression
     pub function_name: String,
     /// Data size where regression was detected
-    pub data_size: usize,
+    pub datasize: usize,
     /// Regression percentage (positive means slower)
     pub regression_percent: f64,
     /// Confidence level of regression detection
@@ -269,7 +269,7 @@ struct MemoryTracker {
     peak_memory: usize,
     allocations: usize,
     deallocations: usize,
-    allocation_sizes: Vec<usize>,
+    allocationsizes: Vec<usize>,
 }
 
 impl BenchmarkSuite {
@@ -287,7 +287,7 @@ impl BenchmarkSuite {
         };
 
         Self {
-            config: config,
+            config,
             memory_tracker,
             baseline_cache: HashMap::new(),
         }
@@ -299,8 +299,8 @@ impl BenchmarkSuite {
         let _start_time = Instant::now();
 
         // Benchmark basic descriptive statistics
-        for &size in &self.config.data_sizes {
-            let data = self.generate_test_data(size)?;
+        for &size in &self.config.datasizes {
+            let data = self.generate_testdata(size)?;
 
             // Benchmark mean calculation
             metrics.push(
@@ -363,9 +363,9 @@ impl BenchmarkSuite {
     pub fn benchmark_correlation(&mut self) -> StatsResult<BenchmarkReport> {
         let mut metrics = Vec::new();
 
-        for &size in &self.config.data_sizes {
-            let data_x = self.generate_test_data(size)?;
-            let data_y = self.generate_correlated_data(&data_x, 0.7)?; // 70% correlation
+        for &size in &self.config.datasizes {
+            let data_x = self.generate_testdata(size)?;
+            let data_y = self.generate_correlateddata(&data_x, 0.7)?; // 70% correlation
 
             // Benchmark Pearson correlation
             metrics.push(self.benchmark_function("pearson_correlation", size, || {
@@ -389,9 +389,9 @@ impl BenchmarkSuite {
             // Benchmark correlation matrix for multivariate data
             if size <= 100000 {
                 // Limit matrix size for memory
-                let matrix_data = self.generate_matrix_data(size, 5)?; // 5 variables
+                let matrixdata = self.generate_matrixdata(size, 5)?; // 5 variables
                 metrics.push(self.benchmark_function("correlation_matrix", size, || {
-                    crate::correlation::corrcoef(&matrix_data.view(), "pearson")
+                    crate::correlation::corrcoef(&matrixdata.view(), "pearson")
                 })?);
             }
         }
@@ -414,7 +414,7 @@ impl BenchmarkSuite {
     pub fn benchmark_distributions(&mut self) -> StatsResult<BenchmarkReport> {
         let mut metrics = Vec::new();
 
-        for &size in &self.config.data_sizes {
+        for &size in &self.config.datasizes {
             // Benchmark normal distribution operations
             let normal = crate::distributions::norm(0.0f64, 1.0)?;
 
@@ -453,7 +453,7 @@ impl BenchmarkSuite {
     fn benchmark_function<F, R>(
         &self,
         function_name: &str,
-        data_size: usize,
+        datasize: usize,
         mut func: F,
     ) -> StatsResult<BenchmarkMetrics>
     where
@@ -500,25 +500,25 @@ impl BenchmarkSuite {
         };
 
         // Determine algorithm configuration
-        let algorithm_config = self.detect_algorithm_config(function_name, data_size);
+        let algorithm_config = self.detect_algorithm_config(function_name, datasize);
 
         // Calculate throughput (operations per second)
         let throughput = if timing_stats.mean_ns > 0.0 {
-            1_000_000_000.0 / timing_stats.mean_ns * data_size as f64
+            1_000_000_000.0 / timing_stats.mean_ns * datasize as f64
         } else {
             0.0
         };
 
         // Compare with baseline if enabled
-        let baseline_comparison = if self.config.compare_baseline {
-            self.get_baseline_comparison(function_name, data_size, timing_stats.mean_ns)
+        let baseline_comparison = if self.config.comparebaseline {
+            self.getbaseline_comparison(function_name, datasize, timing_stats.mean_ns)
         } else {
             None
         };
 
         Ok(BenchmarkMetrics {
             function_name: function_name.to_string(),
-            data_size,
+            datasize,
             timing: timing_stats,
             memory: memory_stats,
             algorithm_config,
@@ -528,7 +528,7 @@ impl BenchmarkSuite {
     }
 
     /// Generate test data for benchmarking
-    fn generate_test_data(&self, size: usize) -> StatsResult<Array1<f64>> {
+    fn generate_testdata(&self, size: usize) -> StatsResult<Array1<f64>> {
         use rand_distr::{Distribution, Normal};
 
         let mut rng = rand::rng();
@@ -542,9 +542,9 @@ impl BenchmarkSuite {
     }
 
     /// Generate correlated test data
-    fn generate_correlated_data(
+    fn generate_correlateddata(
         &self,
-        base_data: &Array1<f64>,
+        basedata: &Array1<f64>,
         correlation: f64,
     ) -> StatsResult<Array1<f64>> {
         use rand_distr::{Distribution, Normal};
@@ -556,16 +556,16 @@ impl BenchmarkSuite {
 
         let noise_factor = (1.0 - correlation * correlation).sqrt();
 
-        let correlated_data: Vec<f64> = base_data
+        let correlateddata: Vec<f64> = basedata
             .iter()
             .map(|&x| correlation * x + noise_factor * normal.sample(&mut rng))
             .collect();
 
-        Ok(Array1::from_vec(correlated_data))
+        Ok(Array1::from_vec(correlateddata))
     }
 
     /// Generate matrix test data
-    fn generate_matrix_data(&self, rows: usize, cols: usize) -> StatsResult<Array2<f64>> {
+    fn generate_matrixdata(&self, rows: usize, cols: usize) -> StatsResult<Array2<f64>> {
         use rand_distr::{Distribution, Normal};
 
         let mut rng = rand::rng();
@@ -608,16 +608,16 @@ impl BenchmarkSuite {
     }
 
     /// Get baseline performance comparison
-    fn get_baseline_comparison(
+    fn getbaseline_comparison(
         &self,
         _function_name: &str,
-        _data_size: usize,
+        datasize: usize,
         current_time_ns: f64,
     ) -> Option<f64> {
         // This would typically compare against stored baseline measurements
         // For now, we'll simulate a baseline comparison
-        let simulated_baseline = current_time_ns * 1.2; // Assume we're 20% faster than baseline
-        Some(simulated_baseline / current_time_ns)
+        let simulatedbaseline = current_time_ns * 1.2; // Assume we're 20% faster than baseline
+        Some(simulatedbaseline / current_time_ns)
     }
 
     /// Analyze performance across all benchmarks
@@ -635,12 +635,12 @@ impl BenchmarkSuite {
                 let base_name = metric.function_name.replace("_simd", "");
                 if let Some(base_metric) = metrics.iter().find(|m| {
                     m.function_name == base_name
-                        && m.data_size == metric.data_size
+                        && m.datasize == metric.datasize
                         && !m.algorithm_config.simd_enabled
                 }) {
                     let improvement = base_metric.timing.mean_ns / metric.timing.mean_ns;
                     simd_effectiveness
-                        .insert(format!("{}_{}", base_name, metric.data_size), improvement);
+                        .insert(format!("{}_{}", base_name, metric.datasize), improvement);
                 }
             }
         }
@@ -651,12 +651,12 @@ impl BenchmarkSuite {
                 let base_name = metric.function_name.replace("_parallel", "");
                 if let Some(base_metric) = metrics.iter().find(|m| {
                     m.function_name == base_name
-                        && m.data_size == metric.data_size
+                        && m.datasize == metric.datasize
                         && !m.algorithm_config.parallel_enabled
                 }) {
                     let improvement = base_metric.timing.mean_ns / metric.timing.mean_ns;
                     parallel_effectiveness
-                        .insert(format!("{}_{}", base_name, metric.data_size), improvement);
+                        .insert(format!("{}_{}", base_name, metric.datasize), improvement);
                 }
             }
         }
@@ -668,7 +668,7 @@ impl BenchmarkSuite {
                     let regression_percent = (1.0 - baseline_ratio) * 100.0;
                     regressions.push(PerformanceRegression {
                         function_name: metric.function_name.clone(),
-                        data_size: metric.data_size,
+                        datasize: metric.datasize,
                         regression_percent,
                         confidence: self.config.confidence_level,
                         suspected_cause: "Algorithm or system change".to_string(),
@@ -729,7 +729,7 @@ impl BenchmarkSuite {
 
             // Sort by data size
             let mut sorted_metrics = function_metrics;
-            sorted_metrics.sort_by_key(|m| m.data_size);
+            sorted_metrics.sort_by_key(|m| m.datasize);
 
             // Analyze time complexity
             let complexity = self.classify_complexity(&sorted_metrics);
@@ -760,7 +760,7 @@ impl BenchmarkSuite {
             return ComplexityClass::Unknown;
         }
 
-        let sizes: Vec<f64> = metrics.iter().map(|m| m.data_size as f64).collect();
+        let sizes: Vec<f64> = metrics.iter().map(|m| m.datasize as f64).collect();
         let times: Vec<f64> = metrics.iter().map(|m| m.timing.mean_ns).collect();
 
         // Simple heuristic classification based on growth rate
@@ -772,15 +772,15 @@ impl BenchmarkSuite {
         }
 
         let avg_time_ratio = time_ratios.iter().sum::<f64>() / time_ratios.len() as f64;
-        let avg_size_ratio = size_ratios.iter().sum::<f64>() / size_ratios.len() as f64;
+        let avgsize_ratio = size_ratios.iter().sum::<f64>() / size_ratios.len() as f64;
 
         if avg_time_ratio < 1.1 {
             ComplexityClass::Constant
-        } else if avg_time_ratio / avg_size_ratio < 1.5 {
+        } else if avg_time_ratio / avgsize_ratio < 1.5 {
             ComplexityClass::Linear
-        } else if avg_time_ratio / (avg_size_ratio * avg_size_ratio.log2()) < 2.0 {
+        } else if avg_time_ratio / (avgsize_ratio * avgsize_ratio.log2()) < 2.0 {
             ComplexityClass::LinearLogarithmic
-        } else if avg_time_ratio / (avg_size_ratio * avg_size_ratio) < 2.0 {
+        } else if avg_time_ratio / (avgsize_ratio * avgsize_ratio) < 2.0 {
             ComplexityClass::Quadratic
         } else {
             ComplexityClass::Unknown
@@ -798,7 +798,7 @@ impl BenchmarkSuite {
     fn analyze_memory_scaling(&self, metrics: &[&BenchmarkMetrics]) -> Option<MemoryScaling> {
         let memory_data: Vec<_> = metrics
             .iter()
-            .filter_map(|m| m.memory.as_ref().map(|mem| (m.data_size, mem.peak_bytes)))
+            .filter_map(|m| m.memory.as_ref().map(|mem| (m.datasize, mem.peak_bytes)))
             .collect();
 
         if memory_data.len() < 2 {
@@ -895,7 +895,7 @@ impl MemoryTracker {
             peak_memory: 0,
             allocations: 0,
             deallocations: 0,
-            allocation_sizes: Vec::new(),
+            allocationsizes: Vec::new(),
         }
     }
 
@@ -904,12 +904,12 @@ impl MemoryTracker {
         self.peak_memory = 0;
         self.allocations = 0;
         self.deallocations = 0;
-        self.allocation_sizes.clear();
+        self.allocationsizes.clear();
     }
 
     fn get_stats(&self) -> MemoryStats {
-        let avg_allocation_size = if self.allocations > 0 {
-            self.allocation_sizes.iter().sum::<usize>() as f64 / self.allocations as f64
+        let avg_allocationsize = if self.allocations > 0 {
+            self.allocationsizes.iter().sum::<usize>() as f64 / self.allocations as f64
         } else {
             0.0
         };
@@ -924,7 +924,7 @@ impl MemoryTracker {
             peak_bytes: self.peak_memory,
             allocations: self.allocations,
             deallocations: self.deallocations,
-            avg_allocation_size,
+            avg_allocationsize,
             fragmentation_score: fragmentation_score.max(0.0).min(1.0),
         }
     }
@@ -943,23 +943,23 @@ mod tests {
     #[test]
     fn test_benchmark_suite_creation() {
         let suite = BenchmarkSuite::new();
-        assert_eq!(suite.config.data_sizes.len(), 5);
+        assert_eq!(suite.config.datasizes.len(), 5);
         assert_eq!(suite.config.iterations, 100);
     }
 
     #[test]
-    fn test_test_data_generation() {
+    fn test_testdata_generation() {
         let suite = BenchmarkSuite::new();
-        let data = suite.generate_test_data(1000).unwrap();
+        let data = suite.generate_testdata(1000).unwrap();
         assert_eq!(data.len(), 1000);
     }
 
     #[test]
-    fn test_correlated_data_generation() {
+    fn test_correlateddata_generation() {
         let suite = BenchmarkSuite::new();
-        let base_data = suite.generate_test_data(100).unwrap();
-        let correlated_data = suite.generate_correlated_data(&base_data, 0.8).unwrap();
-        assert_eq!(correlated_data.len(), 100);
+        let basedata = suite.generate_testdata(100).unwrap();
+        let correlateddata = suite.generate_correlateddata(&basedata, 0.8).unwrap();
+        assert_eq!(correlateddata.len(), 100);
     }
 
     #[test]
@@ -968,7 +968,7 @@ mod tests {
 
         let metric1 = BenchmarkMetrics {
             function_name: "test".to_string(),
-            data_size: 100,
+            datasize: 100,
             timing: TimingStats {
                 mean_ns: 1000.0,
                 std_dev_ns: 100.0,
@@ -992,7 +992,7 @@ mod tests {
 
         let metric2 = BenchmarkMetrics {
             function_name: "test".to_string(),
-            data_size: 1000,
+            datasize: 1000,
             timing: TimingStats {
                 mean_ns: 10000.0,
                 std_dev_ns: 1000.0,
@@ -1016,7 +1016,7 @@ mod tests {
 
         let metric3 = BenchmarkMetrics {
             function_name: "test".to_string(),
-            data_size: 10000,
+            datasize: 10000,
             timing: TimingStats {
                 mean_ns: 100000.0,
                 std_dev_ns: 10000.0,

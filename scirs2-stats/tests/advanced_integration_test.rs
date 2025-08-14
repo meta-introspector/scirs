@@ -24,17 +24,17 @@ fn test_basic_integration() {
 }
 
 #[test]
-fn test_large_data_integration() {
-    let large_data: Array1<f64> = Array1::from_iter((1..=1000).map(|x| x as f64));
+fn test_largedata_integration() {
+    let largedata: Array1<f64> = Array1::from_iter((1..=1000).map(|x| x as f64));
 
     // Test that operations complete successfully on larger datasets
-    let mean_result = mean(&large_data.view()).unwrap();
+    let mean_result = mean(&largedata.view()).unwrap();
     assert!((mean_result - 500.5).abs() < 1e-10);
 
-    let var_result = var(&large_data.view(), 1, None).unwrap();
+    let var_result = var(&largedata.view(), 1, None).unwrap();
     assert!(var_result > 0.0);
 
-    let std_result = std(&large_data.view(), 1, None).unwrap();
+    let std_result = std(&largedata.view(), 1, None).unwrap();
     assert!(std_result > 0.0);
 }
 

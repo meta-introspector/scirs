@@ -527,7 +527,7 @@ impl DocumentationAnalyzer {
     /// Create a new documentation analyzer
     pub fn new(config: AnalyzerConfig) -> Self {
         Self {
-            config: config,
+            config,
             analysis_results: AnalysisResults::default(),
             metrics: DocumentationMetrics::default(),
         }
@@ -658,8 +658,7 @@ impl DocumentationAnalyzer {
         let mut file_total_items = 0;
 
         while current_line < lines.len() {
-            if let Some((item, category, line_num)) = self.parse_public_item(&lines, current_line)
-            {
+            if let Some((item, category, line_num)) = self.parse_public_item(&lines, current_line) {
                 *total_items += 1;
                 file_total_items += 1;
 

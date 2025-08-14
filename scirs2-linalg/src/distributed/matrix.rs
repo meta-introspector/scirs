@@ -38,10 +38,10 @@ where
 {
     /// Create a distributed matrix from a local matrix
     pub fn from_local(
-        local_matrix: Array2<T>,
+        localmatrix: Array2<T>,
         config: super::DistributedConfig,
     ) -> LinalgResult<Self> {
-        let globalshape = local_matrix.dim();
+        let globalshape = localmatrix.dim();
         
         // Create distribution
         let distribution = match config.distribution {
@@ -56,7 +56,7 @@ where
                     globalshape,
                     config.num_nodes,
                     config.node_rank,
-                    (config.block_size, config.block_size),
+                    (config.blocksize, config.blocksize),
                 )?
             }
             _ => {
@@ -67,7 +67,7 @@ where
         };
         
         // Extract local partition
-        let local_data = MatrixPartitioner::partition(&local_matrix.view(), &distribution)?;
+        let local_data = MatrixPartitioner::partition(&localmatrix.view(), &distribution)?;
         
         // Create communicator and coordinator
         let communicator = Arc::new(DistributedCommunicator::new(&config)?);
@@ -202,8 +202,8 @@ where
                     partition_map.insert(rank, matrix);
                 }
                 
-                let global_matrix = MatrixPartitioner::reconstruct(&partition_map, &self.distribution)?;
-                Ok(Some(global_matrix))
+                let globalmatrix = MatrixPartitioner::reconstruct(&partition_map, &self.distribution)?;
+                Ok(Some(globalmatrix))
             } else {
                 Ok(None)
             }
@@ -216,25 +216,25 @@ where
     
     /// Broadcast a matrix from root to all nodes
     pub fn broadcast_from_root(
-        global_matrix: Option<Array2<T>>,
+        globalmatrix: Option<Array2<T>>,
         config: super::DistributedConfig,
     ) -> LinalgResult<DistributedMatrix<T>> {
         let communicator = Arc::new(DistributedCommunicator::new(&config)?);
         
         if config.node_rank == 0 {
-            let _matrix = global_matrix.ok_or_else(|| {
-                LinalgError::InvalidInput("Root node must provide _matrix for broadcast".to_string())
+            let matrix = globalmatrix.ok_or_else(|| {
+                LinalgError::InvalidInput("Root node must provide matrix for broadcast".to_string())
             })?;
             
             // Broadcast to all other nodes
-            communicator.broadcast_matrix(&_matrix.view())?;
+            communicator.broadcastmatrix(&matrix.view())?;
             
-            // Create distributed _matrix on root
-            Self::from_local(_matrix, config)
+            // Create distributed matrix on root
+            Self::from_local(matrix, config)
         } else {
             // Receive from root
-            let _matrix = communicator.recv_matrix(0, MessageTag::Data)?;
-            Self::from_local(_matrix, config)
+            let matrix = communicator.recvmatrix(0, MessageTag::Data)?;
+            Self::from_local(matrix, config)
         }
     }
     
@@ -285,11 +285,11 @@ where
             let b_partition = if j == self.node_rank {
                 other.local_data.clone()
             } else {
-                self.communicator.recv_matrix(j, MessageTag::MatMul)?
+                self.communicator.recvmatrix(j, MessageTag::MatMul)?
             };
             
             if j != self.node_rank {
-                self.communicator.send_matrix(&other.local_data.view(), j, MessageTag::MatMul)?;
+                self.communicator.sendmatrix(&other.local_data.view(), j, MessageTag::MatMul)?;
             }
             
             // Compute local contribution
@@ -348,9 +348,9 @@ where
         let mut result = DistributedMatrix::from_distribution(result_distribution, self.config.clone())?;
         
         // Gather transpose data from all nodes
-        if let Some(global_matrix) = self.gather()? {
+        if let Some(globalmatrix) = self.gather()? {
             // Only root computes transpose
-            let transposed = global_matrix.t().to_owned();
+            let transposed = globalmatrix.t().to_owned();
             
             // Redistribute transposed matrix
             let redistributed = DistributedMatrix::broadcast_from_root(
@@ -380,8 +380,8 @@ where
         let mut result = DistributedMatrix::from_distribution(result_distribution, self.config.clone())?;
         
         // Similar to transpose_row_to_col but with different target distribution
-        if let Some(global_matrix) = self.gather()? {
-            let transposed = global_matrix.t().to_owned();
+        if let Some(globalmatrix) = self.gather()? {
+            let transposed = globalmatrix.t().to_owned();
             let redistributed = DistributedMatrix::broadcast_from_root(
                 Some(transposed),
                 self.config.clone(),
@@ -553,10 +553,10 @@ where
     /// Gather vector to root node
     pub fn gather(&self) -> LinalgResult<Option<Array1<T>>> {
         // Simple implementation - in practice would be more efficient
-        let dummy_matrix = self.local_data.clone().insert_axis(Axis(0));
+        let dummymatrix = self.local_data.clone().insert_axis(Axis(0));
         
         if self.node_rank == 0 {
-            let matrices = self.communicator.gather_matrices(&dummy_matrix.view())?;
+            let matrices = self.communicator.gather_matrices(&dummymatrix.view())?;
             if let Some(parts) = matrices {
                 let mut result = Array1::zeros(self.global_length);
                 for (rank, matrix) in parts.into_iter().enumerate() {
@@ -569,7 +569,7 @@ where
                 Ok(None)
             }
         } else {
-            self.communicator.gather_matrices(&dummy_matrix.view())?;
+            self.communicator.gather_matrices(&dummymatrix.view())?;
             Ok(None)
         }
     }
@@ -578,20 +578,20 @@ where
     
     fn allreduce_sum(&self, localvalue: T) -> LinalgResult<T> {
         // Simple implementation using gather and broadcast
-        let value_matrix = Array2::from_elem((1, 1), local_value);
+        let valuematrix = Array2::from_elem((1, 1), local_value);
         
-        if let Some(gathered) = self.communicator.gather_matrices(&value_matrix.view())? {
+        if let Some(gathered) = self.communicator.gather_matrices(&valuematrix.view())? {
             // Sum all values (only on root)
             let total: T = gathered.iter().map(|m| m[[0, 0]]).fold(T::zero(), |acc, x| acc + x);
             
             // Broadcast result
-            let result_matrix = Array2::from_elem((1, 1), total);
-            self.communicator.broadcast_matrix(&result_matrix.view())?;
+            let resultmatrix = Array2::from_elem((1, 1), total);
+            self.communicator.broadcastmatrix(&resultmatrix.view())?;
             Ok(total)
         } else {
             // Receive result from root
-            let result_matrix = self.communicator.recv_matrix(0, MessageTag::Data)?;
-            Ok(result_matrix[[0, 0]])
+            let resultmatrix = self.communicator.recvmatrix(0, MessageTag::Data)?;
+            Ok(resultmatrix[[0, 0]])
         }
     }
 }
@@ -602,18 +602,18 @@ mod tests {
     use super::super::DistributedConfig;
     
     #[test]
-    fn test_distributed_matrix_creation() {
+    fn test_distributedmatrix_creation() {
         let matrix = Array2::from_shape_fn((6, 4), |(i, j)| (i * 4 + j) as f64);
         let config = DistributedConfig::default()
             .with_num_nodes(2)
             .with_node_rank(0)
             .with_distribution(DistributionStrategy::RowWise);
         
-        let dist_matrix = DistributedMatrix::from_local(matrix.clone(), config).unwrap();
+        let distmatrix = DistributedMatrix::from_local(matrix.clone(), config).unwrap();
         
-        assert_eq!(dist_matrix.globalshape(), (6, 4));
-        assert_eq!(dist_matrix.localshape().0, 3); // Half the rows
-        assert_eq!(dist_matrix.localshape().1, 4); // All columns
+        assert_eq!(distmatrix.globalshape(), (6, 4));
+        assert_eq!(distmatrix.localshape().0, 3); // Half the rows
+        assert_eq!(distmatrix.localshape().1, 4); // All columns
     }
     
     #[test]
@@ -640,7 +640,7 @@ mod tests {
     }
     
     #[test]
-    fn test_matrix_local_operations() {
+    fn testmatrix_local_operations() {
         let matrix1 = Array2::from_shape_fn((4, 4), |(i, j)| (i + j) as f64);
         let matrix2 = Array2::from_shape_fn((4, 4), |(i, j)| (i * j) as f64);
         

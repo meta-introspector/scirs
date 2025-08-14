@@ -1196,7 +1196,9 @@ pub struct PoolAllocator {
 
 impl PoolAllocator {
     pub fn new(_blocksize: usize) -> Self {
-        Self { block_size: _blocksize }
+        Self {
+            block_size: _blocksize,
+        }
     }
 }
 

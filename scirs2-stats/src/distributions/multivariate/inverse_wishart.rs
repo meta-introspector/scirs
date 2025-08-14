@@ -152,8 +152,7 @@ impl InverseWishart {
         x_det = x_det * x_det; // Square it since det(X) = det(L)^2
 
         // Compute x_inv using its Cholesky decomposition
-        let x_inv =
-            compute_inverse_from_cholesky(xchol).expect("Failed to compute matrix inverse");
+        let x_inv = compute_inverse_from_cholesky(xchol).expect("Failed to compute matrix inverse");
 
         // Calculate trace(Ψ·X^-1)
         let mut trace = 0.0;

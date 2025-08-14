@@ -36,7 +36,7 @@ pub struct ScipyComparisonConfig {
     /// Enable memory usage comparison
     pub compare_memory: bool,
     /// Test data sizes
-    pub test_sizes: Vec<usize>,
+    pub testsizes: Vec<usize>,
     /// Functions to benchmark
     pub functions_to_test: Vec<String>,
 }
@@ -54,7 +54,7 @@ impl Default for ScipyComparisonConfig {
             measurement_iterations: 100,
             detailed_accuracy: true,
             compare_memory: true,
-            test_sizes: vec![100, 1000, 10000, 100000],
+            testsizes: vec![100, 1000, 10000, 100000],
             functions_to_test: vec![
                 "mean".to_string(),
                 "std".to_string(),
@@ -131,7 +131,7 @@ pub struct FunctionComparison {
     /// Function name
     pub function_name: String,
     /// Test data size
-    pub data_size: usize,
+    pub datasize: usize,
     /// Performance comparison
     pub performance: PerformanceComparison,
     /// Accuracy comparison
@@ -282,7 +282,7 @@ pub struct PerformanceAnalysis {
     /// Functions slower than SciPy
     pub slower_functions: Vec<(String, f64)>,
     /// Performance by data size
-    pub performance_by_size: HashMap<usize, f64>,
+    pub performance_bysize: HashMap<usize, f64>,
     /// Performance trends
     pub trends: PerformanceTrends,
 }
@@ -297,7 +297,7 @@ pub struct AccuracyAnalysis {
     /// Functions with accuracy issues
     pub problematic_functions: Vec<(String, f64)>,
     /// Accuracy by data size
-    pub accuracy_by_size: HashMap<usize, f64>,
+    pub accuracy_bysize: HashMap<usize, f64>,
     /// Numerical stability assessment
     pub stability_assessment: NumericalStabilityAssessment,
 }
@@ -595,7 +595,7 @@ impl ScipyBenchmarkComparison {
 
         Ok(Self {
             temp_dir: config.temp_dir.clone(),
-            config: config,
+            config,
         })
     }
 
@@ -618,13 +618,13 @@ impl ScipyBenchmarkComparison {
         let mut function_comparisons = Vec::new();
 
         for function_name in &self.config.functions_to_test {
-            for &data_size in &self.config.test_sizes {
-                match self.compare_function(function_name, data_size) {
+            for &datasize in &self.config.testsizes {
+                match self.compare_function(function_name, datasize) {
                     Ok(comparison) => function_comparisons.push(comparison),
                     Err(e) => {
                         function_comparisons.push(FunctionComparison {
                             function_name: function_name.clone(),
-                            data_size,
+                            datasize,
                             performance: PerformanceComparison {
                                 scirs2_time_ns: 0.0,
                                 scipy_time_ns: 0.0,
@@ -768,16 +768,16 @@ print(json.dumps(info))
     fn compare_function(
         &self,
         function_name: &str,
-        data_size: usize,
+        datasize: usize,
     ) -> StatsResult<FunctionComparison> {
         // Generate test data
-        let test_data = self.generate_test_data(data_size)?;
+        let testdata = self.generate_testdata(datasize)?;
 
         // Benchmark scirs2-stats function
-        let scirs2_result = self.benchmark_scirs2_function(function_name, &test_data)?;
+        let scirs2_result = self.benchmark_scirs2_function(function_name, &testdata)?;
 
         // Benchmark SciPy function
-        let scipy_result = self.benchmark_scipy_function(function_name, &test_data)?;
+        let scipy_result = self.benchmark_scipy_function(function_name, &testdata)?;
 
         // Compare performance
         let performance = PerformanceComparison {
@@ -797,7 +797,7 @@ print(json.dumps(info))
 
         Ok(FunctionComparison {
             function_name: function_name.to_string(),
-            data_size,
+            datasize,
             performance,
             accuracy,
             memory: None, // Would implement memory comparison
@@ -807,7 +807,7 @@ print(json.dumps(info))
     }
 
     /// Generate test data for benchmarking
-    fn generate_test_data(&self, size: usize) -> StatsResult<TestData> {
+    fn generate_testdata(&self, size: usize) -> StatsResult<TestData> {
         use rand_distr::{Distribution, Normal};
 
         let mut rng = rand::rng();
@@ -834,30 +834,30 @@ print(json.dumps(info))
     fn benchmark_scirs2_function(
         &self,
         function_name: &str,
-        test_data: &TestData,
+        testdata: &TestData,
     ) -> StatsResult<BenchmarkResult> {
         let start_time = Instant::now();
 
         let result = match function_name {
             "mean" => {
-                vec![crate::descriptive::mean(&test_data.primary.view())?]
+                vec![crate::descriptive::mean(&testdata.primary.view())?]
             }
             "std" => {
-                vec![crate::descriptive::std(&test_data.primary.view(), 1, None)?]
+                vec![crate::descriptive::std(&testdata.primary.view(), 1, None)?]
             }
             "var" => {
-                vec![crate::descriptive::var(&test_data.primary.view(), 1, None)?]
+                vec![crate::descriptive::var(&testdata.primary.view(), 1, None)?]
             }
             "skew" => {
                 vec![crate::descriptive::skew(
-                    &test_data.primary.view(),
+                    &testdata.primary.view(),
                     false,
                     None,
                 )?]
             }
             "kurtosis" => {
                 vec![crate::descriptive::kurtosis(
-                    &test_data.primary.view(),
+                    &testdata.primary.view(),
                     true,
                     false,
                     None,
@@ -865,21 +865,21 @@ print(json.dumps(info))
             }
             "pearsonr" => {
                 let corr = crate::correlation::pearson_r(
-                    &test_data.primary.view(),
-                    &test_data.secondary.view(),
+                    &testdata.primary.view(),
+                    &testdata.secondary.view(),
                 )?;
                 vec![corr]
             }
             "spearmanr" => {
                 let corr = crate::correlation::spearman_r(
-                    &test_data.primary.view(),
-                    &test_data.secondary.view(),
+                    &testdata.primary.view(),
+                    &testdata.secondary.view(),
                 )?;
                 vec![corr]
             }
             "ttest_1samp" => {
                 let result = crate::tests::ttest::ttest_1samp(
-                    &test_data.primary.view(),
+                    &testdata.primary.view(),
                     0.0,
                     crate::tests::ttest::Alternative::TwoSided,
                     "propagate",
@@ -906,9 +906,9 @@ print(json.dumps(info))
     fn benchmark_scipy_function(
         &self,
         function_name: &str,
-        test_data: &TestData,
+        testdata: &TestData,
     ) -> StatsResult<BenchmarkResult> {
-        let script = self.generate_scipy_script(function_name, test_data)?;
+        let script = self.generate_scipy_script(function_name, testdata)?;
         let script_path = format!("{}/scipy_benchmark_{}.py", self.temp_dir, function_name);
 
         fs::write(&script_path, script).map_err(|e| {
@@ -954,11 +954,11 @@ print(json.dumps(info))
     fn generate_scipy_script(
         &self,
         function_name: &str,
-        test_data: &TestData,
+        testdata: &TestData,
     ) -> StatsResult<String> {
-        let data_primary: Vec<String> = test_data.primary.iter().map(|x| x.to_string()).collect();
+        let data_primary: Vec<String> = testdata.primary.iter().map(|x| x.to_string()).collect();
         let data_secondary: Vec<String> =
-            test_data.secondary.iter().map(|x| x.to_string()).collect();
+            testdata.secondary.iter().map(|x| x.to_string()).collect();
 
         let script = match function_name {
             "mean" => {
@@ -968,10 +968,10 @@ import numpy as np
 import time
 import json
 
-_data = np.array([{}])
+data = np.array([{}])
 
 start_time = time.perf_counter()
-result = np.mean(_data)
+result = np.mean(data)
 execution_time = time.perf_counter() - start_time
 
 output = {{
@@ -991,10 +991,10 @@ import numpy as np
 import time
 import json
 
-_data = np.array([{}])
+data = np.array([{}])
 
 start_time = time.perf_counter()
-result = np.std(_data, ddof=1)
+result = np.std(data, ddof=1)
 execution_time = time.perf_counter() - start_time
 
 output = {{
@@ -1261,7 +1261,7 @@ print(json.dumps(output))
             .map(|c| (c.function_name.clone(), c.performance.ratio))
             .collect();
 
-        let performance_by_size = HashMap::new(); // Would implement proper analysis
+        let performance_bysize = HashMap::new(); // Would implement proper analysis
 
         let trends = PerformanceTrends {
             scaling_analysis: ScalingAnalysis {
@@ -1286,7 +1286,7 @@ print(json.dumps(output))
             ratio_std_dev,
             faster_functions,
             slower_functions,
-            performance_by_size,
+            performance_bysize,
             trends,
         }
     }
@@ -1308,7 +1308,7 @@ print(json.dumps(output))
             .map(|c| (c.function_name.clone(), c.accuracy.relative_difference))
             .collect();
 
-        let accuracy_by_size = HashMap::new(); // Would implement proper analysis
+        let accuracy_bysize = HashMap::new(); // Would implement proper analysis
 
         let stability_assessment = NumericalStabilityAssessment {
             stability_rating: if max_relative_diff < 1e-10 {
@@ -1341,7 +1341,7 @@ print(json.dumps(output))
             average_relative_diff,
             max_relative_diff,
             problematic_functions,
-            accuracy_by_size,
+            accuracy_bysize,
             stability_assessment,
         }
     }
@@ -1461,13 +1461,13 @@ mod tests {
     }
 
     #[test]
-    fn test_test_data_generation() {
+    fn test_testdata_generation() {
         let comparison = ScipyBenchmarkComparison::default().unwrap();
-        let test_data = comparison.generate_test_data(100).unwrap();
+        let testdata = comparison.generate_testdata(100).unwrap();
 
-        assert_eq!(test_data.primary.len(), 100);
-        assert_eq!(test_data.secondary.len(), 100);
-        assert_eq!(test_data.matrix.nrows(), 100);
+        assert_eq!(testdata.primary.len(), 100);
+        assert_eq!(testdata.secondary.len(), 100);
+        assert_eq!(testdata.matrix.nrows(), 100);
     }
 
     #[test]

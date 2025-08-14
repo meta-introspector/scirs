@@ -821,9 +821,9 @@ where
         let mut new_indices = Vec::new();
         let mut new_indptr = vec![0];
 
-        let (rows_, _) = self.shape();
+        let (rows, _) = self.shape();
 
-        for row in 0..rows_ {
+        for row in 0..rows {
             let start = self.indptr[row];
             let end = self.indptr[row + 1];
 
@@ -847,9 +847,9 @@ where
             return;
         }
 
-        let (rows_, _) = self.shape();
+        let (rows, _) = self.shape();
 
-        for row in 0..rows_ {
+        for row in 0..rows {
             let start = self.indptr[row];
             let end = self.indptr[row + 1];
 

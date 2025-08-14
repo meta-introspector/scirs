@@ -120,7 +120,7 @@ where
     pub fn new(size: usize, algorithm: FFTAlgorithm, realinput: bool) -> LinalgResult<Self> {
         if size == 0 {
             return Err(LinalgError::ShapeError(
-                "FFT _size must be positive".to_string(),
+                "FFT size must be positive".to_string(),
             ));
         }
 
@@ -133,7 +133,7 @@ where
         if let FFTAlgorithm::CooleyTukey = selected_algorithm {
             if !size.is_power_of_two() {
                 return Err(LinalgError::ShapeError(
-                    "Cooley-Tukey algorithm requires power-of-2 _size".to_string(),
+                    "Cooley-Tukey algorithm requires power-of-2 size".to_string(),
                 ));
             }
         }
@@ -175,10 +175,10 @@ where
     /// Compute bit-reversal permutation for radix-2 FFT
     fn compute_bit_reversal(size: usize) -> Vec<usize> {
         let mut reversal = vec![0; size];
-        let log_size = (size as f64).log2() as usize;
+        let logsize = (size as f64).log2() as usize;
 
         for (i, item) in reversal.iter_mut().enumerate().take(size) {
-            *item = Self::reverse_bits(i, log_size);
+            *item = Self::reverse_bits(i, logsize);
         }
 
         reversal
@@ -322,7 +322,7 @@ fn mixed_radix_fft(
     _plan: &FFTPlan<f64>,
     inverse: bool,
 ) -> LinalgResult<Array1<Complex64>> {
-    let _size = input.len();
+    let size = input.len();
 
     // For now, use Bluestein's algorithm for arbitrary sizes
     bluestein_fft(input, inverse)
@@ -459,10 +459,10 @@ pub fn rfft_1d(input: &ArrayView1<f64>) -> LinalgResult<Array1<Complex64>> {
     };
 
     // Extract positive frequencies (including DC and Nyquist)
-    let output_size = n / 2 + 1;
-    let mut result = Array1::zeros(output_size);
+    let outputsize = n / 2 + 1;
+    let mut result = Array1::zeros(outputsize);
 
-    for i in 0..output_size {
+    for i in 0..outputsize {
         result[i] = full_fft[i];
     }
 
@@ -476,7 +476,7 @@ pub fn rfft_1d(input: &ArrayView1<f64>) -> LinalgResult<Array1<Complex64>> {
 /// # Arguments
 ///
 /// * `input` - Complex FFT coefficients
-/// * `output_size` - Size of real output (must be even)
+/// * `outputsize` - Size of real output (must be even)
 ///
 /// # Returns
 ///
@@ -485,16 +485,16 @@ pub fn rfft_1d(input: &ArrayView1<f64>) -> LinalgResult<Array1<Complex64>> {
 pub fn irfft_1d(input: &ArrayView1<Complex64>, outputsize: usize) -> LinalgResult<Array1<f64>> {
     if outputsize % 2 != 0 {
         return Err(LinalgError::ShapeError(
-            "Output _size must be even for IRFFT".to_string(),
+            "Output size must be even for IRFFT".to_string(),
         ));
     }
 
-    let expected_input_size = outputsize / 2 + 1;
-    if input.len() != expected_input_size {
+    let expected_inputsize = outputsize / 2 + 1;
+    if input.len() != expected_inputsize {
         return Err(LinalgError::ShapeError(format!(
-            "Input _size {} doesn't match expected _size {} for output _size {}",
+            "Input size {} doesn't match expected size {} for output size {}",
             input.len(),
-            expected_input_size,
+            expected_inputsize,
             outputsize
         )));
     }
@@ -670,10 +670,7 @@ pub fn fft_3d(input: &ArrayView3<Complex64>, inverse: bool) -> LinalgResult<Arra
 ///
 /// * Windowed signal
 #[allow(dead_code)]
-pub fn apply_window(
-    signal: &ArrayView1<f64>,
-    window: WindowFunction,
-) -> LinalgResult<Array1<f64>> {
+pub fn apply_window(signal: &ArrayView1<f64>, window: WindowFunction) -> LinalgResult<Array1<f64>> {
     let n = signal.len();
     let mut windowed = signal.to_owned();
 
@@ -849,14 +846,14 @@ pub fn fft_convolve(
 ) -> LinalgResult<Array1<f64>> {
     let n1 = signal1.len();
     let n2 = signal2.len();
-    let output_size = n1 + n2 - 1;
+    let outputsize = n1 + n2 - 1;
 
     // Find next power of 2 for efficient FFT
-    let fft_size = output_size.next_power_of_two();
+    let fftsize = outputsize.next_power_of_two();
 
     // Zero-pad both signals
-    let mut padded1 = Array1::zeros(fft_size);
-    let mut padded2 = Array1::zeros(fft_size);
+    let mut padded1 = Array1::zeros(fftsize);
+    let mut padded2 = Array1::zeros(fftsize);
 
     for i in 0..n1 {
         padded1[i] = signal1[i];
@@ -876,11 +873,11 @@ pub fn fft_convolve(
     }
 
     // Inverse FFT
-    let result_full = irfft_1d(&product.view(), fft_size)?;
+    let result_full = irfft_1d(&product.view(), fftsize)?;
 
     // Extract valid convolution output
-    let mut result = Array1::zeros(output_size);
-    for i in 0..output_size {
+    let mut result = Array1::zeros(outputsize);
+    for i in 0..outputsize {
         result[i] = result_full[i];
     }
 
@@ -905,14 +902,14 @@ pub fn periodogram_psd(
     nfft: Option<usize>,
 ) -> LinalgResult<Array1<f64>> {
     let n = signal.len();
-    let fft_size = nfft.unwrap_or(n);
+    let fftsize = nfft.unwrap_or(n);
 
     // Apply window
     let windowed = apply_window(signal, window)?;
 
     // Zero-pad if necessary
-    let mut padded = Array1::zeros(fft_size);
-    for i in 0..n.min(fft_size) {
+    let mut padded = Array1::zeros(fftsize);
+    for i in 0..n.min(fftsize) {
         padded[i] = windowed[i];
     }
 
@@ -921,14 +918,14 @@ pub fn periodogram_psd(
 
     // Compute power spectral density
     let mut psd = Array1::zeros(fft_result.len());
-    let normalization = 1.0 / (fft_size as f64);
+    let normalization = 1.0 / (fftsize as f64);
 
     for i in 0..fft_result.len() {
         psd[i] = fft_result[i].norm_sqr() * normalization;
     }
 
     // Handle DC and Nyquist components for real signals
-    if fft_size % 2 == 0 && fft_result.len() > 1 {
+    if fftsize % 2 == 0 && fft_result.len() > 1 {
         // Double all except DC and Nyquist
         for i in 1..fft_result.len() - 1 {
             psd[i] *= 2.0;
@@ -985,9 +982,9 @@ pub fn welch_psd(
         ));
     }
 
-    let fft_size = nperseg.next_power_of_two();
-    let output_size = fft_size / 2 + 1;
-    let mut psd_sum = Array1::zeros(output_size);
+    let fftsize = nperseg.next_power_of_two();
+    let outputsize = fftsize / 2 + 1;
+    let mut psd_sum = Array1::zeros(outputsize);
 
     for seg in 0..num_segments {
         let start = seg * step;
@@ -1000,16 +997,16 @@ pub fn welch_psd(
         }
 
         // Compute PSD for this segment
-        let segment_psd = periodogram_psd(&segment.view(), window, Some(fft_size))?;
+        let segment_psd = periodogram_psd(&segment.view(), window, Some(fftsize))?;
 
         // Add to sum
-        for i in 0..output_size {
+        for i in 0..outputsize {
             psd_sum[i] += segment_psd[i];
         }
     }
 
     // Average over segments
-    for i in 0..output_size {
+    for i in 0..outputsize {
         psd_sum[i] /= num_segments as f64;
     }
 
@@ -1196,17 +1193,17 @@ pub fn fast_walsh_transform(input: &ArrayView1<f64>, inverse: bool) -> LinalgRes
 /// * Frequency bins in Hz
 #[allow(dead_code)]
 pub fn fft_frequencies(n: usize, sample_rate: f64, realfft: bool) -> Array1<f64> {
-    let output_size = if realfft { n / 2 + 1 } else { n };
-    let mut freqs = Array1::zeros(output_size);
+    let outputsize = if realfft { n / 2 + 1 } else { n };
+    let mut freqs = Array1::zeros(outputsize);
 
     let df = sample_rate / n as f64;
 
     if realfft {
-        for i in 0..output_size {
+        for i in 0..outputsize {
             freqs[i] = i as f64 * df;
         }
     } else {
-        for i in 0..output_size {
+        for i in 0..outputsize {
             freqs[i] = if i <= n / 2 {
                 i as f64 * df
             } else {
@@ -1383,7 +1380,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bluestein_arbitrary_size() {
+    fn test_bluestein_arbitrarysize() {
         let input = array![
             Complex64::new(1.0, 0.0),
             Complex64::new(0.0, 0.0),

@@ -930,7 +930,7 @@ impl VisualReasoningEngine {
         let mut activities = Vec::new();
 
         // Analyze object combinations and spatial relationships
-        for object in &scene_analysis.objects {
+        for object in &sceneanalysis.objects {
             match object.class.as_str() {
                 "person" => activities.push("human_activity".to_string()),
                 "car" => activities.push("transportation".to_string()),

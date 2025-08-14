@@ -100,8 +100,8 @@ mod gamma_properties {
         }
 
         let gamma_x = gamma(x);
-        let gamma_1_minus_x = gamma(1.0 - x);
-        let product = gamma_x * gamma_1_minus_x;
+        let gamma_1minus_x = gamma(1.0 - x);
+        let product = gamma_x * gamma_1minus_x;
         let expected = f64::consts::PI / (f64::consts::PI * x).sin();
 
         TestResult::from_bool(approx_eq(product, expected, 1e-10))
@@ -189,11 +189,11 @@ mod bessel_properties {
             return TestResult::discard();
         }
 
-        let j_n_minus_1 = jn(n - 1, x);
+        let j_nminus_1 = jn(n - 1, x);
         let j_n = jn(n, x);
         let j_n_plus_1 = jn(n + 1, x);
 
-        let left = j_n_minus_1 + j_n_plus_1;
+        let left = j_nminus_1 + j_n_plus_1;
         let right = (2.0 * n as f64 / x) * j_n;
 
         TestResult::from_bool(approx_eq(left, right, 1e-10))
@@ -323,12 +323,12 @@ mod orthogonal_polynomial_properties {
             return TestResult::discard();
         }
 
-        let p_n_minus_1 = legendre(n - 1, x);
+        let p_nminus_1 = legendre(n - 1, x);
         let p_n = legendre(n, x);
         let p_n_plus_1 = legendre(n + 1, x);
 
         let left = (n + 1) as f64 * p_n_plus_1;
-        let right = (2 * n + 1) as f64 * x * p_n - n as f64 * p_n_minus_1;
+        let right = (2 * n + 1) as f64 * x * p_n - n as f64 * p_nminus_1;
 
         TestResult::from_bool(approx_eq(left, right, 1e-10))
     }

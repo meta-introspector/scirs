@@ -742,16 +742,12 @@ impl TransformerBlock {
         // Multi-head attention with residual connection
         let attention_output = self.attention.forward(input, input, input)?;
         let residual1 = input + &attention_output.view();
-        let after_attention = self
-            .layer_norm1
-            .forward(&residual1.view())?;
+        let after_attention = self.layer_norm1.forward(&residual1.view())?;
 
         // Feed-forward with residual connection
         let ff_output = self.feed_forward.forward(&after_attention.view())?;
         let residual2 = &after_attention + &ff_output.view();
-        let output = self
-            .layer_norm2
-            .forward(&residual2.view())?;
+        let output = self.layer_norm2.forward(&residual2.view())?;
 
         Ok(output)
     }

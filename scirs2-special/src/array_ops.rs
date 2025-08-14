@@ -70,7 +70,7 @@ pub enum Backend {
 #[derive(Debug, Clone)]
 pub struct ArrayConfig {
     /// Chunk size for memory-efficient processing
-    pub chunk_size: usize,
+    pub chunksize: usize,
     /// Whether to use parallel processing
     pub parallel: bool,
     /// Memory limit for operations (in bytes)
@@ -80,7 +80,7 @@ pub struct ArrayConfig {
     /// Whether to cache computed results
     pub cache_results: bool,
     /// Maximum cache size (number of entries)
-    pub max_cache_size: usize,
+    pub max_cachesize: usize,
     /// Lazy evaluation threshold (array size)
     pub lazy_threshold: usize,
 }
@@ -88,12 +88,12 @@ pub struct ArrayConfig {
 impl Default for ArrayConfig {
     fn default() -> Self {
         Self {
-            chunk_size: 1024,
+            chunksize: 1024,
             parallel: cfg!(feature = "parallel"),
             memory_limit: 1024 * 1024 * 1024, // 1GB
             backend: Backend::default(),
             cache_results: true,
-            max_cache_size: 1000,
+            max_cachesize: 1000,
             lazy_threshold: 10_000, // Use lazy evaluation for arrays > 10k elements
         }
     }
@@ -105,9 +105,9 @@ pub mod memory_efficient {
 
     /// Estimate memory usage for an operation
     pub fn estimate_memory_usage<T>(shape: &[usize], numarrays: usize) -> usize {
-        let elem_size = std::mem::size_of::<T>();
+        let elemsize = std::mem::size_of::<T>();
         let total_elements: usize = shape.iter().product();
-        total_elements * elem_size * num_arrays
+        total_elements * elemsize * num_arrays
     }
 
     /// Check if operation fits within memory limits
@@ -220,7 +220,7 @@ pub mod lazy {
         D: Dimension,
     {
         pub fn new(input: Array<f64, D>) -> Self {
-            Self { _input }
+            Self { input }
         }
     }
 
@@ -257,7 +257,7 @@ pub mod lazy {
         D: Dimension,
     {
         pub fn new(input: Array<f64, D>) -> Self {
-            Self { _input }
+            Self { input }
         }
     }
 
@@ -286,7 +286,7 @@ pub mod lazy {
         D: Dimension + Send + Sync + 'static,
     {
         let shape = input.shape().to_vec();
-        let operation = Box::new(LazyGamma::new(_input));
+        let operation = Box::new(LazyGamma::new(input));
         LazyArray::new(operation, shape, config)
     }
 
@@ -296,7 +296,7 @@ pub mod lazy {
         D: Dimension + Send + Sync + 'static,
     {
         let shape = input.shape().to_vec();
-        let operation = Box::new(LazyBesselJ0::new(_input));
+        let operation = Box::new(LazyBesselJ0::new(input));
         LazyArray::new(operation, shape, config)
     }
 }
@@ -311,9 +311,9 @@ pub mod gpu {
         #[cfg(feature = "gpu")]
         buffer: Option<std::sync::Arc<scirs2_core::gpu::GpuBuffer<f64>>>,
         size: usize,
-        element_size: usize,
+        elementsize: usize,
         shape: Vec<usize>,
-        allocated_size: usize,
+        allocatedsize: usize,
     }
 
     impl GpuBuffer {
@@ -331,9 +331,9 @@ pub mod gpu {
             Ok(Self {
                 buffer: Some(buffer),
                 size: data.len(),
-                element_size: std::mem::size_of::<T>(),
+                elementsize: std::mem::size_of::<T>(),
                 shape: vec![data.len()],
-                allocated_size: byte_data.len(),
+                allocatedsize: byte_data.len(),
             })
         }
 
@@ -587,12 +587,12 @@ pub mod gpu {
         #[cfg(feature = "gpu")]
         {
             let pipeline = GpuPipeline::new()?;
-            pipeline.gamma_gpu(_input)
+            pipeline.gamma_gpu(input)
         }
         #[cfg(not(feature = "gpu"))]
         {
             // Fallback to CPU
-            Ok(_input.mapv(crate::gamma::gamma))
+            Ok(input.mapv(crate::gamma::gamma))
         }
     }
 }
@@ -723,7 +723,7 @@ pub mod vectorized {
         }
 
         // Default CPU implementation with optional parallelization
-        if config.parallel && total_elements > config.chunk_size {
+        if config.parallel && total_elements > config.chunksize {
             #[cfg(feature = "parallel")]
             {
                 use scirs2_core::parallel_ops::*;
@@ -773,27 +773,24 @@ pub mod vectorized {
     }
 
     /// Enhanced error function computation
-    pub fn erf_array<D>(
-        _input: &Array<f64, D>,
-        config: &ArrayConfig,
-    ) -> SpecialResult<Array<f64, D>>
+    pub fn erf_array<D>(input: &Array<f64, D>, config: &ArrayConfig) -> SpecialResult<Array<f64, D>>
     where
         D: Dimension,
     {
-        if config.parallel && input.len() > config.chunk_size {
+        if config.parallel && input.len() > config.chunksize {
             #[cfg(feature = "parallel")]
             {
                 use scirs2_core::parallel_ops::*;
                 let data: Vec<f64> = input.iter().copied().collect();
                 let result: Vec<f64> = data.par_iter().map(|&x| crate::erf::erf(x)).collect();
                 return Ok(Array::from_vec(result)
-                    .toshape(_input.dim())
+                    .toshape(input.dim())
                     .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
                     .into_owned());
             }
         }
 
-        Ok(_input.mapv(crate::erf::erf))
+        Ok(input.mapv(crate::erf::erf))
     }
 
     /// Enhanced factorial function computation
@@ -804,7 +801,7 @@ pub mod vectorized {
     where
         D: Dimension,
     {
-        if config.parallel && input.len() > config.chunk_size {
+        if config.parallel && input.len() > config.chunksize {
             #[cfg(feature = "parallel")]
             {
                 use scirs2_core::parallel_ops::*;
@@ -920,7 +917,7 @@ pub mod vectorized {
     //     let dims = input.shape();
     //
     //     // Create ArrayFire array
-    //     let af_input = match dims.len() {
+    //     let afinput = match dims.len() {
     //         1 => af::Array::new(&input_vec, af::Dim4::new(&[dims[0] as u64, 1, 1, 1])),
     //         2 => af::Array::new(&input_vec, af::Dim4::new(&[dims[0] as u64, dims[1] as u64, 1, 1])),
     //         3 => af::Array::new(&input_vec, af::Dim4::new(&[dims[0] as u64, dims[1] as u64, dims[2] as u64, 1])),
@@ -932,7 +929,7 @@ pub mod vectorized {
     //     };
     //
     //     // Compute gamma function using ArrayFire
-    //     let af_result = arrayfire_gamma_kernel(&af_input)?;
+    //     let af_result = arrayfire_gamma_kernel(&afinput)?;
     //
     //     // Convert result back to ndarray
     //     let mut result_vec = vec![0.0; input.len()];
@@ -952,7 +949,7 @@ pub mod vectorized {
     //     use arrayfire as af;
     //
     //     // Check for negative values (gamma undefined for negative integers)
-    //     let negative_mask = af::lt(_input, &0.0, false);
+    //     let negative_mask = af::lt(input, &0.0, false);
     //     let has_negatives = af::any_true_all(&negative_mask).0;
     //
     //     if has_negatives {
@@ -963,10 +960,10 @@ pub mod vectorized {
     //     // otherwise implement Lanczos approximation
     //     let result = if af::get_backend() == af::Backend::CUDA || af::get_backend() == af::Backend::OPENCL {
     //         // Use GPU-accelerated computation
-    //         arrayfire_gamma_lanczos(_input)?
+    //         arrayfire_gamma_lanczos(input)?
     //     } else {
     //         // Fallback to CPU
-    //         arrayfire_gamma_lanczos(_input)?
+    //         arrayfire_gamma_lanczos(input)?
     //     };
     //
     //     Ok(result)
@@ -1041,7 +1038,7 @@ pub mod vectorized {
         D: Dimension,
         F: Fn(T) -> T + Send + Sync,
     {
-        if input.len() <= config.chunk_size {
+        if input.len() <= config.chunksize {
             return Ok(input.mapv(operation));
         }
 
@@ -1093,7 +1090,7 @@ pub mod convenience {
     /// Apply gamma function to 1D array with automatic backend selection
     pub async fn gamma_1d(input: &Array1<f64>) -> SpecialResult<Array1<f64>> {
         let config = ArrayConfig::default();
-        let result = vectorized::gamma_array(_input, &config)?;
+        let result = vectorized::gamma_array(input, &config)?;
         result.compute().await
     }
 
@@ -1109,7 +1106,7 @@ pub mod convenience {
     /// Apply gamma function to 2D array with automatic backend selection
     pub async fn gamma_2d(input: &Array2<f64>) -> SpecialResult<Array2<f64>> {
         let config = ArrayConfig::default();
-        let result = vectorized::gamma_array(_input, &config)?;
+        let result = vectorized::gamma_array(input, &config)?;
         result.compute().await
     }
 
@@ -1142,13 +1139,13 @@ pub mod convenience {
     where
         D: Dimension,
     {
-        super::gpu::gamma_gpu(_input).await
+        super::gpu::gamma_gpu(input).await
     }
 
     /// Apply Bessel J0 function to 1D array
     pub fn j0_1d(input: &Array1<f64>) -> SpecialResult<Array1<f64>> {
         let config = ArrayConfig::default();
-        let result = vectorized::j0_array(_input, &config)?;
+        let result = vectorized::j0_array(input, &config)?;
         result.compute()
     }
 
@@ -1167,7 +1164,7 @@ pub mod convenience {
     /// Apply error function to 1D array
     pub fn erf_1d(input: &Array1<f64>) -> SpecialResult<Array1<f64>> {
         let config = ArrayConfig::default();
-        vectorized::erf_array(_input, &config)
+        vectorized::erf_array(input, &config)
     }
 
     /// Apply error function with parallel processing
@@ -1179,19 +1176,19 @@ pub mod convenience {
             parallel: true,
             ..Default::default()
         };
-        vectorized::erf_array(_input, &config)
+        vectorized::erf_array(input, &config)
     }
 
     /// Apply factorial to 1D array
     pub fn factorial_1d(input: &Array1<u32>) -> SpecialResult<Array1<f64>> {
         let config = ArrayConfig::default();
-        vectorized::factorial_array(_input, &config)
+        vectorized::factorial_array(input, &config)
     }
 
     /// Apply softmax to 1D array
     pub fn softmax_1d(input: &Array1<f64>) -> SpecialResult<Array1<f64>> {
         let config = ArrayConfig::default();
-        vectorized::softmax_1d(_input.view(), &config)
+        vectorized::softmax_1d(input.view(), &config)
     }
 
     /// Batch processing for multiple arrays
@@ -1238,8 +1235,8 @@ pub mod convenience {
         }
 
         /// Set chunk size for processing
-        pub fn chunk_size(mut self, size: usize) -> Self {
-            self.config.chunk_size = size;
+        pub fn chunksize(mut self, size: usize) -> Self {
+            self.config.chunksize = size;
             self
         }
 
@@ -1270,7 +1267,7 @@ pub mod convenience {
     /// Create a configuration optimized for large arrays
     pub fn large_array_config() -> ArrayConfig {
         ConfigBuilder::new()
-            .chunk_size(8192)
+            .chunksize(8192)
             .memory_limit(4 * 1024 * 1024 * 1024) // 4GB
             .lazy_threshold(50_000)
             .parallel(true)
@@ -1280,7 +1277,7 @@ pub mod convenience {
     /// Create a configuration optimized for small arrays
     pub fn small_array_config() -> ArrayConfig {
         ConfigBuilder::new()
-            .chunk_size(256)
+            .chunksize(256)
             .lazy_threshold(100_000) // Higher threshold to avoid lazy overhead
             .parallel(false)
             .build()
@@ -1291,7 +1288,7 @@ pub mod convenience {
     pub fn gpu_config() -> ArrayConfig {
         ConfigBuilder::new()
             .backend(Backend::Gpu)
-            .chunk_size(4096)
+            .chunksize(4096)
             .build()
     }
 
@@ -1384,13 +1381,13 @@ mod tests {
     #[test]
     fn test_config_builder() {
         let config = convenience::ConfigBuilder::new()
-            .chunk_size(2048)
+            .chunksize(2048)
             .parallel(true)
             .memory_limit(2 * 1024 * 1024 * 1024)
             .lazy_threshold(5000)
             .build();
 
-        assert_eq!(config.chunk_size, 2048);
+        assert_eq!(config.chunksize, 2048);
         assert!(config.parallel);
         assert_eq!(config.memory_limit, 2 * 1024 * 1024 * 1024);
         assert_eq!(config.lazy_threshold, 5000);
@@ -1399,12 +1396,12 @@ mod tests {
     #[test]
     fn test_predefined_configs() {
         let large_config = convenience::large_array_config();
-        assert_eq!(large_config.chunk_size, 8192);
+        assert_eq!(large_config.chunksize, 8192);
         assert!(large_config.parallel);
         assert_eq!(large_config.lazy_threshold, 50_000);
 
         let small_config = convenience::small_array_config();
-        assert_eq!(small_config.chunk_size, 256);
+        assert_eq!(small_config.chunksize, 256);
         assert!(!small_config.parallel);
         assert_eq!(small_config.lazy_threshold, 100_000);
     }
@@ -1468,7 +1465,7 @@ mod tests {
     fn test_chunked_processing() {
         let input = Array::ones(2000);
         let config = ArrayConfig {
-            chunk_size: 100,
+            chunksize: 100,
             ..Default::default()
         };
 

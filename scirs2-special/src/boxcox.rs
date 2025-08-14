@@ -48,7 +48,7 @@ use std::fmt::{Debug, Display};
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::boxcox;
+/// use scirs2_special::boxcox;
 ///
 /// // λ = 0 case (logarithmic)
 /// let result = boxcox(2.718, 0.0).unwrap();
@@ -97,7 +97,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::boxcox1p;
+/// use scirs2_special::boxcox1p;
 ///
 /// // λ = 0 case
 /// let result = boxcox1p(1.718, 0.0).unwrap();
@@ -147,7 +147,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::{boxcox, inv_boxcox};
+/// use scirs2_special::{boxcox, inv_boxcox};
 ///
 /// let x = 5.0;
 /// let lmbda = 0.3;
@@ -195,7 +195,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::{boxcox1p, inv_boxcox1p};
+/// use scirs2_special::{boxcox1p, inv_boxcox1p};
 ///
 /// let x = 0.5;
 /// let lmbda = -0.2;
@@ -242,7 +242,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2__special::boxcox_array;
+/// use scirs2_special::boxcox_array;
 ///
 /// let x = array![1.0, 2.0, 4.0, 8.0];
 /// let result = boxcox_array(&x.view(), 0.0).unwrap();

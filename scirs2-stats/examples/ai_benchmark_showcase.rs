@@ -21,11 +21,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create enhanced benchmark configuration
     let enhanced_config = EnhancedBenchmarkConfig {
         base_config: BenchmarkConfig {
-            data_sizes: vec![1000, 10000, 100000, 1000000],
+            datasizes: vec![1000, 10000, 100000, 1000000],
             iterations: 50,
             warmup_iterations: 5,
             track_memory: true,
-            compare_baseline: true,
+            comparebaseline: true,
             test_simd: true,
             test_parallel: true,
             confidence_level: 0.95,
@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             PlatformTarget::aarch64_macos(),
         ],
         regression_sensitivity: 0.03, // 3% sensitivity
-        baseline_database_path: Some("./benchmark_baselines.db".to_string()),
+        baselinedatabase_path: Some("./benchmarkbaselines.db".to_string()),
     };
 
     // Create enhanced benchmark suite
@@ -113,7 +113,7 @@ fn display_benchmark_results(
     println!("🕒 Benchmark timestamp: {}", report.base_report.timestamp);
     println!(
         "📏 Data sizes tested: {:?}",
-        report.base_report.config.data_sizes
+        report.base_report.config.datasizes
     );
     println!(
         "🔄 Iterations per test: {}",
@@ -222,7 +222,7 @@ fn display_benchmark_results(
                 "   {}. Workload: {} with {} elements",
                 i + 1,
                 prediction.workload_characteristics.operation_type,
-                prediction.workload_characteristics.data_size
+                prediction.workload_characteristics.datasize
             );
             println!(
                 "      Predicted Time: {:.2}ms",

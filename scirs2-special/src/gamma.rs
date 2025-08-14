@@ -317,16 +317,16 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
         if x < F::from(-100.0).unwrap() {
             // For very negative x, use enhanced logarithmic computation
             // with better condition number handling
-            let one_minus_x = F::one() - x;
+            let oneminus_x = F::one() - x;
 
             // Check if 1-x would cause issues in gammaln
-            if one_minus_x > F::from(171.0).unwrap() {
+            if oneminus_x > F::from(171.0).unwrap() {
                 // Use Stirling approximation directly for better stability
-                let log_gamma_1_minus_x = stirling_approximation_ln(one_minus_x);
+                let log_gamma_1minus_x = stirling_approximation_ln(oneminus_x);
                 let log_sinpix = enhanced_log_sin_pi_x(x);
                 let log_pi = pi.ln();
 
-                let log_result = log_pi - log_sinpix - log_gamma_1_minus_x;
+                let log_result = log_pi - log_sinpix - log_gamma_1minus_x;
 
                 // Enhanced sign computation for extreme values
                 let sign: F = enhanced_reflection_sign(x_f64);
@@ -341,12 +341,12 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
                     };
                 }
             } else {
-                let log_gamma_1_minus_x = gammaln(one_minus_x);
+                let log_gamma_1minus_x = gammaln(oneminus_x);
                 let log_sinpix = enhanced_log_sin_pi_x(x);
                 let log_pi = pi.ln();
 
                 let sign: F = enhanced_reflection_sign(x_f64);
-                let log_result = log_pi - log_sinpix - log_gamma_1_minus_x;
+                let log_result = log_pi - log_sinpix - log_gamma_1minus_x;
 
                 if log_result < F::from(f64::MAX.ln() * 0.9).unwrap() {
                     return sign * log_result.exp();
@@ -387,11 +387,11 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
             // Γ(n + 0.5) = (2n-1)!!/(2^n) * sqrt(π)
             let mut double_factorial = F::one();
             for i in 1..=n {
-                let double_i_minus_1 = match 2_i32.checked_mul(i).and_then(|x| x.checked_sub(1)) {
+                let double_iminus_1 = match 2_i32.checked_mul(i).and_then(|x| x.checked_sub(1)) {
                     Some(val) => val,
                     None => return F::infinity(), // Handle overflow gracefully
                 };
-                double_factorial = double_factorial * F::from(double_i_minus_1).unwrap();
+                double_factorial = double_factorial * F::from(double_iminus_1).unwrap();
             }
 
             let sqrt_pi = F::from(f64::consts::PI.sqrt()).unwrap();
@@ -1476,14 +1476,14 @@ fn stirling_approximation_ln<F: Float + FromPrimitive + std::ops::AddAssign>(x: 
     let p6 = F::from(-691.0 / 360360.0).unwrap(); // B₁₂/(12·11·12!)
     let p7 = F::from(1.0 / 156.0).unwrap(); // B₁₄/(14·13·14!)
 
-    let x_minus_half = x - F::from(0.5).unwrap();
+    let xminus_half = x - F::from(0.5).unwrap();
     let log_x = x.ln();
     let x_recip = F::one() / x;
     let x_recip_squared = x_recip * x_recip;
     let x_recip_fourth = x_recip_squared * x_recip_squared;
 
     // Main formula: (x - 0.5) * log(x) - x + 0.5 * log(2π)
-    let result = x_minus_half * log_x - x + p0;
+    let result = xminus_half * log_x - x + p0;
 
     // Enhanced correction terms - adaptively include more terms for extreme values
     let mut correction = p1 * x_recip
@@ -2000,10 +2000,10 @@ fn asymptotic_gamma_large_negative<F: Float + FromPrimitive + std::ops::AddAssig
     // For large |x|, Γ(1-x) ≈ Stirling's approximation
 
     let pi = F::from(std::f64::consts::PI).unwrap();
-    let one_minus_x = F::one() - x;
+    let oneminus_x = F::one() - x;
 
     // Use Stirling for the positive large argument
-    let log_gamma_pos = stirling_approximation_ln(one_minus_x);
+    let log_gamma_pos = stirling_approximation_ln(oneminus_x);
     let log_sin_pi_x = enhanced_log_sin_pi_x(x);
     let log_pi = pi.ln();
 
@@ -2190,10 +2190,10 @@ fn estimate_gamma_condition_number<
     if x_f64 > 0.0 && x_f64 < 100.0 {
         let gamma_x = gamma(x).to_f64().unwrap();
         let gamma_x_plus_h = gamma(x + F::from(h).unwrap()).to_f64().unwrap();
-        let gamma_x_minus_h = gamma(x - F::from(h).unwrap()).to_f64().unwrap();
+        let gamma_xminus_h = gamma(x - F::from(h).unwrap()).to_f64().unwrap();
 
-        if gamma_x != 0.0 && gamma_x_plus_h.is_finite() && gamma_x_minus_h.is_finite() {
-            let derivative = (gamma_x_plus_h - gamma_x_minus_h) / (2.0 * h);
+        if gamma_x != 0.0 && gamma_x_plus_h.is_finite() && gamma_xminus_h.is_finite() {
+            let derivative = (gamma_x_plus_h - gamma_xminus_h) / (2.0 * h);
             return (x_f64 * derivative / gamma_x).abs();
         }
     }
@@ -2553,9 +2553,9 @@ pub mod complex {
             }
 
             let pi = Complex64::new(PI, 0.0);
-            let one_minus_z = Complex64::new(1.0, 0.0) - z;
+            let oneminus_z = Complex64::new(1.0, 0.0) - z;
 
-            return pi / (sin_pi_z * gamma_complex(one_minus_z));
+            return pi / (sin_pi_z * gamma_complex(oneminus_z));
         }
 
         // Use Lanczos approximation for Re(z) >= 0.5
@@ -2609,9 +2609,9 @@ pub mod complex {
 
             let log_pi = Complex64::new(PI.ln(), 0.0);
             let log_sin_pi_z = sin_pi_z.ln();
-            let one_minus_z = Complex64::new(1.0, 0.0) - z;
+            let oneminus_z = Complex64::new(1.0, 0.0) - z;
 
-            return log_pi - log_sin_pi_z - loggamma_complex(one_minus_z);
+            return log_pi - log_sin_pi_z - loggamma_complex(oneminus_z);
         }
 
         // Use Lanczos approximation for Re(z) >= 0.5
@@ -2675,8 +2675,8 @@ pub mod complex {
             let eps = 1e-8;
             let h = Complex64::new(eps, 0.0);
             let log_gamma_plus = loggamma_complex(z + h);
-            let log_gamma_minus = loggamma_complex(z - h);
-            result += (log_gamma_plus - log_gamma_minus) / (Complex64::new(2.0, 0.0) * h);
+            let log_gammaminus = loggamma_complex(z - h);
+            result += (log_gamma_plus - log_gammaminus) / (Complex64::new(2.0, 0.0) * h);
         }
 
         result
@@ -2743,17 +2743,17 @@ pub mod complex {
             1.5056327351493116e-7,
         ];
 
-        let z_minus_one = z - Complex64::new(1.0, 0.0);
+        let zminus_one = z - Complex64::new(1.0, 0.0);
         let mut acc = Complex64::new(p[0], 0.0);
 
         for (i, &p_val) in p.iter().enumerate().skip(1) {
-            acc += Complex64::new(p_val, 0.0) / (z_minus_one + Complex64::new(i as f64, 0.0));
+            acc += Complex64::new(p_val, 0.0) / (zminus_one + Complex64::new(i as f64, 0.0));
         }
 
-        let t = z_minus_one + Complex64::new(g + 0.5, 0.0);
+        let t = zminus_one + Complex64::new(g + 0.5, 0.0);
         let term1 = Complex64::new(sqrt_2pi, 0.0);
         let term2 = acc;
-        let term3 = t.powc(z_minus_one + Complex64::new(0.5, 0.0));
+        let term3 = t.powc(zminus_one + Complex64::new(0.5, 0.0));
         let term4 = (-t).exp();
 
         term1 * term2 * term3 * term4
@@ -2783,20 +2783,20 @@ pub mod complex {
             1.5056327351493116e-7,
         ];
 
-        let z_minus_one = z - Complex64::new(1.0, 0.0);
+        let zminus_one = z - Complex64::new(1.0, 0.0);
         let mut acc = Complex64::new(p[0], 0.0);
 
         for (i, &p_val) in p.iter().enumerate().skip(1) {
-            acc += Complex64::new(p_val, 0.0) / (z_minus_one + Complex64::new(i as f64, 0.0));
+            acc += Complex64::new(p_val, 0.0) / (zminus_one + Complex64::new(i as f64, 0.0));
         }
 
-        let t = z_minus_one + Complex64::new(g + 0.5, 0.0);
+        let t = zminus_one + Complex64::new(g + 0.5, 0.0);
         let log_acc = acc.ln();
         let log_t = t.ln();
 
         Complex64::new(log_sqrt_2pi, 0.0)
             + log_acc
-            + (z_minus_one + Complex64::new(0.5, 0.0)) * log_t
+            + (zminus_one + Complex64::new(0.5, 0.0)) * log_t
             - t
     }
 

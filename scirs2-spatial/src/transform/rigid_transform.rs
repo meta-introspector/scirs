@@ -481,7 +481,7 @@ impl RigidTransform {
     /// ```
     pub fn from_rotation(rotation: Rotation) -> RigidTransform {
         RigidTransform {
-            rotation: rotation,
+            rotation,
             translation: Array1::<f64>::zeros(3),
         }
     }

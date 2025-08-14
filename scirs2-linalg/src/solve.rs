@@ -8,9 +8,9 @@ use crate::basic::inv;
 use crate::decomposition::{lu, qr, svd};
 use crate::error::{LinalgError, LinalgResult};
 use crate::validation::{
-    validate_finite_matrix, validate_finite_vector, validate_least_squares, validate_linear_system,
-    validate_matrix_vector_dimensions, validate_multiple_linear_systems, validate_not_empty_matrix,
-    validate_not_empty_vector, validate_square_matrix,
+    validate_finite_vector, validate_finitematrix, validate_least_squares, validate_linear_system,
+    validate_multiple_linear_systems, validate_not_empty_vector, validate_not_emptymatrix,
+    validate_squarematrix, validatematrix_vector_dimensions,
 };
 
 /// Solution to a least-squares problem
@@ -84,7 +84,7 @@ where
     // For larger systems, use LU decomposition
     let (p, l, u) = match lu(a, workers) {
         Err(LinalgError::SingularMatrixError(_)) => {
-            return Err(LinalgError::singular_matrix_with_suggestions(
+            return Err(LinalgError::singularmatrix_with_suggestions(
                 "linear system solve",
                 a.dim(),
                 None,
@@ -148,11 +148,11 @@ where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Parameter validation using helper functions
-    validate_not_empty_matrix(a, "Triangular system solve")?;
+    validate_not_emptymatrix(a, "Triangular system solve")?;
     validate_not_empty_vector(b, "Triangular system solve")?;
-    validate_square_matrix(a, "Triangular system solve")?;
-    validate_matrix_vector_dimensions(a, b, "Triangular system solve")?;
-    validate_finite_matrix(a, "Triangular system solve")?;
+    validate_squarematrix(a, "Triangular system solve")?;
+    validatematrix_vector_dimensions(a, b, "Triangular system solve")?;
+    validate_finitematrix(a, "Triangular system solve")?;
     validate_finite_vector(b, "Triangular system solve")?;
 
     let n = a.nrows();
@@ -169,7 +169,7 @@ where
                 x[i] = sum;
             } else {
                 if a[[i, i]].abs() < F::epsilon() {
-                    return Err(LinalgError::singular_matrix_with_suggestions(
+                    return Err(LinalgError::singularmatrix_with_suggestions(
                         "triangular system solve (forward substitution)",
                         a.dim(),
                         Some(1e16), // Very high condition number due to zero _diagonal
@@ -189,7 +189,7 @@ where
                 x[i] = sum;
             } else {
                 if a[[i, i]].abs() < F::epsilon() {
-                    return Err(LinalgError::singular_matrix_with_suggestions(
+                    return Err(LinalgError::singularmatrix_with_suggestions(
                         "triangular system solve (back substitution)",
                         a.dim(),
                         Some(1e16), // Very high condition number due to zero _diagonal
@@ -392,7 +392,7 @@ where
     // For efficiency, perform LU decomposition once
     let (p, l, u) = match lu(a, workers) {
         Err(LinalgError::SingularMatrixError(_)) => {
-            return Err(LinalgError::singular_matrix_with_suggestions(
+            return Err(LinalgError::singularmatrix_with_suggestions(
                 "multiple linear systems solve",
                 a.dim(),
                 None,

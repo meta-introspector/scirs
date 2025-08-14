@@ -167,7 +167,7 @@ pub struct AdvancedBootstrapResult<F> {
     /// Number of successful bootstrap samples
     pub n_successful: usize,
     /// Effective sample size (for block bootstrap)
-    pub effective_sample_size: Option<usize>,
+    pub effective_samplesize: Option<usize>,
     /// Bootstrap diagnostics
     pub diagnostics: BootstrapDiagnostics<F>,
 }
@@ -236,7 +236,7 @@ pub struct ConvergenceInfo<F> {
     /// Has the bootstrap converged
     pub converged: bool,
     /// Number of samples needed for convergence
-    pub convergence_sample_size: Option<usize>,
+    pub convergence_samplesize: Option<usize>,
     /// Running mean stability
     pub mean_stability: F,
     /// Running variance stability
@@ -274,7 +274,7 @@ where
         };
 
         Self {
-            config: config,
+            config,
             rng,
             _phantom: PhantomData,
         }
@@ -336,8 +336,8 @@ where
         let diagnostics = self.compute_diagnostics(&bootstrap_samples, original_statistic)?;
 
         // Determine effective sample size
-        let effective_sample_size = match &self.config.bootstrap_type {
-            BootstrapType::Block { .. } => Some(self.compute_effective_sample_size(data.len())),
+        let effective_samplesize = match &self.config.bootstrap_type {
+            BootstrapType::Block { .. } => Some(self.compute_effective_samplesize(data.len())),
             _ => None,
         };
 
@@ -350,7 +350,7 @@ where
             confidence_intervals,
             method: self.config.bootstrap_type.clone(),
             n_successful: self.config.n_bootstrap,
-            effective_sample_size,
+            effective_samplesize,
             diagnostics,
         })
     }
@@ -441,12 +441,12 @@ where
             let mut resample_idx = 0;
 
             // Sample from each stratum proportionally
-            for (_, group_data) in &strata_groups {
-                let group_size = group_data.len();
+            for (_, groupdata) in &strata_groups {
+                let groupsize = groupdata.len();
 
-                for _ in 0..group_size {
-                    let idx = self.rng.gen_range(0..group_size);
-                    resample[resample_idx] = group_data[idx].1;
+                for _ in 0..groupsize {
+                    let idx = self.rng.gen_range(0..groupsize);
+                    resample[resample_idx] = groupdata[idx].1;
                     resample_idx += 1;
                 }
             }
@@ -952,7 +952,7 @@ where
     }
 
     /// Compute effective sample size for block bootstrap
-    fn compute_effective_sample_size(&self, n: usize) -> usize {
+    fn compute_effective_samplesize(&self, n: usize) -> usize {
         let block_length = self
             .config
             .block_length
@@ -1131,7 +1131,7 @@ where
 
         Ok(ConvergenceInfo {
             converged,
-            convergence_sample_size: if converged { Some(samples.len()) } else { None },
+            convergence_samplesize: if converged { Some(samples.len()) } else { None },
             mean_stability: F::one(),     // Simplified
             variance_stability: F::one(), // Simplified
         })
@@ -1378,7 +1378,7 @@ mod tests {
         .unwrap();
 
         assert_eq!(result.n_successful, 50);
-        assert!(result.effective_sample_size.is_some());
+        assert!(result.effective_samplesize.is_some());
     }
 
     #[test]

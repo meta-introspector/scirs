@@ -17,9 +17,9 @@ use std::sync::Arc;
 #[derive(Debug, Clone)]
 pub struct ParallelConfig {
     /// Minimum size for parallel execution
-    pub min_size: usize,
+    pub minsize: usize,
     /// Target chunk size per thread
-    pub chunk_size: Option<usize>,
+    pub chunksize: Option<usize>,
     /// Maximum number of threads to use
     pub max_threads: Option<usize>,
     /// Whether to use adaptive thresholds
@@ -29,8 +29,8 @@ pub struct ParallelConfig {
 impl Default for ParallelConfig {
     fn default() -> Self {
         Self {
-            min_size: 5_000,   // Lower threshold than before
-            chunk_size: None,  // Auto-determine
+            minsize: 5_000,    // Lower threshold than before
+            chunksize: None,   // Auto-determine
             max_threads: None, // Use all available
             adaptive: true,
         }
@@ -45,8 +45,8 @@ impl ParallelConfig {
     }
 
     /// Create config with specific chunk size
-    pub fn with_chunk_size(mut self, size: usize) -> Self {
-        self.chunk_size = Some(size);
+    pub fn with_chunksize(mut self, size: usize) -> Self {
+        self.chunksize = Some(size);
         self
     }
 
@@ -73,13 +73,13 @@ impl ParallelConfig {
             // Adaptive decision for medium arrays
             n > threads * overhead_factor
         } else {
-            n >= self.min_size
+            n >= self.minsize
         }
     }
 
     /// Get optimal chunk size for the given data size
-    pub fn get_chunk_size(&self, n: usize) -> usize {
-        if let Some(size) = self.chunk_size {
+    pub fn get_chunksize(&self, n: usize) -> usize {
+        if let Some(size) = self.chunksize {
             size
         } else {
             // Simple adaptive chunk size: divide data among available threads
@@ -154,8 +154,8 @@ where
     }
 
     // Parallel Welford's algorithm
-    let chunk_size = config.get_chunk_size(n);
-    let n_chunks = (n + chunk_size - 1) / chunk_size;
+    let chunksize = config.get_chunksize(n);
+    let n_chunks = (n + chunksize - 1) / chunksize;
 
     // Each chunk computes local mean and M2
     let chunk_stats: Vec<(F, F, usize)> = (0..n_chunks)
@@ -163,8 +163,8 @@ where
         .collect::<Vec<_>>()
         .into_par_iter()
         .map(|chunk_idx| {
-            let start = chunk_idx * chunk_size;
-            let end = (start + chunk_size).min(n);
+            let start = chunk_idx * chunksize;
+            let end = (start + chunksize).min(n);
 
             let mut local_mean = F::zero();
             let mut local_m2 = F::zero();
@@ -305,9 +305,9 @@ fn parallel_sum_slice<F>(slice: &[F], config: &ParallelConfig) -> F
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum + std::fmt::Display,
 {
-    let chunk_size = config.get_chunk_size(slice.len());
+    let chunksize = config.get_chunksize(slice.len());
 
-    par_chunks(slice, chunk_size)
+    par_chunks(slice, chunksize)
         .map(|chunk| chunk.iter().fold(F::zero(), |acc, &val| acc + val))
         .reduce(|| F::zero(), |a, b| a + b)
 }
@@ -320,16 +320,16 @@ where
     D: Data<Elem = F> + Sync,
 {
     let n = arr.len();
-    let chunk_size = config.get_chunk_size(n);
-    let n_chunks = (n + chunk_size - 1) / chunk_size;
+    let chunksize = config.get_chunksize(n);
+    let n_chunks = (n + chunksize - 1) / chunksize;
 
     (0..n_chunks)
         .into_iter()
         .collect::<Vec<_>>()
         .into_par_iter()
         .map(|chunk_idx| {
-            let start = chunk_idx * chunk_size;
-            let end = (start + chunk_size).min(n);
+            let start = chunk_idx * chunksize;
+            let end = (start + chunksize).min(n);
 
             (start..end)
                 .map(|i| arr[i])
@@ -420,8 +420,8 @@ mod tests {
 
         let config_fixed = ParallelConfig::default()
             .with_threads(4)
-            .with_chunk_size(1000);
-        assert_eq!(config_fixed.get_chunk_size(10_000), 1000);
+            .with_chunksize(1000);
+        assert_eq!(config_fixed.get_chunksize(10_000), 1000);
     }
 
     #[test]

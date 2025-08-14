@@ -96,8 +96,8 @@ fn main() {
     assert!(result[2] < 0.3);
     
     // Test logit_array
-    let prob_input = array![0.1, 0.5, 0.9];
-    let logit_result = logit_array(&prob_input.view());
+    let probinput = array![0.1, 0.5, 0.9];
+    let logit_result = logit_array(&probinput.view());
     assert!((logit_result[1] - 0.0).abs() < 1e-10);
     assert!(logit_result[0] < 0.0);
     assert!(logit_result[2] > 0.0);

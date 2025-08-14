@@ -20,7 +20,7 @@ use crate::error::{LinalgError, LinalgResult};
 ///
 /// * `a` - First matrix of shape (m, k)
 /// * `b` - Second matrix of shape (k, n)
-/// * `block_size` - Size of blocks to use (default: 64)
+/// * `blocksize` - Size of blocks to use (default: 64)
 ///
 /// # Returns
 ///
@@ -50,7 +50,7 @@ use crate::error::{LinalgError, LinalgResult};
 pub fn block_matmul<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
-    block_size: Option<usize>,
+    blocksize: Option<usize>,
 ) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + ScalarOperand + Send + Sync + 'static,
@@ -65,25 +65,25 @@ where
         )));
     }
 
-    // Use the provided block _size or default to 64
-    let block_size = block_size.unwrap_or(64);
+    // Use the provided block size or default to 64
+    let blocksize = blocksize.unwrap_or(64);
 
     // Initialize result matrix
     let mut result = Array2::zeros((m, n));
 
     // Compute the number of blocks in each dimension
-    let m_blocks = m.div_ceil(block_size);
-    let n_blocks = n.div_ceil(block_size);
-    let k_blocks = k1.div_ceil(block_size);
+    let m_blocks = m.div_ceil(blocksize);
+    let n_blocks = n.div_ceil(blocksize);
+    let k_blocks = k1.div_ceil(blocksize);
 
     // Perform block-based matrix multiplication
     for mb in 0..m_blocks {
-        let m_start = mb * block_size;
-        let m_end = (m_start + block_size).min(m);
+        let m_start = mb * blocksize;
+        let m_end = (m_start + blocksize).min(m);
 
         for nb in 0..n_blocks {
-            let n_start = nb * block_size;
-            let n_end = (n_start + block_size).min(n);
+            let n_start = nb * blocksize;
+            let n_end = (n_start + blocksize).min(n);
 
             // Initialize block result to zero
             for i in m_start..m_end {
@@ -94,8 +94,8 @@ where
 
             // Accumulate over k-dimension blocks
             for kb in 0..k_blocks {
-                let k_start = kb * block_size;
-                let k_end = (k_start + block_size).min(k1);
+                let k_start = kb * blocksize;
+                let k_end = (k_start + blocksize).min(k1);
 
                 // Compute the block multiplication
                 for i in m_start..m_end {
@@ -179,11 +179,11 @@ where
     }
 
     // Find the next power of 2 for each dimension
-    let new_size = 1 << ((m.max(k1).max(n) - 1).ilog2() + 1);
+    let newsize = 1 << ((m.max(k1).max(n) - 1).ilog2() + 1);
 
     // Pad matrices to power of 2 dimensions
-    let a_padded = pad_matrix(a, new_size, new_size);
-    let b_padded = pad_matrix(b, new_size, new_size);
+    let a_padded = padmatrix(a, newsize, newsize);
+    let b_padded = padmatrix(b, newsize, newsize);
 
     // Recursively compute using Strassen algorithm
     let result_padded = strassen_recursive(&a_padded.view(), &b_padded.view(), cutoff);
@@ -196,7 +196,7 @@ where
 
 /// Pad a matrix to the specified dimensions
 #[allow(dead_code)]
-fn pad_matrix<F>(a: &ArrayView2<F>, new_rows: usize, newcols: usize) -> Array2<F>
+fn padmatrix<F>(a: &ArrayView2<F>, new_rows: usize, newcols: usize) -> Array2<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
@@ -308,7 +308,7 @@ where
 ///
 /// * `a` - First matrix
 /// * `b` - Second matrix
-/// * `tile_size` - Size of the tiles (default: 32)
+/// * `tilesize` - Size of the tiles (default: 32)
 ///
 /// # Returns
 ///
@@ -338,7 +338,7 @@ where
 pub fn tiled_matmul<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
-    tile_size: Option<usize>,
+    tilesize: Option<usize>,
 ) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + ScalarOperand + Send + Sync + 'static,
@@ -353,30 +353,30 @@ where
         )));
     }
 
-    // Use the provided tile _size or default to 32
-    let tile_size = tile_size.unwrap_or(32);
+    // Use the provided tile size or default to 32
+    let tilesize = tilesize.unwrap_or(32);
 
     // Initialize result matrix
     let mut result = Array2::zeros((m, n));
 
     // Compute the number of tiles in each dimension
-    let m_tiles = m.div_ceil(tile_size);
-    let n_tiles = n.div_ceil(tile_size);
-    let k_tiles = k1.div_ceil(tile_size);
+    let m_tiles = m.div_ceil(tilesize);
+    let n_tiles = n.div_ceil(tilesize);
+    let k_tiles = k1.div_ceil(tilesize);
 
     // Iterate over tiles
     for i_tile in 0..m_tiles {
-        let i_start = i_tile * tile_size;
-        let i_end = (i_start + tile_size).min(m);
+        let i_start = i_tile * tilesize;
+        let i_end = (i_start + tilesize).min(m);
 
         for j_tile in 0..n_tiles {
-            let j_start = j_tile * tile_size;
-            let j_end = (j_start + tile_size).min(n);
+            let j_start = j_tile * tilesize;
+            let j_end = (j_start + tilesize).min(n);
 
             // Iterate over tiles of the k dimension
             for k_tile in 0..k_tiles {
-                let k_start = k_tile * tile_size;
-                let k_end = (k_start + tile_size).min(k1);
+                let k_start = k_tile * tilesize;
+                let k_end = (k_start + tilesize).min(k1);
 
                 // Process the current tile
                 for i in i_start..i_end {
@@ -490,7 +490,7 @@ mod tests {
     }
 
     #[test]
-    fn test_large_matrix_equivalence() {
+    fn test_largematrix_equivalence() {
         // Create larger matrices to test the algorithms
         let size = 20;
         let mut a = Array2::<f64>::zeros((size, size));

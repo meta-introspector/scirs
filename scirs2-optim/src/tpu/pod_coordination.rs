@@ -2133,11 +2133,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
         Ok(())
     }
 
-    pub fn get_partition(
-        &self,
-        batchid: BatchId,
-        deviceid: DeviceId,
-    ) -> Result<BatchPartition<T>> {
+    pub fn get_partition(&self, batchid: BatchId, deviceid: DeviceId) -> Result<BatchPartition<T>> {
         if let Some(batch) = self.active_batches.get(&batchid) {
             if let Some(partition) = batch.device_assignments.get(&deviceid) {
                 return Ok((*partition).clone());

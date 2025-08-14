@@ -98,7 +98,7 @@ impl HDRProcessor {
     }
 
     /// Compute camera response curve
-    fn compute_response_curve(selfimages: &[ArrayView2<f32>]) -> Result<Array1<f32>> {
+    fn compute_response_curve(&self, images: &[ArrayView2<f32>]) -> Result<Array1<f32>> {
         // Simplified response curve computation
         // In practice, would use Debevec & Malik algorithm
 
@@ -757,20 +757,20 @@ impl SuperResolutionProcessor {
         let kernel_size = 9;
 
         // Feature extraction layer (64 filters)
-        let feature_layer = Array3::fromshape_fn((64, kernel_size, kernel_size), |(___)| {
+        let feature_layer = Array3::from_shape_fn((64, kernel_size, kernel_size), |(___)| {
             rand::random::<f32>() * 0.01 - 0.005
         });
 
         // Mapping layers (32 filters each)
         let mapping_layer1 =
-            Array3::fromshape_fn((32, 1, 1), |(___)| rand::random::<f32>() * 0.01 - 0.005);
+            Array3::from_shape_fn((32, 1, 1), |(___)| rand::random::<f32>() * 0.01 - 0.005);
 
         let mapping_layer2 =
-            Array3::fromshape_fn((32, 3, 3), |(___)| rand::random::<f32>() * 0.01 - 0.005);
+            Array3::from_shape_fn((32, 3, 3), |(___)| rand::random::<f32>() * 0.01 - 0.005);
 
         // Reconstruction layer
         let reconstruction_layer =
-            Array3::fromshape_fn((1, 5, 5), |(___)| rand::random::<f32>() * 0.01 - 0.005);
+            Array3::from_shape_fn((1, 5, 5), |(___)| rand::random::<f32>() * 0.01 - 0.005);
 
         // Bias terms
         let biases = vec![

@@ -1125,8 +1125,7 @@ impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> RNNLayer<T> 
 
         // Split gates
         let input_gate = Self::sigmoid(&combined.slice(s![0..hiddensize]).to_owned());
-        let forget_gate =
-            Self::sigmoid(&combined.slice(s![hiddensize..2 * hiddensize]).to_owned());
+        let forget_gate = Self::sigmoid(&combined.slice(s![hiddensize..2 * hiddensize]).to_owned());
         let cell_gate = Self::tanh(
             &combined
                 .slice(s![2 * hiddensize..3 * hiddensize])
@@ -1226,7 +1225,7 @@ impl<T: Float + Default + Clone> EmbeddingLayer<T> {
     fn new(_vocab_size: usize, embeddingdim: usize) -> Result<Self> {
         Ok(Self {
             embeddings: Array2::zeros((_vocab_size, embeddingdim)),
-            _vocab_size: _vocab_size,
+            _vocab_size,
             embeddingdim,
         })
     }

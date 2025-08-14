@@ -882,9 +882,9 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
             MixedPrecisionOperation::Multiplication => {
                 self.single_precision_vector_mul(&f32data)?
             }
-            MixedPrecisionOperation::DotProduct => Array1::from_vec(vec![
-                self.single_precision_dot_product(&f32data, &f32data)?
-            ]),
+            MixedPrecisionOperation::DotProduct => {
+                Array1::from_vec(vec![self.single_precision_dot_product(&f32data, &f32data)?])
+            }
             MixedPrecisionOperation::Reduction => {
                 Array1::from_vec(vec![self.single_precision_reduction(&f32data)?])
             }

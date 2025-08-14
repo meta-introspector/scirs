@@ -13,7 +13,7 @@ use scirs2_stats::{
 
 /// Generate large datasets for throughput testing
 #[allow(dead_code)]
-fn generate_large_dataset(n: usize) -> Array1<f64> {
+fn generate_largedataset(n: usize) -> Array1<f64> {
     let mut rng = rand::rng();
     Array1::from_shape_fn(n, |_| StandardNormal.sample(&mut rng))
 }
@@ -27,7 +27,7 @@ fn bench_descriptive_stats(c: &mut Criterion) {
     let sizes = vec![100, 1_000, 10_000, 100_000, 1_000_000];
 
     for &size in &sizes {
-        let data = generate_large_dataset(size);
+        let data = generate_largedataset(size);
 
         // Set throughput for MB/s calculation
         group.throughput(Throughput::Bytes((size * 8) as u64)); // 8 bytes per f64
@@ -66,7 +66,7 @@ fn bench_quantiles(c: &mut Criterion) {
     let quantiles_to_test = vec![0.25, 0.5, 0.75, 0.95, 0.99];
 
     for &size in &sizes {
-        let data = generate_large_dataset(size);
+        let data = generate_largedataset(size);
 
         // Single quantile calculation
         group.bench_with_input(BenchmarkId::new("median", size), &data, |b, data| {
@@ -137,8 +137,8 @@ fn bench_memory_operations(c: &mut Criterion) {
     let sizes = vec![10_000, 100_000, 1_000_000];
 
     for &size in &sizes {
-        let data1 = generate_large_dataset(size);
-        let data2 = generate_large_dataset(size);
+        let data1 = generate_largedataset(size);
+        let data2 = generate_largedataset(size);
 
         // Pearson correlation (requires multiple passes through data)
         group.bench_with_input(
@@ -171,7 +171,7 @@ fn bench_parallel_operations(c: &mut Criterion) {
 
     // Large datasets where parallelization should help
     let size = 1_000_000;
-    let data = generate_large_dataset(size);
+    let data = generate_largedataset(size);
 
     // Operations that could benefit from parallelization
     group.bench_function("large_mean", |b| {
@@ -183,7 +183,7 @@ fn bench_parallel_operations(c: &mut Criterion) {
     });
 
     // Multiple independent calculations
-    let datasets: Vec<Array1<f64>> = (0..10).map(|_| generate_large_dataset(10_000)).collect();
+    let datasets: Vec<Array1<f64>> = (0..10).map(|_| generate_largedataset(10_000)).collect();
 
     group.bench_function("multiple_means", |b| {
         b.iter(|| {

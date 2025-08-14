@@ -467,7 +467,7 @@ impl<A> SparseMatrixCOO<A> {
     /// Create a new sparse matrix in COO format
     pub fn new(rows: usize, cols: usize) -> Self {
         Self {
-            rows: rows,
+            rows,
             cols,
             row_indices: Vec::new(),
             col_indices: Vec::new(),
@@ -884,7 +884,7 @@ impl<A: Clone> SparseMatrixCSR<A> {
     /// Create a new CSR sparse matrix
     pub fn new(rows: usize, cols: usize) -> Self {
         Self {
-            rows: rows,
+            rows,
             cols,
             row_ptrs: vec![0; rows + 1],
             col_indices: Vec::new(),
@@ -920,7 +920,7 @@ impl<A: Clone> SparseMatrixCSC<A> {
     /// Create a new CSC sparse matrix
     pub fn new(rows: usize, cols: usize) -> Self {
         Self {
-            rows: rows,
+            rows,
             cols,
             col_ptrs: vec![0; cols + 1],
             row_indices: Vec::new(),
@@ -981,9 +981,7 @@ where
 
 /// Convert Matrix Market format to enhanced sparse matrix
 #[allow(dead_code)]
-pub fn from_matrix_market<A>(
-    mm_matrix: &crate::matrix_market::MMSparseMatrix<A>,
-) -> SparseMatrix<A>
+pub fn from_matrix_market<A>(mm_matrix: &crate::matrix_market::MMSparseMatrix<A>) -> SparseMatrix<A>
 where
     A: Clone,
 {

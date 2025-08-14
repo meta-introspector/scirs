@@ -58,12 +58,12 @@ use std::fmt::{Debug, Display};
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::voigt_profile;
+/// use scirs2_special::voigt_profile;
 ///
 /// // Pure Gaussian limit (γ → 0)
 /// let result = voigt_profile(0.0, 1.0, 1e-10).unwrap();
-/// let gaussian_max = 1.0 / (2.0 * std::f64::consts::PI).sqrt();
-/// assert!((result - gaussian_max).abs() < 1e-6);
+/// let gaussianmax = 1.0 / (2.0 * std::f64::consts::PI).sqrt();
+/// assert!((result - gaussianmax).abs() < 1e-6);
 ///
 /// // Symmetric property
 /// let x = 1.5;
@@ -194,7 +194,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2__special::voigt_profile_array;
+/// use scirs2_special::voigt_profile_array;
 ///
 /// let x = array![-2.0, -1.0, 0.0, 1.0, 2.0];
 /// let result = voigt_profile_array(&x.view(), 1.0, 0.5).unwrap();
@@ -256,17 +256,17 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::pseudo_voigt;
+/// use scirs2_special::pseudo_voigt;
 ///
 /// // Pure Gaussian (η = 0)
 /// let result = pseudo_voigt(0.0, 1.0, 0.5, 0.0).unwrap();
-/// let gaussian_max = 1.0 / (2.0 * std::f64::consts::PI).sqrt();
-/// assert!((result - gaussian_max).abs() < 1e-10);
+/// let gaussianmax = 1.0 / (2.0 * std::f64::consts::PI).sqrt();
+/// assert!((result - gaussianmax).abs() < 1e-10);
 ///
 /// // Pure Lorentzian (η = 1)
 /// let result = pseudo_voigt(0.0, 1.0, 0.5, 1.0).unwrap();
-/// let lorentzian_max = 1.0 / (std::f64::consts::PI * 0.5);
-/// assert!((result - lorentzian_max).abs() < 1e-10);
+/// let lorentzianmax = 1.0 / (std::f64::consts::PI * 0.5);
+/// assert!((result - lorentzianmax).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
 pub fn pseudo_voigt<T>(x: T, sigma: T, gamma: T, eta: T) -> SpecialResult<T>

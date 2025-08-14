@@ -29,7 +29,7 @@
 //! };
 //!
 //! // Create a cache-optimized RBF interpolator
-//! let points = Array2::fromshape_vec((1000, 3), vec![0.0; 3000]).unwrap();
+//! let points = Array2::from_shape_vec((1000, 3), vec![0.0; 3000]).unwrap();
 //! let values = Array1::from_vec(vec![1.0; 1000]);
 //! let config = CacheOptimizedConfig::default();
 //!

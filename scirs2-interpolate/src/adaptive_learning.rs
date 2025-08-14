@@ -70,7 +70,7 @@ pub enum SamplingStrategy {
 #[derive(Debug, Clone)]
 pub struct ActiveLearningConfig<T> {
     /// Maximum number of new samples to suggest in one iteration
-    pub max_samples_per_iteration: usize,
+    pub maxsamples_per_iteration: usize,
     /// Total sampling budget (maximum number of samples)
     pub total_budget: usize,
     /// Weight for exploration vs exploitation (0.0 = pure exploitation, 1.0 = pure exploration)
@@ -90,7 +90,7 @@ pub struct ActiveLearningConfig<T> {
 impl<T: Float + FromPrimitive> Default for ActiveLearningConfig<T> {
     fn default() -> Self {
         Self {
-            max_samples_per_iteration: 10,
+            maxsamples_per_iteration: 10,
             total_budget: 100,
             exploration_weight: T::from(0.1).unwrap(),
             min_sample_distance: T::from(0.01).unwrap(),
@@ -226,8 +226,8 @@ where
     }
 
     /// Set the maximum number of samples per iteration
-    pub fn with_max_samples_per_iteration(mut self, maxsamples: usize) -> Self {
-        self.config.max_samples_per_iteration = max_samples;
+    pub fn with_maxsamples_per_iteration(mut self, maxsamples: usize) -> Self {
+        self.config.maxsamples_per_iteration = maxsamples;
         self
     }
 
@@ -235,7 +235,7 @@ where
     ///
     /// # Arguments
     ///
-    /// * `num_points` - Number of new points to suggest (limited by max_samples_per_iteration)
+    /// * `num_points` - Number of new points to suggest (limited by maxsamples_per_iteration)
     ///
     /// # Returns
     ///
@@ -244,7 +244,7 @@ where
         &mut self,
         num_points: usize,
     ) -> InterpolateResult<Vec<SamplingCandidate<T>>> {
-        let num_to_suggest = std::cmp::min(num_points, self.config.max_samples_per_iteration);
+        let num_to_suggest = std::cmp::min(num_points, self.config.maxsamples_per_iteration);
 
         // Check if we've exceeded the budget
         if self.stats.samples_suggested + num_to_suggest > self.config.total_budget {
@@ -747,7 +747,7 @@ where
         }
 
         // Check minimum distance to other selected _points
-        for &point in existing_points {
+        for &point in existingpoints {
             if (location - point).abs() < self.config.min_sample_distance {
                 return false;
             }

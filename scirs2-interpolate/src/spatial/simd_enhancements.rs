@@ -468,13 +468,13 @@ mod tests {
 
     #[test]
     fn test_simd_distance_computation() {
-        let points = Array2::fromshape_vec(
+        let points = Array2::from_shape_vec(
             (4, 3),
             vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0],
         )
         .unwrap();
 
-        let queries = Array2::fromshape_vec((2, 3), vec![0.5, 0.5, 0.0, 1.0, 1.0, 0.0]).unwrap();
+        let queries = Array2::from_shape_vec((2, 3), vec![0.5, 0.5, 0.0, 1.0, 1.0, 0.0]).unwrap();
 
         let distance_matrix =
             AdvancedSimdOps::vectorized_distance_matrix(&queries.view(), &points.view());
@@ -489,7 +489,7 @@ mod tests {
     #[test]
     #[cfg(feature = "simd")]
     fn test_simd_knn_search() {
-        let points = Array2::fromshape_vec(
+        let points = Array2::from_shape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -506,7 +506,7 @@ mod tests {
     #[test]
     #[cfg(feature = "simd")]
     fn test_simd_range_search() {
-        let points = Array2::fromshape_vec(
+        let points = Array2::from_shape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )

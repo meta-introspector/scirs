@@ -305,7 +305,7 @@ fn find_local_minima(img: &GrayImage, connectivity: u8) -> Vec<(usize, usize)> {
 /// Get neighbor offsets based on connectivity
 #[allow(dead_code)]
 fn get_neighbors(connectivity: u8) -> &'static [(i32, i32)] {
-    match _connectivity {
+    match connectivity {
         4 => &[(-1, 0), (0, -1), (0, 1), (1, 0)],
         8 => &[
             (-1, -1),

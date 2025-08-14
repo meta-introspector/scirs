@@ -4,7 +4,7 @@
 //! of the spherical Bessel functions implementation.
 
 use approx::assert_relative_eq;
-use scirs2__special::bessel::spherical::spherical_jn;
+use scirs2_special::bessel::spherical::spherical_jn;
 use std::f64;
 
 #[test]

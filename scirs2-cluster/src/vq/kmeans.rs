@@ -656,7 +656,7 @@ where
             let options = KMeansOptions {
                 max_iter: 100,
                 tol: F::from(1e-4).unwrap(),
-                random_seed: random_seed,
+                random_seed,
                 n_init: 1,
                 init_method: KMeansInit::KMeansPlusPlus,
             };

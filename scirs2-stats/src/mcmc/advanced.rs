@@ -370,7 +370,7 @@ pub struct SliceSampler<T: TargetDistribution> {
     /// Current log density
     pub current_log_density: f64,
     /// Step size for finding interval
-    pub step_size: f64,
+    pub stepsize: f64,
     /// Maximum number of doublings for interval finding
     pub max_doublings: usize,
     /// Number of accepted proposals
@@ -399,7 +399,7 @@ impl<T: TargetDistribution> SliceSampler<T> {
             target,
             current: initial,
             current_log_density,
-            step_size: stepsize,
+            stepsize,
             max_doublings: 20,
             n_accepted: 0,
             n_proposed: 0,
@@ -439,8 +439,8 @@ impl<T: TargetDistribution> SliceSampler<T> {
         let slice_level = current_log_density + u.ln();
 
         // Find initial interval
-        let mut left = current_value - self.step_size * rng.random::<f64>();
-        let mut right = left + self.step_size;
+        let mut left = current_value - self.stepsize * rng.random::<f64>();
+        let mut right = left + self.stepsize;
 
         // Expand interval using doubling procedure
         for _ in 0..self.max_doublings {
@@ -595,8 +595,8 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
     ) -> Result<()> {
         for i in start..end {
             // Select random walker from complementary ensemble
-            let comp_size = comp_end - comp_start;
-            let j = comp_start + rng.gen_range(0..comp_size);
+            let compsize = comp_end - comp_start;
+            let j = comp_start + rng.gen_range(0..compsize);
 
             // Generate stretch parameter
             let z = ((self.scale - 1.0) * rng.random::<f64>() + 1.0).powf(2.0) / self.scale;
@@ -757,7 +757,7 @@ pub struct ChainStatistics {
 
 impl ChainStatistics {
     /// Get effective sample sizes
-    pub fn effective_sample_sizes(&self) -> Array1<f64> {
+    pub fn effective_samplesizes(&self) -> Array1<f64> {
         self.autocorr_times.mapv(|tau| {
             if tau > 0.0 {
                 self.n_samples_ as f64 / (2.0 * tau)

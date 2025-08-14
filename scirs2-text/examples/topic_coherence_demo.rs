@@ -67,7 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Training LDA Model");
     println!("--------------------");
 
-    let mut lda = LatentDirichletAllocation::with_n_topics(3);
+    let mut lda = LatentDirichletAllocation::with_ntopics(3);
     lda.fit(&doc_term_matrix)?;
 
     // Create reverse vocabulary mapping
@@ -130,7 +130,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut results = Vec::new();
 
     for n_topics in topic_counts {
-        let mut lda = LatentDirichletAllocation::with_n_topics(n_topics);
+        let mut lda = LatentDirichletAllocation::with_ntopics(n_topics);
         lda.fit(&doc_term_matrix)?;
 
         let topics = lda.get_topics(5, &id_to_word)?;

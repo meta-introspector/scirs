@@ -79,10 +79,10 @@ where
     let nrows = matrix.nrows();
     let ncols = matrix.ncols();
 
-    // Create a dense _matrix clone to avoid lifetime issues
+    // Create a dense matrix clone to avoid lifetime issues
     let matrix_clone = matrix.to_dense()?;
 
-    // Create a closure that captures the _matrix clone and performs _matrix-vector multiplication
+    // Create a closure that captures the matrix clone and performs matrix-vector multiplication
     let matvec = move |x: &ArrayView1<A>| {
         let mut result = Array1::zeros(nrows);
         for i in 0..nrows {

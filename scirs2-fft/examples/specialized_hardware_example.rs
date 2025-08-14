@@ -3,7 +3,7 @@
 //! This example demonstrates the use of specialized hardware accelerators
 //! including FPGAs and ASICs for high-performance sparse FFT computation.
 
-use scirs2__fft::{
+use scirs2_fft::{
     sparse_fft::{SparseFFTAlgorithm, SparseFFTConfig, SparsityEstimationMethod},
     sparse_fft_specialized_hardware::{
         specialized_hardware_sparse_fft, SpecializedHardwareManager,

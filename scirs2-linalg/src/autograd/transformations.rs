@@ -242,7 +242,7 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
 ///
 /// A 2x2 rotation matrix with gradient tracking.
 #[allow(dead_code)]
-pub fn rotation_matrix_2d<F: Float + Debug + Send + Sync + 'static>(
+pub fn rotationmatrix_2d<F: Float + Debug + Send + Sync + 'static>(
     angle: &Tensor<F>,
 ) -> AutogradResult<Tensor<F>> {
     // Ensure angle is a scalar
@@ -294,7 +294,7 @@ pub fn rotation_matrix_2d<F: Float + Debug + Send + Sync + 'static>(
         };
 
         let node = Node::new(
-            scirs2_autograd::graph::OpType::Activation("rotation_matrix_2d".to_string()),
+            scirs2_autograd::graph::OpType::Activation("rotationmatrix_2d".to_string()),
             vec![angle],
             vec![backward],
         );
@@ -318,7 +318,7 @@ pub fn rotation_matrix_2d<F: Float + Debug + Send + Sync + 'static>(
 ///
 /// A diagonal scaling matrix with gradient tracking.
 #[allow(dead_code)]
-pub fn scaling_matrix<F: Float + Debug + Send + Sync + 'static>(
+pub fn scalingmatrix<F: Float + Debug + Send + Sync + 'static>(
     scales: &Tensor<F>,
 ) -> AutogradResult<Tensor<F>> {
     // Ensure scales is a vector
@@ -363,7 +363,7 @@ pub fn scaling_matrix<F: Float + Debug + Send + Sync + 'static>(
         };
 
         let node = Node::new(
-            scirs2_autograd::graph::OpType::Activation("scaling_matrix".to_string()),
+            scirs2_autograd::graph::OpType::Activation("scalingmatrix".to_string()),
             vec![scales],
             vec![backward],
         );
@@ -387,7 +387,7 @@ pub fn scaling_matrix<F: Float + Debug + Send + Sync + 'static>(
 ///
 /// A reflection matrix with gradient tracking.
 #[allow(dead_code)]
-pub fn reflection_matrix<F: Float + Debug + Send + Sync + 'static>(
+pub fn reflectionmatrix<F: Float + Debug + Send + Sync + 'static>(
     normal: &Tensor<F>,
 ) -> AutogradResult<Tensor<F>> {
     // Ensure normal is a vector
@@ -442,7 +442,7 @@ pub fn reflection_matrix<F: Float + Debug + Send + Sync + 'static>(
         };
 
         let node = Node::new(
-            scirs2_autograd::graph::OpType::Activation("reflection_matrix".to_string()),
+            scirs2_autograd::graph::OpType::Activation("reflectionmatrix".to_string()),
             vec![normal],
             vec![backward],
         );
@@ -469,7 +469,7 @@ pub fn reflection_matrix<F: Float + Debug + Send + Sync + 'static>(
 ///
 /// A shear matrix with gradient tracking.
 #[allow(dead_code)]
-pub fn shear_matrix<F: Float + Debug + Send + Sync + 'static>(
+pub fn shearmatrix<F: Float + Debug + Send + Sync + 'static>(
     shear_factor: &Tensor<F>,
     dim1: usize,
     dim2: usize,
@@ -517,7 +517,7 @@ pub fn shear_matrix<F: Float + Debug + Send + Sync + 'static>(
         };
 
         let node = Node::new(
-            scirs2_autograd::graph::OpType::Activation("shear_matrix".to_string()),
+            scirs2_autograd::graph::OpType::Activation("shearmatrix".to_string()),
             vec![shear_factor],
             vec![backward],
         );
@@ -548,43 +548,43 @@ pub mod variable {
     }
 
     /// 2D rotation matrix for Variables
-    pub fn rotation_matrix_2d<F: Float + Debug + Send + Sync + 'static>(
+    pub fn rotationmatrix_2d<F: Float + Debug + Send + Sync + 'static>(
         angle: &Variable<F>,
     ) -> AutogradResult<Variable<F>> {
-        let result_tensor = super::rotation_matrix_2d(&angle.tensor)?;
+        let result_tensor = super::rotationmatrix_2d(&angle.tensor)?;
         Ok(Variable {
             tensor: result_tensor,
         })
     }
 
     /// Scaling matrix for Variables
-    pub fn scaling_matrix<F: Float + Debug + Send + Sync + 'static>(
+    pub fn scalingmatrix<F: Float + Debug + Send + Sync + 'static>(
         scales: &Variable<F>,
     ) -> AutogradResult<Variable<F>> {
-        let result_tensor = super::scaling_matrix(&scales.tensor)?;
+        let result_tensor = super::scalingmatrix(&scales.tensor)?;
         Ok(Variable {
             tensor: result_tensor,
         })
     }
 
     /// Reflection matrix for Variables
-    pub fn reflection_matrix<F: Float + Debug + Send + Sync + 'static>(
+    pub fn reflectionmatrix<F: Float + Debug + Send + Sync + 'static>(
         normal: &Variable<F>,
     ) -> AutogradResult<Variable<F>> {
-        let result_tensor = super::reflection_matrix(&normal.tensor)?;
+        let result_tensor = super::reflectionmatrix(&normal.tensor)?;
         Ok(Variable {
             tensor: result_tensor,
         })
     }
 
     /// Shear matrix for Variables
-    pub fn shear_matrix<F: Float + Debug + Send + Sync + 'static>(
+    pub fn shearmatrix<F: Float + Debug + Send + Sync + 'static>(
         shear_factor: &Variable<F>,
         dim1: usize,
         dim2: usize,
         n: usize,
     ) -> AutogradResult<Variable<F>> {
-        let result_tensor = super::shear_matrix(&shear_factor.tensor, dim1, dim2, n)?;
+        let result_tensor = super::shearmatrix(&shear_factor.tensor, dim1, dim2, n)?;
         Ok(Variable {
             tensor: result_tensor,
         })

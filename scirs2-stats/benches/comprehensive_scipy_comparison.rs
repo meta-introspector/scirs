@@ -14,7 +14,7 @@ use std::time::Duration;
 
 /// Configuration for benchmark runs
 struct BenchConfig {
-    sample_sizes: Vec<usize>,
+    samplesizes: Vec<usize>,
     warmup_time: Duration,
     measurement_time: Duration,
 }
@@ -22,7 +22,7 @@ struct BenchConfig {
 impl Default for BenchConfig {
     fn default() -> Self {
         Self {
-            sample_sizes: vec![10, 50, 100, 500, 1000, 5000, 10000],
+            samplesizes: vec![10, 50, 100, 500, 1000, 5000, 10000],
             warmup_time: Duration::from_secs(1),
             measurement_time: Duration::from_secs(3),
         }
@@ -57,7 +57,7 @@ mod data_generators {
         Array2::from_shape_fn((n, dim), |_| normal.sample(&mut rng))
     }
 
-    pub fn correlated_data(n: usize, correlation: f64) -> (Array1<f64>, Array1<f64>) {
+    pub fn correlateddata(n: usize, correlation: f64) -> (Array1<f64>, Array1<f64>) {
         let mut rng = rand::rng();
         let normal = StandardNormal;
         let x = Array1::from_shape_fn(n, |_| normal.sample(&mut rng));
@@ -75,7 +75,7 @@ fn bench_descriptive_stats(c: &mut Criterion) {
     group.warm_up_time(config.warmup_time);
     group.measurement_time(config.measurement_time);
 
-    for &n in &config.sample_sizes {
+    for &n in &config.samplesizes {
         let data = data_generators::normal(n, 0.0, 1.0);
 
         // Mean
@@ -123,8 +123,8 @@ fn bench_correlation(c: &mut Criterion) {
     group.warm_up_time(config.warmup_time);
     group.measurement_time(config.measurement_time);
 
-    for &n in &config.sample_sizes {
-        let (x, y) = data_generators::correlated_data(n, 0.7);
+    for &n in &config.samplesizes {
+        let (x, y) = data_generators::correlateddata(n, 0.7);
 
         // Pearson correlation
         group.bench_with_input(BenchmarkId::new("pearson", n), &(&x, &y), |b, (x, y)| {
@@ -156,7 +156,7 @@ fn bench_statistical_tests(c: &mut Criterion) {
     group.warm_up_time(config.warmup_time);
     group.measurement_time(config.measurement_time);
 
-    for &n in &config.sample_sizes {
+    for &n in &config.samplesizes {
         let data = data_generators::normal(n, 0.0, 1.0);
         let data2 = data_generators::normal(n, 0.5, 1.0);
 
@@ -285,7 +285,7 @@ fn bench_regression(c: &mut Criterion) {
     group.warm_up_time(config.warmup_time);
     group.measurement_time(config.measurement_time);
 
-    for &n in &config.sample_sizes {
+    for &n in &config.samplesizes {
         // Simple linear regression
         let x = data_generators::uniform(n, 0.0, 10.0);
         let y = &x * 2.0 + data_generators::normal(n, 0.0, 0.1);
@@ -329,7 +329,7 @@ fn bench_quantiles(c: &mut Criterion) {
     group.warm_up_time(config.warmup_time);
     group.measurement_time(config.measurement_time);
 
-    for &n in &config.sample_sizes {
+    for &n in &config.samplesizes {
         let data = data_generators::normal(n, 0.0, 1.0);
 
         // Single quantile
@@ -369,7 +369,7 @@ fn bench_dispersion(c: &mut Criterion) {
     group.warm_up_time(config.warmup_time);
     group.measurement_time(config.measurement_time);
 
-    for &n in &config.sample_sizes {
+    for &n in &config.samplesizes {
         let data = data_generators::normal(n, 0.0, 1.0);
 
         // MAD (Median Absolute Deviation)
@@ -410,7 +410,7 @@ fn bench_random_sampling(c: &mut Criterion) {
     group.warm_up_time(config.warmup_time);
     group.measurement_time(config.measurement_time);
 
-    for &n in &config.sample_sizes {
+    for &n in &config.samplesizes {
         let data = data_generators::normal(n, 0.0, 1.0);
 
         // Choice with replacement
@@ -456,7 +456,7 @@ criterion_group! {
     name = benches;
     config = Criterion::default()
         .with_plots()
-        .sample_size(100);
+        .samplesize(100);
     targets =
         bench_descriptive_stats,
         bench_correlation,

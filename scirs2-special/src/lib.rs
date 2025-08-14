@@ -219,7 +219,7 @@ pub use combinatorial::{
     bell_number, bernoulli_number, binomial, comb, double_factorial, euler_number, factorial,
     factorial2, factorialk, perm, permutations, stirling2, stirling_first, stirling_second,
 };
-pub use coulomb::{coulomb_f, coulomb_g, coulomb_h_minus, coulomb_h_plus, coulomb_phase_shift};
+pub use coulomb::{coulomb_f, coulomb_g, coulomb_h_plus, coulomb_hminus, coulomb_phase_shift};
 pub use distributions::{
     // Binomial distribution
     bdtr,
@@ -275,7 +275,7 @@ pub use elliptic::{
     elliptic_k, elliptic_pi, jacobi_cn, jacobi_dn, jacobi_sn,
 };
 pub use fresnel::{
-    fresnel, fresnel_complex, fresnelc, fresnels, mod_fresnel_minus, mod_fresnel_plus,
+    fresnel, fresnel_complex, fresnelc, fresnels, mod_fresnel_plus, mod_fresnelminus,
 };
 pub use gamma::{
     beta,

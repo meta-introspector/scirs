@@ -161,7 +161,7 @@ impl<F: IntegrateFloat> EventHandler<F> {
         let last_values = vec![None; specs.len()];
 
         EventHandler {
-            specs: specs,
+            specs,
             record: EventRecord::new(),
             last_values,
             last_state: None,

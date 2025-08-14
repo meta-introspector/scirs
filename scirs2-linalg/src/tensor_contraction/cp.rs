@@ -381,8 +381,8 @@ where
             let mttkrp = unfolded_tensors[mode].dot(&kr_product);
 
             // Compute the pseudoinverse of the Khatri-Rao product using the Gram matrix
-            let gram_matrix = compute_gram_matrix(&factors, mode)?;
-            let gram_inv = pseudo_inverse(&gram_matrix)?;
+            let grammatrix = compute_grammatrix(&factors, mode)?;
+            let gram_inv = pseudo_inverse(&grammatrix)?;
 
             // Update the factor for this mode
             factors[mode] = mttkrp.dot(&gram_inv);
@@ -463,7 +463,7 @@ where
     // Populate the unfolded _tensor
     for idx in ndarray::indices(shape) {
         let mode_idx = idx[mode];
-        let idx_vec: Vec<usize> = idx.as_array_view().to_vec();
+        let idx_vec: Vec<usize> = idx.asarray_view().to_vec();
         let col_idx = calc_col_idx(&idx_vec, shape, mode);
         result[[mode_idx, col_idx]] = tensor[idx.clone()];
     }
@@ -545,7 +545,7 @@ where
 
 // Computes the Gram matrix for ALS update
 #[allow(dead_code)]
-fn compute_gram_matrix<A>(_factors: &[Array2<A>], skipmode: usize) -> LinalgResult<Array2<A>>
+fn compute_grammatrix<A>(_factors: &[Array2<A>], skipmode: usize) -> LinalgResult<Array2<A>>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
 {
@@ -590,7 +590,7 @@ where
         + 'static
         + ndarray::ScalarOperand,
 {
-    let (u, s, vt) = svd(&_matrix.view(), false, None)?;
+    let (u, s, vt) = svd(&matrix.view(), false, None)?;
 
     // Compute the pseudoinverse of the singular values
     let mut s_inv = Array2::zeros((s.len(), s.len()));

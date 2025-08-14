@@ -63,7 +63,7 @@ pub enum PolynomialBasis {
 /// use scirs2__interpolate::local::mls::{MovingLeastSquares, WeightFunction, PolynomialBasis};
 ///
 /// // Create some 2D scattered data
-/// let points = Array2::fromshape_vec((5, 2), vec![
+/// let points = Array2::from_shape_vec((5, 2), vec![
 ///     0.0, 0.0,
 ///     1.0, 0.0,
 ///     0.0, 1.0,
@@ -511,7 +511,7 @@ where
         // Solve the system for coefficients
         #[cfg(feature = "linalg")]
         let coeffs = {
-            use scirs2__linalg::solve;
+            use scirs2_linalg::solve;
             let btb_f64 = btb.mapv(|x| x.to_f64().unwrap());
             let bty_f64 = bty.mapv(|x| x.to_f64().unwrap());
             match solve(&btb_f64.view(), &bty_f64.view(), None) {
@@ -609,7 +609,7 @@ mod tests {
     fn test_mls_constant_basis() {
         // Simple test with 2D data and constant basis
         let points =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         // Simple plane: z = x + y
         let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
@@ -634,7 +634,7 @@ mod tests {
     fn test_mls_linear_basis() {
         // Simple test with 2D data and linear basis
         let points =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         // Simple plane: z = x + y
         let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
@@ -649,7 +649,7 @@ mod tests {
         .unwrap();
 
         // With linear basis, should be able to reproduce the plane equation
-        let test_points = Array2::fromshape_vec(
+        let test_points = Array2::from_shape_vec(
             (5, 2),
             vec![
                 0.5, 0.5, // Should be exactly 1.0
@@ -673,7 +673,7 @@ mod tests {
     #[test]
     fn test_different_weight_functions() {
         // Simple test with 2D data - well-spaced points to avoid singularities
-        let points = Array2::fromshape_vec(
+        let points = Array2::from_shape_vec(
             (6, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.7, 0.7],
         )

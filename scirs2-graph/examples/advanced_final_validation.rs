@@ -6,21 +6,21 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-use scirs2__graph::{
+use scirs2_graph::{
     barabasi_albert_graph, betweenness_centrality, breadth_first_search, connected_components,
     dijkstra_path, erdos_renyi_graph, louvain_communities_result, pagerank_centrality,
     watts_strogatz_graph, DiGraph, Graph, Node,
 };
 
-use scirs2__graph::advanced::{
+use scirs2_graph::advanced::{
     create_enhanced_advanced_processor, create_large_graph_advanced_processor,
     create_performance_advanced_processor, execute_with_enhanced_advanced, AdvancedConfig,
     AdvancedProcessor,
 };
 
-use scirs2__graph::graph_memory_profiler::{AdvancedMemoryProfiler, MemoryProfilerConfig};
+use scirs2_graph::graph_memory_profiler::{AdvancedMemoryProfiler, MemoryProfilerConfig};
 
-use scirs2__graph::numerical_accuracy_validation::{
+use scirs2_graph::numerical_accuracy_validation::{
     create_comprehensive_validation_suite, run_quick_validation, ValidationConfig,
 };
 
@@ -241,26 +241,24 @@ fn test_memory_efficiency() -> f64 {
     profiler.start_profiling(&processor);
 
     // Run several memory-intensive operations
-    let operations = vec![
-        ("pagerank", |g: &Graph<usize, f64>| {
+    let _ =
+        execute_with_enhanced_advanced(&mut processor, &test_graph, "memory_test_pagerank", |g| {
             pagerank_centrality(g, 0.85, 1e-6)
-        }),
-        ("betweenness", |g: &Graph<usize, f64>| {
-            Ok(betweenness_centrality(g, false))
-        }),
-        ("connected_components", |g: &Graph<usize, f64>| {
-            Ok(connected_components(g))
-        }),
-    ];
+        });
 
-    for (name, operation) in operations {
-        let _ = execute_with_enhanced_advanced(
-            &mut processor,
-            &test_graph,
-            &format!("memory_test_{}", name),
-            operation,
-        );
-    }
+    let _ = execute_with_enhanced_advanced(
+        &mut processor,
+        &test_graph,
+        "memory_test_betweenness",
+        |g| Ok(betweenness_centrality(g, false)),
+    );
+
+    let _ = execute_with_enhanced_advanced(
+        &mut processor,
+        &test_graph,
+        "memory_test_connected_components",
+        |g| Ok(connected_components(g)),
+    );
 
     // Memory profiling results would be available after processing
     let efficiency = 0.85; // Placeholder efficiency score
@@ -441,7 +439,7 @@ fn print_validation_report(report: &AdvancedValidationReport) {
 
     // Processor Configuration Tests
     println!("\n🔧 Processor Configuration Tests:");
-    for (test_name, result) in &_report.processor_tests {
+    for (test_name, result) in &report.processor_tests {
         let emoji = if *result { "✅" } else { "❌" };
         println!(
             "  {} {}: {}",
@@ -453,7 +451,7 @@ fn print_validation_report(report: &AdvancedValidationReport) {
 
     // Algorithm Execution Tests
     println!("\n🧮 Algorithm Execution Tests:");
-    for (algorithm, duration) in &_report.algorithm_tests {
+    for (algorithm, duration) in &report.algorithm_tests {
         println!("  ✅ {}: {:?}", algorithm, duration);
     }
 
@@ -490,7 +488,7 @@ fn print_validation_report(report: &AdvancedValidationReport) {
 
     // Performance Improvements
     println!("\n⚡ Performance Improvements:");
-    for (algorithm, improvement) in &_report.performance_improvements {
+    for (algorithm, improvement) in &report.performance_improvements {
         let improvement_emoji = if *improvement >= 1.5 {
             "🚀"
         } else if *improvement >= 1.1 {
@@ -529,7 +527,7 @@ fn print_validation_report(report: &AdvancedValidationReport) {
         }
     );
 
-    let avg_improvement = if !_report.performance_improvements.is_empty() {
+    let avg_improvement = if !report.performance_improvements.is_empty() {
         report.performance_improvements.values().sum::<f64>()
             / report.performance_improvements.len() as f64
     } else {

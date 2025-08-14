@@ -54,7 +54,7 @@ pub fn find_homography(
     // Configure RANSAC
     let config = RansacConfig {
         max_iterations: 2000,
-        _threshold: ransac_threshold,
+        threshold: ransac_threshold,
         min_inliers: 4,
         confidence,
         seed: None,
@@ -104,7 +104,7 @@ pub fn find_homography_from_matches(
     let mut src_points = Vec::with_capacity(matches.len());
     let mut dst_points = Vec::with_capacity(matches.len());
 
-    for &(idx1, idx2_) in matches {
+    for &(idx1, idx2_, _) in matches {
         if idx1 >= keypoints1.len() || idx2_ >= keypoints2.len() {
             return Err(crate::error::VisionError::InvalidParameter(format!(
                 "Invalid keypoint indices: ({idx1}, {idx2_})"

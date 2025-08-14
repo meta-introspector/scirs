@@ -1156,8 +1156,8 @@ impl AdvancedQuantumOptimizer {
         }
 
         // ✅ Advanced OPTIMIZATION: Multiple convergence criteria
-        let recent_improvement = fitnesshistory[fitnesshistory.len() - 1]
-            - fitnesshistory[fitnesshistory.len() - 10];
+        let recent_improvement =
+            fitnesshistory[fitnesshistory.len() - 1] - fitnesshistory[fitnesshistory.len() - 10];
 
         let diversity = self.calculate_population_diversity();
         let convergence_threshold = 1e-6;
@@ -1173,8 +1173,8 @@ impl AdvancedQuantumOptimizer {
         self.performance_metrics.energy_consumption += iteration_time;
 
         if fitnesshistory.len() >= 2 {
-            let improvement = fitnesshistory[fitnesshistory.len() - 1]
-                - fitnesshistory[fitnesshistory.len() - 2];
+            let improvement =
+                fitnesshistory[fitnesshistory.len() - 1] - fitnesshistory[fitnesshistory.len() - 2];
             self.performance_metrics.quality_improvement_rate = improvement / iteration_time;
         }
 

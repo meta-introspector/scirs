@@ -315,9 +315,9 @@ where
         }
 
         // Now convert the DOK-like format to BSR
-        let mut rows_with_blocks: Vec<usize> = block_data.keys().map(|&(row_, _)| row_).collect();
-        rows_with_blocks.sort();
-        rows_with_blocks.dedup();
+        let mut rowswith_blocks: Vec<usize> = block_data.keys().map(|&(row_, _)| row_).collect();
+        rowswith_blocks.sort();
+        rowswith_blocks.dedup();
 
         // Create indptr array
         let mut indptr = vec![0; block_rows + 1];
@@ -328,7 +328,7 @@ where
         let mut indices = Vec::new();
 
         for row_idx in 0..block_rows {
-            if rows_with_blocks.contains(&row_idx) {
+            if rowswith_blocks.contains(&row_idx) {
                 // Get all blocks for this row
                 let mut row_blocks: Vec<(usize, Vec<Vec<T>>)> = block_data
                     .iter()

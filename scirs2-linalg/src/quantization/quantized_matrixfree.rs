@@ -131,7 +131,7 @@ where
     /// # Returns
     ///
     /// A new `QuantizedMatrixFreeOp` instance
-    pub fn from_matrix(
+    pub fn frommatrix(
         matrix: &ArrayView2<F>,
         bits: u8,
         method: QuantizationMethod,
@@ -232,7 +232,7 @@ where
         // Determine if the operator is symmetric
         let symmetric = method == QuantizationMethod::Symmetric
             && shape.0 == shape.1
-            && is_matrix_symmetric(matrix);
+            && ismatrix_symmetric(matrix);
 
         Ok(QuantizedMatrixFreeOp {
             shape,
@@ -920,7 +920,7 @@ where
 
 /// Check if a matrix is symmetric
 #[allow(dead_code)]
-fn is_matrix_symmetric<F>(matrix: &ArrayView2<F>) -> bool
+fn ismatrix_symmetric<F>(matrix: &ArrayView2<F>) -> bool
 where
     F: Float + PartialEq,
 {
@@ -947,13 +947,13 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_quantized_matrix_free_op_from_matrix() {
+    fn test_quantizedmatrix_free_op_frommatrix() {
         // Create a test matrix
         let matrix = array![[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
         // Create a quantized matrix-free operator
         let op =
-            QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
+            QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
                 .unwrap();
 
         // Apply to a vector
@@ -971,7 +971,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quantized_matrix_free_op_block_diagonal() {
+    fn test_quantizedmatrix_free_op_block_diagonal() {
         // Create test matrices for the blocks
         let block1 = array![[1.0f32, 2.0], [3.0, 4.0]];
 
@@ -1002,7 +1002,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quantized_matrix_free_op_sparse() {
+    fn test_quantizedmatrix_free_op_sparse() {
         // Create a sparse matrix:
         // [ 1.0 0.0 2.0 ]
         // [ 0.0 3.0 0.0 ]
@@ -1037,7 +1037,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quantized_matrix_free_op_banded() {
+    fn test_quantizedmatrix_free_op_banded() {
         // Create a tridiagonal matrix:
         // [ 2.0 1.0 0.0 ]
         // [ 1.0 3.0 1.0 ]
@@ -1078,7 +1078,7 @@ mod tests {
 
         // Create a symmetric quantized matrix-free operator
         let quantized_op =
-            QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
+            QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
                 .unwrap()
                 .symmetric()
                 .positive_definite();

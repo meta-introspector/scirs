@@ -151,7 +151,7 @@ impl AdvancedPropertyTester {
     pub fn test_mathematical_invariants<F>(
         &self,
         function_name: &str,
-        test_data_generator: Box<dyn TestDataGenerator<F>>,
+        testdata_generator: Box<dyn TestDataGenerator<F>>,
     ) -> StatsResult<MathematicalInvariantTestResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -172,7 +172,7 @@ impl AdvancedPropertyTester {
 
         for property in properties {
             let property_result =
-                self.test_single_mathematical_property(&property, &test_data_generator)?;
+                self.test_single_mathematical_property(&property, &testdata_generator)?;
 
             total_tests += property_result.test_iterations;
             passed_tests += property_result.passed_iterations;
@@ -519,7 +519,7 @@ impl AdvancedPropertyTester {
     fn test_single_mathematical_property<F>(
         &self,
         property: &MathematicalProperty,
-        test_data_generator: &dyn TestDataGenerator<F>,
+        testdata_generator: &dyn TestDataGenerator<F>,
     ) -> StatsResult<PropertyTestResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -530,8 +530,8 @@ impl AdvancedPropertyTester {
             std::cmp::min(self.config.max_iterations, property.required_iterations);
 
         for _ in 0..test_iterations {
-            let test_data = test_data_generator.generate()?;
-            let property_holds = self.check_mathematical_property(property, &test_data)?;
+            let testdata = testdata_generator.generate()?;
+            let property_holds = self.check_mathematical_property(property, &testdata)?;
 
             if property_holds {
                 passed_iterations += 1;
@@ -554,22 +554,22 @@ impl AdvancedPropertyTester {
     fn check_mathematical_property<F>(
         &self,
         property: &MathematicalProperty,
-        test_data: &TestData<F>,
+        testdata: &TestData<F>,
     ) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
         + std::fmt::Display,
     {
         match &property.property_type {
-            MathematicalPropertyType::Commutativity => self.check_commutativity(test_data),
-            MathematicalPropertyType::Associativity => self.check_associativity(test_data),
-            MathematicalPropertyType::Distributivity => self.check_distributivity(test_data),
-            MathematicalPropertyType::Identity => self.check_identity_property(test_data),
-            MathematicalPropertyType::Inverse => self.check_inverse_property(test_data),
-            MathematicalPropertyType::Monotonicity => self.check_monotonicity(test_data),
-            MathematicalPropertyType::Linearity => self.check_linearity(test_data),
-            MathematicalPropertyType::Idempotence => self.check_idempotence(test_data),
-            MathematicalPropertyType::Custom(checker) => checker(test_data),
+            MathematicalPropertyType::Commutativity => self.check_commutativity(testdata),
+            MathematicalPropertyType::Associativity => self.check_associativity(testdata),
+            MathematicalPropertyType::Distributivity => self.check_distributivity(testdata),
+            MathematicalPropertyType::Identity => self.check_identity_property(testdata),
+            MathematicalPropertyType::Inverse => self.check_inverse_property(testdata),
+            MathematicalPropertyType::Monotonicity => self.check_monotonicity(testdata),
+            MathematicalPropertyType::Linearity => self.check_linearity(testdata),
+            MathematicalPropertyType::Idempotence => self.check_idempotence(testdata),
+            MathematicalPropertyType::Custom(checker) => checker(testdata),
         }
     }
 
@@ -579,13 +579,13 @@ impl AdvancedPropertyTester {
         + std::fmt::Display,
     {
         // Example: For operations like addition, a + b = b + a
-        match test_data {
+        match testdata {
             TestData::TwoArrays(_a_b) => {
                 // Placeholder - would implement actual commutativity check
                 Ok(true)
             }
             _ => Err(StatsError::dimension_mismatch(
-                "Invalid test _data for commutativity".to_string(),
+                "Invalid test data for commutativity".to_string(),
             )),
         }
     }
@@ -596,13 +596,13 @@ impl AdvancedPropertyTester {
         + std::fmt::Display,
     {
         // Example: For operations like addition, (a + b) + c = a + (b + c)
-        match test_data {
+        match testdata {
             TestData::ThreeArrays(_a_b_c) => {
                 // Placeholder - would implement actual associativity check
                 Ok(true)
             }
             _ => Err(StatsError::dimension_mismatch(
-                "Invalid test _data for associativity".to_string(),
+                "Invalid test data for associativity".to_string(),
             )),
         }
     }
@@ -676,9 +676,9 @@ impl AdvancedPropertyTester {
             distribution_name: distribution.name.clone(),
             test_passed: true,
             p_value: 0.95,
-            effect_size: 0.1,
+            effectsize: 0.1,
             confidence_interval: (0.05, 0.95),
-            sample_size_used: 1000,
+            samplesize_used: 1000,
         })
     }
 
@@ -730,7 +730,7 @@ impl AdvancedPropertyTester {
         ConvergenceAnalysis {
             convergence_rate: 0.95,
             asymptotic_behavior: AsymptoticBehavior::Stable,
-            sample_size_requirements: HashMap::new(),
+            samplesize_requirements: HashMap::new(),
         }
     }
 
@@ -873,7 +873,7 @@ pub struct StatisticalProperty {
     pub description: String,
     pub property_type: StatisticalPropertyType,
     pub applicable_operations: Vec<StatisticalOperationType>,
-    pub required_sample_size: usize,
+    pub required_samplesize: usize,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -921,7 +921,7 @@ pub struct TestDistribution<F> {
     pub name: String,
     pub distribution_type: DistributionType,
     pub parameters: HashMap<String, F>,
-    pub sample_size_range: (usize, usize),
+    pub samplesize_range: (usize, usize),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -990,7 +990,7 @@ pub enum ConstraintType {
 pub struct EdgeCase<F> {
     pub name: String,
     pub description: String,
-    pub input_data: TestData<F>,
+    pub inputdata: TestData<F>,
     pub expected_behavior: ExpectedBehavior,
     pub criticality: EdgeCaseCriticality,
 }
@@ -1042,7 +1042,7 @@ pub struct PerformanceRequirements {
 
 #[derive(Debug, Clone)]
 pub struct ScalabilityRequirement {
-    pub input_size_scaling: f64,
+    pub inputsize_scaling: f64,
     pub parallel_scaling_efficiency: f64,
     pub memory_scaling_factor: f64,
 }
@@ -1068,7 +1068,7 @@ pub trait Implementation<F> {
 #[derive(Debug, Clone)]
 pub struct TestCase<F> {
     pub id: String,
-    pub input_data: TestData<F>,
+    pub inputdata: TestData<F>,
     pub expected_output: Option<F>,
     pub tolerance: NumericalTolerance,
 }
@@ -1112,7 +1112,7 @@ pub struct PropertyTestResult {
 
 #[derive(Debug, Clone)]
 pub struct PropertyViolation {
-    pub input_data: String, // Serialized input
+    pub inputdata: String, // Serialized input
     pub expected_result: String,
     pub actual_result: String,
     pub deviation_magnitude: f64,
@@ -1135,16 +1135,16 @@ pub struct StatisticalPropertyResult {
     pub distribution_name: String,
     pub test_passed: bool,
     pub p_value: f64,
-    pub effect_size: f64,
+    pub effectsize: f64,
     pub confidence_interval: (f64, f64),
-    pub sample_size_used: usize,
+    pub samplesize_used: usize,
 }
 
 #[derive(Debug, Clone)]
 pub struct ConvergenceAnalysis {
     pub convergence_rate: f64,
     pub asymptotic_behavior: AsymptoticBehavior,
-    pub sample_size_requirements: HashMap<String, usize>,
+    pub samplesize_requirements: HashMap<String, usize>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -1395,7 +1395,7 @@ pub struct PerformancePropertyTestResult {
 #[derive(Debug, Clone)]
 pub struct PerformancePropertyTest {
     pub test_name: String,
-    pub input_size: usize,
+    pub inputsize: usize,
     pub expected_complexity: ComplexityClass,
     pub performance_constraints: PerformanceConstraints,
 }
@@ -1725,14 +1725,14 @@ impl StatisticalPropertyRegistry {
                 description: "Sample means approach normal distribution".to_string(),
                 property_type: StatisticalPropertyType::CentralLimitTheorem,
                 applicable_operations: vec![StatisticalOperationType::Mean],
-                required_sample_size: 1000,
+                required_samplesize: 1000,
             },
             StatisticalProperty {
                 name: "Law of Large Numbers".to_string(),
                 description: "Sample mean converges to population mean".to_string(),
                 property_type: StatisticalPropertyType::LawOfLargeNumbers,
                 applicable_operations: vec![StatisticalOperationType::Mean],
-                required_sample_size: 10000,
+                required_samplesize: 10000,
             },
         ];
 
@@ -1773,14 +1773,14 @@ impl NumericalStabilityAnalyzer {
 
 pub struct IntelligentEdgeCaseGenerator {
     generation_strategy: EdgeCaseGenerationStrategy,
-    edge_case_database: HashMap<String, Vec<EdgeCase<f64>>>,
+    edge_casedatabase: HashMap<String, Vec<EdgeCase<f64>>>,
 }
 
 impl IntelligentEdgeCaseGenerator {
     pub fn new(config: &AdvancedPropertyConfig) -> Self {
         Self {
             generation_strategy: config.edge_case_strategy,
-            edge_case_database: HashMap::new(),
+            edge_casedatabase: HashMap::new(),
         }
     }
 
@@ -1888,7 +1888,7 @@ impl RegressionDetector {
     }
 
     pub fn detect_regressions<F>(
-        &self, _function_name: &str, _baseline: &ComprehensivePropertyTestResult, current: &ComprehensivePropertyTestResult,
+        &self, _function_name: &str, baseline: &ComprehensivePropertyTestResult, current: &ComprehensivePropertyTestResult,
     ) -> StatsResult<RegressionDetectionResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static

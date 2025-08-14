@@ -66,7 +66,7 @@ pub enum LinalgError {
 /// Enhanced error types with regularization suggestions
 impl LinalgError {
     /// Create a singular matrix error with regularization suggestions
-    pub fn singular_matrix_with_suggestions(
+    pub fn singularmatrix_with_suggestions(
         operation: &str,
         matrixshape: (usize, usize),
         condition_number: Option<f64>,

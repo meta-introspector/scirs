@@ -1026,7 +1026,7 @@ impl DashboardBuilder {
         Self {
             plots: Vec::new(),
             layout: DashboardLayout {
-                rows: rows,
+                rows,
                 cols,
                 spacing: 10.0,
             },

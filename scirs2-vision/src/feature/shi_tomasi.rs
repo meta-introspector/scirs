@@ -161,7 +161,7 @@ pub fn shi_tomasi_corners(
     for (x, y, score) in _corners {
         let mut too_close = false;
 
-        for &(sx, sy_) in &selected_corners {
+        for &(sx, sy_, _) in &selected_corners {
             let dist_sq = ((x as i32 - sx as i32).pow(2) + (y as i32 - sy_ as i32).pow(2)) as usize;
             if dist_sq < min_distance * min_distance {
                 too_close = true;
@@ -180,7 +180,7 @@ pub fn shi_tomasi_corners(
 
     // Create output image
     let mut output = Array2::zeros((height, width));
-    for (x, y_) in selected_corners {
+    for (x, y_, _) in selected_corners {
         output[[y_, x]] = 1.0;
     }
 
@@ -353,7 +353,7 @@ pub fn good_features_to_track(
     for (x, y, score) in _corners {
         let mut too_close = false;
 
-        for &(sx, sy_) in &selected_corners {
+        for &(sx, sy_, _) in &selected_corners {
             let x_diff: f32 = x - sx;
             let y_diff: f32 = y - sy_;
             let dist_sq: f32 = x_diff.powi(2) + y_diff.powi(2);

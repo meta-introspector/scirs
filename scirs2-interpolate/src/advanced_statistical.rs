@@ -150,12 +150,12 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
         }
 
         let coeffs = self.basis_coefficients.as_ref().unwrap();
-        let n_new = x_new.len();
+        let n_new = xnew.len();
         let n_curves = coeffs.ncols();
 
         let mut predictions = Array2::zeros((n_new, n_curves));
 
-        for (i, &x_val) in x_new.iter().enumerate() {
+        for (i, &x_val) in xnew.iter().enumerate() {
             for curve_idx in 0..n_curves {
                 let mut y_val = T::zero();
                 for (j, basis_fn) in self.basis_functions.iter().enumerate() {
@@ -386,12 +386,12 @@ pub struct MultiOutputInterpolator<T: Float + ScalarOperand> {
 
 impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutputInterpolator<T> {
     /// Create a new multi-output interpolator
-    pub fn new(_input_dim: usize, output_dim: usize, _n_basis_perdim: usize) -> Self {
+    pub fn new(input_dim: usize, output_dim: usize, _n_basis_perdim: usize) -> Self {
         Self {
             input_dim,
             output_dim,
             parameters: None,
-            basis_functions: (0.._input_dim).map(|_| Vec::new()).collect(),
+            basis_functions: (0..input_dim).map(|_| Vec::new()).collect(),
             correlation_matrix: None,
             fitted: false,
         }
@@ -457,10 +457,10 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
         }
 
         let parameters = self.parameters.as_ref().unwrap();
-        let n_new = x_new.nrows();
+        let n_new = xnew.nrows();
         let mut predictions = Array2::zeros((n_new, self.output_dim));
 
-        for (sample_idx, x_row) in x_new.outer_iter().enumerate() {
+        for (sample_idx, x_row) in xnew.outer_iter().enumerate() {
             let features = self.compute_tensor_product_features(&x_row)?;
 
             for output_idx in 0..self.output_dim {
@@ -491,7 +491,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
 
         // Generate polynomial basis functions
         for degree in 0..5 {
-            self.basis_functions[_dim].push(Box::new(move |x: T| -> T {
+            self.basis_functions[dim].push(Box::new(move |x: T| -> T {
                 let normalized = (x - min_val) / range;
                 normalized.powi(degree)
             }));
@@ -502,7 +502,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
             let center = min_val + range * T::from_f64(i as f64 / 2.0).unwrap();
             let width = range / T::from_f64(3.0).unwrap();
 
-            self.basis_functions[_dim].push(Box::new(move |x: T| -> T {
+            self.basis_functions[dim].push(Box::new(move |x: T| -> T {
                 let diff = (x - center) / width;
                 (-diff * diff).exp()
             }));
@@ -716,11 +716,11 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
     PiecewisePolynomialInterpolator<T>
 {
     /// Create a new piecewise polynomial interpolator
-    pub fn new(_max_degree: usize, min_points_per_segment: usize, breakpointpenalty: T) -> Self {
+    pub fn new(max_degree: usize, min_points_per_segment: usize, breakpointpenalty: T) -> Self {
         Self {
             max_degree,
             min_points_per_segment,
-            breakpoint_penalty,
+            breakpoint_penalty: breakpointpenalty,
             breakpoints: None,
             _segment_coefficients: None,
             fitted: false,
@@ -779,9 +779,9 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
         let breakpoints = self.breakpoints.as_ref().unwrap();
         let coefficients = self.segment_coefficients.as_ref().unwrap();
 
-        let mut predictions = Array1::zeros(x_new.len());
+        let mut predictions = Array1::zeros(xnew.len());
 
-        for (i, &x_val) in x_new.iter().enumerate() {
+        for (i, &x_val) in xnew.iter().enumerate() {
             let segment_idx = self.find_segment(x_val, breakpoints);
             let segment_coeffs = &coefficients[segment_idx];
 
@@ -992,7 +992,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
     /// Find which segment a value belongs to
     fn find_segment(&self, xval: T, breakpoints: &Array1<T>) -> usize {
         for (i, &bp) in breakpoints.iter().enumerate() {
-            if x_val <= bp {
+            if xval <= bp {
                 return i;
             }
         }
@@ -1113,7 +1113,7 @@ mod tests {
         let mut interpolator = make_fda_interpolator::<f64>(None);
 
         let x = Array1::from_vec(vec![0.0, 0.25, 0.5, 0.75, 1.0]);
-        let y = Array2::fromshape_vec(
+        let y = Array2::from_shape_vec(
             (5, 2),
             vec![0.0, 0.0, 0.5, 0.25, 1.0, 1.0, 1.5, 2.25, 2.0, 4.0],
         )
@@ -1133,15 +1133,15 @@ mod tests {
         let mut interpolator = make_multi_output_interpolator::<f64>(2, 2, Some(4));
 
         let x =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         let y =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
 
         let result = interpolator.fit(&x.view(), &y.view());
         assert!(result.is_ok());
 
-        let x_new = Array2::fromshape_vec((2, 2), vec![0.5, 0.5, 0.25, 0.75]).unwrap();
+        let x_new = Array2::from_shape_vec((2, 2), vec![0.5, 0.5, 0.25, 0.75]).unwrap();
 
         let predictions = interpolator.predict(&x_new.view()).unwrap();
         assert_eq!(predictions.nrows(), 2);

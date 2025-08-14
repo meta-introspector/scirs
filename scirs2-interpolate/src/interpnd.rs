@@ -203,7 +203,7 @@ impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
     /// ).unwrap();
     ///
     /// // Interpolate at multiple points
-    /// let xi = Array2::fromshape_vec((3, 2), vec![
+    /// let xi = Array2::from_shape_vec((3, 2), vec![
     ///     0.5, 0.5,
     ///     1.0, 0.0,
     ///     1.5, 0.5,
@@ -617,7 +617,7 @@ impl<
     /// };
     ///
     /// // Create scattered 3D data
-    /// let points = Array2::fromshape_vec((5, 3), vec![
+    /// let points = Array2::from_shape_vec((5, 3), vec![
     ///     0.0, 0.0, 0.0,
     ///     1.0, 0.0, 0.0,
     ///     0.0, 1.0, 0.0,
@@ -908,7 +908,7 @@ impl<
 ///
 /// // Interpolate at a point
 /// use ndarray::Array2;
-/// let points_to_interp = Array2::fromshape_vec((1, 2), vec![1.5, 2.5]).unwrap();
+/// let points_to_interp = Array2::from_shape_vec((1, 2), vec![1.5, 2.5]).unwrap();
 /// let result = interp.__call__(&points_to_interp.view()).unwrap();
 /// assert!((result[0] - 9.0).abs() < 1e-10);
 /// ```
@@ -1077,12 +1077,12 @@ mod tests {
         .unwrap();
 
         // Test interpolation at grid points
-        let grid_point = Array2::fromshape_vec((1, 2), vec![1.0, 2.0]).unwrap();
+        let grid_point = Array2::from_shape_vec((1, 2), vec![1.0, 2.0]).unwrap();
         let result = interp.__call__(&grid_point.view()).unwrap();
         assert_abs_diff_eq!(result[0], 5.0, epsilon = 1e-10);
 
         // Test interpolation at non-grid points
-        let non_grid_point = Array2::fromshape_vec((1, 2), vec![1.5, 2.5]).unwrap();
+        let non_grid_point = Array2::from_shape_vec((1, 2), vec![1.5, 2.5]).unwrap();
         let result = interp.__call__(&non_grid_point.view()).unwrap();
 
         // For point (1.5, 2.5):
@@ -1098,7 +1098,7 @@ mod tests {
         assert_abs_diff_eq!(result[0], 9.0, epsilon = 1e-10);
 
         // Test multiple points at once
-        let multiple_points = Array2::fromshape_vec((2, 2), vec![1.0, 1.0, 2.0, 2.0]).unwrap();
+        let multiple_points = Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 2.0, 2.0]).unwrap();
         let result = interp.__call__(&multiple_points.view()).unwrap();
         assert_abs_diff_eq!(result[0], 2.0, epsilon = 1e-10);
         assert_abs_diff_eq!(result[1], 8.0, epsilon = 1e-10);
@@ -1112,7 +1112,7 @@ mod tests {
         )
         .unwrap();
 
-        let point = Array2::fromshape_vec((1, 2), vec![1.6, 1.7]).unwrap();
+        let point = Array2::from_shape_vec((1, 2), vec![1.6, 1.7]).unwrap();
         let result = interp_nearest.__call__(&point.view()).unwrap();
         // Point (1.6, 1.7) is closest to grid point (2,2) which has value 8.0
         assert_abs_diff_eq!(result[0], 8.0, epsilon = 1e-10);
@@ -1121,7 +1121,7 @@ mod tests {
     #[test]
     fn test_scattered_interpolator() {
         // Create scattered points in 2D
-        let points = Array2::fromshape_vec(
+        let points = Array2::from_shape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -1141,7 +1141,7 @@ mod tests {
         .unwrap();
 
         // Test interpolation at a point
-        let test_point = Array2::fromshape_vec((1, 2), vec![0.5, 0.0]).unwrap();
+        let test_point = Array2::from_shape_vec((1, 2), vec![0.5, 0.0]).unwrap();
         let result = interp.__call__(&test_point.view()).unwrap();
         // Value should be between 0.0 and 1.0, closer to 0.5
         assert!(result[0] > 0.0 && result[0] < 1.0);
@@ -1156,7 +1156,7 @@ mod tests {
         )
         .unwrap();
 
-        let test_point = Array2::fromshape_vec((1, 2), vec![0.6, 0.6]).unwrap();
+        let test_point = Array2::from_shape_vec((1, 2), vec![0.6, 0.6]).unwrap();
         let result = interp_nearest.__call__(&test_point.view()).unwrap();
         assert_abs_diff_eq!(result[0], 0.5, epsilon = 1e-10); // Should pick the center point
     }

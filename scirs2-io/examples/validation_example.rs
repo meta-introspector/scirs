@@ -79,19 +79,11 @@ fn basic_checksum_example(data: &str) -> Result<(), Box<dyn std::error::Error>> 
     );
     println!(
         "SHA256 valid: {}",
-        verify_checksum(
-            data.as_bytes(),
-            &sha256_checksum,
-            ChecksumAlgorithm::SHA256
-        )
+        verify_checksum(data.as_bytes(), &sha256_checksum, ChecksumAlgorithm::SHA256)
     );
     println!(
         "BLAKE3 valid: {}",
-        verify_checksum(
-            data.as_bytes(),
-            &blake3_checksum,
-            ChecksumAlgorithm::BLAKE3
-        )
+        verify_checksum(data.as_bytes(), &blake3_checksum, ChecksumAlgorithm::BLAKE3)
     );
 
     // Verify with modified data

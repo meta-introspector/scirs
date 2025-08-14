@@ -11,15 +11,15 @@ use std::hint::black_box;
 
 // Helper functions to generate test data
 #[allow(dead_code)]
-fn create_random_array2_f32(rows: usize, cols: usize) -> Array2<f32> {
+fn create_randomarray2_f32(rows: usize, cols: usize) -> Array2<f32> {
     Array2::from_shape_fn((_rows, cols), |(i, j)| {
         ((i * cols + j) % 100) as f32 / 100.0
     })
 }
 
 #[allow(dead_code)]
-fn create_random_array1_f32(size: usize) -> Array1<f32> {
-    Array1::from_iter((0.._size).map(|i| (i % 100) as f32 / 100.0))
+fn create_randomarray1_f32(size: usize) -> Array1<f32> {
+    Array1::from_iter((0..size).map(|i| (i % 100) as f32 / 100.0))
 }
 
 // Regular matrix multiplication for comparison
@@ -36,7 +36,7 @@ fn bench_quantization(c: &mut Criterion) {
     let bit_widths = [4, 8];
 
     for &size in &sizes {
-        let matrix = create_random_array2_f32(size, size);
+        let matrix = create_randomarray2_f32(size, size);
 
         for &bits in &bit_widths {
             // Create benchmark ID using both size and bit width
@@ -81,9 +81,9 @@ fn bench_quantized_ops(c: &mut Criterion) {
     let bit_widths = [4, 8];
 
     for &size in &sizes {
-        let matrix_a = create_random_array2_f32(size, size);
-        let matrix_b = create_random_array2_f32(size, size);
-        let vector = create_random_array1_f32(size);
+        let matrix_a = create_randomarray2_f32(size, size);
+        let matrix_b = create_randomarray2_f32(size, size);
+        let vector = create_randomarray1_f32(size);
 
         for &bits in &bit_widths {
             // Create benchmark ID using both size and bit width
@@ -163,7 +163,7 @@ fn bench_calibration(c: &mut Criterion) {
     let sizes = [100, 500];
 
     for &size in &sizes {
-        let matrix = create_random_array2_f32(size, size);
+        let matrix = create_randomarray2_f32(size, size);
 
         // Create different calibration configurations
         let minmax_config = CalibrationConfig {

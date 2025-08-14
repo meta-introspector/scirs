@@ -158,12 +158,12 @@ where
         let mut row_indices = Vec::new();
         let mut col_indices = Vec::new();
 
-        let rows_vec = matrix.row_indices();
+        let rowsvec = matrix.row_indices();
         let cols_vec = matrix.col_indices();
         let data_vec = matrix.data();
 
         for i in 0..data_vec.len() {
-            let row = rows_vec[i];
+            let row = rowsvec[i];
             let col = cols_vec[i];
 
             // Only include elements in lower triangular part (including diagonal)

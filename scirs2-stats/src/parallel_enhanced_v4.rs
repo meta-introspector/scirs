@@ -16,7 +16,7 @@ pub struct EnhancedParallelConfig {
     /// Number of threads to use (None = auto-detect)
     pub num_threads: Option<usize>,
     /// Minimum chunk size for parallel processing
-    pub min_chunk_size: usize,
+    pub min_chunksize: usize,
     /// Maximum number of chunks
     pub max_chunks: usize,
     /// Enable NUMA-aware processing
@@ -29,7 +29,7 @@ impl Default for EnhancedParallelConfig {
     fn default() -> Self {
         Self {
             num_threads: None,
-            min_chunk_size: 1000,
+            min_chunksize: 1000,
             max_chunks: num_cpus::get() * 4,
             numa_aware: true,
             work_stealing: true,
@@ -69,7 +69,7 @@ where
     /// Create with custom configuration
     pub fn with_config(config: EnhancedParallelConfig) -> Self {
         Self {
-            config: config,
+            config,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -86,17 +86,17 @@ where
 
         let n = data.len();
 
-        if n < self.config.min_chunk_size {
+        if n < self.config.min_chunksize {
             // Use sequential computation for small datasets
             return Ok(data.mean().unwrap());
         }
 
         // Use scirs2-core's parallel operations
-        let chunk_size = self.calculate_optimal_chunk_size(n);
+        let chunksize = self.calculate_optimal_chunksize(n);
         let result = data
             .as_slice()
             .unwrap()
-            .par_chunks(chunk_size)
+            .par_chunks(chunksize)
             .map(|chunk| {
                 // Process each chunk (map phase)
                 let sum: F = chunk.iter().copied().sum();
@@ -127,7 +127,7 @@ where
 
         let n = data.len();
 
-        if n < self.config.min_chunk_size {
+        if n < self.config.min_chunksize {
             // Use sequential computation for small datasets
             let mean = data.mean().unwrap();
             let sum_sq_diff: F = data.iter().map(|&x| (x - mean) * (x - mean)).sum();
@@ -138,11 +138,11 @@ where
         let mean = self.mean_parallel_enhanced(data)?;
 
         // Second pass: compute variance in parallel
-        let chunk_size = self.calculate_optimal_chunk_size(n);
+        let chunksize = self.calculate_optimal_chunksize(n);
         let result = data
             .as_slice()
             .unwrap()
-            .par_chunks(chunk_size)
+            .par_chunks(chunksize)
             .map(|chunk| {
                 // Process each chunk (map phase)
                 let sum_sq_diff: F = chunk.iter().map(|&x| (x - mean) * (x - mean)).sum();
@@ -323,23 +323,23 @@ where
         }
 
         // Create owned copy for sorting
-        let mut sorted_data = data.to_owned();
+        let mut sorteddata = data.to_owned();
 
         // Use parallel sorting if data is large enough
-        if sorted_data.len() >= self.config.min_chunk_size {
-            sorted_data
+        if sorteddata.len() >= self.config.min_chunksize {
+            sorteddata
                 .as_slice_mut()
                 .unwrap()
                 .par_sort_by(|a, b| a.partial_cmp(b).unwrap());
         } else {
-            sorted_data
+            sorteddata
                 .as_slice_mut()
                 .unwrap()
                 .sort_by(|a, b| a.partial_cmp(b).unwrap());
         }
 
         // Compute quantiles
-        let n = sorted_data.len();
+        let n = sorteddata.len();
         let results = quantiles
             .iter()
             .map(|&q| {
@@ -349,9 +349,9 @@ where
                 let weight = F::from(index - index.floor()).unwrap();
 
                 if lower == upper {
-                    sorted_data[lower]
+                    sorteddata[lower]
                 } else {
-                    sorted_data[lower] * (F::one() - weight) + sorted_data[upper] * weight
+                    sorteddata[lower] * (F::one() - weight) + sorteddata[upper] * weight
                 }
             })
             .collect::<Vec<F>>();
@@ -360,11 +360,11 @@ where
     }
 
     /// Helper: Calculate optimal chunk size
-    fn calculate_optimal_chunk_size(&self, datalen: usize) -> usize {
+    fn calculate_optimal_chunksize(&self, datalen: usize) -> usize {
         let num_threads = self.config.num_threads.unwrap_or_else(num_cpus::get);
         let ideal_chunks = num_threads * 2; // Allow for load balancing
-        let chunk_size = (datalen / ideal_chunks).max(self.config.min_chunk_size);
-        chunk_size.min(datalen)
+        let chunksize = (datalen / ideal_chunks).max(self.config.min_chunksize);
+        chunksize.min(datalen)
     }
 
     /// Helper: Compute correlation coefficient
@@ -386,10 +386,10 @@ where
             return Ok(F::zero());
         }
 
-        let chunk_size = self.calculate_optimal_chunk_size(n);
+        let chunksize = self.calculate_optimal_chunksize(n);
         let result = parallel_map_reduce_indexed(
             0..n,
-            chunk_size,
+            chunksize,
             |indices| {
                 let mut sum_xy = F::zero();
                 let mut sum_x2 = F::zero();

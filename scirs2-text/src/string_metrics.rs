@@ -306,7 +306,9 @@ impl Metaphone {
 
     /// Create with custom maximum length
     pub fn with_max_length(_maxlength: usize) -> Self {
-        Self { max_length: _maxlength }
+        Self {
+            max_length: _maxlength,
+        }
     }
 }
 
@@ -470,7 +472,9 @@ impl Nysiis {
 
     /// Create with custom maximum length
     pub fn with_max_length(_maxlength: usize) -> Self {
-        Self { max_length: _maxlength }
+        Self {
+            max_length: _maxlength,
+        }
     }
 }
 

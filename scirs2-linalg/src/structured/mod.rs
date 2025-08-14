@@ -54,7 +54,7 @@ pub use hankel::HankelMatrix;
 pub use toeplitz::ToeplitzMatrix;
 pub use utils::{
     circulant_determinant, circulant_eigenvalues, circulant_inverse_fft, circulant_matvec_direct,
-    circulant_matvec_fft, dft_matrix_multiply, fast_toeplitz_inverse, gohberg_semencul_inverse,
+    circulant_matvec_fft, dftmatrix_multiply, fast_toeplitz_inverse, gohberg_semencul_inverse,
     hadamard_transform, hankel_determinant, hankel_matvec, hankel_matvec_fft, hankel_svd,
     levinson_durbin, solve_circulant, solve_circulant_fft, solve_toeplitz, solve_tridiagonal_lu,
     solve_tridiagonal_thomas, tridiagonal_determinant, tridiagonal_eigenvalues,

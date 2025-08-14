@@ -229,9 +229,10 @@ pub struct CacheFriendlyKNN<F: Float> {
 
 impl<F: Float + FromPrimitive> CacheFriendlyKNN<F> {
     /// Create a new cache-friendly kNN searcher
-    pub fn new(_cachesize: usize) -> Self {
+    pub fn new(cachesize: usize) -> Self {
         Self {
-            cache_size_phantom: std::marker::PhantomData,
+            cache_size: cachesize,
+            _phantom: std::marker::PhantomData,
         }
     }
 

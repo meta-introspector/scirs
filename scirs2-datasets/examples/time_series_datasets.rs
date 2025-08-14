@@ -51,8 +51,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Companies: {}", stock_returns.n_features());
 
     // Print companies
-    if let Some(feature_names) = &stock_returns.feature_names {
-        println!("  Companies: {}", feature_names.join(", "));
+    if let Some(featurenames) = &stock_returns.featurenames {
+        println!("  Companies: {}", featurenames.join(", "));
     }
 
     // Load the weather dataset

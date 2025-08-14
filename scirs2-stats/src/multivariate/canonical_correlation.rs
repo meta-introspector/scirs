@@ -122,7 +122,7 @@ impl CanonicalCorrelationAnalysis {
                 .create_validation_error(
                     ErrorCode::E2001,
                     "CCA fit",
-                    "sample_size_mismatch",
+                    "samplesize_mismatch",
                     format!("x: {}, y: {}", n_samples_x, n_samples_y),
                     "X and Y must have the same number of samples",
                 )
@@ -599,7 +599,7 @@ impl PLSCanonical {
                 .create_validation_error(
                     ErrorCode::E2001,
                     "PLS fit",
-                    "sample_size_mismatch",
+                    "samplesize_mismatch",
                     format!("x: {}, y: {}", n_samples_, n_samples_y),
                     "X and Y must have the same number of samples",
                 )
@@ -628,12 +628,12 @@ impl PLSCanonical {
             // Check if there's sufficient variance left for another component
             let x_var = x_current.iter().map(|&x| x * x).sum::<f64>();
             let y_var = y_current.iter().map(|&y| y * y).sum::<f64>();
-            
+
             if x_var < 1e-12 || y_var < 1e-12 {
                 // Not enough variance left, stop here
                 break;
             }
-            
+
             // Initialize weights with first column of Y
             let mut u = y_current.column(0).to_owned();
             let mut w_old = Array1::zeros(n_x_features);
@@ -674,7 +674,7 @@ impl PLSCanonical {
                 }
                 w_old = w.clone();
             }
-            
+
             // If inner loop didn't converge, skip this component
             if !converged_inner {
                 break;
@@ -701,7 +701,7 @@ impl PLSCanonical {
             if t_dot_t < 1e-10 || u_dot_u < 1e-10 {
                 break; // Can't extract this component
             }
-            
+
             let p = x_current.t().dot(&t) / t_dot_t;
             let q = y_current.t().dot(&u) / u_dot_u;
 
@@ -742,19 +742,32 @@ impl PLSCanonical {
         // Compute rotation matrices only if we have components
         let (x_rotations, y_rotations) = if actual_components > 0 {
             let x_rot = x_weights.dot(
-                &scirs2_linalg::inv(&(x_loadings.t().dot(&x_weights)).view(), None).map_err(|e| {
-                    StatsError::ComputationError(format!("Failed to compute X rotations: {}", e))
-                })?,
+                &scirs2_linalg::inv(&(x_loadings.t().dot(&x_weights)).view(), None).map_err(
+                    |e| {
+                        StatsError::ComputationError(format!(
+                            "Failed to compute X rotations: {}",
+                            e
+                        ))
+                    },
+                )?,
             );
 
             let y_rot = y_weights.dot(
-                &scirs2_linalg::inv(&(y_loadings.t().dot(&y_weights)).view(), None).map_err(|e| {
-                    StatsError::ComputationError(format!("Failed to compute Y rotations: {}", e))
-                })?,
+                &scirs2_linalg::inv(&(y_loadings.t().dot(&y_weights)).view(), None).map_err(
+                    |e| {
+                        StatsError::ComputationError(format!(
+                            "Failed to compute Y rotations: {}",
+                            e
+                        ))
+                    },
+                )?,
             );
             (x_rot, y_rot)
         } else {
-            (Array2::zeros((n_x_features, 0)), Array2::zeros((n_y_features, 0)))
+            (
+                Array2::zeros((n_x_features, 0)),
+                Array2::zeros((n_y_features, 0)),
+            )
         };
 
         Ok(PLSResult {
@@ -850,21 +863,9 @@ mod tests {
     #[test]
     fn test_pls_basic() {
         // Create data with more independent variation to support 2 components
-        let x = array![
-            [1.0, 3.0], 
-            [2.0, 1.0], 
-            [3.0, 4.0], 
-            [4.0, 2.0], 
-            [5.0, 5.0],
-        ];
+        let x = array![[1.0, 3.0], [2.0, 1.0], [3.0, 4.0], [4.0, 2.0], [5.0, 5.0],];
 
-        let y = array![
-            [2.0, 6.0],
-            [4.0, 2.0],
-            [6.0, 8.0],
-            [8.0, 4.0],
-            [10.0, 10.0],
-        ];
+        let y = array![[2.0, 6.0], [4.0, 2.0], [6.0, 8.0], [8.0, 4.0], [10.0, 10.0],];
 
         let pls = PLSCanonical::new(2);
         let result = pls.fit(x.view(), y.view()).unwrap();

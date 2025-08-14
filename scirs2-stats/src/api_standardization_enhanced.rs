@@ -109,7 +109,7 @@ where
         };
 
         Self {
-            config: config,
+            config,
             operation_chain: Vec::new(),
             result_cache: Arc::new(std::sync::RwLock::new(HashMap::new())),
             performance_monitor,
@@ -292,7 +292,7 @@ where
         Ok(OperationResult {
             value: Box::new(F::zero()),
             metadata: ResultMetadata {
-                sample_size: 0,
+                samplesize: 0,
                 degrees_of_freedom: None,
                 confidence_level: None,
                 method: "mean".to_string(),
@@ -314,7 +314,7 @@ where
         Ok(OperationResult {
             value: Box::new(F::one()),
             metadata: ResultMetadata {
-                sample_size: 0,
+                samplesize: 0,
                 degrees_of_freedom: Some(0),
                 confidence_level: None,
                 method: "variance".to_string(),
@@ -336,7 +336,7 @@ where
         Ok(OperationResult {
             value: Box::new(F::zero()),
             metadata: ResultMetadata {
-                sample_size: 0,
+                samplesize: 0,
                 degrees_of_freedom: None,
                 confidence_level: Some(0.95),
                 method: "pearson_correlation".to_string(),
@@ -358,7 +358,7 @@ where
         Ok(OperationResult {
             value: Box::new(F::zero()),
             metadata: ResultMetadata {
-                sample_size: 0,
+                samplesize: 0,
                 degrees_of_freedom: Some(0),
                 confidence_level: Some(0.95),
                 method: "t_test".to_string(),
@@ -380,7 +380,7 @@ where
         Ok(OperationResult {
             value: Box::new(F::zero()),
             metadata: ResultMetadata {
-                sample_size: 0,
+                samplesize: 0,
                 degrees_of_freedom: Some(0),
                 confidence_level: Some(0.95),
                 method: "linear_regression".to_string(),
@@ -709,7 +709,7 @@ impl OperationType {
 #[derive(Debug, Clone)]
 pub struct DataRequirements {
     pub arrays_needed: usize,
-    pub min_size: usize,
+    pub minsize: usize,
     pub requires_numeric: bool,
 }
 
@@ -717,7 +717,7 @@ impl DataRequirements {
     pub fn single_array() -> Self {
         Self {
             arrays_needed: 1,
-            min_size: 1,
+            minsize: 1,
             requires_numeric: true,
         }
     }
@@ -725,7 +725,7 @@ impl DataRequirements {
     pub fn multi_array() -> Self {
         Self {
             arrays_needed: 2,
-            min_size: 1,
+            minsize: 1,
             requires_numeric: true,
         }
     }
@@ -733,7 +733,7 @@ impl DataRequirements {
     pub fn xy_arrays() -> Self {
         Self {
             arrays_needed: 2,
-            min_size: 2,
+            minsize: 2,
             requires_numeric: true,
         }
     }
@@ -837,7 +837,7 @@ struct CachedResult<F> {
 impl<F> CachedResult<F> {
     fn new(result: OperationResult<F>) -> Self {
         Self {
-            result: result,
+            result,
             created_at: Instant::now(),
             ttl: Duration::from_secs(300), // 5 minutes default TTL
         }

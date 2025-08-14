@@ -97,10 +97,7 @@ where
 }
 
 #[allow(dead_code)]
-fn minimum_cut_heuristic<N, E, Ix>(
-    graph: &Graph<N, E, Ix>,
-    nodes: &[N],
-) -> Result<(f64, Vec<bool>)>
+fn minimum_cut_heuristic<N, E, Ix>(graph: &Graph<N, E, Ix>, nodes: &[N]) -> Result<(f64, Vec<bool>)>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone,
@@ -861,13 +858,8 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FordFulkersonResidualGraph<N
         if let Some(neighbors) = self.adj.get(current) {
             for (neighbor, capacity) in neighbors {
                 if !visited.contains(&neighbor) && *capacity > 0.0 {
-                    let bottleneck = self.dfs_helper(
-                        neighbor,
-                        sink,
-                        visited,
-                        path,
-                        min_capacity.min(*capacity),
-                    );
+                    let bottleneck =
+                        self.dfs_helper(neighbor, sink, visited, path, min_capacity.min(*capacity));
                     if bottleneck > 0.0 {
                         return bottleneck;
                     }
@@ -1073,7 +1065,8 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> ISAPGraph<N> {
                     let edge_idx = iter[self.get_node_index(&current)];
                     let (neighbor, capacity_, _) = &adj_edges[edge_idx];
 
-                    if *capacity_ > 0.0 && self.distance.get(neighbor) == Some(&(current_dist - 1)) {
+                    if *capacity_ > 0.0 && self.distance.get(neighbor) == Some(&(current_dist - 1))
+                    {
                         // Found admissible arc
                         stack.push((current.clone(), edge_idx));
                         current = neighbor.clone();
@@ -1109,7 +1102,8 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> ISAPGraph<N> {
                 if let Some(adj_edges) = self.adj.get(&current) {
                     for (neighbor, capacity_, _) in adj_edges {
                         if *capacity_ > 0.0 {
-                            min_dist = min_dist.min(*self.distance.get(neighbor).unwrap_or(&self.n));
+                            min_dist =
+                                min_dist.min(*self.distance.get(neighbor).unwrap_or(&self.n));
                         }
                     }
                 }
@@ -1561,8 +1555,11 @@ impl<N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug> ParallelFlowGr
             }
 
             // Phase 3: Handle cross-partition edges
-            let cross_partition_flow =
-                ParallelFlowGraph::<N>::balance_cross_partition_flows(source, sink, &partition_flows);
+            let cross_partition_flow = ParallelFlowGraph::<N>::balance_cross_partition_flows(
+                source,
+                sink,
+                &partition_flows,
+            );
             iteration_flow += cross_partition_flow;
 
             total_flow = iteration_flow;

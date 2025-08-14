@@ -750,7 +750,7 @@ impl HybridClusterer {
     /// Create new hybrid clusterer
     pub fn new(_numclusters: usize) -> Self {
         Self {
-            _numclusters: _numclusters,
+            _numclusters,
             quantum_exploration_ratio: 0.7,
             classical_refinement: true,
             adaptive_switching: true,

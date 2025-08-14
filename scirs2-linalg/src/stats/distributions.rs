@@ -11,7 +11,7 @@ use std::f64::consts::PI;
 use crate::basic::{det, inv};
 use crate::decomposition::cholesky;
 use crate::error::{LinalgError, LinalgResult};
-use crate::random::random_normal_matrix;
+use crate::random::random_normalmatrix;
 
 /// Parameters for a matrix normal distribution
 ///
@@ -106,7 +106,7 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> Wishart
             )));
         }
 
-        Ok(Self { scale: scale, dof })
+        Ok(Self { scale, dof })
     }
 }
 
@@ -250,7 +250,7 @@ where
 ///
 /// * Random matrix sample
 #[allow(dead_code)]
-pub fn sample_matrix_normal<F>(
+pub fn samplematrix_normal<F>(
     params: &MatrixNormalParams<F>,
     rng_seed: Option<u64>,
 ) -> LinalgResult<Array2<F>>
@@ -271,7 +271,7 @@ where
     let (m, n) = params.mean.dim();
 
     // Generate standard normal matrix
-    let z = random_normal_matrix((m, n), rng_seed)?;
+    let z = random_normalmatrix((m, n), rng_seed)?;
 
     // Compute Cholesky factorizations
     let l_u = cholesky(&params.row_cov.view(), None)?;
@@ -325,7 +325,7 @@ where
 
     // Fill lower triangular part with random values
     // This is a simplified version - in practice you'd use proper random distributions
-    let z = random_normal_matrix::<F>((p, p), rng_seed)?;
+    let z = random_normalmatrix::<F>((p, p), rng_seed)?;
 
     for i in 0..p {
         for j in 0..=i {
@@ -383,7 +383,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_matrix_normal_params() {
+    fn testmatrix_normal_params() {
         let mean = array![[1.0, 2.0], [3.0, 4.0]];
         let row_cov = array![[1.0, 0.0], [0.0, 1.0]];
         let col_cov = array![[2.0, 0.0], [0.0, 2.0]];
@@ -405,7 +405,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_normal_logpdf() {
+    fn testmatrix_normal_logpdf() {
         let x = array![[1.0, 0.0], [0.0, 1.0]];
         let mean = array![[0.0, 0.0], [0.0, 0.0]];
         let row_cov = array![[1.0, 0.0], [0.0, 1.0]];
@@ -419,13 +419,13 @@ mod tests {
     }
 
     #[test]
-    fn test_sample_matrix_normal() {
+    fn test_samplematrix_normal() {
         let mean = array![[0.0, 0.0], [0.0, 0.0]];
         let row_cov = array![[1.0, 0.0], [0.0, 1.0]];
         let col_cov = array![[1.0, 0.0], [0.0, 1.0]];
 
         let params = MatrixNormalParams::new(mean, row_cov, col_cov).unwrap();
-        let sample = sample_matrix_normal(&params, Some(42)).unwrap();
+        let sample = samplematrix_normal(&params, Some(42)).unwrap();
 
         assert_eq!(sample.dim(), (2, 2));
         assert!(sample.iter().all(|&x| x.is_finite()));
@@ -469,7 +469,7 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> Inverse
             )));
         }
 
-        Ok(InverseWishartParams { scale: scale, dof })
+        Ok(InverseWishartParams { scale, dof })
     }
 }
 
@@ -690,7 +690,7 @@ mod extended_tests {
     }
 
     #[test]
-    fn test_matrix_t_params() {
+    fn testmatrix_t_params() {
         let location = array![[0.0, 0.0], [0.0, 0.0]];
         let scale_u = array![[1.0, 0.0], [0.0, 1.0]];
         let scale_v = array![[1.0, 0.0], [0.0, 1.0]];
@@ -720,7 +720,7 @@ mod extended_tests {
     }
 
     #[test]
-    fn test_matrix_t_logpdf() {
+    fn testmatrix_t_logpdf() {
         let x = array![[1.0, 0.5], [0.5, 1.0]];
         let location = array![[0.0, 0.0], [0.0, 0.0]];
         let scale_u = array![[1.0, 0.0], [0.0, 1.0]];

@@ -2,7 +2,7 @@ use plotly::{
     common::{Mode, Title},
     Layout, Plot, Scatter,
 };
-use scirs2__fft::{
+use scirs2_fft::{
     sparse_fft::SparseFFTAlgorithm,
     sparse_fft_gpu::GPUBackend,
     sparse_fft_gpu_cuda::{cuda_sparse_fft, get_cuda_devices},
@@ -237,7 +237,7 @@ fn benchmark_accuracy() {
 
             // Add noise
             if noise_level > 0.0 {
-                use rand__distr::{Distribution, Normal};
+                use rand_distr::{Distribution, Normal};
 
                 let mut rng = rand::rng();
                 let normal = Normal::new(0.0, noise_level).unwrap();
@@ -258,7 +258,7 @@ fn benchmark_accuracy() {
 
             // Calculate accuracy (how many true frequencies were found)
             let mut found_count = 0;
-            for &true_freq in frequencies.iter().map(|(f_)| f) {
+            for &true_freq in frequencies.iter().map(|(f| f) {
                 for &found_freq in &result.indices {
                     // Consider frequencies within a small tolerance as matches
                     let tolerance = 2;

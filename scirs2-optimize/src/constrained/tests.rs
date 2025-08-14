@@ -220,14 +220,8 @@ fn test_cobyla_not_implemented() {
 
     let result = minimize_constrained(objective, &x0.view(), &constraints, Method::COBYLA, None);
 
-    // Should return an error
-    assert!(result.is_err());
-
-    // Check that it's specifically a NotImplementedError
-    match result {
-        Err(OptimizeError::NotImplementedError(msg)) => {
-            assert!(msg.contains("COBYLA"));
-        }
-        _ => panic!("Expected NotImplementedError for COBYLA"),
-    }
+    // COBYLA is now implemented, so it should succeed
+    assert!(result.is_ok());
+    let opt_result = result.unwrap();
+    assert!(opt_result.success || opt_result.nit > 0); // Should make progress or succeed
 }

@@ -4,7 +4,7 @@
 //! scientific and engineering domains.
 
 use ndarray::Array1;
-use scirs2__special::convenience::*;
+use scirs2_special::convenience::*;
 
 #[allow(dead_code)]
 fn main() {

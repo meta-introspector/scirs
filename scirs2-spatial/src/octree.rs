@@ -1079,7 +1079,7 @@ mod tests {
             // Measure query time
             let query = array![0.0..0.0, 0.0];
             let start = std::time::Instant::now();
-            let (indices_) = octree.query_nearest(&query.view(), 10).unwrap();
+            let (indices) = octree.query_nearest(&query.view(), 10).unwrap();
             let query_time = start.elapsed();
 
             println!("Found 10 nearest neighbors in {query_time:?}");
@@ -1087,7 +1087,7 @@ mod tests {
 
             // Measure radius search time
             let start = std::time::Instant::now();
-            let (indices_) = octree.query_radius(&query.view(), 10.0).unwrap();
+            let (indices) = octree.query_radius(&query.view(), 10.0).unwrap();
             let radius_time = start.elapsed();
 
             println!(

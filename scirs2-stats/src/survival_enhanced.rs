@@ -278,7 +278,7 @@ pub struct CoxConfig {
     /// Convergence tolerance
     pub tolerance: f64,
     /// Step size for line search
-    pub step_size: f64,
+    pub stepsize: f64,
     /// Enable parallel processing
     pub parallel: bool,
 }
@@ -299,7 +299,7 @@ impl Default for CoxConfig {
         Self {
             max_iter: 100,
             tolerance: 1e-6,
-            step_size: 1.0,
+            stepsize: 1.0,
             parallel: true,
         }
     }
@@ -324,7 +324,7 @@ where
             coefficients: None,
             standard_errors: None,
             baseline_hazard: None,
-            config: config,
+            config,
             convergence_info: None,
             _phantom: PhantomData,
         }
@@ -383,7 +383,7 @@ where
             })?;
 
             let update = hessian_inv.dot(&gradient);
-            beta = &beta + &update.mapv(|x| x * self.config.step_size);
+            beta = &beta + &update.mapv(|x| x * self.config.stepsize);
         }
 
         // Compute standard errors from Hessian
@@ -532,18 +532,18 @@ where
     checkarray_finite(durations2, "durations2")?;
 
     // Combine data with group indicators
-    let mut combined_data = Vec::new();
+    let mut combineddata = Vec::new();
 
     for (_i, (&duration, &observed)) in durations1.iter().zip(event_observed1.iter()).enumerate() {
-        combined_data.push((duration, observed, 0)); // Group 0
+        combineddata.push((duration, observed, 0)); // Group 0
     }
 
     for (_i, (&duration, &observed)) in durations2.iter().zip(event_observed2.iter()).enumerate() {
-        combined_data.push((duration, observed, 1)); // Group 1
+        combineddata.push((duration, observed, 1)); // Group 1
     }
 
     // Sort by duration
-    combined_data.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    combineddata.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
     let mut observed_minus_expected = F::zero();
     let mut variance = F::zero();
@@ -554,16 +554,16 @@ where
     let mut at_risk2 = n2;
 
     let mut i = 0;
-    while i < combined_data.len() {
-        let current_time = combined_data[i].0;
+    while i < combineddata.len() {
+        let current_time = combineddata[i].0;
         let mut events1 = 0;
         let mut events2 = 0;
         let mut censored1 = 0;
         let mut censored2 = 0;
 
         // Count events and censoring at current time for both groups
-        while i < combined_data.len() && combined_data[i].0 == current_time {
-            let (_, observed, group) = combined_data[i];
+        while i < combineddata.len() && combineddata[i].0 == current_time {
+            let (_, observed, group) = combineddata[i];
 
             if group == 0 {
                 if observed {

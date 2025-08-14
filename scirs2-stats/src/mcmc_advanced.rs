@@ -126,7 +126,7 @@ pub struct AdvancedAdvancedConfig<F> {
 pub enum SamplingMethod<F> {
     /// Enhanced Hamiltonian Monte Carlo
     EnhancedHMC {
-        step_size: F,
+        stepsize: F,
         num_steps: usize,
         mass_matrix: MassMatrixType<F>,
     },
@@ -137,7 +137,7 @@ pub enum SamplingMethod<F> {
     },
     /// Riemannian Manifold HMC
     RiemannianHMC {
-        step_size: F,
+        stepsize: F,
         num_steps: usize,
         metric_adaptation: bool,
     },
@@ -151,7 +151,7 @@ pub enum SamplingMethod<F> {
     /// Slice sampling
     SliceSampling { width: F, max_steps: usize },
     /// Langevin dynamics
-    Langevin { step_size: F, friction: F },
+    Langevin { stepsize: F, friction: F },
     /// Zig-Zag sampler
     ZigZag { refresh_rate: F },
     /// Bouncy Particle Sampler
@@ -173,7 +173,7 @@ pub struct AdaptationConfig<F> {
     /// Adaptation period
     pub adaptation_period: usize,
     /// Step size adaptation
-    pub step_size_adaptation: StepSizeAdaptation<F>,
+    pub stepsize_adaptation: StepSizeAdaptation<F>,
     /// Mass matrix adaptation
     pub mass_adaptation: MassAdaptation,
     /// Covariance adaptation
@@ -226,7 +226,7 @@ pub struct TemperingConfig<F> {
 #[derive(Debug, Clone)]
 pub struct PopulationConfig<F> {
     /// Population size
-    pub population_size: usize,
+    pub populationsize: usize,
     /// Migration rate between populations
     pub migration_rate: F,
     /// Selection pressure
@@ -297,7 +297,7 @@ pub struct MCMCChain<F> {
     /// Acceptance history
     pub acceptances: Vec<bool>,
     /// Step size (for adaptive methods)
-    pub step_size: F,
+    pub stepsize: F,
     /// Mass matrix (for HMC methods)
     pub mass_matrix: MassMatrixType<F>,
     /// Temperature (for tempering)
@@ -314,7 +314,7 @@ pub struct AdaptationState<F> {
     /// Number of samples seen
     pub num_samples: RwLock<usize>,
     /// Step size adaptation state
-    pub step_size_state: RwLock<StepSizeState<F>>,
+    pub stepsize_state: RwLock<StepSizeState<F>>,
     /// Mass matrix adaptation state
     pub mass_matrix_state: RwLock<MassMatrixState<F>>,
 }
@@ -322,8 +322,8 @@ pub struct AdaptationState<F> {
 /// Step size adaptation state
 #[derive(Debug, Clone)]
 pub struct StepSizeState<F> {
-    pub log_step_size: F,
-    pub log_step_size_bar: F,
+    pub log_stepsize: F,
+    pub log_stepsize_bar: F,
     pub h_bar: F,
     pub mu: F,
     pub iteration: usize,
@@ -438,7 +438,7 @@ where
         let performance_monitor = PerformanceMonitor::new();
 
         Ok(Self {
-            target: target,
+            target,
             config,
             chains,
             adaptation_state,
@@ -532,7 +532,7 @@ where
             let current_pos = self.chains[i].current_position.clone();
             let current_grad = self.chains[i].current_gradient.as_ref().unwrap().clone();
             let mass_matrix = self.chains[i].mass_matrix.clone();
-            let step_size = self.chains[i].step_size;
+            let stepsize = self.chains[i].stepsize;
             let current_log_density = self.chains[i].current_log_density;
 
             // Sample momentum
@@ -543,7 +543,7 @@ where
                 &current_pos,
                 &momentum,
                 &current_grad,
-                step_size,
+                stepsize,
                 10, // num_steps - would get from config
             )?;
 
@@ -577,12 +577,12 @@ where
         position: &Array1<F>,
         momentum: &Array1<F>,
         gradient: &Array1<F>,
-        step_size: F,
+        stepsize: F,
         num_steps: usize,
     ) -> StatsResult<(Array1<F>, Array1<F>)> {
         let mut p = position.clone();
         let mut m = momentum.clone();
-        let half_step = step_size / F::from(2.0).unwrap();
+        let half_step = stepsize / F::from(2.0).unwrap();
 
         // First half-step for momentum
         m = &m + &F::simd_scalar_mul(&gradient.view(), half_step);
@@ -590,17 +590,17 @@ where
         // Full _steps
         for _ in 0..(num_steps - 1) {
             // Full step for position
-            p = &p + &F::simd_scalar_mul(&m.view(), step_size);
+            p = &p + &F::simd_scalar_mul(&m.view(), stepsize);
 
             // Compute new gradient
             let new_grad = self.target.gradient(&p);
 
             // Full step for momentum
-            m = &m + &F::simd_scalar_mul(&new_grad.view(), step_size);
+            m = &m + &F::simd_scalar_mul(&new_grad.view(), stepsize);
         }
 
         // Final position step
-        p = &p + &F::simd_scalar_mul(&m.view(), step_size);
+        p = &p + &F::simd_scalar_mul(&m.view(), stepsize);
 
         // Final half-step for momentum
         let final_grad = self.target.gradient(&p);
@@ -786,14 +786,14 @@ where
 {
     fn new(id: usize, dim: usize, config: &AdvancedAdvancedConfig<F>) -> StatsResult<Self> {
         Ok(Self {
-            id: id,
+            id,
             current_position: Array1::zeros(dim),
             current_log_density: F::zero(),
             current_gradient: None,
             samples: Array2::zeros((config.num_samples, dim)),
             log_densities: Array1::zeros(config.num_samples),
             acceptances: Vec::with_capacity(config.num_samples),
-            step_size: F::from(0.01).unwrap(),
+            stepsize: F::from(0.01).unwrap(),
             mass_matrix: MassMatrixType::Identity,
             temperature: F::one(),
         })
@@ -809,9 +809,9 @@ where
             sample_covariance: RwLock::new(Array2::eye(dim)),
             sample_mean: RwLock::new(Array1::zeros(dim)),
             num_samples: RwLock::new(0),
-            step_size_state: RwLock::new(StepSizeState {
-                log_step_size: F::from(-2.3).unwrap(), // log(0.1)
-                log_step_size_bar: F::from(-2.3).unwrap(),
+            stepsize_state: RwLock::new(StepSizeState {
+                log_stepsize: F::from(-2.3).unwrap(), // log(0.1)
+                log_stepsize_bar: F::from(-2.3).unwrap(),
                 h_bar: F::zero(),
                 mu: F::from(10.0).unwrap(),
                 iteration: 0,
@@ -865,13 +865,13 @@ where
             burn_in: 1000,
             thin: 1,
             method: SamplingMethod::EnhancedHMC {
-                step_size: F::from(0.01).unwrap(),
+                stepsize: F::from(0.01).unwrap(),
                 num_steps: 10,
                 mass_matrix: MassMatrixType::Identity,
             },
             adaptation: AdaptationConfig {
                 adaptation_period: 1000,
-                step_size_adaptation: StepSizeAdaptation::DualAveraging {
+                stepsize_adaptation: StepSizeAdaptation::DualAveraging {
                     target_accept: F::from(0.8).unwrap(),
                     gamma: F::from(0.75).unwrap(),
                     t0: F::from(10.0).unwrap(),

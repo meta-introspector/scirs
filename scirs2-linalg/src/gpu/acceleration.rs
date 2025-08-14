@@ -40,7 +40,7 @@ where
 #[derive(Debug, Clone)]
 pub struct AccelerationConfig {
     /// Minimum problem size for GPU acceleration
-    pub min_gpu_size: usize,
+    pub min_gpusize: usize,
     /// Maximum memory usage per operation (in bytes)
     pub max_memory_per_op: usize,
     /// Enable automatic kernel selection
@@ -60,7 +60,7 @@ pub struct AccelerationConfig {
 impl Default for AccelerationConfig {
     fn default() -> Self {
         Self {
-            min_gpu_size: 50_000,
+            min_gpusize: 50_000,
             max_memory_per_op: 2 * 1024 * 1024 * 1024, // 2GB
             auto_kernel_selection: true,
             enable_profiling: true,
@@ -96,7 +96,7 @@ pub struct PerformanceMeasurement {
     /// Operation name
     pub operation: String,
     /// Problem size
-    pub problem_size: usize,
+    pub problemsize: usize,
     /// Execution time in seconds
     pub execution_time: f64,
     /// Memory usage in bytes
@@ -121,7 +121,7 @@ where
     /// Create framework with custom configuration
     pub fn with_config(config: AccelerationConfig) -> LinalgResult<Self> {
         let backend_manager = Arc::new(Mutex::new(super::initialize_gpu_manager()?));
-        let dispatcher = GpuOperationDispatcher::with_threshold(_config.min_gpu_size);
+        let dispatcher = GpuOperationDispatcher::with_threshold(_config.min_gpusize);
         let advanced_ops = AdvancedGpuOperations::new();
         let kernel_manager = Arc::new(Mutex::new(GpuKernelManager::new()));
 
@@ -132,7 +132,7 @@ where
             kernel_manager,
             contexts: HashMap::new(),
             profiler: GpuPerformanceProfiler::default(),
-            config: config,
+            config,
         })
     }
 
@@ -169,10 +169,10 @@ where
         x: &ArrayView1<T>,
     ) -> LinalgResult<Array1<T>> {
         let operation_name = "matvec";
-        let problem_size = a.len() + x.len();
+        let problemsize = a.len() + x.len();
 
         // Select optimal execution strategy
-        let strategy = self.select_execution_strategy(operation_name, problem_size)?;
+        let strategy = self.select_execution_strategy(operation_name, problemsize)?;
 
         let start_time = std::time::Instant::now();
 
@@ -194,7 +194,7 @@ where
 
         // Record performance if enabled
         if self.config.enable_profiling {
-            self.record_performance(operation_name, problem_size, execution_time, &strategy);
+            self.record_performance(operation_name, problemsize, execution_time, &strategy);
         }
 
         result
@@ -207,9 +207,9 @@ where
         b: &ArrayView2<T>,
     ) -> LinalgResult<Array2<T>> {
         let operation_name = "matmul";
-        let problem_size = a.len() + b.len();
+        let problemsize = a.len() + b.len();
 
-        let strategy = self.select_execution_strategy(operation_name, problem_size)?;
+        let strategy = self.select_execution_strategy(operation_name, problemsize)?;
         let start_time = std::time::Instant::now();
 
         let result = match strategy {
@@ -229,7 +229,7 @@ where
         let execution_time = start_time.elapsed().as_secs_f64();
 
         if self.config.enable_profiling {
-            self.record_performance(operation_name, problem_size, execution_time, &strategy);
+            self.record_performance(operation_name, problemsize, execution_time, &strategy);
         }
 
         result
@@ -259,20 +259,20 @@ where
     fn select_execution_strategy(
         &self,
         operation: &str,
-        problem_size: usize,
+        problemsize: usize,
     ) -> LinalgResult<ExecutionStrategy> {
         // Check if problem is large enough for GPU
-        if problem_size < self.config.min_gpu_size {
+        if problemsize < self.config.min_gpusize {
             return Ok(ExecutionStrategy::Cpu);
         }
 
         // Find best available GPU context
-        let best_context = self.select_best_context(operation, problem_size)?;
+        let best_context = self.select_best_context(operation, problemsize)?;
 
         match best_context {
             Some(context) => {
                 // Check if multi-GPU would be beneficial
-                if problem_size > 1_000_000 && self.contexts.len() > 1 {
+                if problemsize > 1_000_000 && self.contexts.len() > 1 {
                     Ok(ExecutionStrategy::MultiGpu {
                         primary_context: context.clone(),
                         secondary_contexts: self.get_secondary_contexts(&context),
@@ -280,7 +280,7 @@ where
                 } else {
                     Ok(ExecutionStrategy::Gpu {
                         context,
-                        kernel_variant: self.select_kernel_variant(operation, problem_size),
+                        kernel_variant: self.select_kernel_variant(operation, problemsize),
                     })
                 }
             }
@@ -292,7 +292,7 @@ where
     fn select_best_context(
         &self,
         operation: &str,
-        problem_size: usize,
+        problemsize: usize,
     ) -> LinalgResult<Option<Arc<dyn GpuContext>>> {
         if self.contexts.is_empty() {
             return Ok(None);
@@ -302,7 +302,7 @@ where
         let mut best_score = 0.0f64;
 
         for (_context_name, context) in &self.contexts {
-            let score = self.calculate_context_score(context.as_ref(), operation, problem_size);
+            let score = self.calculate_context_score(context.as_ref(), operation, problemsize);
 
             if score > best_score {
                 best_score = score;
@@ -318,7 +318,7 @@ where
         &self,
         context: &dyn GpuContext,
         operation: &str,
-        _problem_size: usize,
+        _problemsize: usize,
     ) -> f64 {
         let device_info = context.device_info();
         let mut score = 0.0;
@@ -361,14 +361,14 @@ where
 
         match operation {
             "matmul" => {
-                if problem_size > 100_000 {
+                if problemsize > 100_000 {
                     KernelVariant::Optimized
                 } else {
                     KernelVariant::Basic
                 }
             }
             "matvec" => {
-                if problem_size > 50_000 {
+                if problemsize > 50_000 {
                     KernelVariant::Vectorized
                 } else {
                     KernelVariant::Basic
@@ -391,7 +391,7 @@ where
     fn record_performance(
         &mut self,
         operation: &str,
-        problem_size: usize,
+        problemsize: usize,
         execution_time: f64,
         strategy: &ExecutionStrategy,
     ) {
@@ -405,17 +405,17 @@ where
 
         // Estimate GFLOPS (rough approximation)
         let operations = match operation {
-            "matmul" => problem_size as f64 * 2.0, // Rough estimate
-            "matvec" => problem_size as f64,
-            _ => problem_size as f64,
+            "matmul" => problemsize as f64 * 2.0, // Rough estimate
+            "matvec" => problemsize as f64,
+            _ => problemsize as f64,
         };
         let gflops = operations / (execution_time * 1e9);
 
         let measurement = PerformanceMeasurement {
             operation: operation.to_string(),
-            problem_size,
+            problemsize,
             execution_time,
-            memory_usage: problem_size * std::mem::size_of::<T>(),
+            memory_usage: problemsize * std::mem::size_of::<T>(),
             device_type,
             gflops,
             memory_bandwidth_util: 0.8, // Placeholder
@@ -655,8 +655,8 @@ pub struct OutOfCoreHandler<T> {
 /// Tile manager for matrix decomposition and processing
 #[derive(Debug)]
 pub struct TileManager<T> {
-    tile_size: (usize, usize),
-    overlap_size: usize,
+    tilesize: (usize, usize),
+    overlapsize: usize,
     active_tiles: HashMap<String, MatrixTile<T>>,
     tile_schedule: Vec<TileOperation>,
 }
@@ -695,8 +695,8 @@ pub enum TileOperationType {
 pub struct PrefetchCache<T> {
     cache_entries: HashMap<String, CacheEntry<T>>,
     prediction_model: PredictionModel,
-    max_cache_size: usize,
-    current_cache_size: usize,
+    max_cachesize: usize,
+    current_cachesize: usize,
 }
 
 /// Cache entry for prefetch system
@@ -863,18 +863,18 @@ where
 
         // Determine optimal tile sizes based on available GPU memory
         let available_memory = context.available_memory()?;
-        let tile_size = self.calculate_optimal_tile_size(available_memory, (m, n, k));
+        let tilesize = self.calculate_optimal_tilesize(available_memory, (m, n, k));
 
         // Process matrix multiplication in tiles
-        for i in (0..m).step_by(tile_size.0) {
-            for j in (0..n).step_by(tile_size.1) {
+        for i in (0..m).step_by(tilesize.0) {
+            for j in (0..n).step_by(tilesize.1) {
                 let mut c_tile =
-                    Array2::zeros(((i + tile_size.0).min(m) - i, (j + tile_size.1).min(n) - j));
+                    Array2::zeros(((i + tilesize.0).min(m) - i, (j + tilesize.1).min(n) - j));
 
                 // Accumulate partial results across K dimension
-                for l in (0..k).step_by(tile_size.2) {
-                    let a_tile = load_a(i, l, tile_size.0, tile_size.2)?;
-                    let b_tile = load_b(l, j, tile_size.2, tile_size.1)?;
+                for l in (0..k).step_by(tilesize.2) {
+                    let a_tile = load_a(i, l, tilesize.0, tilesize.2)?;
+                    let b_tile = load_b(l, j, tilesize.2, tilesize.1)?;
 
                     // Perform tile multiplication on GPU
                     let partial_result = self.gpu_tile_matmul(context, &a_tile, &b_tile)?;
@@ -943,19 +943,19 @@ where
 
     // Private helper methods
 
-    fn calculate_optimal_tile_size(
+    fn calculate_optimal_tilesize(
         &self,
         available_memory: usize,
         dimensions: (usize, usize, usize),
     ) -> (usize, usize, usize) {
         let (m, n, k) = dimensions;
-        let element_size = std::mem::size_of::<T>();
+        let elementsize = std::mem::size_of::<T>();
 
         // Reserve _memory for 3 tiles (A, B, C) plus overhead
         let usable_memory = available_memory / 4; // Use 25% of available _memory
 
         // Calculate tile size that fits in _memory
-        let max_tile_elements = usable_memory / (3 * element_size);
+        let max_tile_elements = usable_memory / (3 * elementsize);
         let tile_dim = (max_tile_elements as f64).powf(1.0 / 3.0) as usize;
 
         (tile_dim.min(m), tile_dim.min(n), tile_dim.min(k))
@@ -987,9 +987,9 @@ where
     fn estimate_operation_time(&self, operation: &str, problemsize: usize) -> f64 {
         // Estimate operation time based on historical data
         match operation {
-            "matmul" => problem_size as f64 * 1e-9, // Rough estimate
-            "matvec" => problem_size as f64 * 5e-10,
-            _ => problem_size as f64 * 1e-9,
+            "matmul" => problemsize as f64 * 1e-9, // Rough estimate
+            "matvec" => problemsize as f64 * 5e-10,
+            _ => problemsize as f64 * 1e-9,
         }
     }
 
@@ -1051,26 +1051,26 @@ impl<T: Clone + Send + Sync + std::fmt::Debug + 'static> GpuMemoryPool<T> {
 
     fn try_reuse_buffer(&mut self, size: usize) -> Option<Box<dyn super::GpuBuffer<T>>> {
         // Find the smallest buffer that's large enough
-        let mut best_size = None;
-        for &buffer_size in self.free_buffers.keys() {
-            if buffer_size >= size {
-                match best_size {
-                    Some(current_best) if buffer_size < current_best => {
-                        best_size = Some(buffer_size);
+        let mut bestsize = None;
+        for &buffersize in self.free_buffers.keys() {
+            if buffersize >= size {
+                match bestsize {
+                    Some(current_best) if buffersize < current_best => {
+                        bestsize = Some(buffersize);
                     }
                     None => {
-                        best_size = Some(buffer_size);
+                        bestsize = Some(buffersize);
                     }
                     _ => {}
                 }
             }
         }
 
-        if let Some(buffer_size) = best_size {
-            if let Some(mut buffers) = self.free_buffers.remove(&buffer_size) {
+        if let Some(buffersize) = bestsize {
+            if let Some(mut buffers) = self.free_buffers.remove(&buffersize) {
                 if let Some(buffer) = buffers.pop() {
                     if !buffers.is_empty() {
-                        self.free_buffers.insert(buffer_size, buffers);
+                        self.free_buffers.insert(buffersize, buffers);
                     }
                     return Some(buffer);
                 }
@@ -1145,8 +1145,8 @@ impl<T> OutOfCoreHandler<T> {
 impl<T> TileManager<T> {
     fn new() -> Self {
         Self {
-            tile_size: (256, 256), // Default tile size
-            overlap_size: 0,
+            tilesize: (256, 256), // Default tile size
+            overlapsize: 0,
             active_tiles: HashMap::new(),
             tile_schedule: Vec::new(),
         }
@@ -1158,8 +1158,8 @@ impl<T> PrefetchCache<T> {
         Self {
             cache_entries: HashMap::new(),
             prediction_model: PredictionModel::new(),
-            max_cache_size: 1024 * 1024 * 1024, // 1GB default
-            current_cache_size: 0,
+            max_cachesize: 1024 * 1024 * 1024, // 1GB default
+            current_cachesize: 0,
         }
     }
 }
@@ -1198,7 +1198,7 @@ pub struct MockGpuBuffer<T> {
 impl<T> MockGpuBuffer<T> {
     pub fn new(size: usize) -> Self {
         Self {
-            _size_phantom: std::marker::PhantomData,
+            size_phantom: std::marker::PhantomData,
         }
     }
 }

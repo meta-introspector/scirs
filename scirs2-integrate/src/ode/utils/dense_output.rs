@@ -214,7 +214,7 @@ pub struct DOP853Interpolant<F: IntegrateFloat> {
 impl<F: IntegrateFloat> DOP853Interpolant<F> {
     /// Create a new DOP853 interpolant
     pub fn new(t0: F, h: F, y0: Array1<F>, k: Vec<Array1<F>>) -> Self {
-        DOP853Interpolant { t0: t0, h, y0, k }
+        DOP853Interpolant { t0, h, y0, k }
     }
 
     /// Evaluate the interpolant at a specific point within the step
@@ -276,13 +276,7 @@ pub struct RadauInterpolant<F: IntegrateFloat> {
 impl<F: IntegrateFloat> RadauInterpolant<F> {
     /// Create a new Radau interpolant
     pub fn new(t0: F, h: F, y0: Array1<F>, y1: Array1<F>, k: Vec<Array1<F>>) -> Self {
-        RadauInterpolant {
-            t0: t0,
-            h,
-            y0,
-            y1,
-            k,
-        }
+        RadauInterpolant { t0, h, y0, y1, k }
     }
 
     /// Evaluate the interpolant at a specific point within the step

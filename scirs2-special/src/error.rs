@@ -16,7 +16,7 @@
 //! ## Usage Examples
 //!
 //! ```rust
-//! use scirs2__special::{gamma, SpecialError, SpecialResult};
+//! use scirs2_special::{gamma, SpecialError, SpecialResult};
 //!
 //! // Function that can return different error types
 //! fn safe_gamma(x: f64) -> SpecialResult<f64> {
@@ -156,7 +156,7 @@ pub enum SpecialError {
 /// # Usage Examples
 ///
 /// ```rust
-/// use scirs2__special::{SpecialResult, SpecialError};
+/// use scirs2_special::{SpecialResult, SpecialError};
 ///
 /// fn safe_computation(x: f64) -> SpecialResult<f64> {
 ///     if x < 0.0 {

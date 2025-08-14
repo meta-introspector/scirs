@@ -13,9 +13,9 @@ use std::sync::{Arc, Mutex};
 #[derive(Debug, Clone)]
 pub struct AdvancedParallelConfig {
     /// Minimum size for parallel execution
-    pub min_size: usize,
+    pub minsize: usize,
     /// Target chunk size per thread
-    pub chunk_size: Option<usize>,
+    pub chunksize: Option<usize>,
     /// Maximum number of threads to use
     pub max_threads: Option<usize>,
     /// Enable work stealing for better load balancing
@@ -27,8 +27,8 @@ pub struct AdvancedParallelConfig {
 impl Default for AdvancedParallelConfig {
     fn default() -> Self {
         Self {
-            min_size: 2_000,   // More aggressive parallelization
-            chunk_size: None,  // Auto-determine
+            minsize: 2_000,    // More aggressive parallelization
+            chunksize: None,   // Auto-determine
             max_threads: None, // Use all available
             work_stealing: true,
             dynamic_chunks: true,
@@ -38,8 +38,8 @@ impl Default for AdvancedParallelConfig {
 
 impl AdvancedParallelConfig {
     /// Get optimal chunk size based on data size and threading
-    pub fn get_optimal_chunk_size(&self, n: usize) -> usize {
-        if let Some(size) = self.chunk_size {
+    pub fn get_optimal_chunksize(&self, n: usize) -> usize {
+        if let Some(size) = self.chunksize {
             return size;
         }
 
@@ -70,7 +70,7 @@ where
 {
     pub fn new(config: AdvancedParallelConfig) -> Self {
         Self {
-            config: config,
+            config,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -90,13 +90,13 @@ where
 
         let results: Vec<StatsResult<(F, F, F, F)>> = datasets
             .iter()
-            .map(|dataset| self.compute_single_dataset_stats(dataset))
+            .map(|dataset| self.compute_singledataset_stats(dataset))
             .collect();
 
         results.into_iter().collect()
     }
 
-    fn compute_single_dataset_stats<D>(&self, data: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F, F)>
+    fn compute_singledataset_stats<D>(&self, data: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F, F)>
     where
         D: Data<Elem = F>,
     {
@@ -107,7 +107,7 @@ where
             ));
         }
 
-        if n < self.config.min_size {
+        if n < self.config.minsize {
             // Sequential computation for small datasets
             let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap();
             let variance = data
@@ -129,13 +129,13 @@ where
         }
 
         // Parallel computation
-        let chunk_size = self.config.get_optimal_chunk_size(n);
+        let chunksize = self.config.get_optimal_chunksize(n);
 
         // Parallel reduction for statistics
         let results: Vec<(F, F, F, F, usize)> = data
             .as_slice()
             .unwrap()
-            .par_chunks(chunk_size)
+            .par_chunks(chunksize)
             .map(|chunk| {
                 let len = chunk.len();
                 let sum = chunk.iter().fold(F::zero(), |acc, &x| acc + x);
@@ -188,7 +188,7 @@ where
                 );
 
         // Recalculate variance with global mean (more accurate)
-        let global_variance = par_chunks(data.as_slice().unwrap(), chunk_size)
+        let global_variance = par_chunks(data.as_slice().unwrap(), chunksize)
             .map(|chunk| {
                 chunk
                     .iter()
@@ -251,7 +251,7 @@ where
             ));
         }
 
-        let fold_size = n / self.k_folds;
+        let foldsize = n / self.k_folds;
         let x_arc = Arc::new(x.to_owned());
         let y_arc = Arc::new(y.to_owned());
 
@@ -259,11 +259,11 @@ where
         let correlations: Vec<F> = (0..self.k_folds)
             .into_iter()
             .map(|fold| {
-                let start = fold * fold_size;
+                let start = fold * foldsize;
                 let end = if fold == self.k_folds - 1 {
                     n
                 } else {
-                    (fold + 1) * fold_size
+                    (fold + 1) * foldsize
                 };
 
                 // Create fold by excluding test indices
@@ -504,7 +504,7 @@ impl ParallelMatrixOps {
         let config = config.unwrap_or_default();
         let mut result = Array1::zeros(m);
 
-        if m < config.min_size {
+        if m < config.minsize {
             // Sequential computation for small matrices
             for i in 0..m {
                 let row = matrix.row(i);
@@ -512,13 +512,13 @@ impl ParallelMatrixOps {
             }
         } else {
             // Parallel computation
-            let chunk_size = config.get_optimal_chunk_size(m);
+            let chunksize = config.get_optimal_chunksize(m);
 
             result
-                .axis_chunks_iter_mut(Axis(0), chunk_size)
+                .axis_chunks_iter_mut(Axis(0), chunksize)
                 .enumerate()
                 .for_each(|(chunk_idx, mut result_chunk)| {
-                    let start_row = chunk_idx * chunk_size;
+                    let start_row = chunk_idx * chunksize;
                     let end_row = (start_row + result_chunk.len()).min(m);
 
                     for (local_idx, i) in (start_row..end_row).enumerate() {
@@ -549,7 +549,7 @@ impl ParallelMatrixOps {
 
         let config = config.unwrap_or_default();
 
-        if m * n < config.min_size {
+        if m * n < config.minsize {
             // Sequential computation for small matrices
             for i in 0..m {
                 for j in 0..n {

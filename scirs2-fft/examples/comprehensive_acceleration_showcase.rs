@@ -4,7 +4,7 @@
 //! including multi-GPU processing, specialized hardware support, and performance
 //! comparison across different acceleration methods.
 
-use scirs2__fft::{
+use scirs2_fft::{
     // GPU backends
     gpu_sparse_fft,
     is_cuda_available,

@@ -6,7 +6,7 @@
 //!
 //! Run with: cargo run --example comprehensive_performance_benchmark --features gpu,simd,parallel
 
-use scirs2__special::performance_benchmarks::{
+use scirs2_special::performance_benchmarks::{
     comprehensive_benchmark, quick_benchmark, BenchmarkConfig, GammaBenchmarks,
 };
 use std::env;
@@ -66,7 +66,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn run_custom_benchmark(
 ) -> Result<scirs2_special::performance, _benchmarks::BenchmarkSuite, Box<dyn std::error::Error>> {
     let config = BenchmarkConfig {
-        array_sizes: vec![
+        arraysizes: vec![
             100,       // Small arrays
             1_000,     // Medium arrays
             10_000,    // Large arrays
@@ -83,7 +83,7 @@ fn run_custom_benchmark(
     };
 
     println!("Custom benchmark configuration:");
-    println!("  Array sizes: {:?}", config.array_sizes);
+    println!("  Array sizes: {:?}", config.arraysizes);
     println!("  Iterations: {}", config.iterations);
     println!("  Warmup iterations: {}", config.warmup_iterations);
     println!("  Test GPU: {}", config.test_gpu);
@@ -146,7 +146,7 @@ fn generate_performance_recommendations(
     let mut size_recommendations = std::collections::HashMap::new();
 
     for result in &successful_results {
-        let size_range = match result.array_size {
+        let size_range = match result.arraysize {
             0..=1000 => "Small (≤1K)",
             1001..=10000 => "Medium (1K-10K)",
             10001..=100000 => "Large (10K-100K)",
@@ -194,15 +194,15 @@ fn generate_performance_recommendations(
                 println!("  • ✅ GPU acceleration is reliable for this system");
 
                 // Find minimum array size where GPU is beneficial
-                if let Some(min_beneficial_size) = gpu_results
+                if let Some(min_beneficialsize) = gpu_results
                     .iter()
                     .filter(|r| r.success && r.speedup_factor.unwrap_or(0.0) > 1.0)
-                    .map(|r| r.array_size)
+                    .map(|r| r.arraysize)
                     .min()
                 {
                     println!(
                         "  • 📏 Use GPU for arrays larger than {} elements",
-                        min_beneficial_size
+                        min_beneficialsize
                     );
                 }
             } else if gpu_success_rate > 0.0 {
@@ -299,13 +299,8 @@ fn generate_performance_recommendations(
     // Memory recommendations
     println!("\n💾 Memory Usage Recommendations:");
 
-    let largest_tested_size = suite
-        .results
-        .iter()
-        .map(|r| r.array_size)
-        .max()
-        .unwrap_or(0);
-    let estimated_memory_mb = (largest_tested_size * 8) / 1024 / 1024; // Assuming f64
+    let largest_testedsize = suite.results.iter().map(|r| r.arraysize).max().unwrap_or(0);
+    let estimated_memory_mb = (largest_testedsize * 8) / 1024 / 1024; // Assuming f64
 
     if estimated_memory_mb > 100 {
         println!(
@@ -324,15 +319,15 @@ fn generate_performance_recommendations(
 /// Example of how to use the benchmark results programmatically
 #[allow(dead_code)]
 fn analyze_results_programmatically(
-    suite: &scirs2__special::performance_benchmarks::BenchmarkSuite,
+    suite: &scirs2_special::performance_benchmarks::BenchmarkSuite,
 ) {
     // Find the fastest implementation for each array size
-    let mut fastest_by_size = std::collections::HashMap::new();
+    let mut fastest_bysize = std::collections::HashMap::new();
 
     for result in &suite.results {
         if result.success {
-            fastest_by_size
-                .entry(result.array_size)
+            fastest_bysize
+                .entry(result.arraysize)
                 .and_modify(
                     |current: &mut &scirs2_special::performance, _benchmarks::BenchmarkResult| {
                         if result.average_time < current.average_time {
@@ -345,7 +340,7 @@ fn analyze_results_programmatically(
     }
 
     // Print fastest implementation for each size
-    for (size, fastest) in fastest_by_size {
+    for (size, fastest) in fastest_bysize {
         println!(
             "Size {}: {} ({:?})",
             size, fastest.implementation, fastest.average_time

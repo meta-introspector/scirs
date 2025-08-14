@@ -253,7 +253,7 @@ struct PoolAllocator {
 /// Individual memory pool for specific allocation sizes
 struct MemoryPool {
     /// Block size for this pool
-    block_size: usize,
+    blocksize: usize,
     /// Available blocks
     available_blocks: VecDeque<*mut u8>,
     /// Total allocated blocks
@@ -307,7 +307,7 @@ struct AlgorithmProfile {
     /// Performance under different memory pressures
     performance_by_pressure: HashMap<MemoryPressure, PerformanceScore>,
     /// Preferred data size ranges
-    optimal_data_sizes: Vec<(usize, usize)>,
+    optimaldatasizes: Vec<(usize, usize)>,
 }
 
 /// Memory usage profile for algorithms
@@ -361,7 +361,7 @@ struct MemoryConditions {
 struct SelectionEvent {
     timestamp: Instant,
     algorithm: String,
-    data_size: usize,
+    datasize: usize,
     memory_conditions: MemoryConditions,
     performance_result: PerformanceScore,
 }
@@ -422,7 +422,7 @@ impl EnhancedMemoryOptimizer {
     /// Optimize memory layout for statistical computation
     pub fn optimize_for_computation<F>(
         &self,
-        data_size: usize,
+        datasize: usize,
         operation: &str,
     ) -> OptimizationRecommendation
     where
@@ -433,20 +433,20 @@ impl EnhancedMemoryOptimizer {
 
         // Select optimal algorithm based on memory conditions
         let recommended_algorithm =
-            algorithm_selector.select_algorithm(operation, data_size, &current_conditions);
+            algorithm_selector.select_algorithm(operation, datasize, &current_conditions);
 
         // Determine optimal memory layout
-        let memory_layout = self.determine_optimal_layout(data_size, &current_conditions);
+        let memory_layout = self.determine_optimal_layout(datasize, &current_conditions);
 
         // Cache strategy recommendation
-        let cache_strategy = self.recommend_cache_strategy(data_size, operation);
+        let cache_strategy = self.recommend_cache_strategy(datasize, operation);
 
         OptimizationRecommendation {
             algorithm: recommended_algorithm,
             memory_layout,
             cache_strategy,
-            expected_performance: self.predict_performance(data_size, operation),
-            memory_requirements: self.estimate_memory_requirements(data_size, operation),
+            expected_performance: self.predict_performance(datasize, operation),
+            memory_requirements: self.estimate_memory_requirements(datasize, operation),
         }
     }
 
@@ -479,13 +479,13 @@ impl EnhancedMemoryOptimizer {
     }
 
     /// Memory-aware algorithm selection for specific operations
-    pub fn select_algorithm<F>(&self, operation: &str, data_size: usize) -> String
+    pub fn select_algorithm<F>(&self, operation: &str, datasize: usize) -> String
     where
         F: Float + NumCast + std::fmt::Display,
     {
         let conditions = self.assess_memory_conditions();
         let selector = self.algorithm_selector.read().unwrap();
-        selector.select_algorithm(operation, data_size, &conditions)
+        selector.select_algorithm(operation, datasize, &conditions)
     }
 
     // Private implementation methods
@@ -560,22 +560,22 @@ impl EnhancedMemoryOptimizer {
 
     fn determine_optimal_layout(
         &self,
-        data_size: usize,
+        datasize: usize,
         conditions: &MemoryConditions,
     ) -> MemoryLayout {
         match conditions.pressure {
             MemoryPressure::Low => MemoryLayout::Contiguous,
-            MemoryPressure::Medium => MemoryLayout::Chunked(self.optimal_chunk_size(data_size)),
+            MemoryPressure::Medium => MemoryLayout::Chunked(self.optimal_chunksize(datasize)),
             MemoryPressure::High => MemoryLayout::Streaming,
             MemoryPressure::Critical => MemoryLayout::MemoryMapped,
         }
     }
 
-    fn recommend_cache_strategy(&self, data_size: usize, operation: &str) -> CacheStrategy {
-        if data_size < 1024 * 1024 {
+    fn recommend_cache_strategy(&self, datasize: usize, operation: &str) -> CacheStrategy {
+        if datasize < 1024 * 1024 {
             // 1MB
             CacheStrategy::Aggressive
-        } else if data_size < 100 * 1024 * 1024 {
+        } else if datasize < 100 * 1024 * 1024 {
             // 100MB
             CacheStrategy::Selective
         } else {
@@ -583,7 +583,7 @@ impl EnhancedMemoryOptimizer {
         }
     }
 
-    fn predict_performance(&self, _size: usize, operation: &str) -> PerformanceScore {
+    fn predict_performance(&self, size: usize, operation: &str) -> PerformanceScore {
         // Implement performance prediction based on historical data
         PerformanceScore {
             time_score: 85.0,
@@ -593,12 +593,8 @@ impl EnhancedMemoryOptimizer {
         }
     }
 
-    fn estimate_memory_requirements(
-        &self,
-        data_size: usize,
-        operation: &str,
-    ) -> MemoryRequirements {
-        let base_memory = data_size * std::mem::size_of::<f64>();
+    fn estimate_memory_requirements(&self, datasize: usize, operation: &str) -> MemoryRequirements {
+        let base_memory = datasize * std::mem::size_of::<f64>();
         let overhead_multiplier = match operation {
             "mean" => 1.1,
             "variance" => 1.3,
@@ -642,9 +638,9 @@ impl EnhancedMemoryOptimizer {
         0.15 // Placeholder
     }
 
-    fn optimal_chunk_size(&self, data_size: usize) -> usize {
+    fn optimal_chunksize(&self, datasize: usize) -> usize {
         // Calculate optimal chunk size based on cache characteristics
-        (32 * 1024).min(data_size / 4) // 32KB or 1/4 of data size
+        (32 * 1024).min(datasize / 4) // 32KB or 1/4 of data size
     }
 
     fn estimate_bandwidth_utilization(&self) -> f64 {
@@ -807,7 +803,7 @@ impl MemoryAwareSelector {
     fn select_algorithm(
         &self,
         operation: &str,
-        _data_size: usize,
+        datasize: usize,
         conditions: &MemoryConditions,
     ) -> String {
         // Select optimal algorithm based on memory conditions

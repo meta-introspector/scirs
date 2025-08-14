@@ -17,8 +17,8 @@
 //! Run with: cargo run --example experimental_physics_applications
 
 use ndarray::Array1;
-use num__complex::Complex64;
-use scirs2__special::*;
+use num_complex::Complex64;
+use scirs2_special::*;
 use std::f64::consts::PI;
 use std::io::{self, Write};
 
@@ -1075,7 +1075,7 @@ fn statistical_mechanics_mesoscopic() -> Result<(), Box<dyn std::error::Error>> 
     ];
 
     println!("QUANTUM DOT CHARGING ENERGY:");
-    println!("Size     C (F)     Δ (μeV)   E_c (meV)   N_max(300K)");
+    println!("Size     C (F)     Δ (μeV)   E_c (meV)   Nmax(300K)");
     println!("------   -------   -------   ---------   -----------");
 
     for &(size, capacitance, level_spacing) in &quantum_dot_params {
@@ -1168,7 +1168,7 @@ fn statistical_mechanics_mesoscopic() -> Result<(), Box<dyn std::error::Error>> 
     println!("S(ω) = 4kTγ/(γ² + ω²) where γ = 6πηr/m");
     println!();
 
-    let particle_sizes = vec![1e-9, 10e-9, 100e-9, 1e-6]; // meters
+    let particlesizes = vec![1e-9, 10e-9, 100e-9, 1e-6]; // meters
     let temperature = 300.0; // K
     let viscosity = 1e-3; // Pa·s (water)
 
@@ -1176,7 +1176,7 @@ fn statistical_mechanics_mesoscopic() -> Result<(), Box<dyn std::error::Error>> 
     println!("r (nm)   D (m²/s)   τ_c (ns)   ⟨x²⟩ (nm²/s)");
     println!("------   --------   --------   -------------");
 
-    for &radius in &particle_sizes {
+    for &radius in &particlesizes {
         let diffusion_coeff = diffusion_coefficient(radius, temperature, viscosity);
         let correlation_time = momentum_correlation_time(radius, viscosity);
         let mean_square_displacement = 2.0 * diffusion_coeff * 1e18; // nm²/s
@@ -1202,17 +1202,17 @@ fn statistical_mechanics_mesoscopic() -> Result<(), Box<dyn std::error::Error>> 
     println!("Where L is system size, t = (g-g_c)/g_c, and f_χ is a universal function.");
     println!();
 
-    let system_sizes = vec![4, 8, 16, 32, 64];
+    let systemsizes = vec![4, 8, 16, 32, 64];
     let critical_exponents = (1.0, 0.75, 2.0); // ν, γ, β
 
     println!("FINITE-SIZE SCALING ANALYSIS:");
     println!("L    Correlation ξ/L   Susceptibility χL^(-γ/ν)   Order Parameter");
     println!("--   --------------   ----------------------   ----------------");
 
-    for &size in &system_sizes {
-        let correlation_ratio = finite_size_correlation(size as f64, critical_exponents.0);
-        let susceptibility_scaled = finite_size_susceptibility(size as f64, critical_exponents);
-        let order_parameter = finite_size_order_parameter(size as f64, critical_exponents.2);
+    for &size in &systemsizes {
+        let correlation_ratio = finitesize_correlation(size as f64, critical_exponents.0);
+        let susceptibility_scaled = finitesize_susceptibility(size as f64, critical_exponents);
+        let order_parameter = finitesize_order_parameter(size as f64, critical_exponents.2);
 
         println!(
             "{:2}   {:14.3}   {:22.3}   {:16.3}",
@@ -1443,15 +1443,15 @@ fn cosmic_ray_physics() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     println!("COSMIC RAY FLUX:");
-    println!("Region        E_min (eV)   E_max (eV)   Index γ   Flux at 10¹⁵ eV");
+    println!("Region        Emin (eV)   Emax (eV)   Index γ   Flux at 10¹⁵ eV");
     println!("------------  -----------  -----------  -------   ----------------");
 
-    for &(region, e_min, e_max, gamma) in &energy_ranges {
+    for &(region, emin, emax, gamma) in &energy_ranges {
         let flux_reference = cosmic_ray_flux(1e15, gamma);
 
         println!(
             "{:12}  {:11.0e}  {:11.0e}  {:7.1}   {:16.2e}",
-            region, e_min, e_max, gamma, flux_reference
+            region, emin, emax, gamma, flux_reference
         );
     }
     println!();
@@ -1462,10 +1462,10 @@ fn cosmic_ray_physics() -> Result<(), Box<dyn std::error::Error>> {
     println!("=====================================");
     println!();
     println!("Electromagnetic cascades follow the Heitler model:");
-    println!("N(t) = 2^t for t < t_max");
-    println!("N(t) = 2^t_max exp(-(t-t_max)/λ) for t > t_max");
+    println!("N(t) = 2^t for t < tmax");
+    println!("N(t) = 2^tmax exp(-(t-tmax)/λ) for t > tmax");
     println!();
-    println!("Where t = depth/X₀ and t_max ≈ ln(E₀/E_c)/ln(2)");
+    println!("Where t = depth/X₀ and tmax ≈ ln(E₀/E_c)/ln(2)");
     println!();
 
     let primary_energies = vec![1e12, 1e14, 1e16, 1e18]; // eV
@@ -1473,18 +1473,18 @@ fn cosmic_ray_physics() -> Result<(), Box<dyn std::error::Error>> {
     let radiation_length: f64 = 37.15; // g/cm² for air
 
     println!("ELECTROMAGNETIC SHOWER DEVELOPMENT:");
-    println!("E₀ (eV)     t_max   N_max       X_max (g/cm²)   Depth (km)");
+    println!("E₀ (eV)     tmax   Nmax       Xmax (g/cm²)   Depth (km)");
     println!("---------   -----   ---------   -------------   ----------");
 
     for &energy in &primary_energies {
-        let t_max = (energy / critical_energy).ln() / 2.0_f64.ln();
-        let n_max = 2.0_f64.powf(t_max);
-        let x_max = t_max * radiation_length;
-        let depth_km = x_max / 1030.0 * 10.0; // approximate conversion to km
+        let tmax = (energy / critical_energy).ln() / 2.0_f64.ln();
+        let nmax = 2.0_f64.powf(tmax);
+        let xmax = tmax * radiation_length;
+        let depth_km = xmax / 1030.0 * 10.0; // approximate conversion to km
 
         println!(
             "{:9.0e}   {:5.1}   {:9.1e}   {:13.1}   {:10.2}",
-            energy, t_max, n_max, x_max, depth_km
+            energy, tmax, nmax, xmax, depth_km
         );
     }
     println!();
@@ -1757,13 +1757,13 @@ fn quantum_information_experiments() -> Result<(), Box<dyn std::error::Error>> {
     println!("• Simulation: exponential for many-body quantum systems");
     println!();
 
-    let problem_sizes = vec![100, 1000, 10000, 100000];
+    let problemsizes = vec![100, 1000, 10000, 100000];
 
     println!("QUANTUM vs CLASSICAL COMPLEXITY:");
     println!("Problem Size   Classical (factoring)   Quantum (Shor)   Speedup");
     println!("------------   --------------------   ---------------   -------");
 
-    for &n in &problem_sizes {
+    for &n in &problemsizes {
         let classical_time = shor_classical_complexity(n as f64);
         let quantum_time = shor_quantum_complexity(n as f64);
         let speedup = classical_time / quantum_time;
@@ -1779,7 +1779,7 @@ fn quantum_information_experiments() -> Result<(), Box<dyn std::error::Error>> {
     println!("Database Size   Classical   Quantum (Grover)   Speedup");
     println!("-------------   ---------   ----------------   -------");
 
-    for &n in &problem_sizes {
+    for &n in &problemsizes {
         let classical_search = n as f64 / 2.0; // average case
         let quantum_search = (n as f64).sqrt() * PI / 4.0;
         let grover_speedup = classical_search / quantum_search;
@@ -2131,18 +2131,18 @@ fn momentum_correlation_time(radius: f64, viscosity: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn finite_size_correlation(size: f64, nu: f64) -> f64 {
+fn finitesize_correlation(size: f64, nu: f64) -> f64 {
     1.0 / size.powf(1.0 / nu)
 }
 
 #[allow(dead_code)]
-fn finite_size_susceptibility(size: f64, exponents: (f64, f64, f64)) -> f64 {
+fn finitesize_susceptibility(size: f64, exponents: (f64, f64, f64)) -> f64 {
     let (nu, gamma_beta) = exponents;
     size.powf(-gamma / nu)
 }
 
 #[allow(dead_code)]
-fn finite_size_order_parameter(size: f64, beta: f64) -> f64 {
+fn finitesize_order_parameter(size: f64, beta: f64) -> f64 {
     size.powf(-beta)
 }
 

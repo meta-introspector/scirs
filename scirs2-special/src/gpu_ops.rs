@@ -70,7 +70,7 @@ where
     use crate::gpu_context__manager::{get_gpu_pool, record_gpu_performance};
     use scirs2_core::gpu::GpuBackend;
 
-    // Validate _input dimensions
+    // Validate input dimensions
     if input.len() != output.len() {
         return Err(SpecialError::ValueError(
             "Input and output arrays must have the same length".to_string(),
@@ -79,16 +79,16 @@ where
 
     // Check if GPU should be used based on array size and system state
     let pool = get_gpu_pool();
-    let element_size = std::mem::size_of::<F>();
+    let elementsize = std::mem::size_of::<F>();
 
-    if !pool.should_use_gpu(_input.len(), element_size) {
+    if !pool.should_use_gpu(input.len(), elementsize) {
         #[cfg(feature = "gpu")]
         log::debug!(
             "Using CPU fallback for gamma computation (array size: {}, element size: {})",
             input.len(),
-            element_size
+            elementsize
         );
-        return gamma_cpu_fallback(_input, output);
+        return gamma_cpu_fallback(input, output);
     }
 
     // Try GPU execution with performance monitoring and intelligent retry
@@ -99,14 +99,14 @@ where
     while attempts < MAX_ATTEMPTS {
         attempts += 1;
 
-        match try_gamma_gpu_execution_enhanced(_input, output) {
+        match try_gamma_gpu_execution_enhanced(input, output) {
             Ok(backend_type) => {
                 let execution_time = start_time.elapsed();
                 record_gpu_performance(
                     backend_type,
                     execution_time,
                     true,
-                    input.len() * element_size,
+                    input.len() * elementsize,
                 );
                 #[cfg(feature = "gpu")]
                 log::debug!(
@@ -135,7 +135,7 @@ where
                         GpuBackend::Cpu,
                         start_time.elapsed(),
                         false,
-                        input.len() * element_size,
+                        input.len() * elementsize,
                     );
                     #[cfg(feature = "gpu")]
                     log::error!(
@@ -152,7 +152,7 @@ where
     }
 
     // Fall back to CPU implementation
-    gamma_cpu_fallback(_input, output)
+    gamma_cpu_fallback(input, output)
 }
 
 /// GPU-accelerated Bessel J0 function for arrays
@@ -169,9 +169,9 @@ where
     }
 
     // Try GPU execution first, fall back to CPU if GPU is not available
-    match try_j0_gpu_execution(_input, output) {
+    match try_j0_gpu_execution(input, output) {
         Ok(()) => Ok(()),
-        Err(SpecialError::GpuNotAvailable(_)) => j0_cpu_fallback(_input, output),
+        Err(SpecialError::GpuNotAvailable(_)) => j0_cpu_fallback(input, output),
         Err(e) => Err(e),
     }
 }
@@ -190,9 +190,9 @@ where
     }
 
     // Try GPU execution first, fall back to CPU if GPU is not available
-    match try_erf_gpu_execution(_input, output) {
+    match try_erf_gpu_execution(input, output) {
         Ok(()) => Ok(()),
-        Err(SpecialError::GpuNotAvailable(_)) => erf_cpu_fallback(_input, output),
+        Err(SpecialError::GpuNotAvailable(_)) => erf_cpu_fallback(input, output),
         Err(e) => Err(e),
     }
 }
@@ -220,9 +220,9 @@ where
     }
 
     // Try GPU execution first, fall back to CPU if GPU is not available
-    match try_digamma_gpu_execution(_input, output) {
+    match try_digamma_gpu_execution(input, output) {
         Ok(()) => Ok(()),
-        Err(SpecialError::GpuNotAvailable(_)) => digamma_cpu_fallback(_input, output),
+        Err(SpecialError::GpuNotAvailable(_)) => digamma_cpu_fallback(input, output),
         Err(e) => Err(e),
     }
 }
@@ -247,9 +247,9 @@ where
     }
 
     // Try GPU execution first, fall back to CPU if GPU is not available
-    match try_log_gamma_gpu_execution(_input, output) {
+    match try_log_gamma_gpu_execution(input, output) {
         Ok(()) => Ok(()),
-        Err(SpecialError::GpuNotAvailable(_)) => log_gamma_cpu_fallback(_input, output),
+        Err(SpecialError::GpuNotAvailable(_)) => log_gamma_cpu_fallback(input, output),
         Err(e) => Err(e),
     }
 }
@@ -275,7 +275,7 @@ where
             use scirs2_core::parallel_ops::IntoParallelRefIterator;
             use scirs2_core::parallel_ops::IntoParallelRefMutIterator;
 
-            _input
+            input
                 .as_slice()
                 .unwrap()
                 .par_iter()
@@ -310,7 +310,7 @@ where
             use scirs2_core::parallel_ops::IntoParallelRefIterator;
             use scirs2_core::parallel_ops::IntoParallelRefMutIterator;
 
-            _input
+            input
                 .as_slice()
                 .unwrap()
                 .par_iter()
@@ -344,7 +344,7 @@ where
             use scirs2_core::parallel_ops::IntoParallelRefIterator;
             use scirs2_core::parallel_ops::IntoParallelRefMutIterator;
 
-            _input
+            input
                 .as_slice()
                 .unwrap()
                 .par_iter()
@@ -820,8 +820,8 @@ fn create_empty_gpu_buffer(
     ctx: &GpuContext,
     size: usize,
 ) -> SpecialResult<scirs2_core::gpu::GpuBuffer<f64>> {
-    let byte_size = size * std::mem::size_of::<f32>();
-    ctx.create_buffer(byte_size)
+    let bytesize = size * std::mem::size_of::<f32>();
+    ctx.create_buffer(bytesize)
         .map_err(|e| SpecialError::ComputationError(format!("Failed to create GPU buffer: {}", e)))
 }
 
@@ -835,16 +835,16 @@ fn create_empty_gpu_buffer_typed<T>(
 where
     T: 'static,
 {
-    let byte_size = size * std::mem::size_of::<T>();
+    let bytesize = size * std::mem::size_of::<T>();
     #[cfg(feature = "gpu")]
     log::debug!(
         "Creating empty GPU buffer with {} bytes for {} elements of type {}",
-        byte_size,
+        bytesize,
         size,
         std::any::type_name::<T>()
     );
 
-    ctx.create_buffer(byte_size).map_err(|e| {
+    ctx.create_buffer(bytesize).map_err(|e| {
         SpecialError::ComputationError(format!("Failed to create empty typed GPU buffer: {}", e))
     })
 }
@@ -1093,8 +1093,8 @@ where
             #[cfg(feature = "gpu")]
             log::debug!("Reused cached output buffer for {} elements", size);
             // Create a new buffer with the same size since GpuBuffer doesn't support cloning
-            let byte_size = size * std::mem::size_of::<T>();
-            let new_buffer = ctx.create_buffer(byte_size).map_err(|e| {
+            let bytesize = size * std::mem::size_of::<T>();
+            let new_buffer = ctx.create_buffer(bytesize).map_err(|e| {
                 SpecialError::ComputationError(format!("Failed to create buffer: {}", e))
             })?;
             return Ok(new_buffer);
@@ -1102,10 +1102,10 @@ where
     }
 
     // Create new buffer
-    let byte_size = size * std::mem::size_of::<T>();
-    let byte_size = size * std::mem::size_of::<T>();
+    let bytesize = size * std::mem::size_of::<T>();
+    let bytesize = size * std::mem::size_of::<T>();
     let buffer = ctx
-        .create_buffer(byte_size)
+        .create_buffer(bytesize)
         .map_err(|e| SpecialError::ComputationError(format!("Failed to create buffer: {}", e)))?;
 
     {

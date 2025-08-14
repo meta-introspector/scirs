@@ -21,7 +21,7 @@ use std::fmt::{Debug, Display};
 /// # Arguments
 /// * `a` - Matrix A (m × n)
 /// * `b` - Right-hand side vector b (m × 1)
-/// * `sketch_size` - Size of the random sketch (typically O(n log n))
+/// * `sketchsize` - Size of the random sketch (typically O(n log n))
 /// * `iterations` - Number of refinement iterations
 ///
 /// # Returns
@@ -40,7 +40,7 @@ use std::fmt::{Debug, Display};
 pub fn randomized_least_squares<A>(
     a: &ArrayView2<A>,
     b: &ArrayView1<A>,
-    sketch_size: usize,
+    sketchsize: usize,
     iterations: usize,
 ) -> LinalgResult<Array1<A>>
 where
@@ -62,20 +62,20 @@ where
         ));
     }
 
-    if sketch_size < n {
+    if sketchsize < n {
         return Err(LinalgError::ShapeError(
-            "Sketch _size must be at least n".to_string(),
+            "Sketch size must be at least n".to_string(),
         ));
     }
 
-    // Generate random sketching matrix S (sketch_size × m)
+    // Generate random sketching matrix S (sketchsize × m)
     let mut rng = rand::rng();
     let normal = Normal::new(0.0, 1.0).unwrap();
 
-    let mut s = Array2::zeros((sketch_size, m));
-    let scale = A::from(1.0 / (sketch_size as f64).sqrt()).unwrap();
+    let mut s = Array2::zeros((sketchsize, m));
+    let scale = A::from(1.0 / (sketchsize as f64).sqrt()).unwrap();
 
-    for i in 0..sketch_size {
+    for i in 0..sketchsize {
         for j in 0..m {
             s[[i, j]] = A::from(normal.sample(&mut rng)).unwrap() * scale;
         }
@@ -205,13 +205,13 @@ where
             // Estimate Frobenius norm using random sampling
             let mut rng = rand::rng();
             let total_entries = (m * n) as f64;
-            let sample_size = num_samples.min(m * n);
-            let scale = A::from(total_entries / sample_size as f64).unwrap_or(A::one());
+            let samplesize = num_samples.min(m * n);
+            let scale = A::from(total_entries / samplesize as f64).unwrap_or(A::one());
 
             let mut sum_sq = A::zero();
             let mut sampled = std::collections::HashSet::new();
 
-            while sampled.len() < sample_size {
+            while sampled.len() < samplesize {
                 let i = rng.gen_range(0..m);
                 let j = rng.gen_range(0..n);
 
@@ -347,7 +347,7 @@ where
 /// # Arguments
 /// * `a` - System matrix
 /// * `b` - Right-hand side matrix (multiple RHS vectors)
-/// * `block_size` - Number of vectors to use in each block
+/// * `blocksize` - Number of vectors to use in each block
 /// * `max_iterations` - Maximum number of block iterations
 /// * `tolerance` - Convergence tolerance
 ///
@@ -357,7 +357,7 @@ where
 pub fn block_krylov_solve<A>(
     a: &ArrayView2<A>,
     b: &ArrayView2<A>,
-    block_size: usize,
+    blocksize: usize,
     max_iterations: usize,
     tolerance: A,
 ) -> LinalgResult<Array2<A>>
@@ -381,9 +381,9 @@ where
         ));
     }
 
-    if block_size == 0 || block_size > n_rhs {
+    if blocksize == 0 || blocksize > n_rhs {
         return Err(LinalgError::InvalidInputError(
-            "Invalid block _size".to_string(),
+            "Invalid block size".to_string(),
         ));
     }
 
@@ -393,8 +393,8 @@ where
     let mut x = Array2::zeros((n, n_rhs));
 
     // Process blocks of RHS vectors
-    for block_start in (0..n_rhs).step_by(block_size) {
-        let block_end = (block_start + block_size).min(n_rhs);
+    for block_start in (0..n_rhs).step_by(blocksize) {
+        let block_end = (block_start + blocksize).min(n_rhs);
         let block_b = b.slice(ndarray::s![.., block_start..block_end]);
 
         // Solve each system in the block
@@ -469,7 +469,7 @@ where
 /// # Arguments
 /// * `a` - Symmetric matrix
 /// * `k` - Number of eigenvalues to compute
-/// * `block_size` - Block size for Lanczos iteration
+/// * `blocksize` - Block size for Lanczos iteration
 /// * `oversampling` - Oversampling parameter
 /// * `max_iterations` - Maximum iterations
 ///
@@ -479,7 +479,7 @@ where
 pub fn randomized_block_lanczos<A>(
     a: &ArrayView2<A>,
     k: usize,
-    block_size: usize,
+    blocksize: usize,
     oversampling: usize,
     max_iterations: usize,
 ) -> LinalgResult<(Array1<A>, Array2<A>)>
@@ -500,8 +500,8 @@ where
         return Err(LinalgError::ShapeError("Matrix must be square".to_string()));
     }
 
-    let total_size = k + oversampling;
-    if total_size > n {
+    let totalsize = k + oversampling;
+    if totalsize > n {
         return Err(LinalgError::ShapeError(
             "k + oversampling must not exceed matrix dimension".to_string(),
         ));
@@ -511,9 +511,9 @@ where
     let mut rng = rand::rng();
     let normal = Normal::new(0.0, 1.0).unwrap();
 
-    let mut q = Array2::zeros((n, block_size));
+    let mut q = Array2::zeros((n, blocksize));
     for i in 0..n {
-        for j in 0..block_size {
+        for j in 0..blocksize {
             q[[i, j]] = A::from(normal.sample(&mut rng)).unwrap();
         }
     }
@@ -523,11 +523,11 @@ where
 
     // Build Krylov subspace
     let mut q_blocks = vec![q0_];
-    let mut t = Array2::zeros((total_size, total_size));
+    let mut t = Array2::zeros((totalsize, totalsize));
     let mut block_offsets = vec![0]; // Track cumulative column offsets
     block_offsets.push(q_blocks[0].ncols());
 
-    for iter in 0..max_iterations.min(total_size / block_size) {
+    for iter in 0..max_iterations.min(totalsize / blocksize) {
         if iter >= q_blocks.len() {
             break;
         }
@@ -549,9 +549,9 @@ where
 
             // Store in block tridiagonal matrix
             // h is prev_cols x curr_cols
-            if prev_offset + prev_cols <= total_size && curr_offset + curr_cols <= total_size {
-                let h_rows = h.nrows().min(total_size - prev_offset);
-                let h_cols = h.ncols().min(total_size - curr_offset);
+            if prev_offset + prev_cols <= totalsize && curr_offset + curr_cols <= totalsize {
+                let h_rows = h.nrows().min(totalsize - prev_offset);
+                let h_cols = h.ncols().min(totalsize - curr_offset);
 
                 if h_rows > 0 && h_cols > 0 {
                     t.slice_mut(ndarray::s![
@@ -581,9 +581,9 @@ where
             let r_rows = r_new.nrows().min(new_cols);
             let r_cols = r_new.ncols().min(curr_cols);
 
-            if next_offset < total_size && curr_offset < total_size && r_rows > 0 && r_cols > 0 {
-                let avail_rows = (total_size - next_offset).min(r_rows);
-                let avail_cols = (total_size - curr_offset).min(r_cols);
+            if next_offset < totalsize && curr_offset < totalsize && r_rows > 0 && r_cols > 0 {
+                let avail_rows = (totalsize - next_offset).min(r_rows);
+                let avail_cols = (totalsize - curr_offset).min(r_cols);
 
                 if avail_rows > 0 && avail_cols > 0 {
                     t.slice_mut(ndarray::s![
@@ -599,16 +599,16 @@ where
         }
 
         // Check if we have enough basis vectors
-        let current_basis_size = block_offsets.last().copied().unwrap_or(0);
-        if current_basis_size >= total_size {
+        let current_basissize = block_offsets.last().copied().unwrap_or(0);
+        if current_basissize >= totalsize {
             break;
         }
     }
 
     // Solve eigenvalue problem for tridiagonal matrix
-    let actual_size: usize = q_blocks.iter().map(|q| q.ncols()).sum();
-    let actual_size = actual_size.min(total_size);
-    let t_reduced = t.slice(ndarray::s![..actual_size, ..actual_size]);
+    let actualsize: usize = q_blocks.iter().map(|q| q.ncols()).sum();
+    let actualsize = actualsize.min(totalsize);
+    let t_reduced = t.slice(ndarray::s![..actualsize, ..actualsize]);
 
     // Use standard eigendecomposition on the reduced matrix
     let (eigvals, eigvecs_small) = crate::eigen::eigh(&t_reduced, None)?;

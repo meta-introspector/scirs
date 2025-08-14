@@ -752,7 +752,7 @@ impl CrossPlatformTester {
         let compatibility_matrix = CompatibilityMatrix::new();
 
         Ok(Self {
-            config: config,
+            config,
             platform_detector,
             test_registry,
             results,

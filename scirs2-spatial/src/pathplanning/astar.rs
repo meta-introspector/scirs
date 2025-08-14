@@ -32,10 +32,7 @@ pub struct Path<N> {
 impl<N> Path<N> {
     /// Create a new path with the given nodes and cost
     pub fn new(nodes: Vec<N>, cost: f64) -> Self {
-        Path {
-            nodes: nodes,
-            cost,
-        }
+        Path { nodes, cost }
     }
 
     /// Check if the path is empty
@@ -66,7 +63,7 @@ impl<N: Clone + Eq + Hash> Node<N> {
     /// Create a new node
     pub fn new(state: N, parent: Option<Rc<Node<N>>>, g: f64, h: f64) -> Self {
         Node {
-            state: state,
+            state,
             parent,
             g,
             h,
@@ -373,7 +370,7 @@ impl GridAStarPlanner {
     /// * `diagonalsallowed` - Whether diagonal movements are allowed
     pub fn new(grid: Vec<Vec<bool>>, diagonalsallowed: bool) -> Self {
         GridAStarPlanner {
-            grid: grid,
+            grid,
             diagonalsallowed,
         }
     }
@@ -481,7 +478,7 @@ impl ContinuousAStarPlanner {
     /// Create a new continuous space A* planner
     pub fn new(obstacles: Vec<Vec<[f64; 2]>>, step_size: f64, collisionthreshold: f64) -> Self {
         ContinuousAStarPlanner {
-            obstacles: obstacles,
+            obstacles,
             step_size,
             collisionthreshold,
         }

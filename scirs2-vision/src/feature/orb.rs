@@ -384,11 +384,11 @@ fn compute_brief_descriptor(
 
 /// Generate BRIEF sampling pattern
 #[allow(dead_code)]
-fn generate_brief_pattern() -> Vec<(isize, isize, isize, isize)> {
+fn generate_brief_pattern() -> Vec<(i32, i32, i32, i32)> {
     // In practice, use a pre-computed pattern
     // This is a simplified random pattern
     let mut pattern = Vec::new();
-    let max_offset = 12;
+    let max_offset = 12i32;
 
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
@@ -396,11 +396,11 @@ fn generate_brief_pattern() -> Vec<(isize, isize, isize, isize)> {
     let mut rng = StdRng::seed_from_u64(42); // Fixed seed for reproducibility
 
     for _ in 0..256 {
-        let x1 = rng.gen_range(-{ max_offset }..=max_offset) as isize;
-        let y1 = rng.gen_range(-{ max_offset }..=max_offset) as isize;
-        let x2 = rng.gen_range(-{ max_offset }..=max_offset) as isize;
-        let y2 = rng.gen_range(-{ max_offset }..=max_offset) as isize;
-        pattern.push((x1..y1, x2, y2));
+        let x1 = rng.gen_range(-max_offset..=max_offset);
+        let y1 = rng.gen_range(-max_offset..=max_offset);
+        let x2 = rng.gen_range(-max_offset..=max_offset);
+        let y2 = rng.gen_range(-max_offset..=max_offset);
+        pattern.push((x1, y1, x2, y2));
     }
 
     pattern

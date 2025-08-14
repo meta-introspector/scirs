@@ -416,7 +416,10 @@ impl<F: Float> GraphDebugger<F> {
     }
 
     /// Find potential optimization opportunities
-    pub fn analyze_optimizations(&self, graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
+    pub fn analyze_optimizations(
+        &self,
+        graph: &Graph<F>,
+    ) -> Result<Vec<String>, VisualizationError> {
         // Look for optimization opportunities:
         // - Common subexpressions
         // - Constant folding opportunities

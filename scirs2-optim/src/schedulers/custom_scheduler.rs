@@ -198,7 +198,9 @@ where
 {
     /// Create a new scheduler builder with the given initial learning rate
     pub fn new(initiallr: A) -> Self {
-        Self { initial_lr: initiallr }
+        Self {
+            initial_lr: initiallr,
+        }
     }
 
     /// Create a step decay scheduler

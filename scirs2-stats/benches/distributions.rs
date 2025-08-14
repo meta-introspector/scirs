@@ -18,9 +18,9 @@ fn bench_continuous_pdf(c: &mut Criterion) {
     let mut group = c.benchmark_group("continuous_pdf");
 
     // Test different sample sizes
-    let sample_sizes = vec![10, 100, 1000, 10000];
+    let samplesizes = vec![10, 100, 1000, 10000];
 
-    for &n in &sample_sizes {
+    for &n in &samplesizes {
         // Generate test points
         let x: Array1<f64> = Array1::linspace(-3.0, 3.0, n);
 
@@ -64,9 +64,9 @@ fn bench_continuous_pdf(c: &mut Criterion) {
 fn bench_continuous_cdf(c: &mut Criterion) {
     let mut group = c.benchmark_group("continuous_cdf");
 
-    let sample_sizes = vec![10, 100, 1000];
+    let samplesizes = vec![10, 100, 1000];
 
-    for &n in &sample_sizes {
+    for &n in &samplesizes {
         let x: Array1<f64> = Array1::linspace(-3.0, 3.0, n);
 
         // Normal distribution CDF
@@ -99,9 +99,9 @@ fn bench_continuous_cdf(c: &mut Criterion) {
 fn bench_random_generation(c: &mut Criterion) {
     let mut group = c.benchmark_group("random_generation");
 
-    let sample_sizes = vec![100, 1000, 10000, 100000];
+    let samplesizes = vec![100, 1000, 10000, 100000];
 
-    for &n in &sample_sizes {
+    for &n in &samplesizes {
         // Normal distribution
         group.bench_with_input(BenchmarkId::new("normal", n), &n, |b, &n| {
             let dist = norm(0.0, 1.0).unwrap();

@@ -243,7 +243,7 @@ pub enum QuantizedData1D {
 ///
 /// Returns None if the matrix does not use Int8 storage
 #[allow(dead_code)]
-pub fn get_quantized_matrix_2d_i8(matrix: &QuantizedMatrix) -> Option<&Array2<i8>> {
+pub fn get_quantizedmatrix_2d_i8(matrix: &QuantizedMatrix) -> Option<&Array2<i8>> {
     match &matrix.data {
         QuantizedData2D::Int8(data) => Some(data),
         _ => None,
@@ -1235,8 +1235,8 @@ where
     match method {
         QuantizationMethod::Int4 => {
             // For 4-bit signed integers, we need to handle the packing
-            let packed_size = length.div_ceil(2); // Round up division
-            let mut packed_data = Array1::zeros(packed_size);
+            let packedsize = length.div_ceil(2); // Round up division
+            let mut packed_data = Array1::zeros(packedsize);
 
             for i in 0..length {
                 let val_f32: f32 = vector[i].as_();
@@ -1260,8 +1260,8 @@ where
         }
         QuantizationMethod::UInt4 => {
             // For 4-bit unsigned integers, similar packing approach
-            let packed_size = length.div_ceil(2); // Round up division
-            let mut packed_data = Array1::zeros(packed_size);
+            let packedsize = length.div_ceil(2); // Round up division
+            let mut packed_data = Array1::zeros(packedsize);
 
             for i in 0..length {
                 let val_f32: f32 = vector[i].as_();
@@ -2216,26 +2216,26 @@ mod tests {
         let matrix = Array2::from_shape_vec((rows, cols), data).unwrap();
 
         // Test different quantization methods
-        let (int8_matrix, _) = quantize_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric);
-        let (int4_matrix, _) = quantize_matrix(&matrix.view(), 4, QuantizationMethod::Int4);
-        let (f16_matrix, _) = quantize_matrix(&matrix.view(), 16, QuantizationMethod::Float16);
-        let (bf16_matrix, _) = quantize_matrix(&matrix.view(), 16, QuantizationMethod::BFloat16);
+        let (int8matrix, _) = quantize_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric);
+        let (int4matrix, _) = quantize_matrix(&matrix.view(), 4, QuantizationMethod::Int4);
+        let (f16matrix, _) = quantize_matrix(&matrix.view(), 16, QuantizationMethod::Float16);
+        let (bf16matrix, _) = quantize_matrix(&matrix.view(), 16, QuantizationMethod::BFloat16);
 
         // Calculate storage sizes (in bytes)
-        let original_size = matrix.len() * std::mem::size_of::<f32>();
+        let originalsize = matrix.len() * std::mem::size_of::<f32>();
 
         // Check actual memory footprint ratios
-        println!("Original f32 size: {} bytes", original_size);
-        println!("Int8 storage: {} bytes", int8_matrix.data.len());
-        println!("Int4 storage: {} bytes", int4_matrix.data.len());
-        println!("Float16 storage: {} bytes", f16_matrix.data.len() * 2); // f16 is 2 bytes each
-        println!("BFloat16 storage: {} bytes", bf16_matrix.data.len() * 2); // bf16 is 2 bytes each
+        println!("Original f32 size: {} bytes", originalsize);
+        println!("Int8 storage: {} bytes", int8matrix.data.len());
+        println!("Int4 storage: {} bytes", int4matrix.data.len());
+        println!("Float16 storage: {} bytes", f16matrix.data.len() * 2); // f16 is 2 bytes each
+        println!("BFloat16 storage: {} bytes", bf16matrix.data.len() * 2); // bf16 is 2 bytes each
 
         // Verify expected ratios
-        assert!(int8_matrix.data.len() * 4 <= original_size); // 8-bit should be 25% of original (32-bit) size
-        assert!(int4_matrix.data.len() * 8 <= original_size); // 4-bit should be 12.5% of original size
-        assert!(f16_matrix.data.len() * 2 <= original_size); // 16-bit should be 50% of original size
-        assert!(bf16_matrix.data.len() * 2 <= original_size); // 16-bit should be 50% of original size
+        assert!(int8matrix.data.len() * 4 <= originalsize); // 8-bit should be 25% of original (32-bit) size
+        assert!(int4matrix.data.len() * 8 <= originalsize); // 4-bit should be 12.5% of original size
+        assert!(f16matrix.data.len() * 2 <= originalsize); // 16-bit should be 50% of original size
+        assert!(bf16matrix.data.len() * 2 <= originalsize); // 16-bit should be 50% of original size
     }
 
     #[test]
@@ -2471,7 +2471,7 @@ mod tests {
     }
 
     #[test]
-    fn test_float16_matrix_operations() {
+    fn test_float16matrix_operations() {
         let a = array![[1.0_f32, 2.0], [3.0, 4.0]];
         let b = array![[5.0_f32, 6.0], [7.0, 8.0]];
         let x = array![5.0_f32, 6.0];

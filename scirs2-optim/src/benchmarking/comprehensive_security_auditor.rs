@@ -493,7 +493,7 @@ impl ComprehensiveSecurityAuditor {
         let report_generator = SecurityReportGenerator::new();
 
         Self {
-            config: config,
+            config,
             dependency_scanner,
             vulnerability_db,
             policy_enforcer,
@@ -503,10 +503,7 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Run comprehensive security audit
-    pub fn audit_project<P: AsRef<Path>>(
-        &mut self,
-        projectpath: P,
-    ) -> Result<SecurityAuditResult> {
+    pub fn audit_project<P: AsRef<Path>>(&mut self, projectpath: P) -> Result<SecurityAuditResult> {
         let start_time = std::time::Instant::now();
         let projectpath = projectpath.as_ref();
 
@@ -542,8 +539,7 @@ impl ComprehensiveSecurityAuditor {
 
         // Run license compliance check
         if self.config.enable_license_compliance {
-            auditresult.license_compliance_results =
-                self.check_license_compliance(projectpath)?;
+            auditresult.license_compliance_results = self.check_license_compliance(projectpath)?;
         }
 
         // Run supply chain analysis
@@ -1137,10 +1133,7 @@ impl ComprehensiveSecurityAuditor {
         let mut total_risk = 0.0;
 
         // Vulnerability risk
-        let vuln_count = auditresult
-            .dependency_results
-            .vulnerable_dependencies
-            .len();
+        let vuln_count = auditresult.dependency_results.vulnerable_dependencies.len();
         if vuln_count > 0 {
             let vuln_risk = (vuln_count as f64 * 0.1).min(0.8);
             risk_factors.push(RiskFactor {
@@ -1792,10 +1785,7 @@ impl SecurityReportGenerator {
                 report.push_str("## Dependency Vulnerabilities\n");
                 report.push_str(&format!(
                     "Found {} vulnerable dependencies\n\n",
-                    auditresult
-                        .dependency_results
-                        .vulnerable_dependencies
-                        .len()
+                    auditresult.dependency_results.vulnerable_dependencies.len()
                 ));
 
                 report.push_str("## Static Analysis Issues\n");

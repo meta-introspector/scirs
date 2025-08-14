@@ -432,7 +432,7 @@ pub struct GraphStatistics<F> {
     /// Connected components
     pub num_components: usize,
     /// Average node size
-    pub average_node_size: F,
+    pub average_nodesize: F,
     /// Graph diameter
     pub graph_diameter: usize,
     /// Average path length
@@ -549,7 +549,7 @@ pub struct MemoryUsageStats {
     /// Average memory usage
     pub average_usage: usize,
     /// Complex size statistics
-    pub complex_sizes: HashMap<String, usize>,
+    pub complexsizes: HashMap<String, usize>,
 }
 
 /// Convergence metrics
@@ -600,7 +600,7 @@ where
             memory_usage: MemoryUsageStats {
                 peak_usage: 0,
                 average_usage: 0,
-                complex_sizes: HashMap::new(),
+                complexsizes: HashMap::new(),
             },
             convergence: ConvergenceMetrics {
                 iterations: 0,
@@ -615,14 +615,14 @@ where
         };
 
         Self {
-            config: config,
+            config,
             cache,
             performance: TopologicalPerformanceMetrics {
                 timing: HashMap::new(),
                 memory_usage: MemoryUsageStats {
                     peak_usage: 0,
                     average_usage: 0,
-                    complex_sizes: HashMap::new(),
+                    complexsizes: HashMap::new(),
                 },
                 convergence: ConvergenceMetrics {
                     iterations: 0,
@@ -1069,7 +1069,7 @@ where
             num_nodes: nodes.len(),
             num_edges: edges.len(),
             num_components: 1,
-            average_node_size: F::from(2.0).unwrap(),
+            average_nodesize: F::from(2.0).unwrap(),
             graph_diameter: 4,
             average_path_length: F::from(2.0).unwrap(),
             clustering_coefficient: F::zero(),

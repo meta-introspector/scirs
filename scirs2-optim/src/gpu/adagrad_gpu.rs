@@ -41,12 +41,7 @@ impl<A: Float + ScalarOperand + Debug> AdagradGpu<A> {
     /// Create with full configuration
     pub fn new_with_config(learning_rate: A, epsilon: A, weight_decay: A, lr_decay: A) -> Self {
         Self {
-            cpu_optimizer: Adagrad::new_with_config(
-                learning_rate,
-                epsilon,
-                weight_decay,
-                lr_decay,
-            ),
+            cpu_optimizer: Adagrad::new_with_config(learning_rate, epsilon, weight_decay, lr_decay),
             gpu_memory: None,
             kernel_handle: None,
             on_gpu: false,

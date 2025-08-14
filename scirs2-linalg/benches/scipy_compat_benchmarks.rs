@@ -12,7 +12,7 @@ use std::time::Duration;
 
 /// Generate a well-conditioned test matrix of given size
 #[allow(dead_code)]
-fn create_test_matrix(n: usize) -> Array2<f64> {
+fn create_testmatrix(n: usize) -> Array2<f64> {
     let mut matrix = Array2::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
@@ -34,7 +34,7 @@ fn create_test_vector(n: usize) -> Array1<f64> {
 
 /// Generate a symmetric positive definite matrix
 #[allow(dead_code)]
-fn create_spd_matrix(n: usize) -> Array2<f64> {
+fn create_spdmatrix(n: usize) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     a.t().dot(&a) + Array2::<f64>::eye(n) * (n as f64) // A^T * A + n*I
 }
@@ -45,7 +45,7 @@ fn bench_basic_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("basic_operations");
 
     for &size in &[10, 50, 100] {
-        let matrix = create_test_matrix(size);
+        let matrix = create_testmatrix(size);
 
         // Benchmark determinant calculation
         group.throughput(Throughput::Elements(size as u64 * size as u64));
@@ -72,11 +72,11 @@ fn bench_basic_operations(c: &mut Criterion) {
 
 /// Benchmark matrix norms
 #[allow(dead_code)]
-fn bench_matrix_norms(c: &mut Criterion) {
+fn benchmatrix_norms(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_norms");
 
     for &size in &[20, 100, 200] {
-        let matrix = create_test_matrix(size);
+        let matrix = create_testmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -174,12 +174,12 @@ fn bench_vector_norms(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_decompositions(c: &mut Criterion) {
     let mut group = c.benchmark_group("decompositions");
-    group.sample_size(10); // Reduce sample size for expensive operations
+    group.samplesize(10); // Reduce sample size for expensive operations
     group.measurement_time(Duration::from_secs(30));
 
     for &size in &[20, 50, 100] {
-        let matrix = create_test_matrix(size);
-        let spd_matrix = create_spd_matrix(size);
+        let matrix = create_testmatrix(size);
+        let spdmatrix = create_spdmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -215,13 +215,13 @@ fn bench_decompositions(c: &mut Criterion) {
         // Cholesky decomposition (SPD matrices only)
         group.bench_with_input(
             BenchmarkId::new("cholesky_compat", size),
-            &spd_matrix,
+            &spdmatrix,
             |b, m| b.iter(|| compat::cholesky(&m.view(), true, false, true).unwrap()),
         );
 
         group.bench_with_input(
             BenchmarkId::new("cholesky_basic", size),
-            &spd_matrix,
+            &spdmatrix,
             |b, m| b.iter(|| cholesky(&m.view(), None).unwrap()),
         );
     }
@@ -233,18 +233,18 @@ fn bench_decompositions(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_eigenvalues(c: &mut Criterion) {
     let mut group = c.benchmark_group("eigenvalues");
-    group.sample_size(10);
+    group.samplesize(10);
     group.measurement_time(Duration::from_secs(20));
 
     for &size in &[20, 50, 100] {
-        let spd_matrix = create_spd_matrix(size);
+        let spdmatrix = create_spdmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
         // Eigenvalues only
         group.bench_with_input(
             BenchmarkId::new("eigvals_compat", size),
-            &spd_matrix,
+            &spdmatrix,
             |b, m| {
                 b.iter(|| {
                     compat::eigh(
@@ -267,36 +267,32 @@ fn bench_eigenvalues(c: &mut Criterion) {
 
         group.bench_with_input(
             BenchmarkId::new("eigvals_basic", size),
-            &spd_matrix,
+            &spdmatrix,
             |b, m| b.iter(|| eigen::eigvalsh(&m.view(), None).unwrap()),
         );
 
         // Eigenvalues and eigenvectors (smaller sizes)
         if size <= 50 {
-            group.bench_with_input(
-                BenchmarkId::new("eigh_compat", size),
-                &spd_matrix,
-                |b, m| {
-                    b.iter(|| {
-                        compat::eigh(
-                            &m.view(),
-                            None,
-                            false,
-                            false,
-                            false,
-                            false,
-                            true,
-                            None,
-                            None,
-                            None,
-                            1,
-                        )
-                        .unwrap()
-                    })
-                },
-            );
+            group.bench_with_input(BenchmarkId::new("eigh_compat", size), &spdmatrix, |b, m| {
+                b.iter(|| {
+                    compat::eigh(
+                        &m.view(),
+                        None,
+                        false,
+                        false,
+                        false,
+                        false,
+                        true,
+                        None,
+                        None,
+                        None,
+                        1,
+                    )
+                    .unwrap()
+                })
+            });
 
-            group.bench_with_input(BenchmarkId::new("eigh_basic", size), &spd_matrix, |b, m| {
+            group.bench_with_input(BenchmarkId::new("eigh_basic", size), &spdmatrix, |b, m| {
                 b.iter(|| eigen::eigh(&m.view(), None).unwrap())
             });
         }
@@ -309,10 +305,10 @@ fn bench_eigenvalues(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_linear_solvers(c: &mut Criterion) {
     let mut group = c.benchmark_group("linear_solvers");
-    group.sample_size(20);
+    group.samplesize(20);
 
     for &size in &[20, 50, 100] {
-        let matrix = create_test_matrix(size);
+        let matrix = create_testmatrix(size);
         let rhs_2d = create_test_vector(size).insert_axis(Axis(1));
         let rhs_1d = create_test_vector(size);
 
@@ -373,14 +369,14 @@ fn bench_linear_solvers(c: &mut Criterion) {
 
 /// Benchmark matrix functions
 #[allow(dead_code)]
-fn bench_matrix_functions(c: &mut Criterion) {
+fn benchmatrix_functions(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_functions");
-    group.sample_size(10);
+    group.samplesize(10);
     group.measurement_time(Duration::from_secs(30));
 
     for &size in &[10, 20, 30] {
         // Smaller sizes for expensive matrix functions
-        let matrix = create_spd_matrix(size) * 0.1; // Scale down for numerical stability
+        let matrix = create_spdmatrix(size) * 0.1; // Scale down for numerical stability
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -420,11 +416,11 @@ fn bench_matrix_functions(c: &mut Criterion) {
 
 /// Benchmark condition numbers and matrix properties
 #[allow(dead_code)]
-fn bench_matrix_properties(c: &mut Criterion) {
+fn benchmatrix_properties(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_properties");
 
     for &size in &[20, 50, 100] {
-        let matrix = create_test_matrix(size);
+        let matrix = create_testmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -461,10 +457,10 @@ fn bench_matrix_properties(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_advanced_decompositions(c: &mut Criterion) {
     let mut group = c.benchmark_group("advanced_decompositions");
-    group.sample_size(10);
+    group.samplesize(10);
 
     for &size in &[10, 20, 30] {
-        let matrix = create_spd_matrix(size);
+        let matrix = create_spdmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -492,9 +488,9 @@ fn bench_utility_functions(c: &mut Criterion) {
     let mut group = c.benchmark_group("utility_functions");
 
     for &num_blocks in &[2, 5, 10] {
-        let block_size = 10;
+        let blocksize = 10;
         let blocks: Vec<Array2<f64>> = (0..num_blocks)
-            .map(|i| create_test_matrix(block_size + i % 3)) // Varying block sizes
+            .map(|i| create_testmatrix(blocksize + i % 3)) // Varying block sizes
             .collect();
         let block_views: Vec<_> = blocks.iter().map(|b| b.view()).collect();
 
@@ -525,7 +521,7 @@ fn bench_memory_allocation(c: &mut Criterion) {
         });
 
         // Benchmark with computation
-        let matrix = create_test_matrix(size);
+        let matrix = create_testmatrix(size);
         group.bench_with_input(
             BenchmarkId::new("det_with_allocation", size),
             &matrix,
@@ -545,12 +541,12 @@ fn bench_memory_allocation(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_scalability(c: &mut Criterion) {
     let mut group = c.benchmark_group("scalability");
-    group.sample_size(15);
+    group.samplesize(15);
 
     let sizes = [10, 20, 50, 100, 150];
 
     for &size in &sizes {
-        let matrix = create_test_matrix(size);
+        let matrix = create_testmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -579,13 +575,13 @@ fn bench_scalability(c: &mut Criterion) {
 criterion_group!(
     benches,
     bench_basic_operations,
-    bench_matrix_norms,
+    benchmatrix_norms,
     bench_vector_norms,
     bench_decompositions,
     bench_eigenvalues,
     bench_linear_solvers,
-    bench_matrix_functions,
-    bench_matrix_properties,
+    benchmatrix_functions,
+    benchmatrix_properties,
     bench_advanced_decompositions,
     bench_utility_functions,
     bench_memory_allocation,

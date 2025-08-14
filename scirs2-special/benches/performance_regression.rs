@@ -74,7 +74,7 @@ fn array_operation_benchmarks(c: &mut Criterion) {
         group.throughput(Throughput::Elements(size as u64));
 
         // Gamma function array operations
-        group.bench_with_input(
+        group.bench_withinput(
             BenchmarkId::new("gamma_array_scalar", size),
             &data,
             |b, data| {
@@ -89,7 +89,7 @@ fn array_operation_benchmarks(c: &mut Criterion) {
         );
 
         // Error function array operations
-        group.bench_with_input(
+        group.bench_withinput(
             BenchmarkId::new("erf_array_scalar", size),
             &data,
             |b, data| {
@@ -104,7 +104,7 @@ fn array_operation_benchmarks(c: &mut Criterion) {
         );
 
         // Bessel function array operations
-        group.bench_with_input(
+        group.bench_withinput(
             BenchmarkId::new("bessel_j0_array_scalar", size),
             &data,
             |b, data| {
@@ -465,8 +465,8 @@ fn stability_benchmarks(c: &mut Criterion) {
     group.bench_function("memory_allocation_stress", |b| {
         b.iter(|| {
             let mut total = 0.0;
-            for chunk_size in [1000, 5000, 10000, 50000].iter() {
-                let data: Vec<f64> = (0..*chunk_size).map(|i| 1.0 + i as f64 * 0.0001).collect();
+            for chunksize in [1000, 5000, 10000, 50000].iter() {
+                let data: Vec<f64> = (0..*chunksize).map(|i| 1.0 + i as f64 * 0.0001).collect();
                 for x in data {
                     total += gamma(black_box(x));
                 }

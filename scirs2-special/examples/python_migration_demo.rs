@@ -4,7 +4,7 @@
 //! SciPy special functions code to SciRS2.
 
 use ndarray::Array1;
-use scirs2__special::python_interop::{codegen, compat, examples, MigrationGuide};
+use scirs2_special::python_interop::{codegen, compat, examples, MigrationGuide};
 
 #[allow(dead_code)]
 fn main() {
@@ -111,7 +111,7 @@ result3 = j0(2.5)
     println!("\n6. Performance Comparison");
     println!("-------------------------");
 
-    use scirs2__special::python_interop::performance::PerformanceComparison;
+    use scirs2_special::python_interop::performance::PerformanceComparison;
 
     let comparisons = vec![
         PerformanceComparison {

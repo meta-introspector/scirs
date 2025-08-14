@@ -48,7 +48,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + FromPrimitive> GradientAcc
     /// Create a new gradient accumulator
     pub fn new(config: GradientAccumulationConfig) -> Self {
         Self {
-            config: config,
+            config,
             current_step: 0,
             stats: None,
         }

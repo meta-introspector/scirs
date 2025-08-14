@@ -113,7 +113,7 @@ where
                 None
             };
 
-            return Err(LinalgError::singular_matrix_with_suggestions(
+            return Err(LinalgError::singularmatrix_with_suggestions(
                 "LU decomposition",
                 (n, m),
                 condition_estimate,
@@ -502,20 +502,20 @@ where
 
 /// Extend a matrix to form a complete orthogonal basis
 #[allow(dead_code)]
-fn extend_to_orthogonal_basis<F>(_matrix: Array2<F>, targetsize: usize) -> Array2<F>
+fn extend_to_orthogonal_basis<F>(matrix: Array2<F>, targetsize: usize) -> Array2<F>
 where
     F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
 {
-    let current_cols = _matrix.ncols();
+    let current_cols = matrix.ncols();
     if current_cols >= targetsize {
-        return _matrix;
+        return matrix;
     }
 
-    let n_rows = _matrix.nrows();
+    let n_rows = matrix.nrows();
     let mut extended = Array2::<F>::zeros((n_rows, targetsize));
     extended
         .slice_mut(ndarray::s![.., 0..current_cols])
-        .assign(&_matrix);
+        .assign(&matrix);
 
     // Add orthogonal vectors using QR decomposition approach
     for k in current_cols..targetsize {

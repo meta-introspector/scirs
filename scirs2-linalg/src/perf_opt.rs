@@ -28,7 +28,7 @@ pub enum OptAlgorithm {
 #[derive(Debug, Clone)]
 pub struct OptConfig {
     /// Block size for cache-friendly algorithms
-    pub block_size: usize,
+    pub blocksize: usize,
     /// Threshold for using parallel algorithms
     pub parallel_threshold: usize,
     /// Number of threads for parallel operations (None = use default)
@@ -40,7 +40,7 @@ pub struct OptConfig {
 impl Default for OptConfig {
     fn default() -> Self {
         OptConfig {
-            block_size: 64,
+            blocksize: 64,
             parallel_threshold: 1000,
             num_threads: None,
             algorithm: OptAlgorithm::Blocked,
@@ -50,8 +50,8 @@ impl Default for OptConfig {
 
 impl OptConfig {
     /// Builder pattern methods
-    pub fn with_block_size(mut self, size: usize) -> Self {
-        self.block_size = size;
+    pub fn with_blocksize(mut self, size: usize) -> Self {
+        self.blocksize = size;
         self
     }
 
@@ -94,24 +94,24 @@ where
     }
 
     let mut c = Array2::zeros((m, n));
-    let block_size = config.block_size;
+    let blocksize = config.blocksize;
 
     match config.algorithm {
         OptAlgorithm::Standard => Ok(a.dot(b)),
         OptAlgorithm::Blocked => {
-            serial_blocked_matmul(a, b, &mut c, block_size)?;
+            serial_blocked_matmul(a, b, &mut c, blocksize)?;
             Ok(c)
         }
         OptAlgorithm::Parallel => {
-            parallel_blocked_matmul(a, b, &mut c, block_size)?;
+            parallel_blocked_matmul(a, b, &mut c, blocksize)?;
             Ok(c)
         }
         OptAlgorithm::Adaptive => {
             // Use parallel processing for large matrices
             if m * n > config.parallel_threshold {
-                parallel_blocked_matmul(a, b, &mut c, block_size)?;
+                parallel_blocked_matmul(a, b, &mut c, blocksize)?;
             } else if m * n > 10000 {
-                serial_blocked_matmul(a, b, &mut c, block_size)?;
+                serial_blocked_matmul(a, b, &mut c, blocksize)?;
             } else {
                 return Ok(a.dot(b));
             }
@@ -126,7 +126,7 @@ fn serial_blocked_matmul<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
     c: &mut Array2<F>,
-    block_size: usize,
+    blocksize: usize,
 ) -> LinalgResult<()>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -135,13 +135,13 @@ where
     let n = b.ncols();
 
     // Loop tiling for better cache performance
-    for ii in (0..m).step_by(block_size) {
-        for jj in (0..n).step_by(block_size) {
-            for kk in (0..k).step_by(block_size) {
+    for ii in (0..m).step_by(blocksize) {
+        for jj in (0..n).step_by(blocksize) {
+            for kk in (0..k).step_by(blocksize) {
                 // Process block
-                let i_end = cmp::min(ii + block_size, m);
-                let j_end = cmp::min(jj + block_size, n);
-                let k_end = cmp::min(kk + block_size, k);
+                let i_end = cmp::min(ii + blocksize, m);
+                let j_end = cmp::min(jj + blocksize, n);
+                let k_end = cmp::min(kk + blocksize, k);
 
                 for i in ii..i_end {
                     for j in jj..j_end {
@@ -165,7 +165,7 @@ fn parallel_blocked_matmul<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
     c: &mut Array2<F>,
-    block_size: usize,
+    blocksize: usize,
 ) -> LinalgResult<()>
 where
     F: Float + NumAssign + Sum + Send + Sync,
@@ -175,21 +175,21 @@ where
 
     // Create blocks for parallel processing
     let block_indices: Vec<(usize, usize)> = (0..m)
-        .step_by(block_size)
-        .flat_map(|i| (0..n).step_by(block_size).map(move |j| (i, j)))
+        .step_by(blocksize)
+        .flat_map(|i| (0..n).step_by(blocksize).map(move |j| (i, j)))
         .collect();
 
     // Process blocks in parallel and collect results using scirs2-core parallel operations
     let results: Vec<_> = parallel_map(&block_indices, |&(ii, jj)| {
-        let i_end = cmp::min(ii + block_size, m);
-        let j_end = cmp::min(jj + block_size, n);
+        let i_end = cmp::min(ii + blocksize, m);
+        let j_end = cmp::min(jj + blocksize, n);
 
         // Create local accumulator for this block
         let mut local_c = Array2::zeros((i_end - ii, j_end - jj));
 
         // Compute block multiplication
-        for kk in (0..k).step_by(block_size) {
-            let k_end = cmp::min(kk + block_size, k);
+        for kk in (0..k).step_by(blocksize) {
+            let k_end = cmp::min(kk + blocksize, k);
 
             for (i_local, i) in (0..(i_end - ii)).zip(ii..i_end) {
                 for (j_local, j) in (0..(j_end - jj)).zip(jj..j_end) {
@@ -208,8 +208,8 @@ where
 
     // Write results back to the main matrix
     for ((ii, jj), local_c) in results {
-        let i_end = cmp::min(ii + block_size, m);
-        let j_end = cmp::min(jj + block_size, n);
+        let i_end = cmp::min(ii + blocksize, m);
+        let j_end = cmp::min(jj + blocksize, n);
 
         for (i_local, i) in (0..(i_end - ii)).zip(ii..i_end) {
             for (j_local, j) in (0..(j_end - jj)).zip(jj..j_end) {
@@ -270,12 +270,12 @@ where
     let mut result = Array2::zeros((n, m));
 
     // Use blocked transpose for better cache performance
-    let block_size = 32;
+    let blocksize = 32;
 
-    for i in (0..m).step_by(block_size) {
-        for j in (0..n).step_by(block_size) {
-            let i_end = cmp::min(i + block_size, m);
-            let j_end = cmp::min(j + block_size, n);
+    for i in (0..m).step_by(blocksize) {
+        for j in (0..n).step_by(blocksize) {
+            let i_end = cmp::min(i + blocksize, m);
+            let j_end = cmp::min(j + blocksize, n);
 
             // Transpose block
             for ii in i..i_end {
@@ -541,7 +541,7 @@ pub mod decomposition_opt {
         /// Work array for computations
         pub work: Array1<F>,
         /// Temporary array for matrix operations
-        pub temp_matrix: Array2<F>,
+        pub tempmatrix: Array2<F>,
     }
 
     impl<F: Float> QRWorkspace<F> {
@@ -551,7 +551,7 @@ pub mod decomposition_opt {
             Self {
                 tau: Array1::zeros(min_dim),
                 work: Array1::zeros(maxcols * 64), // 64 is a reasonable work size multiplier
-                temp_matrix: Array2::zeros((_max_rows, maxcols)),
+                tempmatrix: Array2::zeros((_max_rows, maxcols)),
             }
         }
 
@@ -563,13 +563,13 @@ pub mod decomposition_opt {
                 self.tau = Array1::zeros(min_dim);
             }
 
-            let work_size = cols * 64;
-            if self.work.len() < work_size {
-                self.work = Array1::zeros(work_size);
+            let worksize = cols * 64;
+            if self.work.len() < worksize {
+                self.work = Array1::zeros(worksize);
             }
 
-            if self.temp_matrix.nrows() < rows || self.temp_matrix.ncols() < cols {
-                self.temp_matrix = Array2::zeros((rows, cols));
+            if self.tempmatrix.nrows() < rows || self.tempmatrix.ncols() < cols {
+                self.tempmatrix = Array2::zeros((rows, cols));
             }
         }
     }
@@ -587,7 +587,7 @@ pub mod decomposition_opt {
         workspace.resize_if_needed(m, n);
 
         // Copy input matrix to temporary workspace to avoid modifying original
-        let mut a_work = workspace.temp_matrix.slice_mut(s![..m, ..n]);
+        let mut a_work = workspace.tempmatrix.slice_mut(s![..m, ..n]);
         a_work.assign(a);
 
         // Perform in-place QR factorization
@@ -648,7 +648,7 @@ pub mod decomposition_opt {
         /// Pool of reusable vectors
         pub vectors: Vec<Array1<F>>,
         /// Maximum number of arrays to keep in pool
-        pub max_pool_size: usize,
+        pub max_poolsize: usize,
     }
 
     impl<F: Float> DecompositionMemoryPool<F> {
@@ -657,12 +657,12 @@ pub mod decomposition_opt {
             Self {
                 arrays: Vec::new(),
                 vectors: Vec::new(),
-                max_pool_size: _max_poolsize,
+                max_poolsize: _max_poolsize,
             }
         }
 
         /// Get a temporary array of the specified size, reusing from pool if available
-        pub fn get_array(&mut self, rows: usize, cols: usize) -> Array2<F> {
+        pub fn getarray(&mut self, rows: usize, cols: usize) -> Array2<F> {
             // Try to find a suitable array in the pool
             for (i, array) in self.arrays.iter().enumerate() {
                 if array.nrows() >= rows && array.ncols() >= cols {
@@ -679,8 +679,8 @@ pub mod decomposition_opt {
         }
 
         /// Return an array to the pool for reuse
-        pub fn return_array(&mut self, array: Array2<F>) {
-            if self.arrays.len() < self.max_pool_size {
+        pub fn returnarray(&mut self, array: Array2<F>) {
+            if self.arrays.len() < self.max_poolsize {
                 self.arrays.push(array);
             }
         }
@@ -703,7 +703,7 @@ pub mod decomposition_opt {
 
         /// Return a vector to the pool for reuse
         pub fn return_vector(&mut self, vector: Array1<F>) {
-            if self.vectors.len() < self.max_pool_size {
+            if self.vectors.len() < self.max_poolsize {
                 self.vectors.push(vector);
             }
         }
@@ -719,7 +719,7 @@ pub mod decomposition_opt {
     /// Uses blocked algorithms for better memory access patterns
     pub fn blocked_qr<F>(
         a: &ArrayView2<F>,
-        block_size: usize,
+        blocksize: usize,
     ) -> LinalgResult<(Array2<F>, Array2<F>)>
     where
         F: Float + NumAssign + Sum + Clone,
@@ -731,8 +731,8 @@ pub mod decomposition_opt {
         let min_dim = m.min(n);
 
         // Process matrix in blocks for better cache locality
-        for start_col in (0..min_dim).step_by(block_size) {
-            let end_col = (start_col + block_size).min(min_dim);
+        for start_col in (0..min_dim).step_by(blocksize) {
+            let end_col = (start_col + blocksize).min(min_dim);
             let _panel_width = end_col - start_col;
 
             // Apply Householder transformations to current panel
@@ -807,7 +807,7 @@ mod tests {
         let b = array![[5.0, 6.0], [7.0, 8.0]];
 
         let config = OptConfig {
-            block_size: 1,
+            blocksize: 1,
             parallel_threshold: 1000,
             num_threads: None,
             algorithm: OptAlgorithm::Blocked,
@@ -893,14 +893,14 @@ mod tests {
     }
 
     #[test]
-    fn test_large_matrix_blocked() {
+    fn test_largematrix_blocked() {
         // Test with larger matrix to verify blocking works correctly
         let n = 100;
         let a = Array2::from_shape_fn((n, n), |(i, j)| (i + j) as f64);
         let b = Array2::eye(n);
 
         let config = OptConfig {
-            block_size: 16,
+            blocksize: 16,
             parallel_threshold: 10000,
             num_threads: None,
             algorithm: OptAlgorithm::Blocked,

@@ -728,8 +728,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         }
 
         // Now update inter-level neighbors separately to avoid borrowing conflicts
-        let cellids: Vec<CellId> = if let Some(mesh_level) = self.mesh_hierarchy.levels.get(level)
-        {
+        let cellids: Vec<CellId> = if let Some(mesh_level) = self.mesh_hierarchy.levels.get(level) {
             mesh_level.cells.keys().cloned().collect()
         } else {
             Vec::new()
@@ -767,11 +766,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Update neighbor relationships across different mesh levels
-    fn update_interlevel_neighbors(
-        &mut self,
-        cellid: CellId,
-        level: usize,
-    ) -> IntegrateResult<()> {
+    fn update_interlevel_neighbors(&mut self, cellid: CellId, level: usize) -> IntegrateResult<()> {
         // Collect neighbor relationships first to avoid borrowing conflicts
         let mut coarser_neighbors = Vec::new();
         let mut finer_neighbors = Vec::new();

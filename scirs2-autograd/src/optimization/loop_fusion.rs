@@ -251,14 +251,17 @@ impl<F: Float> LoopFusionOptimizer<F> {
             }
 
             // Check if current operation is fusable
-            if let Some(fusableop) = LoopFusionOptimizer::<F>::classify_operation(current_op, graph) {
+            if let Some(fusableop) = LoopFusionOptimizer::<F>::classify_operation(current_op, graph)
+            {
                 visited.insert(current_op);
 
                 // For this example, assume shape is [100] - in practice would extract from graph
                 chain.add_operation(fusableop, vec![100]);
 
                 // Find next operation in chain
-                if let Some(nextop) = LoopFusionOptimizer::<F>::find_next_fusable_operation(current_op, graph) {
+                if let Some(nextop) =
+                    LoopFusionOptimizer::<F>::find_next_fusable_operation(current_op, graph)
+                {
                     current_op = nextop;
                 } else {
                     break;
@@ -272,20 +275,14 @@ impl<F: Float> LoopFusionOptimizer<F> {
     }
 
     /// Classify an operation as fusable or not
-    fn classify_operation(
-        op_idx: TensorID,
-        graph: &Graph<F>,
-    ) -> Option<FusableOperation<F>> {
+    fn classify_operation(op_idx: TensorID, graph: &Graph<F>) -> Option<FusableOperation<F>> {
         // In practice, would inspect the actual operation type
         // For this example, return a sample operation
         Some(FusableOperation::Add)
     }
 
     /// Find the next operation that can be fused with the current one
-    fn find_next_fusable_operation(
-        current_op: TensorID,
-        graph: &Graph<F>,
-    ) -> Option<TensorID> {
+    fn find_next_fusable_operation(current_op: TensorID, graph: &Graph<F>) -> Option<TensorID> {
         // In practice, would traverse _graph dependencies
         None
     }
@@ -326,10 +323,7 @@ impl<F: Float> FusedKernel<F> {
     pub fn from_chain(chain: FusionChain<F>) -> Result<Self, OpError> {
         let kernel_func = Self::compile_kernel(&chain)?;
 
-        Ok(Self {
-            chain,
-            kernel_func,
-        })
+        Ok(Self { chain, kernel_func })
     }
 
     /// Compile the fusion chain into an executable kernel

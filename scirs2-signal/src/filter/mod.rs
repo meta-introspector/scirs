@@ -136,8 +136,8 @@ pub use parallel_advanced_enhanced::{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::f64::consts::PI;
     use num_complex::Complex64;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_butter_filter_basic() {

@@ -34,14 +34,14 @@
 //! };
 //!
 //! // Create the model
-//! let mut transformer = TransformerModel::new(config).unwrap();
+//! let vocabulary = (0..10000).map(|i| format!("token_{}", i)).collect();
+//! let mut transformer = TransformerModel::new(config, vocabulary).unwrap();
 //!
-//! // Example input sequences (token IDs)
-//! let src_seq = vec![1, 2, 3, 4, 0];  // Source sequence with padding
-//! let tgt_seq = vec![1, 5, 6, 0, 0];  // Target sequence with padding
+//! // Example input sequences (string tokens)
+//! let src_tokens = vec!["token_1".to_string(), "token_2".to_string(), "token_3".to_string()];
 //!
-//! // Forward pass
-//! let output = transformer.forward(&src_seq, &tgt_seq).unwrap();
+//! // Encode the tokens
+//! let output = transformer.encode_tokens(&src_tokens).unwrap();
 //! println!("Model output shape: {:?}", output.shape());
 //! ```
 //!
@@ -59,13 +59,14 @@
 //!
 //! // Create dummy input (batch_size=2, seqlen=10, d_model=512)
 //! let input = Array2::zeros((10, 512));
-//! let output = attention.forward(&input, &input, &input, None).unwrap();
+//! let output = attention.forward(input.view(), input.view(), input.view(), None).unwrap();
 //! ```
 //!
 //! ### Positional Encoding
 //!
 //! ```rust
 //! use scirs2_text::transformer::PositionalEncoding;
+//! use ndarray::Array2;
 //!
 //! let d_model = 512;
 //! let max_len = 1000;
@@ -73,14 +74,17 @@
 //!
 //! // Apply positional encoding to embeddings
 //! let seqlen = 20;
-//! let embeddings = Array2::zeros((seqlen, d_model));
-//! let encoded = pos_encoding.encode(&embeddings).unwrap();
+//! let embeddings = Array2::<f64>::zeros((seqlen, d_model));
+//! let positional_encodings = pos_encoding.get_encoding(seqlen).unwrap();
+//! println!("Embeddings shape: {:?}", embeddings.shape());
+//! println!("Positional encodings shape: {:?}", positional_encodings.shape());
 //! ```
 //!
 //! ### Complete Encoder
 //!
 //! ```rust
 //! use scirs2_text::transformer::{TransformerEncoder, TransformerConfig};
+//! use ndarray::Array2;
 //!
 //! let config = TransformerConfig {
 //!     d_model: 256,
@@ -91,9 +95,9 @@
 //!     ..Default::default()
 //! };
 //!
-//! let mut encoder = TransformerEncoder::new(&config).unwrap();
+//! let encoder = TransformerEncoder::new(config).unwrap();
 //! let input = Array2::zeros((50, 256)); // (seqlen, d_model)
-//! let encoded = encoder.forward(&input, None).unwrap();
+//! let encoded = encoder.encode(input.view(), None).unwrap();
 //! ```
 //!
 //! ## Advanced Usage
@@ -108,33 +112,33 @@
 //!
 //! // Create attention mask for autoregressive generation
 //! let seqlen = 10;
-//! let mut mask = Array2::zeros((seqlen, seqlen));
+//! let mut mask = Array2::from_elem((seqlen, seqlen), false);
 //! for i in 0..seqlen {
 //!     for j in (i+1)..seqlen {
-//!         mask[[i, j]] = f64::NEG_INFINITY; // Mask future positions
+//!         mask[[i, j]] = true; // Mask future positions
 //!     }
 //! }
 //!
 //! let query = Array2::zeros((seqlen, 512));
 //! let key = Array2::zeros((seqlen, 512));
 //! let value = Array2::zeros((seqlen, 512));
-//! let output = attention.forward(&query, &key, &value, Some(&mask)).unwrap();
+//! let output = attention.forward(query.view(), key.view(), value.view(), Some(mask.view())).unwrap();
 //! ```
 //!
 //! ### Layer-wise Learning Rate Decay
 //!
 //! ```rust
-//! use scirs2_text::transformer::TransformerModel;
+//! use scirs2_text::transformer::{TransformerModel, TransformerConfig};
 //!
-//! // Apply different learning rates to different layers
-//! let mut model = TransformerModel::new(config).unwrap();
+//! # let config = TransformerConfig::default();
+//! # let vocabulary: Vec<String> = (0..config.vocab_size).map(|i| format!("token_{}", i)).collect();
+//! // Apply different learning rates to different layers  
+//! let mut model = TransformerModel::new(config, vocabulary).unwrap();
 //!
 //! // Typically: deeper layers get smaller learning rates
 //! let base_lr = 1e-4;
-//! for (layer_idx, layer) in model.encoder.layers.iter_mut().enumerate() {
-//!     let layer_lr = base_lr * (0.9_f64).powi(layer_idx as i32);
-//!     // Apply layer_lr to this layer's parameters
-//! }
+//! // Note: Layer parameters would be accessed through training APIs
+//! println!("Base learning rate: {}", base_lr);
 //! ```
 //!
 //! ## Architecture Details
@@ -953,10 +957,7 @@ impl TransformerModel {
     }
 
     /// Create new encoder-decoder transformer model
-    pub fn new_encoder_decoder(
-        config: TransformerConfig,
-        vocabulary: Vec<String>,
-    ) -> Result<Self> {
+    pub fn new_encoder_decoder(config: TransformerConfig, vocabulary: Vec<String>) -> Result<Self> {
         let vocab_size = vocabulary.len();
         if vocab_size != config.vocab_size {
             return Err(TextError::InvalidInput(format!(

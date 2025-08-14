@@ -934,7 +934,7 @@ impl<
         let rng = scirs2_core::random::rng();
 
         Ok(Self {
-            config: config,
+            config,
             lstm_network,
             history_buffer,
             meta_learner,
@@ -1147,8 +1147,7 @@ impl<
         // Update attention statistics if available
         if let Some(ref attention) = self.lstm_network.attention {
             if let Some(ref attentionweights) = attention.attentionweights {
-                self.metrics.attention_stats =
-                    Some(self.compute_attention_stats(attentionweights));
+                self.metrics.attention_stats = Some(self.compute_attention_stats(attentionweights));
             }
         }
     }
@@ -1446,7 +1445,7 @@ impl<T: Float + Default + Clone> HistoryBuffer<T> {
             losses: VecDeque::with_capacity(_maxlength),
             learning_rates: VecDeque::with_capacity(_maxlength),
             update_magnitudes: VecDeque::with_capacity(_maxlength),
-            _maxlength: _maxlength,
+            _maxlength,
             feature_cache: None,
         }
     }

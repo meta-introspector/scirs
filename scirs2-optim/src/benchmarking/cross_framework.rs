@@ -298,7 +298,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         })?;
 
         Ok(Self {
-            config: config,
+            config,
             test_functions: Vec::new(),
             python_scripts,
             results: Vec::new(),

@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 #[derive(Debug, Clone)]
 pub struct AdvancedErrorContext {
     pub operation_start: Instant,
-    pub data_size: usize,
+    pub datasize: usize,
     pub memory_usage_mb: f64,
     pub simd_enabled: bool,
     pub parallel_enabled: bool,
@@ -27,7 +27,7 @@ pub enum OptimizationSuggestion {
     },
     EnableParallel {
         reason: String,
-        min_data_size: usize,
+        mindatasize: usize,
     },
     ReduceMemoryUsage {
         current_mb: f64,
@@ -35,7 +35,7 @@ pub enum OptimizationSuggestion {
         strategy: String,
     },
     ChunkProcessing {
-        chunk_size: usize,
+        chunksize: usize,
         reason: String,
     },
     AlgorithmChange {
@@ -61,7 +61,7 @@ impl AdvancedErrorMessages {
 
         StatsError::computation(format!(
             "Memory exhaustion: operation requires {:.1}MB but only {:.1}MB available. \
-             Data _size: {} elements. Suggestion: {}",
+             Data size: {} elements. Suggestion: {}",
             required_mb, available_mb, datasize, suggestion
         ))
     }
@@ -77,9 +77,9 @@ impl AdvancedErrorMessages {
 
         let suggestion = match slowdown_factor {
             x if x > 10.0 => {
-                if !context.simd_enabled && context.data_size > 1000 {
+                if !context.simd_enabled && context.datasize > 1000 {
                     "Enable SIMD operations for significant performance improvement."
-                } else if !context.parallel_enabled && context.data_size > 10_000 {
+                } else if !context.parallel_enabled && context.datasize > 10_000 {
                     "Enable parallel processing for better performance on large datasets."
                 } else {
                     "Check for memory pressure or system resource contention."
@@ -96,7 +96,7 @@ impl AdvancedErrorMessages {
             expected_duration.as_secs_f64(),
             actual_duration.as_secs_f64(),
             slowdown_factor,
-            context.data_size,
+            context.datasize,
             context.simd_enabled,
             context.parallel_enabled,
             suggestion
@@ -128,7 +128,7 @@ impl AdvancedErrorMessages {
     /// SIMD/parallel optimization recommendations
     pub fn optimization_opportunity(
         operation: &str,
-        data_size: usize,
+        datasize: usize,
         current_performance: Duration,
         suggestion: OptimizationSuggestion,
     ) -> StatsError {
@@ -144,11 +144,11 @@ impl AdvancedErrorMessages {
             }
             OptimizationSuggestion::EnableParallel {
                 reason,
-                min_data_size,
+                mindatasize,
             } => {
                 format!(
-                    "Parallel processing recommended for {}: {} Minimum data _size: {}",
-                    operation, reason, min_data_size
+                    "Parallel processing recommended for {}: {} Minimum data size: {}",
+                    operation, reason, mindatasize
                 )
             }
             OptimizationSuggestion::ReduceMemoryUsage {
@@ -161,10 +161,10 @@ impl AdvancedErrorMessages {
                     operation, current_mb, suggested_mb, strategy
                 )
             }
-            OptimizationSuggestion::ChunkProcessing { chunk_size, reason } => {
+            OptimizationSuggestion::ChunkProcessing { chunksize, reason } => {
                 format!(
                     "Chunked processing recommended for {}: use chunks of {} elements. {}",
-                    operation, chunk_size, reason
+                    operation, chunksize, reason
                 )
             }
             OptimizationSuggestion::AlgorithmChange {
@@ -182,7 +182,7 @@ impl AdvancedErrorMessages {
         StatsError::computation(format!(
             "Optimization opportunity: {} Data , size: {} elements, Current time: {:.3}s",
             message,
-            data_size,
+            datasize,
             current_performance.as_secs_f64()
         ))
     }
@@ -231,15 +231,15 @@ impl AdvancedErrorRecovery {
         match error {
             StatsError::ComputationError(msg) if msg.contains("memory") => {
                 Some(RecoveryStrategy::ReduceMemoryFootprint {
-                    chunk_size: context.data_size / 4,
+                    chunksize: context.datasize / 4,
                     streaming: true,
                 })
             }
             StatsError::ComputationError(msg) if msg.contains("performance") => {
-                if !context.simd_enabled && context.data_size > 1000 {
+                if !context.simd_enabled && context.datasize > 1000 {
                     Some(RecoveryStrategy::EnableOptimizations {
                         simd: true,
-                        parallel: context.data_size > 10_000,
+                        parallel: context.datasize > 10_000,
                     })
                 } else {
                     Some(RecoveryStrategy::AlgorithmFallback {
@@ -266,16 +266,16 @@ impl AdvancedErrorRecovery {
         let mut suggestions = Vec::new();
 
         // Data size-based suggestions
-        if context.data_size > 1_000_000 {
+        if context.datasize > 1_000_000 {
             suggestions.push("Consider using chunked processing for large datasets".to_string());
         }
 
         // Performance-based suggestions
-        if !context.simd_enabled && context.data_size > 1000 {
+        if !context.simd_enabled && context.datasize > 1000 {
             suggestions.push("Enable SIMD operations for better performance".to_string());
         }
 
-        if !context.parallel_enabled && context.data_size > 10_000 {
+        if !context.parallel_enabled && context.datasize > 10_000 {
             suggestions.push("Enable parallel processing for large datasets".to_string());
         }
 
@@ -310,7 +310,7 @@ impl AdvancedErrorRecovery {
 #[derive(Debug, Clone)]
 pub enum RecoveryStrategy {
     ReduceMemoryFootprint {
-        chunk_size: usize,
+        chunksize: usize,
         streaming: bool,
     },
     EnableOptimizations {
@@ -329,7 +329,7 @@ pub enum RecoveryStrategy {
 
 /// Context builder for Advanced error handling
 pub struct AdvancedContextBuilder {
-    data_size: usize,
+    datasize: usize,
     operation_start: Instant,
     memory_usage_mb: f64,
     simd_enabled: bool,
@@ -337,9 +337,9 @@ pub struct AdvancedContextBuilder {
 }
 
 impl AdvancedContextBuilder {
-    pub fn new(_datasize: usize) -> Self {
+    pub fn new(datasize: usize) -> Self {
         Self {
-            data_size: _datasize,
+            datasize,
             operation_start: Instant::now(),
             memory_usage_mb: 0.0,
             simd_enabled: false,
@@ -365,7 +365,7 @@ impl AdvancedContextBuilder {
     pub fn build(self) -> AdvancedErrorContext {
         AdvancedErrorContext {
             operation_start: self.operation_start,
-            data_size: self.data_size,
+            datasize: self.datasize,
             memory_usage_mb: self.memory_usage_mb,
             simd_enabled: self.simd_enabled,
             parallel_enabled: self.parallel_enabled,
@@ -386,7 +386,7 @@ mod tests {
             .parallel_enabled(false)
             .build();
 
-        assert_eq!(context.data_size, 10000);
+        assert_eq!(context.datasize, 10000);
         assert_eq!(context.memory_usage_mb, 256.0);
         assert!(context.simd_enabled);
         assert!(!context.parallel_enabled);

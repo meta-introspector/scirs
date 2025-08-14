@@ -90,7 +90,7 @@ pub mod cuda {
         max_grid_dim: [i32; 3],
         shared_memory_per_block: usize,
         total_constant_memory: usize,
-        warp_size: i32,
+        warpsize: i32,
         max_pitch: usize,
         max_registers_per_block: i32,
         clock_rate: i32,
@@ -107,7 +107,7 @@ pub mod cuda {
         unified_addressing: bool,
         memory_clock_rate: i32,
         memory_bus_width: i32,
-        l2_cache_size: usize,
+        l2_cachesize: usize,
         max_threads_per_multiprocessor: i32,
         stream_priorities_supported: bool,
         global_l1_cache_supported: bool,
@@ -156,7 +156,7 @@ pub mod cuda {
                     max_grid_dim: [2147483647, 65535, 65535],
                     shared_memory_per_block: 49152,
                     total_constant_memory: 65536,
-                    warp_size: 32,
+                    warpsize: 32,
                     max_pitch: 2147483647,
                     max_registers_per_block: 65536,
                     clock_rate: 1590000, // 1.59 GHz
@@ -173,7 +173,7 @@ pub mod cuda {
                     unified_addressing: true,
                     memory_clock_rate: 7000000, // 7 GHz effective
                     memory_bus_width: 352,
-                    l2_cache_size: 5767168, // 5.5 MB
+                    l2_cachesize: 5767168, // 5.5 MB
                     max_threads_per_multiprocessor: 1024,
                     stream_priorities_supported: true,
                     global_l1_cache_supported: true,
@@ -261,12 +261,12 @@ pub mod cuda {
                         supports_fp16: cuda_device.compute_capability.0 >= 5
                             || (cuda_device.compute_capability.0 == 5
                                 && cuda_device.compute_capability.1 >= 3), // Maxwell and later
-                        max_work_group_size: cuda_device.max_threads_per_block as usize,
+                        max_work_groupsize: cuda_device.max_threads_per_block as usize,
                         memory_bandwidth,
-                        l2_cache_size: cuda_device.l2_cache_size,
+                        l2_cachesize: cuda_device.l2_cachesize,
                         shared_memory_per_block: cuda_device.shared_memory_per_block,
                         registers_per_block: cuda_device.max_registers_per_block as u32,
-                        warp_size: cuda_device.warp_size as u32,
+                        warpsize: cuda_device.warpsize as u32,
                         max_threads_per_mp: cuda_device.max_threads_per_multiprocessor as u32,
                         multiprocessor_count: 68, // Mock SM count
                         supports_tensor_cores: cuda_device.compute_capability.0 >= 7, // Volta and later
@@ -415,12 +415,12 @@ pub mod cuda {
                         supports_fp16: self.device_info.compute_capability.0 >= 5
                             || (self.device_info.compute_capability.0 == 5
                                 && self.device_info.compute_capability.1 >= 3),
-                        max_work_group_size: self.device_info.max_threads_per_block as usize,
+                        max_work_groupsize: self.device_info.max_threads_per_block as usize,
                         memory_bandwidth,
-                        l2_cache_size: self.device_info.l2_cache_size,
+                        l2_cachesize: self.device_info.l2_cachesize,
                         shared_memory_per_block: self.device_info.shared_memory_per_block,
                         registers_per_block: self.device_info.max_registers_per_block as u32,
-                        warp_size: self.device_info.warp_size as u32,
+                        warpsize: self.device_info.warpsize as u32,
                         max_threads_per_mp: self.device_info.max_threads_per_multiprocessor as u32,
                         multiprocessor_count: 68,
                         supports_tensor_cores: self.device_info.compute_capability.0 >= 7,
@@ -536,11 +536,11 @@ pub mod cuda {
     unsafe impl<T> Sync for CudaBuffer<T> {}
 
     impl<T: Clone + Send + Sync + Copy> CudaBuffer<T> {
-        fn new(_size: usize, deviceid: i32) -> LinalgResult<Self> {
-            let byte_size = _size * std::mem::size_of::<T>();
+        fn new(size: usize, deviceid: i32) -> LinalgResult<Self> {
+            let bytesize = size * std::mem::size_of::<T>();
             let mut device_ptr = ptr::null_mut();
 
-            let result = cuda_malloc(&mut device_ptr, byte_size);
+            let result = cuda_malloc(&mut device_ptr, bytesize);
             if result != CUDA_SUCCESS {
                 return Err(LinalgError::ComputationError(format!(
                     "Failed to allocate CUDA buffer: error code {}",
@@ -585,11 +585,11 @@ pub mod cuda {
                 )));
             }
 
-            let byte_size = data.len() * std::mem::size_of::<T>();
+            let bytesize = data.len() * std::mem::size_of::<T>();
             let result = cuda_memcpy(
                 self.device_ptr,
                 data.as_ptr() as *const std::ffi::c_void,
-                byte_size,
+                bytesize,
                 1, // cudaMemcpyHostToDevice
             );
 
@@ -612,11 +612,11 @@ pub mod cuda {
                 )));
             }
 
-            let byte_size = data.len() * std::mem::size_of::<T>();
+            let bytesize = data.len() * std::mem::size_of::<T>();
             let result = cuda_memcpy(
                 data.as_mut_ptr() as *mut std::ffi::c_void,
                 self.device_ptr,
-                byte_size,
+                bytesize,
                 2, // cudaMemcpyDeviceToHost
             );
 
@@ -761,7 +761,7 @@ pub mod opencl {
         buffer: ClMem,
         _blocking: ClBool,
         offset: usize,
-        _size: usize,
+        size: usize,
         ptr: *const std::ffi::c_void,
     ) -> ClInt {
         CL_SUCCESS
@@ -772,7 +772,7 @@ pub mod opencl {
         buffer: ClMem,
         _blocking: ClBool,
         offset: usize,
-        _size: usize,
+        size: usize,
         ptr: *mut std::ffi::c_void,
     ) -> ClInt {
         CL_SUCCESS
@@ -817,9 +817,9 @@ pub mod opencl {
         device_version: String,
         opencl_c_version: String,
         max_compute_units: ClUInt,
-        max_work_group_size: usize,
+        max_work_groupsize: usize,
         max_work_item_dimensions: ClUInt,
-        max_work_item_sizes: Vec<usize>,
+        max_work_itemsizes: Vec<usize>,
         preferred_vector_width_char: ClUInt,
         preferred_vector_width_short: ClUInt,
         preferred_vector_width_int: ClUInt,
@@ -828,7 +828,7 @@ pub mod opencl {
         preferred_vector_width_double: ClUInt,
         max_clock_frequency: ClUInt,
         address_bits: ClUInt,
-        max_mem_alloc_size: ClULong,
+        max_mem_allocsize: ClULong,
         image_support: ClBool,
         max_read_image_args: ClUInt,
         max_write_image_args: ClUInt,
@@ -838,18 +838,18 @@ pub mod opencl {
         image3d_max_height: usize,
         image3d_max_depth: usize,
         max_samplers: ClUInt,
-        max_parameter_size: usize,
+        max_parametersize: usize,
         mem_base_addr_align: ClUInt,
-        min_data_type_align_size: ClUInt,
+        min_data_type_alignsize: ClUInt,
         single_fp_config: ClULong,
         global_mem_cache_type: ClUInt,
-        global_mem_cacheline_size: ClUInt,
-        global_mem_cache_size: ClULong,
-        global_mem_size: ClULong,
-        max_constant_buffer_size: ClULong,
+        global_mem_cachelinesize: ClUInt,
+        global_mem_cachesize: ClULong,
+        global_memsize: ClULong,
+        max_constant_buffersize: ClULong,
         max_constant_args: ClUInt,
         local_mem_type: ClUInt,
-        local_mem_size: ClULong,
+        local_memsize: ClULong,
         error_correction_support: ClBool,
         profiling_timer_resolution: usize,
         endian_little: ClBool,
@@ -962,9 +962,9 @@ pub mod opencl {
                 device_version: "OpenCL 2.1".to_string(),
                 opencl_c_version: "OpenCL C 2.0".to_string(),
                 max_compute_units: 32,
-                max_work_group_size: 1024,
+                max_work_groupsize: 1024,
                 max_work_item_dimensions: 3,
-                max_work_item_sizes: vec![1024, 1024, 64],
+                max_work_itemsizes: vec![1024, 1024, 64],
                 preferred_vector_width_char: 16,
                 preferred_vector_width_short: 8,
                 preferred_vector_width_int: 4,
@@ -973,7 +973,7 @@ pub mod opencl {
                 preferred_vector_width_double: 2,
                 max_clock_frequency: 1500,
                 address_bits: 64,
-                max_mem_alloc_size: 2 * 1024 * 1024 * 1024, // 2GB
+                max_mem_allocsize: 2 * 1024 * 1024 * 1024, // 2GB
                 image_support: 1,
                 max_read_image_args: 128,
                 max_write_image_args: 64,
@@ -983,18 +983,18 @@ pub mod opencl {
                 image3d_max_height: 2048,
                 image3d_max_depth: 2048,
                 max_samplers: 16,
-                max_parameter_size: 1024,
+                max_parametersize: 1024,
                 mem_base_addr_align: 1024,
-                min_data_type_align_size: 128,
+                min_data_type_alignsize: 128,
                 single_fp_config: 0x3F,   // Mock FP config
                 global_mem_cache_type: 2, // CL_READ_WRITE_CACHE
-                global_mem_cacheline_size: 64,
-                global_mem_cache_size: 2 * 1024 * 1024,  // 2MB
-                global_mem_size: 8 * 1024 * 1024 * 1024, // 8GB
-                max_constant_buffer_size: 64 * 1024,     // 64KB
+                global_mem_cachelinesize: 64,
+                global_mem_cachesize: 2 * 1024 * 1024,  // 2MB
+                global_memsize: 8 * 1024 * 1024 * 1024, // 8GB
+                max_constant_buffersize: 64 * 1024,     // 64KB
                 max_constant_args: 8,
-                local_mem_type: 1,         // CL_LOCAL
-                local_mem_size: 48 * 1024, // 48KB
+                local_mem_type: 1,        // CL_LOCAL
+                local_memsize: 48 * 1024, // 48KB
                 error_correction_support: 0,
                 profiling_timer_resolution: 1,
                 endian_little: 1,
@@ -1059,18 +1059,18 @@ pub mod opencl {
                     GpuDeviceInfo {
                         device_type,
                         name: format!("{} ({})", opencl_device.name, opencl_device.vendor),
-                        total_memory: opencl_device.global_mem_size as usize,
+                        total_memory: opencl_device.global_memsize as usize,
                         compute_units: opencl_device.max_compute_units,
                         clock_frequency: opencl_device.max_clock_frequency,
                         supports_fp64: self.supports_double_precision(),
                         supports_fp16: self.supports_half_precision(),
-                        max_work_group_size: opencl_device.max_work_group_size,
+                        max_work_groupsize: opencl_device.max_work_groupsize,
                         memory_bandwidth,
-                        l2_cache_size: opencl_device.global_mem_cache_size as usize,
-                        shared_memory_per_block: opencl_device.local_mem_size as usize,
+                        l2_cachesize: opencl_device.global_mem_cachesize as usize,
+                        shared_memory_per_block: opencl_device.local_memsize as usize,
                         registers_per_block: 0, // OpenCL doesn't expose this directly
-                        warp_size: opencl_device.preferred_vector_width_float, // Approximate
-                        max_threads_per_mp: opencl_device.max_work_group_size as u32,
+                        warpsize: opencl_device.preferred_vector_width_float, // Approximate
+                        max_threads_per_mp: opencl_device.max_work_groupsize as u32,
                         multiprocessor_count: opencl_device.max_compute_units,
                         supports_tensor_cores: false, // Most OpenCL devices don't have tensor cores
                         supports_mixed_precision: self.supports_half_precision(),
@@ -1189,18 +1189,18 @@ pub mod opencl {
                     CACHED_INFO = Some(GpuDeviceInfo {
                         device_type: GpuDeviceType::OpenCl,
                         name: format!("{} ({})", opencl_device.name, opencl_device.vendor),
-                        total_memory: opencl_device.global_mem_size as usize,
+                        total_memory: opencl_device.global_memsize as usize,
                         compute_units: opencl_device.max_compute_units,
                         clock_frequency: opencl_device.max_clock_frequency,
                         supports_fp64: true, // Mock - would check extensions
                         supports_fp16: true, // Mock - would check extensions
-                        max_work_group_size: opencl_device.max_work_group_size,
+                        max_work_groupsize: opencl_device.max_work_groupsize,
                         memory_bandwidth,
-                        l2_cache_size: opencl_device.global_mem_cache_size as usize,
-                        shared_memory_per_block: opencl_device.local_mem_size as usize,
+                        l2_cachesize: opencl_device.global_mem_cachesize as usize,
+                        shared_memory_per_block: opencl_device.local_memsize as usize,
                         registers_per_block: 0,
-                        warp_size: opencl_device.preferred_vector_width_float,
-                        max_threads_per_mp: opencl_device.max_work_group_size as u32,
+                        warpsize: opencl_device.preferred_vector_width_float,
+                        max_threads_per_mp: opencl_device.max_work_groupsize as u32,
                         multiprocessor_count: opencl_device.max_compute_units,
                         supports_tensor_cores: false,
                         supports_mixed_precision: true,
@@ -1225,7 +1225,7 @@ pub mod opencl {
 
         fn available_memory(&self) -> LinalgResult<usize> {
             // Mock implementation - would query actual available memory
-            Ok(self.context_data.device_info.global_mem_size as usize / 2)
+            Ok(self.context_data.device_info.global_memsize as usize / 2)
         }
     }
 
@@ -1309,9 +1309,9 @@ pub mod opencl {
             context: ClContext,
             command_queue: ClCommandQueue,
         ) -> LinalgResult<Self> {
-            let byte_size = size * std::mem::size_of::<T>();
+            let bytesize = size * std::mem::size_of::<T>();
 
-            let (result, buffer) = cl_create_buffer(context, CL_MEM_READ_WRITE, byte_size);
+            let (result, buffer) = cl_create_buffer(context, CL_MEM_READ_WRITE, bytesize);
             if result != CL_SUCCESS {
                 return Err(LinalgError::ComputationError(format!(
                     "Failed to create OpenCL buffer: error code {}",
@@ -1347,13 +1347,13 @@ pub mod opencl {
                 )));
             }
 
-            let byte_size = data.len() * std::mem::size_of::<T>();
+            let bytesize = data.len() * std::mem::size_of::<T>();
             let result = cl_enqueue_write_buffer(
                 self.command_queue,
                 self.buffer,
                 1, // blocking
                 0, // offset
-                byte_size,
+                bytesize,
                 data.as_ptr() as *const std::ffi::c_void,
             );
 
@@ -1376,13 +1376,13 @@ pub mod opencl {
                 )));
             }
 
-            let byte_size = data.len() * std::mem::size_of::<T>();
+            let bytesize = data.len() * std::mem::size_of::<T>();
             let result = cl_enqueue_read_buffer(
                 self.command_queue,
                 self.buffer,
                 1, // blocking
                 0, // offset
-                byte_size,
+                bytesize,
                 data.as_mut_ptr() as *mut std::ffi::c_void,
             );
 
@@ -1557,12 +1557,12 @@ impl CpuFallbackBackend {
                 clock_frequency: 3000, // 3GHz estimate
                 supports_fp64: true,
                 supports_fp16: false,
-                max_work_group_size: 1024,
+                max_work_groupsize: 1024,
                 memory_bandwidth: 100.0, // CPU memory bandwidth estimate
-                l2_cache_size: 32 * 1024 * 1024, // 32MB L2 cache estimate
+                l2_cachesize: 32 * 1024 * 1024, // 32MB L2 cache estimate
                 shared_memory_per_block: 0, // No shared memory concept for CPU
                 registers_per_block: 0,
-                warp_size: 1, // No SIMD grouping for CPU
+                warpsize: 1, // No SIMD grouping for CPU
                 max_threads_per_mp: 1,
                 multiprocessor_count: num_cpus::get() as u32,
                 supports_tensor_cores: false,
@@ -1639,7 +1639,7 @@ struct CpuBuffer<T> {
 impl<T: Clone + Send + Sync> CpuBuffer<T> {
     fn new(size: usize) -> Self {
         Self {
-            data: Vec::with_capacity(_size),
+            data: Vec::with_capacity(size),
         }
     }
 }

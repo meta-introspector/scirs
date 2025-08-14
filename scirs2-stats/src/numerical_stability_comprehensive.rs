@@ -169,7 +169,7 @@ impl NumericalStabilityTester {
         
         // Test with mixed-scale data
         if self.config.test_mixed_scale {
-            self.test_mixed_scale_data();
+            self.test_mixed_scaledata();
         }
         
         // Test with special values
@@ -212,8 +212,8 @@ impl NumericalStabilityTester {
     /// Test mean calculation stability
     fn test_mean_stability(&mut self) {
         // Test with constant values
-        let constant_data = vec![1e10; 1000];
-        self.run_test("mean_constant_large", "basic_statistics", &constant_data, |data| {
+        let constantdata = vec![1e10; 1000];
+        self.run_test("mean_constant_large", "basic_statistics", &constantdata, |data| {
             let arr = Array1::from_vec(data.clone());
             crate::descriptive::mean(&arr.view()).map(|mean| {
                 let expected = data[0];
@@ -231,8 +231,8 @@ impl NumericalStabilityTester {
         });
 
         // Test with alternating signs and cancellation
-        let alternating_data: Vec<f64> = (0..1000).map(|i| if i % 2 == 0 { 1e15 } else { -1e15 + 1.0 }).collect();
-        self.run_test("mean_alternating_cancellation", "basic_statistics", &alternating_data, |data| {
+        let alternatingdata: Vec<f64> = (0..1000).map(|i| if i % 2 == 0 { 1e15 } else { -1e15 + 1.0 }).collect();
+        self.run_test("mean_alternating_cancellation", "basic_statistics", &alternatingdata, |data| {
             let arr = Array1::from_vec(data.clone());
             crate::descriptive::mean(&arr.view()).map(|mean| {
                 // Should be close to 0.5 due to the +1.0 in odd elements
@@ -256,8 +256,8 @@ impl NumericalStabilityTester {
         });
 
         // Test Welford's algorithm stability
-        let large_scale_data: Vec<f64> = (0..1000).map(|i| 1e9 + rand::rng().random::<f64>()).collect();
-        self.run_test("variance_welford_large_scale", "basic_statistics", &large_scale_data, |data| {
+        let large_scaledata: Vec<f64> = (0..1000).map(|i| 1e9 + rand::rng().random::<f64>()).collect();
+        self.run_test("variance_welford_large_scale", "basic_statistics", &large_scaledata, |data| {
             let arr = Array1::from_vec(data.clone());
             let result1 = crate::descriptive::var(&arr.view(), 1, None);
             let result2 = crate::memory_efficient::welford_variance(&arr.view(), 1);
@@ -295,9 +295,9 @@ impl NumericalStabilityTester {
     /// Test higher moments (skewness, kurtosis) stability
     fn test_higher_moments_stability(&mut self) {
         // Test with symmetric data (skewness should be near zero)
-        let symmetric_data: Vec<f64> = (-500..=500).map(|i| i as f64).collect();
+        let symmetricdata: Vec<f64> = (-500..=500).map(|i| i as f64).collect();
         
-        self.run_test("skewness_symmetric_data", "higher_moments", &symmetric_data, |data| {
+        self.run_test("skewness_symmetricdata", "higher_moments", &symmetricdata, |data| {
             let arr = Array1::from_vec(data.clone());
             crate::descriptive::skew(&arr.view(), false, None).map(|skew| {
                 skew.abs() < 1e-10
@@ -305,12 +305,12 @@ impl NumericalStabilityTester {
         });
 
         // Test with normal-like data (kurtosis should be near 3)
-        let normal_data: Vec<f64> = (0..10000).map(|_| {
+        let normaldata: Vec<f64> = (0..10000).map(|_| {
             let normal = Normal::new(0.0, 1.0).unwrap();
             normal.sample(&mut self.rng)
         }).collect();
         
-        self.run_test("kurtosis_normal_data", "higher_moments", &normal_data, |data| {
+        self.run_test("kurtosis_normaldata", "higher_moments", &normaldata, |data| {
             let arr = Array1::from_vec(data.clone());
             crate::descriptive::kurtosis(&arr.view(), false, false).map(|kurt| {
                 (kurt - 3.0).abs() < 0.5 // Allow some tolerance for finite samples
@@ -321,9 +321,9 @@ impl NumericalStabilityTester {
     /// Test quantile calculation stability
     fn test_quantile_stability(&mut self) {
         // Test with sorted data (should be exact)
-        let sorted_data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
+        let sorteddata: Vec<f64> = (0..1000).map(|i| i as f64).collect();
         
-        self.run_test("quantilesorted_data", "quantiles", &sorted_data, |data| {
+        self.run_test("quantilesorteddata", "quantiles", &sorteddata, |data| {
             let arr = Array1::from_vec(data.clone());
             crate::quantile::quantile(&arr.view(), 0.5, crate::quantile::QuantileInterpolation::Linear).map(|median| {
                 let expected = 499.5; // Midpoint of 0-999
@@ -332,9 +332,9 @@ impl NumericalStabilityTester {
         });
 
         // Test with duplicate values
-        let duplicate_data = vec![42.0; 1000];
+        let duplicatedata = vec![42.0; 1000];
         
-        self.run_test("quantile_duplicate_values", "quantiles", &duplicate_data, |data| {
+        self.run_test("quantile_duplicate_values", "quantiles", &duplicatedata, |data| {
             let arr = Array1::from_vec(data.clone());
             crate::quantile::quantile(&arr.view(), 0.75, crate::quantile::QuantileInterpolation::Linear).map(|q75| {
                 (q75 - 42.0).abs() < 1e-15
@@ -358,10 +358,10 @@ impl NumericalStabilityTester {
 
         // Test with high precision requirements
         for _ in 0..5 {
-            let base_data: Vec<f64> = (0..1000).map(|_| rand::rng().random::<f64>()).collect();
-            let scaled_data: Vec<f64> = base_data.iter().map(|&x| 1e15 * x + 1e10).collect();
+            let basedata: Vec<f64> = (0..1000).map(|_| rand::rng().random::<f64>()).collect();
+            let scaleddata: Vec<f64> = basedata.iter().map(|&x| 1e15 * x + 1e10).collect();
             
-            self.run_test("correlation_high_precision", "correlation", &base_data, |base| {
+            self.run_test("correlation_high_precision", "correlation", &basedata, |base| {
                 let base_arr = Array1::from_vec(base.clone());
                 let scaled_arr = Array1::from_vec(base.iter().map(|&x| 1e15 * x + 1e10).collect());
                 
@@ -382,9 +382,9 @@ impl NumericalStabilityTester {
     /// Test with extreme values
     fn test_extreme_values(&mut self) {
         // Test with very large values
-        let large_data = vec![1e100, 2e100, 3e100, 1e99];
+        let largedata = vec![1e100, 2e100, 3e100, 1e99];
         
-        self.run_test("extreme_large_values", "extreme_values", &large_data, |data| {
+        self.run_test("extreme_large_values", "extreme_values", &largedata, |data| {
             let arr = Array1::from_vec(data.clone());
             crate::descriptive::mean(&arr.view()).map(|mean| {
                 mean.is_finite() && mean > 0.0
@@ -392,9 +392,9 @@ impl NumericalStabilityTester {
         });
 
         // Test with very small values
-        let small_data = vec![1e-100, 2e-100, 3e-100, 1e-99];
+        let smalldata = vec![1e-100, 2e-100, 3e-100, 1e-99];
         
-        self.run_test("extreme_small_values", "extreme_values", &small_data, |data| {
+        self.run_test("extreme_small_values", "extreme_values", &smalldata, |data| {
             let arr = Array1::from_vec(data.clone());
             crate::descriptive::mean(&arr.view()).map(|mean| {
                 mean.is_finite() && mean > 0.0
@@ -404,9 +404,9 @@ impl NumericalStabilityTester {
 
     /// Test with near-zero values
     fn test_near_zero_values(&mut self) {
-        let near_zero_data: Vec<f64> = (0..100).map(|i| 1e-15 * (i as f64)).collect();
+        let near_zerodata: Vec<f64> = (0..100).map(|i| 1e-15 * (i as f64)).collect();
         
-        self.run_test("near_zero_variance", "near_zero", &near_zero_data, |data| {
+        self.run_test("near_zero_variance", "near_zero", &near_zerodata, |data| {
             let arr = Array1::from_vec(data.clone());
             crate::descriptive::var(&arr.view(), 1, None).map(|var| {
                 var >= 0.0 && var.is_finite()
@@ -416,9 +416,9 @@ impl NumericalStabilityTester {
 
     /// Test with large values
     fn test_large_values(&mut self) {
-        let large_data: Vec<f64> = (0..100).map(|i| 1e12 + (i as f64)).collect();
+        let largedata: Vec<f64> = (0..100).map(|i| 1e12 + (i as f64)).collect();
         
-        self.run_test("large_values_precision", "large_values", &large_data, |data| {
+        self.run_test("large_values_precision", "large_values", &largedata, |data| {
             let arr = Array1::from_vec(data.clone());
             crate::descriptive::var(&arr.view(), 1, None).map(|var| {
                 // Variance should be close to actual variance
@@ -430,10 +430,10 @@ impl NumericalStabilityTester {
     }
 
     /// Test with mixed-scale data
-    fn test_mixed_scale_data(&mut self) {
-        let mixed_data = vec![1e-10, 1.0, 1e10, 2e-10, 2.0, 2e10];
+    fn test_mixed_scaledata(&mut self) {
+        let mixeddata = vec![1e-10, 1.0, 1e10, 2e-10, 2.0, 2e10];
         
-        self.run_test("mixed_scale_mean", "mixed_scale", &mixed_data, |data| {
+        self.run_test("mixed_scale_mean", "mixed_scale", &mixeddata, |data| {
             let arr = Array1::from_vec(data.clone());
             crate::descriptive::mean(&arr.view()).map(|mean| {
                 mean.is_finite()
@@ -444,9 +444,9 @@ impl NumericalStabilityTester {
     /// Test with special values (NaN, Inf)
     fn test_special_values(&mut self) {
         // Test with NaN values
-        let nan_data = vec![1.0, 2.0, f64::NAN, 4.0, 5.0];
+        let nandata = vec![1.0, 2.0, f64::NAN, 4.0, 5.0];
         
-        self.run_test("special_nan_handling", "special_values", &nan_data, |data| {
+        self.run_test("special_nan_handling", "special_values", &nandata, |data| {
             let arr = Array1::from_vec(data.clone());
             // Should either handle NaN gracefully or return an appropriate error
             match crate::descriptive::mean(&arr.view()) {
@@ -456,9 +456,9 @@ impl NumericalStabilityTester {
         });
 
         // Test with infinite values
-        let inf_data = vec![1.0, 2.0, f64::INFINITY, 4.0, 5.0];
+        let infdata = vec![1.0, 2.0, f64::INFINITY, 4.0, 5.0];
         
-        self.run_test("special_inf_handling", "special_values", &inf_data, |data| {
+        self.run_test("special_inf_handling", "special_values", &infdata, |data| {
             let arr = Array1::from_vec(data.clone());
             match crate::descriptive::mean(&arr.view()) {
                 Ok(mean) => mean.is_finite(), // Should handle infinity appropriately
@@ -645,14 +645,14 @@ impl NumericalStabilityFixes {
     /// Improved mean calculation with Kahan summation for better numerical stability
     pub fn stable_mean(data: &[f64]) -> StatsResult<f64> {
         if data.is_empty() {
-            return Err(StatsError::InvalidArgument("Cannot compute mean of empty _data".to_string()));
+            return Err(StatsError::InvalidArgument("Cannot compute mean of empty data".to_string()));
         }
         
         // Use Kahan summation algorithm for better numerical stability
         let mut sum = 0.0;
         let mut compensation = 0.0;
         
-        for &value in _data {
+        for &value in data {
             if !value.is_finite() {
                 return Err(StatsError::InvalidArgument(format!("Non-finite value detected: {}", value)));
             }
@@ -670,7 +670,7 @@ impl NumericalStabilityFixes {
     pub fn stable_variance(data: &[f64], ddof: usize) -> StatsResult<f64> {
         if data.len() <= ddof {
             return Err(StatsError::InvalidArgument(
-                format!("Insufficient _data points: {} <= {}", data.len(), ddof)
+                format!("Insufficient data points: {} <= {}", data.len(), ddof)
             ));
         }
         
@@ -678,7 +678,7 @@ impl NumericalStabilityFixes {
         let mut m2 = 0.0;
         let mut count = 0;
         
-        for &value in _data {
+        for &value in data {
             if !value.is_finite() {
                 return Err(StatsError::InvalidArgument(format!("Non-finite value detected: {}", value)));
             }
@@ -762,15 +762,15 @@ impl NumericalStabilityFixes {
     }
     
     /// Detect and fix common numerical issues in data
-    pub fn diagnose_and_fix_data_issues(data: &[f64]) -> (Vec<f64>, Vec<String>) {
-        let mut fixed_data = Vec::new();
+    pub fn diagnose_and_fixdata_issues(data: &[f64]) -> (Vec<f64>, Vec<String>) {
+        let mut fixeddata = Vec::new();
         let mut issues_fixed = Vec::new();
         
         let mut nan_count = 0;
         let mut inf_count = 0;
         let mut extreme_count = 0;
         
-        for &value in _data {
+        for &value in data {
             if value.is_nan() {
                 nan_count += 1;
                 // Skip NaN values (could also interpolate)
@@ -779,24 +779,24 @@ impl NumericalStabilityFixes {
                 inf_count += 1;
                 // Replace infinity with large finite value
                 if value.is_sign_positive() {
-                    fixed_data.push(f64::MAX / 2.0);
+                    fixeddata.push(f64::MAX / 2.0);
                 } else {
-                    fixed_data.push(f64::MIN / 2.0);
+                    fixeddata.push(f64::MIN / 2.0);
                 }
             } else if value.abs() > 1e100 || (value != 0.0 && value.abs() < 1e-100) {
                 extreme_count += 1;
                 // Cap extreme values
                 if value > 1e100 {
-                    fixed_data.push(1e100);
+                    fixeddata.push(1e100);
                 } else if value < -1e100 {
-                    fixed_data.push(-1e100);
+                    fixeddata.push(-1e100);
                 } else if value.abs() < 1e-100 && value != 0.0 {
-                    fixed_data.push(if value > 0.0 { 1e-100 } else { -1e-100 });
+                    fixeddata.push(if value > 0.0 { 1e-100 } else { -1e-100 });
                 } else {
-                    fixed_data.push(value);
+                    fixeddata.push(value);
                 }
             } else {
-                fixed_data.push(value);
+                fixeddata.push(value);
             }
         }
         
@@ -810,7 +810,7 @@ impl NumericalStabilityFixes {
             issues_fixed.push(format!("Capped {} extreme values", extreme_count));
         }
         
-        (fixed_data, issues_fixed)
+        (fixeddata, issues_fixed)
     }
     
     /// Test for numerical conditioning of a matrix (simplified)
@@ -923,35 +923,35 @@ impl IntegratedStabilityFixes {
     where
         F: FnOnce(&[f64]) -> StatsResult<T>,
     {
-        // First, diagnose and fix _data issues
-        let (fixed_data, issues) = NumericalStabilityFixes::diagnose_and_fix_data_issues(_data);
+        // First, diagnose and fix data issues
+        let (fixeddata, issues) = NumericalStabilityFixes::diagnose_and_fixdata_issues(data);
         
         if !issues.is_empty() {
             eprintln!("Numerical stability fixes applied: {:?}", issues);
         }
         
-        // Apply the operation to the fixed _data
-        operation(&fixed_data)
+        // Apply the operation to the fixed data
+        operation(&fixeddata)
     }
     
     /// Stability-enhanced mean calculation
     pub fn enhanced_mean(data: &[f64]) -> StatsResult<f64> {
-        Self::with_stability_checks(_data, |fixed_data| {
-            NumericalStabilityFixes::stable_mean(fixed_data)
+        Self::with_stability_checks(data, |fixeddata| {
+            NumericalStabilityFixes::stable_mean(fixeddata)
         })
     }
     
     /// Stability-enhanced variance calculation
     pub fn enhanced_variance(data: &[f64], ddof: usize) -> StatsResult<f64> {
-        Self::with_stability_checks(_data, |fixed_data| {
-            NumericalStabilityFixes::stable_variance(fixed_data, ddof)
+        Self::with_stability_checks(data, |fixeddata| {
+            NumericalStabilityFixes::stable_variance(fixeddata, ddof)
         })
     }
     
     /// Stability-enhanced correlation calculation
     pub fn enhanced_correlation(x: &[f64], y: &[f64]) -> StatsResult<f64> {
-        let (fixed_x_) = NumericalStabilityFixes::diagnose_and_fix_data_issues(x);
-        let (fixed_y_) = NumericalStabilityFixes::diagnose_and_fix_data_issues(y);
+        let (fixed_x_) = NumericalStabilityFixes::diagnose_and_fixdata_issues(x);
+        let (fixed_y_) = NumericalStabilityFixes::diagnose_and_fixdata_issues(y);
         
         NumericalStabilityFixes::stable_correlation(&fixed_x, &fixed_y)
     }
@@ -1028,9 +1028,9 @@ mod tests {
     }
 
     #[test]
-    fn test_data_issue_diagnosis() {
+    fn testdata_issue_diagnosis() {
         let data = vec![1.0, f64::NAN, f64::INFINITY, -f64::INFINITY, 1e200, -1e200, 0.0];
-        let (fixed, issues) = NumericalStabilityFixes::diagnose_and_fix_data_issues(&data);
+        let (fixed, issues) = NumericalStabilityFixes::diagnose_and_fixdata_issues(&data);
         
         assert!(!issues.is_empty());
         assert!(fixed.iter().all(|&x| x.is_finite()));
@@ -1079,9 +1079,9 @@ mod tests {
 
     #[test]
     fn test_integrated_stability_fixes() {
-        let problematic_data = vec![1.0, f64::NAN, 3.0, f64::INFINITY, 5.0];
+        let problematicdata = vec![1.0, f64::NAN, 3.0, f64::INFINITY, 5.0];
         
-        let result = IntegratedStabilityFixes::enhanced_mean(&problematic_data);
+        let result = IntegratedStabilityFixes::enhanced_mean(&problematicdata);
         assert!(result.is_ok());
         assert!(result.unwrap().is_finite());
     }

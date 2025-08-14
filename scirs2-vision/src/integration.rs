@@ -819,7 +819,7 @@ impl ClusteringCoordinationInterface {
             let mut clusters = Array1::zeros(data.nrows());
 
             // Simulate quantum superposition by using probabilistic assignments
-            for (i_row) in data.rows().into_iter().enumerate() {
+            for (i, _row) in data.rows().into_iter().enumerate() {
                 let quantum_state = (i as f64 * 0.618033988749).sin().abs(); // Golden ratio for quantum simulation
                 clusters[i] = (quantum_state * num_clusters as f64) as usize % num_clusters;
             }
@@ -922,7 +922,7 @@ impl SpatialProcessingInterface {
         // Apply neuromorphic adaptation
         let neuromorphic_adaptation = if self.neuromorphic_spatial_enabled {
             // Simulate spike-based processing with adaptive thresholds
-            let adaptive_threshold = processed_data.mean().unwrap_or(0.0);
+            let adaptive_threshold = processed_data.clone().mean();
             for value in processed_data.iter_mut() {
                 if *value > adaptive_threshold {
                     *value = (*value - adaptive_threshold) * 1.2 + adaptive_threshold;
@@ -1214,16 +1214,17 @@ impl GlobalAdvancedOptimizer {
     }
 
     pub async fn fuse_cross_module_results(
-        &mut self_vision: &Option<VisionResult>,
+        &mut self,
+        vision: &Option<VisionResult>,
         _clustering: &Option<ClusteringResult>,
         _spatial: &Option<SpatialResult>,
         _neural: &Option<NeuralResult>,
     ) -> Result<CrossModuleFusedResult> {
         Ok(CrossModuleFusedResult {
-            _vision_output: None,
-            _clustering_output: None,
-            _spatial_output: None,
-            _neural_output: None,
+            vision_output: None,
+            clustering_output: None,
+            spatial_output: None,
+            neural_output: None,
             fusion_confidence: 0.92,
             fusion_method: "AdvancedFusion".to_string(),
         })
@@ -1260,7 +1261,8 @@ impl CrossModulePerformanceTracker {
     }
 
     pub async fn track_and_analyze(
-        &mut self_result: &CrossModuleFusedResult,
+        &mut self,
+        result: &CrossModuleFusedResult,
         _elapsed: Duration,
         allocation: &ResourceAllocation,
     ) -> Result<AdvancedPerformanceMetrics> {
@@ -1301,7 +1303,8 @@ impl UnifiedMetaLearningSystem {
     }
 
     pub async fn optimize_cross_module_parameters(
-        &mut self_data: &AdvancedInputData,
+        &mut self,
+        data: &AdvancedInputData,
     ) -> Result<MetaOptimizationParameters> {
         Ok(MetaOptimizationParameters {
             improvement_factor: 1.6,
@@ -1336,7 +1339,8 @@ impl AdvancedResourceManager {
     }
 
     pub async fn allocate_optimal_resources(
-        &mut self_params: &MetaOptimizationParameters,
+        &mut self,
+        params: &MetaOptimizationParameters,
     ) -> Result<ResourceAllocation> {
         Ok(ResourceAllocation {
             efficiency_score: 0.91,
@@ -1669,9 +1673,7 @@ impl NeuralQuantumHybridProcessor {
                     activations: vec![ActivationType::Swish, ActivationType::GELU],
                     connections: vec![ConnectionType::Skip, ConnectionType::Attention],
                 },
-                SearchStrategy::Evolutionary {
-                    population_size: 20,
-                },
+                SearchStrategy::Evolutionary { populationsize: 20 },
             ),
             fusion_params,
             performance_tracker: PerformanceTracker {
@@ -1894,7 +1896,7 @@ impl NeuralQuantumHybridProcessor {
     }
 
     /// Apply optimization actions based on AI decisions
-    fn apply_optimization_action(&mut selfaction: &ActionDiscrete) -> Result<()> {
+    fn apply_optimization_action(&mut self, action: &ActionDiscrete) -> Result<()> {
         // Implement specific optimization actions
         // This could adjust quantum weights, neuromorphic parameters, etc.
         Ok(())
@@ -1922,7 +1924,7 @@ impl NeuralQuantumHybridProcessor {
     }
 
     /// Update meta-learning based on performance
-    fn update_meta_learning(&mut selfmetrics: &PerformanceMetric) -> Result<()> {
+    fn update_meta_learning(&mut self, metrics: &PerformanceMetric) -> Result<()> {
         // Update task adaptation
         self.meta_learner.task_adaptation.adaptation_speed *= 0.99; // Gradual decay
 
@@ -2068,16 +2070,16 @@ pub struct UncertaintyQuantification {
 #[allow(dead_code)]
 pub fn process_with_advanced_mode(frame: Frame) -> Result<AdvancedProcessingResult> {
     let mut processor = NeuralQuantumHybridProcessor::new();
-    processor.process_advanced(_frame)
+    processor.process_advanced(frame)
 }
 
 /// Batch processing with Advanced capabilities
 #[allow(dead_code)]
 pub fn batch_process_advanced(frames: Vec<Frame>) -> Result<Vec<AdvancedProcessingResult>> {
     let mut processor = NeuralQuantumHybridProcessor::new();
-    let mut results = Vec::with_capacity(_frames.len());
+    let mut results = Vec::with_capacity(frames.len());
 
-    for frame in _frames {
+    for frame in frames {
         let result = processor.process_advanced(frame)?;
         results.push(result);
 

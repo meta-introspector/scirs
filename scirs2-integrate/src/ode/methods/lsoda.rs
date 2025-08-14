@@ -145,8 +145,7 @@ impl<F: IntegrateFloat> LsodaState<F> {
             self.order = 1;
             self.jacobian = None;
             self.jacobian_age = 0;
-        } else if self.method_type == LsodaMethodType::Bdf && _newmethod == LsodaMethodType::Adams
-        {
+        } else if self.method_type == LsodaMethodType::Bdf && _newmethod == LsodaMethodType::Adams {
             self.stiff_to_nonstiff_switches += 1;
 
             // When switching to Adams, be more conservative

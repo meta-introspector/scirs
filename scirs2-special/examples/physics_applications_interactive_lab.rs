@@ -16,7 +16,7 @@
 //! Run with: cargo run --example physics_applications_interactive_lab
 
 use ndarray::{Array1, Array2};
-use scirs2__special::*;
+use scirs2_special::*;
 use std::collections::HashMap;
 use std::f64::consts::{PI, TAU};
 use std::io::{self, Write};
@@ -50,7 +50,7 @@ struct ExperimentParameter {
     current_value: f64,
     min_value: f64,
     max_value: f64,
-    step_size: f64,
+    stepsize: f64,
     units: String,
     physical_meaning: String,
 }
@@ -145,7 +145,7 @@ impl PhysicsLab {
                 current_value: 3.0,
                 min_value: 0.0,
                 max_value: 20.0,
-                step_size: 1.0,
+                stepsize: 1.0,
                 units: "dimensionless".to_string(),
                 physical_meaning: "Principal quantum number determining energy level".to_string(),
             },
@@ -159,7 +159,7 @@ impl PhysicsLab {
                 current_value: 1.0,
                 min_value: 0.1,
                 max_value: 10.0,
-                step_size: 0.1,
+                stepsize: 0.1,
                 units: "rad/s".to_string(),
                 physical_meaning: "Oscillator frequency parameter".to_string(),
             },
@@ -233,7 +233,7 @@ Key mathematical properties:
                 current_value: 1000.0,
                 min_value: 100.0,
                 max_value: 10000.0,
-                step_size: 100.0,
+                stepsize: 100.0,
                 units: "Hz".to_string(),
                 physical_meaning: "Frequency of the propagating wave".to_string(),
             },
@@ -247,7 +247,7 @@ Key mathematical properties:
                 current_value: 0.1,
                 min_value: 0.01,
                 max_value: 1.0,
-                step_size: 0.01,
+                stepsize: 0.01,
                 units: "m".to_string(),
                 physical_meaning: "Radius of the cylindrical boundary".to_string(),
             },
@@ -334,7 +334,7 @@ Key properties:
                 current_value: 1e-5,
                 min_value: 1e-7,
                 max_value: 1e-3,
-                step_size: 1e-6,
+                stepsize: 1e-6,
                 units: "m²/s".to_string(),
                 physical_meaning: "Rate of heat diffusion through material".to_string(),
             },
@@ -348,7 +348,7 @@ Key properties:
                 current_value: 100.0,
                 min_value: 1.0,
                 max_value: 1000.0,
-                step_size: 10.0,
+                stepsize: 10.0,
                 units: "s".to_string(),
                 physical_meaning: "Elapsed time since initial condition".to_string(),
             },
@@ -431,7 +431,7 @@ Heat flux at the surface:
                 current_value: 0.2,
                 min_value: 0.05,
                 max_value: 1.0,
-                step_size: 0.05,
+                stepsize: 0.05,
                 units: "m".to_string(),
                 physical_meaning: "Radius of the circular membrane".to_string(),
             },
@@ -445,7 +445,7 @@ Heat flux at the surface:
                 current_value: 1.0,
                 min_value: 0.0,
                 max_value: 5.0,
-                step_size: 1.0,
+                stepsize: 1.0,
                 units: "dimensionless".to_string(),
                 physical_meaning: "Number of nodal diameters".to_string(),
             },
@@ -459,7 +459,7 @@ Heat flux at the surface:
                 current_value: 1.0,
                 min_value: 1.0,
                 max_value: 5.0,
-                step_size: 1.0,
+                stepsize: 1.0,
                 units: "dimensionless".to_string(),
                 physical_meaning: "Number of nodal circles".to_string(),
             },
@@ -546,7 +546,7 @@ Key properties:
                 current_value: 300.0,
                 min_value: 1.0,
                 max_value: 3000.0,
-                step_size: 10.0,
+                stepsize: 10.0,
                 units: "K".to_string(),
                 physical_meaning: "Absolute temperature of the system".to_string(),
             },
@@ -560,7 +560,7 @@ Key properties:
                 current_value: 0.0,
                 min_value: -5.0,
                 max_value: 5.0,
-                step_size: 0.1,
+                stepsize: 0.1,
                 units: "eV".to_string(),
                 physical_meaning: "Chemical potential in electron volts".to_string(),
             },
@@ -645,7 +645,7 @@ The density of states for free electrons involves Γ(3/2).
                 current_value: 1000.0,
                 min_value: 100.0,
                 max_value: 10000.0,
-                step_size: 100.0,
+                stepsize: 100.0,
                 units: "Hz".to_string(),
                 physical_meaning: "Filter cutoff frequency".to_string(),
             },
@@ -730,7 +730,7 @@ Properties:
                 current_value: 0.001,
                 min_value: 1e-6,
                 max_value: 0.01,
-                step_size: 1e-5,
+                stepsize: 1e-5,
                 units: "m".to_string(),
                 physical_meaning: "Radius of the scattering sphere".to_string(),
             },
@@ -744,7 +744,7 @@ Properties:
                 current_value: 500e-9,
                 min_value: 300e-9,
                 max_value: 800e-9,
-                step_size: 10e-9,
+                stepsize: 10e-9,
                 units: "m".to_string(),
                 physical_meaning: "Wavelength of incident electromagnetic radiation".to_string(),
             },
@@ -828,7 +828,7 @@ Key functions:
                 current_value: 5.0,
                 min_value: 1.0,
                 max_value: 20.0,
-                step_size: 0.5,
+                stepsize: 0.5,
                 units: "eV".to_string(),
                 physical_meaning: "Height of the potential barrier".to_string(),
             },
@@ -842,7 +842,7 @@ Key functions:
                 current_value: 1e-9,
                 min_value: 1e-10,
                 max_value: 1e-8,
-                step_size: 1e-10,
+                stepsize: 1e-10,
                 units: "m".to_string(),
                 physical_meaning: "Width of the potential barrier".to_string(),
             },
@@ -1546,9 +1546,9 @@ fn run_tunneling_simulation() -> Result<(), Box<dyn std::error::Error>> {
 // Helper functions for special function evaluations
 #[allow(dead_code)]
 fn fresnel_c_integral(x: f64) -> f64 {
-    // Simplified implementation - in practice, use scirs2__special::fresnel
-    let t_max = x.abs();
-    if t_max > 5.0 {
+    // Simplified implementation - in practice, use scirs2_special::fresnel
+    let tmax = x.abs();
+    if tmax > 5.0 {
         return 0.5 * x.signum();
     }
 
@@ -1572,9 +1572,9 @@ fn fresnel_c_integral(x: f64) -> f64 {
 
 #[allow(dead_code)]
 fn fresnel_s_integral(x: f64) -> f64 {
-    // Simplified implementation - in practice, use scirs2__special::fresnel
-    let t_max = x.abs();
-    if t_max > 5.0 {
+    // Simplified implementation - in practice, use scirs2_special::fresnel
+    let tmax = x.abs();
+    if tmax > 5.0 {
         return 0.5 * x.signum();
     }
 

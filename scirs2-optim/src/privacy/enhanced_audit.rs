@@ -1292,7 +1292,7 @@ impl<T: Float + Send + Sync> EnhancedAuditSystem<T> {
     /// Create new enhanced audit system
     pub fn new(config: AuditConfig) -> Self {
         Self {
-            config: config,
+            config,
             audit_trail: AuditTrail::new(),
             compliance_monitor: ComplianceMonitor::new(),
             verification_engine: FormalVerificationEngine::new(),

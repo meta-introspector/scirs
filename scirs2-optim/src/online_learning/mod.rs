@@ -599,7 +599,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
     /// Create a new lifelong optimizer
     pub fn new(strategy: LifelongStrategy) -> Self {
         Self {
-            strategy: strategy,
+            strategy,
             task_optimizers: HashMap::new(),
             shared_knowledge: SharedKnowledge {
                 fisher_information: None,

@@ -77,7 +77,7 @@ pub struct ThreadPoolConfig {
     /// Queue capacity
     pub queue_capacity: usize,
     /// Thread stack size
-    pub stack_size: Option<usize>,
+    pub stacksize: Option<usize>,
 }
 
 impl Default for ThreadPoolConfig {
@@ -96,7 +96,7 @@ impl Default for ThreadPoolConfig {
             numa_aware: false,
             work_stealing: true,
             queue_capacity: 1024,
-            stack_size: None,
+            stacksize: None,
         }
     }
 }
@@ -223,7 +223,7 @@ pub struct PredictionModelParams {
 impl Default for PredictionModelParams {
     fn default() -> Self {
         let mut parameters = HashMap::new();
-        parameters.insert("window_size".to_string(), 10.0);
+        parameters.insert("windowsize".to_string(), 10.0);
         parameters.insert("smoothing_factor".to_string(), 0.1);
 
         Self {
@@ -478,7 +478,7 @@ impl AdvancedPerformanceThreadPool {
         let profiler = Arc::new(Mutex::new(ThreadPoolProfiler::new()));
 
         Ok(Self {
-            config: config,
+            config,
             stats,
             thread_manager,
             workload_predictor,

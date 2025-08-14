@@ -1,12 +1,12 @@
-use num__complex::Complex64;
+use num_complex::Complex64;
 use plotly::{
     common::{Mode, Title},
     Layout, Plot, Scatter,
 };
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use rand__distr::{Distribution, Normal};
-use scirs2__fft::{
+use rand_distr::{Distribution, Normal};
+use scirs2_fft::{
     sparse_fft::{reconstruct_time_domain, SparseFFTAlgorithm, SparseFFTResult},
     sparse_fft_cuda_kernels::execute_cuda_sublinear_sparse_fft,
     sparse_fft_cuda_kernels_iterative::execute_cuda_iterative_sparse_fft,
@@ -85,7 +85,7 @@ fn evaluate_accuracy(
 
 /// Run sparse FFT with multiple algorithms and compare results
 #[allow(dead_code)]
-fn run_algorithm_comparison(n: usize, sparsity: usize, noiselevel: f64) {
+fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
     println!("\nRunning algorithm comparison:");
     println!("  Signal size: {n}");
     println!("  Expected sparsity: {sparsity}");

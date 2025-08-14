@@ -281,8 +281,7 @@ impl PerformanceProfiler {
 
         // Compute function evaluation efficiency
         if metrics.function_evaluations > 0 && !metrics.total_time.is_zero() {
-            let eval_rate =
-                metrics.function_evaluations as f64 / metrics.total_time.as_secs_f64();
+            let eval_rate = metrics.function_evaluations as f64 / metrics.total_time.as_secs_f64();
             metrics
                 .algorithmmetrics
                 .insert("evaluations_per_second".to_string(), eval_rate);
@@ -432,8 +431,7 @@ impl PerformanceAnalyzer {
 
         // Function evaluation efficiency
         if metrics.function_evaluations > 0 && !metrics.total_time.is_zero() {
-            let eval_rate =
-                metrics.function_evaluations as f64 / metrics.total_time.as_secs_f64();
+            let eval_rate = metrics.function_evaluations as f64 / metrics.total_time.as_secs_f64();
             if eval_rate < 100.0 {
                 // Less than 100 evaluations per second
                 bottlenecks.push(PerformanceBottleneck {

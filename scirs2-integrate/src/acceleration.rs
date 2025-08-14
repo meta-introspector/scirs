@@ -92,7 +92,7 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
     /// Create a new Anderson accelerator
     pub fn new(dimension: usize, options: AcceleratorOptions<F>) -> Self {
         Self {
-            dimension: dimension,
+            dimension,
             options,
             x_history: VecDeque::new(),
             g_history: VecDeque::new(),

@@ -45,14 +45,14 @@ pub mod dwt;
 pub mod wavelets;
 
 // Additional signal processing modules
-pub mod hilbert;
-pub mod tv;
-pub mod parametric;
 pub mod emd;
-pub mod swt;
-pub mod waveforms;
-pub mod spline;
+pub mod hilbert;
 pub mod median;
+pub mod parametric;
+pub mod spline;
+pub mod swt;
+pub mod tv;
+pub mod waveforms;
 
 // Additional signal processing modules (temporarily disabled for compilation stability)
 // TODO: Re-add these modules incrementally after fixing compilation errors
@@ -98,44 +98,56 @@ pub use dwt::{
 pub use wavelets::{complex_morlet, cwt, morlet, ricker, scalogram};
 
 // Re-export key additional modules functionality
-pub use tv::{tv_denoise_1d, tv_denoise_2d};
 pub use parametric::{ar_spectrum, burg_method, yule_walker};
-pub use swt::{swt, iswt};
+pub use swt::{iswt, swt};
+pub use tv::{tv_denoise_1d, tv_denoise_2d};
 pub use waveforms::{chirp, sawtooth, square};
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dwt::{Wavelet, wavedec, waverec};
-    
+    use crate::dwt::{wavedec, waverec, Wavelet};
+
     #[test]
     fn it_works() {
         assert_eq!(2 + 2, 4);
     }
-    
+
     #[test]
     fn test_dwt_phase3_verification() {
         println!("Testing Phase 3 DWT functionality...");
-        
+
         // Create a simpler test signal (power of 2 length for DWT)
         let signal: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        
+
         // Test wavelet decomposition (using DB(4) instead of Daubechies4 alias)
-        let coeffs = wavedec(&signal, Wavelet::DB(4), Some(1), None).expect("DWT decomposition should work");
-        
-        println!("✓ DWT decomposition successful with {} coefficient arrays", coeffs.len());
+        let coeffs =
+            wavedec(&signal, Wavelet::DB(4), Some(1), None).expect("DWT decomposition should work");
+
+        println!(
+            "✓ DWT decomposition successful with {} coefficient arrays",
+            coeffs.len()
+        );
         assert!(!coeffs.is_empty(), "Should have coefficient arrays");
-        
+
         // Test reconstruction
-        let reconstructed = waverec(&coeffs, Wavelet::DB(4)).expect("DWT reconstruction should work");
-        
+        let reconstructed =
+            waverec(&coeffs, Wavelet::DB(4)).expect("DWT reconstruction should work");
+
         println!("✓ DWT reconstruction successful");
-        println!("Original length: {}, Reconstructed length: {}", signal.len(), reconstructed.len());
-        
+        println!(
+            "Original length: {}, Reconstructed length: {}",
+            signal.len(),
+            reconstructed.len()
+        );
+
         // Check basic functionality rather than perfect reconstruction for now
-        assert!(!reconstructed.is_empty(), "Reconstructed signal should not be empty");
+        assert!(
+            !reconstructed.is_empty(),
+            "Reconstructed signal should not be empty"
+        );
         println!("✓ DWT Phase 3 verification: BASIC FUNCTIONALITY CONFIRMED");
-        
+
         // TODO: Investigate perfect reconstruction requirements
         // For now, confirming the API works is sufficient for Phase 3 completion
     }

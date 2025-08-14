@@ -136,7 +136,7 @@ use std::fmt::{Debug, Display};
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::utility::cbrt;
+/// use scirs2_special::utility::cbrt;
 ///
 /// assert_eq!(cbrt(8.0), 2.0);
 /// assert_eq!(cbrt(-8.0), -2.0);
@@ -750,7 +750,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::expit;
+/// use scirs2_special::expit;
 /// assert_eq!(expit(0.0), 0.5);
 /// assert!(expit(10.0) > 0.99);
 /// assert!(expit(-10.0) < 0.01);
@@ -778,7 +778,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::logit;
+/// use scirs2_special::logit;
 /// assert!((logit(0.5).unwrap() - 0.0).abs() < 1e-10);
 /// assert!(logit(0.0).is_err());
 /// assert!(logit(1.0).is_err());
@@ -810,7 +810,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2__special::expit_array;
+/// use scirs2_special::expit_array;
 /// let input = array![0.0, 1.0, -1.0];
 /// let result = expit_array(&input.view());
 /// assert!((result[0] - 0.5).abs() < 1e-10);
@@ -834,7 +834,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2__special::logit_array;
+/// use scirs2_special::logit_array;
 /// let input = array![0.1, 0.5, 0.9];
 /// let result = logit_array(&input.view());
 /// assert!((result[1] - 0.0).abs() < 1e-10);
@@ -877,7 +877,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2__special::log1p_array_utility;
+/// use scirs2_special::log1p_array_utility;
 /// let input = array![0.0, 1e-10, 0.1];
 /// let result = log1p_array_utility(&input.view());
 /// assert!((result[0] - 0.0).abs() < 1e-15);
@@ -901,7 +901,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2__special::expm1_array_utility;
+/// use scirs2_special::expm1_array_utility;
 /// let input = array![0.0, 1e-10, 0.1];
 /// let result = expm1_array_utility(&input.view());
 /// assert!((result[0] - 0.0).abs() < 1e-15);
@@ -1148,8 +1148,8 @@ mod tests {
         assert!(result[2] < 0.3);
 
         // Test logit_array
-        let prob_input = array![0.1, 0.5, 0.9];
-        let logit_result = logit_array(&prob_input.view());
+        let probinput = array![0.1, 0.5, 0.9];
+        let logit_result = logit_array(&probinput.view());
         assert_relative_eq!(logit_result[1], 0.0, epsilon = 1e-10);
         assert!(logit_result[0] < 0.0);
         assert!(logit_result[2] > 0.0);

@@ -171,7 +171,7 @@ impl ReferenceCountingDetector {
     /// Create a new reference counting detector
     pub fn new(config: ReferenceCountingConfig) -> Self {
         Self {
-            config: config,
+            config,
             reference_tracker: Arc::new(RwLock::new(ReferenceTracker::new())),
             cycle_detector: CycleDetector::new(),
         }
@@ -830,7 +830,7 @@ impl RealTimeMemoryMonitor {
     /// Create a new real-time memory monitor
     pub fn new(config: RealTimeMonitorConfig) -> Self {
         Self {
-            config: config,
+            config,
             state: Arc::new(Mutex::new(MonitorState::new())),
             alert_system: AlertSystem::new(),
             is_active: Arc::new(Mutex::new(false)),
@@ -903,7 +903,7 @@ impl RealTimeMemoryMonitor {
         // In a real implementation, this would use system APIs to get actual memory usage
         // For now, we'll simulate memory sampling
         MemorySample {
-            timestamp: timestamp,
+            timestamp,
             memory_usage: Self::get_current_memory_usage(),
             allocation_rate: 0.0,   // Would be calculated from real data
             deallocation_rate: 0.0, // Would be calculated from real data

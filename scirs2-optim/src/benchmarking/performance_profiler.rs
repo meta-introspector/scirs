@@ -463,7 +463,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
     /// Create a new performance profiler
     pub fn new(config: ProfilerConfig) -> Self {
         Self {
-            config: config,
+            config,
             metrics: PerformanceMetrics::new(),
             memory_tracker: MemoryTracker::new(),
             efficiency_analyzer: EfficiencyAnalyzer::new(),

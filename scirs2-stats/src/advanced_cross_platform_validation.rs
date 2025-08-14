@@ -43,9 +43,9 @@ impl Default for PlatformInfo {
             simd_features: capabilities.available_features(),
             logical_cores: capabilities.logical_cores(),
             physical_cores: capabilities.physical_cores(),
-            l1_cache_kb: capabilities.l1_cache_size() / 1024,
-            l2_cache_kb: capabilities.l2_cache_size() / 1024,
-            l3_cache_kb: capabilities.l3_cache_size() / 1024,
+            l1_cache_kb: capabilities.l1_cachesize() / 1024,
+            l2_cache_kb: capabilities.l2_cachesize() / 1024,
+            l3_cache_kb: capabilities.l3_cachesize() / 1024,
             memory_gb: capabilities.total_memory() as f64 / (1024.0 * 1024.0 * 1024.0),
             compiler_version: std::env::var("RUSTC_VERSION")
                 .unwrap_or_else(|_| "unknown".to_string()),
@@ -221,13 +221,13 @@ impl CrossPlatformValidator {
         let mut results = Vec::new();
 
         // Test data sets with different characteristics
-        let test_datasets = vec![
-            ("normal_small", generate_normal_data(100)),
-            ("normal_medium", generate_normal_data(10000)),
-            ("normal_large", generate_normal_data(1000000)),
-            ("uniform_data", generate_uniform_data(50000)),
-            ("skewed_data", generate_skewed_data(25000)),
-            ("outlier_data", generate_outlier_data(10000)),
+        let testdatasets = vec![
+            ("normal_small", generate_normaldata(100)),
+            ("normal_medium", generate_normaldata(10000)),
+            ("normal_large", generate_normaldata(1000000)),
+            ("uniformdata", generate_uniformdata(50000)),
+            ("skeweddata", generate_skeweddata(25000)),
+            ("outlierdata", generate_outlierdata(10000)),
         ];
 
         for config in &self.test_configurations {
@@ -236,7 +236,7 @@ impl CrossPlatformValidator {
                     config.clone(),
                 );
 
-            for (dataset_name, data) in &test_datasets {
+            for (dataset_name, data) in &testdatasets {
                 let test_name = format!(
                     "basic_stats_{}_{:?}",
                     dataset_name, config.optimization_mode
@@ -298,12 +298,12 @@ impl CrossPlatformValidator {
         let mut results = Vec::new();
 
         // Test SIMD with different data sizes and alignments
-        let test_sizes = vec![64, 256, 1024, 4096, 16384, 65536];
+        let testsizes = vec![64, 256, 1024, 4096, 16384, 65536];
 
-        for size in test_sizes {
+        for size in testsizes {
             for alignment in &[16, 32, 64] {
-                let data = generate_aligned_data(size, *alignment);
-                let test_name = format!("simd_test_size_{}_align_{}", size, alignment);
+                let data = generate_aligneddata(size, *alignment);
+                let test_name = format!("simd_testsize_{}_align_{}", size, alignment);
 
                 let start_time = Instant::now();
                 let optimizer = crate::advanced_simd_stats::AdvancedSimdOptimizer::new(
@@ -374,7 +374,7 @@ impl CrossPlatformValidator {
         let thread_counts = vec![1, 2, 4, available_cores.min(8), available_cores];
 
         for thread_count in thread_counts {
-            let data = generate_large_dataset(100000);
+            let data = generate_largedataset(100000);
             let test_name = format!("parallel_test_{}_threads", thread_count);
 
             // Configure for specific thread count
@@ -440,12 +440,12 @@ impl CrossPlatformValidator {
 
         // Test with challenging numerical scenarios
         let test_cases = vec![
-            ("near_zero_values", generate_near_zero_data(1000)),
-            ("large_values", generate_large_values_data(1000)),
-            ("mixed_scale", generate_mixed_scale_data(1000)),
+            ("near_zero_values", generate_near_zerodata(1000)),
+            ("large_values", generate_large_valuesdata(1000)),
+            ("mixed_scale", generate_mixed_scaledata(1000)),
             (
                 "catastrophic_cancellation",
-                generate_cancellation_data(1000),
+                generate_cancellationdata(1000),
             ),
         ];
 
@@ -492,7 +492,7 @@ impl CrossPlatformValidator {
             let mut all_passed = true;
 
             for _i in 0..iterations {
-                let data = generate_normal_data(size);
+                let data = generate_normaldata(size);
                 let start_time = Instant::now();
 
                 // Estimate memory usage (simplified)
@@ -537,16 +537,16 @@ impl CrossPlatformValidator {
 
     /// Analyze platform-specific performance characteristics
     fn analyze_platform_performance(&self) -> StatsResult<PerformancePlatformProfile> {
-        let test_data = generate_performance_test_data(50000);
+        let testdata = generate_performance_testdata(50000);
 
         // Test SIMD speedup
-        let scalar_time = time_scalar_operation(&test_data);
-        let simd_time = time_simd_operation(&test_data);
+        let scalar_time = time_scalar_operation(&testdata);
+        let simd_time = time_simd_operation(&testdata);
         let simd_speedup = scalar_time.as_secs_f64() / simd_time.as_secs_f64();
 
         // Test parallel efficiency
-        let single_thread_time = time_single_thread_operation(&test_data);
-        let multi_thread_time = time_multi_thread_operation(&test_data);
+        let single_thread_time = time_single_thread_operation(&testdata);
+        let multi_thread_time = time_multi_thread_operation(&testdata);
         let parallel_efficiency = single_thread_time.as_secs_f64()
             / (multi_thread_time.as_secs_f64() * num_cpus::get() as f64);
 
@@ -554,7 +554,7 @@ impl CrossPlatformValidator {
         let memory_bandwidth = estimate_memory_bandwidth();
 
         // Check cache efficiency
-        let cache_efficiency = measure_cache_efficiency(&test_data);
+        let cache_efficiency = measure_cache_efficiency(&testdata);
 
         // Thermal throttling detection (simplified)
         let thermal_throttling = detect_thermal_throttling();
@@ -649,10 +649,10 @@ impl CrossPlatformValidator {
     fn calculate_performance_score(
         &self,
         execution_time: std::time::Duration,
-        data_size: usize,
+        datasize: usize,
     ) -> f64 {
-        let throughput = data_size as f64 / execution_time.as_secs_f64();
-        let expected_throughput = estimate_expected_throughput(data_size);
+        let throughput = datasize as f64 / execution_time.as_secs_f64();
+        let expected_throughput = estimate_expected_throughput(datasize);
         (throughput / expected_throughput).min(1.0)
     }
 
@@ -660,11 +660,11 @@ impl CrossPlatformValidator {
     fn calculate_parallel_performance_score(
         &self,
         execution_time: std::time::Duration,
-        data_size: usize,
+        datasize: usize,
         thread_count: usize,
     ) -> f64 {
-        let throughput = data_size as f64 / execution_time.as_secs_f64();
-        let expected_throughput = estimate_expected_parallel_throughput(data_size, thread_count);
+        let throughput = datasize as f64 / execution_time.as_secs_f64();
+        let expected_throughput = estimate_expected_parallel_throughput(datasize, thread_count);
         (throughput / expected_throughput).min(1.0)
     }
 }
@@ -678,7 +678,7 @@ pub fn create_cross_platform_validator() -> CrossPlatformValidator {
 // Helper functions for data generation and testing
 
 #[allow(dead_code)]
-fn generate_normal_data(n: usize) -> Array1<f64> {
+fn generate_normaldata(n: usize) -> Array1<f64> {
     Array1::from_shape_fn(n, |i| {
         let u1 = (i as f64 + 1.0) / (n as f64 + 2.0);
         let u2 = ((i * 7) % n) as f64 / n as f64;
@@ -687,12 +687,12 @@ fn generate_normal_data(n: usize) -> Array1<f64> {
 }
 
 #[allow(dead_code)]
-fn generate_uniform_data(n: usize) -> Array1<f64> {
+fn generate_uniformdata(n: usize) -> Array1<f64> {
     Array1::from_shape_fn(n, |i| (i as f64) / (n as f64))
 }
 
 #[allow(dead_code)]
-fn generate_skewed_data(n: usize) -> Array1<f64> {
+fn generate_skeweddata(n: usize) -> Array1<f64> {
     Array1::from_shape_fn(n, |i| {
         let x = (i as f64) / (n as f64);
         x * x * x // Cubic function creates right skew
@@ -700,8 +700,8 @@ fn generate_skewed_data(n: usize) -> Array1<f64> {
 }
 
 #[allow(dead_code)]
-fn generate_outlier_data(n: usize) -> Array1<f64> {
-    let mut data = generate_normal_data(n);
+fn generate_outlierdata(n: usize) -> Array1<f64> {
+    let mut data = generate_normaldata(n);
     // Add outliers at 5% of positions
     for i in (0..n).step_by(20) {
         data[i] *= 10.0;
@@ -710,58 +710,58 @@ fn generate_outlier_data(n: usize) -> Array1<f64> {
 }
 
 #[allow(dead_code)]
-fn generate_aligned_data(size: usize, alignment: usize) -> Array1<f64> {
+fn generate_aligneddata(size: usize, alignment: usize) -> Array1<f64> {
     // Generate data with specific memory _alignment for SIMD testing
-    Array1::from_shape_fn(_size, |i| (i as f64).sin())
+    Array1::from_shape_fn(size, |i| (i as f64).sin())
 }
 
 #[allow(dead_code)]
-fn generate_large_dataset(size: usize) -> Array1<f64> {
-    Array1::from_shape_fn(_size, |i| (i as f64 * 0.001).sin() + (i as f64 * 0.01).cos())
+fn generate_largedataset(size: usize) -> Array1<f64> {
+    Array1::from_shape_fn(size, |i| (i as f64 * 0.001).sin() + (i as f64 * 0.01).cos())
 }
 
 #[allow(dead_code)]
-fn generate_near_zero_data(n: usize) -> Array1<f64> {
-    generate_normal_data(n).mapv(|x| x * 1e-15)
+fn generate_near_zerodata(n: usize) -> Array1<f64> {
+    generate_normaldata(n).mapv(|x| x * 1e-15)
 }
 
 #[allow(dead_code)]
-fn generate_large_values_data(n: usize) -> Array1<f64> {
-    generate_normal_data(n).mapv(|x| x * 1e15)
+fn generate_large_valuesdata(n: usize) -> Array1<f64> {
+    generate_normaldata(n).mapv(|x| x * 1e15)
 }
 
 #[allow(dead_code)]
-fn generate_mixed_scale_data(n: usize) -> Array1<f64> {
+fn generate_mixed_scaledata(n: usize) -> Array1<f64> {
     Array1::from_shape_fn(n, |i| if i % 10 == 0 { 1e12 } else { 1e-12 })
 }
 
 #[allow(dead_code)]
-fn generate_cancellation_data(n: usize) -> Array1<f64> {
+fn generate_cancellationdata(n: usize) -> Array1<f64> {
     // Data designed to cause catastrophic cancellation
     let base = 1e8;
     Array1::from_shape_fn(n, |i| base + (i as f64 * 1e-8))
 }
 
 #[allow(dead_code)]
-fn generate_performance_test_data(size: usize) -> Array1<f64> {
-    Array1::from_shape_fn(_size, |i| (i as f64).sin())
+fn generate_performance_testdata(size: usize) -> Array1<f64> {
+    Array1::from_shape_fn(size, |i| (i as f64).sin())
 }
 
 #[allow(dead_code)]
-fn estimate_memory_usage(_datasize: usize) -> usize {
-    _data_size * std::mem::size_of::<f64>() * 2 // Rough estimate
+fn estimate_memory_usage(datasize: usize) -> usize {
+    datasize * std::mem::size_of::<f64>() * 2 // Rough estimate
 }
 
 #[allow(dead_code)]
 fn calculate_memory_efficiency(_peak_usage: usize, datasize: usize) -> f64 {
-    let theoretical_minimum = data_size * std::mem::size_of::<f64>();
+    let theoretical_minimum = datasize * std::mem::size_of::<f64>();
     theoretical_minimum as f64 / _peak_usage as f64
 }
 
 #[allow(dead_code)]
-fn estimate_expected_throughput(_datasize: usize) -> f64 {
+fn estimate_expected_throughput(datasize: usize) -> f64 {
     // Very rough estimate - should be calibrated per platform
-    match _data_size {
+    match datasize {
         n if n < 1000 => 1e6,    // 1M elements/sec
         n if n < 10000 => 5e6,   // 5M elements/sec
         n if n < 100000 => 10e6, // 10M elements/sec
@@ -770,8 +770,8 @@ fn estimate_expected_throughput(_datasize: usize) -> f64 {
 }
 
 #[allow(dead_code)]
-fn estimate_expected_parallel_throughput(_data_size: usize, threadcount: usize) -> f64 {
-    estimate_expected_throughput(_data_size) * (thread_count as f64 * 0.8) // 80% parallel efficiency
+fn estimate_expected_parallel_throughput(datasize: usize, threadcount: usize) -> f64 {
+    estimate_expected_throughput(datasize) * (thread_count as f64 * 0.8) // 80% parallel efficiency
 }
 
 #[allow(dead_code)]
@@ -787,7 +787,7 @@ fn time_simd_operation(data: &Array1<f64>) -> std::time::Duration {
     let optimizer = crate::advanced_simd_stats::AdvancedSimdOptimizer::new(
         crate::advanced_simd_stats::AdvancedSimdConfig::default(),
     );
-    let data_arrays = vec![_data.view()];
+    let data_arrays = vec![data.view()];
     let operations = vec![crate::advanced_simd_stats::BatchOperation::Mean];
     let _result = optimizer.advanced_batch_statistics(&data_arrays, &operations);
     start.elapsed()
@@ -803,7 +803,7 @@ fn time_single_thread_operation(data: &Array1<f64>) -> std::time::Duration {
 #[allow(dead_code)]
 fn time_multi_thread_operation(data: &Array1<f64>) -> std::time::Duration {
     let start = Instant::now();
-    let _result = crate::parallel_stats::mean_parallel(&_data.view(), None);
+    let _result = crate::parallel_stats::mean_parallel(&data.view(), None);
     start.elapsed()
 }
 

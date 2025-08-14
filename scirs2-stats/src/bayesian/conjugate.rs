@@ -236,8 +236,8 @@ impl NormalKnownVariance {
         }
 
         let precision_prior = 1.0 / self.prior_variance;
-        let precision_data = n / self.data_variance;
-        let precision_posterior = precision_prior + precision_data;
+        let precisiondata = n / self.data_variance;
+        let precision_posterior = precision_prior + precisiondata;
 
         if precision_posterior.abs() < f64::EPSILON {
             return Err(StatsError::domain(
@@ -247,7 +247,7 @@ impl NormalKnownVariance {
 
         let posterior_variance = 1.0 / precision_posterior;
         let posterior_mean =
-            (precision_prior * self.prior_mean + precision_data * data_mean) / precision_posterior;
+            (precision_prior * self.prior_mean + precisiondata * data_mean) / precision_posterior;
 
         Ok(Self {
             prior_mean: posterior_mean,

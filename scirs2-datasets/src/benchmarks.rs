@@ -445,9 +445,9 @@ impl BenchmarkRunner {
     /// Benchmark CSV loading performance
     pub fn benchmark_csv_loading<P: AsRef<Path>>(&self, csvpath: P) -> BenchmarkSuite {
         let mut suite = BenchmarkSuite::new("CSV Loading".to_string());
-        let _path = csv_path.as_ref();
+        let path = csvpath.as_ref();
 
-        if !_path.exists() {
+        if !path.exists() {
             let mut result = BenchmarkResult::new("csv_loading".to_string(), HashMap::new());
             result = result.failure("CSV file not found".to_string());
             suite.add_result(result);
@@ -461,7 +461,7 @@ impl BenchmarkRunner {
         ]);
         let std_result = self.run_benchmark("csv_standard", std_params, || {
             let config = CsvConfig::default().with_header(true);
-            match load_csv(_path, config) {
+            match load_csv(path, config) {
                 Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
                 Err(e) => Err(format!("Failed to load CSV: {e}")),
             }
@@ -478,7 +478,7 @@ impl BenchmarkRunner {
             let streaming_config = StreamingConfig::default()
                 .with_parallel(true)
                 .with_chunk_size(1000);
-            match load_csv_parallel(_path, csv_config, streaming_config) {
+            match load_csv_parallel(path, csv_config, streaming_config) {
                 Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
                 Err(e) => Err(format!("Failed to load CSV in parallel: {e}")),
             }

@@ -848,11 +848,9 @@ impl CrossModalFusionEngine {
             .map(|r| r.fun)
             .fold(f64::NEG_INFINITY, f64::max);
         for result in results {
-            let weight = if max_obj > result.fun {
-                (max_obj - result.fun + 1e-12).recip()
-            } else {
-                1.0
-            };
+            // Better solutions (lower objective) should get higher weights
+            // Use (max_obj - fun + small_value) to give higher weight to lower objective values
+            let weight = max_obj - result.fun + 1e-12;
             weights.push(weight);
         }
 
@@ -1006,10 +1004,13 @@ mod tests {
         let initial_params = Array1::from(vec![1.0]);
         let mut coordinator = AdvancedCoordinator::new(config, &initial_params.view());
 
-        // Add some performance history
-        coordinator.state.performance_history.push_back(10.0);
-        coordinator.state.performance_history.push_back(9.0);
-        coordinator.state.performance_history.push_back(8.0);
+        // Add enough performance history (needs at least 10 values for improvement rate calculation)
+        for i in 0..12 {
+            coordinator
+                .state
+                .performance_history
+                .push_back(15.0 - i as f64 * 0.5);
+        }
 
         let improvement_rate = coordinator.compute_recent_improvement_rate();
         assert!(improvement_rate > 0.0);

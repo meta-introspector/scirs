@@ -17,7 +17,7 @@ pub struct AABB {
 impl AABB {
     /// Creates a new AABB with the given minimum and maximum corners
     pub fn new(min: [f64; 3], max: [f64; 3]) -> Self {
-        AABB { min: min, max }
+        AABB { min, max }
     }
 
     /// Creates an AABB from a 3D box
@@ -296,13 +296,12 @@ pub struct SweepAndPrune1D {
 impl SweepAndPrune1D {
     /// Creates a new sweep and prune algorithm for the given axis
     pub fn new(axis: usize) -> Self {
-        SweepAndPrune1D { axis: axis }
+        SweepAndPrune1D { axis }
     }
 
     /// Checks if two AABBs could be colliding along the chosen axis
     pub fn may_collide(&self, aabb1: &AABB, aabb2: &AABB) -> bool {
-        aabb1.min[self.axis] <= aabb2.max[self.axis]
-            && aabb1.max[self.axis] >= aabb2.min[self.axis]
+        aabb1.min[self.axis] <= aabb2.max[self.axis] && aabb1.max[self.axis] >= aabb2.min[self.axis]
     }
 
     /// Gets the starting point of an AABB along the chosen axis

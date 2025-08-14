@@ -67,7 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let keywords_with_pos = extractor.extract_keywords_with_positions(text)?;
 
-    for (keyword_score, positions) in keywords_with_pos.iter().take(5) {
+    for (keyword, _score, positions) in keywords_with_pos.iter().take(5) {
         println!("'{keyword}' appears at positions: {positions:?}");
     }
 

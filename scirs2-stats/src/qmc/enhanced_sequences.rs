@@ -128,7 +128,7 @@ pub struct EnhancedQMCConfig {
     /// Enable parallel generation
     pub parallel: bool,
     /// Chunk size for parallel processing
-    pub chunk_size: usize,
+    pub chunksize: usize,
     /// Randomization seed
     pub seed: Option<u64>,
     /// Enable SIMD optimizations
@@ -145,7 +145,7 @@ impl Default for EnhancedQMCConfig {
     fn default() -> Self {
         Self {
             parallel: true,
-            chunk_size: 1000,
+            chunksize: 1000,
             seed: None,
             use_simd: true,
             quality_threshold: 1e-3,
@@ -225,7 +225,7 @@ where
     pub fn generate(&mut self, n: usize) -> StatsResult<Array2<F>> {
         check_positive(n, "n")?;
 
-        if self.config.parallel && n >= self.config.chunk_size {
+        if self.config.parallel && n >= self.config.chunksize {
             self.generate_parallel(n)
         } else {
             self.generate_sequential(n)
@@ -234,17 +234,17 @@ where
 
     /// Generate sequence in parallel
     fn generate_parallel(&mut self, n: usize) -> StatsResult<Array2<F>> {
-        let chunk_size = self.config.chunk_size;
-        let num_chunks = (n + chunk_size - 1) / chunk_size;
+        let chunksize = self.config.chunksize;
+        let num_chunks = (n + chunksize - 1) / chunksize;
 
         let chunks = parallel_map_result(
             (0..num_chunks).collect::<Vec<_>>().as_slice(),
             |&chunk_idx| {
-                let start = chunk_idx * chunk_size;
-                let end = (start + chunk_size).min(n);
-                let chunk_size = end - start;
+                let start = chunk_idx * chunksize;
+                let end = (start + chunksize).min(n);
+                let chunksize = end - start;
 
-                self.generate_chunk(start, chunk_size)
+                self.generate_chunk(start, chunksize)
             },
         )?;
 
@@ -397,7 +397,7 @@ where
     fn compute_niederreiter_enhanced(
         &self,
         index: usize,
-        _base_strategy: &BaseSelectionStrategy,
+        base_strategy: &BaseSelectionStrategy,
         _matrix_optimization: bool,
     ) -> StatsResult<Array1<F>> {
         // Simplified implementation

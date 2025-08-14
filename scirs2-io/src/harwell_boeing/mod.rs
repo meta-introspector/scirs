@@ -656,11 +656,7 @@ fn read_integer_data<R: BufRead>(
 
 /// Read real data from file
 #[allow(dead_code)]
-fn read_real_data<R: BufRead>(
-    reader: &mut R,
-    num_lines: usize,
-    data: &mut Vec<f64>,
-) -> Result<()> {
+fn read_real_data<R: BufRead>(reader: &mut R, num_lines: usize, data: &mut Vec<f64>) -> Result<()> {
     for _ in 0..num_lines {
         let mut line = String::new();
         reader
@@ -687,8 +683,7 @@ fn write_integer_data<W: Write>(writer: &mut W, data: &[usize], fieldwidth: usiz
             if i > 0 {
                 write!(writer, " ").map_err(|e| IoError::FileError(e.to_string()))?;
             }
-            write!(writer, "{value:fieldwidth$}")
-                .map_err(|e| IoError::FileError(e.to_string()))?;
+            write!(writer, "{value:fieldwidth$}").map_err(|e| IoError::FileError(e.to_string()))?;
         }
         writeln!(writer).map_err(|e| IoError::FileError(e.to_string()))?;
     }
@@ -768,10 +763,7 @@ mod tests {
         assert_eq!(hbmatrix.header.nnzero, 4);
         assert_eq!(hbmatrix.colptr, vec![0, 2, 4]);
         assert_eq!(hbmatrix.rowind, vec![0, 1, 0, 1]);
-        assert_eq!(
-            hbmatrix.values.as_ref().unwrap(),
-            &vec![1.0, 2.0, 3.0, 4.0]
-        );
+        assert_eq!(hbmatrix.values.as_ref().unwrap(), &vec![1.0, 2.0, 3.0, 4.0]);
 
         // Convert back to CCS
         let (new_colptr, new_rowind, new_values) = hb_to_ccs(&hbmatrix);

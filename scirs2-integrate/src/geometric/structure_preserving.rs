@@ -376,7 +376,7 @@ impl SplittingIntegrator {
         ];
 
         Self {
-            kinetic: kinetic,
+            kinetic,
             potential,
             dim,
             coefficients,

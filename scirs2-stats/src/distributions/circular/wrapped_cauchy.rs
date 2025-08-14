@@ -317,6 +317,10 @@ mod tests {
         // Note: Statistical test - may occasionally fail due to random variation
         // Using very wide tolerance for now until sampling algorithm is improved
         let deviation = (circular_mean - 0.0).abs();
-        assert!(deviation < PI, "Circular mean deviation {} should be less than π", deviation);
+        assert!(
+            deviation < PI,
+            "Circular mean deviation {} should be less than π",
+            deviation
+        );
     }
 }

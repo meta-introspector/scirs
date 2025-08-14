@@ -15,8 +15,8 @@ pub mod transpose;
 // Re-export commonly used SIMD operations
 #[cfg(feature = "simd")]
 pub use elementwise::{
-    simd_matrix_add_f32, simd_matrix_add_f64, simd_matrix_add_inplace_f32,
-    simd_matrix_mul_elementwise_f32, simd_matrix_scale_f32,
+    simdmatrix_add_f32, simdmatrix_add_f64, simdmatrix_add_inplace_f32,
+    simdmatrix_mul_elementwise_f32, simdmatrix_scale_f32,
 };
 #[cfg(feature = "simd")]
 pub use gemm::{
@@ -185,7 +185,7 @@ pub fn simd_matmul_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgResult
 /// * Matrix containing element-wise maximum values
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_matrix_max_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgResult<Array2<f32>> {
+pub fn simdmatrix_max_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgResult<Array2<f32>> {
     if a.shape() != b.shape() {
         return Err(LinalgError::ShapeError(format!(
             "Matrix dimensions must match for element-wise operations: {:?} vs {:?}",
@@ -225,7 +225,7 @@ pub fn simd_matrix_max_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgRe
 /// * Matrix containing element-wise maximum values
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_matrix_max_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
+pub fn simdmatrix_max_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
     if a.shape() != b.shape() {
         return Err(LinalgError::ShapeError(format!(
             "Matrix dimensions must match for element-wise operations: {:?} vs {:?}",
@@ -265,7 +265,7 @@ pub fn simd_matrix_max_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgRe
 /// * Matrix containing element-wise minimum values
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_matrix_min_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgResult<Array2<f32>> {
+pub fn simdmatrix_min_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgResult<Array2<f32>> {
     if a.shape() != b.shape() {
         return Err(LinalgError::ShapeError(format!(
             "Matrix dimensions must match for element-wise operations: {:?} vs {:?}",
@@ -305,7 +305,7 @@ pub fn simd_matrix_min_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgRe
 /// * Matrix containing element-wise minimum values
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_matrix_min_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
+pub fn simdmatrix_min_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
     if a.shape() != b.shape() {
         return Err(LinalgError::ShapeError(format!(
             "Matrix dimensions must match for element-wise operations: {:?} vs {:?}",

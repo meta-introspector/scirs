@@ -453,7 +453,8 @@ where
             .collect();
 
         // Sort by _score in descending order
-        score_relevance_idx.sort_by(|(a, _, _), (b, _, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        score_relevance_idx
+            .sort_by(|(a, _, _), (b, _, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Calculate precision at each relevant position
         let mut precision_sum = 0.0;

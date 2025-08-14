@@ -391,7 +391,7 @@ pub fn integrate_bispline<F: crate::traits::InterpolationFloat>(
             let _y = mid_y + half_width_y * points[j];
 
             // Evaluate the spline at this point
-            let value = evaluate_bispline(_x, y, knots_x, knots_y, coeffs, kx, ky);
+            let value = evaluate_bispline(_x, _y, knots_x, knots_y, coeffs, kx, ky);
 
             // Add to the sum with appropriate weight
             sum = sum + value * weights[i] * weights[j];

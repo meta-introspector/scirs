@@ -97,7 +97,7 @@ where
 
     // Create the complete compressed array structure
     let compressed_array = CompressedArray {
-        metadata: metadata,
+        metadata,
         data: compressed_data,
     };
 

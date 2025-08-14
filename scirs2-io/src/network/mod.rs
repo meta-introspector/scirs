@@ -104,7 +104,7 @@ impl NetworkClient {
     /// Create a new network client with custom configuration
     pub fn with_config(config: NetworkConfig) -> Self {
         Self {
-            config: config,
+            config,
             #[cfg(feature = "reqwest")]
             http_client: None,
             cloud_provider: None,

@@ -379,7 +379,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_parallel_dispatch_small_matrix() {
+    fn test_parallel_dispatch_smallmatrix() {
         // Small matrix should use serial implementation
         let a = array![[1.0, 2.0], [2.0, 5.0]];
         let result = ParallelDecomposition::cholesky(&a.view(), Some(4));

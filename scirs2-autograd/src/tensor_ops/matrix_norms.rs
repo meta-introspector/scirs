@@ -271,10 +271,7 @@ fn compute_matrix_inf_norm<F: Float>(matrix: &ArrayView2<F>) -> F {
 
 /// Compute gradient for matrix infinity-norm
 #[allow(dead_code)]
-fn compute_matrix_inf_norm_gradient<F: Float>(
-    matrix: &ArrayView2<F>,
-    grad_scalar: F,
-) -> Array2<F> {
+fn compute_matrix_inf_norm_gradient<F: Float>(matrix: &ArrayView2<F>, grad_scalar: F) -> Array2<F> {
     let (m, n) = matrix.dim();
     let mut grad_matrix = Array2::zeros((m, n));
 

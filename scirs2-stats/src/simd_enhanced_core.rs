@@ -88,7 +88,7 @@ where
         return Err(ErrorMessages::empty_array("x"));
     }
     if n <= ddof {
-        return Err(ErrorMessages::insufficient_data(
+        return Err(ErrorMessages::insufficientdata(
             "variance calculation",
             ddof + 1,
             n,
@@ -190,7 +190,7 @@ where
         return Err(ErrorMessages::empty_array("x"));
     }
     if n <= ddof {
-        return Err(ErrorMessages::insufficient_data(
+        return Err(ErrorMessages::insufficientdata(
             "comprehensive statistics",
             ddof + 1,
             n,

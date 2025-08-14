@@ -452,7 +452,7 @@ fn fit_local_polynomial<F: Float + FromPrimitive + 'static>(
 
     #[cfg(feature = "linalg")]
     let coefficients = {
-        use scirs2__linalg::solve;
+        use scirs2_linalg::solve;
         let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());
         let xty_f64 = xty.mapv(|x| x.to_f64().unwrap());
         solve(&xtx_f64.view(), &xty_f64.view(), None)

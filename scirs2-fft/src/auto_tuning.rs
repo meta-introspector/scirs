@@ -166,7 +166,7 @@ impl AutoTuner {
             });
 
         Self {
-            config: config,
+            config,
             database,
             enabled: true,
         }

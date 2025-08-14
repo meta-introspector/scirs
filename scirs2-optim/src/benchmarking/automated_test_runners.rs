@@ -372,7 +372,7 @@ impl AutomatedTestRunner {
         let results_aggregator = ResultsAggregator::new();
 
         Self {
-            config: config,
+            config,
             platform_matrix,
             execution_queue,
             resource_manager,
@@ -1027,7 +1027,7 @@ impl ResourceManager {
                 .unwrap_or(1),
             available_memory: Self::get_available_memory(),
             allocated_resources: Arc::new(Mutex::new(HashMap::new())),
-            _monitoringenabled: _monitoringenabled,
+            _monitoringenabled,
         }
     }
 

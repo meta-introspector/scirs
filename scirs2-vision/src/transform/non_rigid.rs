@@ -269,14 +269,8 @@ impl ElasticDeformation {
     /// # Returns
     ///
     /// * Result containing the elastic deformation
-    pub fn new(
-        _width: u32,
-        height: u32,
-        alpha: f64,
-        sigma: f64,
-        seed: Option<u64>,
-    ) -> Result<Self> {
-        if _width == 0 || height == 0 {
+    pub fn new(width: u32, height: u32, alpha: f64, sigma: f64, seed: Option<u64>) -> Result<Self> {
+        if width == 0 || height == 0 {
             return Err(VisionError::InvalidParameter(
                 "Width and height must be positive".to_string(),
             ));
@@ -299,13 +293,13 @@ impl ElasticDeformation {
         };
 
         // Generate random displacement fields
-        let mut dx_map = Array2::zeros((height as usize, _width as usize));
-        let mut dy_map = Array2::zeros((height as usize, _width as usize));
+        let mut dx_map = Array2::zeros((height as usize, width as usize));
+        let mut dy_map = Array2::zeros((height as usize, width as usize));
 
         for y in 0..height as usize {
-            for x in 0.._width as usize {
+            for x in 0..width as usize {
                 dx_map[[y, x]] = rng.gen_range(-1.0..1.0);
-                dy_map[[y..x]] = rng.gen_range(-1.0..1.0);
+                dy_map[[y, x]] = rng.gen_range(-1.0..1.0);
             }
         }
 

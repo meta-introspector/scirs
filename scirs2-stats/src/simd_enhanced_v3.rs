@@ -179,7 +179,7 @@ where
 ///
 /// Computes rolling statistics over a sliding window using SIMD acceleration.
 pub struct MovingWindowSIMD<F> {
-    window_size: usize,
+    windowsize: usize,
     _phantom: std::marker::PhantomData<F>,
 }
 
@@ -189,7 +189,7 @@ where
 {
     pub fn new(_windowsize: usize) -> Self {
         Self {
-            window_size: _windowsize,
+            windowsize: _windowsize,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -199,34 +199,34 @@ where
     where
         D: Data<Elem = F>,
     {
-        if data.len() < self.window_size {
+        if data.len() < self.windowsize {
             return Err(StatsError::InvalidArgument(
                 "Data length must be >= window size".to_string(),
             ));
         }
 
-        let n_windows = data.len() - self.window_size + 1;
+        let n_windows = data.len() - self.windowsize + 1;
         let mut result = ndarray::Array1::zeros(n_windows);
 
-        if self.window_size > 16 {
+        if self.windowsize > 16 {
             // SIMD path: compute each window mean
             for i in 0..n_windows {
-                let window = data.slice(ndarray::s![i..i + self.window_size]);
+                let window = data.slice(ndarray::s![i..i + self.windowsize]);
                 let sum = F::simd_sum(&window);
-                result[i] = sum / F::from(self.window_size).unwrap();
+                result[i] = sum / F::from(self.windowsize).unwrap();
             }
         } else {
             // Optimized scalar path using sliding window sum
             let mut window_sum = data
-                .slice(ndarray::s![0..self.window_size])
+                .slice(ndarray::s![0..self.windowsize])
                 .iter()
                 .fold(F::zero(), |acc, &x| acc + x);
 
-            result[0] = window_sum / F::from(self.window_size).unwrap();
+            result[0] = window_sum / F::from(self.windowsize).unwrap();
 
             for i in 1..n_windows {
-                window_sum = window_sum - data[i - 1] + data[i + self.window_size - 1];
-                result[i] = window_sum / F::from(self.window_size).unwrap();
+                window_sum = window_sum - data[i - 1] + data[i + self.windowsize - 1];
+                result[i] = window_sum / F::from(self.windowsize).unwrap();
             }
         }
 
@@ -242,33 +242,33 @@ where
     where
         D: Data<Elem = F>,
     {
-        if data.len() < self.window_size {
+        if data.len() < self.windowsize {
             return Err(StatsError::InvalidArgument(
                 "Data length must be >= window size".to_string(),
             ));
         }
 
-        if self.window_size <= ddof {
+        if self.windowsize <= ddof {
             return Err(StatsError::InvalidArgument(
                 "Window size must be > ddof".to_string(),
             ));
         }
 
-        let n_windows = data.len() - self.window_size + 1;
+        let n_windows = data.len() - self.windowsize + 1;
         let mut result = ndarray::Array1::zeros(n_windows);
 
         for i in 0..n_windows {
-            let window = data.slice(ndarray::s![i..i + self.window_size]);
+            let window = data.slice(ndarray::s![i..i + self.windowsize]);
 
-            if self.window_size > 16 {
+            if self.windowsize > 16 {
                 // SIMD path: compute mean, then variance
-                let mean = F::simd_sum(&window.view()) / F::from(self.window_size).unwrap();
-                let mean_array = ndarray::Array1::from_elem(self.window_size, mean);
+                let mean = F::simd_sum(&window.view()) / F::from(self.windowsize).unwrap();
+                let mean_array = ndarray::Array1::from_elem(self.windowsize, mean);
                 let diff = F::simd_sub(&window, &mean_array.view());
                 let sq_diff = F::simd_mul(&diff.view(), &diff.view());
                 let sum_sq_diff = F::simd_sum(&sq_diff.view());
 
-                result[i] = sum_sq_diff / F::from(self.window_size - ddof).unwrap();
+                result[i] = sum_sq_diff / F::from(self.windowsize - ddof).unwrap();
             } else {
                 // Scalar path: Welford's algorithm
                 let mut mean = F::zero();
@@ -295,17 +295,17 @@ where
     where
         D: Data<Elem = F>,
     {
-        if data.len() < self.window_size {
+        if data.len() < self.windowsize {
             return Err(StatsError::InvalidArgument(
                 "Data length must be >= window size".to_string(),
             ));
         }
 
-        let n_windows = data.len() - self.window_size + 1;
+        let n_windows = data.len() - self.windowsize + 1;
         let mut result = ndarray::Array1::zeros(n_windows);
 
         for i in 0..n_windows {
-            let window = data.slice(ndarray::s![i..i + self.window_size]);
+            let window = data.slice(ndarray::s![i..i + self.windowsize]);
 
             // Use scalar path for now (SIMD min/max need different implementation)
             result[i] = window.iter().fold(
@@ -322,17 +322,17 @@ where
     where
         D: Data<Elem = F>,
     {
-        if data.len() < self.window_size {
+        if data.len() < self.windowsize {
             return Err(StatsError::InvalidArgument(
                 "Data length must be >= window size".to_string(),
             ));
         }
 
-        let n_windows = data.len() - self.window_size + 1;
+        let n_windows = data.len() - self.windowsize + 1;
         let mut result = ndarray::Array1::zeros(n_windows);
 
         for i in 0..n_windows {
-            let window = data.slice(ndarray::s![i..i + self.window_size]);
+            let window = data.slice(ndarray::s![i..i + self.windowsize]);
 
             // Use scalar path for now (SIMD min/max need different implementation)
             result[i] = window.iter().fold(

@@ -859,12 +859,7 @@ impl<
     }
 
     /// Set custom damping for a specific layer
-    pub fn set_layer_damping(
-        &mut self,
-        layername: &str,
-        damping_a: T,
-        damping_g: T,
-    ) -> Result<()> {
+    pub fn set_layer_damping(&mut self, layername: &str, damping_a: T, damping_g: T) -> Result<()> {
         let state = self
             .layer_states
             .get_mut(layername)

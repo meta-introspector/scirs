@@ -73,7 +73,7 @@ impl<F> IdentityOperator<F> {
     /// Create a new identity operator of given size
     pub fn new(size: usize) -> Self {
         Self {
-            size: size,
+            size,
             phantom: PhantomData,
         }
     }
@@ -113,7 +113,7 @@ pub struct ScaledIdentityOperator<F> {
 impl<F: Float> ScaledIdentityOperator<F> {
     /// Create a new scaled identity operator
     pub fn new(size: usize, scale: F) -> Self {
-        Self { size: size, scale }
+        Self { size, scale }
     }
 }
 
@@ -151,9 +151,7 @@ pub struct DiagonalOperator<F> {
 impl<F: Float> DiagonalOperator<F> {
     /// Create a new diagonal operator from diagonal values
     pub fn new(diagonal: Vec<F>) -> Self {
-        Self {
-            diagonal: diagonal,
-        }
+        Self { diagonal }
     }
 
     /// Get the diagonal values
@@ -255,7 +253,7 @@ impl<F, M> MatrixLinearOperator<F, M> {
     /// Create a new matrix linear operator
     pub fn new(matrix: M) -> Self {
         Self {
-            matrix: matrix,
+            matrix,
             phantom: PhantomData,
         }
     }
@@ -562,7 +560,7 @@ impl<F: Float> InverseOperator<F> {
         }
 
         Ok(Self {
-            original: original,
+            original,
             solver_fn: Box::new(solver_fn),
         })
     }
@@ -607,9 +605,7 @@ pub struct TransposeOperator<F> {
 impl<F: Float + NumAssign> TransposeOperator<F> {
     /// Create a new transpose operator
     pub fn new(original: Box<dyn LinearOperator<F>>) -> Self {
-        Self {
-            original: original,
-        }
+        Self { original }
     }
 }
 
@@ -647,9 +643,7 @@ impl<F: Float + NumAssign> AdjointOperator<F> {
                 "Original operator does not support adjoint operations".to_string(),
             ));
         }
-        Ok(Self {
-            original: original,
-        })
+        Ok(Self { original })
     }
 }
 
@@ -735,10 +729,7 @@ pub struct ScaledOperator<F> {
 impl<F: Float + NumAssign> ScaledOperator<F> {
     /// Create a new scaled operator
     pub fn new(alpha: F, operator: Box<dyn LinearOperator<F>>) -> Self {
-        Self {
-            alpha: alpha,
-            operator,
-        }
+        Self { alpha, operator }
     }
 }
 
@@ -802,7 +793,7 @@ impl<F: Float + NumAssign> ChainOperator<F> {
         let totalshape = (first_rows, last_cols);
 
         Ok(Self {
-            operators: operators,
+            operators,
             totalshape,
         })
     }
@@ -865,10 +856,7 @@ impl<F: Float + NumAssign> PowerOperator<F> {
                 "Power must be positive".to_string(),
             ));
         }
-        Ok(Self {
-            operator: operator,
-            power,
-        })
+        Ok(Self { operator, power })
     }
 }
 

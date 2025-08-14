@@ -187,12 +187,12 @@ where
     }
 
     // Create tridiagonal matrix in full form
-    let mut tri_matrix = Array2::zeros((n, n));
+    let mut trimatrix = Array2::zeros((n, n));
     for i in 0..n {
-        tri_matrix[[i, i]] = diagonal[i];
+        trimatrix[[i, i]] = diagonal[i];
         if i < n - 1 {
-            tri_matrix[[i, i + 1]] = off_diagonal[i];
-            tri_matrix[[i + 1, i]] = off_diagonal[i];
+            trimatrix[[i, i + 1]] = off_diagonal[i];
+            trimatrix[[i + 1, i]] = off_diagonal[i];
         }
     }
 
@@ -210,7 +210,7 @@ where
 
     for _ in 0..max_iter {
         // Do a QR step
-        let (q, r) = match crate::decomposition::qr(&tri_matrix.view(), None) {
+        let (q, r) = match crate::decomposition::qr(&trimatrix.view(), None) {
             Ok((q, r)) => (q, r),
             Err(e) => return Err(e),
         };
@@ -259,13 +259,13 @@ where
             return Ok((sorted_eigenvalues, sorted_eigenvectors));
         }
 
-        tri_matrix = temp;
+        trimatrix = temp;
     }
 
     // If not converged, return a simple approximation
     let mut eigenvalues = Array1::zeros(n);
     for i in 0..n {
-        eigenvalues[i] = tri_matrix[[i, i]];
+        eigenvalues[i] = trimatrix[[i, i]];
     }
 
     Err(LinalgError::ConvergenceError(

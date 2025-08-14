@@ -40,8 +40,8 @@
 //! use std::fs::File;
 //! use std::io::Write;
 //! use tempfile::NamedTempFile;
-//! use scirs2__graph::base::Graph;
-//! use scirs2__graph::io::matrix_market::{read_matrix_market_format, write_matrix_market_format};
+//! use scirs2_graph::base::Graph;
+//! use scirs2_graph::io::matrix_market::{read_matrix_market_format, write_matrix_market_format};
 //!
 //! // Create a temporary file with Matrix Market data
 //! let mut temp_file = NamedTempFile::new().unwrap();

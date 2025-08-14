@@ -763,7 +763,7 @@ impl<A: Float + Debug + Send + Sync + 'static> BaseOptimizerPlugin<A> {
     /// Create a new base optimizer plugin
     pub fn new(info: PluginInfo, capabilities: PluginCapabilities) -> Self {
         Self {
-            info: info,
+            info,
             capabilities,
             config: OptimizerConfig::default(),
             state: BaseOptimizerState::new(),

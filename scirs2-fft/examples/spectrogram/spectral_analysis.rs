@@ -3,8 +3,8 @@
 //! This example demonstrates how to perform spectral analysis on time-domain signals
 //! using various FFT functions and visualizing them with spectrograms.
 
-use num__complex::Complex64;
-use scirs2__fft::{
+use num_complex::Complex64;
+use scirs2_fft::{
     fft, fftfreq, fftshift, get_window, spectrogram, stft, window::Window, hilbert,
 };
 use std::f64::consts::PI;

@@ -1807,7 +1807,7 @@ impl NeuralLayer {
         activation: ActivationFunction,
         layer_type: LayerType,
     ) -> Self {
-        let weights = Array2::fromshape_fn((output_size, input_size), |_| {
+        let weights = Array2::from_shape_fn((output_size, input_size), |_| {
             rand::rng().random::<f64>() * 0.01 - 0.005 // Small random initialization
         });
 
@@ -1866,14 +1866,14 @@ impl NeuralLayer {
     /// Update layer weights
     fn update_weights(&mut self, learning_rate: f64, momentum: f64) {
         // Simplified weight update (in real implementation, this would use gradients)
-        let weight_update = Array2::fromshape_fn(self.weights.dim(), |_| {
+        let weight_update = Array2::from_shape_fn(self.weights.dim(), |_| {
             (rand::rng().random::<f64>() - 0.5) * learning_rate * 0.001
         });
 
         self.weights = &self.weights - &weight_update;
 
         // Simple bias update
-        let bias_update = Array1::fromshape_fn(self.bias.len(), |_| {
+        let bias_update = Array1::from_shape_fn(self.bias.len(), |_| {
             (rand::rng().random::<f64>() - 0.5) * learning_rate * 0.001
         });
 
@@ -1885,7 +1885,7 @@ impl NeuralLayer {
         let output_size = self.weights.nrows();
 
         // Create new weights matrix with different input _size
-        self.weights = Array2::fromshape_fn((output_size, new_input_size), |_| {
+        self.weights = Array2::from_shape_fn((output_size, new_input_size), |_| {
             rand::rng().random::<f64>() * 0.01 - 0.005
         });
     }
@@ -1924,7 +1924,7 @@ impl PerformancePredictionModel {
     }
 
     /// Predict future performance
-    fn predict(&selfhorizon: Duration) -> Result<PerformancePredictionPoint> {
+    fn predict(&self, horizon: Duration) -> Result<PerformancePredictionPoint> {
         if self.performance_history.is_empty() {
             return Ok(PerformancePredictionPoint {
                 features: Array1::zeros(1),
@@ -2007,7 +2007,7 @@ impl AdaptiveStreamingEngine {
         horizon: Duration,
     ) -> Result<PerformancePredictionPoint> {
         let prediction_model = PerformancePredictionModel::new();
-        prediction_model.predict(horizon)
+        prediction_model.predict(&horizon)
     }
 }
 
@@ -2017,7 +2017,7 @@ mod tests {
 
     #[allow(dead_code)]
     fn create_test_chunk() -> StreamChunk {
-        let data = Array2::fromshape_vec((10, 5), (0..50).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 5), (0..50).map(|x| x as f64).collect()).unwrap();
         StreamChunk {
             data,
             timestamp: Instant::now(),
@@ -2054,7 +2054,7 @@ mod tests {
     #[test]
     fn test_statistical_moments_calculation() {
         let engine = create_adaptive_engine();
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (5, 3),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,

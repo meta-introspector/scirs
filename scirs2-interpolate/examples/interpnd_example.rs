@@ -57,7 +57,7 @@ fn regular_grid_example() {
     .unwrap();
 
     // Test points for interpolation
-    let test_points = Array2::fromshape_vec(
+    let test_points = Array2::from_shape_vec(
         (5, 2),
         vec![
             0.5, 0.5, // Between grid points
@@ -87,7 +87,7 @@ fn regular_grid_example() {
 #[allow(dead_code)]
 fn scattered_data_example() {
     // Create scattered points in 2D
-    let points = Array2::fromshape_vec(
+    let points = Array2::from_shape_vec(
         (6, 2),
         vec![
             0.0, 0.0, // Origin
@@ -141,7 +141,7 @@ fn scattered_data_example() {
     .unwrap();
 
     // Test points for interpolation
-    let test_points = Array2::fromshape_vec(
+    let test_points = Array2::from_shape_vec(
         (3, 2),
         vec![
             0.25, 0.25, // Between points

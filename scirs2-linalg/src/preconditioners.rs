@@ -85,7 +85,7 @@ pub struct PreconditionerConfig {
     /// Smoother iterations for multigrid
     pub mg_smoothing_iterations: usize,
     /// Block size for block methods
-    pub block_size: usize,
+    pub blocksize: usize,
     /// Domain overlap for Schwarz methods
     pub domain_overlap: usize,
     /// Polynomial degree for polynomial preconditioners
@@ -104,7 +104,7 @@ impl Default for PreconditionerConfig {
             drop_tolerance: 1e-4,
             mg_levels: 4,
             mg_smoothing_iterations: 2,
-            block_size: 64,
+            blocksize: 64,
             domain_overlap: 2,
             polynomial_degree: 3,
             workers: WorkerConfig::default(),
@@ -145,8 +145,8 @@ impl PreconditionerConfig {
     }
 
     /// Set block size for block methods
-    pub fn with_block_size(mut self, blocksize: usize) -> Self {
-        self.block_size = blocksize;
+    pub fn with_blocksize(mut self, blocksize: usize) -> Self {
+        self.blocksize = blocksize;
         self
     }
 
@@ -211,7 +211,7 @@ where
         let (m, n) = matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
-                "Diagonal preconditioner requires square _matrix".to_string(),
+                "Diagonal preconditioner requires square matrix".to_string(),
             ));
         }
 
@@ -263,7 +263,7 @@ where
         let (m, n) = matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
-                "ILU preconditioner requires square _matrix".to_string(),
+                "ILU preconditioner requires square matrix".to_string(),
             ));
         }
 
@@ -271,13 +271,13 @@ where
         let mut l_factor = Array2::zeros((n, n));
         let mut u_factor = Array2::zeros((n, n));
 
-        // Copy _matrix to working array
-        let mut working_matrix = matrix.to_owned();
+        // Copy matrix to working array
+        let mut workingmatrix = matrix.to_owned();
 
         // Perform incomplete LU factorization
         for k in 0..n {
             // Diagonal element
-            let pivot = working_matrix[[k, k]];
+            let pivot = workingmatrix[[k, k]];
             if pivot.abs() < F::epsilon() {
                 return Err(LinalgError::SingularMatrixError(
                     "Matrix is singular".to_string(),
@@ -289,16 +289,15 @@ where
 
             // Update submatrix with fill-in control
             for i in (k + 1)..n {
-                if working_matrix[[i, k]].abs() > F::from(config.drop_tolerance).unwrap() {
-                    l_factor[[i, k]] = working_matrix[[i, k]] / pivot;
+                if workingmatrix[[i, k]].abs() > F::from(config.drop_tolerance).unwrap() {
+                    l_factor[[i, k]] = workingmatrix[[i, k]] / pivot;
 
                     for j in (k + 1)..n {
-                        if working_matrix[[k, j]].abs() > F::from(config.drop_tolerance).unwrap()
-                            && working_matrix[[i, j]].abs()
-                                > F::from(config.drop_tolerance).unwrap()
+                        if workingmatrix[[k, j]].abs() > F::from(config.drop_tolerance).unwrap()
+                            && workingmatrix[[i, j]].abs() > F::from(config.drop_tolerance).unwrap()
                         {
-                            working_matrix[[i, j]] =
-                                working_matrix[[i, j]] - l_factor[[i, k]] * working_matrix[[k, j]];
+                            workingmatrix[[i, j]] =
+                                workingmatrix[[i, j]] - l_factor[[i, k]] * workingmatrix[[k, j]];
                         }
                     }
                 }
@@ -306,8 +305,8 @@ where
 
             // Update U factor
             for j in (k + 1)..n {
-                if working_matrix[[k, j]].abs() > F::from(config.drop_tolerance).unwrap() {
-                    u_factor[[k, j]] = working_matrix[[k, j]];
+                if workingmatrix[[k, j]].abs() > F::from(config.drop_tolerance).unwrap() {
+                    u_factor[[k, j]] = workingmatrix[[k, j]];
                 }
             }
         }
@@ -387,17 +386,17 @@ where
         let (m, n) = matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
-                "Incomplete Cholesky requires square _matrix".to_string(),
+                "Incomplete Cholesky requires square matrix".to_string(),
             ));
         }
 
         let mut l_factor = Array2::zeros((n, n));
-        let mut working_matrix = matrix.to_owned();
+        let mut workingmatrix = matrix.to_owned();
 
         // Perform incomplete Cholesky factorization
         for k in 0..n {
             // Diagonal element
-            let diag_elem = working_matrix[[k, k]];
+            let diag_elem = workingmatrix[[k, k]];
             if diag_elem <= F::zero() {
                 return Err(LinalgError::InvalidInput(
                     "Matrix is not positive definite".to_string(),
@@ -408,8 +407,8 @@ where
 
             // Update column below diagonal
             for i in (k + 1)..n {
-                if working_matrix[[i, k]].abs() > F::from(config.drop_tolerance).unwrap() {
-                    l_factor[[i, k]] = working_matrix[[i, k]] / l_factor[[k, k]];
+                if workingmatrix[[i, k]].abs() > F::from(config.drop_tolerance).unwrap() {
+                    l_factor[[i, k]] = workingmatrix[[i, k]] / l_factor[[k, k]];
                 }
             }
 
@@ -419,7 +418,7 @@ where
                     if l_factor[[i, k]].abs() > F::from(config.drop_tolerance).unwrap()
                         && l_factor[[j, k]].abs() > F::from(config.drop_tolerance).unwrap()
                     {
-                        working_matrix[[i, j]] -= l_factor[[i, k]] * l_factor[[j, k]];
+                        workingmatrix[[i, j]] -= l_factor[[i, k]] * l_factor[[j, k]];
                     }
                 }
             }
@@ -480,7 +479,7 @@ pub struct BlockJacobiPreconditioner<F> {
     /// Inverse blocks on the diagonal
     inverse_blocks: Vec<Array2<F>>,
     /// Block sizes
-    block_sizes: Vec<usize>,
+    blocksizes: Vec<usize>,
     /// Total size
     size: usize,
 }
@@ -494,19 +493,19 @@ where
         let (m, n) = matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
-                "Block Jacobi requires square _matrix".to_string(),
+                "Block Jacobi requires square matrix".to_string(),
             ));
         }
 
-        let block_size = config.block_size.min(n);
-        let num_blocks = n.div_ceil(block_size);
+        let blocksize = config.blocksize.min(n);
+        let num_blocks = n.div_ceil(blocksize);
         let mut inverse_blocks = Vec::with_capacity(num_blocks);
-        let mut block_sizes = Vec::with_capacity(num_blocks);
+        let mut blocksizes = Vec::with_capacity(num_blocks);
 
         for block_idx in 0..num_blocks {
-            let start_idx = block_idx * block_size;
-            let end_idx = (start_idx + block_size).min(n);
-            let current_block_size = end_idx - start_idx;
+            let start_idx = block_idx * blocksize;
+            let end_idx = (start_idx + blocksize).min(n);
+            let current_blocksize = end_idx - start_idx;
 
             // Extract diagonal block
             let block = matrix.slice(ndarray::s![start_idx..end_idx, start_idx..end_idx]);
@@ -515,18 +514,18 @@ where
             let (p, l, u) = lu(&block, None)?;
 
             // Create identity for solving
-            let identity = Array2::eye(current_block_size);
-            let mut inverse_block = Array2::zeros((current_block_size, current_block_size));
+            let identity = Array2::eye(current_blocksize);
+            let mut inverse_block = Array2::zeros((current_blocksize, current_blocksize));
 
             // Solve for each column of the inverse
-            for j in 0..current_block_size {
+            for j in 0..current_blocksize {
                 let rhs = identity.column(j);
                 // Apply permutation: P*e_j
                 let permuted_rhs = p.dot(&rhs);
 
                 // Forward substitution: solve Ly = P*e_j
-                let mut y = Array1::zeros(current_block_size);
-                for i in 0..current_block_size {
+                let mut y = Array1::zeros(current_blocksize);
+                for i in 0..current_blocksize {
                     let mut sum = F::zero();
                     for k in 0..i {
                         sum += l[[i, k]] * y[k];
@@ -535,28 +534,28 @@ where
                 }
 
                 // Backward substitution: solve Ux = y
-                let mut x = Array1::zeros(current_block_size);
-                for i in (0..current_block_size).rev() {
+                let mut x = Array1::zeros(current_blocksize);
+                for i in (0..current_blocksize).rev() {
                     let mut sum = F::zero();
-                    for k in (i + 1)..current_block_size {
+                    for k in (i + 1)..current_blocksize {
                         sum += u[[i, k]] * x[k];
                     }
                     x[i] = (y[i] - sum) / u[[i, i]];
                 }
 
                 // Store column in inverse block
-                for i in 0..current_block_size {
+                for i in 0..current_blocksize {
                     inverse_block[[i, j]] = x[i];
                 }
             }
 
             inverse_blocks.push(inverse_block);
-            block_sizes.push(current_block_size);
+            blocksizes.push(current_blocksize);
         }
 
         Ok(Self {
             inverse_blocks,
-            block_sizes,
+            blocksizes,
             size: n,
         })
     }
@@ -570,8 +569,8 @@ where
         let mut result = Array1::zeros(self.size);
         let mut current_idx = 0;
 
-        for (block_inv, &block_size) in self.inverse_blocks.iter().zip(&self.block_sizes) {
-            let end_idx = current_idx + block_size;
+        for (block_inv, &blocksize) in self.inverse_blocks.iter().zip(&self.blocksizes) {
+            let end_idx = current_idx + blocksize;
             let x_block = x.slice(ndarray::s![current_idx..end_idx]);
             let y_block = block_inv.dot(&x_block);
 
@@ -612,7 +611,7 @@ where
         let (m, n) = matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
-                "Polynomial preconditioner requires square _matrix".to_string(),
+                "Polynomial preconditioner requires square matrix".to_string(),
             ));
         }
 
@@ -635,15 +634,15 @@ where
 {
     fn apply(&self, x: &ArrayView1<F>) -> LinalgResult<Array1<F>> {
         // Neumann series: M⁻¹ ≈ α(I + (I - αA) + (I - αA)² + ... + (I - αA)ᵏ)
-        let scaled_matrix = &self.matrix * self.scaling;
+        let scaledmatrix = &self.matrix * self.scaling;
         let identity = Array2::eye(self.size);
-        let residual_matrix = &identity - &scaled_matrix;
+        let residualmatrix = &identity - &scaledmatrix;
 
         let mut result = x.to_owned() * self.scaling;
         let mut power = x.to_owned();
 
         for _k in 1..=self.degree {
-            power = residual_matrix.dot(&power);
+            power = residualmatrix.dot(&power);
             result = &result + &power * self.scaling;
         }
 
@@ -679,7 +678,7 @@ where
         let (m, n) = matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
-                "Preconditioner requires square _matrix".to_string(),
+                "Preconditioner requires square matrix".to_string(),
             ));
         }
 
@@ -776,10 +775,7 @@ where
         let total_elements = m * n;
         let tolerance = F::from(1e-14).unwrap();
 
-        let zero_elements = matrix
-            .iter()
-            .filter(|&&val| val.abs() <= tolerance)
-            .count();
+        let zero_elements = matrix.iter().filter(|&&val| val.abs() <= tolerance).count();
         F::from(zero_elements).unwrap() / F::from(total_elements).unwrap()
     }
 }
@@ -1133,7 +1129,7 @@ mod tests {
             [0.0, 0.0, 1.0, 3.0]
         ];
 
-        let config = PreconditionerConfig::default().with_block_size(2);
+        let config = PreconditionerConfig::default().with_blocksize(2);
         let preconditioner = BlockJacobiPreconditioner::new(&matrix.view(), &config).unwrap();
 
         let x = array![1.0, 2.0, 3.0, 4.0];

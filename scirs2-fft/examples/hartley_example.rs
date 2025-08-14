@@ -1,7 +1,7 @@
 //! Example demonstrating the Hartley transform
 
 use ndarray::{array, Array1};
-use scirs2__fft::hartley::{dht, dht2, fht, idht};
+use scirs2_fft::hartley::{dht, dht2, fht, idht};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -80,8 +80,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Hartley transform: {hartley_result:?}");
 
     // Compute FFT and derive Hartley from it
-    use num__complex::Complex64;
-    use scirs2__fft::fft::fft;
+    use num_complex::Complex64;
+    use scirs2_fft::fft::fft;
 
     let mut complex_signal = Array1::<Complex64>::zeros(test_signal.len());
     for (i, &val) in test_signal.iter().enumerate() {

@@ -48,7 +48,7 @@ pub struct HardwareConfig {
     /// Number of NUMA nodes
     pub numa_nodes: usize,
     /// L1/L2/L3 cache sizes
-    pub cache_sizes: CacheSizes,
+    pub cachesizes: CacheSizes,
     /// Memory bandwidth (GB/s)
     pub memory_bandwidth: f64,
     /// Platform SIMD capabilities
@@ -60,7 +60,7 @@ pub struct HardwareConfig {
 /// Cache hierarchy information
 #[derive(Debug, Clone)]
 pub struct CacheSizes {
-    pub l1_data: usize,
+    pub l1data: usize,
     pub l1_instruction: usize,
     pub l2_unified: usize,
     pub l3_shared: usize,
@@ -103,11 +103,11 @@ pub struct MemoryConfig {
     /// Enable out-of-core processing
     pub enable_out_of_core: bool,
     /// Chunk size for out-of-core operations
-    pub out_of_core_chunk_size: usize,
+    pub out_of_core_chunksize: usize,
     /// Enable memory mapping
     pub enable_memory_mapping: bool,
     /// Memory pool size
-    pub memory_pool_size: usize,
+    pub memory_poolsize: usize,
     /// Enable garbage collection
     pub enable_gc: bool,
 }
@@ -174,7 +174,7 @@ impl Default for AdvancedParallelConfig {
             hardware: HardwareConfig {
                 cpu_cores,
                 numa_nodes: Self::detect_numa_nodes(),
-                cache_sizes: Self::detect_cache_sizes(),
+                cachesizes: Self::detect_cachesizes(),
                 memory_bandwidth: Self::detect_memory_bandwidth(),
                 simd_capabilities: PlatformCapabilities::detect(),
                 gpu_devices: Self::detect_gpu_devices(),
@@ -184,9 +184,9 @@ impl Default for AdvancedParallelConfig {
                 system_ram,
                 memory_limit: Some(system_ram * 3 / 4), // Use 75% of system RAM
                 enable_out_of_core: true,
-                out_of_core_chunk_size: 1024 * 1024 * 1024, // 1GB chunks
+                out_of_core_chunksize: 1024 * 1024 * 1024, // 1GB chunks
                 enable_memory_mapping: true,
-                memory_pool_size: system_ram / 8,
+                memory_poolsize: system_ram / 8,
                 enable_gc: true,
             },
             optimization: OptimizationConfig {
@@ -330,13 +330,13 @@ impl AdvancedParallelConfig {
     }
 
     /// Detect cache hierarchy
-    fn detect_cache_sizes() -> CacheSizes {
+    fn detect_cachesizes() -> CacheSizes {
         // Enhanced cache detection using multiple methods
         #[cfg(target_os = "linux")]
         {
             use std::fs;
 
-            let mut l1_data = 32 * 1024;
+            let mut l1data = 32 * 1024;
             let mut l1_instruction = 32 * 1024;
             let mut l2_unified = 256 * 1024;
             let mut l3_shared = 8 * 1024 * 1024;
@@ -369,7 +369,7 @@ impl AdvancedParallelConfig {
                                         fs::read_to_string(cache_path.join("type"))
                                     {
                                         match (level, type_str.trim()) {
-                                            (1, "Data") => l1_data = size,
+                                            (1, "Data") => l1data = size,
                                             (1, "Instruction") => l1_instruction = size,
                                             (2, "Unified") => l2_unified = size,
                                             (3, "Unified") => l3_shared = size,
@@ -383,7 +383,7 @@ impl AdvancedParallelConfig {
             }
 
             CacheSizes {
-                l1_data,
+                l1data,
                 l1_instruction,
                 l2_unified,
                 l3_shared,
@@ -399,7 +399,7 @@ impl AdvancedParallelConfig {
             if num_cores >= 16 {
                 // High-end server/workstation CPU
                 CacheSizes {
-                    l1_data: 48 * 1024,          // 48KB
+                    l1data: 48 * 1024,           // 48KB
                     l1_instruction: 32 * 1024,   // 32KB
                     l2_unified: 512 * 1024,      // 512KB
                     l3_shared: 32 * 1024 * 1024, // 32MB
@@ -407,7 +407,7 @@ impl AdvancedParallelConfig {
             } else if num_cores >= 8 {
                 // Mid-range desktop CPU
                 CacheSizes {
-                    l1_data: 32 * 1024,          // 32KB
+                    l1data: 32 * 1024,           // 32KB
                     l1_instruction: 32 * 1024,   // 32KB
                     l2_unified: 256 * 1024,      // 256KB
                     l3_shared: 16 * 1024 * 1024, // 16MB
@@ -415,7 +415,7 @@ impl AdvancedParallelConfig {
             } else {
                 // Entry-level CPU
                 CacheSizes {
-                    l1_data: 32 * 1024,         // 32KB
+                    l1data: 32 * 1024,          // 32KB
                     l1_instruction: 32 * 1024,  // 32KB
                     l2_unified: 256 * 1024,     // 256KB
                     l3_shared: 6 * 1024 * 1024, // 6MB
@@ -427,14 +427,14 @@ impl AdvancedParallelConfig {
     /// Detect memory bandwidth using micro-benchmarks
     fn detect_memory_bandwidth() -> f64 {
         // Run a simple memory bandwidth benchmark
-        let test_size = 64 * 1024 * 1024; // 64MB test array
+        let testsize = 64 * 1024 * 1024; // 64MB test array
         let iterations = 10;
 
         let mut total_bandwidth = 0.0;
         let mut successful_tests = 0;
 
         for _ in 0..iterations {
-            if let Some(bandwidth) = Self::measure_memory_bandwidth(test_size) {
+            if let Some(bandwidth) = Self::measure_memory_bandwidth(testsize) {
                 total_bandwidth += bandwidth;
                 successful_tests += 1;
             }
@@ -530,7 +530,7 @@ pub struct Task {
     id: u64,
     priority: u8,
     complexity: f64,
-    data_size: usize,
+    datasize: usize,
     function: Box<dyn FnOnce() -> TaskResult + Send>,
 }
 
@@ -596,7 +596,7 @@ pub struct MemoryManager {
 
 /// Memory pool for efficient allocation
 pub struct MemoryPool {
-    chunk_size: usize,
+    chunksize: usize,
     available_chunks: Mutex<Vec<*mut u8>>,
     total_chunks: AtomicUsize,
 }
@@ -654,7 +654,7 @@ where
         };
 
         Self {
-            config: config,
+            config,
             thread_pool,
             performance_monitor,
             memory_manager,
@@ -664,11 +664,7 @@ where
     }
 
     /// Process massive dataset using optimal parallel strategy
-    pub fn process_massive_dataset<T, R>(
-        &self,
-        data: &ArrayView2<F>,
-        operation: T,
-    ) -> StatsResult<R>
+    pub fn process_massivedataset<T, R>(&self, data: &ArrayView2<F>, operation: T) -> StatsResult<R>
     where
         T: Fn(&ArrayView2<F>) -> StatsResult<R> + Send + Sync + Clone + 'static,
         R: Send + Sync + 'static,
@@ -688,14 +684,14 @@ where
 
     /// Select optimal processing strategy based on workload analysis
     fn select_optimal_strategy(&self, data: &ArrayView2<F>) -> StatsResult<ParallelStrategy> {
-        let data_size = data.len() * std::mem::size_of::<F>();
+        let datasize = data.len() * std::mem::size_of::<F>();
         let (rows, cols) = data.dim();
 
         // Simple heuristics for strategy selection
-        if data_size > self.config.memory.system_ram {
+        if datasize > self.config.memory.system_ram {
             // Data larger than RAM - use out-of-core processing
             Ok(ParallelStrategy::CpuOptimal)
-        } else if self.config.gpu.enable_gpu && data_size > self.config.gpu.transfer_threshold {
+        } else if self.config.gpu.enable_gpu && datasize > self.config.gpu.transfer_threshold {
             // Large data with GPU available
             Ok(ParallelStrategy::HybridCpuGpu)
         } else if rows * cols > 1_000_000 {
@@ -715,14 +711,14 @@ where
     {
         let (rows, cols) = data.dim();
         let num_threads = self.config.hardware.cpu_cores;
-        let chunk_size = (rows + num_threads - 1) / num_threads;
+        let chunksize = (rows + num_threads - 1) / num_threads;
 
         // Process in parallel chunks
         let results: Vec<_> = (0..num_threads)
             .into_par_iter()
             .map(|thread_id| {
-                let start_row = thread_id * chunk_size;
-                let end_row = ((thread_id + 1) * chunk_size).min(rows);
+                let start_row = thread_id * chunksize;
+                let end_row = ((thread_id + 1) * chunksize).min(rows);
 
                 if start_row < rows {
                     let chunk = data.slice(ndarray::s![start_row..end_row, ..]);
@@ -960,11 +956,11 @@ mod tests {
     }
 
     #[test]
-    fn test_cache_size_detection() {
-        let cache_sizes = AdvancedParallelConfig::detect_cache_sizes();
-        assert!(cache_sizes.l1_data > 0);
-        assert!(cache_sizes.l2_unified > cache_sizes.l1_data);
-        assert!(cache_sizes.l3_shared > cache_sizes.l2_unified);
+    fn test_cachesize_detection() {
+        let cachesizes = AdvancedParallelConfig::detect_cachesizes();
+        assert!(cachesizes.l1data > 0);
+        assert!(cachesizes.l2_unified > cachesizes.l1data);
+        assert!(cachesizes.l3_shared > cachesizes.l2_unified);
     }
 
     #[test]
@@ -983,9 +979,9 @@ mod tests {
     #[test]
     fn test_strategy_selection() {
         let processor = AdvancedParallelProcessor::<f64>::new();
-        let small_data = Array2::<f64>::zeros((10, 10));
+        let smalldata = Array2::<f64>::zeros((10, 10));
         let strategy = processor
-            .select_optimal_strategy(&small_data.view())
+            .select_optimal_strategy(&smalldata.view())
             .unwrap();
 
         // Should select CPU optimal for small data

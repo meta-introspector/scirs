@@ -7,7 +7,7 @@
 //! The CSV format is:
 //! x, j₀(x), j₁(x), j₂(x), j₃(x), y₀(x), y₁(x), j₀_scaled(x), j₁_scaled(x)
 
-use scirs2__special::bessel::spherical::{spherical_jn, spherical_jn_scaled, spherical_yn};
+use scirs2_special::bessel::spherical::{spherical_jn, spherical_jn_scaled, spherical_yn};
 use std::fs::File;
 use std::io::{self, Write};
 

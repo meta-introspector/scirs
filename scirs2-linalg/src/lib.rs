@@ -396,8 +396,8 @@ pub mod prelude {
         PreconditionerType,
     };
     pub use super::projection::{
-        gaussian_random_matrix, johnson_lindenstrauss_min_dim, johnson_lindenstrauss_transform,
-        project, sparse_random_matrix, very_sparse_random_matrix,
+        gaussian_randommatrix, johnson_lindenstrauss_min_dim, johnson_lindenstrauss_transform,
+        project, sparse_randommatrix, very_sparse_randommatrix,
     };
     pub use super::quantization::calibration::{
         calibrate_matrix, calibrate_vector, CalibrationConfig, CalibrationMethod,
@@ -417,7 +417,7 @@ pub mod prelude {
         sparse, spd, toeplitz, uniform, vandermonde, with_condition_number, with_eigenvalues,
     };
     pub use super::random_matrices::{
-        random_complex_matrix, random_hermitian, random_matrix, Distribution1D, MatrixType,
+        random_complexmatrix, random_hermitian, randommatrix, Distribution1D, MatrixType,
     };
     // 一時的にrandom_newエクスポートを無効化（コンパイル問題解決まで）
     // pub use super::random_new::{
@@ -456,10 +456,6 @@ pub mod prelude {
         simd_matmul_f64,
         simd_matmul_optimized_f32,
         simd_matmul_optimized_f64,
-        simd_matrix_max_f32,
-        simd_matrix_max_f64,
-        simd_matrix_min_f32,
-        simd_matrix_min_f64,
         simd_matvec_f32,
         simd_matvec_f64,
         // Transpose operations
@@ -468,6 +464,10 @@ pub mod prelude {
         // Vector norm operations
         simd_vector_norm_f32,
         simd_vector_norm_f64,
+        simdmatrix_max_f32,
+        simdmatrix_max_f64,
+        simdmatrix_min_f32,
+        simdmatrix_min_f64,
         GemmBlockSizes,
     };
     pub use super::solve::{lstsq, solve, solve_multiple, solve_triangular};
@@ -481,7 +481,7 @@ pub mod prelude {
         specialized_to_operator, BandedMatrix, BlockTridiagonalMatrix, SpecializedMatrix,
         SymmetricMatrix, TridiagonalMatrix,
     };
-    pub use super::stats::{correlation_matrix, covariance_matrix};
+    pub use super::stats::{correlationmatrix, covariancematrix};
     pub use super::structured::{
         solve_circulant, solve_toeplitz, structured_to_operator, CirculantMatrix, HankelMatrix,
         StructuredMatrix, ToeplitzMatrix,
@@ -565,7 +565,7 @@ pub mod prelude {
             eigvalsh_tridiagonal,
             // Matrix functions
             expm,
-            fractional_matrix_power,
+            fractionalmatrix_power,
             funm,
             inv,
             logm,

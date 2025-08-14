@@ -31,7 +31,7 @@ use crate::spatial::kdtree::KdTree;
 /// use scirs2__interpolate::local::mls::{WeightFunction, PolynomialBasis};
 ///
 /// // Create some 2D scattered data
-/// let points = Array2::fromshape_vec((5, 2), vec![
+/// let points = Array2::from_shape_vec((5, 2), vec![
 ///     0.0, 0.0,
 ///     1.0, 0.0,
 ///     0.0, 1.0,
@@ -50,7 +50,7 @@ use crate::spatial::kdtree::KdTree;
 /// ).unwrap();
 ///
 /// // Create test points
-/// let test_points = Array2::fromshape_vec((3, 2), vec![
+/// let test_points = Array2::from_shape_vec((3, 2), vec![
 ///     0.25, 0.25,
 ///     0.75, 0.75,
 ///     0.5, 0.0,
@@ -368,7 +368,7 @@ mod tests {
     #[test]
     fn test_parallel_mls_matches_sequential() {
         // Create a simple 2D dataset
-        let points = Array2::fromshape_vec(
+        let points = Array2::from_shape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -399,7 +399,7 @@ mod tests {
 
         // Test points
         let test_points =
-            Array2::fromshape_vec((3, 2), vec![0.25, 0.25, 0.75, 0.75, 0.5, 0.0]).unwrap();
+            Array2::from_shape_vec((3, 2), vec![0.25, 0.25, 0.75, 0.75, 0.5, 0.0]).unwrap();
 
         // Sequential evaluation
         let sequential_results = sequential_mls.evaluate_multi(&test_points.view()).unwrap();
@@ -440,7 +440,7 @@ mod tests {
             values_vec.push(value);
         }
 
-        let points = Array2::fromshape_vec((n_points, 2), points_vec).unwrap();
+        let points = Array2::from_shape_vec((n_points, 2), points_vec).unwrap();
         let values = Array1::from_vec(values_vec);
 
         // Create parallel MLS
@@ -454,7 +454,7 @@ mod tests {
         .unwrap();
 
         // Create test points
-        let test_points = Array2::fromshape_vec(
+        let test_points = Array2::from_shape_vec(
             (10, 2),
             vec![
                 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4, 0.4, 0.5, 0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8,

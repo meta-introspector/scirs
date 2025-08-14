@@ -16,7 +16,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::numerical_stability_analyzer::{
     NumericalStabilityAnalyzer, StabilityAnalysisResult, StabilityConfig,
 };
-use crate::property_based_validation::{
+use crate::propertybased_validation::{
     ComprehensivePropertyTestSuite, PropertyTestConfig, PropertyTestResult,
 };
 use crate::scipy_benchmark_framework::{BenchmarkConfig, BenchmarkResult, ScipyBenchmarkFramework};
@@ -359,11 +359,11 @@ impl ComprehensiveValidationSuite {
         let property_results = self.property_test_suite.test_function(function_name)?;
 
         // Run stability analysis with test data
-        let test_data = self.generate_test_data(1000)?;
+        let testdata = self.generate_testdata(1000)?;
         let stability_result = self.stability_analyzer.analyze_function(
             function_name,
             scirs2_impl,
-            &test_data.view(),
+            &testdata.view(),
         )?;
 
         // Perform cross-validation analysis
@@ -411,7 +411,7 @@ impl ComprehensiveValidationSuite {
     }
 
     /// Generate test data for validation
-    fn generate_test_data(&self, size: usize) -> StatsResult<Array1<f64>> {
+    fn generate_testdata(&self, size: usize) -> StatsResult<Array1<f64>> {
         use rand::prelude::*;
         use rand_distr::{Distribution, Normal};
 
@@ -590,7 +590,7 @@ impl ComprehensiveValidationSuite {
         let property_ready = property_results.iter().all(|r| {
             matches!(
                 r.status,
-                crate::property_based_validation::PropertyTestStatus::Pass
+                crate::propertybased_validation::PropertyTestStatus::Pass
             )
         });
         if property_ready {
@@ -775,7 +775,7 @@ mod tests {
     fn test_mean_comprehensive_validation() {
         let mut suite = ComprehensiveValidationSuite::new(ValidationSuiteConfig {
             benchmark_config: BenchmarkConfig {
-                test_sizes: vec![100],
+                testsizes: vec![100],
                 performance_iterations: 5,
                 warmup_iterations: 1,
                 ..Default::default()

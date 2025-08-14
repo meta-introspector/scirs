@@ -210,7 +210,7 @@ impl ChemicalIntegrator {
     /// Create a new chemical integrator
     pub fn new(config: ChemicalConfig, properties: ChemicalProperties) -> Self {
         Self {
-            config: config,
+            config,
             properties,
             previous_state: None,
             jacobian_cache: None,

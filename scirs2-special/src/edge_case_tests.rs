@@ -120,12 +120,12 @@ fn test_gamma_extreme_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // Test very large values
-    let large_input = 170.0; // Near overflow threshold
-    let output = gamma::gamma(large_input);
+    let largeinput = 170.0; // Near overflow threshold
+    let output = gamma::gamma(largeinput);
     results.push(EdgeCaseResult {
         test_name: "gamma_large_value".to_string(),
         function: "gamma".to_string(),
-        input: large_input,
+        input: largeinput,
         output,
         expected_behavior: "Should be finite for x < 171".to_string(),
         passed: output.is_finite(),
@@ -137,12 +137,12 @@ fn test_gamma_extreme_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     });
 
     // Test very small positive values
-    let small_input = 1e-10;
-    let output = gamma::gamma(small_input);
+    let smallinput = 1e-10;
+    let output = gamma::gamma(smallinput);
     results.push(EdgeCaseResult {
         test_name: "gamma_small_positive".to_string(),
         function: "gamma".to_string(),
-        input: small_input,
+        input: smallinput,
         output,
         expected_behavior: "Should be approximately 1/x for small x".to_string(),
         passed: output.is_finite() && output > 0.0,
@@ -181,7 +181,7 @@ fn test_gamma_boundary_conditions(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult
         let expected_finite = input.fract() != 0.0; // Should be finite unless exactly negative integer
 
         results.push(EdgeCaseResult {
-            test_name: format!("gamma_negative_{abs_input}", abs_input = input.abs()),
+            test_name: format!("gamma_negative_{absinput}", absinput = input.abs()),
             function: "gamma".to_string(),
             input,
             output,
@@ -204,13 +204,13 @@ fn test_gamma_subnormal_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // Test with subnormal inputs
-    let subnormal_input = f64::MIN_POSITIVE / 2.0;
-    let output = gamma::gamma(subnormal_input);
+    let subnormalinput = f64::MIN_POSITIVE / 2.0;
+    let output = gamma::gamma(subnormalinput);
 
     results.push(EdgeCaseResult {
         test_name: "gamma_subnormal".to_string(),
         function: "gamma".to_string(),
-        input: subnormal_input,
+        input: subnormalinput,
         output,
         expected_behavior: "Should handle subnormal inputs gracefully".to_string(),
         passed: output.is_finite(),
@@ -296,13 +296,13 @@ fn test_bessel_extreme_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // Test very large arguments
-    let large_input = 1000.0;
-    let output = bessel::j0(large_input);
+    let largeinput = 1000.0;
+    let output = bessel::j0(largeinput);
 
     results.push(EdgeCaseResult {
         test_name: "j0_large".to_string(),
         function: "j0".to_string(),
-        input: large_input,
+        input: largeinput,
         output,
         expected_behavior: "Should be finite and oscillatory for large x".to_string(),
         passed: output.is_finite() && output.abs() < 1.0,
@@ -324,15 +324,15 @@ fn test_bessel_boundary_conditions(config: &EdgeCaseConfig) -> Vec<EdgeCaseResul
     let mut results = Vec::new();
 
     // Test very small positive values
-    let small_input = 1e-12;
-    let output = bessel::j0(small_input);
+    let smallinput = 1e-12;
+    let output = bessel::j0(smallinput);
     let expected = 1.0f64; // J0(x) ≈ 1 for small x
     let error = (output - expected).abs();
 
     results.push(EdgeCaseResult {
         test_name: "j0_small".to_string(),
         function: "j0".to_string(),
-        input: small_input,
+        input: smallinput,
         output,
         expected_behavior: "J0(x) ≈ 1 for small x".to_string(),
         passed: error < config.tolerance,
@@ -411,36 +411,36 @@ fn test_erf_extreme_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // Test very large positive values
-    let large_input = 100.0;
-    let output = erf::erf(large_input);
+    let largeinput = 100.0;
+    let output = erf::erf(largeinput);
 
     results.push(EdgeCaseResult {
         test_name: "erf_large_positive".to_string(),
         function: "erf".to_string(),
-        input: large_input,
+        input: largeinput,
         output,
         expected_behavior: "erf(large) should approach 1".to_string(),
         passed: (output - 1.0).abs() < 1e-10,
         error_message: if (output - 1.0).abs() >= 1e-10 {
-            Some(format!("erf({large_input}) = {output}, expected ≈ 1"))
+            Some(format!("erf({largeinput}) = {output}, expected ≈ 1"))
         } else {
             None
         },
     });
 
     // Test very large negative values
-    let large_neg_input = -100.0;
-    let output = erf::erf(large_neg_input);
+    let large_neginput = -100.0;
+    let output = erf::erf(large_neginput);
 
     results.push(EdgeCaseResult {
         test_name: "erf_large_negative".to_string(),
         function: "erf".to_string(),
-        input: large_neg_input,
+        input: large_neginput,
         output,
         expected_behavior: "erf(-large) should approach -1".to_string(),
         passed: (output + 1.0).abs() < 1e-10,
         error_message: if (output + 1.0).abs() >= 1e-10 {
-            Some(format!("erf({large_neg_input}) = {output}, expected ≈ -1"))
+            Some(format!("erf({large_neginput}) = {output}, expected ≈ -1"))
         } else {
             None
         },

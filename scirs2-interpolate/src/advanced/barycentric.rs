@@ -110,22 +110,22 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - The point at which to evaluate the interpolant
+    /// * `xnew` - The point at which to evaluate the interpolant
     ///
     /// # Returns
     ///
-    /// The interpolated value at `x_new`
+    /// The interpolated value at `xnew`
     pub fn evaluate(&self, xnew: F) -> InterpolateResult<F> {
-        // Check if x_new is exactly one of the data points
+        // Check if xnew is exactly one of the data points
         let eps = F::from_f64(1e-14).unwrap();
         for i in 0..self.x.len() {
-            if (x_new - self.x[i]).abs() < eps {
+            if (xnew - self.x[i]).abs() < eps {
                 return Ok(self.y[i]);
             }
         }
 
         // Find the nearest neighbors to use
-        let indices = self.find_nearest_indices(x_new);
+        let indices = self.find_nearest_indices(xnew);
 
         // Compute local barycentric weights for numerical stability
         let local_weights = self.compute_local_weights(&indices);
@@ -135,7 +135,7 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
         let mut denominator = F::zero();
 
         for (i, &idx) in indices.iter().enumerate() {
-            let diff = x_new - self.x[idx];
+            let diff = xnew - self.x[idx];
             if diff.abs() < eps {
                 // If we're very close to a data point, return that value
                 return Ok(self.y[idx]);
@@ -192,7 +192,7 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
         // Create a vector of (distance, index) pairs
         let mut distances: Vec<(F, usize)> = Vec::with_capacity(n);
         for i in 0..n {
-            let dist = (x_new - self.x[i]).abs();
+            let dist = (xnew - self.x[i]).abs();
             distances.push((dist, i));
         }
 
@@ -210,14 +210,14 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - The points at which to evaluate the interpolant
+    /// * `xnew` - The points at which to evaluate the interpolant
     ///
     /// # Returns
     ///
-    /// The interpolated values at `x_new`
+    /// The interpolated values at `xnew`
     pub fn evaluate_array(&self, xnew: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
-        let mut result = Array1::zeros(x_new.len());
-        for (i, &x) in x_new.iter().enumerate() {
+        let mut result = Array1::zeros(xnew.len());
+        for (i, &x) in xnew.iter().enumerate() {
             result[i] = self.evaluate(x)?;
         }
         Ok(result)
@@ -541,13 +541,13 @@ mod tests {
         let interp = BarycentricInterpolator::new(&x.view(), &y.view(), 1).unwrap();
 
         // Evaluate at multiple points
-        let x_new = array![0.5, 1.5, 2.5, 3.5];
-        let y_new = interp.evaluate_array(&x_new.view()).unwrap();
+        let xnew = array![0.5, 1.5, 2.5, 3.5];
+        let y_new = interp.evaluate_array(&xnew.view()).unwrap();
 
         // Expected values: y = 2x + 1
         let expected = array![2.0, 4.0, 6.0, 8.0];
 
-        for i in 0..x_new.len() {
+        for i in 0..xnew.len() {
             assert_abs_diff_eq!(y_new[i], expected[i], epsilon = 1e-10);
         }
     }

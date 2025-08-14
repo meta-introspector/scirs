@@ -11,8 +11,8 @@
 //!
 //! Run with: cargo run --example advanced_interactive_tutor
 
-use num__complex::Complex64;
-use scirs2__special::*;
+use num_complex::Complex64;
+use scirs2_special::*;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::io::{self, Write};
@@ -165,10 +165,10 @@ fn setup_user_profile() -> Result<UserProfile, Box<dyn std::error::Error>> {
     println!("\n📊 Let's customize your learning experience:");
 
     // Learning style assessment
-    let visual = get_yes_no_input("Do you prefer visual explanations and graphs? (y/n): ")?;
+    let visual = get_yes_noinput("Do you prefer visual explanations and graphs? (y/n): ")?;
     let theoretical =
-        get_yes_no_input("Are you interested in mathematical proofs and theory? (y/n): ")?;
-    let practical = get_yes_no_input("Do you want to see practical applications? (y/n): ")?;
+        get_yes_noinput("Are you interested in mathematical proofs and theory? (y/n): ")?;
+    let practical = get_yes_noinput("Do you want to see practical applications? (y/n): ")?;
 
     profile.learning_preferences.visual_learner = visual;
     profile.learning_preferences.theoretical_focus = theoretical;
@@ -1035,14 +1035,14 @@ fn solve_probability_problems(
     println!("\na) P(X = {}) = {:.6}", k, prob_exactly);
 
     // Part (b)
-    let k_max = 25;
-    let prob_at_most = poisson_cdf(k_max, lambda);
-    println!("b) P(X ≤ {}) = {:.6}", k_max, prob_at_most);
+    let kmax = 25;
+    let prob_at_most = poisson_cdf(kmax, lambda);
+    println!("b) P(X ≤ {}) = {:.6}", kmax, prob_at_most);
 
     // Part (c)
-    let k_min = 15;
-    let prob_more_than = 1.0 - poisson_cdf(k_min, lambda);
-    println!("c) P(X > {}) = {:.6}", k_min, prob_more_than);
+    let kmin = 15;
+    let prob_more_than = 1.0 - poisson_cdf(kmin, lambda);
+    println!("c) P(X > {}) = {:.6}", kmin, prob_more_than);
 
     println!("\n🎯 Interactive exploration:");
     let user_k = get_user_input("Enter a value k to compute P(X = k): ")?
@@ -2199,9 +2199,9 @@ fn profile_settings(profile: &mut UserProfile) -> Result<(), Box<dyn std::error:
     if modify.to_lowercase() == "y" {
         println!("\n🔧 Settings Modification:");
 
-        let new_visual = get_yes_no_input("Enable visual learning? (y/n): ")?;
-        let new_theoretical = get_yes_no_input("Focus on theory? (y/n): ")?;
-        let new_practical = get_yes_no_input("Include practical applications? (y/n): ")?;
+        let new_visual = get_yes_noinput("Enable visual learning? (y/n): ")?;
+        let new_theoretical = get_yes_noinput("Focus on theory? (y/n): ")?;
+        let new_practical = get_yes_noinput("Include practical applications? (y/n): ")?;
 
         profile.learning_preferences.visual_learner = new_visual;
         profile.learning_preferences.theoretical_focus = new_theoretical;
@@ -2468,7 +2468,7 @@ fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn get_yes_no_input(prompt: &str) -> Result<bool, Box<dyn std::error::Error>> {
+fn get_yes_noinput(prompt: &str) -> Result<bool, Box<dyn std::error::Error>> {
     let input = get_user_input(_prompt)?;
     Ok(input.to_lowercase().starts_with('y'))
 }

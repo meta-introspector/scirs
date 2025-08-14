@@ -617,7 +617,7 @@ where
 /// assert_eq!(c.shape(), (4, 4));
 ///
 /// // Verify there is a non-zero element by checking the number of non-zeros
-/// let (rows_, data) = c.find();
+/// let (rows, data) = c.find();
 /// assert!(rows.len() > 0);
 /// assert!(data.len() > 0);
 /// ```
@@ -1084,15 +1084,15 @@ mod tests {
         assert_eq!(c.get(1, 0), 0.0);
 
         // Test kronecker product of more complex matrices
-        let rows_a = vec![0, 0, 1];
+        let rowsa = vec![0, 0, 1];
         let cols_a = vec![0, 1, 0];
         let data_a = vec![1.0, 2.0, 3.0];
-        let a = CooArray::from_triplets(&rows_a, &cols_a, &data_a, (2, 2), false).unwrap();
+        let a = CooArray::from_triplets(&rowsa, &cols_a, &data_a, (2, 2), false).unwrap();
 
-        let rows_b = vec![0, 1];
+        let rowsb = vec![0, 1];
         let cols_b = vec![0, 1];
         let data_b = vec![4.0, 5.0];
-        let b = CooArray::from_triplets(&rows_b, &cols_b, &data_b, (2, 2), false).unwrap();
+        let b = CooArray::from_triplets(&rowsb, &cols_b, &data_b, (2, 2), false).unwrap();
 
         let c = kron(&a, &b, "csr").unwrap();
         assert_eq!(c.shape(), (4, 4));
@@ -1140,7 +1140,7 @@ mod tests {
         assert_eq!(c.shape(), (4, 4));
 
         // Verify the matrix is non-trivial (has at least a few non-zero entries)
-        let (rows_, data) = c.find();
+        let (rows, data) = c.find();
         assert!(!rows.is_empty());
         assert!(!data.is_empty());
 
@@ -1149,7 +1149,7 @@ mod tests {
         assert_eq!(c_coo.shape(), (4, 4));
 
         // Verify the COO format also has non-zero entries
-        let (coo_rows_, coo_data) = c_coo.find();
+        let (coo_rows, coo_data) = c_coo.find();
         assert!(!coo_rows.is_empty());
         assert!(!coo_data.is_empty());
     }

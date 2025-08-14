@@ -110,7 +110,7 @@ where
                         Ok(dok) => {
                             if let Some(dok_array) = dok.as_any().downcast_ref::<DokArray<T>>() {
                                 // For DOK format, we convert to COO triplets first
-                                let (rows_cols, values) = dok_array.to_triplets();
+                                let (rowscols, values) = dok_array.to_triplets();
                                 let shape = dok_array.shape();
 
                                 // Use zeros for indptr (not used in DOK)

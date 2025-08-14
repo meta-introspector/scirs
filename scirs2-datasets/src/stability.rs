@@ -229,7 +229,7 @@ impl StabilityChecker {
 
     /// Get the stability level of a specific API component
     pub fn get_stability_level(_apiname: &str) -> StabilityLevel {
-        match _api_name {
+        match _apiname {
             // Core stable APIs
             "Dataset"
             | "load_iris"
@@ -260,15 +260,15 @@ impl StabilityChecker {
 
     /// Validate that experimental APIs are being used appropriately
     pub fn validate_experimental_usage(_apiname: &str) -> Result<(), String> {
-        match Self::get_stability_level(_api_name) {
+        match Self::get_stability_level(_apiname) {
             StabilityLevel::Experimental => {
                 eprintln!(
-                    "Warning: '{_api_name}' is an experimental API and may change in future versions"
+                    "Warning: '{_apiname}' is an experimental API and may change in future versions"
                 );
                 Ok(())
             }
             StabilityLevel::Internal => Err(format!(
-                "Error: '{api_name}' is an internal API and should not be used directly"
+                "Error: '{apiname}' is an internal API and should not be used directly"
             )),
             StabilityLevel::Stable => Ok(()),
         }

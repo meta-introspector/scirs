@@ -265,17 +265,17 @@ impl LogRankTest {
         }
 
         // Combine all observations with group labels
-        let mut combined_data = Vec::new();
+        let mut combineddata = Vec::new();
 
         for i in 0..durations1.len() {
-            combined_data.push((durations1[i], events1[i], 0)); // Group 0
+            combineddata.push((durations1[i], events1[i], 0)); // Group 0
         }
         for i in 0..durations2.len() {
-            combined_data.push((durations2[i], events2[i], 1)); // Group 1
+            combineddata.push((durations2[i], events2[i], 1)); // Group 1
         }
 
         // Sort by time
-        combined_data.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        combineddata.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
         // Calculate log-rank statistic
         let mut observed_group1 = 0.0;
@@ -288,16 +288,16 @@ impl LogRankTest {
         let mut at_risk2 = n2;
 
         let mut i = 0;
-        while i < combined_data.len() {
-            let current_time = combined_data[i].0;
+        while i < combineddata.len() {
+            let current_time = combineddata[i].0;
             let mut events_group1 = 0.0;
             let mut events_group2 = 0.0;
             let mut censored_group1 = 0.0;
             let mut censored_group2 = 0.0;
 
             // Count events and censoring at current time
-            while i < combined_data.len() && combined_data[i].0 == current_time {
-                let (_, is_event, group) = combined_data[i];
+            while i < combineddata.len() && combineddata[i].0 == current_time {
+                let (_, is_event, group) = combineddata[i];
                 if group == 0 {
                     if is_event {
                         events_group1 += 1.0;
@@ -454,7 +454,7 @@ impl CoxPHModel {
             if (log_likelihood - prev_log_likelihood).abs() < tol {
                 let covariance_matrix = Self::invert_hessian(&hessian)?;
                 let (baseline_times, baseline_cumulative_hazard) =
-                    Self::calculate_baseline_hazard(&durations, &events, &covariates, &beta)?;
+                    Self::calculatebaseline_hazard(&durations, &events, &covariates, &beta)?;
 
                 return Ok(Self {
                     coefficients: beta,
@@ -566,7 +566,7 @@ impl CoxPHModel {
     }
 
     /// Calculate baseline hazard function
-    fn calculate_baseline_hazard(
+    fn calculatebaseline_hazard(
         durations: &ArrayView1<f64>,
         events: &ArrayView1<bool>,
         covariates: &ArrayView2<f64>,
@@ -768,7 +768,7 @@ pub struct ExtendedCoxModel {
     /// Log-likelihood of the fitted model
     pub log_likelihood: f64,
     /// Baseline cumulative hazard for each stratum
-    pub stratum_baseline_hazards: Vec<(Array1<f64>, Array1<f64>)>, // (times, cumulative hazards)
+    pub stratumbaseline_hazards: Vec<(Array1<f64>, Array1<f64>)>, // (times, cumulative hazards)
     /// Stratum labels
     pub strata: Option<Array1<usize>>,
     /// Number of strata
@@ -846,7 +846,7 @@ impl ExtendedCoxModel {
             // Check convergence
             if (log_likelihood - prev_log_likelihood).abs() < tol {
                 let covariance_matrix = Self::invert_hessian(&hessian)?;
-                let baseline_hazards = Self::calculate_stratified_baseline_hazards(
+                let baseline_hazards = Self::calculate_stratifiedbaseline_hazards(
                     &durations,
                     &events,
                     &covariates,
@@ -859,7 +859,7 @@ impl ExtendedCoxModel {
                     coefficients: beta,
                     covariance_matrix,
                     log_likelihood,
-                    stratum_baseline_hazards: baseline_hazards,
+                    stratumbaseline_hazards: baseline_hazards,
                     strata: strata_array,
                     n_strata,
                     time_varying_indices,
@@ -1008,7 +1008,7 @@ impl ExtendedCoxModel {
     }
 
     /// Calculate baseline hazards for each stratum
-    fn calculate_stratified_baseline_hazards(
+    fn calculate_stratifiedbaseline_hazards(
         durations: &ArrayView1<f64>,
         events: &ArrayView1<bool>,
         covariates: &ArrayView2<f64>,
@@ -1219,7 +1219,7 @@ impl CompetingRisksModel {
                 covariance_matrices[target_risk - 1] = Self::invert_hessian(&hessian)?;
 
                 // Calculate baseline cumulative incidence
-                let (times, cif) = Self::calculate_baseline_cif(
+                let (times, cif) = Self::calculatebaseline_cif(
                     &modified_durations,
                     &modified_events,
                     &covariates,
@@ -1430,7 +1430,7 @@ impl CompetingRisksModel {
     }
 
     /// Calculate baseline cumulative incidence function
-    fn calculate_baseline_cif(
+    fn calculatebaseline_cif(
         durations: &Array1<f64>,
         events: &Array1<bool>,
         covariates: &ArrayView2<f64>,
@@ -1515,8 +1515,7 @@ impl CompetingRisksModel {
 
             for (j, &t) in times.iter().enumerate() {
                 // Interpolate baseline CIF at time t
-                let baseline_value =
-                    Self::interpolate_baseline_cif(baseline_times, baseline_cif, t);
+                let baseline_value = Self::interpolatebaseline_cif(baseline_times, baseline_cif, t);
 
                 // Transform baseline CIF using subdistribution hazard ratio
                 // This is a simplified transformation - full implementation would be more complex
@@ -1528,7 +1527,7 @@ impl CompetingRisksModel {
     }
 
     /// Interpolate baseline cumulative incidence at given time
-    fn interpolate_baseline_cif(times: &Array1<f64>, cif: &Array1<f64>, t: f64) -> f64 {
+    fn interpolatebaseline_cif(times: &Array1<f64>, cif: &Array1<f64>, t: f64) -> f64 {
         if times.is_empty() {
             return 0.0;
         }

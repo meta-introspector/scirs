@@ -126,14 +126,14 @@ pub fn issue_deprecation_warning(info: &DeprecationInfo) {
             return;
         }
 
-        let count = config.warning_counts.entry(_info.name.clone()).or_insert(0);
+        let count = config.warning_counts.entry(info.name.clone()).or_insert(0);
         *count += 1;
 
         if *count > config.max_warning_count {
             return;
         }
 
-        let warning_msg = format_deprecation_warning(_info);
+        let warning_msg = format_deprecation_warning(info);
 
         if config.warnings_as_errors {
             panic!("Deprecation error: {warning_msg}");
@@ -151,17 +151,17 @@ fn format_deprecation_warning(info: &DeprecationInfo) -> String {
         info.name, info.since
     );
 
-    if let Some(remove_version) = &_info.remove_in {
+    if let Some(remove_version) = &info.remove_in {
         msg.push_str(&format!(" and will be removed in v{remove_version}"));
     }
 
     msg.push_str(&format!(": {}", info.reason));
 
-    if let Some(alternative) = &_info.alternative {
+    if let Some(alternative) = &info.alternative {
         msg.push_str(&format!(" Use '{alternative}' instead."));
     }
 
-    if let Some(notes) = &_info.migration_notes {
+    if let Some(notes) = &info.migration_notes {
         msg.push_str(&format!(" Migration notes: {notes}"));
     }
 
@@ -285,17 +285,17 @@ impl FeatureRegistry {
     }
 
     /// Check if a feature is deprecated
-    pub fn is_feature_deprecated(_featurename: &str) -> bool {
+    pub fn is_feature_deprecated(featurename: &str) -> bool {
         Self::deprecated_features()
             .iter()
-            .any(|f| f._name == feature_name)
+            .any(|f| f.name == featurename)
     }
 
     /// Get deprecation info for a specific feature
-    pub fn get_deprecation_info(_featurename: &str) -> Option<DeprecationInfo> {
+    pub fn get_deprecation_info(featurename: &str) -> Option<DeprecationInfo> {
         Self::deprecated_features()
             .into_iter()
-            .find(|f| f._name == feature_name)
+            .find(|f| f.name == featurename)
     }
 }
 
@@ -304,34 +304,34 @@ pub mod convenience {
     use crate::experimental_feature;
 
     /// Mark a GPU feature as experimental
-    pub fn warn_gpu_experimental(_featurename: &str) {
+    pub fn warn_gpu_experimental(featurename: &str) {
         experimental_feature!(
-            feature_name,
+            featurename,
             "GPU acceleration support is experimental and may change significantly"
         );
     }
 
     /// Mark a neural network feature as experimental  
-    pub fn warn_neural_experimental(_featurename: &str) {
+    pub fn warn_neural_experimental(featurename: &str) {
         experimental_feature!(
-            feature_name,
+            featurename,
             "Neural network enhanced interpolation is experimental"
         );
     }
 
     /// Mark a physics-informed feature as experimental
-    pub fn warn_physics_experimental(_featurename: &str) {
+    pub fn warn_physics_experimental(featurename: &str) {
         experimental_feature!(
-            feature_name,
+            featurename,
             "Physics-informed interpolation methods are experimental"
         );
     }
 
     /// Issue a matrix conditioning warning
-    pub fn warn_matrix_conditioning(_conditionnumber: f64, context: &str) {
-        if _condition_number > 1e14 {
+    pub fn warn_matrix_conditioning(condition_number: f64, context: &str) {
+        if condition_number > 1e14 {
             eprintln!(
-                "NUMERICAL WARNING: Poor matrix conditioning (condition , number: {condition_number:.2e}) in {context}. \
+                "NUMERICAL WARNING: Poor matrix conditioning (condition number: {condition_number:.2e}) in {context}. \
                 Consider regularization or data preprocessing."
             );
         }
@@ -341,7 +341,7 @@ pub mod convenience {
     pub fn warn_performance_large_dataset(operation: &str, size: usize, threshold: usize) {
         if size > threshold {
             eprintln!(
-                "PERFORMANCE WARNING: {_operation} with {size} data points may be slow. \
+                "PERFORMANCE WARNING: {operation} with {size} data points may be slow. \
                 Consider using fast variants or GPU acceleration if available."
             );
         }

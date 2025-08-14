@@ -110,7 +110,7 @@ impl IntelligentErrorRecovery {
         Self {
             error_patterns: HashMap::new(),
             recovery_success_rates: HashMap::new(),
-            config: config,
+            config,
         }
     }
 
@@ -129,7 +129,7 @@ impl IntelligentErrorRecovery {
         let mut strategies = Vec::new();
 
         // Add pattern-based suggestions
-        strategies.extend(self.generate_pattern_based_suggestions(&similar_patterns, error)?);
+        strategies.extend(self.generate_patternbased_suggestions(&similar_patterns, error)?);
 
         // Add heuristic-based suggestions
         strategies.extend(self.generate_heuristic_suggestions(error)?);
@@ -287,7 +287,7 @@ impl IntelligentErrorRecovery {
     }
 
     /// Generate suggestions based on similar error patterns
-    fn generate_pattern_based_suggestions(
+    fn generate_patternbased_suggestions(
         &self,
         similar_patterns: &[&ErrorPattern],
         error: &EnhancedStatsError,
@@ -344,7 +344,7 @@ impl IntelligentErrorRecovery {
                 strategies.extend(self.create_convergence_fix_strategies(error)?);
             }
             StatsError::InsufficientData(_) => {
-                strategies.push(self.create_data_augmentation_strategy(error)?);
+                strategies.push(self.createdata_augmentation_strategy(error)?);
             }
             _ => {
                 strategies.push(self.create_generic_strategy(error)?);
@@ -499,7 +499,7 @@ impl IntelligentErrorRecovery {
     }
 
     /// Create data augmentation strategy
-    fn create_data_augmentation_strategy(
+    fn createdata_augmentation_strategy(
         &self,
         error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
@@ -535,7 +535,7 @@ impl IntelligentErrorRecovery {
             suggestion: RecoverySuggestion {
                 suggestion_type: SuggestionType::ResourceIncrease,
                 description: "Use memory-efficient algorithms and chunked processing".to_string(),
-                action: RecoveryAction::UseChunkedProcessing { chunk_size: 1000 },
+                action: RecoveryAction::UseChunkedProcessing { chunksize: 1000 },
                 expected_outcome: "Reduced memory usage while maintaining accuracy".to_string(),
                 confidence: 0.85,
                 prerequisites: vec!["Large dataset".to_string()],
@@ -747,7 +747,7 @@ pub struct NeuralErrorClassifier {
     /// Bias terms
     biases: Vec<f64>,
     /// Training data for continuous learning
-    training_data: Vec<(Vec<f64>, usize)>, // (features, class)
+    trainingdata: Vec<(Vec<f64>, usize)>, // (features, class)
     /// Learning rate for online learning
     learning_rate: f64,
 }
@@ -758,15 +758,15 @@ impl NeuralErrorClassifier {
         // Initialize with small random weights
         let mut rng = rand::rng();
         let mut weights = Vec::new();
-        let input_size = 12; // Number of features
-        let hidden_size = 8;
-        let output_size = 5; // Number of error classes
+        let inputsize = 12; // Number of features
+        let hiddensize = 8;
+        let outputsize = 5; // Number of error classes
 
         // Input to hidden layer
         let mut layer1 = Vec::new();
-        for _ in 0..hidden_size {
+        for _ in 0..hiddensize {
             let mut neuron_weights = Vec::new();
-            for _ in 0..input_size {
+            for _ in 0..inputsize {
                 neuron_weights.push((rng.random::<f64>() - 0.5) * 0.1);
             }
             layer1.push(neuron_weights);
@@ -775,9 +775,9 @@ impl NeuralErrorClassifier {
 
         // Hidden to output layer
         let mut layer2 = Vec::new();
-        for _ in 0..output_size {
+        for _ in 0..outputsize {
             let mut neuron_weights = Vec::new();
-            for _ in 0..hidden_size {
+            for _ in 0..hiddensize {
                 neuron_weights.push((rng.random::<f64>() - 0.5) * 0.1);
             }
             layer2.push(neuron_weights);
@@ -786,8 +786,8 @@ impl NeuralErrorClassifier {
 
         Self {
             weights,
-            biases: vec![0.0; hidden_size + output_size],
-            training_data: Vec::new(),
+            biases: vec![0.0; hiddensize + outputsize],
+            trainingdata: Vec::new(),
             learning_rate: 0.01,
         }
     }
@@ -807,12 +807,12 @@ impl NeuralErrorClassifier {
 
     /// Forward pass through the neural network
     fn forward_pass(&self, features: &[f64]) -> Vec<f64> {
-        let hidden_size = 8;
-        let output_size = 5;
+        let hiddensize = 8;
+        let outputsize = 5;
 
         // Input to hidden layer
-        let mut hidden = vec![0.0; hidden_size];
-        for i in 0..hidden_size {
+        let mut hidden = vec![0.0; hiddensize];
+        for i in 0..hiddensize {
             let mut sum = self.biases[i];
             for j in 0..features.len().min(12) {
                 sum += self.weights[0][i * 12 + j] * features[j];
@@ -821,12 +821,12 @@ impl NeuralErrorClassifier {
         }
 
         // Hidden to output layer
-        let mut output = vec![0.0; output_size];
-        for i in 0..output_size {
-            let mut sum = self.biases[hidden_size + i];
-            for j in 0..hidden_size {
-                if self.weights.len() > 1 && i * hidden_size + j < self.weights[1].len() {
-                    sum += self.weights[1][i * hidden_size + j] * hidden[j];
+        let mut output = vec![0.0; outputsize];
+        for i in 0..outputsize {
+            let mut sum = self.biases[hiddensize + i];
+            for j in 0..hiddensize {
+                if self.weights.len() > 1 && i * hiddensize + j < self.weights[1].len() {
+                    sum += self.weights[1][i * hiddensize + j] * hidden[j];
                 }
             }
             output[i] = Self::sigmoid(sum);
@@ -847,7 +847,7 @@ impl NeuralErrorClassifier {
 
     /// Online learning update
     pub fn update_from_feedback(&mut self, features: &[f64], correctclass: usize, success: bool) {
-        self.training_data.push((features.to_vec(), correctclass));
+        self.trainingdata.push((features.to_vec(), correctclass));
 
         if success {
             // Positive reinforcement - strengthen this prediction
@@ -858,8 +858,8 @@ impl NeuralErrorClassifier {
         }
 
         // Trim training data to prevent memory overflow
-        if self.training_data.len() > 1000 {
-            self.training_data.drain(0..500);
+        if self.trainingdata.len() > 1000 {
+            self.trainingdata.drain(0..500);
         }
     }
 
@@ -1297,7 +1297,7 @@ impl MLEnhancedErrorRecovery {
 
         // Map neural network classes to recovery strategies
         let strategy = match predicted_class {
-            0 => self.create_data_preprocessing_strategy(error, confidence)?,
+            0 => self.createdata_preprocessing_strategy(error, confidence)?,
             1 => self.create_algorithm_optimization_strategy(error, confidence)?,
             2 => self.create_numerical_stability_strategy(error, confidence)?,
             3 => self.create_resource_scaling_strategy(error, confidence)?,
@@ -1310,7 +1310,7 @@ impl MLEnhancedErrorRecovery {
     }
 
     /// Create data preprocessing strategy
-    fn create_data_preprocessing_strategy(
+    fn createdata_preprocessing_strategy(
         &self,
         error: &EnhancedStatsError,
         confidence: f64,

@@ -17,7 +17,7 @@ pub struct MemoryConstraints {
     /// Maximum memory to use (in bytes)
     pub max_memory_bytes: usize,
     /// Preferred chunk size for processing
-    pub chunk_size: usize,
+    pub chunksize: usize,
     /// Use memory mapping for large files
     pub use_memory_mapping: bool,
     /// Enable garbage collection hints
@@ -29,7 +29,7 @@ impl Default for MemoryConstraints {
         // Default to 1GB max memory, 64KB chunks
         Self {
             max_memory_bytes: 1_024 * 1_024 * 1_024,
-            chunk_size: 64 * 1024,
+            chunksize: 64 * 1024,
             use_memory_mapping: true,
             enable_gc_hints: true,
         }
@@ -49,13 +49,13 @@ pub struct OperationMetrics {
     operation_type: String,
     memory_used: usize,
     processing_time: std::time::Duration,
-    chunk_size_used: usize,
+    chunksize_used: usize,
 }
 
 impl AdaptiveMemoryManager {
     pub fn new(constraints: MemoryConstraints) -> Self {
         Self {
-            constraints: constraints,
+            constraints,
             current_usage: Arc::new(Mutex::new(0)),
             peak_usage: Arc::new(Mutex::new(0)),
             operation_history: Arc::new(Mutex::new(VecDeque::with_capacity(100))),
@@ -63,7 +63,7 @@ impl AdaptiveMemoryManager {
     }
 
     /// Get optimal chunk size based on current memory usage and data size
-    pub fn get_optimal_chunk_size(&self, data_size: usize, elementsize: usize) -> usize {
+    pub fn get_optimal_chunksize(&self, datasize: usize, elementsize: usize) -> usize {
         let current_usage = *self.current_usage.lock().unwrap();
         let available_memory = self
             .constraints
@@ -75,10 +75,10 @@ impl AdaptiveMemoryManager {
         let max_chunk_elements = max_chunk_memory / elementsize;
 
         // Prefer power-of-2 sizes for cache efficiency
-        let optimal_size = max_chunk_elements
-            .min(data_size)
-            .min(self.constraints.chunk_size);
-        optimal_size.next_power_of_two() / 2 // Round down to nearest power of 2
+        let optimalsize = max_chunk_elements
+            .min(datasize)
+            .min(self.constraints.chunksize);
+        optimalsize.next_power_of_two() / 2 // Round down to nearest power of 2
     }
 
     /// Record memory usage for an operation
@@ -160,11 +160,11 @@ where
     checkarray_finite_2d(data, "data")?;
 
     let (n_obs, n_vars) = data.dim();
-    let element_size = std::mem::size_of::<F>();
+    let elementsize = std::mem::size_of::<F>();
 
     // Estimate memory requirements
-    let matrix_memory = n_vars * n_vars * element_size;
-    let temp_memory = n_obs * element_size * 2; // For column pairs
+    let matrix_memory = n_vars * n_vars * elementsize;
+    let temp_memory = n_obs * elementsize * 2; // For column pairs
     let total_estimated = matrix_memory + temp_memory;
 
     let mut corr_matrix = Array2::<F>::zeros((n_vars, n_vars));
@@ -179,8 +179,8 @@ where
         corr_matrix = compute_correlation_matrix_standard(data, method)?;
     } else {
         // Use block-wise computation
-        let block_size = manager.get_optimal_chunk_size(n_vars, element_size * n_vars);
-        corr_matrix = compute_correlation_matrix_blocked(data, method, block_size)?;
+        let blocksize = manager.get_optimal_chunksize(n_vars, elementsize * n_vars);
+        corr_matrix = compute_correlation_matrix_blocked(data, method, blocksize)?;
     }
 
     // Record metrics
@@ -188,7 +188,7 @@ where
         operation_type: format!("corrcoef_memory_aware_{}", method),
         memory_used: total_estimated,
         processing_time: start_time.elapsed(),
-        chunk_size_used: n_vars,
+        chunksize_used: n_vars,
     };
     manager.record_operation(metrics);
 
@@ -332,7 +332,7 @@ where
         operation_type: "streaming_covariance_matrix".to_string(),
         memory_used,
         processing_time: start_time.elapsed(),
-        chunk_size_used: n_vars,
+        chunksize_used: n_vars,
     };
     manager.record_operation(metrics);
 
@@ -362,39 +362,39 @@ where
     }
 
     // Estimate memory for centered data
-    let centered_data_memory = n_obs * n_vars * std::mem::size_of::<F>();
+    let centereddata_memory = n_obs * n_vars * std::mem::size_of::<F>();
 
-    if centered_data_memory <= manager.constraints.max_memory_bytes / 2 {
+    if centereddata_memory <= manager.constraints.max_memory_bytes / 2 {
         // Can afford to store centered data
-        let mut centered_data = Array2::<F>::zeros((n_obs, n_vars));
+        let mut centereddata = Array2::<F>::zeros((n_obs, n_vars));
         for i in 0..n_obs {
             for j in 0..n_vars {
-                centered_data[[i, j]] = data[[i, j]] - means[j];
+                centereddata[[i, j]] = data[[i, j]] - means[j];
             }
         }
 
         // Compute covariance matrix
-        let cov_matrix = compute_covariance_from_centered(&centered_data.view())?;
+        let cov_matrix = compute_covariance_from_centered(&centereddata.view())?;
 
         // Eigendecomposition (simplified - would use proper linear algebra library)
         let (eigenvectors, eigenvalues) =
             compute_eigendecomposition(&cov_matrix.view(), n_components)?;
 
         // Transform data
-        let transformed = matrix_multiply(&centered_data.view(), &eigenvectors.view())?;
+        let transformed = matrix_multiply(&centereddata.view(), &eigenvectors.view())?;
 
         let result = PCAResult {
             components: eigenvectors,
             explained_variance: eigenvalues,
-            transformed_data: transformed,
+            transformeddata: transformed,
             mean: means,
         };
 
         let metrics = OperationMetrics {
             operation_type: "pca_memory_efficient".to_string(),
-            memory_used: centered_data_memory,
+            memory_used: centereddata_memory,
             processing_time: start_time.elapsed(),
-            chunk_size_used: n_vars,
+            chunksize_used: n_vars,
         };
         manager.record_operation(metrics);
 
@@ -409,7 +409,7 @@ where
 pub struct PCAResult<F> {
     pub components: Array2<F>,
     pub explained_variance: Array1<F>,
-    pub transformed_data: Array2<F>,
+    pub transformeddata: Array2<F>,
     pub mean: Array1<F>,
 }
 
@@ -490,13 +490,13 @@ where
         operation_type: "streaming_pca_enhanced".to_string(),
         memory_used,
         processing_time: start_time.elapsed(),
-        chunk_size_used: manager.constraints.chunk_size,
+        chunksize_used: manager.constraints.chunksize,
     });
 
     Ok(PCAResult {
-        components: components,
+        components,
         explained_variance,
-        transformed_data: Array2::zeros((0, 0)), // Would project data in second pass
+        transformeddata: Array2::zeros((0, 0)), // Would project data in second pass
         mean: running_mean,
     })
 }
@@ -529,7 +529,7 @@ where
             total_count += 1;
 
             // Reservoir sampling to maintain memory bounds
-            if values.len() < manager.constraints.chunk_size {
+            if values.len() < manager.constraints.chunksize {
                 values.push(value);
             } else {
                 let j = {
@@ -593,7 +593,7 @@ where
         operation_type: "streaming_histogram_adaptive".to_string(),
         memory_used,
         processing_time: start_time.elapsed(),
-        chunk_size_used: manager.constraints.chunk_size,
+        chunksize_used: manager.constraints.chunksize,
     });
 
     Ok((bin_edges, counts))
@@ -636,7 +636,7 @@ where
         operation_type: "streaming_quantiles_p2".to_string(),
         memory_used,
         processing_time: start_time.elapsed(),
-        chunk_size_used: manager.constraints.chunk_size,
+        chunksize_used: manager.constraints.chunksize,
     });
 
     Ok(Array1::from_vec(results))
@@ -669,13 +669,7 @@ where
                 3.0 + 2.0 * quantile,
                 5.0,
             ],
-            increment: [
-                0.0,
-                quantile / 2.0,
-                quantile,
-                (1.0 + quantile) / 2.0,
-                1.0,
-            ],
+            increment: [0.0, quantile / 2.0, quantile, (1.0 + quantile) / 2.0, 1.0],
             count: 0,
         };
 
@@ -878,7 +872,7 @@ where
         operation_type: "streaming_regression_enhanced".to_string(),
         memory_used,
         processing_time: start_time.elapsed(),
-        chunk_size_used: manager.constraints.chunk_size,
+        chunksize_used: manager.constraints.chunksize,
     });
 
     Ok(coefficients)
@@ -987,7 +981,7 @@ where
 fn compute_correlation_matrix_blocked<F>(
     data: &ArrayView2<F>,
     method: &str,
-    block_size: usize,
+    blocksize: usize,
 ) -> StatsResult<Array2<F>>
 where
     F: Float
@@ -1009,11 +1003,11 @@ where
     }
 
     // Process in blocks
-    for i_block in (0..n_vars).step_by(block_size) {
-        let i_end = (i_block + block_size).min(n_vars);
+    for i_block in (0..n_vars).step_by(blocksize) {
+        let i_end = (i_block + blocksize).min(n_vars);
 
-        for j_block in (i_block..n_vars).step_by(block_size) {
-            let j_end = (j_block + block_size).min(n_vars);
+        for j_block in (i_block..n_vars).step_by(blocksize) {
+            let j_end = (j_block + blocksize).min(n_vars);
 
             // Compute correlations for this block
             for i in i_block..i_end {
@@ -1204,7 +1198,7 @@ where
     let n_components = n_components.min(n_vars);
 
     // Batch size for incremental processing
-    let batch_size = manager.get_optimal_chunk_size(n_obs, std::mem::size_of::<F>() * n_vars);
+    let batchsize = manager.get_optimal_chunksize(n_obs, std::mem::size_of::<F>() * n_vars);
 
     // Initialize _components with random orthogonal matrix
     let mut components = Array2::<F>::zeros((n_vars, n_components));
@@ -1216,8 +1210,8 @@ where
     let mut _n_samples_seen = 0;
 
     // Process data in batches
-    for batch_start in (0..n_obs).step_by(batch_size) {
-        let batch_end = (batch_start + batch_size).min(n_obs);
+    for batch_start in (0..n_obs).step_by(batchsize) {
+        let batch_end = (batch_start + batchsize).min(n_obs);
         let batch = data.slice(ndarray::s![batch_start..batch_end, ..]);
 
         // Center the batch
@@ -1277,7 +1271,7 @@ where
     }
 
     // Transform the data
-    let mut transformed_data = Array2::<F>::zeros((n_obs, n_components));
+    let mut transformeddata = Array2::<F>::zeros((n_obs, n_components));
     for i in 0..n_obs {
         for k in 0..n_components {
             let mut projection = F::zero();
@@ -1285,14 +1279,14 @@ where
                 let centered_val = data[[i, j]] - means[j];
                 projection = projection + centered_val * components[[j, k]];
             }
-            transformed_data[[i, k]] = projection;
+            transformeddata[[i, k]] = projection;
         }
     }
 
     Ok(PCAResult {
-        components: components,
+        components,
         explained_variance,
-        transformed_data,
+        transformeddata,
         mean: means.clone(),
     })
 }
@@ -1324,15 +1318,15 @@ mod tests {
         let constraints = MemoryConstraints::default();
         let manager = AdaptiveMemoryManager::new(constraints);
 
-        let chunk_size = manager.get_optimal_chunk_size(1000, 8);
-        assert!(chunk_size > 0);
-        assert!(chunk_size <= 1000);
+        let chunksize = manager.get_optimal_chunksize(1000, 8);
+        assert!(chunksize > 0);
+        assert!(chunksize <= 1000);
 
         let metrics = OperationMetrics {
             operation_type: "test".to_string(),
             memory_used: 1024,
             processing_time: std::time::Duration::from_millis(10),
-            chunk_size_used: chunk_size,
+            chunksize_used: chunksize,
         };
 
         manager.record_operation(metrics);

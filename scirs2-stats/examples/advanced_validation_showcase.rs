@@ -124,18 +124,18 @@ fn demonstrate_statistical_tests() -> Result<(), Box<dyn std::error::Error>> {
     println!("--------------------");
 
     // Create sample data for testing
-    let sample_data = array![
+    let sampledata = array![
         5.1, 4.9, 6.2, 5.7, 5.3, 5.0, 5.8, 5.4, 5.2, 5.6, 4.8, 5.9, 5.1, 5.3, 5.5, 5.2, 5.4, 5.0,
         5.1, 4.9
     ];
 
     println!(
         "🔬 Sample Data (n={}): Testing if mean = 5.0",
-        sample_data.len()
+        sampledata.len()
     );
 
     // One-sample t-test
-    let ttest_result = ttest_1samp(&sample_data.view(), 5.0, Alternative::TwoSided, "propagate")?;
+    let ttest_result = ttest_1samp(&sampledata.view(), 5.0, Alternative::TwoSided, "propagate")?;
 
     println!("\n📊 One-Sample t-Test Results:");
     println!("  Null hypothesis: μ = 5.0");
@@ -158,9 +158,9 @@ fn demonstrate_statistical_tests() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Show confidence interval information
-    let sample_mean = mean(&sample_data.view())?;
-    let sample_std = std(&sample_data.view(), 1, None)?;
-    let n = sample_data.len() as f64;
+    let sample_mean = mean(&sampledata.view())?;
+    let sample_std = std(&sampledata.view(), 1, None)?;
+    let n = sampledata.len() as f64;
     let se = sample_std / n.sqrt();
 
     println!("\n📈 Descriptive Statistics:");

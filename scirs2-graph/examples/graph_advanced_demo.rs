@@ -4,13 +4,13 @@
 //! for graph processing algorithms.
 
 use rand::rng;
-use scirs2__graph::advanced::{
+use scirs2_graph::advanced::{
     create_advanced_processor, execute_with_advanced, AdvancedConfig, AdvancedProcessor,
 };
-use scirs2__graph::algorithms::community::louvain_communities_result;
-use scirs2__graph::algorithms::connectivity::connected_components;
-use scirs2__graph::generators::erdos_renyi_graph;
-use scirs2__graph::measures::pagerank_centrality;
+use scirs2_graph::algorithms::community::louvain_communities_result;
+use scirs2_graph::algorithms::connectivity::connected_components;
+use scirs2_graph::generators::erdos_renyi_graph;
+use scirs2_graph::measures::pagerank_centrality;
 use std::time::Instant;
 
 #[allow(dead_code)]

@@ -10,7 +10,7 @@
 //! Run with: cargo run --example interactive_learning_modules
 
 // Removed unused imports - fixed compilation warnings
-use scirs2__special::*;
+use scirs2_special::*;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::io::{self, Write};
@@ -279,10 +279,10 @@ fn gamma_function_deep_dive(
     println!("\n2. Factorial extension verification:");
     for n in 1..=5 {
         let gamma_n = gamma(n as f64);
-        let factorial_n_minus_1 = (1..n).product::<usize>() as f64;
+        let factorial_nminus_1 = (1..n).product::<usize>() as f64;
         println!(
             "n = {}: Γ({}) = {:.6}, ({}−1)! = {:.6}",
-            n, n, gamma_n, n, factorial_n_minus_1
+            n, n, gamma_n, n, factorial_nminus_1
         );
     }
 

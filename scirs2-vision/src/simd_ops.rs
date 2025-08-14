@@ -164,9 +164,9 @@ pub fn simd_sobel_gradients(
 pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<f32>> {
     let (height, width) = image.dim();
 
-    // Handle edge case: very small sigma or _image
+    // Handle edge case: very small sigma or image
     if sigma < 0.1 || height < 3 || width < 3 {
-        return Ok(_image.to_owned());
+        return Ok(image.to_owned());
     }
 
     // Generate 1D Gaussian kernel with proper odd size calculation
@@ -692,13 +692,13 @@ impl SimdMemoryPool {
 /// Get a temporary buffer from the memory pool
 #[allow(dead_code)]
 pub fn get_temp_buffer(size: usize) -> Vec<f32> {
-    SIMD_MEMORY_POOL.with(|pool| pool.borrow_mut().get_buffer(_size))
+    SIMD_MEMORY_POOL.with(|pool| pool.borrow_mut().get_buffer(size))
 }
 
 /// Return a buffer to the memory pool
 #[allow(dead_code)]
 pub fn return_temp_buffer(buffer: Vec<f32>) {
-    SIMD_MEMORY_POOL.with(|pool| pool.borrow_mut().return_buffer(_buffer));
+    SIMD_MEMORY_POOL.with(|pool| pool.borrow_mut().return_buffer(buffer));
 }
 
 // ============================================================================
@@ -1122,7 +1122,7 @@ pub fn simd_convolve_adaptive_advanced(
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
 ) -> Result<Array2<f32>> {
-    let (_height_width) = image.dim();
+    let (height, width) = image.dim();
     let (k_height, k_width) = kernel.dim();
 
     // Ensure kernel is odd-sized
@@ -1395,7 +1395,7 @@ mod tests {
         assert_eq!(small_sigma_blurred, image);
 
         // Test with very large image to test normal path
-        let large_image = Array2::fromshape_fn((100, 100), |(y, x)| {
+        let large_image = Array2::from_shape_fn((100, 100), |(y, x)| {
             if y > 45 && y < 55 && x > 45 && x < 55 {
                 5.0
             } else {

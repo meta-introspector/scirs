@@ -122,7 +122,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> SSORPreconditioner<F> {
         }
 
         Ok(Self {
-            matrix: matrix,
+            matrix,
             omega,
             diagonal,
         })

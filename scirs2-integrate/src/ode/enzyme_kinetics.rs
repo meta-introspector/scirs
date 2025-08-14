@@ -182,7 +182,7 @@ impl EnzymeParameters {
     /// Create Michaelis-Menten enzyme parameters
     pub fn michaelis_menten(km: f64, vmax: f64) -> Self {
         Self {
-            mechanism: EnzymeMechanism::MichaelisMenten { km: km, vmax },
+            mechanism: EnzymeMechanism::MichaelisMenten { km, vmax },
             temperature: 310.15, // 37°C
             ph: 7.4,
             ionic_strength: 0.15,
@@ -194,7 +194,7 @@ impl EnzymeParameters {
     /// Create Hill equation enzyme parameters
     pub fn hill(kd: f64, vmax: f64, n: f64) -> Self {
         Self {
-            mechanism: EnzymeMechanism::Hill { kd: kd, vmax, n },
+            mechanism: EnzymeMechanism::Hill { kd, vmax, n },
             temperature: 310.15,
             ph: 7.4,
             ionic_strength: 0.15,

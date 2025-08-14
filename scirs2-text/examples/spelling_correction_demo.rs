@@ -247,7 +247,7 @@ fn performance_test(
     // Create a list of misspelled words to test
     let test_words: Vec<&str> = COMMON_MISSPELLINGS
         .iter()
-        .map(|(misspelled_)| *misspelled)
+        .map(|(misspelled_, _)| *misspelled_)
         .collect();
 
     // Measure performance of basic corrector
@@ -292,9 +292,7 @@ fn performance_test(
 
 // Demonstrate text-wide correction
 #[allow(dead_code)]
-fn text_correction_demo(
-    _corrector: &DictionaryCorrector,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn text_correction_demo(corrector: &DictionaryCorrector) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Text Correction Demo ===\n");
 
     println!("Original text with misspellings:");

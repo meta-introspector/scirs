@@ -1,6 +1,6 @@
 use approx::assert_relative_eq;
-use scirs2__sparse::csr::CsrMatrix;
-use scirs2__sparse::linalg::{bicg, cg, expm_multiply, BiCGOptions, CGOptions};
+use scirs2_sparse::csr::CsrMatrix;
+use scirs2_sparse::linalg::{bicg, cg, expm_multiply, BiCGOptions, CGOptions};
 
 #[test]
 #[allow(dead_code)]
@@ -12,7 +12,7 @@ fn test_cg_solver() {
     let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).unwrap();
 
     // Use AsLinearOperator trait to convert to LinearOperator
-    use scirs2__sparse::linalg::AsLinearOperator;
+    use scirs2_sparse::linalg::AsLinearOperator;
     let op = matrix.as_linear_operator();
 
     // Right-hand side
@@ -42,7 +42,7 @@ fn test_bicg_solver() {
     let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).unwrap();
 
     // Use AsLinearOperator trait to convert to LinearOperator
-    use scirs2__sparse::linalg::AsLinearOperator;
+    use scirs2_sparse::linalg::AsLinearOperator;
     let op = matrix.as_linear_operator();
 
     // Right-hand side
@@ -89,7 +89,7 @@ fn test_expm_multiply() {
     let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).unwrap();
 
     // Use AsLinearOperator trait to convert to LinearOperator
-    use scirs2__sparse::linalg::AsLinearOperator;
+    use scirs2_sparse::linalg::AsLinearOperator;
     let op = matrix.as_linear_operator();
 
     // Vector to multiply - use a different vector to avoid degeneracy

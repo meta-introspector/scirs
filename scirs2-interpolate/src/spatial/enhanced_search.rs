@@ -231,7 +231,7 @@ where
     ///     EnhancedNearestNeighborSearcher, IndexType, SearchConfig
     /// };
     ///
-    /// let points = Array2::fromshape_vec((5, 2), vec![
+    /// let points = Array2::from_shape_vec((5, 2), vec![
     ///     0.0, 0.0,
     ///     1.0, 0.0,
     ///     0.0, 1.0,
@@ -337,7 +337,7 @@ where
     ///     EnhancedNearestNeighborSearcher, IndexType, SearchConfig
     /// };
     ///
-    /// let points = Array2::fromshape_vec((4, 2), vec![
+    /// let points = Array2::from_shape_vec((4, 2), vec![
     ///     0.0, 0.0,
     ///     1.0, 0.0,
     ///     0.0, 1.0,
@@ -1486,7 +1486,7 @@ impl<F: Float + FromPrimitive> LSHIndex<F> {
 ///     make_enhanced_searcher, SearchConfig
 /// };
 ///
-/// let points = Array2::fromshape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
+/// let points = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
 /// let searcher = make_enhanced_searcher(points, None).unwrap();
 /// ```
 #[allow(dead_code)]

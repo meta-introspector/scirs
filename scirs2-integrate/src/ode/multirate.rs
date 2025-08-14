@@ -111,7 +111,7 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
         };
 
         Self {
-            options: options,
+            options,
             history: VecDeque::new(),
             current_macro_step,
             current_micro_step,

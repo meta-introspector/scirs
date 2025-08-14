@@ -161,7 +161,7 @@ fn non_convexshape_example() -> Result<(), Box<dyn std::error::Error>> {
         flat_data.push(point[1]);
     }
 
-    let points = ndarray::Array2::fromshape_vec((n, 2), flat_data)?;
+    let points = ndarray::Array2::from_shape_vec((n, 2), flat_data)?;
 
     println!("C-shaped point cloud with {n} points");
 
@@ -214,7 +214,7 @@ fn outlier_detection_example() -> Result<(), Box<dyn std::error::Error>> {
         flat_data.push(point[1]);
     }
 
-    let points = ndarray::Array2::fromshape_vec((n, 2), flat_data)?;
+    let points = ndarray::Array2::from_shape_vec((n, 2), flat_data)?;
 
     println!("Point cloud with {n} points including outliers");
 
@@ -314,7 +314,7 @@ fn optimal_alpha_example() -> Result<(), Box<dyn std::error::Error>> {
         flat_data.push(point[1]);
     }
 
-    let points = ndarray::Array2::fromshape_vec((n, 2), flat_data)?;
+    let points = ndarray::Array2::from_shape_vec((n, 2), flat_data)?;
 
     println!("Two-cluster point set with {n} points");
 
@@ -359,7 +359,7 @@ fn circular_points_example() -> Result<(), Box<dyn std::error::Error>> {
         flat_data.push(point[1]);
     }
 
-    let points = ndarray::Array2::fromshape_vec((n, 2), flat_data)?;
+    let points = ndarray::Array2::from_shape_vec((n, 2), flat_data)?;
 
     println!("Circular ring with {n} points");
 

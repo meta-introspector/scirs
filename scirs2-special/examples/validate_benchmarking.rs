@@ -5,7 +5,7 @@
 //!
 //! Run with: cargo run --example validate_benchmarking
 
-use scirs2__special::performance_benchmarks::GammaBenchmarks;
+use scirs2_special::performance_benchmarks::GammaBenchmarks;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

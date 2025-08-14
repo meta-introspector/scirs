@@ -14,7 +14,7 @@
 //! Run with: cargo run --example computational_methods_laboratory
 
 use ndarray::Array1;
-use scirs2__special::*;
+use scirs2_special::*;
 use std::f64::consts::PI;
 use std::io::{self, Write};
 use std::time::Instant;
@@ -384,13 +384,13 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     println!("===================================");
     println!();
 
-    let array_sizes = vec![100, 1000, 10000, 100000];
+    let arraysizes = vec![100, 1000, 10000, 100000];
     println!("Array operations performance comparison:");
     println!();
     println!("Size      Scalar (ms)   Vector (ms)   Speedup    Efficiency");
     println!("----      -----------   -----------   -------    ----------");
 
-    for &size in &array_sizes {
+    for &size in &arraysizes {
         let data: Vec<f64> = (0..size).map(|i| 1.0 + i as f64 * 0.01).collect();
 
         // Scalar timing
@@ -437,16 +437,16 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Test different access patterns
-    let matrix_size = 1000;
-    let matrix_data: Vec<f64> = (0..matrix_size * matrix_size)
+    let matrixsize = 1000;
+    let matrix_data: Vec<f64> = (0..matrixsize * matrixsize)
         .map(|i| 1.0 + (i % 100) as f64 * 0.01)
         .collect();
 
     // Row-major access
     let start = Instant::now();
-    for row in 0..matrix_size {
-        for col in 0..matrix_size {
-            let idx = row * matrix_size + col;
+    for row in 0..matrixsize {
+        for col in 0..matrixsize {
+            let idx = row * matrixsize + col;
             let _ = gamma(matrix_data[idx]);
         }
     }
@@ -454,15 +454,15 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
 
     // Column-major access
     let start = Instant::now();
-    for col in 0..matrix_size {
-        for row in 0..matrix_size {
-            let idx = row * matrix_size + col;
+    for col in 0..matrixsize {
+        for row in 0..matrixsize {
+            let idx = row * matrixsize + col;
             let _ = gamma(matrix_data[idx]);
         }
     }
     let col_major_time = start.elapsed().as_millis();
 
-    println!("{matrix_size}x{matrix_size} matrix access patterns:");
+    println!("{matrixsize}x{matrixsize} matrix access patterns:");
     println!("Row-major:    {row_major_time} ms (cache-friendly)");
     println!("Column-major: {col_major_time} ms (cache-unfriendly)");
     println!(
@@ -480,8 +480,8 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let thread_counts = vec![1, 2, 4, 8];
-    let array_size = 100000;
-    let data: Vec<f64> = (0..array_size).map(|i| 1.0 + i as f64 * 0.001).collect();
+    let arraysize = 100000;
+    let data: Vec<f64> = (0..arraysize).map(|i| 1.0 + i as f64 * 0.001).collect();
 
     println!("Threads   Time (ms)   Speedup   Efficiency");
     println!("-------   ---------   -------   ----------");
@@ -491,10 +491,10 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     for &threads in &thread_counts {
         // Simulate parallel computation
         let start = Instant::now();
-        let chunk_size = array_size / threads;
+        let chunksize = arraysize / threads;
 
         // Sequential simulation of parallel work
-        for chunk in data.chunks(chunk_size) {
+        for chunk in data.chunks(chunksize) {
             for &x in chunk {
                 let _ = gamma(x);
             }
@@ -828,11 +828,11 @@ fn simd_and_parallel_optimization() -> Result<(), Box<dyn std::error::Error>> {
     println!("Comparing scalar vs vectorized gamma computation:");
     println!();
 
-    let array_sizes = vec![1000, 10000, 100000];
+    let arraysizes = vec![1000, 10000, 100000];
     println!("Array Size   Scalar Time   Vector Time   Speedup");
     println!("----------   -----------   -----------   -------");
 
-    for &size in &array_sizes {
+    for &size in &arraysizes {
         let data: Vec<f64> = (0..size).map(|i| 1.0 + i as f64 * 0.001).collect();
 
         // Scalar timing
@@ -1156,8 +1156,8 @@ fn validation_and_testing_methods() -> Result<(), Box<dyn std::error::Error>> {
     println!("Monitoring performance to detect regressions:");
     println!();
 
-    let array_size = 10000;
-    let test_data: Vec<f64> = (0..array_size).map(|i| 1.0 + i as f64 * 0.001).collect();
+    let arraysize = 10000;
+    let test_data: Vec<f64> = (0..arraysize).map(|i| 1.0 + i as f64 * 0.001).collect();
 
     println!("Function    Baseline (μs)   Current (μs)   Change     Status");
     println!("--------    -------------   ------------   ------     ------");

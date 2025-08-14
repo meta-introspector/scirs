@@ -6,8 +6,8 @@
 //! Run with: cargo run --example bessel_interactive_tutorial
 
 use ndarray::Array1;
-use scirs2__special::bessel::*;
-use scirs2__special::{j0_zeros, j1_zeros};
+use scirs2_special::bessel::*;
+use scirs2_special::{j0_zeros, j1_zeros};
 use std::io::{self, Write};
 
 /// Helper function to generate multiple J0 zeros
@@ -802,13 +802,13 @@ fn plot_regular_bessel() {
     println!("\n📈 Plotting Regular Bessel Functions");
     println!("─────────────────────────────────────");
 
-    let x_max = 15.0;
+    let xmax = 15.0;
     let n_points = 150;
-    let x_values: Vec<f64> = Array1::linspace(0.01, x_max, n_points).to_vec();
+    let x_values: Vec<f64> = Array1::linspace(0.01, xmax, n_points).to_vec();
 
     println!(
         "\nBessel Functions J₀(x), J₁(x), J₂(x) for x ∈ [0, {}]",
-        x_max
+        xmax
     );
     println!("(Approximate ASCII plot)");
     println!();
@@ -823,12 +823,12 @@ fn plot_regular_bessel() {
     let j2_values: Vec<f64> = x_values.iter().map(|&x| jn(2, x)).collect();
 
     // Find min/max for scaling
-    let y_min = -0.5;
-    let y_max = 1.0;
+    let ymin = -0.5;
+    let ymax = 1.0;
 
     // Print plot
     for row in 0..plot_height {
-        let y = y_max - (row as f64 / (plot_height - 1) as f64) * (y_max - y_min);
+        let y = ymax - (row as f64 / (plot_height - 1) as f64) * (ymax - ymin);
 
         if row == 0 || row == plot_height - 1 {
             print!("{:5.2} ", y);
@@ -865,10 +865,10 @@ fn plot_regular_bessel() {
 
     println!(
         "      0    {}    {}    {}    {}",
-        x_max / 4.0,
-        x_max / 2.0,
-        3.0 * x_max / 4.0,
-        x_max
+        xmax / 4.0,
+        xmax / 2.0,
+        3.0 * xmax / 4.0,
+        xmax
     );
     println!();
     println!("Legend: 0 = J₀(x), 1 = J₁(x), 2 = J₂(x)");
@@ -892,13 +892,13 @@ fn plot_modified_bessel() {
     println!("──────────────────────────────────────");
 
     // For modified Bessel functions, we need different ranges
-    let x_max = 3.0; // I₀ grows exponentially
+    let xmax = 3.0; // I₀ grows exponentially
     let n_points = 60;
-    let _x_values: Vec<f64> = Array1::linspace(0.01, x_max, n_points).to_vec();
+    let _x_values: Vec<f64> = Array1::linspace(0.01, xmax, n_points).to_vec();
 
     println!(
         "\nModified Bessel Functions I₀(x) and K₀(x) for x ∈ [0, {}]",
-        x_max
+        xmax
     );
     println!("Note: I₀ grows exponentially, K₀ decays exponentially");
 
@@ -908,7 +908,7 @@ fn plot_modified_bessel() {
     println!("------|----------|----------|----------");
 
     for &x in [0.1, 0.5, 1.0, 2.0, 3.0].iter() {
-        if x <= x_max {
+        if x <= xmax {
             let i0_val = i0(x);
             let k0_val = k0(x);
 
@@ -933,10 +933,10 @@ fn plot_spherical_bessel() {
     println!("\n📈 Plotting Spherical Bessel Functions");
     println!("───────────────────────────────────────");
 
-    let x_max = 15.0;
+    let xmax = 15.0;
     println!(
         "\nSpherical Bessel Functions j₀(x), j₁(x), j₂(x) for x ∈ [0, {}]",
-        x_max
+        xmax
     );
 
     // Show relationship to elementary functions
@@ -950,7 +950,7 @@ fn plot_spherical_bessel() {
     println!("------|----------|----------|----------|----------");
 
     for &x in [1.0f64, 3.14159, 6.28, 9.42, 12.57].iter() {
-        if x <= x_max {
+        if x <= xmax {
             let j0_val = spherical_jn(0, x);
             let j1_val = spherical_jn(1, x);
             let j2_val = spherical_jn(2, x);

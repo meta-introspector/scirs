@@ -420,10 +420,10 @@ fn advanced_features_differences() -> LinalgResult<()> {
     // Error handling differences
     println!("\n🔹 Error Handling Differences");
     println!("Python: try:");
-    println!("            result = linalg.inv(singular_matrix)");
+    println!("            result = linalg.inv(singularmatrix)");
     println!("        except LinAlgError as e:");
     println!("            print(f'Error: {{e}}')");
-    println!("Rust:   match inv(&singular_matrix.view(), None) {{");
+    println!("Rust:   match inv(&singularmatrix.view(), None) {{");
     println!("            Ok(result) => {{ /* use result */ }}");
     println!("            Err(e) => println!(\"Error: {{}}\", e),");
     println!("        }}");

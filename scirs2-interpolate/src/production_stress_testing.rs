@@ -395,6 +395,12 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                 "sparse_data" => self.create_sparse_data(1000),
                 "highly_oscillatory" => self.create_oscillatory_data(1000),
                 "monotonic_extreme" => self.create_monotonic_extreme_data(1000),
+                _ => {
+                    return Err(crate::error::InterpolateError::invalid_input(format!(
+                        "Unknown test case: {}",
+                        test_name
+                    )));
+                }
             };
 
             let test_result = match data_result {

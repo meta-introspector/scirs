@@ -11,15 +11,15 @@ fn main() {
     println!("===================================");
 
     // Multimodal data for mode calculation (using integers since floats don't implement Hash/Eq)
-    let multi_data = array![1, 2, 2, 3, 3, 4, 5, 5, 6];
+    let multidata = array![1, 2, 2, 3, 3, 4, 5, 5, 6];
 
     // Find modes
-    let unimodal_result = mode(&multi_data.view(), ModeMethod::Unimodal).unwrap();
-    let multimodal_result = mode(&multi_data.view(), ModeMethod::MultiModal).unwrap();
+    let unimodal_result = mode(&multidata.view(), ModeMethod::Unimodal).unwrap();
+    let multimodal_result = mode(&multidata.view(), ModeMethod::MultiModal).unwrap();
 
     println!("\n1. Mode Analysis");
     println!("---------------");
-    println!("Data: {:?}", multi_data);
+    println!("Data: {:?}", multidata);
     println!(
         "Unimodal mode: {:?} (count: {})",
         unimodal_result.values[0], unimodal_result.counts[0]

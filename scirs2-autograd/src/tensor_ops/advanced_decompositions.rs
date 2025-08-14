@@ -710,9 +710,7 @@ fn orthogonalize_qr<F: Float + ndarray::ScalarOperand>(
 }
 
 #[allow(dead_code)]
-fn compute_matrix_inverse<F: Float>(
-    matrix: &ndarray::ArrayView2<F>,
-) -> Result<Array2<F>, OpError> {
+fn compute_matrix_inverse<F: Float>(matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F>, OpError> {
     let n = matrix.shape()[0];
     let mut a = matrix.to_owned();
     let mut inv = Array2::<F>::eye(n);

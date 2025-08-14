@@ -2,7 +2,7 @@
 
 //! Simple test of new SciPy parity implementations
 
-use scirs2__special::{
+use scirs2_special::{
     // New Airy functions
     ai_zeros, aie, airye, bi_zeros, bie, itairy,
     // New distribution inverse functions  

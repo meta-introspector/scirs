@@ -20,15 +20,15 @@ fn main() {
 
     // Example 1: Creating and using a small chunked quantized matrix
     println!("\n--- Example 1: Small Matrix Operations ---");
-    example_small_matrix(&file_path);
+    example_smallmatrix(&file_path);
 
     // Example 2: Solving a linear system with a medium-sized matrix
     println!("\n--- Example 2: Medium Matrix Solver ---");
-    example_medium_matrix(&file_path);
+    example_mediummatrix(&file_path);
 
     // Example 3: Very large matrix demonstration with performance comparison
     println!("\n--- Example 3: Large Matrix Performance Comparison ---");
-    example_large_matrix_performance(&file_path);
+    example_largematrix_performance(&file_path);
 
     // Clean up
     std::fs::remove_file(&file_path).unwrap_or_default();
@@ -37,9 +37,9 @@ fn main() {
 
 /// Example using a small matrix to demonstrate basic functionality
 #[allow(dead_code)]
-fn example_small_matrix(_filepath: &Path) {
+fn example_smallmatrix(file_path: &Path) {
     println!("Creating a small 10x10 matrix...");
-    let matrix = create_random_spd_matrix(10);
+    let matrix = create_random_spdmatrix(10);
 
     // Create a chunked quantized matrix with 8-bit quantization
     println!("Creating chunked quantized matrix with 8-bit quantization...");
@@ -82,10 +82,10 @@ fn example_small_matrix(_filepath: &Path) {
 
 /// Example solving a linear system with a medium-sized matrix
 #[allow(dead_code)]
-fn example_medium_matrix(filepath: &Path) {
+fn example_mediummatrix(file_path: &Path) {
     let size = 100;
     println!("Creating a medium {}x{} matrix...", size, size);
-    let matrix = create_random_spd_matrix(size);
+    let matrix = create_random_spdmatrix(size);
 
     // Create a chunked quantized matrix with 8-bit quantization
     println!("Creating chunked quantized matrix with 8-bit quantization...");
@@ -131,7 +131,7 @@ fn example_medium_matrix(filepath: &Path) {
 
 /// Example comparing performance with a large matrix
 #[allow(dead_code)]
-fn example_large_matrix_performance(filepath: &Path) {
+fn example_largematrix_performance(file_path: &Path) {
     let size = 1000;
     println!(
         "Creating a large {}x{} matrix (this would be much larger in a real scenario)...",
@@ -140,7 +140,7 @@ fn example_large_matrix_performance(filepath: &Path) {
 
     // For demonstration purposes we'll use a relatively small "large" matrix
     // In a real scenario, this would be much larger (e.g., 100,000 x 100,000)
-    let matrix = create_random_spd_matrix(size);
+    let matrix = create_random_spdmatrix(size);
 
     // Create vectors for different bit-width chunked quantized matrices
     println!("Creating chunked quantized matrices with different bit widths...");
@@ -210,19 +210,19 @@ fn example_large_matrix_performance(filepath: &Path) {
     println!("Relative residual: {:.6e}", relative_residual_4bit);
 
     // Calculate file sizes
-    let file_size_8bit = std::fs::metadata(&file_path_8bit)
+    let filesize_8bit = std::fs::metadata(&file_path_8bit)
         .map(|m| m.len() as f64 / 1024.0 / 1024.0)
         .unwrap_or(0.0);
-    let file_size_4bit = std::fs::metadata(&file_path_4bit)
+    let filesize_4bit = std::fs::metadata(&file_path_4bit)
         .map(|m| m.len() as f64 / 1024.0 / 1024.0)
         .unwrap_or(0.0);
 
     println!("\nMemory usage comparison:");
-    println!("8-bit quantization file size: {:.2} MB", file_size_8bit);
-    println!("4-bit quantization file size: {:.2} MB", file_size_4bit);
+    println!("8-bit quantization file size: {:.2} MB", filesize_8bit);
+    println!("4-bit quantization file size: {:.2} MB", filesize_4bit);
     println!(
         "Memory reduction with 4-bit: {:.1}%",
-        (1.0 - file_size_4bit / file_size_8bit) * 100.0
+        (1.0 - filesize_4bit / filesize_8bit) * 100.0
     );
 
     println!("\nPerformance comparison:");
@@ -248,27 +248,27 @@ fn example_large_matrix_performance(filepath: &Path) {
 
 /// Create a random symmetric positive definite matrix of the given size
 #[allow(dead_code)]
-fn create_random_spd_matrix(size: usize) -> Array2<f32> {
+fn create_random_spdmatrix(size: usize) -> Array2<f32> {
     // Create a random matrix with values in the range [-1.0, 1.0)
     let mut rng = rand::rng();
-    let mut matrix = Array2::zeros((_size, size));
+    let mut matrix = Array2::zeros((size, size));
 
-    for i in 0.._size {
-        for j in 0.._size {
+    for i in 0..size {
+        for j in 0..size {
             matrix[[i, j]] = rng.gen_range(-1.0..1.0);
         }
     }
 
     // Make it symmetric
-    for i in 0.._size {
-        for j in i + 1.._size {
-            matrix[[j..i]] = matrix[[i, j]];
+    for i in 0..size {
+        for j in i + 1..size {
+            matrix[[j, i]] = matrix[[i, j]];
         }
     }
 
     // Add to the diagonal to ensure positive definiteness
-    for i in 0.._size {
-        matrix[[i, i]] += _size as f32;
+    for i in 0..size {
+        matrix[[i, i]] += size as f32;
     }
 
     matrix
@@ -278,6 +278,6 @@ fn create_random_spd_matrix(size: usize) -> Array2<f32> {
 #[allow(dead_code)]
 fn get_temp_file_path(name: &str) -> PathBuf {
     let mut path = env::temp_dir();
-    path.push(format!("quantized_matrix_{}.bin", name));
+    path.push(format!("quantizedmatrix_{}.bin", name));
     path
 }

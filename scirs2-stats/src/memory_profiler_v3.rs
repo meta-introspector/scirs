@@ -24,7 +24,7 @@ pub struct AllocationStats {
     pub total_allocations: usize,
     pub total_bytes: usize,
     pub peak_bytes: usize,
-    pub average_size: f64,
+    pub averagesize: f64,
     pub allocation_times: Vec<Duration>,
 }
 
@@ -50,7 +50,7 @@ impl MemoryProfiler {
         stats.total_allocations += 1;
         stats.total_bytes += size;
         stats.peak_bytes = stats.peak_bytes.max(size);
-        stats.average_size = stats.total_bytes as f64 / stats.total_allocations as f64;
+        stats.averagesize = stats.total_bytes as f64 / stats.total_allocations as f64;
         stats.allocation_times.push(duration);
 
         // Update global memory tracking
@@ -95,10 +95,10 @@ impl MemoryProfiler {
 
         for (category, stats) in allocations {
             // Check for frequent small allocations
-            if stats.total_allocations > 1000 && stats.average_size < 1024.0 {
+            if stats.total_allocations > 1000 && stats.averagesize < 1024.0 {
                 recommendations.push(format!(
                     "Consider memory pooling for '{}' category (many small allocations: {} allocations, avg size: {:.1} bytes)",
-                    category, stats.total_allocations, stats.average_size
+                    category, stats.total_allocations, stats.averagesize
                 ));
             }
 
@@ -174,7 +174,7 @@ impl MemoryReport {
                 "    Peak Allocation: {:.2} KB",
                 stats.peak_bytes as f64 / 1024.0
             );
-            println!("    Average Size: {:.1} bytes", stats.average_size);
+            println!("    Average Size: {:.1} bytes", stats.averagesize);
 
             if !stats.allocation_times.is_empty() {
                 let avg_time = stats.allocation_times.iter().sum::<Duration>().as_micros() as f64
@@ -206,7 +206,7 @@ pub struct StatisticsCache<F> {
 struct CachedResult<F> {
     value: F,
     timestamp: Instant,
-    memory_size: usize,
+    memorysize: usize,
     access_count: usize,
 }
 
@@ -228,26 +228,26 @@ impl<F: Float + Clone + std::fmt::Display> StatisticsCache<F> {
 
     /// Cache a computed result
     pub fn put(&mut self, key: String, value: F) {
-        let memory_size = std::mem::size_of::<F>() + key.len();
+        let memorysize = std::mem::size_of::<F>() + key.len();
 
         // Check if we need to evict entries
-        self.maybe_evict(memory_size);
+        self.maybe_evict(memorysize);
 
         let cached_result = CachedResult {
             value,
             timestamp: Instant::now(),
-            memory_size,
+            memorysize,
             access_count: 0,
         };
 
         if let Some(old_result) = self.cache.insert(key.clone(), cached_result) {
-            self.current_memory -= old_result.memory_size;
+            self.current_memory -= old_result.memorysize;
         }
 
-        self.current_memory += memory_size;
+        self.current_memory += memorysize;
 
         if let Some(profiler) = &self.profiler {
-            profiler.record_allocation("statistics_cache", memory_size, Duration::from_nanos(0));
+            profiler.record_allocation("statistics_cache", memorysize, Duration::from_nanos(0));
         }
     }
 
@@ -283,10 +283,10 @@ impl<F: Float + Clone + std::fmt::Display> StatisticsCache<F> {
             .map(|(k, v)| (k.clone(), v.clone()))
         {
             self.cache.remove(&key_to_remove);
-            self.current_memory -= entry_to_remove.memory_size;
+            self.current_memory -= entry_to_remove.memorysize;
 
             if let Some(profiler) = &self.profiler {
-                profiler.record_deallocation(entry_to_remove.memory_size);
+                profiler.record_deallocation(entry_to_remove.memorysize);
             }
         }
     }
@@ -313,7 +313,7 @@ impl<F: Float + Clone + std::fmt::Display> StatisticsCache<F> {
     pub fn clear(&mut self) {
         if let Some(profiler) = &self.profiler {
             for entry in self.cache.values() {
-                profiler.record_deallocation(entry.memory_size);
+                profiler.record_deallocation(entry.memorysize);
             }
         }
 
@@ -341,7 +341,7 @@ impl AdaptiveMemoryManager {
         Self {
             memory_threshold_low: 100 * 1024 * 1024,   // 100MB
             memory_threshold_high: 1024 * 1024 * 1024, // 1GB
-            profiler: profiler,
+            profiler,
         }
     }
 
@@ -374,7 +374,7 @@ impl AdaptiveMemoryManager {
     }
 
     /// Suggest chunk size based on available memory
-    pub fn suggest_chunk_size(&self, data_size: usize, elementsize: usize) -> usize {
+    pub fn suggest_chunksize(&self, datasize: usize, elementsize: usize) -> usize {
         let current_memory = *self.profiler.current_memory.lock().unwrap();
         let available_memory = self.memory_threshold_high.saturating_sub(current_memory);
 
@@ -383,7 +383,7 @@ impl AdaptiveMemoryManager {
         let max_chunk_elements = max_chunk_memory / elementsize;
 
         // Clamp to reasonable bounds
-        max_chunk_elements.clamp(1000, data_size / 4)
+        max_chunk_elements.clamp(1000, datasize / 4)
     }
 }
 
@@ -484,14 +484,14 @@ where
         D: Data<Elem = F>,
     {
         // Chunked processing
-        let chunk_size = self
+        let chunksize = self
             .adaptive_manager
-            .suggest_chunk_size(data.len(), std::mem::size_of::<F>());
+            .suggest_chunksize(data.len(), std::mem::size_of::<F>());
         let mut total_sum = F::zero();
         let mut total_count = 0;
 
-        for chunk_start in (0..data.len()).step_by(chunk_size) {
-            let chunk_end = (chunk_start + chunk_size).min(data.len());
+        for chunk_start in (0..data.len()).step_by(chunksize) {
+            let chunk_end = (chunk_start + chunksize).min(data.len());
             let chunk = data.slice(ndarray::s![chunk_start..chunk_end]);
 
             let chunk_sum = chunk.iter().fold(F::zero(), |acc, &x| acc + x);
@@ -603,8 +603,8 @@ mod tests {
         assert_ne!(choice_small, choice_large);
 
         // Test chunk size suggestion
-        let chunk_size = manager.suggest_chunk_size(100_000, 8);
-        assert!(chunk_size > 0);
-        assert!(chunk_size <= 25_000); // Should be reasonable fraction of data size
+        let chunksize = manager.suggest_chunksize(100_000, 8);
+        assert!(chunksize > 0);
+        assert!(chunksize <= 25_000); // Should be reasonable fraction of data size
     }
 }

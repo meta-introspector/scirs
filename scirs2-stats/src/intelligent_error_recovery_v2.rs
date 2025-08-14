@@ -251,7 +251,7 @@ pub enum StabilizationTechnique {
 /// Memory optimization strategies
 #[derive(Debug, Clone)]
 pub enum MemoryOptimizationStrategy {
-    ChunkedProcessing { chunk_size: usize },
+    ChunkedProcessing { chunksize: usize },
     StreamingAlgorithms,
     InPlaceOperations,
     MemoryPooling,
@@ -274,10 +274,10 @@ pub enum DegradedResult {
 #[derive(Debug, Clone)]
 pub enum DecompositionStrategy {
     SpatialDecomposition { n_parts: usize },
-    TemporalDecomposition { window_size: usize },
+    TemporalDecomposition { windowsize: usize },
     FeatureDecomposition { feature_groups: Vec<Vec<usize>> },
     HierarchicalDecomposition { levels: usize },
-    RandomSampling { sample_size: usize },
+    RandomSampling { samplesize: usize },
 }
 
 /// Various method enums for preprocessing
@@ -679,7 +679,7 @@ where
             ErrorClassification::MemoryIssue { .. } => {
                 strategies.push(RecoveryStrategy::MemoryOptimization {
                     strategies: vec![
-                        MemoryOptimizationStrategy::ChunkedProcessing { chunk_size: 1000 },
+                        MemoryOptimizationStrategy::ChunkedProcessing { chunksize: 1000 },
                         MemoryOptimizationStrategy::StreamingAlgorithms,
                     ],
                 });

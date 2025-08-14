@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Bencher, Criterion};
 use rand::Rng;
-use scirs2__fft::{
+use scirs2_fft::{
     sparse_fft,
     sparse_fft::{SparseFFTAlgorithm, WindowFunction},
     sparse_fft_gpu::{gpu_batch_sparse_fft, gpu_sparse_fft, GPUBackend},

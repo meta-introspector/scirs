@@ -474,8 +474,7 @@ impl OrdinalEncoder {
 
         if handleunknown == "use_encoded_value" && unknownvalue.is_none() {
             return Err(TransformError::InvalidInput(
-                "unknownvalue must be specified when handleunknown='use_encoded_value'"
-                    .to_string(),
+                "unknownvalue must be specified when handleunknown='use_encoded_value'".to_string(),
             ));
         }
 

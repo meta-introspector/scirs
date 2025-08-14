@@ -226,7 +226,7 @@ pub struct Homography {
 impl Homography {
     /// Create a new homography matrix from raw data
     pub fn new(_matrixdata: &[f64; 9]) -> Self {
-        let matrix = Array2::fromshape_vec((3, 3), _matrixdata.to_vec()).unwrap();
+        let matrix = Array2::from_shape_vec((3, 3), _matrixdata.to_vec()).unwrap();
         let inverse = match Self::invert_matrix(&matrix) {
             Ok(inv) => inv,
             Err(_) => Array2::eye(3),
@@ -294,10 +294,8 @@ impl Homography {
 
         let det = matrix[[0, 0]]
             * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
-            - matrix[[0, 1]]
-                * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
-            + matrix[[0, 2]]
-                * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
+            - matrix[[0, 1]] * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
+            + matrix[[0, 2]] * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
 
         if det.abs() < 1e-10 {
             return Err(crate::error::VisionError::OperationError(
@@ -307,24 +305,15 @@ impl Homography {
 
         let mut inverse = Array2::zeros((3, 3));
 
-        inverse[[0, 0]] =
-            (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
-        inverse[[0, 1]] =
-            (matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
-        inverse[[0, 2]] =
-            (matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
-        inverse[[1, 0]] =
-            (matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
-        inverse[[1, 1]] =
-            (matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
-        inverse[[1, 2]] =
-            (matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
-        inverse[[2, 0]] =
-            (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
-        inverse[[2, 1]] =
-            (matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
-        inverse[[2, 2]] =
-            (matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
+        inverse[[0, 0]] = (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
+        inverse[[0, 1]] = (matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
+        inverse[[0, 2]] = (matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
+        inverse[[1, 0]] = (matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
+        inverse[[1, 1]] = (matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
+        inverse[[1, 2]] = (matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
+        inverse[[2, 0]] = (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
+        inverse[[2, 1]] = (matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
+        inverse[[2, 2]] = (matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
 
         Ok(inverse)
     }

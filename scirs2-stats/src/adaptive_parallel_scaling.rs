@@ -42,7 +42,7 @@ pub struct AdaptiveParallelConfig {
     /// Enable NUMA awareness
     pub enable_numa_affinity: bool,
     /// Performance history window size
-    pub performance_window_size: usize,
+    pub performance_windowsize: usize,
 }
 
 impl Default for AdaptiveParallelConfig {
@@ -58,7 +58,7 @@ impl Default for AdaptiveParallelConfig {
             enable_load_balancing: true,
             enable_work_stealing: true,
             enable_numa_affinity: true,
-            performance_window_size: 10,
+            performance_windowsize: 10,
         }
     }
 }
@@ -217,7 +217,7 @@ pub struct PerformancePredictor {
     /// Feature weights for performance prediction
     weights: Vec<f64>,
     /// Training data (features, performance)
-    training_data: VecDeque<(Vec<f64>, f64)>,
+    trainingdata: VecDeque<(Vec<f64>, f64)>,
     /// Prediction accuracy
     accuracy: f64,
 }
@@ -370,9 +370,9 @@ where
         let cpu_count = num_cpus::get();
 
         // Strategy selection heuristics
-        if data_size < 1000 {
+        if datasize < 1000 {
             WorkDistributionStrategy::EqualChunks
-        } else if numa_nodes > 1 && data_size > 100000 {
+        } else if numa_nodes > 1 && datasize > 100000 {
             WorkDistributionStrategy::NumaAware
         } else if complexity > 3.0 && cpu_count >= 8 {
             WorkDistributionStrategy::WorkStealing
@@ -387,11 +387,11 @@ where
     fn compute_mean_equal_chunks(&self, data: &ArrayView1<F>) -> StatsResult<F> {
         let n = data.len();
         let num_threads = self.get_optimal_thread_count(n, 1.0);
-        let chunk_size = n / num_threads;
+        let chunksize = n / num_threads;
 
         let result = parallel_map_reduce(
             data,
-            chunk_size,
+            chunksize,
             |chunk| {
                 let sum: F = chunk.iter().copied().sum();
                 (sum, chunk.len())
@@ -466,11 +466,11 @@ where
             data.len() / num_cpus::get()
         };
 
-        let chunk_size = predicted_optimal_chunks.max(100).min(data.len() / 2);
+        let chunksize = predicted_optimal_chunks.max(100).min(data.len() / 2);
         
         let result = parallel_map_reduce(
             data,
-            chunk_size,
+            chunksize,
             |chunk| {
                 let sum: F = chunk.iter().copied().sum();
                 (sum, chunk.len())
@@ -545,11 +545,11 @@ where
     fn compute_variance_equal_chunks(&self, data: &ArrayView1<F>, mean: F, ddof: usize) -> StatsResult<F> {
         let n = data.len();
         let num_threads = self.get_optimal_thread_count(n, 2.0);
-        let chunk_size = n / num_threads;
+        let chunksize = n / num_threads;
 
         let result = parallel_map_reduce(
             data,
-            chunk_size,
+            chunksize,
             |chunk| {
                 let sum_squared_diffs: F = chunk.iter()
                     .map(|&x| (x - mean) * (x - mean))
@@ -570,17 +570,17 @@ where
         let num_threads = self.get_optimal_thread_count(n, complexity);
         
         // Base chunk size
-        let base_chunk_size = n / num_threads;
+        let base_chunksize = n / num_threads;
         
         // Adjust chunk sizes based on system load and performance metrics
         let load_factor = self.get_current_load_factor();
-        let adjusted_chunk_size = (base_chunk_size as f64 * load_factor) as usize;
+        let adjusted_chunksize = (base_chunksize as f64 * load_factor) as usize;
         
         let mut chunks = Vec::new();
         let mut start = 0;
         
         while start < n {
-            let end = (start + adjusted_chunk_size).min(n);
+            let end = (start + adjusted_chunksize).min(n);
             chunks.push(data.slice(ndarray::s![start..end]));
             start = end;
         }
@@ -591,14 +591,14 @@ where
     /// Create work units for work stealing
     fn create_work_units(&self, data: &ArrayView1<F>, complexity: f64) -> StatsResult<Vec<WorkUnit<ArrayView1<F>>>> {
         let n = data.len();
-        let optimal_chunk_size = self.calculate_optimal_work_unit_size(n, complexity);
+        let optimal_chunksize = self.calculate_optimal_work_unitsize(n, complexity);
         
         let mut work_units = Vec::new();
         let mut start = 0;
         let mut id = 0;
         
         while start < n {
-            let end = (start + optimal_chunk_size).min(n);
+            let end = (start + optimal_chunksize).min(n);
             let chunk = data.slice(ndarray::s![start..end]);
             
             work_units.push(WorkUnit {
@@ -639,13 +639,13 @@ where
     fn distribute_numa_aware(&self, data: &ArrayView1<F>) -> StatsResult<Vec<(usize, ArrayView1<F>)>> {
         let n = data.len();
         let num_nodes = self.numa_topology.num_nodes;
-        let chunk_size = n / num_nodes;
+        let chunksize = n / num_nodes;
         
         let mut numa_chunks = Vec::new();
         
         for node_id in 0..num_nodes {
-            let start = node_id * chunk_size;
-            let end = if node_id == num_nodes - 1 { n } else { start + chunk_size };
+            let start = node_id * chunksize;
+            let end = if node_id == num_nodes - 1 { n } else { start + chunksize };
             
             if start < n {
                 let chunk = data.slice(ndarray::s![start..end]);
@@ -662,7 +662,7 @@ where
         let current_load = self.get_current_load_factor();
         
         // Adjust thread count based on current system load
-        let base_threads = if data_size < 10000 {
+        let base_threads = if datasize < 10000 {
             2.min(cpu_count)
         } else if complexity > 2.0 {
             cpu_count
@@ -675,12 +675,12 @@ where
     }
 
     /// Calculate optimal work unit size for work stealing
-    fn calculate_optimal_work_unit_size(&self, totalsize: usize, complexity: f64) -> usize {
-        let base_size = 1000; // Base work unit _size
+    fn calculate_optimal_work_unitsize(&self, totalsize: usize, complexity: f64) -> usize {
+        let basesize = 1000; // Base work unit size
         let complexity_factor = complexity.sqrt();
-        let adjusted_size = (base_size as f64 * complexity_factor) as usize;
+        let adjustedsize = (basesize as f64 * complexity_factor) as usize;
         
-        adjusted_size.clamp(100, total_size / 4).max(1)
+        adjustedsize.clamp(100, totalsize / 4).max(1)
     }
 
     /// Extract workload features for ML guidance
@@ -776,7 +776,7 @@ impl PerformancePredictor {
     fn new() -> Self {
         Self {
             weights: vec![0.1, 0.2, 0.3, 0.2, 0.2], // Initial weights
-            training_data: VecDeque::with_capacity(1000),
+            trainingdata: VecDeque::with_capacity(1000),
             accuracy: 0.5,
         }
     }
@@ -811,13 +811,13 @@ impl NumaTopology {
 #[allow(dead_code)]
 pub fn adaptive_mean_f64(data: &ArrayView1<f64>) -> StatsResult<f64> {
     let mut processor = AdaptiveParallelProcessor::<f64>::new();
-    processor.adaptive_mean(_data)
+    processor.adaptive_mean(data)
 }
 
 #[allow(dead_code)]
 pub fn adaptive_variance_f64(data: &ArrayView1<f64>, ddof: usize) -> StatsResult<f64> {
     let mut processor = AdaptiveParallelProcessor::<f64>::new();
-    processor.adaptive_variance(_data, ddof)
+    processor.adaptive_variance(data, ddof)
 }
 
 #[cfg(test)]

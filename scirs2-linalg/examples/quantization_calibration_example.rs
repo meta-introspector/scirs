@@ -148,7 +148,7 @@ fn compare_calibration_methods(data: &Array2<f32>, bits: u8) {
             symmetric: true,
             percentile: 0.995,
             num_bins: 100,
-            window_size: 3,
+            windowsize: 3,
             per_channel: false,
             ema_factor: 0.9,
             convergence_threshold: 0.01,

@@ -169,10 +169,7 @@ impl DashboardHttpServer {
 }
 
 /// Serve the dashboard over HTTP
-async fn serve_dashboard(
-    addr: SocketAddr,
-    dashboard: InteractiveDashboard,
-) -> std::io::Result<()> {
+async fn serve_dashboard(addr: SocketAddr, dashboard: InteractiveDashboard) -> std::io::Result<()> {
     let listener = TcpListener::bind(addr).await?;
     println!("Dashboard listening on http://{}", addr);
 

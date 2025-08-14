@@ -330,16 +330,14 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         };
         buffer[cursor] = compression_id;
 
-        file
-            .write_all(&buffer)
+        file.write_all(&buffer)
             .map_err(|e| IoError::FileError(format!("Failed to write metadata: {e}")))
     }
 
     /// Read metadata from file
     fn read_metadata(file: &mut File) -> Result<ArrayMetadata> {
         let mut buffer = vec![0u8; Self::metadata_size()];
-        file
-            .read_exact(&mut buffer)
+        file.read_exact(&mut buffer)
             .map_err(|e| IoError::ParseError(format!("Failed to read metadata: {e}")))?;
 
         let mut cursor = 0;
@@ -1060,7 +1058,7 @@ impl<T: ScientificNumber + Ord + Clone> OutOfCoreSorter<T> {
             .map_err(|e| IoError::FileError(format!("Failed to create temp dir: {}", e)))?;
 
         Ok(Self {
-            temp_dir: temp_dir,
+            temp_dir,
             chunk_size,
             chunk_files: Vec::new(),
             _phantom: std::marker::PhantomData,
@@ -1191,7 +1189,7 @@ impl<T: Clone> VirtualArray<T> {
         shape[axis] = arrays.iter().map(|a| a.shape()[axis]).sum();
 
         Ok(Self {
-            arrays: arrays,
+            arrays,
             shape,
             axis,
         })

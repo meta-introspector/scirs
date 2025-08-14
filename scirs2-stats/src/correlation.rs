@@ -1239,7 +1239,7 @@ where
 
     // Need at least 2 observations
     if n < 2 {
-        return Err(ErrorMessages::insufficient_data(
+        return Err(ErrorMessages::insufficientdata(
             "correlation analysis",
             2,
             n,

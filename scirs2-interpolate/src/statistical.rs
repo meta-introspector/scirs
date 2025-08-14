@@ -15,7 +15,7 @@ use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use rand__distr::{Distribution, Normal, StandardNormal};
+use rand_distr::{Distribution, Normal, StandardNormal};
 use statrs::statistics::Statistics;
 use std::fmt::{Debug, Display};
 
@@ -393,7 +393,7 @@ impl<
             // Draw _samples for this query point
             for i in 0..n_samples {
                 if let Ok(normal) =
-                    Normal::_new(mean[j].to_f64().unwrap(), std_dev.to_f64().unwrap())
+                    Normal::new(mean[j].to_f64().unwrap(), std_dev.to_f64().unwrap())
                 {
                     samples[[i, j]] = T::from(normal.sample(&mut rng)).unwrap();
                 } else {
@@ -902,7 +902,7 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
             ));
         }
 
-        let mut all_results = Vec::_new();
+        let mut all_results = Vec::new();
 
         // Collect results from all methods
         for method in self.methods.iter() {
@@ -1024,8 +1024,8 @@ impl CrossValidationUncertainty {
         // Leave-one-out cross-validation
         for i in 0..n {
             // Create training set without point i
-            let mut x_train = Vec::_new();
-            let mut y_train = Vec::_new();
+            let mut x_train = Vec::new();
+            let mut y_train = Vec::new();
 
             for j in 0..n {
                 if j != i {
@@ -1077,7 +1077,7 @@ impl CrossValidationUncertainty {
         let n = x.len();
         let m = x_new.len();
         let fold_size = n / self.k_folds;
-        let mut predictions = Vec::_new();
+        let mut predictions = Vec::new();
 
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
@@ -1102,8 +1102,8 @@ impl CrossValidationUncertainty {
             };
 
             // Create training set (excluding current fold)
-            let mut x_train = Vec::_new();
-            let mut y_train = Vec::_new();
+            let mut x_train = Vec::new();
+            let mut y_train = Vec::new();
 
             for &idx in &indices[..start_idx] {
                 x_train.push(x[idx]);

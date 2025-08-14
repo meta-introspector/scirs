@@ -3,8 +3,8 @@
 //! This example provides a detailed performance comparison between the
 //! SIMD-optimized FFT implementations and the standard implementation.
 
-use num__complex::Complex64;
-use scirs2__fft::{fft, fft2, fft2_simd, fft_simd, fftn, fftn_simd, simd_support_available};
+use num_complex::Complex64;
+use scirs2_fft::{fft, fft2, fft2_simd, fft_simd, fftn, fftn_simd, simd_support_available};
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 

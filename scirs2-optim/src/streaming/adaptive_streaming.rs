@@ -741,9 +741,7 @@ where
         // Apply base optimizer
         let current_params_nd = current_params.into_dimensionality::<D>().unwrap();
         let gradients_nd = gradients.into_dimensionality::<D>().unwrap();
-        let updated_params_nd = self
-            .baseoptimizer
-            .step(&current_params_nd, &gradients_nd)?;
+        let updated_params_nd = self.baseoptimizer.step(&current_params_nd, &gradients_nd)?;
         let updated_params = updated_params_nd
             .into_dimensionality::<ndarray::Ix1>()
             .unwrap();

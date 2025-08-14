@@ -480,7 +480,7 @@ fn demonstrate_batch_processing() -> Result<(), Box<dyn std::error::Error>> {
     let batch_start = Instant::now();
     let mut total_samples = 0;
 
-    for (request_name, samples, features, dataset_type) in requests {
+    for (requestname, samples, features, dataset_type) in requests {
         let start = Instant::now();
 
         let dataset = match dataset_type {
@@ -499,7 +499,7 @@ fn demonstrate_batch_processing() -> Result<(), Box<dyn std::error::Error>> {
 
         println!(
             "    {}: {} samples in {:.1}ms",
-            request_name,
+            requestname,
             dataset.n_samples(),
             duration.as_millis()
         );

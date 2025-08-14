@@ -229,7 +229,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
     /// Create a new automatic differentiation engine
     pub fn new(config: AutodiffConfig) -> Self {
         Self {
-            config: config,
+            config,
             graph: Vec::new(),
             variables: HashMap::new(),
             tape: Vec::new(),

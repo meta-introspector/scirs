@@ -158,7 +158,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
         }
 
         SparseJacobian {
-            pattern: pattern,
+            pattern,
             values: vec![F::zero(); nnz],
             index_map,
         }
@@ -178,9 +178,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
 
     /// Get a value from the sparse Jacobian
     pub fn get(&self, row: usize, col: usize) -> Option<F> {
-        self.index_map
-            .get(&(row, col))
-            .map(|&idx| self.values[idx])
+        self.index_map.get(&(row, col)).map(|&idx| self.values[idx])
     }
 
     /// Convert to dense matrix
@@ -269,7 +267,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
 
         SparseJacobian {
             values: vec![F::zero(); pattern.entries.len()],
-            pattern: pattern,
+            pattern,
             index_map,
         }
     }
@@ -566,10 +564,7 @@ pub struct SparseJacobianUpdater<F: IntegrateFloat> {
 impl<F: IntegrateFloat> SparseJacobianUpdater<F> {
     /// Create a new updater
     pub fn new(pattern: SparsePattern, threshold: F) -> Self {
-        SparseJacobianUpdater {
-            pattern: pattern,
-            threshold,
-        }
+        SparseJacobianUpdater { pattern, threshold }
     }
 
     /// Update sparse Jacobian using Broyden's method

@@ -4,8 +4,8 @@
 //! using the scirs2-fft library.
 
 use ndarray::array;
-use num__complex::Complex64;
-use scirs2__fft::{
+use num_complex::Complex64;
+use scirs2_fft::{
     fft, fft2, fftfreq, frft, hilbert, ifft, ifft2, irfft, rfft, spectrogram,
     window::{get_window, Window},
 };

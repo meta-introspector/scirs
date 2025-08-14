@@ -176,12 +176,7 @@ fn initialize_random(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
     let mut indices: Vec<_> = (0..colors.len()).collect();
     indices.shuffle(&mut rng);
 
-    centers.extend(
-        indices
-            .iter()
-            .take(k.min(colors.len()))
-            .map(|&i| colors[i]),
-    );
+    centers.extend(indices.iter().take(k.min(colors.len())).map(|&i| colors[i]));
 
     centers
 }
@@ -248,7 +243,7 @@ fn initialize_frequency(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
 
     // Take top k colors
     let mut centers = Vec::new();
-    for (r, g, b) in sorted.iter().take(k.min(sorted.len())) {
+    for ((r, g, b), _) in sorted.iter().take(k.min(sorted.len())) {
         centers.push([*r as f32, *g as f32, *b as f32]);
     }
 

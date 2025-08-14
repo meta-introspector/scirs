@@ -20,15 +20,15 @@ pub fn gamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let mut output = Array1::zeros(len);
 
     // Process in SIMD chunks
-    let chunk_size = 8; // f32x8 for AVX2
-    let chunks = len / chunk_size;
+    let chunksize = 8; // f32x8 for AVX2
+    let chunks = len / chunksize;
 
     for i in 0..chunks {
-        let start = i * chunk_size;
-        let end = start + chunk_size;
+        let start = i * chunksize;
+        let end = start + chunksize;
 
         // Load SIMD vectors
-        let x_slice = &_input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().unwrap()[start..end];
 
         // Compute gamma using Stirling's approximation for SIMD
         // This is a simplified version - in practice you'd want more precision
@@ -39,8 +39,8 @@ pub fn gamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     }
 
     // Handle remaining elements with scalar gamma
-    for i in (chunks * chunk_size)..len {
-        output[i] = crate::gamma::gamma(_input[i] as f64) as f32;
+    for i in (chunks * chunksize)..len {
+        output[i] = crate::gamma::gamma(input[i] as f64) as f32;
     }
 
     Ok(output)
@@ -54,15 +54,15 @@ pub fn gamma_f64_simd(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
     let mut output = Array1::zeros(len);
 
     // Process in SIMD chunks
-    let chunk_size = 4; // f64x4 for AVX2
-    let chunks = len / chunk_size;
+    let chunksize = 4; // f64x4 for AVX2
+    let chunks = len / chunksize;
 
     for i in 0..chunks {
-        let start = i * chunk_size;
-        let end = start + chunk_size;
+        let start = i * chunksize;
+        let end = start + chunksize;
 
         // Load SIMD vectors
-        let x_slice = &_input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().unwrap()[start..end];
 
         // Compute gamma using SIMD operations
         let results = simd_gamma_approx_f64(x_slice);
@@ -72,7 +72,7 @@ pub fn gamma_f64_simd(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
     }
 
     // Handle remaining elements with scalar gamma
-    for i in (chunks * chunk_size)..len {
+    for i in (chunks * chunksize)..len {
         output[i] = crate::gamma::gamma(input[i]);
     }
 
@@ -284,13 +284,13 @@ pub fn exp_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
 fn simd_exp_f32_slice(input: &[f32], output: &mut [f32]) {
-    let chunk_size = 8;
-    let chunks = input.len() / chunk_size;
+    let chunksize = 8;
+    let chunks = input.len() / chunksize;
 
     // Process SIMD chunks
     for i in 0..chunks {
-        let start = i * chunk_size;
-        let end = start + chunk_size;
+        let start = i * chunksize;
+        let end = start + chunksize;
 
         // For now, use scalar exp - in practice you'd use SIMD exp approximation
         for j in start..end {
@@ -299,7 +299,7 @@ fn simd_exp_f32_slice(input: &[f32], output: &mut [f32]) {
     }
 
     // Handle remaining elements
-    for i in (chunks * chunk_size).._input.len() {
+    for i in (chunks * chunksize)..input.len() {
         output[i] = input[i].exp();
     }
 }
@@ -312,22 +312,22 @@ pub fn erf_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let mut output = Array1::zeros(len);
 
     // Process in chunks for better cache efficiency
-    let chunk_size = 8;
-    let chunks = len / chunk_size;
+    let chunksize = 8;
+    let chunks = len / chunksize;
 
     for i in 0..chunks {
-        let start = i * chunk_size;
-        let end = start + chunk_size;
+        let start = i * chunksize;
+        let end = start + chunksize;
 
         // Use vectorized erf computation
         for j in start..end {
-            output[j] = crate::erf::erf(_input[j] as f64) as f32;
+            output[j] = crate::erf::erf(input[j] as f64) as f32;
         }
     }
 
     // Handle remaining elements
-    for i in (chunks * chunk_size)..len {
-        output[i] = crate::erf::erf(_input[i] as f64) as f32;
+    for i in (chunks * chunksize)..len {
+        output[i] = crate::erf::erf(input[i] as f64) as f32;
     }
 
     Ok(output)
@@ -340,22 +340,22 @@ pub fn j0_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
 
-    let chunk_size = 8;
-    let chunks = len / chunk_size;
+    let chunksize = 8;
+    let chunks = len / chunksize;
 
     for i in 0..chunks {
-        let start = i * chunk_size;
-        let end = start + chunk_size;
+        let start = i * chunksize;
+        let end = start + chunksize;
 
         // Vectorized J0 computation
         for j in start..end {
-            output[j] = crate::bessel::j0(_input[j] as f64) as f32;
+            output[j] = crate::bessel::j0(input[j] as f64) as f32;
         }
     }
 
     // Handle remaining elements
-    for i in (chunks * chunk_size)..len {
-        output[i] = crate::bessel::j0(_input[i] as f64) as f32;
+    for i in (chunks * chunksize)..len {
+        output[i] = crate::bessel::j0(input[i] as f64) as f32;
     }
 
     Ok(output)
@@ -393,8 +393,7 @@ pub fn gamma_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>>
 
     // Use parallel processing for large arrays
     if len > 1000 {
-        if let (Some(input_slice), Some(output_slice)) = (_input.as_slice(), output.as_slice_mut())
-        {
+        if let (Some(input_slice), Some(output_slice)) = (input.as_slice(), output.as_slice_mut()) {
             output_slice
                 .par_iter_mut()
                 .zip(input_slice.par_iter())
@@ -404,11 +403,9 @@ pub fn gamma_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>>
         } else {
             // Fallback for non-contiguous arrays
             use ndarray::Zip;
-            Zip::from(&mut output)
-                .and(_input)
-                .par_for_each(|out, &inp| {
-                    *out = crate::gamma::gamma(inp);
-                });
+            Zip::from(&mut output).and(input).par_for_each(|out, &inp| {
+                *out = crate::gamma::gamma(inp);
+            });
         }
     } else {
         // Use sequential processing for small arrays
@@ -429,8 +426,7 @@ pub fn j0_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
 
     // Use parallel processing for large arrays
     if len > 1000 {
-        if let (Some(input_slice), Some(output_slice)) = (_input.as_slice(), output.as_slice_mut())
-        {
+        if let (Some(input_slice), Some(output_slice)) = (input.as_slice(), output.as_slice_mut()) {
             output_slice
                 .par_iter_mut()
                 .zip(input_slice.par_iter())
@@ -440,16 +436,14 @@ pub fn j0_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
         } else {
             // Fallback for non-contiguous arrays
             use ndarray::Zip;
-            Zip::from(&mut output)
-                .and(_input)
-                .par_for_each(|out, &inp| {
-                    *out = crate::bessel::j0(inp);
-                });
+            Zip::from(&mut output).and(input).par_for_each(|out, &inp| {
+                *out = crate::bessel::j0(inp);
+            });
         }
     } else {
         // Use sequential processing for small arrays
         for i in 0..len {
-            output[i] = crate::bessel::j0(_input[i]);
+            output[i] = crate::bessel::j0(input[i]);
         }
     }
 
@@ -472,8 +466,7 @@ pub fn gamma_f32_simd_parallel(input: &ArrayView1<f32>) -> SpecialResult<Array1<
         let _remainder = len % SIMD_CHUNK_SIZE;
 
         // For very large arrays, use a simpler parallel approach without complex SIMD chunking
-        if let (Some(input_slice), Some(output_slice)) = (_input.as_slice(), output.as_slice_mut())
-        {
+        if let (Some(input_slice), Some(output_slice)) = (input.as_slice(), output.as_slice_mut()) {
             output_slice
                 .par_iter_mut()
                 .zip(input_slice.par_iter())
@@ -483,19 +476,17 @@ pub fn gamma_f32_simd_parallel(input: &ArrayView1<f32>) -> SpecialResult<Array1<
         } else {
             // Fallback for non-contiguous arrays
             use ndarray::Zip;
-            Zip::from(&mut output)
-                .and(_input)
-                .par_for_each(|out, &inp| {
-                    *out = crate::gamma::gamma(inp as f64) as f32;
-                });
+            Zip::from(&mut output).and(input).par_for_each(|out, &inp| {
+                *out = crate::gamma::gamma(inp as f64) as f32;
+            });
         }
     } else if len > 1000 {
         // Use SIMD for medium arrays
-        return gamma_f32_simd(_input);
+        return gamma_f32_simd(input);
     } else {
         // Use sequential for small arrays
         for i in 0..len {
-            output[i] = crate::gamma::gamma(_input[i] as f64) as f32;
+            output[i] = crate::gamma::gamma(input[i] as f64) as f32;
         }
     }
 
@@ -510,7 +501,7 @@ pub fn benchmark_parallel_performance(size: usize) -> SpecialResult<()> {
 
     // Create test data
     let data_f64: Array1<f64> =
-        Array1::from_vec((0.._size).map(|i| (i as f64) * 0.001 + 1.0).collect());
+        Array1::from_vec((0..size).map(|i| (i as f64) * 0.001 + 1.0).collect());
 
     println!("Benchmarking parallel performance with {} elements:", size);
 
@@ -531,8 +522,7 @@ pub fn benchmark_parallel_performance(size: usize) -> SpecialResult<()> {
     println!("  Speedup:    {:.2}x", speedup);
 
     // Test Bessel J0 as well
-    let bessel_data: Array1<f64> =
-        Array1::from_vec((0.._size).map(|i| (i as f64) * 0.01).collect());
+    let bessel_data: Array1<f64> = Array1::from_vec((0..size).map(|i| (i as f64) * 0.01).collect());
 
     let start = Instant::now();
     let _sequential: Array1<f64> = bessel_data.mapv(crate::bessel::j0);
@@ -561,7 +551,7 @@ pub fn adaptive_gamma_processing(input: &ArrayView1<f64>) -> SpecialResult<Array
     {
         if len > 50000 {
             // Convert to f32 for SIMD+parallel processing if precision allows
-            let _input_f32: Array1<f32> = input.mapv(|x| x as f32);
+            let input_f32: Array1<f32> = input.mapv(|x| x as f32);
             let result_f32 = gamma_f32_simd_parallel(&input_f32.view())?;
             return Ok(result_f32.mapv(|x| x as f64));
         }
@@ -597,7 +587,7 @@ pub fn benchmark_simd_performance(size: usize) -> SpecialResult<()> {
 
     // Create test data
     let data_f32: Array1<f32> =
-        Array1::from_vec((0.._size).map(|i| (i as f32) * 0.01 + 1.0).collect());
+        Array1::from_vec((0..size).map(|i| (i as f32) * 0.01 + 1.0).collect());
 
     println!("Benchmarking SIMD performance with {} elements:", size);
 
@@ -645,15 +635,15 @@ pub fn log_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
 
-    let chunk_size = 8; // f32x8 for AVX2
-    let chunks = len / chunk_size;
+    let chunksize = 8; // f32x8 for AVX2
+    let chunks = len / chunksize;
 
     for i in 0..chunks {
-        let start = i * chunk_size;
-        let end = start + chunk_size;
+        let start = i * chunksize;
+        let end = start + chunksize;
 
         // Load SIMD vectors
-        let x_slice = &_input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().unwrap()[start..end];
 
         // Compute log using SIMD approximation
         let results = simd_log_approx_f32(x_slice);
@@ -663,7 +653,7 @@ pub fn log_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     }
 
     // Handle remaining elements
-    for i in (chunks * chunk_size)..len {
+    for i in (chunks * chunksize)..len {
         output[i] = input[i].ln();
     }
 
@@ -677,20 +667,20 @@ pub fn sin_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
 
-    let chunk_size = 8;
-    let chunks = len / chunk_size;
+    let chunksize = 8;
+    let chunks = len / chunksize;
 
     for i in 0..chunks {
-        let start = i * chunk_size;
-        let end = start + chunk_size;
+        let start = i * chunksize;
+        let end = start + chunksize;
 
-        let x_slice = &_input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().unwrap()[start..end];
         let results = simd_sin_approx_f32(x_slice);
 
         output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
     }
 
-    for i in (chunks * chunk_size)..len {
+    for i in (chunks * chunksize)..len {
         output[i] = input[i].sin();
     }
 
@@ -704,20 +694,20 @@ pub fn cos_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
 
-    let chunk_size = 8;
-    let chunks = len / chunk_size;
+    let chunksize = 8;
+    let chunks = len / chunksize;
 
     for i in 0..chunks {
-        let start = i * chunk_size;
-        let end = start + chunk_size;
+        let start = i * chunksize;
+        let end = start + chunksize;
 
-        let x_slice = &_input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().unwrap()[start..end];
         let results = simd_cos_approx_f32(x_slice);
 
         output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
     }
 
-    for i in (chunks * chunk_size)..len {
+    for i in (chunks * chunksize)..len {
         output[i] = input[i].cos();
     }
 
@@ -731,22 +721,22 @@ pub fn j1_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
 
-    let chunk_size = 8;
-    let chunks = len / chunk_size;
+    let chunksize = 8;
+    let chunks = len / chunksize;
 
     for i in 0..chunks {
-        let start = i * chunk_size;
-        let end = start + chunk_size;
+        let start = i * chunksize;
+        let end = start + chunksize;
 
-        let x_slice = &_input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().unwrap()[start..end];
         let results = simd_j1_approx_f32(x_slice);
 
         output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
     }
 
     // Handle remaining elements with scalar j1
-    for i in (chunks * chunk_size)..len {
-        output[i] = crate::bessel::j1(_input[i] as f64) as f32;
+    for i in (chunks * chunksize)..len {
+        output[i] = crate::bessel::j1(input[i] as f64) as f32;
     }
 
     Ok(output)
@@ -759,22 +749,22 @@ pub fn erfc_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
 
-    let chunk_size = 8;
-    let chunks = len / chunk_size;
+    let chunksize = 8;
+    let chunks = len / chunksize;
 
     for i in 0..chunks {
-        let start = i * chunk_size;
-        let end = start + chunk_size;
+        let start = i * chunksize;
+        let end = start + chunksize;
 
-        let x_slice = &_input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().unwrap()[start..end];
         let results = simd_erfc_approx_f32(x_slice);
 
         output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
     }
 
     // Handle remaining elements
-    for i in (chunks * chunk_size)..len {
-        output[i] = crate::erf::erfc(_input[i] as f64) as f32;
+    for i in (chunks * chunksize)..len {
+        output[i] = crate::erf::erfc(input[i] as f64) as f32;
     }
 
     Ok(output)
@@ -787,22 +777,22 @@ pub fn digamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
 
-    let chunk_size = 8;
-    let chunks = len / chunk_size;
+    let chunksize = 8;
+    let chunks = len / chunksize;
 
     for i in 0..chunks {
-        let start = i * chunk_size;
-        let end = start + chunk_size;
+        let start = i * chunksize;
+        let end = start + chunksize;
 
-        let x_slice = &_input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().unwrap()[start..end];
         let results = simd_digamma_approx_f32(x_slice);
 
         output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
     }
 
     // Handle remaining elements
-    for i in (chunks * chunk_size)..len {
-        output[i] = crate::gamma::digamma(_input[i] as f64) as f32;
+    for i in (chunks * chunksize)..len {
+        output[i] = crate::gamma::digamma(input[i] as f64) as f32;
     }
 
     Ok(output)
@@ -959,12 +949,12 @@ pub fn multi_function_simd_f32(
     let num_functions = functions.len();
     let mut outputs: Vec<Array1<f32>> = vec![Array1::zeros(len); num_functions];
 
-    let chunk_size = 8;
-    let chunks = len / chunk_size;
+    let chunksize = 8;
+    let chunks = len / chunksize;
 
     for i in 0..chunks {
-        let start = i * chunk_size;
-        let end = start + chunk_size;
+        let start = i * chunksize;
+        let end = start + chunksize;
         let x_slice = &input.as_slice().unwrap()[start..end];
 
         for (func_idx, &func_name) in functions.iter().enumerate() {
@@ -991,7 +981,7 @@ pub fn multi_function_simd_f32(
     }
 
     // Handle remaining elements
-    for i in (chunks * chunk_size)..len {
+    for i in (chunks * chunksize)..len {
         for (func_idx, &func_name) in functions.iter().enumerate() {
             outputs[func_idx][i] = match func_name {
                 "gamma" => crate::gamma::gamma(input[i] as f64) as f32,
@@ -1253,12 +1243,12 @@ mod tests {
     #[cfg(feature = "parallel")]
     fn test_parallel_threshold_behavior() {
         // Test small array (should use sequential)
-        let small_input = Array1::from_vec((0..10).map(|i| i as f64 + 1.0).collect());
-        let small_result = gamma_f64_parallel(&small_input.view()).unwrap();
+        let smallinput = Array1::from_vec((0..10).map(|i| i as f64 + 1.0).collect());
+        let small_result = gamma_f64_parallel(&smallinput.view()).unwrap();
 
         // Test large array (should use parallel)
-        let large_input = Array1::from_vec((0..2000).map(|i| (i as f64) * 0.001 + 1.0).collect());
-        let large_result = gamma_f64_parallel(&large_input.view()).unwrap();
+        let largeinput = Array1::from_vec((0..2000).map(|i| (i as f64) * 0.001 + 1.0).collect());
+        let large_result = gamma_f64_parallel(&largeinput.view()).unwrap();
 
         // Both should produce valid results
         assert!(small_result.len() == 10);

@@ -46,12 +46,11 @@ pub mod properties {
                 // Test reflection formula for x < 1, but avoid very small values that have numerical issues
                 if x < 1.0 && x > 1e-6 {
                     let gamma_x = crate::gamma::gamma(x);
-                    let gamma_1_minus_x = crate::gamma::gamma(1.0 - x);
+                    let gamma_1minus_x = crate::gamma::gamma(1.0 - x);
                     let sin_pi_x = (std::f64::consts::PI * x).sin();
 
-                    if sin_pi_x.abs() > 1e-10 && gamma_x.is_finite() && gamma_1_minus_x.is_finite()
-                    {
-                        let product = gamma_x * gamma_1_minus_x * sin_pi_x;
+                    if sin_pi_x.abs() > 1e-10 && gamma_x.is_finite() && gamma_1minus_x.is_finite() {
+                        let product = gamma_x * gamma_1minus_x * sin_pi_x;
                         let expected = std::f64::consts::PI;
 
                         // Use larger tolerance for the reflection formula
@@ -139,13 +138,13 @@ pub mod properties {
         for n in 0..=20 {
             for k in 0..=n {
                 let binom_nk = crate::combinatorial::binomial(n, k).unwrap();
-                let binom_n_n_minus_k = crate::combinatorial::binomial(n, n - k).unwrap();
+                let binom_n_nminus_k = crate::combinatorial::binomial(n, n - k).unwrap();
 
                 // Test symmetry: C(n,k) = C(n,n-k)
-                if (binom_nk - binom_n_n_minus_k).abs() > 1e-10 {
-                    let n_minus_k = n - k;
+                if (binom_nk - binom_n_nminus_k).abs() > 1e-10 {
+                    let nminus_k = n - k;
                     errors.push(format!(
-                        "Binomial symmetry failed: C({n},{k})={binom_nk}, C({n},{n_minus_k})={binom_n_n_minus_k}"
+                        "Binomial symmetry failed: C({n},{k})={binom_nk}, C({n},{nminus_k})={binom_n_nminus_k}"
                     ));
                 }
 
@@ -156,10 +155,10 @@ pub mod properties {
                     let pascal_sum = pascal_left + pascal_right;
 
                     if (binom_nk - pascal_sum).abs() > 1e-10 {
-                        let n_minus_1 = n - 1;
-                        let k_minus_1 = k - 1;
+                        let nminus_1 = n - 1;
+                        let kminus_1 = k - 1;
                         errors.push(format!(
-                            "Pascal's triangle failed: C({n},{k})={binom_nk}, C({n_minus_1},{k_minus_1}) + C({n_minus_1},{k})={pascal_sum}"
+                            "Pascal's triangle failed: C({n},{k})={binom_nk}, C({nminus_1},{kminus_1}) + C({nminus_1},{k})={pascal_sum}"
                         ));
                     }
                 }

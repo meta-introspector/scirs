@@ -86,9 +86,9 @@ where
     let mut rng = match seed {
         Some(s) => ChaCha8Rng::seed_from_u64(s),
         None => {
-            let mut seed_arr = [0u8; 32];
-            rand::rng().fill(&mut seed_arr);
-            ChaCha8Rng::from_seed(seed_arr)
+            let mut seedarr = [0u8; 32];
+            rand::rng().fill(&mut seedarr);
+            ChaCha8Rng::from_seed(seedarr)
         }
     };
 
@@ -148,7 +148,7 @@ where
 ///
 /// A rows×cols matrix with standard normal distribution
 #[allow(dead_code)]
-pub fn random_normal_matrix<F>(shape: (usize, usize), seed: Option<u64>) -> LinalgResult<Array2<F>>
+pub fn random_normalmatrix<F>(shape: (usize, usize), seed: Option<u64>) -> LinalgResult<Array2<F>>
 where
     F: Float + Zero + One + Copy + num_traits::FromPrimitive + NumAssign + 'static,
 {
@@ -163,9 +163,9 @@ where
     let mut rng = match seed {
         Some(s) => ChaCha8Rng::seed_from_u64(s),
         None => {
-            let mut seed_arr = [0u8; 32];
-            rand::rng().fill(&mut seed_arr);
-            ChaCha8Rng::from_seed(seed_arr)
+            let mut seedarr = [0u8; 32];
+            rand::rng().fill(&mut seedarr);
+            ChaCha8Rng::from_seed(seedarr)
         }
     };
 
@@ -307,9 +307,9 @@ where
     let mut rng = match seed {
         Some(s) => ChaCha8Rng::seed_from_u64(s),
         None => {
-            let mut seed_arr = [0u8; 32];
-            rand::rng().fill(&mut seed_arr);
-            ChaCha8Rng::from_seed(seed_arr)
+            let mut seedarr = [0u8; 32];
+            rand::rng().fill(&mut seedarr);
+            ChaCha8Rng::from_seed(seedarr)
         }
     };
 
@@ -364,9 +364,9 @@ where
     let mut rng = match seed {
         Some(s) => ChaCha8Rng::seed_from_u64(s),
         None => {
-            let mut seed_arr = [0u8; 32];
-            rand::rng().fill(&mut seed_arr);
-            ChaCha8Rng::from_seed(seed_arr)
+            let mut seedarr = [0u8; 32];
+            rand::rng().fill(&mut seedarr);
+            ChaCha8Rng::from_seed(seedarr)
         }
     };
 
@@ -433,9 +433,9 @@ where
     let mut rng = match seed {
         Some(s) => ChaCha8Rng::seed_from_u64(s),
         None => {
-            let mut seed_arr = [0u8; 32];
-            rand::rng().fill(&mut seed_arr);
-            ChaCha8Rng::from_seed(seed_arr)
+            let mut seedarr = [0u8; 32];
+            rand::rng().fill(&mut seedarr);
+            ChaCha8Rng::from_seed(seedarr)
         }
     };
 
@@ -506,9 +506,9 @@ where
     let mut rng = match seed {
         Some(s) => ChaCha8Rng::seed_from_u64(s),
         None => {
-            let mut seed_arr = [0u8; 32];
-            rand::rng().fill(&mut seed_arr);
-            ChaCha8Rng::from_seed(seed_arr)
+            let mut seedarr = [0u8; 32];
+            rand::rng().fill(&mut seedarr);
+            ChaCha8Rng::from_seed(seedarr)
         }
     };
 
@@ -564,9 +564,9 @@ where
     let mut rng = match seed {
         Some(s) => ChaCha8Rng::seed_from_u64(s),
         None => {
-            let mut seed_arr = [0u8; 32];
-            rand::rng().fill(&mut seed_arr);
-            ChaCha8Rng::from_seed(seed_arr)
+            let mut seedarr = [0u8; 32];
+            rand::rng().fill(&mut seedarr);
+            ChaCha8Rng::from_seed(seedarr)
         }
     };
 
@@ -1104,9 +1104,9 @@ where
     let mut rng = match seed {
         Some(s) => ChaCha8Rng::seed_from_u64(s),
         None => {
-            let mut seed_arr = [0u8; 32];
-            rand::rng().fill(&mut seed_arr);
-            ChaCha8Rng::from_seed(seed_arr)
+            let mut seedarr = [0u8; 32];
+            rand::rng().fill(&mut seedarr);
+            ChaCha8Rng::from_seed(seedarr)
         }
     };
 

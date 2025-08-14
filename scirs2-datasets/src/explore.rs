@@ -79,9 +79,9 @@ pub struct DatasetInfo {
     /// Number of features
     pub n_features: usize,
     /// Feature names
-    pub feature_names: Option<Vec<String>>,
+    pub featurenames: Option<Vec<String>>,
     /// Target names
-    pub target_names: Option<Vec<String>>,
+    pub targetnames: Option<Vec<String>>,
     /// Dataset description
     pub description: Option<String>,
     /// Memory usage in bytes
@@ -347,8 +347,8 @@ impl DatasetExplorer {
         DatasetInfo {
             n_samples,
             n_features,
-            feature_names: dataset.feature_names.clone(),
-            target_names: dataset.target_names.clone(),
+            featurenames: dataset.featurenames.clone(),
+            targetnames: dataset.targetnames.clone(),
             description: dataset.description.clone(),
             memory_usage,
         }
@@ -359,7 +359,7 @@ impl DatasetExplorer {
 
         for (i, column) in dataset.data.columns().into_iter().enumerate() {
             let name = dataset
-                .feature_names
+                .featurenames
                 .as_ref()
                 .and_then(|names| names.get(i))
                 .cloned()
@@ -570,15 +570,15 @@ impl DatasetExplorer {
             let missing_count = column.iter().filter(|&&x| x.is_nan()).count();
             total_missing += missing_count;
 
-            let feature_name = dataset
-                .feature_names
+            let featurename = dataset
+                .featurenames
                 .as_ref()
                 .and_then(|names| names.get(i))
                 .cloned()
                 .unwrap_or_else(|| format!("feature_{i}"));
 
             let missing_percentage = missing_count as f64 / n_samples as f64 * 100.0;
-            feature_missing.push((feature_name, missing_count, missing_percentage));
+            feature_missing.push((featurename, missing_count, missing_percentage));
         }
 
         let missing_percentage = total_missing as f64 / total_values as f64 * 100.0;
@@ -638,8 +638,8 @@ impl DatasetExplorer {
             let mut distribution = HashMap::new();
             for &value in target.iter() {
                 if !value.is_nan() {
-                    let class_name = format!("{value:.0}");
-                    *distribution.entry(class_name).or_insert(0) += 1;
+                    let classname = format!("{value:.0}");
+                    *distribution.entry(classname).or_insert(0) += 1;
                 }
             }
             Some(distribution)
@@ -650,15 +650,15 @@ impl DatasetExplorer {
         // Compute correlations with features
         let mut correlations_with_features = Vec::new();
         for (i, column) in dataset.data.columns().into_iter().enumerate() {
-            let feature_name = dataset
-                .feature_names
+            let featurename = dataset
+                .featurenames
                 .as_ref()
                 .and_then(|names| names.get(i))
                 .cloned()
                 .unwrap_or_else(|| format!("feature_{i}"));
 
             let correlation = self.compute_correlation(&column, &target_column);
-            correlations_with_features.push((feature_name, correlation));
+            correlations_with_features.push((featurename, correlation));
         }
 
         // Sort by absolute correlation

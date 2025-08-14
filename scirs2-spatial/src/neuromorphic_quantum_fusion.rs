@@ -184,7 +184,7 @@ impl QuantumSpikingClusterer {
     /// Create new quantum spiking clusterer
     pub fn new(_numclusters: usize) -> Self {
         Self {
-            _numclusters: _numclusters,
+            _numclusters,
             quantum_superposition: false,
             stdp_enabled: false,
             quantum_entanglement: 0.0,

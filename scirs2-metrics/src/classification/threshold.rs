@@ -290,7 +290,8 @@ where
     S2: Data<Elem = f64>,
     D1: Dimension,
 {
-    let (precision, recall_, _thresholds) = precision_recall_curve(y_true, y_prob, pos_label, sample_weight)?;
+    let (precision, recall_, _thresholds) =
+        precision_recall_curve(y_true, y_prob, pos_label, sample_weight)?;
     Ok(average_precision_score_from_curve(&precision, &recall_))
 }
 

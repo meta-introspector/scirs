@@ -472,16 +472,23 @@ fn test_namespace_iter() {
     assert!(found_v1, "Variable v1 not found");
     assert!(found_v2, "Variable v2 not found");
 
-    for (i, (name, arr)) in env.default_namespace_mut().iter().enumerate() {
-        if i == 0 {
-            assert_eq!(name, "v1");
-            assert_eq!(arr.borrow().shape(), &[3, 2]);
-        }
-        if i == 1 {
-            assert_eq!(name, "v2");
-            assert_eq!(arr.borrow().shape(), &[2, 3]);
+    let mut found_v1_mut = false;
+    let mut found_v2_mut = false;
+    for (name, arr) in env.default_namespace_mut().iter() {
+        match name {
+            "v1" => {
+                assert_eq!(arr.borrow().shape(), &[3, 2]);
+                found_v1_mut = true;
+            }
+            "v2" => {
+                assert_eq!(arr.borrow().shape(), &[2, 3]);
+                found_v2_mut = true;
+            }
+            _ => panic!("Unexpected variable name: {}", name),
         }
     }
+    assert!(found_v1_mut, "Variable v1 not found in mutable iterator");
+    assert!(found_v2_mut, "Variable v2 not found in mutable iterator");
 }
 
 #[derive(Serialize)]

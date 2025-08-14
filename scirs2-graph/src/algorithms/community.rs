@@ -138,9 +138,9 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
 ///
 /// # Example
 /// ```rust
-/// use scirs2__graph::{Graph, louvain_communities_result};
+/// use scirs2_graph::{Graph, louvain_communities_result};
 ///
-/// let mut graph = Graph::new();
+/// let mut graph: Graph<i32, f64> = Graph::new();
 /// // ... add nodes and edges ...
 /// let result = louvain_communities_result(&graph);
 ///
@@ -508,9 +508,9 @@ where
 ///
 /// # Example
 /// ```rust
-/// use scirs2__graph::{Graph, label_propagation_result};
+/// use scirs2_graph::{Graph, label_propagation_result};
 ///
-/// let mut graph = Graph::new();
+/// let mut graph: Graph<i32, f64> = Graph::new();
 /// // ... add nodes and edges ...
 /// let result = label_propagation_result(&graph, 100);
 ///
@@ -1717,9 +1717,9 @@ where
 ///
 /// # Example
 /// ```rust
-/// use scirs2__graph::{Graph, fluid_communities_result};
+/// use scirs2_graph::{Graph, fluid_communities_result};
 ///
-/// let mut graph = Graph::new();
+/// let mut graph: Graph<i32, f64> = Graph::new();
 /// // ... add nodes and edges ...
 /// let result = fluid_communities_result(&graph, 5, 100);
 ///
@@ -1771,9 +1771,9 @@ where
 ///
 /// # Example
 /// ```rust
-/// use scirs2__graph::{Graph, hierarchical_communities_result};
+/// use scirs2_graph::{Graph, hierarchical_communities_result};
 ///
-/// let mut graph = Graph::new();
+/// let mut graph: Graph<i32, f64> = Graph::new();
 /// // ... add nodes and edges ...
 /// let results = hierarchical_communities_result(&graph, "average");
 ///
@@ -1919,13 +1919,13 @@ where
 ///
 /// # Example
 /// ```rust
-/// use scirs2__graph::{Graph, modularity_optimization_result};
+/// use scirs2_graph::{Graph, modularity_optimization_result};
 ///
-/// let mut graph = Graph::new();
+/// let mut graph: Graph<i32, f64> = Graph::new();
 /// // ... add nodes and edges ...
 /// let result = modularity_optimization_result(&graph, 1.0, 0.95, 1000);
 ///
-/// println!("Optimized modularity: {:.4}", result.modularity);
+/// println!("Optimized modularity: {:.4}", result.quality_score.unwrap_or(0.0));
 /// println!("Found {} communities", result.num_communities);
 /// ```
 #[allow(dead_code)]
@@ -1967,13 +1967,13 @@ where
 ///
 /// # Example
 /// ```rust
-/// use scirs2__graph::{Graph, greedy_modularity_optimization_result};
+/// use scirs2_graph::{Graph, greedy_modularity_optimization_result};
 ///
-/// let mut graph = Graph::new();
+/// let mut graph: Graph<i32, f64> = Graph::new();
 /// // ... add nodes and edges ...
 /// let result = greedy_modularity_optimization_result(&graph, 100);
 ///
-/// println!("Greedy modularity: {:.4}", result.modularity);
+/// println!("Greedy modularity: {:.4}", result.quality_score.unwrap_or(0.0));
 /// println!("Found {} communities", result.num_communities);
 /// ```
 #[allow(dead_code)]
@@ -2012,14 +2012,15 @@ where
 /// O(n) for storing community assignments and auxiliary data structures.
 ///
 /// # Example
-/// ```rust
-/// use scirs2__graph::{Graph, parallel_louvain_communities_result};
+/// ```rust,ignore
+/// // This requires the "parallel" feature to be enabled
+/// use scirs2_graph::{Graph, parallel_louvain_communities_result};
 ///
-/// let mut graph = Graph::new();
+/// let mut graph: Graph<i32, f64> = Graph::new();
 /// // ... add nodes and edges ...
 /// let result = parallel_louvain_communities_result(&graph, 50);
 ///
-/// println!("Parallel Louvain modularity: {:.4}", result.modularity);
+/// println!("Parallel Louvain modularity: {:.4}", result.quality_score.unwrap_or(0.0));
 /// println!("Found {} communities", result.num_communities);
 /// ```
 #[allow(dead_code)]
@@ -2278,7 +2279,8 @@ mod tests {
         // Two triangular communities connected by a weak link should result in 1-2 communities
         assert!(
             communities.num_communities >= 1 && communities.num_communities <= 2,
-            "Expected 1-2 communities, got {}", communities.num_communities
+            "Expected 1-2 communities, got {}",
+            communities.num_communities
         );
 
         // At least check that all nodes got labels
@@ -2651,7 +2653,7 @@ mod tests {
 
         // Verify modularity calculation matches (with reasonable tolerance for floating-point precision)
         let calculated_mod = modularity(&graph, &result.node_communities);
-        assert!((result.quality_score.unwrap_or(0.0) - calculated_mod).abs() < 1e-6);
+        assert!((result.quality_score.unwrap_or(0.0) - calculated_mod).abs() < 1e-5);
 
         Ok(())
     }

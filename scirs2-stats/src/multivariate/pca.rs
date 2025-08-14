@@ -140,20 +140,20 @@ impl PCA {
             Array1::zeros(n_features)
         };
 
-        let mut centered_data = data.to_owned();
+        let mut centereddata = data.to_owned();
         if self.center {
-            for mut row in centered_data.rows_mut() {
+            for mut row in centereddata.rows_mut() {
                 row -= &mean;
             }
         }
 
         // Scale the data
         let scale = if self.scale {
-            let std = centered_data.std_axis(Axis(0), 1.0);
+            let std = centereddata.std_axis(Axis(0), 1.0);
             // Avoid division by zero
             let std = std.mapv(|s| if s > 1e-10 { s } else { 1.0 });
 
-            for (mut col, &s) in centered_data.columns_mut().into_iter().zip(std.iter()) {
+            for (mut col, &s) in centereddata.columns_mut().into_iter().zip(std.iter()) {
                 col /= s;
             }
             Some(std)
@@ -175,10 +175,8 @@ impl PCA {
 
         // Perform PCA
         let result = match solver {
-            SvdSolver::Full => self.pca_svd(&centered_data, n_components, n_samples)?,
-            SvdSolver::Randomized => {
-                self.pca_randomized(&centered_data, n_components, n_samples)?
-            }
+            SvdSolver::Full => self.pca_svd(&centereddata, n_components, n_samples)?,
+            SvdSolver::Randomized => self.pca_randomized(&centereddata, n_components, n_samples)?,
             _ => unreachable!(),
         };
 
@@ -443,7 +441,7 @@ pub struct IncrementalPCA {
     /// Base PCA configuration
     pub pca: PCA,
     /// Batch size for incremental updates
-    pub batch_size: usize,
+    pub batchsize: usize,
     /// Running mean
     mean: Option<Array1<f64>>,
     /// Running components
@@ -460,13 +458,13 @@ pub struct IncrementalPCA {
 
 impl IncrementalPCA {
     /// Create a new incremental PCA instance
-    pub fn new(n_components: usize, batch_size: usize) -> Result<Self> {
+    pub fn new(n_components: usize, batchsize: usize) -> Result<Self> {
         check_positive(n_components, "n_components")?;
-        check_positive(batch_size, "batch_size")?;
+        check_positive(batchsize, "batchsize")?;
 
         Ok(Self {
             pca: PCA::new().with_n_components(n_components),
-            batch_size: batch_size,
+            batchsize,
             mean: None,
             components: None,
             singular_values: None,
@@ -480,17 +478,17 @@ impl IncrementalPCA {
     /// Partial fit on a batch of data
     pub fn partial_fit(&mut self, batch: ArrayView2<f64>) -> Result<()> {
         checkarray_finite(&batch, "batch")?;
-        let (batch_size, n_features) = batch.dim();
+        let (batchsize, n_features) = batch.dim();
 
         // Update mean incrementally
         let batch_mean = batch.mean_axis(Axis(0)).unwrap();
         let old_n = self.n_samples_seen;
-        self.n_samples_seen += batch_size;
+        self.n_samples_seen += batchsize;
 
         self.mean = match &self.mean {
             None => Some(batch_mean.clone()),
             Some(mean) => {
-                let updated = (mean * old_n as f64 + &batch_mean * batch_size as f64)
+                let updated = (mean * old_n as f64 + &batch_mean * batchsize as f64)
                     / self.n_samples_seen as f64;
                 Some(updated)
             }
@@ -571,7 +569,7 @@ impl IncrementalPCA {
             let vt_aug = vt_aug.unwrap();
 
             // Update U
-            let mut u_new = Array2::zeros((old_n + batch_size, n_components));
+            let mut u_new = Array2::zeros((old_n + batchsize, n_components));
             let u_aug_slice = u_aug.slice(ndarray::s![..n_components, ..n_components]);
 
             // Update old samples part

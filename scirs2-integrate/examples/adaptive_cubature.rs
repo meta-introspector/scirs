@@ -258,7 +258,7 @@ where
     }
 
     // Helper to transform quadrature points to the integration region
-    fn transform_point(x: f64, dimidx: usize, a: &Array1<f64>, b: &Array1<f64>) -> f64 {
+    fn transform_point(x: f64, dim_idx: usize, a: &Array1<f64>, b: &Array1<f64>) -> f64 {
         a[dim_idx] + (b[dim_idx] - a[dim_idx]) * (x + 1.0) / 2.0
     }
 

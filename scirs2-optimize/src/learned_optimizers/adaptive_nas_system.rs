@@ -608,8 +608,7 @@ impl AdaptiveNASSystem {
                     for k in 0..dims.2 {
                         let learning_rate = self.config.meta_learning_rate;
                         let idx = (i % lstm_len, j, k);
-                        self.controller.lstm_weights[idx] +=
-                            learning_rate * advantage * 0.01;
+                        self.controller.lstm_weights[idx] += learning_rate * advantage * 0.01;
                     }
                 }
             }

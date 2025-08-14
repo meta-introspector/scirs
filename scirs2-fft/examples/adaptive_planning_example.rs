@@ -1,5 +1,5 @@
-use num__complex::Complex64;
-use scirs2__fft::planning_adaptive::{AdaptiveExecutor, AdaptivePlanningConfig};
+use num_complex::Complex64;
+use scirs2_fft::planning_adaptive::{AdaptiveExecutor, AdaptivePlanningConfig};
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]

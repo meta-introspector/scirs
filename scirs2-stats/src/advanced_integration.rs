@@ -274,7 +274,7 @@ pub struct DimensionalityAnalysisWorkflow {
     /// Whether to use incremental PCA for large datasets
     pub use_incremental_pca: bool,
     /// PCA batch size (for incremental)
-    pub pca_batch_size: usize,
+    pub pca_batchsize: usize,
     /// Random seed
     pub random_seed: Option<u64>,
 }
@@ -285,7 +285,7 @@ impl Default for DimensionalityAnalysisWorkflow {
             n_pca_components: None,
             n_factors: None,
             use_incremental_pca: false,
-            pca_batch_size: 1000,
+            pca_batchsize: 1000,
             random_seed: None,
         }
     }
@@ -339,11 +339,11 @@ impl DimensionalityAnalysisWorkflow {
         mut self,
         n_components: Option<usize>,
         incremental: bool,
-        batch_size: usize,
+        batchsize: usize,
     ) -> Self {
         self.n_pca_components = n_components;
         self.use_incremental_pca = incremental;
-        self.pca_batch_size = batch_size;
+        self.pca_batchsize = batchsize;
         self
     }
 
@@ -371,7 +371,7 @@ impl DimensionalityAnalysisWorkflow {
         }
 
         // Perform PCA analysis
-        let pca = if self.use_incremental_pca && n_samples_ > self.pca_batch_size {
+        let pca = if self.use_incremental_pca && n_samples_ > self.pca_batchsize {
             Some(self.perform_incremental_pca(data)?)
         } else {
             Some(self.perform_standard_pca(data)?)

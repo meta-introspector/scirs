@@ -34,11 +34,11 @@
 //!     "A quick brown dog outpaces a quick fox",
 //!     "The lazy dog sleeps all day"
 //! ];
-//! let mut vectorizer = TfidfVectorizer::new();
+//! let mut vectorizer = TfidfVectorizer::new(false, true, Some("l2".to_string()));
 //! let matrix = vectorizer.fit_transform(&documents).unwrap();
 //!
 //! // Sentiment analysis
-//! let analyzer = LexiconSentimentAnalyzer::default();
+//! let analyzer = LexiconSentimentAnalyzer::with_basiclexicon();
 //! let sentiment = analyzer.analyze("I love this library!").unwrap();
 //! println!("Sentiment: {:?}", sentiment.sentiment);
 //! ```

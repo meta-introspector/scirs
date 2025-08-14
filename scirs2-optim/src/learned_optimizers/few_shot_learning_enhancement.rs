@@ -1328,7 +1328,7 @@ impl<T: Float + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>>
             task_analyzer: TaskDistributionAnalyzer::new(&config)?,
             adaptation_controller: AdaptationController::new(&config)?,
             performance_tracker: FewShotPerformanceTracker::new(&config)?,
-            config: config,
+            config,
         })
     }
 
@@ -1594,7 +1594,7 @@ impl<T: Float + Send + Sync> EpisodeMemory<T> {
         Self {
             episodes: VecDeque::new(),
             episode_features: HashMap::new(),
-            capacity: capacity,
+            capacity,
             retrieval_mechanism: MemoryRetrievalMechanism::MostSimilar,
         }
     }
@@ -1633,7 +1633,7 @@ impl<T: Float + Send + Sync> FastAdaptationEngine<T> {
 impl<T: Float + Send + Sync> PrototypeUpdateRule<T> {
     fn new(method: PrototypeUpdateMethod) -> Self {
         Self {
-            method: method,
+            method,
             parameters: HashMap::new(),
             update_history: VecDeque::new(),
         }
@@ -1643,7 +1643,7 @@ impl<T: Float + Send + Sync> PrototypeUpdateRule<T> {
 impl<T: Float + Send + Sync> DistanceComputer<T> {
     fn new(metric: DistanceMetric) -> Self {
         Self {
-            metric: metric,
+            metric,
             parameters: HashMap::new(),
             distance_cache: HashMap::new(),
             normalization: DistanceNormalization::L2,
@@ -1667,7 +1667,7 @@ impl<T: Float + Send + Sync> SimilarityCache<T> {
         Self {
             cache: HashMap::new(),
             hit_rate: 0.0,
-            capacity: capacity,
+            capacity,
             eviction_policy: CacheEvictionPolicy::LRU,
         }
     }
@@ -1740,7 +1740,7 @@ impl<T: Float + Send + Sync> ConvergenceDetector<T> {
 impl<T: Float + Send + Sync> EarlyStoppingMechanism<T> {
     fn new(patience: usize) -> Self {
         Self {
-            patience: patience,
+            patience,
             best_performance: T::neg_infinity(),
             steps_since_improvement: 0,
             stopping_criterion: StoppingCriterion::default(),
@@ -1751,7 +1751,7 @@ impl<T: Float + Send + Sync> EarlyStoppingMechanism<T> {
 impl<T: Float + Send + Sync> AdaptationStrategy<T> {
     fn new(_strategytype: AdaptationStrategyType) -> Self {
         Self {
-            _strategytype: _strategytype,
+            _strategytype,
             parameters: HashMap::new(),
             history: VecDeque::new(),
         }
@@ -1761,7 +1761,7 @@ impl<T: Float + Send + Sync> AdaptationStrategy<T> {
 impl<T: Float + Send + Sync> AdaptationRateController<T> {
     fn new(_baserate: T) -> Self {
         Self {
-            _baserate: _baserate,
+            _baserate,
             current_rate: _baserate,
             schedule: LearningRateSchedule::Constant,
             adaptive_control: false,
@@ -1773,7 +1773,7 @@ impl<T: Float + Send + Sync> AdaptationMemory<T> {
     fn new(capacity: usize) -> Self {
         Self {
             entries: VecDeque::new(),
-            capacity: capacity,
+            capacity,
             access_patterns: HashMap::new(),
         }
     }
@@ -1783,7 +1783,7 @@ impl<T: Float + Send + Sync> AdaptationPerformanceMonitor<T> {
     fn new(_windowsize: usize) -> Self {
         Self {
             performance_history: VecDeque::new(),
-            _windowsize: _windowsize,
+            _windowsize,
             trends: PerformanceTrends::default(),
             alert_thresholds: HashMap::new(),
         }
@@ -1793,7 +1793,7 @@ impl<T: Float + Send + Sync> AdaptationPerformanceMonitor<T> {
 impl<T: Float + Send + Sync> TaskPerformance<T> {
     fn new(_taskid: String) -> Self {
         Self {
-            _taskid: _taskid,
+            _taskid,
             metrics: HashMap::new(),
             history: VecDeque::new(),
             adaptation_stats: AdaptationStatistics::default(),

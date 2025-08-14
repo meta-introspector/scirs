@@ -19,7 +19,7 @@ pub struct WorkloadCharacteristics {
     /// Types of operations being performed
     pub operation_types: Vec<MemoryOperationType>,
     /// Data sizes and shapes
-    pub data_sizes: Vec<TensorShape>,
+    pub datasizes: Vec<TensorShape>,
     /// Computation intensity (operations per byte)
     pub computation_intensity: f64,
     /// Memory intensity (bytes accessed per operation)
@@ -159,7 +159,7 @@ pub struct CacheAccessPattern<T> {
     /// Data types
     pub data_types: Vec<DataType>,
     /// Access sizes
-    pub access_sizes: Vec<usize>,
+    pub accesssizes: Vec<usize>,
     /// Temporal spacing
     pub temporal_spacing: Vec<f64>,
     /// Spatial locality score
@@ -197,7 +197,7 @@ pub struct AccessContext<T> {
     /// NUMA node
     pub numa_node: usize,
     /// Available cache sizes
-    pub cache_sizes: CacheSizes,
+    pub cachesizes: CacheSizes,
     /// Memory pressure
     pub memory_pressure: f64,
     /// CPU utilization
@@ -233,7 +233,7 @@ pub struct CacheSizes {
     /// L3 cache size
     pub l3: usize,
     /// Cache line size
-    pub cache_line_size: usize,
+    pub cache_linesize: usize,
     /// Translation lookaside buffer entries
     pub tlb_entries: usize,
 }
@@ -285,7 +285,7 @@ pub struct NeuralModelParameters {
     /// Learning rate
     pub learning_rate: f64,
     /// Batch size
-    pub batch_size: usize,
+    pub batchsize: usize,
     /// Number of epochs
     pub epochs: usize,
     /// Regularization strength
@@ -766,11 +766,11 @@ pub struct NumaTopology {
     /// NUMA nodes
     pub nodes: Vec<NumaNode>,
     /// Inter-node distances
-    pub distance_matrix: Array2<f64>,
+    pub distancematrix: Array2<f64>,
     /// Bandwidth matrix
-    pub bandwidth_matrix: Array2<f64>,
+    pub bandwidthmatrix: Array2<f64>,
     /// Latency matrix
-    pub latency_matrix: Array2<f64>,
+    pub latencymatrix: Array2<f64>,
 }
 
 /// NUMA node information
@@ -781,7 +781,7 @@ pub struct NumaNode {
     /// CPU cores
     pub cpu_cores: Vec<usize>,
     /// Memory size
-    pub memory_size: usize,
+    pub memorysize: usize,
     /// Memory bandwidth
     pub memory_bandwidth: f64,
     /// Current utilization
@@ -825,7 +825,7 @@ pub struct MemoryAccessSample {
     /// Target node
     pub target_node: usize,
     /// Access size
-    pub access_size: usize,
+    pub accesssize: usize,
     /// Access type
     pub access_type: MemoryAccessType,
     /// Latency
@@ -1012,7 +1012,7 @@ pub struct PoolingLayer {
     /// Pooling type
     pub pooling_type: PoolingType,
     /// Kernel size
-    pub kernel_size: (usize, usize),
+    pub kernelsize: (usize, usize),
     /// Stride
     pub stride: (usize, usize),
 }
@@ -1036,7 +1036,7 @@ pub struct EmbeddingLayer<T> {
     /// Embedding dimension
     pub embedding_dim: usize,
     /// Vocabulary size
-    pub vocab_size: usize,
+    pub vocabsize: usize,
 }
 
 /// Classification head for pattern classification
@@ -1098,7 +1098,7 @@ pub struct ExperienceReplayBuffer<T> {
     /// Buffer capacity
     capacity: usize,
     /// Current size
-    current_size: usize,
+    currentsize: usize,
 }
 
 /// Experience tuple for reinforcement learning
@@ -1130,7 +1130,7 @@ pub struct RLLearningParameters {
     /// Minimum exploration rate
     pub min_exploration_rate: f64,
     /// Batch size
-    pub batch_size: usize,
+    pub batchsize: usize,
     /// Update frequency
     pub update_frequency: usize,
 }
@@ -1142,7 +1142,7 @@ pub struct GeneticLayoutOptimizer<T> {
     /// Population of layout solutions
     population: Vec<AdvancedMemoryLayout<T>>,
     /// Population size
-    population_size: usize,
+    populationsize: usize,
     /// Genetic algorithm parameters
     ga_params: GeneticAlgorithmParameters,
     /// Fitness evaluator
@@ -1155,7 +1155,7 @@ pub struct AdvancedMemoryLayout<T> {
     /// Layout type
     pub layout_type: LayoutType,
     /// Block sizes
-    pub block_sizes: Vec<usize>,
+    pub blocksizes: Vec<usize>,
     /// Alignment requirements
     pub alignments: Vec<usize>,
     /// Padding strategies
@@ -1204,7 +1204,7 @@ pub enum DataOrdering {
 #[derive(Debug, Clone)]
 pub struct GeneticAlgorithmParameters {
     /// Population size
-    pub population_size: usize,
+    pub populationsize: usize,
     /// Number of generations
     pub generations: usize,
     /// Crossover rate
@@ -1408,7 +1408,7 @@ pub struct PatternFeatures {
     /// Repetition factor
     pub repetition_factor: f64,
     /// Working set size
-    pub working_set_size: usize,
+    pub working_setsize: usize,
     /// Cache utilization
     pub cache_utilization: f64,
 }
@@ -1789,7 +1789,7 @@ impl Default for NeuralModelParameters {
     fn default() -> Self {
         Self {
             learning_rate: 0.001,
-            batch_size: 32,
+            batchsize: 32,
             epochs: 100,
             regularization: 0.01,
             dropout_rate: 0.1,
@@ -2028,9 +2028,9 @@ impl NumaTopology {
     fn detect() -> LinalgResult<Self> {
         Ok(Self {
             nodes: Vec::new(),
-            distance_matrix: Array2::zeros((1, 1)),
-            bandwidth_matrix: Array2::zeros((1, 1)),
-            latency_matrix: Array2::zeros((1, 1)),
+            distancematrix: Array2::zeros((1, 1)),
+            bandwidthmatrix: Array2::zeros((1, 1)),
+            latencymatrix: Array2::zeros((1, 1)),
         })
     }
 }
@@ -2135,7 +2135,7 @@ where
         Ok(Self {
             weights: Array2::zeros((1, 1)),
             embedding_dim: 128,
-            vocab_size: 1000,
+            vocabsize: 1000,
         })
     }
 }
@@ -2191,8 +2191,8 @@ impl<T> ExperienceReplayBuffer<T> {
     fn new(capacity: usize) -> Self {
         Self {
             buffer: VecDeque::with_capacity(capacity),
-            capacity: capacity,
-            current_size: 0,
+            capacity,
+            currentsize: 0,
         }
     }
 }
@@ -2205,7 +2205,7 @@ impl Default for RLLearningParameters {
             exploration_rate: 1.0,
             exploration_decay: 0.995,
             min_exploration_rate: 0.01,
-            batch_size: 32,
+            batchsize: 32,
             update_frequency: 4,
         }
     }
@@ -2215,7 +2215,7 @@ impl<T> GeneticLayoutOptimizer<T> {
     fn new() -> LinalgResult<Self> {
         Ok(Self {
             population: Vec::new(),
-            population_size: 50,
+            populationsize: 50,
             ga_params: GeneticAlgorithmParameters::default(),
             fitness_evaluator: FitnessEvaluator::new()?,
         })
@@ -2225,7 +2225,7 @@ impl<T> GeneticLayoutOptimizer<T> {
 impl Default for GeneticAlgorithmParameters {
     fn default() -> Self {
         Self {
-            population_size: 50,
+            populationsize: 50,
             generations: 100,
             crossover_rate: 0.8,
             mutation_rate: 0.1,
@@ -2306,7 +2306,7 @@ where
             addresses: Vec::new(),
             access_order: Vec::new(),
             data_types: Vec::new(),
-            access_sizes: Vec::new(),
+            accesssizes: Vec::new(),
             temporal_spacing: Vec::new(),
             spatial_locality: 0.5,
             temporal_locality: 0.5,
@@ -2326,7 +2326,7 @@ where
             operation_type: MemoryOperationType::MatrixMultiplication,
             thread_count: 1,
             numa_node: 0,
-            cache_sizes: CacheSizes::default(),
+            cachesizes: CacheSizes::default(),
             memory_pressure: 0.0,
             cpu_utilization: 0.0,
             ambient_params: AmbientParameters::default(),
@@ -2341,7 +2341,7 @@ impl Default for CacheSizes {
             l1_instruction: 32 * 1024,
             l2: 256 * 1024,
             l3: 8 * 1024 * 1024,
-            cache_line_size: 64,
+            cache_linesize: 64,
             tlb_entries: 512,
         }
     }
@@ -2380,7 +2380,7 @@ mod tests {
         let memory_intelligence = AdvancedMemoryIntelligence::<f32>::new().unwrap();
         let workload = WorkloadCharacteristics {
             operation_types: vec![MemoryOperationType::MatrixMultiplication],
-            data_sizes: vec![TensorShape {
+            datasizes: vec![TensorShape {
                 dimensions: vec![100, 100],
                 element_type: ElementType::F32,
                 memory_layout: MemoryLayout::RowMajor,
@@ -2413,7 +2413,7 @@ mod tests {
         let memory_intelligence = AdvancedMemoryIntelligence::<f32>::new().unwrap();
         let workload = WorkloadCharacteristics {
             operation_types: vec![MemoryOperationType::MatrixMultiplication],
-            data_sizes: vec![TensorShape {
+            datasizes: vec![TensorShape {
                 dimensions: vec![1000, 1000],
                 element_type: ElementType::F32,
                 memory_layout: MemoryLayout::RowMajor,
@@ -2443,7 +2443,7 @@ mod tests {
         let memory_intelligence = AdvancedMemoryIntelligence::<f32>::new().unwrap();
         let workload = WorkloadCharacteristics {
             operation_types: vec![MemoryOperationType::MatrixMultiplication],
-            data_sizes: vec![TensorShape {
+            datasizes: vec![TensorShape {
                 dimensions: vec![500, 500],
                 element_type: ElementType::F32,
                 memory_layout: MemoryLayout::RowMajor,
@@ -2466,7 +2466,7 @@ mod tests {
     fn test_neural_model_parameters() {
         let params = NeuralModelParameters::default();
         assert!(params.learning_rate > 0.0);
-        assert!(params.batch_size > 0);
+        assert!(params.batchsize > 0);
         assert!(params.validation_split > 0.0 && params.validation_split < 1.0);
     }
 
@@ -2481,7 +2481,7 @@ mod tests {
     #[test]
     fn test_genetic_algorithm_parameters() {
         let params = GeneticAlgorithmParameters::default();
-        assert!(params.population_size > 0);
+        assert!(params.populationsize > 0);
         assert!(params.crossover_rate >= 0.0 && params.crossover_rate <= 1.0);
         assert!(params.mutation_rate >= 0.0 && params.mutation_rate <= 1.0);
         assert!(params.elitism_rate >= 0.0 && params.elitism_rate <= 1.0);

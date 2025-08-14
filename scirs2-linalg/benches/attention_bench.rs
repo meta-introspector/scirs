@@ -12,15 +12,15 @@ use scirs2__linalg::attention::{
 fn attention_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("attention");
 
-    let batch_size = 8;
+    let batchsize = 8;
     let seq_lens = [16, 32, 64, 128]; // Various sequence lengths to benchmark
     let d_model = 64;
 
     for &seq_len in seq_lens.iter() {
         // Prepare tensors
-        let query = Array3::<f32>::ones((batch_size, seq_len, d_model));
-        let key = Array3::<f32>::ones((batch_size, seq_len, d_model));
-        let value = Array3::<f32>::ones((batch_size, seq_len, d_model));
+        let query = Array3::<f32>::ones((batchsize, seq_len, d_model));
+        let key = Array3::<f32>::ones((batchsize, seq_len, d_model));
+        let value = Array3::<f32>::ones((batchsize, seq_len, d_model));
 
         // Scaled dot-product attention
         group.bench_with_input(

@@ -7,7 +7,7 @@ pub mod monotonic;
 pub mod pchip;
 
 // Re-export interpolation functions
-pub use basic__interp::{cubic_interpolate, linear_interpolate, nearest_interpolate};
+pub use basic_interp::{cubic_interpolate, linear_interpolate, nearest_interpolate};
 pub use monotonic::{
     hyman_interpolate, modified_akima_interpolate, monotonic_interpolate, steffen_interpolate,
     MonotonicInterpolator, MonotonicMethod,

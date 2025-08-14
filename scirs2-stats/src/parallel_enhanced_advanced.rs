@@ -149,7 +149,7 @@ where
             ChunkStrategy::WorkStealing => self.mean_work_stealing(x),
             ChunkStrategy::Adaptive => self.mean_adaptive_chunking(x),
             ChunkStrategy::CacheOptimal => self.mean_cache_optimal(x),
-            ChunkStrategy::Fixed(chunk_size) => self.mean_fixed_chunks(x, chunk_size),
+            ChunkStrategy::Fixed(chunksize) => self.mean_fixed_chunks(x, chunksize),
         }
     }
 
@@ -167,7 +167,7 @@ where
             return Err(ErrorMessages::empty_array("x"));
         }
         if n <= ddof {
-            return Err(ErrorMessages::insufficient_data(
+            return Err(ErrorMessages::insufficientdata(
                 "variance calculation",
                 ddof + 1,
                 n,
@@ -193,7 +193,7 @@ where
             return Err(ErrorMessages::empty_array("data"));
         }
         if n_features == 0 {
-            return Err(ErrorMessages::insufficient_data(
+            return Err(ErrorMessages::insufficientdata(
                 "correlation matrix",
                 2,
                 n_features,
@@ -233,7 +233,7 @@ where
             return Err(ErrorMessages::empty_array("x"));
         }
         if n <= ddof {
-            return Err(ErrorMessages::insufficient_data(
+            return Err(ErrorMessages::insufficientdata(
                 "comprehensive statistics",
                 ddof + 1,
                 n,
@@ -264,7 +264,7 @@ where
             return Err(ErrorMessages::empty_array("x"));
         }
         if n_samples_ == 0 {
-            return Err(ErrorMessages::insufficient_data("bootstrap", 1, 0));
+            return Err(ErrorMessages::insufficientdata("bootstrap", 1, 0));
         }
 
         let num_threads = self
@@ -307,15 +307,15 @@ where
             .config
             .num_threads
             .unwrap_or_else(|| self.optimal_thread_count());
-        let initial_chunk_size = (n + num_threads - 1) / num_threads;
+        let initial_chunksize = (n + num_threads - 1) / num_threads;
 
         // Create work queue with initial chunks
         let work_queue: Arc<Mutex<VecDeque<(usize, usize)>>> =
             Arc::new(Mutex::new(VecDeque::new()));
 
         for i in 0..num_threads {
-            let start = i * initial_chunk_size;
-            let end = ((i + 1) * initial_chunk_size).min(n);
+            let start = i * initial_chunksize;
+            let end = ((i + 1) * initial_chunksize).min(n);
             if start < end {
                 work_queue.lock().unwrap().push_back((start, end));
             }
@@ -368,21 +368,21 @@ where
         D: Data<Elem = F> + Sync + Send,
     {
         let n = x.len();
-        let element_size = std::mem::size_of::<F>();
+        let elementsize = std::mem::size_of::<F>();
 
         // Adaptive chunk size based on cache hierarchy
         let l1_cache = 32 * 1024; // 32KB L1 cache (typical)
         let l2_cache = 256 * 1024; // 256KB L2 cache (typical)
 
-        let chunk_size = if n * element_size <= l1_cache {
+        let chunksize = if n * elementsize <= l1_cache {
             n // Fits in L1, no chunking needed
-        } else if n * element_size <= l2_cache {
-            l1_cache / element_size // Chunk to fit in L1
+        } else if n * elementsize <= l2_cache {
+            l1_cache / elementsize // Chunk to fit in L1
         } else {
-            l2_cache / element_size // Chunk to fit in L2
+            l2_cache / elementsize // Chunk to fit in L2
         };
 
-        let num_chunks = (n + chunk_size - 1) / chunk_size;
+        let num_chunks = (n + chunksize - 1) / chunksize;
         let _num_threads = self
             .config
             .num_threads
@@ -391,8 +391,8 @@ where
         // Use thread pool for processing
         let chunks: Vec<_> = (0..num_chunks)
             .map(|i| {
-                let start = i * chunk_size;
-                let end = ((i + 1) * chunk_size).min(n);
+                let start = i * chunksize;
+                let end = ((i + 1) * chunksize).min(n);
                 x.slice(ndarray::s![start..end])
             })
             .collect();
@@ -467,16 +467,16 @@ where
         }
     }
 
-    fn mean_fixed_chunks<D>(&self, x: &ArrayBase<D, Ix1>, chunk_size: usize) -> StatsResult<F>
+    fn mean_fixed_chunks<D>(&self, x: &ArrayBase<D, Ix1>, chunksize: usize) -> StatsResult<F>
     where
         D: Data<Elem = F> + Sync + Send,
     {
         let n = x.len();
         let chunks: Vec<_> = x
-            .exact_chunks(chunk_size)
+            .exact_chunks(chunksize)
             .into_iter()
-            .chain(if n % chunk_size != 0 {
-                vec![x.slice(ndarray::s![n - (n % chunk_size)..])]
+            .chain(if n % chunksize != 0 {
+                vec![x.slice(ndarray::s![n - (n % chunksize)..])]
             } else {
                 vec![]
             })
@@ -503,13 +503,13 @@ where
             .config
             .num_threads
             .unwrap_or_else(|| self.optimal_thread_count());
-        let chunk_size = (n + num_threads - 1) / num_threads;
+        let chunksize = (n + num_threads - 1) / num_threads;
 
         let results: Vec<(F, F, usize)> = (0..num_threads)
             .into_par_iter()
             .map(|i| {
-                let start = i * chunk_size;
-                let end = ((i + 1) * chunk_size).min(n);
+                let start = i * chunksize;
+                let end = ((i + 1) * chunksize).min(n);
 
                 if start >= end {
                     return (F::zero(), F::zero(), 0);
@@ -629,14 +629,14 @@ where
             .config
             .num_threads
             .unwrap_or_else(|| self.optimal_thread_count());
-        let chunk_size = (n + num_threads - 1) / num_threads;
+        let chunksize = (n + num_threads - 1) / num_threads;
 
         // Parallel computation of all moments
         let results: Vec<(F, F, F, F, usize)> = (0..num_threads)
             .into_par_iter()
             .map(|i| {
-                let start = i * chunk_size;
-                let end = ((i + 1) * chunk_size).min(n);
+                let start = i * chunksize;
+                let end = ((i + 1) * chunksize).min(n);
 
                 if start >= end {
                     return (F::zero(), F::zero(), F::zero(), F::zero(), 0);
@@ -758,12 +758,12 @@ where
                     };
 
                     let mut local_results = Vec::with_capacity(samples_per_thread);
-                    let n_data = data_arc.len();
+                    let ndata = data_arc.len();
 
                     for _ in 0..samples_per_thread {
                         // Generate bootstrap sample
                         let bootstrap_indices: Vec<usize> =
-                            (0..n_data).map(|_| rng.gen_range(0..n_data)).collect();
+                            (0..ndata).map(|_| rng.gen_range(0..ndata)).collect();
 
                         let bootstrap_sample: Vec<F> =
                             bootstrap_indices.into_iter().map(|i| data_arc[i]).collect();
@@ -800,16 +800,16 @@ enum Message {
 }
 
 impl ThreadPool {
-    fn new(_size: usize, config: AdvancedParallelConfig) -> StatsResult<ThreadPool> {
-        if _size == 0 {
+    fn new(size: usize, config: AdvancedParallelConfig) -> StatsResult<ThreadPool> {
+        if size == 0 {
             return Err(ErrorMessages::invalid_probability("thread count", 0.0));
         }
 
         let (sender, receiver) = std::sync::mpsc::channel();
         let receiver = Arc::new(Mutex::new(receiver));
-        let mut workers = Vec::with_capacity(_size);
+        let mut workers = Vec::with_capacity(size);
 
-        for _id in 0.._size {
+        for _id in 0..size {
             let receiver = Arc::clone(&receiver);
 
             let worker = thread::spawn(move || loop {

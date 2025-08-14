@@ -468,8 +468,8 @@ where
             }
             Some(1) => {
                 // Sum along columns
-                let (rows_, _) = self.shape();
-                let mut result = DokArray::new((rows_, 1));
+                let (rows, _) = self.shape();
+                let mut result = DokArray::new((rows, 1));
 
                 for (&(row, col), &value) in &self.data {
                     let current = result.get(row, 0);

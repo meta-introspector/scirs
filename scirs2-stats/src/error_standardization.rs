@@ -46,7 +46,7 @@ impl ErrorMessages {
     }
 
     /// Standard insufficient data messages
-    pub fn insufficient_data(operation: &str, required: usize, actual: usize) -> StatsError {
+    pub fn insufficientdata(operation: &str, required: usize, actual: usize) -> StatsError {
         StatsError::invalid_argument(format!(
             "Insufficient data for {}: requires at least {} elements, got {}. {}",
             operation,
@@ -216,9 +216,9 @@ impl ErrorValidator {
     }
 
     /// Validate minimum sample size
-    pub fn validate_sample_size(size: usize, minimum: usize, operation: &str) -> StatsResult<()> {
+    pub fn validate_samplesize(size: usize, minimum: usize, operation: &str) -> StatsResult<()> {
         if size < minimum {
-            return Err(ErrorMessages::insufficient_data(operation, minimum, size));
+            return Err(ErrorMessages::insufficientdata(operation, minimum, size));
         }
         Ok(())
     }
@@ -646,7 +646,7 @@ pub struct ErrorDiagnostics;
 
 impl ErrorDiagnostics {
     /// Generate comprehensive diagnostics for array data
-    pub fn diagnose_array_f64(_data: &[f64], name: &str) -> DataDiagnostics {
+    pub fn diagnose_array_f64(data: &[f64], name: &str) -> DataDiagnostics {
         let mut quality_issues = Vec::new();
         let mut nan_count = 0;
         let mut inf_count = 0;
@@ -654,7 +654,7 @@ impl ErrorDiagnostics {
         let mut has_negative = false;
         let mut has_zeros = false;
 
-        for &value in _data {
+        for &value in data {
             if value.is_nan() {
                 nan_count += 1;
             } else if value.is_infinite() {
@@ -705,7 +705,7 @@ impl ErrorDiagnostics {
             quality_issues.push(DataQualityIssue::SmallSample(finite_values.len()));
         }
 
-        // Check for constant _data
+        // Check for constant data
         if let (Some(min_val), Some(max_val)) = (min, max) {
             if (max_val - min_val).abs() < 1e-15 {
                 quality_issues.push(DataQualityIssue::Constant);
@@ -726,7 +726,7 @@ impl ErrorDiagnostics {
         }
 
         DataDiagnostics {
-            shape: vec![_data.len()],
+            shape: vec![data.len()],
             data_type: "f64".to_string(),
             summary: StatsSummary {
                 min,
@@ -834,7 +834,7 @@ impl AutoRecoverySystem {
                 priority: 1,
                 performance_impact: PerformanceImpact::Minimal,
                 code_example: Some(
-                    "let clean_data = data.iter().filter(|x| x.is_finite()).collect();".to_string(),
+                    "let cleandata = data.iter().filter(|x| x.is_finite()).collect();".to_string(),
                 ),
                 automatic: true,
             }),
@@ -844,7 +844,7 @@ impl AutoRecoverySystem {
                     priority: 2,
                     performance_impact: PerformanceImpact::Minimal,
                     code_example: Some(
-                        "let aligned_data = data.broadcast_to(targetshape);".to_string(),
+                        "let aligneddata = data.broadcast_to(targetshape);".to_string(),
                     ),
                     automatic: false, // Usually requires user input
                 })
@@ -877,11 +877,11 @@ mod tests {
         let empty_data: &[f64] = &[];
         assert!(ErrorValidator::validate_array(empty_data, "test").is_err());
 
-        let finite_data = [1.0, 2.0, 3.0];
-        assert!(ErrorValidator::validate_finite_array(&finite_data, "test").is_ok());
+        let finitedata = [1.0, 2.0, 3.0];
+        assert!(ErrorValidator::validate_finite_array(&finitedata, "test").is_ok());
 
-        let nan_data = [1.0, f64::NAN, 3.0];
-        assert!(ErrorValidator::validate_finite_array(&nan_data, "test").is_err());
+        let nandata = [1.0, f64::NAN, 3.0];
+        assert!(ErrorValidator::validate_finite_array(&nandata, "test").is_err());
     }
 
     #[test]
@@ -894,7 +894,7 @@ mod tests {
     #[test]
     fn test_enhanced_error_context() {
         let data = [1.0, 2.0, f64::NAN, 4.0];
-        let diagnostics = ErrorDiagnostics::diagnose_array_f64(&data, "test_data");
+        let diagnostics = ErrorDiagnostics::diagnose_array_f64(&data, "testdata");
 
         assert_eq!(diagnostics.shape, vec![4]);
         assert_eq!(diagnostics.summary.nan_count, 1);

@@ -124,7 +124,7 @@ where
         ).unwrap();
         
         // Generate the matrix using scirs2-core random sampling
-        let flat_array = uniform_dist.random_array(rng, [_rows * cols]);
+        let flatarray = uniform_dist.randomarray(rng, [_rows * cols]);
         
         // Convert to the target type if necessary
         let mut result = Array2::<F>::zeros((_rows, cols));
@@ -132,7 +132,7 @@ where
         for i in 0.._rows {
             for j in 0..cols {
                 let idx = i * cols + j;
-                result[[i, j]] = F::from_f64(flat_array[idx]).unwrap();
+                result[[i, j]] = F::from_f64(flatarray[idx]).unwrap();
             }
         }
         
@@ -185,7 +185,7 @@ where
     ).unwrap();
     
     // Generate the matrix using scirs2-core random sampling
-    let flat_array = normal_dist.random_array(&mut rng, [_rows * cols]);
+    let flatarray = normal_dist.randomarray(&mut rng, [_rows * cols]);
     
     // Convert to the target type if necessary
     let mut result = Array2::<F>::zeros((_rows, cols));
@@ -193,7 +193,7 @@ where
     for i in 0.._rows {
         for j in 0..cols {
             let idx = i * cols + j;
-            result[[i, j]] = F::from_f64(flat_array[idx]).unwrap();
+            result[[i, j]] = F::from_f64(flatarray[idx]).unwrap();
         }
     }
     
@@ -481,7 +481,7 @@ where
         f64::from(min_eigenval).expect("Cannot convert to f64")..f64::from(max_eigenval).expect("Cannot convert to f64")
     ).unwrap();
     
-    let diag_values = dist.random_array(&mut rng, [n]);
+    let diag_values = dist.randomarray(&mut rng, [n]);
     
     // Add a diagonal matrix to ensure the minimum eigenvalue is min_eigenval
     for i in 0..n {
@@ -562,7 +562,7 @@ where
         f64::from(max_eigenval).expect("Cannot convert to f64")
     ).unwrap();
     
-    let diag_values = dist.random_array(&mut rng, [n]);
+    let diag_values = dist.randomarray(&mut rng, [n]);
     
     // Add a diagonal matrix to ensure the minimum eigenvalue is min_eigenval
     for i in 0..n {
@@ -618,7 +618,7 @@ where
     ).unwrap();
     
     // Generate random diagonal elements
-    let diag_values = dist.random_array(&mut rng, [n]);
+    let diag_values = dist.randomarray(&mut rng, [n]);
     
     // Create a matrix with these diagonal elements
     let mut result = Array2::<F>::zeros((n, n));
@@ -691,7 +691,7 @@ where
         let j_end = (i + upper_bandwidth + 1).min(cols);
         
         // Generate random values for the band elements
-        let band_values = dist.random_array(&mut rng, [j_end - j_start]);
+        let band_values = dist.randomarray(&mut rng, [j_end - j_start]);
         
         // Assign the values to the matrix
         for (idx, j) in (j_start..j_end).enumerate() {
@@ -768,7 +768,7 @@ where
     indices.truncate(non_zero_count);
     
     // Generate random values for those indices
-    let values = val_dist.random_array(&mut rng, [non_zero_count]);
+    let values = val_dist.randomarray(&mut rng, [non_zero_count]);
     
     // Assign values to the selected indices
     for (idx, &pos) in indices.iter().enumerate() {
@@ -826,7 +826,7 @@ where
     ).unwrap();
     
     // We need 2n-1 values for a Toeplitz matrix: n for first row and n-1 for first column
-    let all_values = dist.random_array(&mut rng, [2 * n - 1]);
+    let all_values = dist.randomarray(&mut rng, [2 * n - 1]);
     
     // The first n values are for the first row
     let first_row: Vec<F> = (0..n)
@@ -1344,11 +1344,11 @@ where
     let mut upper = Array2::<F>::zeros((n, n));
     
     // We need n(n+1)/2 elements for the upper triangular part
-    let upper_size = n * (n + 1) / 2;
-    let non_zero_upper = (upper_size as f64 * density).round() as usize;
+    let uppersize = n * (n + 1) / 2;
+    let non_zero_upper = (uppersize as f64 * density).round() as usize;
     
     // Generate indices for non-zero elements in upper triangular part
-    let mut upper_indices: Vec<(usize, usize)> = Vec::with_capacity(upper_size);
+    let mut upper_indices: Vec<(usize, usize)> = Vec::with_capacity(uppersize);
     for i in 0..n {
         for j in i..n {
             upper_indices.push((i, j));
@@ -1377,7 +1377,7 @@ where
         f64::from(max_eigenval).expect("Cannot convert to f64")
     ).unwrap();
     
-    let diag_values = dist.random_array(&mut rng, [n]);
+    let diag_values = dist.randomarray(&mut rng, [n]);
     
     for i in 0..n {
         upper[[i, i]] += F::from_f64(diag_values[i]).unwrap();
@@ -1404,18 +1404,18 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_linalg::random::polynomial_matrix;
+/// use scirs2_linalg::random::polynomialmatrix;
 ///
 /// // Polynomial: x^3 - 2x^2 + 3x - 4
 /// // Coefficients: [-4, 3, -2, 1]
 /// let coeffs = array![-4.0, 3.0, -2.0, 1.0];
-/// let companion = polynomial_matrix(&coeffs);
+/// let companion = polynomialmatrix(&coeffs);
 ///
 /// // For a monic cubic polynomial, the companion matrix is 3x3
 /// assert_eq!(companion.shape(), &[3, 3]);
 /// ```
 #[allow(dead_code)]
-pub fn polynomial_matrix<F>(coeffs: &Array1<F>) -> Array2<F>
+pub fn polynomialmatrix<F>(coeffs: &Array1<F>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
 {
@@ -1518,9 +1518,9 @@ where
     ).unwrap();
     
     // Generate random values
-    let diag_values = diag_dist.random_array(&mut rng, [n]);
-    let subdiag_values = offdiag_dist.random_array(&mut rng, [n-1]);
-    let superdiag_values = offdiag_dist.random_array(&mut rng, [n-1]);
+    let diag_values = diag_dist.randomarray(&mut rng, [n]);
+    let subdiag_values = offdiag_dist.randomarray(&mut rng, [n-1]);
+    let superdiag_values = offdiag_dist.randomarray(&mut rng, [n-1]);
     
     // Create the tridiagonal matrix
     let mut result = Array2::<F>::zeros((n, n));
@@ -1619,8 +1619,8 @@ where
     ).unwrap();
     
     // Generate random values
-    let diag_values = diag_dist.random_array(&mut rng, [n]);
-    let offdiag_values = offdiag_dist.random_array(&mut rng, [n-1]);
+    let diag_values = diag_dist.randomarray(&mut rng, [n]);
+    let offdiag_values = offdiag_dist.randomarray(&mut rng, [n-1]);
     
     // Create the symmetric tridiagonal matrix
     let mut result = Array2::<F>::zeros((n, n));
@@ -1661,18 +1661,18 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_linalg::random::ml_matrix;
+/// use scirs2_linalg::random::mlmatrix;
 ///
 /// // Generate a 128x64 matrix with Xavier/Glorot initialization
-/// let xavier = ml_matrix::<f32>(128, 64, "xavier", Some(128), None);
+/// let xavier = mlmatrix::<f32>(128, 64, "xavier", Some(128), None);
 /// assert_eq!(xavier.shape(), &[128, 64]);
 ///
 /// // Generate a 256x512 embedding matrix for NLP
-/// let emb = ml_matrix::<f32>(256, 512, "embedding", None, None);
+/// let emb = mlmatrix::<f32>(256, 512, "embedding", None, None);
 /// assert_eq!(emb.shape(), &[256, 512]);
 /// ```
 #[allow(dead_code)]
-pub fn ml_matrix<F>(
+pub fn mlmatrix<F>(
     rows: usize,
     cols: usize,
     init_type: &str,
@@ -1692,7 +1692,7 @@ where
             let limit = (6.0 / (fan_in + fan_out) as f64).sqrt();
             
             let dist = UniformDist::new(-limit, limit).unwrap();
-            let values = dist.random_array(&mut rng, [rows * cols]);
+            let values = dist.randomarray(&mut rng, [rows * cols]);
             
             let mut result = Array2::<F>::zeros((rows, cols));
             for i _in 0..rows {
@@ -1710,7 +1710,7 @@ where
             let std_dev = (2.0 / fan_in as f64).sqrt();
             
             let dist = NormalDist::new(0.0, std_dev).unwrap();
-            let values = dist.random_array(&mut rng, [rows * cols]);
+            let values = dist.randomarray(&mut rng, [rows * cols]);
             
             let mut result = Array2::<F>::zeros((rows, cols));
             for i _in 0..rows {
@@ -1728,7 +1728,7 @@ where
             let std_dev = (1.0 / fan_in as f64).sqrt();
             
             let dist = NormalDist::new(0.0, std_dev).unwrap();
-            let values = dist.random_array(&mut rng, [rows * cols]);
+            let values = dist.randomarray(&mut rng, [rows * cols]);
             
             let mut result = Array2::<F>::zeros((rows, cols));
             for i _in 0..rows {
@@ -1765,7 +1765,7 @@ where
             let std_dev = (1.0 / embedding_dim as f64).sqrt();
             
             let dist = NormalDist::new(0.0, std_dev).unwrap();
-            let values = dist.random_array(&mut rng, [rows * cols]);
+            let values = dist.randomarray(&mut rng, [rows * cols]);
             
             let mut result = Array2::<F>::zeros((rows, cols));
             for i _in 0..rows {

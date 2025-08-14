@@ -691,7 +691,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> AdaptiveCurriculum<A, D> {
     pub fn new(curricula: Vec<CurriculumManager<A, D>>, switchthreshold: A) -> Self {
         let num_curricula = curricula.len();
         Self {
-            curricula: curricula,
+            curricula,
             active_curriculum: 0,
             curriculum_performance: vec![VecDeque::new(); num_curricula],
             switchthreshold,

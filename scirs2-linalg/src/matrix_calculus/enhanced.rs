@@ -760,7 +760,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_gradient() {
+    fn testmatrix_gradient() {
         // Function: f(X) = tr(X^T X) = sum of squares of all elements
         let f = |x: &ArrayView2<f64>| -> LinalgResult<f64> {
             let sum_of_squares = x.iter().fold(0.0, |acc, &val| acc + val * val);
@@ -778,7 +778,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_jacobian() {
+    fn testmatrix_jacobian() {
         // Function: f(X) = [sum(X), sum(X^2)]
         let f = |x: &ArrayView2<f64>| -> LinalgResult<Array1<f64>> {
             let sum = x.sum();

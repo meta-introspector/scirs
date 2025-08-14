@@ -349,7 +349,7 @@ where
 
     // For small matrices, use advanced-precise analytical methods
     if n <= 4 {
-        return advanced_precise_small_matrix_eig(a, precision_target);
+        return advanced_precise_smallmatrix_eig(a, precision_target);
     }
 
     // For larger matrices, use enhanced iterative methods
@@ -400,7 +400,7 @@ where
 
 /// Advanced-precise eigenvalue computation for small matrices (n <= 4)
 #[allow(dead_code)]
-fn advanced_precise_small_matrix_eig<F>(
+fn advanced_precise_smallmatrix_eig<F>(
     a: &ArrayView2<F>,
     precision_target: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
@@ -1239,7 +1239,7 @@ where
     // For 3x3 symmetric matrices, use a specialized QR iteration
     // that converges quickly for small matrices
 
-    let mut work_matrix = a.to_owned();
+    let mut workmatrix = a.to_owned();
     let mut q_total = Array2::eye(3);
     let max_iter = 50;
     let tol = F::from(1e-12).unwrap();
@@ -1248,16 +1248,16 @@ where
     for _ in 0..max_iter {
         // Check for convergence - if off-diagonal elements are small
         let off_diag =
-            work_matrix[[0, 1]].abs() + work_matrix[[0, 2]].abs() + work_matrix[[1, 2]].abs();
+            workmatrix[[0, 1]].abs() + workmatrix[[0, 2]].abs() + workmatrix[[1, 2]].abs();
         if off_diag < tol {
             break;
         }
 
         // Perform QR decomposition
-        let (q, r) = qr(&work_matrix.view(), None)?;
+        let (q, r) = qr(&workmatrix.view(), None)?;
 
         // Update: A = R * Q
-        work_matrix = r.dot(&q);
+        workmatrix = r.dot(&q);
 
         // Accumulate transformation
         q_total = q_total.dot(&q);
@@ -1266,7 +1266,7 @@ where
     // Extract eigenvalues from diagonal
     let mut eigenvalues = Array1::zeros(3);
     for i in 0..3 {
-        eigenvalues[i] = work_matrix[[i, i]];
+        eigenvalues[i] = workmatrix[[i, i]];
     }
 
     // Sort eigenvalues and corresponding eigenvectors
@@ -1297,7 +1297,7 @@ where
     // For 4x4 symmetric matrices, use a specialized QR iteration
     // that converges quickly for small matrices
 
-    let mut work_matrix = a.to_owned();
+    let mut workmatrix = a.to_owned();
     let mut q_total = Array2::eye(4);
     let max_iter = 100;
     let tol = F::from(1e-12).unwrap();
@@ -1308,7 +1308,7 @@ where
         let mut off_diag = F::zero();
         for i in 0..4 {
             for j in (i + 1)..4 {
-                off_diag += work_matrix[[i, j]].abs();
+                off_diag += workmatrix[[i, j]].abs();
             }
         }
         if off_diag < tol {
@@ -1316,10 +1316,10 @@ where
         }
 
         // Perform QR decomposition
-        let (q, r) = qr(&work_matrix.view(), None)?;
+        let (q, r) = qr(&workmatrix.view(), None)?;
 
         // Update: A = R * Q
-        work_matrix = r.dot(&q);
+        workmatrix = r.dot(&q);
 
         // Accumulate transformation
         q_total = q_total.dot(&q);
@@ -1328,7 +1328,7 @@ where
     // Extract eigenvalues from diagonal
     let mut eigenvalues = Array1::zeros(4);
     for i in 0..4 {
-        eigenvalues[i] = work_matrix[[i, i]];
+        eigenvalues[i] = workmatrix[[i, i]];
     }
 
     // Sort eigenvalues and corresponding eigenvectors
@@ -1430,7 +1430,7 @@ where
     // This is more stable than power iteration for all eigenvalues
 
     // Create a working copy of the matrix
-    let mut work_matrix = a.to_owned();
+    let mut workmatrix = a.to_owned();
     let mut q_accumulated = Array2::eye(n);
 
     // Apply QR iterations with shifting for better convergence
@@ -1440,7 +1440,7 @@ where
         for i in 0..n {
             for j in 0..n {
                 if i != j {
-                    let abs_val = work_matrix[[i, j]].abs();
+                    let abs_val = workmatrix[[i, j]].abs();
                     if abs_val > max_off_diag {
                         max_off_diag = abs_val;
                     }
@@ -1456,9 +1456,9 @@ where
         // Use Wilkinson shift: the eigenvalue of the 2x2 bottom-right submatrix
         // that is closer to the bottom-right element
         let shift = if n >= 2 {
-            let a_nn = work_matrix[[n - 1, n - 1]];
-            let a_n1n1 = work_matrix[[n - 2, n - 2]];
-            let a_nn1 = work_matrix[[n - 1, n - 2]];
+            let a_nn = workmatrix[[n - 1, n - 1]];
+            let a_n1n1 = workmatrix[[n - 2, n - 2]];
+            let a_nn1 = workmatrix[[n - 1, n - 2]];
 
             let b = a_nn + a_n1n1;
             let c = a_nn * a_n1n1 - a_nn1 * a_nn1;
@@ -1479,25 +1479,25 @@ where
                 a_nn
             }
         } else {
-            work_matrix[[n - 1, n - 1]]
+            workmatrix[[n - 1, n - 1]]
         };
 
         // Apply shift: A' = A - σI
         for i in 0..n {
-            work_matrix[[i, i]] -= shift;
+            workmatrix[[i, i]] -= shift;
         }
 
         // Perform QR decomposition
-        let (q, r) = qr(&work_matrix.view(), None).map_err(|_| {
+        let (q, r) = qr(&workmatrix.view(), None).map_err(|_| {
             LinalgError::ConvergenceError(format!(
                 "QR decomposition failed in symmetric eigenvalue computation at iteration {iter}"
             ))
         })?;
 
         // Update: A = RQ + σI
-        work_matrix = r.dot(&q);
+        workmatrix = r.dot(&q);
         for i in 0..n {
-            work_matrix[[i, i]] += shift;
+            workmatrix[[i, i]] += shift;
         }
 
         // Accumulate transformation
@@ -1512,7 +1512,7 @@ where
     // Extract eigenvalues from diagonal
     let mut eigenvalues = Array1::zeros(n);
     for i in 0..n {
-        eigenvalues[i] = work_matrix[[i, i]];
+        eigenvalues[i] = workmatrix[[i, i]];
     }
 
     // Sort eigenvalues and eigenvectors in descending order
@@ -1567,7 +1567,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_1x1_matrix() {
+    fn test_1x1matrix() {
         let a = array![[3.0_f64]];
         let (eigenvalues, eigenvectors) = eig(&a.view(), None).unwrap();
 
@@ -1578,7 +1578,7 @@ mod tests {
     }
 
     #[test]
-    fn test_2x2_diagonal_matrix() {
+    fn test_2x2_diagonalmatrix() {
         let a = array![[3.0_f64, 0.0], [0.0, 4.0]];
 
         let (eigenvalues, eigenvectors) = eig(&a.view(), None).unwrap();
@@ -1597,7 +1597,7 @@ mod tests {
     }
 
     #[test]
-    fn test_2x2_symmetric_matrix() {
+    fn test_2x2_symmetricmatrix() {
         let a = array![[1.0, 2.0], [2.0, 4.0]];
 
         // Test eigh

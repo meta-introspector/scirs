@@ -344,8 +344,8 @@ mod tests {
         assert!(result.is_err());
 
         // Test NaN validation
-        let nan_data = &[1.0, f64::NAN, 3.0];
-        let result = handler.validate_finite_array_or_error(nan_data, "test_array", "test_op");
+        let nandata = &[1.0, f64::NAN, 3.0];
+        let result = handler.validate_finite_array_or_error(nandata, "test_array", "test_op");
         assert!(result.is_err());
 
         // Test invalid probability
@@ -372,9 +372,9 @@ mod tests {
         let _error = stats_error_unified!(ErrorCode::E1001, "test_operation", "Test message");
 
         // Test validation macro would need valid arrays to test properly
-        let valid_data = &[1.0, 2.0, 3.0];
+        let validdata = &[1.0, 2.0, 3.0];
         let result: Result<(), StatsError> = (|| {
-            validate_or_error!(finite: valid_data, "test_data", "test_op");
+            validate_or_error!(finite: validdata, "testdata", "test_op");
             Ok(())
         })();
         assert!(result.is_ok());

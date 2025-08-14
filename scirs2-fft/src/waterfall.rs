@@ -684,7 +684,7 @@ mod tests {
 
     // Generate a test signal (chirp: frequency increases with time)
     fn generate_chirp(fs: f64, duration: f64) -> Vec<f64> {
-        let n_samples = (_fs * duration) as usize;
+        let n_samples = (fs * duration) as usize;
         let t: Vec<f64> = (0..n_samples).map(|i| i as f64 / fs).collect();
 
         t.iter()

@@ -15,8 +15,8 @@
 //!
 //! Run with: cargo run --example enhanced_derivation_studio
 
-use num__complex::Complex64;
-use scirs2__special::*;
+use num_complex::Complex64;
+use scirs2_special::*;
 use std::f64::consts::{E, PI};
 use std::io::{self, Write};
 use std::time::{Duration, Instant};
@@ -207,7 +207,7 @@ struct Parameter {
     value_type: ParameterType,
     current_value: f64,
     range: (f64, f64),
-    step_size: f64,
+    stepsize: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -1594,15 +1594,8 @@ impl DerivationStudio {
         println!("Right side: (2/{})J₁({}) = {:.12}", x, x, recurrence_right);
         let error: f64 = recurrence_left - recurrence_right;
         println!("Error: {:.2e}", error.abs());
-        println!(
-            "✅ Verification: {}",
-            let error: f64 = recurrence_left - recurrence_right;
-            if error.abs() < 1e-10 {
-                "PASS"
-            } else {
-                "FAIL"
-            }
-        );
+        let verification_result = if error.abs() < 1e-10 { "PASS" } else { "FAIL" };
+        println!("✅ Verification: {}", verification_result);
 
         wait_for_user_input()?;
         Ok(())

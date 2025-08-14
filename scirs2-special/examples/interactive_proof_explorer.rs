@@ -14,8 +14,8 @@
 //! Run with: cargo run --example interactive_proof_explorer
 
 use ndarray::{Array1, Array2};
-use num__complex::Complex64;
-use scirs2__special::*;
+use num_complex::Complex64;
+use scirs2_special::*;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::io::{self, Write};
@@ -1540,7 +1540,7 @@ fn create_bessel_generating_examples() -> Vec<ComputationalExample> {
         ComputationalExample {
             title: "Generating Function Verification".to_string(),
             description: "Verify that the generating function produces correct Bessel function values".to_string(),
-            code: "let x = 2.0;\nlet t = 1.0;\nlet gen_func = (x * (t - 1.0/t) / 2.0).exp();\nlet series_sum = j0(x) + j1(x) * t + j_minus1(x) / t;\nprintln!(\"Gen func: {}, Series: {}\", gen_func, series_sum);".to_string(),
+            code: "let x = 2.0;\nlet t = 1.0;\nlet gen_func = (x * (t - 1.0/t) / 2.0).exp();\nlet series_sum = j0(x) + j1(x) * t + jminus1(x) / t;\nprintln!(\"Gen func: {}, Series: {}\", gen_func, series_sum);".to_string(),
             expected_output: "The generating function equals the series sum".to_string(),
             learning_objective: "Understand how generating functions encode infinite families of functions".to_string(),
         },

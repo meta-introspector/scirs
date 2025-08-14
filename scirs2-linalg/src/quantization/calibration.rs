@@ -57,7 +57,7 @@ pub struct CalibrationConfig {
     pub percentile: f32,
 
     /// Moving average window size for min-max methods
-    pub window_size: usize,
+    pub windowsize: usize,
 
     /// Whether to use per-channel calibration
     pub per_channel: bool,
@@ -82,7 +82,7 @@ impl Default for CalibrationConfig {
             method: CalibrationMethod::MinMax,
             num_bins: 2048,
             percentile: 0.999,
-            window_size: 10,
+            windowsize: 10,
             per_channel: false,
             symmetric: true,
             ema_factor: 0.1,
@@ -126,11 +126,11 @@ where
                 calibrate_matrix_per_channel_moving_average(
                     matrix,
                     bits,
-                    config.window_size,
+                    config.windowsize,
                     config.symmetric,
                 )
             } else {
-                calibrate_matrix_moving_average(matrix, bits, config.window_size, config.symmetric)
+                calibrate_matrix_moving_average(matrix, bits, config.windowsize, config.symmetric)
             }
         }
         CalibrationMethod::PercentileCalibration => {
@@ -216,7 +216,7 @@ where
     match config.method {
         CalibrationMethod::MinMax => calibrate_vector_minmax(vector, bits, config.symmetric),
         CalibrationMethod::MovingAverageMinMax => {
-            calibrate_vector_moving_average(vector, bits, config.window_size, config.symmetric)
+            calibrate_vector_moving_average(vector, bits, config.windowsize, config.symmetric)
         }
         CalibrationMethod::PercentileCalibration => {
             calibrate_vector_percentile(vector, bits, config.percentile, config.symmetric)
@@ -364,7 +364,7 @@ where
 fn calibrate_matrix_moving_average<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
-    window_size: usize,
+    windowsize: usize,
     symmetric: bool,
 ) -> LinalgResult<QuantizationParams>
 where
@@ -394,15 +394,15 @@ where
     values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     // Calculate moving averages to find stable min/max
-    if values.len() <= window_size {
+    if values.len() <= windowsize {
         // Not enough data for moving average, fall back to min-max
         let min_val = *values.first().unwrap();
         let max_val = *values.last().unwrap();
         create_params_from_range(bits, min_val, max_val, symmetric)
     } else {
         // Calculate moving averages
-        let min_val = values.iter().take(window_size).sum::<f32>() / window_size as f32;
-        let max_val = values.iter().rev().take(window_size).sum::<f32>() / window_size as f32;
+        let min_val = values.iter().take(windowsize).sum::<f32>() / windowsize as f32;
+        let max_val = values.iter().rev().take(windowsize).sum::<f32>() / windowsize as f32;
 
         create_params_from_range(bits, min_val, max_val, symmetric)
     }
@@ -613,7 +613,7 @@ where
 fn calibrate_matrix_per_channel_moving_average<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
-    window_size: usize,
+    windowsize: usize,
     symmetric: bool,
 ) -> LinalgResult<QuantizationParams>
 where
@@ -659,13 +659,13 @@ where
         values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         // Calculate moving averages to find stable min/max
-        let (col_min, col_max) = if values.len() <= window_size {
+        let (col_min, col_max) = if values.len() <= windowsize {
             // Not enough data for moving average, fall back to min-max
             (*values.first().unwrap(), *values.last().unwrap())
         } else {
             // Calculate moving averages
-            let min_val = values.iter().take(window_size).sum::<f32>() / window_size as f32;
-            let max_val = values.iter().rev().take(window_size).sum::<f32>() / window_size as f32;
+            let min_val = values.iter().take(windowsize).sum::<f32>() / windowsize as f32;
+            let max_val = values.iter().rev().take(windowsize).sum::<f32>() / windowsize as f32;
             (min_val, max_val)
         };
 
@@ -1014,7 +1014,7 @@ where
 fn calibrate_vector_moving_average<F>(
     vector: &ArrayView1<F>,
     bits: u8,
-    window_size: usize,
+    windowsize: usize,
     symmetric: bool,
 ) -> LinalgResult<QuantizationParams>
 where
@@ -1044,15 +1044,15 @@ where
     values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     // Calculate moving averages to find stable min/max
-    if values.len() <= window_size {
+    if values.len() <= windowsize {
         // Not enough data for moving average, fall back to min-max
         let min_val = *values.first().unwrap();
         let max_val = *values.last().unwrap();
         create_params_from_range(bits, min_val, max_val, symmetric)
     } else {
         // Calculate moving averages
-        let min_val = values.iter().take(window_size).sum::<f32>() / window_size as f32;
-        let max_val = values.iter().rev().take(window_size).sum::<f32>() / window_size as f32;
+        let min_val = values.iter().take(windowsize).sum::<f32>() / windowsize as f32;
+        let max_val = values.iter().rev().take(windowsize).sum::<f32>() / windowsize as f32;
 
         create_params_from_range(bits, min_val, max_val, symmetric)
     }
@@ -1505,7 +1505,7 @@ fn calculate_kl_divergence_asymmetric(
 
 /// Optimize symmetric scale factor using MSE
 #[allow(dead_code)]
-fn optimize_symmetric_scale<F>(_matrix: &ArrayView2<F>, bits: u8, basescale: f32) -> f32
+fn optimize_symmetric_scale<F>(matrix: &ArrayView2<F>, bits: u8, basescale: f32) -> f32
 where
     F: num_traits::Float + Debug + num_traits::AsPrimitive<f32> + num_traits::FromPrimitive,
     f32: num_traits::AsPrimitive<F>,
@@ -1524,12 +1524,12 @@ where
     // Test each scale factor
     for &scale in &scales {
         // Create temporary quantization parameters
-        let abs_max = _matrix
+        let abs_max = matrix
             .mapv(|x| x.as_().abs())
             .fold(0.0, |a: f32, &b| a.max(b));
         let params = QuantizationParams {
             bits,
-            scale: scale,
+            scale,
             zero_point: 0,
             min_val: -abs_max,
             max_val: abs_max,
@@ -1544,7 +1544,7 @@ where
         };
 
         // Manually simulate quantization and dequantization for F type
-        let matrix_f32 = _matrix.mapv(|x| x.as_());
+        let matrix_f32 = matrix.mapv(|x| x.as_());
         let current_scale = params.scale;
         let dequantized = matrix_f32.mapv(|x| {
             let quantized = (x / scale)
@@ -1554,7 +1554,7 @@ where
         });
 
         // Calculate MSE
-        let mse = (&matrix_f32 - &dequantized).mapv(|x| x * x).sum() / _matrix.len() as f32;
+        let mse = (&matrix_f32 - &dequantized).mapv(|x| x * x).sum() / matrix.len() as f32;
 
         if mse < min_mse {
             min_mse = mse;
@@ -1591,7 +1591,7 @@ where
             .fold(0.0, |a: f32, &b| a.max(b));
         let params = QuantizationParams {
             bits,
-            scale: scale,
+            scale,
             zero_point: 0,
             min_val: -abs_max,
             max_val: abs_max,

@@ -40,8 +40,8 @@ where
     let (sum, sum_sq, min_val, max_val) = if n > 32 {
         // SIMD path for large arrays
         let sum = F::simd_sum(&data.view());
-        let sq_data = F::simd_mul(&data.view(), &data.view());
-        let sum_sq = F::simd_sum(&sq_data.view());
+        let sqdata = F::simd_mul(&data.view(), &data.view());
+        let sum_sq = F::simd_sum(&sqdata.view());
         let min_val = F::simd_min_element(&data.view());
         let max_val = F::simd_max_element(&data.view());
         (sum, sum_sq, min_val, max_val)
@@ -141,7 +141,7 @@ pub struct ComprehensiveStats<F> {
 #[allow(dead_code)]
 pub fn sliding_window_stats_simd<F>(
     data: &ArrayView1<F>,
-    window_size: usize,
+    windowsize: usize,
 ) -> StatsResult<SlidingWindowStats<F>>
 where
     F: Float
@@ -154,37 +154,37 @@ where
         + num_traits::FromPrimitive,
 {
     checkarray_finite(data, "data")?;
-    check_positive(window_size, "window_size")?;
+    check_positive(windowsize, "windowsize")?;
 
-    if window_size > data.len() {
+    if windowsize > data.len() {
         return Err(StatsError::InvalidArgument(
-            "Window _size cannot be larger than data length".to_string(),
+            "Window size cannot be larger than data length".to_string(),
         ));
     }
 
-    let n_windows = data.len() - window_size + 1;
+    let n_windows = data.len() - windowsize + 1;
     let mut means = Array1::zeros(n_windows);
     let mut variances = Array1::zeros(n_windows);
     let mut mins = Array1::zeros(n_windows);
     let mut maxs = Array1::zeros(n_windows);
 
-    let window_size_f = F::from(window_size).unwrap();
+    let windowsize_f = F::from(windowsize).unwrap();
 
     // Process each window
     for i in 0..n_windows {
-        let window = data.slice(ndarray::s![i..i + window_size]);
+        let window = data.slice(ndarray::s![i..i + windowsize]);
 
         // Use SIMD for window statistics if window is large enough
-        if window_size > 16 {
+        if windowsize > 16 {
             let sum = F::simd_sum(&window);
-            let mean = sum / window_size_f;
+            let mean = sum / windowsize_f;
             means[i] = mean;
 
-            let sq_data = F::simd_mul(&window, &window);
-            let sum_sq = F::simd_sum(&sq_data.view());
-            let variance = if window_size > 1 {
-                let n_minus_1 = F::from(window_size - 1).unwrap();
-                (sum_sq - sum * sum / window_size_f) / n_minus_1
+            let sqdata = F::simd_mul(&window, &window);
+            let sum_sq = F::simd_sum(&sqdata.view());
+            let variance = if windowsize > 1 {
+                let n_minus_1 = F::from(windowsize - 1).unwrap();
+                (sum_sq - sum * sum / windowsize_f) / n_minus_1
             } else {
                 F::zero()
             };
@@ -195,13 +195,13 @@ where
         } else {
             // Scalar fallback for small windows
             let sum: F = window.iter().copied().sum();
-            let mean = sum / window_size_f;
+            let mean = sum / windowsize_f;
             means[i] = mean;
 
             let sum_sq: F = window.iter().map(|&x| x * x).sum();
-            let variance = if window_size > 1 {
-                let n_minus_1 = F::from(window_size - 1).unwrap();
-                (sum_sq - sum * sum / window_size_f) / n_minus_1
+            let variance = if windowsize > 1 {
+                let n_minus_1 = F::from(windowsize - 1).unwrap();
+                (sum_sq - sum * sum / windowsize_f) / n_minus_1
             } else {
                 F::zero()
             };
@@ -213,7 +213,7 @@ where
     }
 
     Ok(SlidingWindowStats {
-        window_size,
+        windowsize,
         means,
         variances,
         mins,
@@ -224,7 +224,7 @@ where
 /// Sliding window statistics structure
 #[derive(Debug, Clone)]
 pub struct SlidingWindowStats<F> {
-    pub window_size: usize,
+    pub windowsize: usize,
     pub means: Array1<F>,
     pub variances: Array1<F>,
     pub mins: Array1<F>,
@@ -271,18 +271,18 @@ where
         data.mean_axis(Axis(0)).unwrap()
     };
 
-    // Center the _data
-    let mut centered_data = Array2::zeros((n_samples_, n_features));
+    // Center the data
+    let mut centereddata = Array2::zeros((n_samples_, n_features));
     for j in 0..n_features {
         let column = data.column(j);
         let mean_vec = Array1::from_elem(n_samples_, means[j]);
 
         if n_samples_ > 32 {
             let centered_column = F::simd_sub(&column, &mean_vec.view());
-            centered_data.column_mut(j).assign(&centered_column);
+            centereddata.column_mut(j).assign(&centered_column);
         } else {
             for i in 0..n_samples_ {
-                centered_data[(i, j)] = column[i] - means[j];
+                centereddata[(i, j)] = column[i] - means[j];
             }
         }
     }
@@ -293,8 +293,8 @@ where
 
     for i in 0..n_features {
         for j in i..n_features {
-            let col_i = centered_data.column(i);
-            let col_j = centered_data.column(j);
+            let col_i = centereddata.column(i);
+            let col_j = centereddata.column(j);
 
             let covariance = if n_samples_ > 32 {
                 let products = F::simd_mul(&col_i, &col_j);
@@ -342,21 +342,21 @@ where
         }
     }
 
-    // Sort _data for quantile computation
-    let mut sorted_data = data.to_owned();
-    sorted_data
+    // Sort data for quantile computation
+    let mut sorteddata = data.to_owned();
+    sorteddata
         .as_slice_mut()
         .unwrap()
         .sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-    let n = sorted_data.len();
+    let n = sorteddata.len();
     let mut results = Array1::zeros(quantiles.len());
 
     for (i, &q) in quantiles.iter().enumerate() {
         if q == 0.0 {
-            results[i] = sorted_data[0];
+            results[i] = sorteddata[0];
         } else if q == 1.0 {
-            results[i] = sorted_data[n - 1];
+            results[i] = sorteddata[n - 1];
         } else {
             // Linear interpolation for quantiles
             let pos = q * (n - 1) as f64;
@@ -364,8 +364,8 @@ where
             let upper_idx = (lower_idx + 1).min(n - 1);
             let weight = F::from(pos - lower_idx as f64).unwrap();
 
-            let lower_val = sorted_data[lower_idx];
-            let upper_val = sorted_data[upper_idx];
+            let lower_val = sorteddata[lower_idx];
+            let upper_val = sorteddata[upper_idx];
 
             results[i] = lower_val + weight * (upper_val - lower_val);
         }
@@ -599,21 +599,21 @@ where
         ));
     }
 
-    // Sort _data for median computation
-    let mut sorted_data = data.to_owned();
-    sorted_data
+    // Sort data for median computation
+    let mut sorteddata = data.to_owned();
+    sorteddata
         .as_slice_mut()
         .unwrap()
         .sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-    let n = sorted_data.len();
+    let n = sorteddata.len();
 
     // Compute median
     let median = if n % 2 == 1 {
-        sorted_data[n / 2]
+        sorteddata[n / 2]
     } else {
-        let mid1 = sorted_data[n / 2 - 1];
-        let mid2 = sorted_data[n / 2];
+        let mid1 = sorteddata[n / 2 - 1];
+        let mid2 = sorteddata[n / 2];
         (mid1 + mid2) / F::from(2.0).unwrap()
     };
 
@@ -652,8 +652,8 @@ where
     // Compute robust range (IQR)
     let q1_idx = (n as f64 * 0.25) as usize;
     let q3_idx = (n as f64 * 0.75) as usize;
-    let q1 = sorted_data[q1_idx.min(n - 1)];
-    let q3 = sorted_data[q3_idx.min(n - 1)];
+    let q1 = sorteddata[q1_idx.min(n - 1)];
+    let q3 = sorteddata[q3_idx.min(n - 1)];
     let iqr = q3 - q1;
 
     Ok(RobustStats {
@@ -663,8 +663,8 @@ where
         q1,
         q3,
         iqr,
-        min: sorted_data[0],
-        max: sorted_data[n - 1],
+        min: sorteddata[0],
+        max: sorteddata[n - 1],
     })
 }
 

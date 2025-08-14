@@ -24,7 +24,7 @@ fn main() {
     demo_basic_derivatives();
 
     // Example 2: Matrix operations
-    demo_matrix_operations();
+    demomatrix_operations();
 
     // Example 3: Linear algebra operations
     demo_linalg_ops();
@@ -70,7 +70,7 @@ fn demo_basic_derivatives() {
 
 #[cfg(feature = "autograd")]
 #[allow(dead_code)]
-fn demo_matrix_operations() {
+fn demomatrix_operations() {
     println!("2. Matrix Operations");
     println!("-------------------");
 

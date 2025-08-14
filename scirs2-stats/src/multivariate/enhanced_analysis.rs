@@ -43,7 +43,7 @@ pub enum PCAAlgorithm {
     /// Incremental PCA for streaming data
     Incremental {
         /// Batch size
-        batch_size: usize,
+        batchsize: usize,
     },
     /// Sparse PCA with L1 regularization
     Sparse {
@@ -133,7 +133,7 @@ where
     /// Create new enhanced PCA analyzer
     pub fn new(algorithm: PCAAlgorithm, config: PCAConfig) -> Self {
         Self {
-            algorithm: algorithm,
+            algorithm,
             config,
             results: None,
             _phantom: PhantomData,
@@ -167,28 +167,28 @@ where
         }
 
         // Preprocess data
-        let (preprocessed_data, mean, scale) = self.preprocess_data(data)?;
+        let (preprocesseddata, mean, scale) = self.preprocessdata(data)?;
 
         // Compute PCA based on algorithm
         let results = match &self.algorithm {
-            PCAAlgorithm::SVD => self.fit_svd(&preprocessed_data, n_components, mean, scale)?,
-            PCAAlgorithm::Eigen => self.fit_eigen(&preprocessed_data, n_components, mean, scale)?,
+            PCAAlgorithm::SVD => self.fit_svd(&preprocesseddata, n_components, mean, scale)?,
+            PCAAlgorithm::Eigen => self.fit_eigen(&preprocesseddata, n_components, mean, scale)?,
             PCAAlgorithm::Randomized {
                 n_iter,
                 n_oversamples,
             } => self.fit_randomized(
-                &preprocessed_data,
+                &preprocesseddata,
                 n_components,
                 *n_iter,
                 *n_oversamples,
                 mean,
                 scale,
             )?,
-            PCAAlgorithm::Incremental { batch_size } => {
-                self.fit_incremental(&preprocessed_data, n_components, *batch_size, mean, scale)?
+            PCAAlgorithm::Incremental { batchsize } => {
+                self.fit_incremental(&preprocesseddata, n_components, *batchsize, mean, scale)?
             }
             PCAAlgorithm::Sparse { alpha, max_iter } => self.fit_sparse(
-                &preprocessed_data,
+                &preprocesseddata,
                 n_components,
                 *alpha,
                 *max_iter,
@@ -196,7 +196,7 @@ where
                 scale,
             )?,
             PCAAlgorithm::Robust { lambda, max_iter } => self.fit_robust(
-                &preprocessed_data,
+                &preprocesseddata,
                 n_components,
                 *lambda,
                 *max_iter,
@@ -210,11 +210,11 @@ where
     }
 
     /// Preprocess data (center and scale)
-    fn preprocess_data(
+    fn preprocessdata(
         &self,
         data: &ArrayView2<F>,
     ) -> StatsResult<(Array2<F>, Array1<F>, Option<Array1<F>>)> {
-        let mut processed_data = data.to_owned();
+        let mut processeddata = data.to_owned();
         let n_features = data.ncols();
 
         // Compute mean
@@ -222,7 +222,7 @@ where
             let mean = data.mean_axis(Axis(0)).unwrap();
 
             // Center data
-            for mut row in processed_data.rows_mut() {
+            for mut row in processeddata.rows_mut() {
                 for (i, &m) in mean.iter().enumerate() {
                     row[i] = row[i] - m;
                 }
@@ -237,7 +237,7 @@ where
         let scale = if self.config.scale {
             let mut std_dev = Array1::zeros(n_features);
 
-            for (j, mut col) in processed_data.columns_mut().into_iter().enumerate() {
+            for (j, mut col) in processeddata.columns_mut().into_iter().enumerate() {
                 let var = col.mapv(|x| x * x).mean().unwrap();
                 std_dev[j] = var.sqrt();
 
@@ -253,7 +253,7 @@ where
             None
         };
 
-        Ok((processed_data, mean, scale))
+        Ok((processeddata, mean, scale))
     }
 
     /// Standard SVD-based PCA
@@ -411,7 +411,7 @@ where
         &self,
         data: &Array2<F>,
         n_components: usize,
-        _batch_size: usize,
+        _batchsize: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -467,11 +467,11 @@ where
         }
 
         // Apply same preprocessing as during fit
-        let mut processed_data = data.to_owned();
+        let mut processeddata = data.to_owned();
 
         // Center
         if self.config.center {
-            for mut row in processed_data.rows_mut() {
+            for mut row in processeddata.rows_mut() {
                 for (i, &m) in results.mean.iter().enumerate() {
                     row[i] = row[i] - m;
                 }
@@ -480,7 +480,7 @@ where
 
         // Scale
         if let Some(ref scale) = results.scale {
-            for (j, mut col) in processed_data.columns_mut().into_iter().enumerate() {
+            for (j, mut col) in processeddata.columns_mut().into_iter().enumerate() {
                 if scale[j] > F::from(1e-12).unwrap() {
                     for x in col.iter_mut() {
                         *x = *x / scale[j];
@@ -490,7 +490,7 @@ where
         }
 
         // Project onto principal components
-        let transformed = processed_data.dot(&results.components.t());
+        let transformed = processeddata.dot(&results.components.t());
 
         Ok(transformed)
     }
@@ -502,23 +502,23 @@ where
     }
 
     /// Inverse transform from principal component space
-    pub fn inverse_transform(&self, transformed_data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
+    pub fn inverse_transform(&self, transformeddata: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         let results = self.results.as_ref().ok_or_else(|| {
             StatsError::InvalidArgument("PCA must be fitted before inverse_transform".to_string())
         })?;
 
-        checkarray_finite(transformed_data, "transformed_data")?;
+        checkarray_finite(transformeddata, "transformeddata")?;
 
-        if transformed_data.ncols() != results.n_components {
+        if transformeddata.ncols() != results.n_components {
             return Err(StatsError::DimensionMismatch(format!(
                 "Transformed data columns ({}) must match n_components ({})",
-                transformed_data.ncols(),
+                transformeddata.ncols(),
                 results.n_components
             )));
         }
 
         // Project back to original space
-        let mut reconstructed = transformed_data.dot(&results.components);
+        let mut reconstructed = transformeddata.dot(&results.components);
 
         // Reverse scaling
         if let Some(ref scale) = results.scale {
@@ -664,10 +664,10 @@ where
         }
 
         // Standardize data
-        let standardized_data = self.standardize_data(data)?;
+        let standardizeddata = self.standardizedata(data)?;
 
         // Compute correlation matrix
-        let corr_matrix = self.compute_correlation_matrix(&standardized_data)?;
+        let corr_matrix = self.compute_correlation_matrix(&standardizeddata)?;
 
         // Extract initial factor loadings using PCA
         let mut loadings = self.initial_loadings(&corr_matrix)?;
@@ -711,7 +711,7 @@ where
     }
 
     /// Standardize data
-    fn standardize_data(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
+    fn standardizedata(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         let mut standardized = data.to_owned();
 
         for mut col in standardized.columns_mut() {

@@ -1195,7 +1195,7 @@ impl<
         let few_shot_learner = FewShotLearner::new(&config.few_shot_settings)?;
 
         Ok(Self {
-            config: config,
+            config,
             meta_learner,
             task_manager,
             meta_validator,
@@ -1553,7 +1553,7 @@ impl<
         let adaptation_history = VecDeque::with_capacity(1000);
 
         Ok(Self {
-            config: config,
+            config,
             inner_optimizer,
             outer_optimizer,
             gradient_engine,

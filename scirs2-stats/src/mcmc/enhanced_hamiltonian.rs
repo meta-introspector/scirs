@@ -50,13 +50,13 @@ where
 #[derive(Debug, Clone)]
 pub struct EnhancedHMCConfig {
     /// Initial step size
-    pub initial_step_size: f64,
+    pub initial_stepsize: f64,
     /// Number of leapfrog steps
     pub num_leapfrog_steps: usize,
     /// Mass matrix adaptation strategy
     pub mass_adaptation: MassAdaptationStrategy,
     /// Step size adaptation strategy
-    pub step_size_adaptation: StepSizeAdaptationStrategy,
+    pub stepsize_adaptation: StepSizeAdaptationStrategy,
     /// Whether to use parallel leapfrog integration
     pub parallel_leapfrog: bool,
     /// Whether to use SIMD optimizations
@@ -72,10 +72,10 @@ pub struct EnhancedHMCConfig {
 impl Default for EnhancedHMCConfig {
     fn default() -> Self {
         Self {
-            initial_step_size: 0.01,
+            initial_stepsize: 0.01,
             num_leapfrog_steps: 10,
             mass_adaptation: MassAdaptationStrategy::Identity,
-            step_size_adaptation: StepSizeAdaptationStrategy::DualAveraging,
+            stepsize_adaptation: StepSizeAdaptationStrategy::DualAveraging,
             parallel_leapfrog: true,
             use_simd: true,
             target_accept_rate: 0.8,
@@ -126,7 +126,7 @@ pub struct EnhancedHamiltonianMonteCarlo<T, F> {
     /// Inverse mass matrix
     pub mass_inv: Array2<F>,
     /// Step size
-    pub step_size: F,
+    pub stepsize: F,
     /// Adaptation state
     pub adaptation_state: AdaptationState<F>,
     /// Statistics
@@ -140,13 +140,13 @@ pub struct AdaptationState<F> {
     /// Current adaptation iteration
     pub iteration: usize,
     /// Step size adaptation state
-    pub step_size_state: DualAveragingState,
+    pub stepsize_state: DualAveragingState,
     /// Mass matrix adaptation state
     pub mass_state: MassAdaptationState<F>,
     /// Sample buffer for adaptation
     pub sample_buffer: Vec<Array1<F>>,
     /// Buffer size
-    pub buffer_size: usize,
+    pub buffersize: usize,
 }
 
 /// Dual averaging state for step size adaptation
@@ -185,7 +185,7 @@ pub struct HMCStatistics {
     /// Number of acceptances
     pub n_acceptances: usize,
     /// Average step size
-    pub avg_step_size: f64,
+    pub avg_stepsize: f64,
     /// Average number of leapfrog steps
     pub avg_leapfrog_steps: f64,
     /// Energy errors
@@ -222,12 +222,12 @@ where
         let mass_matrix = Array2::eye(dim);
         let mass_inv = Array2::eye(dim);
         let current_log_density = target.log_density(&initial);
-        let step_size = F::from(config.initial_step_size).unwrap();
+        let stepsize = F::from(config.initial_stepsize).unwrap();
 
         let adaptation_state = AdaptationState {
             iteration: 0,
-            step_size_state: DualAveragingState {
-                log_step_avg: config.initial_step_size.ln(),
+            stepsize_state: DualAveragingState {
+                log_step_avg: config.initial_stepsize.ln(),
                 h_avg: 0.0,
                 target_accept: config.target_accept_rate,
                 gamma: 0.05,
@@ -240,7 +240,7 @@ where
                 n_samples_: 0,
             },
             sample_buffer: Vec::new(),
-            buffer_size: 100,
+            buffersize: 100,
         };
 
         Ok(Self {
@@ -250,7 +250,7 @@ where
             config,
             mass_matrix,
             mass_inv,
-            step_size,
+            stepsize,
             adaptation_state,
             stats: HMCStatistics::default(),
             _phantom: PhantomData,
@@ -322,10 +322,10 @@ where
         // Initial half step for momentum
         let gradient = self.target.gradient(&position);
         if self.config.use_simd && position.len() >= 4 {
-            let scaled_gradient = gradient.mapv(|g| g * self.step_size * F::from(0.5).unwrap());
+            let scaled_gradient = gradient.mapv(|g| g * self.stepsize * F::from(0.5).unwrap());
             momentum = F::simd_add(&momentum.view(), &scaled_gradient.view());
         } else {
-            momentum = momentum + gradient.mapv(|g| g * self.step_size * F::from(0.5).unwrap());
+            momentum = momentum + gradient.mapv(|g| g * self.stepsize * F::from(0.5).unwrap());
         }
 
         // Alternating full steps
@@ -333,20 +333,20 @@ where
             // Full step for position
             let momentum_update = self.mass_inv.dot(&momentum);
             if self.config.use_simd && position.len() >= 4 {
-                let scaled_momentum = momentum_update.mapv(|m| m * self.step_size);
+                let scaled_momentum = momentum_update.mapv(|m| m * self.stepsize);
                 position = F::simd_add(&position.view(), &scaled_momentum.view());
             } else {
-                position = position + momentum_update.mapv(|m| m * self.step_size);
+                position = position + momentum_update.mapv(|m| m * self.stepsize);
             }
 
             // Full step for momentum (except last iteration)
             if self.config.num_leapfrog_steps > 1 {
                 let gradient = self.target.gradient(&position);
                 if self.config.use_simd && position.len() >= 4 {
-                    let scaled_gradient = gradient.mapv(|g| g * self.step_size);
+                    let scaled_gradient = gradient.mapv(|g| g * self.stepsize);
                     momentum = F::simd_add(&momentum.view(), &scaled_gradient.view());
                 } else {
-                    momentum = momentum + gradient.mapv(|g| g * self.step_size);
+                    momentum = momentum + gradient.mapv(|g| g * self.stepsize);
                 }
             }
         }
@@ -354,10 +354,10 @@ where
         // Final half step for momentum
         let gradient = self.target.gradient(&position);
         if self.config.use_simd && position.len() >= 4 {
-            let scaled_gradient = gradient.mapv(|g| g * self.step_size * F::from(0.5).unwrap());
+            let scaled_gradient = gradient.mapv(|g| g * self.stepsize * F::from(0.5).unwrap());
             momentum = F::simd_add(&momentum.view(), &scaled_gradient.view());
         } else {
-            momentum = momentum + gradient.mapv(|g| g * self.step_size * F::from(0.5).unwrap());
+            momentum = momentum + gradient.mapv(|g| g * self.stepsize * F::from(0.5).unwrap());
         }
 
         // Negate momentum for reversibility
@@ -395,15 +395,15 @@ where
             let metric_inv = scirs2_linalg::inv(&metric.view(), None)
                 .unwrap_or_else(|_| Array2::eye(position.len()));
 
-            momentum = momentum + gradient.mapv(|g| g * self.step_size * F::from(0.5).unwrap());
+            momentum = momentum + gradient.mapv(|g| g * self.stepsize * F::from(0.5).unwrap());
 
             // Update position using metric
             let velocity = metric_inv.dot(&momentum);
-            position = position + velocity.mapv(|v| v * self.step_size);
+            position = position + velocity.mapv(|v| v * self.stepsize);
 
             // Final momentum update
             let gradient = self.target.gradient(&position);
-            momentum = momentum + gradient.mapv(|g| g * self.step_size * F::from(0.5).unwrap());
+            momentum = momentum + gradient.mapv(|g| g * self.stepsize * F::from(0.5).unwrap());
         }
 
         Ok((position, momentum))
@@ -442,7 +442,7 @@ where
     /// Update adaptation parameters
     fn update_adaptation(&mut self, alpha: f64) -> StatsResult<()> {
         // Update step size using dual averaging
-        self.update_step_size_adaptation(alpha);
+        self.update_stepsize_adaptation(alpha);
 
         // Update mass matrix
         self.update_mass_adaptation()?;
@@ -451,8 +451,8 @@ where
     }
 
     /// Update step size adaptation
-    fn update_step_size_adaptation(&mut self, alpha: f64) {
-        let state = &mut self.adaptation_state.step_size_state;
+    fn update_stepsize_adaptation(&mut self, alpha: f64) {
+        let state = &mut self.adaptation_state.stepsize_state;
         let m = self.adaptation_state.iteration as f64 + 1.0;
 
         // Update H statistic
@@ -467,7 +467,7 @@ where
         state.log_step_avg = (1.0 - weight) * state.log_step_avg + weight * log_step;
 
         // Update step size
-        self.step_size = F::from(log_step.exp()).unwrap();
+        self.stepsize = F::from(log_step.exp()).unwrap();
     }
 
     /// Update mass matrix adaptation
@@ -478,7 +478,7 @@ where
         self.adaptation_state
             .sample_buffer
             .push(self.position.clone());
-        if self.adaptation_state.sample_buffer.len() > self.adaptation_state.buffer_size {
+        if self.adaptation_state.sample_buffer.len() > self.adaptation_state.buffersize {
             self.adaptation_state.sample_buffer.drain(0..1);
         }
 

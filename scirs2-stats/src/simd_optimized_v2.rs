@@ -16,7 +16,7 @@ use scirs2_core::validation::check_not_empty;
 #[derive(Debug, Clone, Copy)]
 pub struct SimdConfig {
     /// Minimum array size for SIMD to be beneficial
-    pub min_size: usize,
+    pub minsize: usize,
     /// Whether to use aligned loads/stores
     pub use_aligned: bool,
     /// Maximum unroll factor
@@ -27,10 +27,10 @@ impl Default for SimdConfig {
     fn default() -> Self {
         // Use conservative defaults for cross-platform compatibility
         // TODO: Implement proper platform capability detection when available
-        let min_size = 128; // Conservative threshold for SIMD benefits
+        let minsize = 128; // Conservative threshold for SIMD benefits
 
         Self {
-            min_size,
+            minsize,
             use_aligned: true, // Enable alignment for better performance
             unroll_factor: 4,  // Standard unroll factor
         }
@@ -58,7 +58,7 @@ where
     let config = config.unwrap_or_default();
     let n = x.len();
 
-    if n < config.min_size {
+    if n < config.minsize {
         // Small arrays: use scalar code
         let sum = x.iter().fold(F::zero(), |acc, &val| acc + val);
         return Ok(sum / F::from(n).unwrap());
@@ -91,7 +91,7 @@ where
 
     let config = config.unwrap_or_default();
 
-    if n < config.min_size {
+    if n < config.minsize {
         // Small arrays: use scalar Welford's algorithm
         return variance_scalar_welford(x, ddof);
     }
@@ -125,7 +125,7 @@ where
     let n = x.len();
     let n_f = F::from(n).unwrap();
 
-    if n < config.min_size {
+    if n < config.minsize {
         // Use scalar single-pass algorithm
         return stats_scalar_single_pass(x);
     }

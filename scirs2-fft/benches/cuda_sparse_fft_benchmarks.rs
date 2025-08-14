@@ -1,8 +1,8 @@
 use criterion::{black_box, criterion_group, criterion_main, Bencher, Criterion};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use rand__distr::{Distribution, Normal};
-use scirs2__fft::{
+use rand_distr::{Distribution, Normal};
+use scirs2_fft::{
     sparse_fft::sparse_fft,
     sparse_fft::{SparseFFTAlgorithm, WindowFunction},
     sparse_fft_gpu::GPUBackend,

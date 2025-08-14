@@ -195,7 +195,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         Self {
             forward_engine: ForwardModeEngine::new(),
             reverse_engine: ReverseModeEngine::new(),
-            _maxorder: _maxorder,
+            _maxorder,
             mixed_mode: true,
             derivative_cache: HashMap::new(),
             finite_diff_eps: T::from(1e-5).unwrap(),

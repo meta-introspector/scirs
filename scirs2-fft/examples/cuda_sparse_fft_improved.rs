@@ -3,8 +3,8 @@
 //! This example demonstrates the improved CUDA integration with proper memory management
 //! and GPU acceleration for sparse FFT algorithms.
 
-use num__complex::Complex64;
-use scirs2__fft::{
+use num_complex::Complex64;
+use scirs2_fft::{
     sparse_fft::{SparseFFTAlgorithm, WindowFunction},
     sparse_fft_gpu_cuda::cuda_sparse_fft,
     sparse_fft_gpu_memory::is_cuda_available,

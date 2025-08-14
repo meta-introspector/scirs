@@ -121,13 +121,13 @@ impl FactorAnalysis {
 
         // Center the data
         let mean = data.mean_axis(Axis(0)).unwrap();
-        let mut centered_data = data.to_owned();
-        for mut row in centered_data.rows_mut() {
+        let mut centereddata = data.to_owned();
+        for mut row in centereddata.rows_mut() {
             row -= &mean;
         }
 
         // Initialize parameters
-        let (mut loadings, mut psi) = self.initialize_parameters(&centered_data)?;
+        let (mut loadings, mut psi) = self.initialize_parameters(&centereddata)?;
 
         let mut prev_log_likelihood = f64::NEG_INFINITY;
         let mut n_iter = 0;
@@ -135,14 +135,14 @@ impl FactorAnalysis {
         // EM algorithm
         for iteration in 0..self.max_iter {
             // E-step: compute expected sufficient statistics
-            let (e_h, e_hht) = self.e_step(&centered_data, &loadings, &psi)?;
+            let (e_h, e_hht) = self.e_step(&centereddata, &loadings, &psi)?;
 
             // M-step: update parameters
-            let (new_loadings, new_psi) = self.m_step(&centered_data, &e_h, &e_hht)?;
+            let (new_loadings, new_psi) = self.m_step(&centereddata, &e_h, &e_hht)?;
 
             // Compute log-likelihood
             let log_likelihood =
-                self.compute_log_likelihood(&centered_data, &new_loadings, &new_psi)?;
+                self.compute_log_likelihood(&centereddata, &new_loadings, &new_psi)?;
 
             // Check convergence
             if (log_likelihood - prev_log_likelihood).abs() < self.tol {
@@ -173,7 +173,7 @@ impl FactorAnalysis {
         };
 
         // Compute factor scores
-        let scores = self.compute_factor_scores(&centered_data, &rotated_loadings, &psi)?;
+        let scores = self.compute_factor_scores(&centereddata, &rotated_loadings, &psi)?;
 
         // Compute explained variance and communalities
         let explained_variance_ratio = self.compute_explained_variance(&rotated_loadings);
@@ -181,7 +181,7 @@ impl FactorAnalysis {
 
         // Final log-likelihood
         let final_log_likelihood =
-            self.compute_log_likelihood(&centered_data, &rotated_loadings, &psi)?;
+            self.compute_log_likelihood(&centereddata, &rotated_loadings, &psi)?;
 
         Ok(FactorAnalysisResult {
             loadings: rotated_loadings,
@@ -574,7 +574,7 @@ pub mod efa {
 
         for _ in 0..n_simulations {
             // Generate random normal data with same dimensions
-            let mut random_data = Array2::zeros((n_samples, n_features));
+            let mut randomdata = Array2::zeros((n_samples, n_features));
             use rand_distr::{Distribution, Normal};
             let normal = Normal::new(0.0, 1.0).map_err(|e| {
                 StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
@@ -582,11 +582,11 @@ pub mod efa {
 
             for i in 0..n_samples {
                 for j in 0..n_features {
-                    random_data[[i, j]] = normal.sample(&mut rng);
+                    randomdata[[i, j]] = normal.sample(&mut rng);
                 }
             }
 
-            let eigenvalues = compute_correlation_eigenvalues(random_data.view())?;
+            let eigenvalues = compute_correlation_eigenvalues(randomdata.view())?;
             simulated_eigenvalues.push(eigenvalues);
         }
 

@@ -188,8 +188,7 @@ where
                 continue;
             }
             for k in j + 1..nodes.len() {
-                if !graph.has_edge(&nodes[i], &nodes[k]) || !graph.has_edge(&nodes[j], &nodes[k])
-                {
+                if !graph.has_edge(&nodes[i], &nodes[k]) || !graph.has_edge(&nodes[j], &nodes[k]) {
                     continue;
                 }
                 for l in k + 1..nodes.len() {

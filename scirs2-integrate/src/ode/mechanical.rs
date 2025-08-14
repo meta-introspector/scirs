@@ -239,7 +239,7 @@ impl MechanicalIntegrator {
     /// Create a new mechanical integrator
     pub fn new(config: MechanicalConfig, properties: MechanicalProperties) -> Self {
         Self {
-            config: config,
+            config,
             properties,
             previous_state: None,
             energy_history: Vec::new(),

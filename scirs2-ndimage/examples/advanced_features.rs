@@ -197,8 +197,8 @@ fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
     let guided_result = simd_guided_filter(
         image.view(),
         image.view(), // using _image as its own guide
-        5,             // radius
-        0.01,          // epsilon
+        5,            // radius
+        0.01,         // epsilon
     )?;
     println!("Guided filter completed");
 

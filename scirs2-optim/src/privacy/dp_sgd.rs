@@ -708,20 +708,8 @@ impl P2AlgorithmState {
         Self {
             markers: [0.0; 5],
             values: [0.0; 5],
-            desired_positions: [
-                0.0,
-                quantile / 2.0,
-                quantile,
-                (1.0 + quantile) / 2.0,
-                1.0,
-            ],
-            increments: [
-                0.0,
-                quantile / 2.0,
-                quantile,
-                (1.0 + quantile) / 2.0,
-                1.0,
-            ],
+            desired_positions: [0.0, quantile / 2.0, quantile, (1.0 + quantile) / 2.0, 1.0],
+            increments: [0.0, quantile / 2.0, quantile, (1.0 + quantile) / 2.0, 1.0],
             count: 0,
         }
     }

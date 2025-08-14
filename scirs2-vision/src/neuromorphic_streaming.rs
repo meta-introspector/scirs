@@ -68,7 +68,7 @@ impl SpikingNeuron {
 
     /// Update neuron state using leaky integrate-and-fire model
     pub fn update(&mut self, dt: f64, inputcurrent: f64) -> bool {
-        self.input_current = input_current;
+        self.input_current = inputcurrent;
         self.time_since_spike += dt;
 
         // Check if in refractory period
@@ -82,7 +82,7 @@ impl SpikingNeuron {
 
         // Integrate membrane potential using Euler method
         let leak_current = (self.resting_potential - self.membrane_potential) / self.tau_membrane;
-        let dvdt = leak_current + input_current;
+        let dvdt = leak_current + inputcurrent;
         self.membrane_potential += dvdt * dt;
 
         // Check for spike
@@ -187,7 +187,7 @@ impl Default for STDPParameters {
 
 impl PlasticSynapse {
     /// Create a new plastic synapse
-    pub fn new(_pre_id: usize, post_id: usize, initialweight: f64) -> Self {
+    pub fn new(pre_id: usize, post_id: usize, initialweight: f64) -> Self {
         Self {
             _weight: initialweight,
             pre_neuron_id: pre_id,
@@ -268,14 +268,14 @@ pub struct SpikeEvent {
 
 impl SpikingNeuralNetwork {
     /// Create a new spiking neural network
-    pub fn new(_num_neurons: usize, connectivityprobability: f64) -> Self {
-        let mut _neurons = Vec::with_capacity(_num_neurons);
+    pub fn new(num_neurons: usize, connectivityprobability: f64) -> Self {
+        let mut neurons = Vec::with_capacity(num_neurons);
         let mut synapses = Vec::new();
         let mut connectivity = HashMap::new();
         let mut rng = rng();
 
-        // Initialize _neurons
-        for _ in 0.._num_neurons {
+        // Initialize neurons
+        for _ in 0..num_neurons {
             neurons.push(SpikingNeuron::new());
         }
 
@@ -1246,7 +1246,7 @@ mod tests {
         let mut detector = NeuromorphicEdgeDetector::new(64);
 
         let frame = Frame {
-            data: Array2::fromshape_fn((8, 8), |(_y, x)| if x > 4 { 1.0 } else { 0.0 }),
+            data: Array2::from_shape_fn((8, 8), |(_y, x)| if x > 4 { 1.0 } else { 0.0 }),
             timestamp: Instant::now(),
             index: 0,
             metadata: Some(FrameMetadata {
@@ -1277,7 +1277,7 @@ mod tests {
         };
 
         let frame2 = Frame {
-            data: Array2::fromshape_fn((10, 10), |(y_x)| if y == 5 { 1.0 } else { 0.0 }),
+            data: Array2::from_shape_fn((10, 10), |(y_x)| if y == 5 { 1.0 } else { 0.0 }),
             timestamp: Instant::now(),
             index: 1,
             metadata: None,
@@ -1300,7 +1300,7 @@ mod tests {
         let mut pipeline = AdaptiveNeuromorphicPipeline::new(64);
 
         let frame = Frame {
-            data: Array2::fromshape_fn((8, 8), |(y, x)| (x + y) as f32 / 16.0),
+            data: Array2::from_shape_fn((8, 8), |(y, x)| (x + y) as f32 / 16.0),
             timestamp: Instant::now(),
             index: 0,
             metadata: None,

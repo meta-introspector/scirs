@@ -6,7 +6,7 @@
 //! Run with: cargo run --example visualization_demo --features plotting
 
 #[cfg(feature = "plotting")]
-use scirs2__special::visualization::{
+use scirs2_special::visualization::{
     bessel_plots, error_function_plots,
     export::{export_plot_data, ExportFormat},
     gamma_plots, polynomial_plots, MultiPlot, PlotConfig,
@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(feature = "plotting")]
 #[allow(dead_code)]
 fn create_custom_plot() -> Result<(), Box<dyn std::error::Error>> {
-    use scirs2__special::{ai, bi, ci, si};
+    use scirs2_special::{ai, bi, ci, si};
 
     let config = PlotConfig {
         title: "Special Functions Comparison".to_string(),
@@ -94,7 +94,7 @@ fn create_custom_plot() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(feature = "plotting")]
 #[allow(dead_code)]
 fn export_examples() -> Result<(), Box<dyn std::error::Error>> {
-    use scirs2__special::gamma;
+    use scirs2_special::gamma;
 
     // Export gamma function data as CSV
     let csv_data = export_plot_data(|x| gamma(x), (0.1, 5.0), 100, ExportFormat::CSV)?;

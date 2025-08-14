@@ -296,11 +296,11 @@ pub enum CpuArchitecture {
 /// Cache hierarchy information
 #[derive(Debug, Clone)]
 pub struct CacheHierarchy {
-    pub l1_data_kb: usize,
+    pub l1data_kb: usize,
     pub l1_instruction_kb: usize,
     pub l2_kb: usize,
     pub l3_kb: usize,
-    pub cache_line_size: usize,
+    pub cache_linesize: usize,
     pub associativity: HashMap<String, usize>,
 }
 
@@ -471,7 +471,7 @@ pub struct NumaManager {
 pub struct NumaNode {
     pub node_id: usize,
     pub cpu_cores: Vec<usize>,
-    pub memory_size_gb: f64,
+    pub memorysize_gb: f64,
     pub memory_bandwidth_gbps: f64,
     pub inter_node_latency_ns: HashMap<usize, f64>,
 }
@@ -493,7 +493,7 @@ impl AdvancedSimdOptimizer {
         let memory_manager = Self::create_memory_manager(&config, &hardware_profile);
 
         Self {
-            config: config,
+            config,
             performance_cache: Arc::new(RwLock::new(HashMap::new())),
             hardware_profile,
             algorithm_selector,
@@ -520,12 +520,12 @@ impl AdvancedSimdOptimizer {
         }
 
         // Analyze data characteristics
-        let characteristics = self.analyze_data_characteristics(x);
+        let characteristics = self.analyzedata_characteristics(x);
 
         // Create operation signature
         let signature = OperationSignature {
             operation_type: "mean".to_string(),
-            size_bucket: Self::categorize_size(x.len()),
+            size_bucket: Self::categorizesize(x.len()),
             data_type: std::any::type_name::<F>().to_string(),
             data_characteristics: characteristics,
         };
@@ -569,17 +569,17 @@ impl AdvancedSimdOptimizer {
 
         let n = x.len();
         if n <= ddof {
-            return Err(ErrorMessages::insufficient_data(
+            return Err(ErrorMessages::insufficientdata(
                 "variance calculation",
                 ddof + 1,
                 n,
             ));
         }
 
-        let characteristics = self.analyze_data_characteristics(x);
+        let characteristics = self.analyzedata_characteristics(x);
         let signature = OperationSignature {
             operation_type: "variance".to_string(),
-            size_bucket: Self::categorize_size(n),
+            size_bucket: Self::categorizesize(n),
             data_type: std::any::type_name::<F>().to_string(),
             data_characteristics: characteristics,
         };
@@ -633,7 +633,7 @@ impl AdvancedSimdOptimizer {
         let characteristics = self.analyze_bivariate_characteristics(x, y);
         let signature = OperationSignature {
             operation_type: "correlation".to_string(),
-            size_bucket: Self::categorize_size(x.len()),
+            size_bucket: Self::categorizesize(x.len()),
             data_type: std::any::type_name::<F>().to_string(),
             data_characteristics: characteristics,
         };
@@ -672,7 +672,7 @@ impl AdvancedSimdOptimizer {
         let characteristics = Self::analyze_matrix_characteristics(a, b);
         let signature = OperationSignature {
             operation_type: "matrix_multiply".to_string(),
-            size_bucket: Self::categorize_matrix_size(a.nrows() * a.ncols()),
+            size_bucket: Self::categorize_matrixsize(a.nrows() * a.ncols()),
             data_type: std::any::type_name::<F>().to_string(),
             data_characteristics: characteristics,
         };
@@ -707,11 +707,11 @@ impl AdvancedSimdOptimizer {
         }
 
         // Analyze batch characteristics
-        let batch_size = data.len();
-        let avg_array_size = data.iter().map(|arr| arr.len()).sum::<usize>() / batch_size;
+        let batchsize = data.len();
+        let avg_arraysize = data.iter().map(|arr| arr.len()).sum::<usize>() / batchsize;
 
         // Select batch processing strategy
-        let strategy = self.select_batch_strategy(batch_size, avg_array_size, operations)?;
+        let strategy = self.select_batch_strategy(batchsize, avg_arraysize, operations)?;
 
         // Execute batch operations
         self.execute_batch_operations(data, operations, &strategy)
@@ -739,11 +739,11 @@ impl AdvancedSimdOptimizer {
                 SimdInstructionSet::AVX2,
             ],
             cache_hierarchy: CacheHierarchy {
-                l1_data_kb: 32,
+                l1data_kb: 32,
                 l1_instruction_kb: 32,
                 l2_kb: 256,
                 l3_kb: 8192,
-                cache_line_size: 64,
+                cache_linesize: 64,
                 associativity: [
                     ("L1".to_string(), 8),
                     ("L2".to_string(), 8),
@@ -840,7 +840,7 @@ impl AdvancedSimdOptimizer {
             node_topology: vec![NumaNode {
                 node_id: 0,
                 cpu_cores: (0..num_cpus::get()).collect(),
-                memory_size_gb: 16.0,
+                memorysize_gb: 16.0,
                 memory_bandwidth_gbps: hardware.memory_subsystem.memory_bandwidth_gbps,
                 inter_node_latency_ns: HashMap::new(),
             }],
@@ -855,7 +855,7 @@ impl AdvancedSimdOptimizer {
     }
 
     /// Analyze data characteristics for optimization selection
-    fn analyze_data_characteristics<F, D>(&self, x: &ArrayBase<D, Ix1>) -> DataCharacteristics
+    fn analyzedata_characteristics<F, D>(&self, x: &ArrayBase<D, Ix1>) -> DataCharacteristics
     where
         F: Float + Copy + std::fmt::Display,
         D: Data<Elem = F>,
@@ -915,7 +915,7 @@ impl AdvancedSimdOptimizer {
         D2: Data<Elem = F>,
     {
         // For simplicity, analyze x and extend to bivariate
-        let x_chars = self.analyze_data_characteristics(x);
+        let x_chars = self.analyzedata_characteristics(x);
 
         // In a real implementation, would analyze correlation structure,
         // joint sparsity patterns, etc.
@@ -937,7 +937,7 @@ impl AdvancedSimdOptimizer {
     }
 
     /// Categorize data size for caching
-    fn categorize_size(size: usize) -> SizeBucket {
+    fn categorizesize(size: usize) -> SizeBucket {
         match size {
             s if s < 64 => SizeBucket::Tiny,
             s if s < 1024 => SizeBucket::Small,
@@ -948,8 +948,8 @@ impl AdvancedSimdOptimizer {
     }
 
     /// Categorize matrix size
-    fn categorize_matrix_size(_totalelements: usize) -> SizeBucket {
-        Self::categorize_size(_totalelements)
+    fn categorize_matrixsize(_totalelements: usize) -> SizeBucket {
+        Self::categorizesize(_totalelements)
     }
 
     /// Get cached performance profile
@@ -1325,11 +1325,11 @@ impl AdvancedSimdOptimizer {
             return self.execute_mean_algorithm(x, simd_choice);
         }
 
-        let chunk_size = (x.len() + thread_count - 1) / thread_count;
+        let chunksize = (x.len() + thread_count - 1) / thread_count;
 
         // Parallel computation using rayon
         let sum: F = x
-            .axis_chunks_iter(ndarray::Axis(0), chunk_size)
+            .axis_chunks_iter(ndarray::Axis(0), chunksize)
             .into_par_iter()
             .map(|chunk| F::simd_sum(&chunk))
             .sum();
@@ -1515,14 +1515,14 @@ impl AdvancedSimdOptimizer {
     /// Select batch processing strategy
     fn select_batch_strategy(
         &self,
-        batch_size: usize,
-        avg_array_size: usize,
+        batchsize: usize,
+        avg_arraysize: usize,
         _operations: &[BatchOperation],
     ) -> StatsResult<BatchStrategy> {
         // Simplified batch strategy selection
-        if batch_size < 10 {
+        if batchsize < 10 {
             Ok(BatchStrategy::Sequential)
-        } else if avg_array_size > 1000 {
+        } else if avg_arraysize > 1000 {
             Ok(BatchStrategy::ParallelArrays)
         } else {
             Ok(BatchStrategy::ParallelOperations)
@@ -1687,12 +1687,12 @@ mod tests {
     }
 
     #[test]
-    fn test_data_characteristics_analysis() {
+    fn testdata_characteristics_analysis() {
         let config = AdvancedSimdConfig::default();
         let optimizer = AdvancedSimdOptimizer::new(config);
 
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let characteristics = optimizer.analyze_data_characteristics(&data.view());
+        let characteristics = optimizer.analyzedata_characteristics(&data.view());
 
         assert!(matches!(
             characteristics.memory_layout,
@@ -1705,17 +1705,17 @@ mod tests {
     }
 
     #[test]
-    fn test_size_categorization() {
+    fn testsize_categorization() {
         assert!(matches!(
-            AdvancedSimdOptimizer::categorize_size(50),
+            AdvancedSimdOptimizer::categorizesize(50),
             SizeBucket::Tiny
         ));
         assert!(matches!(
-            AdvancedSimdOptimizer::categorize_size(500),
+            AdvancedSimdOptimizer::categorizesize(500),
             SizeBucket::Small
         ));
         assert!(matches!(
-            AdvancedSimdOptimizer::categorize_size(50000),
+            AdvancedSimdOptimizer::categorizesize(50000),
             SizeBucket::Medium
         ));
     }
@@ -1734,8 +1734,8 @@ mod tests {
         assert!((result - 1.0).abs() < 1e-10);
 
         // Test a case where naive summation would fail but Kahan succeeds
-        let challenging_data = array![1e8, 1.0, 1e8, -1e8, -1e8];
-        let challenging_result = optimizer.kahan_sum(&challenging_data.view());
+        let challengingdata = array![1e8, 1.0, 1e8, -1e8, -1e8];
+        let challenging_result = optimizer.kahan_sum(&challengingdata.view());
         assert!((challenging_result - 1.0).abs() < 1e-10);
     }
 

@@ -325,9 +325,7 @@ pub fn create_stochastic_options_for_problem(
             learning_rate: 0.001,
             max_iter: 1000,
             batch_size: Some(32.min(dataset_size / 10)),
-            lr_schedule: LearningRateSchedule::ExponentialDecay {
-                decay_rate: 0.99,
-            },
+            lr_schedule: LearningRateSchedule::ExponentialDecay { decay_rate: 0.99 },
             gradient_clip: Some(1.0),
             early_stopping_patience: Some(50),
             ..Default::default()
@@ -362,9 +360,7 @@ pub fn create_stochastic_options_for_problem(
             learning_rate: 0.01,
             max_iter: 1000,
             batch_size: Some(64.min(dataset_size / 5)),
-            lr_schedule: LearningRateSchedule::InverseTimeDecay {
-                decay_rate: 1.0,
-            },
+            lr_schedule: LearningRateSchedule::InverseTimeDecay { decay_rate: 1.0 },
             gradient_clip: Some(2.0),
             early_stopping_patience: Some(100),
             ..Default::default()

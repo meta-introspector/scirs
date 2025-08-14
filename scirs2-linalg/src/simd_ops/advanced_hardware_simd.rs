@@ -37,9 +37,9 @@ pub struct AdvancedHardwareCapabilities {
     pub has_i8mm: bool,
     
     // General capabilities
-    pub l1_cache_size: usize,
-    pub l2_cache_size: usize,
-    pub l3_cache_size: usize,
+    pub l1_cachesize: usize,
+    pub l2_cachesize: usize,
+    pub l3_cachesize: usize,
     pub simd_register_count: usize,
 }
 
@@ -72,9 +72,9 @@ impl AdvancedHardwareCapabilities {
             has_i8mm: cfg!(target_feature = "i8mm"),
             
             // Cache sizes (would be detected at runtime)
-            l1_cache_size: 32 * 1024,    // 32KB L1
-            l2_cache_size: 512 * 1024,   // 512KB L2
-            l3_cache_size: 8 * 1024 * 1024, // 8MB L3
+            l1_cachesize: 32 * 1024,    // 32KB L1
+            l2_cachesize: 512 * 1024,   // 512KB L2
+            l3_cachesize: 8 * 1024 * 1024, // 8MB L3
             
             // Register counts
             simd_register_count: if cfg!(target_arch = "x86_64") { 32 } else { 32 },
@@ -83,15 +83,15 @@ impl AdvancedHardwareCapabilities {
     
     /// Get optimal vector width in bytes for different precisions
     pub fn optimal_vector_width_for_type<T>(&self) -> usize {
-        let element_size = mem::size_of::<T>();
+        let elementsize = mem::size_of::<T>();
         
         if self.has_avx512f {
-            64 / element_size // 512 bits = 64 bytes
+            64 / elementsize // 512 bits = 64 bytes
         } else if self.has_sve {
             // SVE is scalable, typically 128-2048 bits
-            32 / element_size // Conservative estimate
+            32 / elementsize // Conservative estimate
         } else {
-            32 / element_size // AVX2/Neon: 256 bits = 32 bytes
+            32 / elementsize // AVX2/Neon: 256 bits = 32 bytes
         }
     }
     
@@ -104,7 +104,7 @@ impl AdvancedHardwareCapabilities {
         } else if self.has_sve {
             BlockingStrategy::SVE { vector_length: 256 } // Would be detected at runtime
         } else {
-            BlockingStrategy::Standard { block_size: 64 }
+            BlockingStrategy::Standard { blocksize: 64 }
         }
     }
 }
@@ -112,7 +112,7 @@ impl AdvancedHardwareCapabilities {
 /// Blocking strategies for different hardware architectures
 #[derive(Debug, Clone)]
 pub enum BlockingStrategy {
-    Standard { block_size: usize },
+    Standard { blocksize: usize },
     AVX512 { block_m: usize, block_n: usize, block_k: usize },
     SVE { vector_length: usize },
     AMXTiling { tile_m: usize, tile_n: usize, tile_k: usize },
@@ -732,17 +732,17 @@ impl Default for AdaptiveSIMDDispatcher {
 
 /// Advanced ENHANCEMENT 7: Memory Prefetching and Cache Optimization
 pub struct CacheOptimizedOperations {
-    l1_block_size: usize,
-    l2_block_size: usize,
-    l3_block_size: usize,
+    l1_blocksize: usize,
+    l2_blocksize: usize,
+    l3_blocksize: usize,
 }
 
 impl CacheOptimizedOperations {
     pub fn new(capabilities: &AdvancedHardwareCapabilities) -> Self {
         Self {
-            l1_block_size: (_capabilities.l1_cache_size / 8).next_power_of_two().min(256),
-            l2_block_size: (_capabilities.l2_cache_size / 8).next_power_of_two().min(2048),
-            l3_block_size: (_capabilities.l3_cache_size / 8).next_power_of_two().min(8192),
+            l1_blocksize: (_capabilities.l1_cachesize / 8).next_power_of_two().min(256),
+            l2_blocksize: (_capabilities.l2_cachesize / 8).next_power_of_two().min(2048),
+            l3_blocksize: (_capabilities.l3_cachesize / 8).next_power_of_two().min(8192),
         }
     }
     
@@ -754,16 +754,16 @@ impl CacheOptimizedOperations {
         let (rows, cols) = input.dim();
         let mut output = Array2::zeros((cols, rows));
         
-        let tile_size = self.l1_block_size.min(64);
+        let tilesize = self.l1_blocksize.min(64);
         
-        for i in (0..rows).step_by(tile_size) {
-            for j in (0..cols).step_by(tile_size) {
-                let i_end = (i + tile_size).min(rows);
-                let j_end = (j + tile_size).min(cols);
+        for i in (0..rows).step_by(tilesize) {
+            for j in (0..cols).step_by(tilesize) {
+                let i_end = (i + tilesize).min(rows);
+                let j_end = (j + tilesize).min(cols);
                 
                 // Prefetch next tiles
-                if i + 2 * tile_size < rows {
-                    self.prefetch_memory(input.as_ptr(), (i + 2 * tile_size) * cols + j);
+                if i + 2 * tilesize < rows {
+                    self.prefetch_memory(input.as_ptr(), (i + 2 * tilesize) * cols + j);
                 }
                 
                 // Transpose tile
@@ -810,7 +810,7 @@ mod tests {
         // Test blocking strategy
         let strategy = caps.optimal_blocking_strategy();
         match strategy {
-            BlockingStrategy::Standard { block_size } => assert!(block_size > 0),
+            BlockingStrategy::Standard { blocksize } => assert!(blocksize > 0),
             BlockingStrategy::AVX512 { block_m, block_n, block_k } => {
                 assert!(block_m > 0 && block_n > 0 && block_k > 0);
             },

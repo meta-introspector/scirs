@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdvancedStreamingConfig {
     /// Default window size for streaming operations
-    pub default_window_size: usize,
+    pub default_windowsize: usize,
     /// Enable adaptive windowing based on data characteristics
     pub adaptive_windowing: bool,
     /// Maximum memory usage for buffering (bytes)
@@ -47,7 +47,7 @@ pub struct AdvancedStreamingConfig {
 impl Default for AdvancedStreamingConfig {
     fn default() -> Self {
         Self {
-            default_window_size: 1000,
+            default_windowsize: 1000,
             adaptive_windowing: true,
             max_buffer_memory: 100 * 1024 * 1024, // 100MB
             change_point_detection: true,
@@ -76,8 +76,8 @@ pub enum WindowingStrategy {
     TimeBased { duration: Duration },
     /// Adaptive windowing based on data characteristics
     Adaptive {
-        min_size: usize,
-        max_size: usize,
+        minsize: usize,
+        maxsize: usize,
         adaptation_rate: f64,
     },
     /// Event-driven windowing
@@ -90,7 +90,7 @@ pub enum StreamProcessingMode {
     /// Real-time processing with minimal latency
     RealTime,
     /// Micro-batch processing for higher throughput
-    MicroBatch { batch_size: usize },
+    MicroBatch { batchsize: usize },
     /// Adaptive mode switching based on load
     Adaptive,
     /// Event-driven processing
@@ -132,7 +132,7 @@ pub struct AdvancedAdvancedStreamingProcessor<F> {
 /// Change point detection using advanced algorithms
 pub struct ChangePointDetector<F> {
     algorithm: ChangePointAlgorithm,
-    window_data: VecDeque<F>,
+    windowdata: VecDeque<F>,
     threshold: f64,
     last_detection: Option<Instant>,
     _phantom: PhantomData<F>,
@@ -189,7 +189,7 @@ pub enum AnomalyType {
 pub struct IncrementalMLModel<F> {
     model_type: MLModelType,
     parameters: HashMap<String, F>,
-    training_data: VecDeque<Array1<F>>,
+    trainingdata: VecDeque<Array1<F>>,
     model_performance: ModelPerformance<F>,
     _phantom: PhantomData<F>,
 }
@@ -224,7 +224,7 @@ pub struct ModelPerformance<F> {
 pub struct CompressionEngine<F> {
     algorithm: CompressionAlgorithm,
     compression_ratio: f64,
-    historical_data: VecDeque<CompressedDataPoint<F>>,
+    historicaldata: VecDeque<CompressedDataPoint<F>>,
     metadata: CompressionMetadata,
     _phantom: PhantomData<F>,
 }
@@ -236,7 +236,7 @@ pub enum CompressionAlgorithm {
     PAA { segments: usize },
     /// Symbolic Aggregate approXimation (SAX)
     SAX {
-        alphabet_size: usize,
+        alphabetsize: usize,
         segments: usize,
     },
     /// Discrete Fourier Transform compression
@@ -259,8 +259,8 @@ pub struct CompressedDataPoint<F> {
 /// Compression metadata and statistics
 #[derive(Debug, Clone)]
 pub struct CompressionMetadata {
-    pub original_size: usize,
-    pub compressed_size: usize,
+    pub originalsize: usize,
+    pub compressedsize: usize,
     pub compression_ratio: f64,
     pub reconstruction_accuracy: f64,
     pub algorithm_used: String,
@@ -376,7 +376,7 @@ where
     /// Create a new advanced streaming processor
     pub fn new(config: AdvancedStreamingConfig) -> Self {
         let windowing_strategy = WindowingStrategy::Sliding {
-            size: config.default_window_size,
+            size: config.default_windowsize,
         };
         let processing_mode = StreamProcessingMode::Adaptive;
 
@@ -397,7 +397,7 @@ where
         };
 
         Self {
-            config: config,
+            config,
             windowing_strategy,
             processing_mode,
             buffer: Arc::new(RwLock::new(VecDeque::new())),
@@ -411,7 +411,7 @@ where
     }
 
     /// Process a new data point in the stream
-    pub fn process_data_point(&mut self, value: F) -> StatsResult<()> {
+    pub fn processdata_point(&mut self, value: F) -> StatsResult<()> {
         let timestamp = Instant::now();
 
         // Add to buffer
@@ -460,7 +460,7 @@ where
             self.process_batch_simd(values)?;
         } else {
             for &value in values.iter() {
-                self.process_data_point(value)?;
+                self.processdata_point(value)?;
             }
         }
 
@@ -538,11 +538,11 @@ where
                 }
             }
             WindowingStrategy::Adaptive {
-                min_size, max_size, ..
+                minsize, maxsize, ..
             } => {
                 // Adaptive windowing based on data characteristics
-                let adaptive_size = self.calculate_adaptive_window_size(*min_size, *max_size)?;
-                while buffer.len() > adaptive_size {
+                let adaptivesize = self.calculate_adaptive_windowsize(*minsize, *maxsize)?;
+                while buffer.len() > adaptivesize {
                     buffer.pop_front();
                 }
             }
@@ -554,14 +554,10 @@ where
     }
 
     /// Calculate adaptive window size based on data characteristics
-    fn calculate_adaptive_window_size(
-        &self,
-        min_size: usize,
-        max_size: usize,
-    ) -> StatsResult<usize> {
+    fn calculate_adaptive_windowsize(&self, minsize: usize, maxsize: usize) -> StatsResult<usize> {
         let stats = self.statistics.read().unwrap();
 
-        // Base the window _size on variance and throughput
+        // Base the window size on variance and throughput
         let variance_factor = if stats.variance > F::zero() {
             (stats.variance.sqrt()).to_f64().unwrap_or(1.0)
         } else {
@@ -570,8 +566,8 @@ where
 
         let throughput_factor = (stats.throughput / 1000.0).max(0.1).min(10.0);
 
-        let adaptive_size = (min_size as f64 * variance_factor * throughput_factor) as usize;
-        Ok(adaptive_size.max(min_size).min(max_size))
+        let adaptivesize = (minsize as f64 * variance_factor * throughput_factor) as usize;
+        Ok(adaptivesize.max(minsize).min(maxsize))
     }
 
     /// Update real-time statistics with new data point
@@ -644,7 +640,7 @@ where
     /// Apply intelligent compression to historical data
     fn apply_compression(&self, value: F, timestamp: Instant) -> StatsResult<()> {
         let mut engine = self.compression_engine.lock().unwrap();
-        engine.compress_data_point(value, timestamp)?;
+        engine.compressdata_point(value, timestamp)?;
         Ok(())
     }
 
@@ -742,7 +738,7 @@ where
         }
 
         // Window size optimization
-        if stats.count > self.config.default_window_size * 2 {
+        if stats.count > self.config.default_windowsize * 2 {
             recommendations.push(StreamingRecommendation {
                 category: RecommendationCategory::WindowingStrategy,
                 message: "Consider adaptive windowing for better performance".to_string(),
@@ -765,7 +761,7 @@ where
                 drift: 0.5,
                 threshold: 5.0,
             },
-            window_data: VecDeque::new(),
+            windowdata: VecDeque::new(),
             threshold: 0.05,
             last_detection: None,
             _phantom: PhantomData,
@@ -773,7 +769,7 @@ where
     }
 
     fn detect(&mut self, value: F) -> StatsResult<Option<Instant>> {
-        self.window_data.push_back(value);
+        self.windowdata.push_back(value);
 
         match &self.algorithm {
             ChangePointAlgorithm::CUSUM {
@@ -781,7 +777,7 @@ where
                 threshold,
             } => {
                 // Implement CUSUM algorithm
-                if self.window_data.len() >= 10 {
+                if self.windowdata.len() >= 10 {
                     let mean = self.calculate_mean()?;
                     let diff = value.to_f64().unwrap() - mean;
                     if diff.abs() > *threshold {
@@ -799,16 +795,16 @@ where
     }
 
     fn calculate_mean(&self) -> StatsResult<f64> {
-        if self.window_data.is_empty() {
+        if self.windowdata.is_empty() {
             return Ok(0.0);
         }
 
         let sum: f64 = self
-            .window_data
+            .windowdata
             .iter()
             .map(|&x| x.to_f64().unwrap_or(0.0))
             .sum();
-        Ok(sum / self.window_data.len() as f64)
+        Ok(sum / self.windowdata.len() as f64)
     }
 }
 
@@ -881,10 +877,10 @@ where
         Self {
             algorithm: CompressionAlgorithm::PAA { segments: 10 },
             compression_ratio: 0.7,
-            historical_data: VecDeque::new(),
+            historicaldata: VecDeque::new(),
             metadata: CompressionMetadata {
-                original_size: 0,
-                compressed_size: 0,
+                originalsize: 0,
+                compressedsize: 0,
                 compression_ratio: 1.0,
                 reconstruction_accuracy: 1.0,
                 algorithm_used: "PAA".to_string(),
@@ -893,7 +889,7 @@ where
         }
     }
 
-    fn compress_data_point(&mut self, value: F, timestamp: Instant) -> StatsResult<()> {
+    fn compressdata_point(&mut self, value: F, timestamp: Instant) -> StatsResult<()> {
         // Implement compression logic based on the selected algorithm
         match &self.algorithm {
             CompressionAlgorithm::PAA { segments: _ } => {
@@ -904,7 +900,7 @@ where
                     compression_metadata: "PAA compression".to_string(),
                     reconstruction_error: F::zero(),
                 };
-                self.historical_data.push_back(compressed);
+                self.historicaldata.push_back(compressed);
             }
             _ => {
                 // Other compression algorithms would be implemented here
@@ -964,14 +960,14 @@ mod tests {
     fn test_streaming_processor_creation() {
         let processor = create_advanced_streaming_processor::<f64>();
         let config = &processor.config;
-        assert_eq!(config.default_window_size, 1000);
+        assert_eq!(config.default_windowsize, 1000);
         assert!(config.adaptive_windowing);
     }
 
     #[test]
-    fn test_single_data_point_processing() {
+    fn test_singledata_point_processing() {
         let mut processor = create_advanced_streaming_processor::<f64>();
-        let result = processor.process_data_point(5.0);
+        let result = processor.processdata_point(5.0);
         assert!(result.is_ok());
 
         let stats = processor.statistics.read().unwrap();
@@ -1034,9 +1030,9 @@ mod tests {
     fn test_compression_engine() {
         let mut engine = CompressionEngine::<f64>::new();
         let timestamp = Instant::now();
-        let result = engine.compress_data_point(42.0, timestamp);
+        let result = engine.compressdata_point(42.0, timestamp);
         assert!(result.is_ok());
-        assert_eq!(engine.historical_data.len(), 1);
+        assert_eq!(engine.historicaldata.len(), 1);
     }
 
     #[test]

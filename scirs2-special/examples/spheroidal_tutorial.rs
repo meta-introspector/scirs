@@ -12,7 +12,7 @@
 //! - Computational challenges and numerical strategies
 //! - Physical applications in scattering and wave propagation
 
-use scirs2__special::{
+use scirs2_special::{
     obl_ang1, obl_cv, obl_cv_seq, obl_rad1, pro_ang1, pro_cv, pro_cv_seq, pro_rad1,
 };
 use std::f64::consts::PI;
@@ -311,8 +311,8 @@ fn demonstrate_physical_applications() {
     let frequency = 1000.0; // Hz
     let sound_speed = 343.0; // m/s
     let wavelength = sound_speed / frequency; // meters
-    let object_size = 0.1; // meters
-    let ka_acoustic = 2.0 * PI * object_size / wavelength;
+    let objectsize = 0.1; // meters
+    let ka_acoustic = 2.0 * PI * objectsize / wavelength;
 
     println!("  Acoustic size parameter ka = {ka_acoustic:.2}");
 

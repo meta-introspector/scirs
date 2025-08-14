@@ -130,9 +130,8 @@ impl Layer {
         // Xavier/Glorot initialization
         let scale = (1.0 / input_size as f32).sqrt();
         // Initialize weights and biases
-        let weights = Array2::from_shape_fn((input_size, output_size), |_| {
-            rng.gen_range(-scale..scale)
-        });
+        let weights =
+            Array2::from_shape_fn((input_size, output_size), |_| rng.gen_range(-scale..scale));
         let biases = Array2::from_shape_fn((1, output_size), |_| rng.gen_range(-scale..scale));
         Self {
             weights,

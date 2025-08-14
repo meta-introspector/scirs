@@ -88,7 +88,7 @@ where
     let n = a.nrows();
 
     // Special case: if B is identity matrix, solve standard eigenvalue problem
-    let is_identity = check_identity_matrix(b);
+    let is_identity = check_identitymatrix(b);
 
     if is_identity {
         // B is identity, so Ax = λBx becomes Ax = λx (standard eigenvalue problem)
@@ -207,10 +207,10 @@ where
     let n = a.nrows();
 
     // Check symmetry of A
-    check_matrix_symmetry(a, "A")?;
+    checkmatrix_symmetry(a, "A")?;
 
     // Check symmetry of B
-    check_matrix_symmetry(b, "B")?;
+    checkmatrix_symmetry(b, "B")?;
 
     // Transform to standard eigenvalue problem using Cholesky decomposition
     // B = L L^T, then the problem becomes (L^{-1} A L^{-T}) y = λ y
@@ -347,7 +347,7 @@ where
 
 /// Helper function to check if a matrix is the identity matrix
 #[allow(dead_code)]
-fn check_identity_matrix<F>(b: &ArrayView2<F>) -> bool
+fn check_identitymatrix<F>(b: &ArrayView2<F>) -> bool
 where
     F: Float + NumAssign,
 {
@@ -367,7 +367,7 @@ where
 
 /// Helper function to check matrix symmetry
 #[allow(dead_code)]
-fn check_matrix_symmetry<F>(matrix: &ArrayView2<F>, name: &str) -> LinalgResult<()>
+fn checkmatrix_symmetry<F>(matrix: &ArrayView2<F>, name: &str) -> LinalgResult<()>
 where
     F: Float + NumAssign,
 {

@@ -514,10 +514,7 @@ impl TensorCoreDistanceMatrix {
     }
 
     /// Create Z-order (Morton order) layout
-    fn create_zorder_layout(
-        &mut self,
-        points: &ArrayView2<'_, f64>,
-    ) -> SpatialResult<Array2<f64>> {
+    fn create_zorder_layout(&mut self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         let (npoints, ndims) = points.dim();
 
         // Create Z-order mapping
@@ -1269,7 +1266,7 @@ impl TensorCoreClustering {
         let capabilities = detect_tensor_core_capabilities().ok();
 
         Ok(Self {
-            _numclusters: _numclusters,
+            _numclusters,
             precision_mode: PrecisionMode::Mixed16,
             tensor_cores: true,
             mixed_precision: true,
@@ -1351,10 +1348,7 @@ impl TensorCoreClustering {
     }
 
     /// Initialize centroids using k-means++
-    fn initialize_centroids(
-        &mut self,
-        points: &ArrayView2<'_, f64>,
-    ) -> SpatialResult<Array2<f64>> {
+    fn initialize_centroids(&mut self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         let (npoints, ndims) = points.dim();
         let mut centroids = Array2::zeros((self._numclusters, ndims));
 
@@ -1475,10 +1469,7 @@ impl TensorCoreClustering {
     }
 
     /// Tensor sum reduction operation
-    async fn tensor_sum_reduction(
-        &self,
-        data: &ArrayView2<'_, f64>,
-    ) -> SpatialResult<Array1<f64>> {
+    async fn tensor_sum_reduction(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
         let (_npoints, ndims) = data.dim();
         let mut sum_vector = Array1::zeros(ndims);
 

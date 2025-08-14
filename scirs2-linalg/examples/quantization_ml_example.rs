@@ -37,13 +37,13 @@ fn main() {
 /// Create synthetic model weights with normal distribution
 /// (typical for trained neural networks)
 #[allow(dead_code)]
-fn create_model_weights(_input_size: usize, outputsize: usize) -> Array2<f32> {
+fn create_model_weights(_inputsize: usize, outputsize: usize) -> Array2<f32> {
     let mut rng = rand::rng();
     let normal = Normal::new(0.0, 0.1).unwrap(); // Small standard deviation typical for weights
 
-    let mut weights = Array2::zeros((output_size, input_size));
-    for i in 0..output_size {
-        for j in 0.._input_size {
+    let mut weights = Array2::zeros((outputsize, inputsize));
+    for i in 0..outputsize {
+        for j in 0.._inputsize {
             weights[[i, j]] = normal.sample(&mut rng);
         }
     }
@@ -53,13 +53,13 @@ fn create_model_weights(_input_size: usize, outputsize: usize) -> Array2<f32> {
 
 /// Create synthetic activations with various distributions
 #[allow(dead_code)]
-fn create_activations(_batch_size: usize, featuresize: usize) -> Array2<f32> {
+fn create_activations(_batchsize: usize, featuresize: usize) -> Array2<f32> {
     let mut rng = rand::rng();
 
     // Create activations with ReLU-like distribution (many zeros, positive values)
-    let mut activations = Array2::zeros((_batch_size, feature_size));
-    for i in 0.._batch_size {
-        for j in 0..feature_size {
+    let mut activations = Array2::zeros((_batchsize, featuresize));
+    for i in 0.._batchsize {
+        for j in 0..featuresize {
             let val = Normal::new(0.0, 1.0).unwrap().sample(&mut rng);
             activations[[i, j]] = if val > 0.0 { val } else { 0.0 };
         }
@@ -67,8 +67,8 @@ fn create_activations(_batch_size: usize, featuresize: usize) -> Array2<f32> {
 
     // Add some larger activation values to simulate feature importance
     for _ in 0..5 {
-        let i = rng.gen_range(0.._batch_size);
-        let j = rng.gen_range(0..feature_size);
+        let i = rng.gen_range(0.._batchsize);
+        let j = rng.gen_range(0..featuresize);
         activations[[i, j]] = rng.gen_range(2.0..5.0);
     }
 
@@ -250,8 +250,8 @@ fn compare_bit_widths_matmul(weights: &Array2<f32>, activations: &Array2<f32>) {
             * 100.0;
 
         // Calculate memory savings
-        let fp32_size = 32;
-        let memory_savings = (1.0 - (bits as f32 / fp32_size as f32)) * 100.0;
+        let fp32size = 32;
+        let memory_savings = (1.0 - (bits as f32 / fp32size as f32)) * 100.0;
 
         // Print results
         println!(
@@ -327,9 +327,9 @@ fn demonstrate_mixed_precision(weights: &Array2<f32>, activations: &Array2<f32>)
 
         // Calculate memory savings (weighted average based on typical model composition)
         // Assuming _weights are 75% of model size, activations 25%
-        let fp32_size = 32;
-        let weight_savings = 1.0 - (weight_bits as f32 / fp32_size as f32);
-        let act_savings = 1.0 - (act_bits as f32 / fp32_size as f32);
+        let fp32size = 32;
+        let weight_savings = 1.0 - (weight_bits as f32 / fp32size as f32);
+        let act_savings = 1.0 - (act_bits as f32 / fp32size as f32);
         let memory_savings = (weight_savings * 0.75 + act_savings * 0.25) * 100.0;
 
         // Print results

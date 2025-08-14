@@ -1,4 +1,4 @@
-use scirs2__sparse::{
+use scirs2_sparse::{
     csr::CsrMatrix,
     linalg::{cgs, AsLinearOperator, CGSOptions, JacobiPreconditioner, LinearOperator},
 };

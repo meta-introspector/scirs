@@ -68,7 +68,7 @@ impl ExternalClient {
 
     /// Create a new external client with custom configuration
     pub fn with_config(config: ExternalConfig) -> Result<Self> {
-        let cache = DatasetCache::new(crate::cache::get_cache_dir()?);
+        let cache = DatasetCache::new(crate::cache::get_cachedir()?);
 
         #[cfg(feature = "download")]
         let client = {
@@ -406,7 +406,7 @@ impl ExternalClient {
             }
         }
 
-        let data = Array2::fromshape_vec((n_samples, data_cols), data_vec)
+        let data = Array2::from_shape_vec((n_samples, data_cols), data_vec)
             .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
         let target = target_vec.map(Array1::from_vec);
@@ -414,8 +414,8 @@ impl ExternalClient {
         Ok(Dataset {
             data,
             target,
-            feature_names: Some(attributes[..data_cols].to_vec()),
-            target_names: None,
+            featurenames: Some(attributes[..data_cols].to_vec()),
+            targetnames: None,
             feature_descriptions: None,
             description: Some("ARFF dataset loaded from external source".to_string()),
             metadata: std::collections::HashMap::new(),
@@ -659,14 +659,14 @@ pub mod convenience {
     #[cfg(feature = "download")]
     pub async fn load_uci_dataset(name: &str) -> Result<Dataset> {
         let repo = UCIRepository::new()?;
-        repo.load_dataset(_name).await
+        repo.load_dataset(name).await
     }
 
     /// Load a UCI dataset by name synchronously
     #[cfg(not(feature = "download"))]
     pub fn load_uci_dataset_sync(name: &str) -> Result<Dataset> {
         let repo = UCIRepository::new()?;
-        repo.load_dataset_sync(_name)
+        repo.load_dataset_sync(name)
     }
 
     /// Load a dataset from GitHub repository

@@ -7,8 +7,8 @@ use std::iter::Sum;
 use crate::decomposition::svd;
 use crate::error::{LinalgError, LinalgResult};
 use crate::validation::{
-    validate_finite_matrix, validate_finite_vector, validate_not_empty_matrix,
-    validate_not_empty_vector,
+    validate_finite_vector, validate_finitematrix, validate_not_empty_vector,
+    validate_not_emptymatrix,
 };
 
 /// Compute a matrix norm.
@@ -43,8 +43,8 @@ where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     // Parameter validation using validation helpers
-    validate_not_empty_matrix(a, "Matrix norm computation")?;
-    validate_finite_matrix(a, "Matrix norm computation")?;
+    validate_not_emptymatrix(a, "Matrix norm computation")?;
+    validate_finitematrix(a, "Matrix norm computation")?;
 
     match ord {
         "fro" | "f" | "frobenius" => {
@@ -274,10 +274,10 @@ where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     // Parameter validation using validation helpers
-    use crate::validation::validate_square_matrix;
-    validate_not_empty_matrix(a, "Condition number computation")?;
-    validate_square_matrix(a, "Condition number computation")?;
-    validate_finite_matrix(a, "Condition number computation")?;
+    use crate::validation::validate_squarematrix;
+    validate_not_emptymatrix(a, "Condition number computation")?;
+    validate_squarematrix(a, "Condition number computation")?;
+    validate_finitematrix(a, "Condition number computation")?;
 
     let norm_type = p.unwrap_or("2");
 
@@ -375,7 +375,7 @@ where
     if a.is_empty() {
         return Ok(0);
     }
-    validate_finite_matrix(a, "Matrix rank computation")?;
+    validate_finitematrix(a, "Matrix rank computation")?;
 
     // Validate tolerance
     if let Some(t) = tol {
@@ -455,7 +455,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_matrix_norm_frobenius() {
+    fn testmatrix_norm_frobenius() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let norm = matrix_norm(&a.view(), "fro", None).unwrap();
         // sqrt(1^2 + 2^2 + 3^2 + 4^2) = sqrt(30) ≈ 5.477
@@ -463,7 +463,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_norm_1() {
+    fn testmatrix_norm_1() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let norm = matrix_norm(&a.view(), "1", None).unwrap();
         // max(1+3, 2+4) = max(4, 6) = 6
@@ -471,7 +471,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_norm_inf() {
+    fn testmatrix_norm_inf() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let norm = matrix_norm(&a.view(), "inf", None).unwrap();
         // max(1+2, 3+4) = max(3, 7) = 7

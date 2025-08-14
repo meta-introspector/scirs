@@ -1405,7 +1405,7 @@ pub struct GpuPerformanceProfiler {
 impl GpuPerformanceProfiler {
     pub fn new(backend: GpuBackend) -> Self {
         Self {
-            backend: backend,
+            backend,
             timing_data: std::collections::HashMap::new(),
         }
     }

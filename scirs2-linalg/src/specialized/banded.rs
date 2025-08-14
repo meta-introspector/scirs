@@ -154,7 +154,7 @@ where
     /// # Returns
     ///
     /// * `BandedMatrix` representation of the input matrix
-    pub fn from_matrix(
+    pub fn frommatrix(
         a: &ArrayView2<A>,
         lower_bandwidth: usize,
         upper_bandwidth: usize,
@@ -642,7 +642,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_matrix() {
+    fn test_frommatrix() {
         // Create a dense matrix
         let a = array![
             [5.0, 10.0, 14.0, 0.0, 0.0],
@@ -653,7 +653,7 @@ mod tests {
         ];
 
         // Convert to banded form
-        let band = BandedMatrix::from_matrix(&a.view(), 1, 2).unwrap();
+        let band = BandedMatrix::frommatrix(&a.view(), 1, 2).unwrap();
 
         assert_eq!(band.nrows(), 5);
         assert_eq!(band.ncols(), 5);
@@ -814,7 +814,7 @@ mod tests {
         let a = array![[2.0, -1.0, 0.0], [-1.0, 2.0, -1.0], [0.0, -1.0, 2.0]];
 
         // Convert to banded form
-        let band = BandedMatrix::from_matrix(&a.view(), 1, 1).unwrap();
+        let band = BandedMatrix::frommatrix(&a.view(), 1, 1).unwrap();
 
         // Right-hand side b = [1, 2, 3]
         let b = array![1.0, 2.0, 3.0];

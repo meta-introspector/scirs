@@ -66,22 +66,22 @@ where
 
     // Compute median
     let med = median_simd(x)?;
-    let valid_data = x.view();
+    let validdata = x.view();
 
     // Compute absolute deviations using SIMD
     let optimizer = AutoOptimizer::new();
-    let n_valid = valid_data.len();
+    let n_valid = validdata.len();
 
     let deviations = if optimizer.should_use_simd(n_valid) {
         // SIMD path
         let med_array = ndarray::Array1::from_elem(n_valid, med);
-        let diff = F::simd_sub(&valid_data, &med_array.view());
+        let diff = F::simd_sub(&validdata, &med_array.view());
 
         // Compute absolute values using SIMD
         F::simd_abs(&diff.view())
     } else {
         // Scalar fallback
-        ndarray::Array1::from_shape_fn(n_valid, |i| (valid_data[i] - med).abs())
+        ndarray::Array1::from_shape_fn(n_valid, |i| (validdata[i] - med).abs())
     };
 
     // Compute median of absolute deviations
@@ -155,7 +155,7 @@ where
     use crate::descriptive_simd::{mean_simd, std_simd};
 
     // Handle NaN values
-    let valid_data = match nan_policy {
+    let validdata = match nan_policy {
         "propagate" => {
             if x.iter().any(|&v| v.is_nan()) {
                 return Ok(F::nan());
@@ -181,7 +181,7 @@ where
         _ => return Err(StatsError::invalid_argument("Invalid nan_policy")),
     };
 
-    let mean = mean_simd(&valid_data)?;
+    let mean = mean_simd(&validdata)?;
 
     if mean.abs() < F::epsilon() {
         return Err(StatsError::invalid_argument(
@@ -189,7 +189,7 @@ where
         ));
     }
 
-    let std = std_simd(&valid_data, 1)?;
+    let std = std_simd(&validdata, 1)?;
 
     Ok(std / mean.abs())
 }
@@ -260,8 +260,8 @@ where
     }
 
     // Sort the data
-    let mut sorted_data = x.to_owned();
-    let sorted_slice = sorted_data.as_slice_mut().unwrap();
+    let mut sorteddata = x.to_owned();
+    let sorted_slice = sorteddata.as_slice_mut().unwrap();
     crate::quantile_simd::simd_sort(sorted_slice);
 
     // Compute cumulative sum and weighted sum using SIMD
@@ -270,9 +270,9 @@ where
     if optimizer.should_use_simd(n) {
         // SIMD path
         let indices = ndarray::Array1::from_shape_fn(n, |i| F::from(i + 1).unwrap());
-        let weighted = F::simd_mul(&sorted_data.view(), &indices.view());
+        let weighted = F::simd_mul(&sorteddata.view(), &indices.view());
         let weighted_sum = F::simd_sum(&weighted.view());
-        let total_sum = F::simd_sum(&sorted_data.view());
+        let total_sum = F::simd_sum(&sorteddata.view());
 
         if total_sum <= F::epsilon() {
             return Ok(F::zero()); // Perfect equality (all zeros)
@@ -444,13 +444,13 @@ mod tests {
     #[test]
     fn test_gini_simd() {
         // Test perfect equality
-        let equal_data = array![5.0, 5.0, 5.0, 5.0];
-        let gini_equal = gini_simd(&equal_data.view()).unwrap();
+        let equaldata = array![5.0, 5.0, 5.0, 5.0];
+        let gini_equal = gini_simd(&equaldata.view()).unwrap();
         assert_relative_eq!(gini_equal, 0.0, epsilon = 1e-10);
 
         // Test some inequality
-        let unequal_data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let gini_unequal = gini_simd(&unequal_data.view()).unwrap();
+        let unequaldata = array![1.0, 2.0, 3.0, 4.0, 5.0];
+        let gini_unequal = gini_simd(&unequaldata.view()).unwrap();
         assert!(gini_unequal > 0.0 && gini_unequal < 1.0);
     }
 

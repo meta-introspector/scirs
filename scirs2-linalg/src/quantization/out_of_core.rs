@@ -191,7 +191,7 @@ where
 
         // Determine if the matrix is symmetric
         let symmetric =
-            method == QuantizationMethod::Symmetric && rows == cols && is_matrix_symmetric(matrix);
+            method == QuantizationMethod::Symmetric && rows == cols && ismatrix_symmetric(matrix);
 
         Ok(ChunkedQuantizedMatrix {
             shape: (rows, cols),
@@ -281,8 +281,8 @@ where
             let chunk_rows = chunk_end - chunk_start;
 
             // Read the quantized chunk
-            let chunk_size = chunk_rows * cols;
-            let mut u8_data = vec![0u8; chunk_size];
+            let chunksize = chunk_rows * cols;
+            let mut u8_data = vec![0u8; chunksize];
 
             reader
                 .read_exact(&mut u8_data)
@@ -322,7 +322,7 @@ where
     /// # Returns
     ///
     /// A QuantizedMatrixFreeOp instance
-    pub fn to_matrix_free_op(&self) -> LinalgResult<QuantizedMatrixFreeOp<F>> {
+    pub fn tomatrix_free_op(&self) -> LinalgResult<QuantizedMatrixFreeOp<F>> {
         let rows = self.shape.0;
         let cols = self.shape.1;
 
@@ -365,8 +365,8 @@ where
                 let chunk_rows = chunk_end - chunk_start;
 
                 // Read the quantized chunk
-                let chunk_size = chunk_rows * cols;
-                let mut u8_data = vec![0u8; chunk_size];
+                let chunksize = chunk_rows * cols;
+                let mut u8_data = vec![0u8; chunksize];
 
                 reader.read_exact(&mut u8_data).map_err(|e| {
                     LinalgError::ComputationError(format!("Failed to read chunk: {e}"))
@@ -442,7 +442,7 @@ where
 
         if rows * cols <= CHUNK_SIZE * CHUNK_SIZE {
             // Convert to a regular MatrixFreeOp and use the standard solver
-            let op = self.to_matrix_free_op()?;
+            let op = self.tomatrix_free_op()?;
             return quantized_conjugate_gradient(&op, b, max_iter, tol, adaptive_precision);
         }
 
@@ -601,9 +601,9 @@ where
         reader
             .read_exact(&mut scale_bytes)
             .map_err(|e| LinalgError::ComputationError(format!("Failed to read scale: {e}")))?;
-        reader.read_exact(&mut zero_point_bytes).map_err(|e| {
-            LinalgError::ComputationError(format!("Failed to read zeropoint: {e}"))
-        })?;
+        reader
+            .read_exact(&mut zero_point_bytes)
+            .map_err(|e| LinalgError::ComputationError(format!("Failed to read zeropoint: {e}")))?;
 
         let rows = u64::from_le_bytes(rows_bytes) as usize;
         let cols = u64::from_le_bytes(cols_bytes) as usize;
@@ -689,7 +689,7 @@ where
 
 /// Check if a matrix is symmetric
 #[allow(dead_code)]
-fn is_matrix_symmetric<F>(matrix: &ArrayView2<F>) -> bool
+fn ismatrix_symmetric<F>(matrix: &ArrayView2<F>) -> bool
 where
     F: Float + PartialEq,
 {
@@ -752,12 +752,12 @@ mod tests {
     // Helper to get a temporary file path
     fn get_temp_file_path(name: &str) -> PathBuf {
         let mut path = temp_dir();
-        path.push(format!("quantized_matrix_{}.bin", name));
+        path.push(format!("quantizedmatrix_{}.bin", name));
         path
     }
 
     #[test]
-    fn test_chunked_quantized_matrix() {
+    fn test_chunked_quantizedmatrix() {
         // Create a test matrix
         let matrix = array![[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
@@ -791,7 +791,7 @@ mod tests {
     }
 
     #[test]
-    fn test_chunked_quantized_matrix_from_file() {
+    fn test_chunked_quantizedmatrix_from_file() {
         // Create a test matrix
         let matrix = array![[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 

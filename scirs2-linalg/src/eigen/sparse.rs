@@ -81,8 +81,8 @@ pub trait SparseMatrix<F> {
 /// use scirs2_linalg::eigen::sparse::{lanczos, SparseMatrix};
 ///
 /// // This is a placeholder example - actual implementation pending
-/// // let sparse_matrix = create_sparse_matrix();
-/// // let (w, v) = lanczos(&sparse_matrix, 5, "largest", 0.0, 100, 1e-6).unwrap();
+/// // let sparsematrix = create_sparsematrix();
+/// // let (w, v) = lanczos(&sparsematrix, 5, "largest", 0.0, 100, 1e-6).unwrap();
 /// ```
 ///
 /// # Note
@@ -224,23 +224,23 @@ fn solve_tridiagonal_eigenproblem<F: Float + NumAssign + Sum + Send + Sync + 'st
     }
 
     // Create tridiagonal matrix
-    let mut tri_matrix = Array2::<F>::zeros((n, n));
+    let mut trimatrix = Array2::<F>::zeros((n, n));
 
     // Fill diagonal
     for i in 0..n {
-        tri_matrix[[i, i]] = alpha[i];
+        trimatrix[[i, i]] = alpha[i];
     }
 
     // Fill off-diagonals
     for i in 0..n.saturating_sub(1) {
         if i < beta.len() {
-            tri_matrix[[i, i + 1]] = beta[i];
-            tri_matrix[[i + 1, i]] = beta[i];
+            trimatrix[[i, i + 1]] = beta[i];
+            trimatrix[[i + 1, i]] = beta[i];
         }
     }
 
     // Use QR algorithm for small tridiagonal matrices
-    let (eigenvals, eigenvecs) = qr_algorithm_tridiagonal(&tri_matrix)?;
+    let (eigenvals, eigenvecs) = qr_algorithm_tridiagonal(&trimatrix)?;
 
     // Select requested eigenvalues based on 'which' parameter
     let selected_indices = select_eigenvalues(&eigenvals, which, target, k);
@@ -436,8 +436,8 @@ fn select_eigenvalues<F: Float>(
 /// use scirs2_linalg::eigen::sparse::{arnoldi, SparseMatrix};
 ///
 /// // This is a placeholder example - actual implementation pending
-/// // let sparse_matrix = create_sparse_matrix();
-/// // let (w, v) = arnoldi(&sparse_matrix, 3, 1.5, 100, 1e-6).unwrap();
+/// // let sparsematrix = create_sparsematrix();
+/// // let (w, v) = arnoldi(&sparsematrix, 3, 1.5, 100, 1e-6).unwrap();
 /// ```
 ///
 /// # Note
@@ -474,7 +474,7 @@ where
     let mut v_vectors = vec![Array1::<F>::zeros(n); m + 1];
 
     // Hessenberg matrix
-    let mut h_matrix = Array2::<F>::zeros((m + 1, m));
+    let mut hmatrix = Array2::<F>::zeros((m + 1, m));
 
     // Random initial vector
     let mut rng = rand::rng();
@@ -503,7 +503,7 @@ where
                 .zip(v_vectors[i].iter())
                 .map(|(w_val, v_val)| (*w_val) * (*v_val))
                 .sum::<F>();
-            h_matrix[[i, j]] = h_ij;
+            hmatrix[[i, j]] = h_ij;
 
             // w = w - h[i][j] * v_i
             for l in 0..n {
@@ -520,7 +520,7 @@ where
         }
 
         if j + 1 < m {
-            h_matrix[[j + 1, j]] = h_j1_j;
+            hmatrix[[j + 1, j]] = h_j1_j;
 
             // v_{j+1} = w / h[j+1][j]
             for l in 0..n {
@@ -529,13 +529,13 @@ where
         }
 
         // Check convergence of Ritz values every few iterations
-        if j >= k && j % 5 == 0 && check_arnoldi_convergence(&h_matrix, j + 1, k, tol) {
+        if j >= k && j % 5 == 0 && check_arnoldi_convergence(&hmatrix, j + 1, k, tol) {
             break;
         }
     }
 
     // Extract the m x m upper Hessenberg matrix
-    let h_reduced = h_matrix.slice(s![..actual_m, ..actual_m]).to_owned();
+    let h_reduced = hmatrix.slice(s![..actual_m, ..actual_m]).to_owned();
 
     // Solve eigenvalue problem for Hessenberg matrix
     let (ritz_values, ritz_vectors) = solve_hessenberg_eigenproblem(&h_reduced)?;
@@ -597,16 +597,16 @@ fn check_arnoldi_convergence<F: Float>(hmatrix: &Array2<F>, m: usize, k: usize, 
 // Helper function to solve Hessenberg eigenvalue problem
 #[allow(dead_code)]
 fn solve_hessenberg_eigenproblem<F: Float + NumAssign + Sum + 'static>(
-    h_matrix: &Array2<F>,
+    hmatrix: &Array2<F>,
 ) -> SparseEigenResult<F> {
-    let n = h_matrix.nrows();
+    let n = hmatrix.nrows();
 
     // For simplicity, convert to general eigenvalue problem
     // In practice, specialized Hessenberg QR algorithm would be better
     let mut matrix_complex = Array2::<Complex<F>>::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
-            matrix_complex[[i, j]] = Complex::new(h_matrix[[i, j]], F::zero());
+            matrix_complex[[i, j]] = Complex::new(hmatrix[[i, j]], F::zero());
         }
     }
 
@@ -890,7 +890,7 @@ where
 /// use scirs2_linalg::eigen::sparse::{svds, SparseMatrix};
 ///
 /// // This is a placeholder example - actual implementation pending
-/// // let (s, u, vt) = svds(&sparse_matrix, 6, "largest", 100, 1e-6).unwrap();
+/// // let (s, u, vt) = svds(&sparsematrix, 6, "largest", 100, 1e-6).unwrap();
 /// ```
 ///
 /// # Note
@@ -898,7 +898,7 @@ where
 /// This function is currently a placeholder and will be implemented in a future version.
 #[allow(dead_code)]
 pub fn svds<F, M>(
-    _matrix: &M,
+    matrix: &M,
     _k: usize,
     _which: &str,
     _max_iter: usize,
@@ -921,7 +921,7 @@ where
 ///
 /// # Arguments
 ///
-/// * `dense_matrix` - Dense matrix to convert
+/// * `densematrix` - Dense matrix to convert
 /// * `threshold` - Sparsity threshold (elements with absolute value below this are considered zero)
 ///
 /// # Returns
@@ -944,7 +944,7 @@ where
 /// This function is currently a placeholder and will be implemented in a future version.
 #[allow(dead_code)]
 pub fn dense_to_sparse<F>(
-    _dense_matrix: &ArrayView2<F>,
+    _densematrix: &ArrayView2<F>,
     _threshold: F,
 ) -> LinalgResult<Box<dyn SparseMatrix<F>>>
 where
@@ -1047,7 +1047,7 @@ mod tests {
     }
 
     #[test]
-    fn test_csr_matrix_interface() {
+    fn test_csrmatrix_interface() {
         let csr = CsrMatrix::<f64>::new(5, 5, vec![], vec![], vec![]);
 
         assert_eq!(csr.nrows(), 5);

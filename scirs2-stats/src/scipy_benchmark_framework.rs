@@ -23,7 +23,7 @@ use std::time::{Duration, Instant};
 pub struct ScipyBenchmarkFramework {
     config: BenchmarkConfig,
     results_cache: HashMap<String, BenchmarkResult>,
-    test_data_generator: TestDataGenerator,
+    testdata_generator: TestDataGenerator,
 }
 
 /// Configuration for benchmark comparisons
@@ -40,7 +40,7 @@ pub struct BenchmarkConfig {
     /// Maximum allowed performance regression (ratio)
     pub max_performance_regression: f64,
     /// Test data sizes to benchmark
-    pub test_sizes: Vec<usize>,
+    pub testsizes: Vec<usize>,
     /// Enable detailed statistical analysis
     pub enable_statistical_tests: bool,
     /// Path to Python SciPy reference implementation
@@ -53,7 +53,7 @@ pub struct BenchmarkResult {
     /// Function name being benchmarked
     pub function_name: String,
     /// Test data size
-    pub data_size: usize,
+    pub datasize: usize,
     /// Accuracy comparison results
     pub accuracy: AccuracyComparison,
     /// Performance comparison results
@@ -209,7 +209,7 @@ impl Default for BenchmarkConfig {
             performance_iterations: 100,
             warmup_iterations: 10,
             max_performance_regression: 2.0, // Allow 2x slower than SciPy
-            test_sizes: vec![100, 1000, 10000, 100000],
+            testsizes: vec![100, 1000, 10000, 100000],
             enable_statistical_tests: true,
             scipy_reference_path: None,
         }
@@ -230,9 +230,9 @@ impl ScipyBenchmarkFramework {
     /// Create a new benchmark framework
     pub fn new(config: BenchmarkConfig) -> Self {
         Self {
-            config: config,
+            config,
             results_cache: HashMap::new(),
-            test_data_generator: TestDataGenerator::new(TestDataConfig::default()),
+            testdata_generator: TestDataGenerator::new(TestDataConfig::default()),
         }
     }
 
@@ -254,23 +254,23 @@ impl ScipyBenchmarkFramework {
     {
         let mut results = Vec::new();
 
-        for &size in &self.config.test_sizes {
-            let test_data = self.test_data_generator.generate_1d_data(size)?;
+        for &size in &self.config.testsizes {
+            let testdata = self.testdata_generator.generate_1ddata(size)?;
 
             // Run accuracy comparison
             let accuracy =
-                self.compare_accuracy(&scirs2_impl, &scipy_reference, &test_data.view())?;
+                self.compare_accuracy(&scirs2_impl, &scipy_reference, &testdata.view())?;
 
             // Run performance comparison
             let performance =
-                self.compare_performance(&scirs2_impl, Some(&scipy_reference), &test_data.view())?;
+                self.compare_performance(&scirs2_impl, Some(&scipy_reference), &testdata.view())?;
 
             // Determine overall status
             let status = self.determine_status(&accuracy, &performance);
 
             let result = BenchmarkResult {
                 function_name: function_name.to_string(),
-                data_size: size,
+                datasize: size,
                 accuracy,
                 performance,
                 status,
@@ -290,14 +290,14 @@ impl ScipyBenchmarkFramework {
         &self,
         scirs2_impl: &F,
         scipy_reference: &G,
-        test_data: &ArrayView1<f64>,
+        testdata: &ArrayView1<f64>,
     ) -> StatsResult<AccuracyComparison>
     where
         F: Fn(&ArrayView1<f64>) -> StatsResult<f64>,
         G: Fn(&ArrayView1<f64>) -> f64,
     {
-        let scirs2_result = scirs2_impl(test_data)?;
-        let scipy_result = scipy_reference(test_data);
+        let scirs2_result = scirs2_impl(testdata)?;
+        let scipy_result = scipy_reference(testdata);
 
         let abs_difference = (scirs2_result - scipy_result).abs();
         let relativeerror = if scipy_result.abs() > 1e-15 {
@@ -326,19 +326,19 @@ impl ScipyBenchmarkFramework {
         &self,
         scirs2_impl: &F,
         scipy_reference: Option<&G>,
-        test_data: &ArrayView1<f64>,
+        testdata: &ArrayView1<f64>,
     ) -> StatsResult<PerformanceComparison>
     where
         F: Fn(&ArrayView1<f64>) -> StatsResult<f64>,
         G: Fn(&ArrayView1<f64>) -> f64,
     {
         // Benchmark SciRS2 implementation
-        let scirs2_timing = self.measure_timing(|| scirs2_impl(test_data).map(|_| ()))?;
+        let scirs2_timing = self.measure_timing(|| scirs2_impl(testdata).map(|_| ()))?;
 
         // Benchmark SciPy implementation if available
         let scipy_timing = if let Some(scipy_func) = scipy_reference {
             Some(self.measure_timing_scipy(|| {
-                scipy_func(test_data);
+                scipy_func(testdata);
             })?)
         } else {
             None
@@ -526,7 +526,7 @@ impl TestDataGenerator {
     }
 
     /// Generate 1D test data
-    pub fn generate_1d_data(&self, size: usize) -> StatsResult<Array1<f64>> {
+    pub fn generate_1ddata(&self, size: usize) -> StatsResult<Array1<f64>> {
         use rand::prelude::*;
         use rand_distr::{Distribution, Normal, Uniform as UniformDist};
 
@@ -577,7 +577,7 @@ impl TestDataGenerator {
     }
 
     /// Generate 2D test data
-    pub fn generate_2d_data(&self, rows: usize, cols: usize) -> StatsResult<Array2<f64>> {
+    pub fn generate_2ddata(&self, rows: usize, cols: usize) -> StatsResult<Array2<f64>> {
         use rand::prelude::*;
         use rand_distr::{Distribution, Normal};
 
@@ -682,9 +682,9 @@ mod tests {
     }
 
     #[test]
-    fn test_test_data_generation() {
+    fn test_testdata_generation() {
         let generator = TestDataGenerator::new(TestDataConfig::default());
-        let data = generator.generate_1d_data(100).unwrap();
+        let data = generator.generate_1ddata(100).unwrap();
         assert_eq!(data.len(), 100);
     }
 
@@ -714,7 +714,7 @@ mod tests {
     #[test]
     fn test_benchmark_integration() {
         let mut framework = ScipyBenchmarkFramework::new(BenchmarkConfig {
-            test_sizes: vec![100],
+            testsizes: vec![100],
             performance_iterations: 5,
             warmup_iterations: 1,
             ..Default::default()

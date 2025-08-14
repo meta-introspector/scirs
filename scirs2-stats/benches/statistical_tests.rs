@@ -30,7 +30,7 @@ use scirs2_stats::{
 
 /// Generate random normal data
 #[allow(dead_code)]
-fn generate_normal_data(n: usize, mean: f64, std: f64) -> Array1<f64> {
+fn generate_normaldata(n: usize, mean: f64, std: f64) -> Array1<f64> {
     let mut rng = rand::rng();
     let normal = Normal::new(mean, std).unwrap();
     Array1::from_shape_fn(n, |_| normal.sample(&mut rng))
@@ -41,11 +41,11 @@ fn generate_normal_data(n: usize, mean: f64, std: f64) -> Array1<f64> {
 fn bench_t_tests(c: &mut Criterion) {
     let mut group = c.benchmark_group("t_tests");
 
-    let sample_sizes = vec![10, 50, 100, 500, 1000];
+    let samplesizes = vec![10, 50, 100, 500, 1000];
 
-    for &n in &sample_sizes {
+    for &n in &samplesizes {
         // One-sample t-test
-        let data = generate_normal_data(n, 5.0, 1.0);
+        let data = generate_normaldata(n, 5.0, 1.0);
         group.bench_with_input(BenchmarkId::new("one_sample", n), &data, |b, data| {
             b.iter(|| {
                 black_box(ttest_1samp(
@@ -58,8 +58,8 @@ fn bench_t_tests(c: &mut Criterion) {
         });
 
         // Independent samples t-test
-        let data1 = generate_normal_data(n, 5.0, 1.0);
-        let data2 = generate_normal_data(n, 5.5, 1.0);
+        let data1 = generate_normaldata(n, 5.0, 1.0);
+        let data2 = generate_normaldata(n, 5.5, 1.0);
         group.bench_with_input(
             BenchmarkId::new("independent", n),
             &(data1.clone(), data2.clone()),
@@ -118,11 +118,11 @@ fn bench_t_tests(c: &mut Criterion) {
 fn bench_nonparametric_tests(c: &mut Criterion) {
     let mut group = c.benchmark_group("nonparametric_tests");
 
-    let sample_sizes = vec![10, 50, 100, 500];
+    let samplesizes = vec![10, 50, 100, 500];
 
-    for &n in &sample_sizes {
-        let data1 = generate_normal_data(n, 5.0, 1.0);
-        let data2 = generate_normal_data(n, 5.5, 1.0);
+    for &n in &samplesizes {
+        let data1 = generate_normaldata(n, 5.0, 1.0);
+        let data2 = generate_normaldata(n, 5.5, 1.0);
 
         // Mann-Whitney U test
         group.bench_with_input(
@@ -149,9 +149,9 @@ fn bench_nonparametric_tests(c: &mut Criterion) {
 
     // Kruskal-Wallis test with multiple groups
     let groups = vec![
-        generate_normal_data(30, 5.0, 1.0),
-        generate_normal_data(30, 5.5, 1.0),
-        generate_normal_data(30, 6.0, 1.0),
+        generate_normaldata(30, 5.0, 1.0),
+        generate_normaldata(30, 5.5, 1.0),
+        generate_normaldata(30, 6.0, 1.0),
     ];
 
     group.bench_function("kruskal_wallis_3groups", |b| {
@@ -170,16 +170,16 @@ fn bench_nonparametric_tests(c: &mut Criterion) {
 fn bench_normality_tests(c: &mut Criterion) {
     let mut group = c.benchmark_group("normality_tests");
 
-    let sample_sizes = vec![20, 50, 100, 200];
+    let samplesizes = vec![20, 50, 100, 200];
 
-    for &n in &sample_sizes {
-        let normal_data = generate_normal_data(n, 0.0, 1.0);
+    for &n in &samplesizes {
+        let normaldata = generate_normaldata(n, 0.0, 1.0);
 
         // Shapiro-Wilk test (limited to smaller samples)
         if n <= 50 {
             group.bench_with_input(
                 BenchmarkId::new("shapiro_wilk", n),
-                &normal_data,
+                &normaldata,
                 |b, data| {
                     b.iter(|| {
                         black_box(shapiro_wilk(&data.view()));
@@ -191,7 +191,7 @@ fn bench_normality_tests(c: &mut Criterion) {
         // Anderson-Darling test
         group.bench_with_input(
             BenchmarkId::new("anderson_darling", n),
-            &normal_data,
+            &normaldata,
             |b, data| {
                 b.iter(|| {
                     black_box(anderson_darling(&data.view()));
@@ -202,7 +202,7 @@ fn bench_normality_tests(c: &mut Criterion) {
         // D'Agostino K² test
         group.bench_with_input(
             BenchmarkId::new("dagostino_k2", n),
-            &normal_data,
+            &normaldata,
             |b, data| {
                 b.iter(|| {
                     black_box(dagostino_k2(&data.view()));
@@ -219,9 +219,9 @@ fn bench_normality_tests(c: &mut Criterion) {
 fn bench_correlations(c: &mut Criterion) {
     let mut group = c.benchmark_group("correlations");
 
-    let sample_sizes = vec![10, 50, 100, 500, 1000];
+    let samplesizes = vec![10, 50, 100, 500, 1000];
 
-    for &n in &sample_sizes {
+    for &n in &samplesizes {
         // Generate correlated data
         let mut rng = rand::rng();
         let x: Array1<f64> = Array1::from_shape_fn(n, |_| StandardNormal.sample(&mut rng));
@@ -285,7 +285,7 @@ fn bench_anova(c: &mut Criterion) {
 
     for (num_groups, samples_per_group) in configurations {
         let groups: Vec<Array1<f64>> = (0..num_groups)
-            .map(|i| generate_normal_data(samples_per_group, i as f64 * 0.5, 1.0))
+            .map(|i| generate_normaldata(samples_per_group, i as f64 * 0.5, 1.0))
             .collect();
 
         group.bench_with_input(

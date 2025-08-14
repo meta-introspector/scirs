@@ -56,7 +56,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
     pub fn new(strategy: AveragingStrategy, numnodes: usize) -> Self {
         Self {
             averaged_params: Vec::new(),
-            strategy: strategy,
+            strategy,
             node_weights: HashMap::new(),
             numnodes,
             momentum_buffer: None,
@@ -204,8 +204,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
 
         // Weighted sum
         for (nodeid, params) in nodeparameters {
-            let weight =
-                self.node_weights.get(nodeid).copied().unwrap_or(A::zero()) / total_weight;
+            let weight = self.node_weights.get(nodeid).copied().unwrap_or(A::zero()) / total_weight;
 
             for (avg_param, param) in self.averaged_params.iter_mut().zip(params.iter()) {
                 Zip::from(avg_param).and(param).for_each(|avg, &p| {
@@ -791,7 +790,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientCompressor<A, D> {
     /// Create a new gradient compressor
     pub fn new(strategy: CompressionStrategy) -> Self {
         Self {
-            strategy: strategy,
+            strategy,
             error_state: None,
             stats: CompressionStats::new(),
         }

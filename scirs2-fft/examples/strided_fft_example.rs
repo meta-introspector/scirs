@@ -1,6 +1,6 @@
 use ndarray::{s, Array2};
-use num__complex::Complex64;
-use scirs2__fft::{fft, fft_strided, fft_strided_complex, ifft_strided};
+use num_complex::Complex64;
+use scirs2_fft::{fft, fft_strided, fft_strided_complex, ifft_strided};
 use std::time::Instant;
 
 #[allow(dead_code)]

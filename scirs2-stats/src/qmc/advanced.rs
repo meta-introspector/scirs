@@ -1010,7 +1010,7 @@ impl StratifiedSampler {
 
         Ok(Self {
             config,
-            dimension: dimension,
+            dimension,
             strata_counts: HashMap::new(),
         })
     }

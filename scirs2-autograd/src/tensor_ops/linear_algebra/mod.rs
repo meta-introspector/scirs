@@ -692,13 +692,13 @@ where
 {
     let x = x.as_ref();
     let g = x.graph();
-    Tensor::builder(g).append_input(x.as_ref(), false).build(
-        conv_ops::max_pool2d::MaxPool2D {
+    Tensor::builder(g)
+        .append_input(x.as_ref(), false)
+        .build(conv_ops::max_pool2d::MaxPool2D {
             pad,
-            stride: stride,
+            stride,
             size: pool_size,
-        }
-    )
+        })
 }
 
 /// Concatenates input tensors along specified axis.

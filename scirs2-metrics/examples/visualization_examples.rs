@@ -98,7 +98,8 @@ fn main() {
     println!("\n===== Example 4: Calibration Curve Visualization =====");
 
     // Compute calibration curve
-    let (prob_true, prob_pred_, _counts) = calibration_curve(&y_true_binary, &y_score, Some(5)).unwrap();
+    let (prob_true, prob_pred_, _counts) =
+        calibration_curve(&y_true_binary, &y_score, Some(5)).unwrap();
     println!("Calibration Curve Points: {} points", prob_true.len());
 
     // Create a visualizer for the calibration curve

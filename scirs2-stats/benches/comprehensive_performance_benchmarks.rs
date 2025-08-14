@@ -18,25 +18,21 @@ use std::time::Duration;
 
 /// Generate test data of various sizes for benchmarking
 #[allow(dead_code)]
-fn generate_test_data(size: usize, seed: u64) -> Array1<f64> {
+fn generate_testdata(size: usize, seed: u64) -> Array1<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
-    Array1::from_iter((0.._size).map(|_| rng.random::<f64>() * 100.0 - 50.0))
+    Array1::from_iter((0..size).map(|_| rng.random::<f64>() * 100.0 - 50.0))
 }
 
 /// Generate matrix test data for multivariate benchmarks
 #[allow(dead_code)]
-fn generate_matrix_data(rows: usize, cols: usize, seed: u64) -> Array2<f64> {
+fn generate_matrixdata(rows: usize, cols: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
     Array2::from_shape_fn((_rows, cols), |_| rng.random::<f64>() * 100.0 - 50.0)
 }
 
 /// Generate correlated data for correlation benchmarks
 #[allow(dead_code)]
-fn generate_correlated_data(
-    size: usize,
-    correlation: f64,
-    seed: u64,
-) -> (Array1<f64>, Array1<f64>) {
+fn generate_correlateddata(size: usize, correlation: f64, seed: u64) -> (Array1<f64>, Array1<f64>) {
     let mut rng = StdRng::seed_from_u64(seed);
     let x = Array1::from_iter((0..size).map(|_| rng.random::<f64>() * 100.0 - 50.0));
 
@@ -53,7 +49,7 @@ fn bench_descriptive_stats(c: &mut Criterion) {
     let mut group = c.benchmark_group("descriptive_statistics");
 
     for size in [100, 1_000, 10_000, 100_000, 1_000_000].iter() {
-        let data = generate_test_data(*size, 42);
+        let data = generate_testdata(*size, 42);
 
         group.throughput(Throughput::Elements(*size as u64));
 
@@ -106,7 +102,7 @@ fn bench_quantile_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("quantile_operations");
 
     for size in [1_000, 10_000, 100_000, 1_000_000].iter() {
-        let data = generate_test_data(*size, 42);
+        let data = generate_testdata(*size, 42);
 
         group.throughput(Throughput::Elements(*size as u64));
 
@@ -155,7 +151,7 @@ fn bench_correlation_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("correlation_operations");
 
     for size in [1_000, 10_000, 100_000, 1_000_000].iter() {
-        let (x, y) = generate_correlated_data(*size, 0.7, 42);
+        let (x, y) = generate_correlateddata(*size, 0.7, 42);
 
         group.throughput(Throughput::Elements(*size as u64));
 
@@ -183,7 +179,7 @@ fn bench_correlation_operations(c: &mut Criterion) {
 
     // Benchmark correlation matrix computation
     for (rows, cols) in [(100, 10), (1000, 50), (5000, 100)].iter() {
-        let data = generate_matrix_data(*rows, *cols, 42);
+        let data = generate_matrixdata(*rows, *cols, 42);
 
         group.throughput(Throughput::Elements((rows * cols) as u64));
 
@@ -203,7 +199,7 @@ fn bench_regression_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("regression_operations");
 
     for (n_samples, n_features) in [(1000, 10), (10000, 50), (50000, 100)].iter() {
-        let x = generate_matrix_data(*n_samples, *n_features, 42);
+        let x = generate_matrixdata(*n_samples, *n_features, 42);
         let mut rng = StdRng::seed_from_u64(42);
         let true_coef =
             Array1::from_iter((0..*n_features).map(|_| rng.random::<f64>() * 2.0 - 1.0));
@@ -239,7 +235,7 @@ fn bench_regression_operations(c: &mut Criterion) {
         // Prediction benchmark
         let mut ols_model = LinearRegression::new();
         let ols_result = ols_model.fit(&x.view(), &y.view()).unwrap();
-        let test_x = generate_matrix_data(*n_samples / 10, *n_features, 123);
+        let test_x = generate_matrixdata(*n_samples / 10, *n_features, 123);
 
         group.bench_with_input(
             BenchmarkId::new(
@@ -260,8 +256,8 @@ fn bench_statistical_tests(c: &mut Criterion) {
     let mut group = c.benchmark_group("statistical_tests");
 
     for size in [1_000, 10_000, 100_000].iter() {
-        let data1 = generate_test_data(*size, 42);
-        let data2 = generate_test_data(*size, 123);
+        let data1 = generate_testdata(*size, 42);
+        let data2 = generate_testdata(*size, 123);
 
         group.throughput(Throughput::Elements(*size as u64));
 
@@ -410,7 +406,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
 
     // Test different data access patterns
     for size in [10_000, 100_000, 1_000_000].iter() {
-        let data = generate_test_data(*size, 42);
+        let data = generate_testdata(*size, 42);
 
         group.throughput(Throughput::Elements(*size as u64));
 
@@ -440,9 +436,9 @@ fn bench_memory_efficiency(c: &mut Criterion) {
             &data,
             |b, data| {
                 b.iter(|| {
-                    let chunk_size = 1000;
+                    let chunksize = 1000;
                     let mut results = Vec::new();
-                    for chunk in data.chunks(chunk_size) {
+                    for chunk in data.chunks(chunksize) {
                         results.push(chunk.iter().sum::<f64>() / chunk.len() as f64);
                     }
                     black_box(results)
@@ -460,7 +456,7 @@ fn bench_parallel_processing(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_processing");
 
     for size in [100_000, 1_000_000, 10_000_000].iter() {
-        let data = generate_matrix_data(*size / 1000, 1000, 42);
+        let data = generate_matrixdata(*size / 1000, 1000, 42);
 
         group.throughput(Throughput::Elements(*size as u64));
 
@@ -532,7 +528,7 @@ fn bench_simd_vs_scalar(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_vs_scalar");
 
     for size in [1_000, 10_000, 100_000, 1_000_000].iter() {
-        let data = generate_test_data(*size, 42);
+        let data = generate_testdata(*size, 42);
 
         group.throughput(Throughput::Elements(*size as u64));
 
@@ -580,12 +576,12 @@ fn bench_simd_vs_scalar(c: &mut Criterion) {
 fn bench_comprehensive_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("comprehensive_comparison");
     group.measurement_time(Duration::from_secs(10));
-    group.sample_size(50);
+    group.samplesize(50);
 
     // Large-scale realistic workload
     let n_samples = 1_000_000;
-    let data = generate_test_data(n_samples, 42);
-    let (x, y) = generate_correlated_data(n_samples, 0.8, 42);
+    let data = generate_testdata(n_samples, 42);
+    let (x, y) = generate_correlateddata(n_samples, 0.8, 42);
 
     group.throughput(Throughput::Elements(n_samples as u64));
 
@@ -615,7 +611,7 @@ fn bench_comprehensive_comparison(c: &mut Criterion) {
     });
 
     // Large matrix operations
-    let matrix = generate_matrix_data(10_000, 100, 42);
+    let matrix = generate_matrixdata(10_000, 100, 42);
     group.bench_function("large_matrix_correlation", |b| {
         b.iter(|| black_box(corrcoef(&matrix.view(), "pearson").unwrap()))
     });

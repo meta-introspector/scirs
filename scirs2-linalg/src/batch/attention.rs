@@ -19,7 +19,7 @@ use crate::error::{check_dimensions, LinalgError, LinalgResult};
 ///
 /// # Arguments
 ///
-/// * `batch_query` - Batch of query matrices [batch_size, seq_len_q, d_model]
+/// * `batch_query` - Batch of query matrices [batchsize, seq_len_q, d_model]
 /// * `key` - Key matrix [seq_len_k, d_model]
 /// * `value` - Value matrix [seq_len_k, d_model]
 /// * `mask` - Optional attention mask
@@ -27,7 +27,7 @@ use crate::error::{check_dimensions, LinalgError, LinalgResult};
 ///
 /// # Returns
 ///
-/// * Batch of attention outputs [batch_size, seq_len_q, d_model]
+/// * Batch of attention outputs [batchsize, seq_len_q, d_model]
 #[allow(dead_code)]
 pub fn batch_multi_query_attention<F>(
     batch_query: &ArrayView3<F>,
@@ -40,7 +40,7 @@ where
     F: Float + Add + Mul + Div + Sub + NumAssignOps + Zero + std::fmt::Debug + 'static,
 {
     // Check dimensions
-    let (batch_size, seq_len_q, d_model_q) = batch_query.dim();
+    let (batchsize, seq_len_q, d_model_q) = batch_query.dim();
     let (seq_len_k, d_model_k) = key.dim();
     let (seq_len_v, d_model_v) = value.dim();
 
@@ -55,10 +55,10 @@ where
     )?;
 
     // Initialize output
-    let mut result = Array3::<F>::zeros((batch_size, seq_len_q, d_model_v));
+    let mut result = Array3::<F>::zeros((batchsize, seq_len_q, d_model_v));
 
     // Process each batch independently
-    for b in 0..batch_size {
+    for b in 0..batchsize {
         // Extract _query for this batch
         let query_b = batch_query.slice(ndarray::s![b, .., ..]);
 
@@ -142,9 +142,9 @@ where
 ///
 /// # Arguments
 ///
-/// * `batch_query` - Batch of query matrices [batch_size, seq_len_q, d_model]
-/// * `batch_key` - Batch of key matrices [batch_size, seq_len_k, d_model]
-/// * `batch_value` - Batch of value matrices [batch_size, seq_len_k, d_model]
+/// * `batch_query` - Batch of query matrices [batchsize, seq_len_q, d_model]
+/// * `batch_key` - Batch of key matrices [batchsize, seq_len_k, d_model]
+/// * `batch_value` - Batch of value matrices [batchsize, seq_len_k, d_model]
 /// * `wq` - Query projection weights [d_model, d_model]
 /// * `wk` - Key projection weights [d_model, d_model]
 /// * `wv` - Value projection weights [d_model, d_model]
@@ -154,7 +154,7 @@ where
 ///
 /// # Returns
 ///
-/// * Batch of attention outputs [batch_size, seq_len_q, d_model]
+/// * Batch of attention outputs [batchsize, seq_len_q, d_model]
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]
 pub fn batch_multi_head_attention<F>(
@@ -172,14 +172,14 @@ where
     F: Float + Add + Mul + Div + Sub + NumAssignOps + Zero + std::fmt::Debug + 'static,
 {
     // Extract dimensions
-    let (batch_size, seq_len_q, d_model) = batch_query.dim();
-    let (batch_size_k, seq_len_k, d_model_k) = batch_key.dim();
-    let (batch_size_v, seq_len_v, d_model_v) = batch_value.dim();
+    let (batchsize, seq_len_q, d_model) = batch_query.dim();
+    let (batchsize_k, seq_len_k, d_model_k) = batch_key.dim();
+    let (batchsize_v, seq_len_v, d_model_v) = batch_value.dim();
 
     // Validate dimensions
     check_dimensions(
-        batch_size == batch_size_k && batch_size == batch_size_v,
-        format!("Batch sizes must match: {batch_size}, {batch_size_k}, {batch_size_v}"),
+        batchsize == batchsize_k && batchsize == batchsize_v,
+        format!("Batch sizes must match: {batchsize}, {batchsize_k}, {batchsize_v}"),
     )?;
 
     check_dimensions(
@@ -229,12 +229,12 @@ where
     }
 
     // Project queries, keys, and values for all batches
-    let mut q_proj = Array3::<F>::zeros((batch_size, seq_len_q, d_model));
-    let mut k_proj = Array3::<F>::zeros((batch_size, seq_len_k, d_model));
-    let mut v_proj = Array3::<F>::zeros((batch_size, seq_len_v, d_model));
+    let mut q_proj = Array3::<F>::zeros((batchsize, seq_len_q, d_model));
+    let mut k_proj = Array3::<F>::zeros((batchsize, seq_len_k, d_model));
+    let mut v_proj = Array3::<F>::zeros((batchsize, seq_len_v, d_model));
 
     // Apply projections for all batches
-    for b in 0..batch_size {
+    for b in 0..batchsize {
         // Project _query
         for i in 0..seq_len_q {
             for j in 0..d_model {
@@ -270,10 +270,10 @@ where
     }
 
     // Initialize output tensor
-    let mut result = Array3::<F>::zeros((batch_size, seq_len_q, d_model));
+    let mut result = Array3::<F>::zeros((batchsize, seq_len_q, d_model));
 
     // Process each batch and head
-    for b in 0..batch_size {
+    for b in 0..batchsize {
         // Initialize concatenated outputs for this batch
         let mut concat_outputs = Array2::<F>::zeros((seq_len_q, d_model));
 
@@ -396,16 +396,16 @@ where
 ///
 /// # Arguments
 ///
-/// * `batch_query` - Batch of query matrices [batch_size, seq_len_q, d_model]
-/// * `batch_key` - Batch of key matrices [batch_size, seq_len_k, d_model]
-/// * `batch_value` - Batch of value matrices [batch_size, seq_len_k, d_model]
+/// * `batch_query` - Batch of query matrices [batchsize, seq_len_q, d_model]
+/// * `batch_key` - Batch of key matrices [batchsize, seq_len_k, d_model]
+/// * `batch_value` - Batch of value matrices [batchsize, seq_len_k, d_model]
 /// * `mask` - Optional attention mask
 /// * `scale` - Scaling factor for attention scores
-/// * `block_size` - Block size for tiling (affects performance but not results)
+/// * `blocksize` - Block size for tiling (affects performance but not results)
 ///
 /// # Returns
 ///
-/// * Batch of attention outputs [batch_size, seq_len_q, d_model]
+/// * Batch of attention outputs [batchsize, seq_len_q, d_model]
 #[allow(dead_code)]
 pub fn batch_flash_attention<F>(
     batch_query: &ArrayView3<F>,
@@ -413,19 +413,19 @@ pub fn batch_flash_attention<F>(
     batch_value: &ArrayView3<F>,
     mask: Option<&AttentionMask>,
     scale: F,
-    block_size: usize,
+    blocksize: usize,
 ) -> LinalgResult<Array3<F>>
 where
     F: Float + Add + Mul + Div + Sub + NumAssignOps + Zero + std::fmt::Debug + 'static,
 {
     // Check dimensions
-    let (batch_size, seq_len_q, d_model) = batch_query.dim();
-    let (batch_size_k, seq_len_k, d_model_k) = batch_key.dim();
-    let (batch_size_v, seq_len_v, d_model_v) = batch_value.dim();
+    let (batchsize, seq_len_q, d_model) = batch_query.dim();
+    let (batchsize_k, seq_len_k, d_model_k) = batch_key.dim();
+    let (batchsize_v, seq_len_v, d_model_v) = batch_value.dim();
 
     check_dimensions(
-        batch_size == batch_size_k && batch_size == batch_size_v,
-        format!("Batch sizes must match: {batch_size}, {batch_size_k}, {batch_size_v}"),
+        batchsize == batchsize_k && batchsize == batchsize_v,
+        format!("Batch sizes must match: {batchsize}, {batchsize_k}, {batchsize_v}"),
     )?;
 
     check_dimensions(
@@ -439,29 +439,29 @@ where
     )?;
 
     // Determine block sizes
-    let block_size_q = block_size.min(seq_len_q);
-    let block_size_k = block_size.min(seq_len_k);
+    let blocksize_q = blocksize.min(seq_len_q);
+    let blocksize_k = blocksize.min(seq_len_k);
 
     // Initialize output
-    let mut result = Array3::<F>::zeros((batch_size, seq_len_q, d_model_v));
+    let mut result = Array3::<F>::zeros((batchsize, seq_len_q, d_model_v));
 
     // Process batch by batch
-    for b in 0..batch_size {
+    for b in 0..batchsize {
         let query_b = batch_query.slice(ndarray::s![b, .., ..]);
         let key_b = batch_key.slice(ndarray::s![b, .., ..]);
         let value_b = batch_value.slice(ndarray::s![b, .., ..]);
 
         // Process _query blocks
-        for q_start in (0..seq_len_q).step_by(block_size_q) {
-            let q_end = (q_start + block_size_q).min(seq_len_q);
+        for q_start in (0..seq_len_q).step_by(blocksize_q) {
+            let q_end = (q_start + blocksize_q).min(seq_len_q);
             let q_block = query_b.slice(ndarray::s![q_start..q_end, ..]);
 
             // For each _query block, process all _key/_value blocks
             let mut m_block = Array1::<F>::from_elem(q_end - q_start, F::neg_infinity());
             let mut l_block = Array1::<F>::zeros(q_end - q_start);
 
-            for k_start in (0..seq_len_k).step_by(block_size_k) {
-                let k_end = (k_start + block_size_k).min(seq_len_k);
+            for k_start in (0..seq_len_k).step_by(blocksize_k) {
+                let k_end = (k_start + blocksize_k).min(seq_len_k);
                 let k_block = key_b.slice(ndarray::s![k_start..k_end, ..]);
                 let v_block = value_b.slice(ndarray::s![k_start..k_end, ..]);
 
@@ -618,16 +618,16 @@ mod tests {
     #[test]
     fn test_batch_multi_head_attention() {
         // Create a batch of 2 sequences, each with 2 tokens and embedding dim 4
-        let batch_size = 2;
+        let batchsize = 2;
         let seq_len = 2;
         let d_model = 4;
         let num_heads = 2;
         let head_dim = d_model / num_heads;
 
         // Create query, key, value tensors with simple values for testing
-        let batch_query = Array3::from_shape_fn((batch_size, seq_len, d_model), |_| 0.1f64);
-        let batch_key = Array3::from_shape_fn((batch_size, seq_len, d_model), |_| 0.1f64);
-        let batch_value = Array3::from_shape_fn((batch_size, seq_len, d_model), |_| 0.1f64);
+        let batch_query = Array3::from_shape_fn((batchsize, seq_len, d_model), |_| 0.1f64);
+        let batch_key = Array3::from_shape_fn((batchsize, seq_len, d_model), |_| 0.1f64);
+        let batch_value = Array3::from_shape_fn((batchsize, seq_len, d_model), |_| 0.1f64);
 
         // Weight matrices
         let wq = Array2::from_shape_fn((d_model, d_model), |_| 0.1f64);
@@ -659,12 +659,12 @@ mod tests {
         .unwrap();
 
         // Check output shape
-        assert_eq!(result.shape(), &[batch_size, seq_len, d_model]);
+        assert_eq!(result.shape(), &[batchsize, seq_len, d_model]);
 
         // For uniform inputs, should get uniform outputs
         // The exact value depends on the complex matrix multiplications, but we can check they're all the same
         let first_value = result[[0, 0, 0]];
-        for b in 0..batch_size {
+        for b in 0..batchsize {
             for i in 0..seq_len {
                 for j in 0..d_model {
                     assert_relative_eq!(result[[b, i, j]], first_value, epsilon = 1e-5);
@@ -676,14 +676,14 @@ mod tests {
     #[test]
     fn test_batch_flash_attention() {
         // Create a batch of 2 sequences, each with 3 tokens and embedding dim 4
-        let batch_size = 2;
+        let batchsize = 2;
         let seq_len = 3;
         let d_model = 4;
 
         // Create query, key, value tensors with simple values for testing
-        let batch_query = Array3::from_shape_fn((batch_size, seq_len, d_model), |_| 0.1f64);
-        let batch_key = Array3::from_shape_fn((batch_size, seq_len, d_model), |_| 0.1f64);
-        let batch_value = Array3::from_shape_fn((batch_size, seq_len, d_model), |_| 0.1f64);
+        let batch_query = Array3::from_shape_fn((batchsize, seq_len, d_model), |_| 0.1f64);
+        let batch_key = Array3::from_shape_fn((batchsize, seq_len, d_model), |_| 0.1f64);
+        let batch_value = Array3::from_shape_fn((batchsize, seq_len, d_model), |_| 0.1f64);
 
         // Compute batched flash attention with block size 2
         let result = batch_flash_attention(
@@ -697,11 +697,11 @@ mod tests {
         .unwrap();
 
         // Check output shape
-        assert_eq!(result.shape(), &[batch_size, seq_len, d_model]);
+        assert_eq!(result.shape(), &[batchsize, seq_len, d_model]);
 
         // For uniform inputs, should get uniform outputs
         let first_value = result[[0, 0, 0]];
-        for b in 0..batch_size {
+        for b in 0..batchsize {
             for i in 0..seq_len {
                 for j in 0..d_model {
                     assert_relative_eq!(result[[b, i, j]], first_value, epsilon = 1e-5);

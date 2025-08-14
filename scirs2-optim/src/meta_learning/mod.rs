@@ -485,7 +485,7 @@ impl<A: Float + ScalarOperand + Debug> HyperparameterOptimizer<A> {
     /// Create a new hyperparameter optimizer
     pub fn new(strategy: HyperparameterStrategy) -> Self {
         Self {
-            strategy: strategy,
+            strategy,
             best_hyperparameters: None,
             best_performance: None,
             trial_history: Vec::new(),

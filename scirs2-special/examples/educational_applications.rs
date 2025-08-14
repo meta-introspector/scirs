@@ -6,8 +6,8 @@
 //! Run with: cargo run --example educational_applications
 
 use ndarray::Array1;
-use num__complex::Complex64;
-use scirs2__special::*;
+use num_complex::Complex64;
+use scirs2_special::*;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -460,14 +460,14 @@ fn statistics_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("Control limits based on normal distribution properties.");
     println!();
 
-    let sample_sizes = vec![1, 4, 9, 16, 25];
+    let samplesizes = vec![1, 4, 9, 16, 25];
     let sigma_levels = vec![2.0, 3.0];
 
     println!("Control chart factors:");
     println!("n     2σ limits   3σ limits   LCL      UCL");
     println!("------------------------------------------");
 
-    for &n in &sample_sizes {
+    for &n in &samplesizes {
         for &sigma in &sigma_levels {
             let factor = sigma / (n as f64).sqrt();
             let lcl = -factor;

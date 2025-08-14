@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("3. RBF Interpolation with Stability Monitoring:");
 
     // Create well-spaced data points
-    let points_good = Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])?;
+    let points_good = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])?;
     let values_good = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
 
     println!("   Creating RBF interpolator with well-conditioned data...");
@@ -69,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Create poorly-conditioned data (nearly collinear points)
-    let points_bad = Array2::fromshape_vec(
+    let points_bad = Array2::from_shape_vec(
         (4, 2),
         vec![
             0.0, 0.0, 1e-10, 1e-10, // Very close to first point
@@ -122,7 +122,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 5. Test interpolation with stability monitoring
     println!("\n5. Interpolation with Well-Conditioned RBF:");
-    let query_points = Array2::fromshape_vec((2, 2), vec![0.5, 0.5, 0.25, 0.75])?;
+    let query_points = Array2::from_shape_vec((2, 2), vec![0.5, 0.5, 0.25, 0.75])?;
     let results = rbf_good.interpolate(&query_points.view())?;
     println!("   Query points: [[0.5, 0.5], [0.25, 0.75]]");
     println!(

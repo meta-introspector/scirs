@@ -128,8 +128,8 @@ pub fn powell_optimize(
                     .assign(&normalized_dir);
 
                 // Perform line search along the new direction
-                let (newparams_) = line_search(&params, &normalized_dir, cost_function, 1e-6)?;
-                params = newparams;
+                let (newparams_, _) = line_search(&params, &normalized_dir, cost_function, 1e-6)?;
+                params = newparams_;
             }
         }
 

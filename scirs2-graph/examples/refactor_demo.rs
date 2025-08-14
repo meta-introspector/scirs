@@ -3,8 +3,11 @@
 //! This example shows that all the major algorithm categories are accessible
 //! and functional after the refactoring.
 
-use scirs2__graph::algorithms::*;
-use scirs2__graph::generators::{create_digraph, create_graph};
+use scirs2_graph::algorithms::*;
+use scirs2_graph::generators::{create_digraph, create_graph};
+use scirs2_graph::{
+    connected_components, diameter, dijkstra_path, minimum_spanning_tree, pagerank, radius,
+};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

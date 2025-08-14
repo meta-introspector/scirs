@@ -41,11 +41,11 @@ pub struct VectorWidth {
 #[derive(Debug, Clone)]
 pub enum CacheStrategy {
     /// L1 cache optimized (32KB typical)
-    L1Optimized { chunk_size: usize },
+    L1Optimized { chunksize: usize },
     /// L2 cache optimized (256KB typical)
-    L2Optimized { chunk_size: usize },
+    L2Optimized { chunksize: usize },
     /// L3 cache optimized (8MB typical)
-    L3Optimized { chunk_size: usize },
+    L3Optimized { chunksize: usize },
     /// Adaptive based on data size
     Adaptive,
 }
@@ -133,7 +133,7 @@ pub struct SimdAnovaTable<F> {
 pub struct SimdMultiTestResult<F> {
     pub test_statistics: Array1<F>,
     pub p_values: Array1<F>,
-    pub effect_sizes: Array1<F>,
+    pub effectsizes: Array1<F>,
     pub confidence_intervals: Array2<F>,
     pub power_estimates: Array1<F>,
     pub critical_values: Array1<F>,
@@ -278,10 +278,10 @@ where
         let means = self.simd_column_means(data)?;
 
         // SIMD-optimized centering
-        let centered_data = self.simd_center_data(data, &means.view())?;
+        let centereddata = self.simd_centerdata(data, &means.view())?;
 
         // SIMD-optimized covariance matrix computation
-        let covariance_matrix = self.simd_covariance_matrix(&centered_data.view(), bias_correction)?;
+        let covariance_matrix = self.simd_covariance_matrix(&centereddata.view(), bias_correction)?;
 
         // SIMD-optimized correlation matrix
         let correlation_matrix = self.simd_correlation_from_covariance(&covariance_matrix.view())?;
@@ -324,19 +324,19 @@ where
         let n_tests = group1.ncols();
         let mut test_statistics = Array1::zeros(n_tests);
         let mut p_values = Array1::zeros(n_tests);
-        let mut effect_sizes = Array1::zeros(n_tests);
+        let mut effectsizes = Array1::zeros(n_tests);
         let mut confidence_intervals = Array2::zeros((n_tests, 2));
         let mut power_estimates = Array1::zeros(n_tests);
         let mut critical_values = Array1::zeros(n_tests);
 
         // Process tests in SIMD-optimized batches
-        let chunk_size = self.config.vector_width.optimal_chunk;
-        let n_chunks = (n_tests + chunk_size - 1) / chunk_size;
+        let chunksize = self.config.vector_width.optimal_chunk;
+        let n_chunks = (n_tests + chunksize - 1) / chunksize;
 
         for chunk_idx in 0..n_chunks {
-            let start_col = chunk_idx * chunk_size;
-            let end_col = (start_col + chunk_size).min(n_tests);
-            let chunk_size_actual = end_col - start_col;
+            let start_col = chunk_idx * chunksize;
+            let end_col = (start_col + chunksize).min(n_tests);
+            let chunksize_actual = end_col - start_col;
 
             // Extract data chunks for batch processing
             let group1_chunk = group1.slice(ndarray::s![.., start_col..end_col]);
@@ -349,7 +349,7 @@ where
                     
                     test_statistics.slice_mut(ndarray::s![start_col..end_col]).assign(&stats);
                     p_values.slice_mut(ndarray::s![start_col..end_col]).assign(&pvals);
-                    effect_sizes.slice_mut(ndarray::s![start_col..end_col]).assign(&effects);
+                    effectsizes.slice_mut(ndarray::s![start_col..end_col]).assign(&effects);
                     confidence_intervals.slice_mut(ndarray::s![start_col..end_col, ..]).assign(&cis);
                     power_estimates.slice_mut(ndarray::s![start_col..end_col]).assign(&power);
                     critical_values.slice_mut(ndarray::s![start_col..end_col]).assign(&crit);
@@ -360,7 +360,7 @@ where
                     
                     test_statistics.slice_mut(ndarray::s![start_col..end_col]).assign(&stats);
                     p_values.slice_mut(ndarray::s![start_col..end_col]).assign(&pvals);
-                    effect_sizes.slice_mut(ndarray::s![start_col..end_col]).assign(&effects);
+                    effectsizes.slice_mut(ndarray::s![start_col..end_col]).assign(&effects);
                     confidence_intervals.slice_mut(ndarray::s![start_col..end_col, ..]).assign(&cis);
                     power_estimates.slice_mut(ndarray::s![start_col..end_col]).assign(&power);
                     critical_values.slice_mut(ndarray::s![start_col..end_col]).assign(&crit);
@@ -371,7 +371,7 @@ where
                     
                     test_statistics.slice_mut(ndarray::s![start_col..end_col]).assign(&stats);
                     p_values.slice_mut(ndarray::s![start_col..end_col]).assign(&pvals);
-                    effect_sizes.slice_mut(ndarray::s![start_col..end_col]).assign(&effects);
+                    effectsizes.slice_mut(ndarray::s![start_col..end_col]).assign(&effects);
                     confidence_intervals.slice_mut(ndarray::s![start_col..end_col, ..]).assign(&cis);
                     power_estimates.slice_mut(ndarray::s![start_col..end_col]).assign(&power);
                     critical_values.slice_mut(ndarray::s![start_col..end_col]).assign(&crit);
@@ -382,7 +382,7 @@ where
         Ok(SimdMultiTestResult {
             test_statistics,
             p_values,
-            effect_sizes,
+            effectsizes,
             confidence_intervals,
             power_estimates,
             critical_values,
@@ -446,22 +446,22 @@ where
         let mut result = Array2::zeros((m, n));
 
         // Determine block sizes based on cache strategy
-        let block_size = match &self.config.cache_strategy {
-            CacheStrategy::L1Optimized { chunk_size } => *chunk_size,
-            CacheStrategy::L2Optimized { chunk_size } => *chunk_size,
-            CacheStrategy::L3Optimized { chunk_size } => *chunk_size,
+        let blocksize = match &self.config.cache_strategy {
+            CacheStrategy::L1Optimized { chunksize } => *chunksize,
+            CacheStrategy::L2Optimized { chunksize } => *chunksize,
+            CacheStrategy::L3Optimized { chunksize } => *chunksize,
             CacheStrategy::Adaptive => {
                 // Adaptive block size based on matrix dimensions
                 (64.0 * (32768.0 / (m as f64 * n as f64).sqrt()).sqrt()) as usize
             }
         };
 
-        for i_block in (0..m).step_by(block_size) {
-            for j_block in (0..n).step_by(block_size) {
-                for k_block in (0..k).step_by(block_size) {
-                    let i_end = (i_block + block_size).min(m);
-                    let j_end = (j_block + block_size).min(n);
-                    let k_end = (k_block + block_size).min(k);
+        for i_block in (0..m).step_by(blocksize) {
+            for j_block in (0..n).step_by(blocksize) {
+                for k_block in (0..k).step_by(blocksize) {
+                    let i_end = (i_block + blocksize).min(m);
+                    let j_end = (j_block + blocksize).min(n);
+                    let k_end = (k_block + blocksize).min(k);
 
                     // Process block with SIMD
                     for i in i_block..i_end {
@@ -731,7 +731,7 @@ where
         Ok(means)
     }
 
-    fn simd_center_data(&self, data: &ArrayView2<F>, means: &ArrayView1<F>) -> StatsResult<Array2<F>> {
+    fn simd_centerdata(&self, data: &ArrayView2<F>, means: &ArrayView1<F>) -> StatsResult<Array2<F>> {
         let (n_rows, n_cols) = data.dim();
         let mut centered = Array2::zeros((n_rows, n_cols));
         
@@ -747,8 +747,8 @@ where
         Ok(centered)
     }
 
-    fn simd_covariance_matrix(&self, centered_data: &ArrayView2<F>, biascorrection: bool) -> StatsResult<Array2<F>> {
-        let (n, p) = centered_data.dim();
+    fn simd_covariance_matrix(&self, centereddata: &ArrayView2<F>, biascorrection: bool) -> StatsResult<Array2<F>> {
+        let (n, p) = centereddata.dim();
         let mut cov_matrix = Array2::zeros((p, p));
         
         let divisor = if bias_correction {
@@ -759,8 +759,8 @@ where
         
         for i in 0..p {
             for j in i..p {
-                let col_i = centered_data.column(i);
-                let col_j = centered_data.column(j);
+                let col_i = centereddata.column(i);
+                let col_j = centereddata.column(j);
                 let covariance = F::simd_dot_product(&col_i, &col_j) / divisor;
                 
                 cov_matrix[[i, j]] = covariance;

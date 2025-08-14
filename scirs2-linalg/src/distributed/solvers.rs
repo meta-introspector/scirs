@@ -478,7 +478,7 @@ where
     /// Create a new Jacobi preconditioner
     pub fn new(matrix: &DistributedMatrix<T>) -> LinalgResult<Self> {
         // Extract diagonal elements
-        let local_diag: Vec<T> = (0.._matrix.localshape().0)
+        let local_diag: Vec<T> = (0..matrix.localshape().0)
             .map(|i| matrix.local_data()[[i, i]])
             .collect();
         
@@ -528,9 +528,9 @@ mod tests {
     fn test_jacobi_preconditioner() {
         let matrix = Array2::from_diag(&Array1::from_vec(vec![2.0, 3.0, 4.0, 5.0]));
         let config = DistributedConfig::default();
-        let dist_matrix = DistributedMatrix::from_local(matrix, config.clone()).unwrap();
+        let distmatrix = DistributedMatrix::from_local(matrix, config.clone()).unwrap();
         
-        let preconditioner = JacobiPreconditioner::new(&dist_matrix).unwrap();
+        let preconditioner = JacobiPreconditioner::new(&distmatrix).unwrap();
         
         let x = Array1::from_vec(vec![2.0, 6.0, 12.0, 20.0]);
         let dist_x = DistributedVector::from_local(x, config).unwrap();
@@ -548,11 +548,11 @@ mod tests {
         let vector = Array1::from_vec(vec![3.0, 3.0]);
         
         let config = DistributedConfig::default();
-        let dist_matrix = DistributedMatrix::from_local(matrix, config.clone()).unwrap();
+        let distmatrix = DistributedMatrix::from_local(matrix, config.clone()).unwrap();
         let dist_vector = DistributedVector::from_local(vector, config).unwrap();
         
         // Test that solver interface works (even if it doesn't converge in this simple test)
-        let result = solve_linear_system(&dist_matrix, &dist_vector);
+        let result = solve_linear_system(&distmatrix, &dist_vector);
         
         // Should return a result (success or failure)
         assert!(result.is_ok() || result.is_err());

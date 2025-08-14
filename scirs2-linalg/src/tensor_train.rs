@@ -46,10 +46,10 @@ use crate::error::{LinalgError, LinalgResult};
 /// each core Gₖ has dimensions [rₖ₋₁, nₖ, rₖ] with r₀ = rᵈ = 1.
 #[derive(Debug, Clone)]
 pub struct TTTensor<F> {
-    /// TT cores: each core has shape [rank_left, mode_size, rank_right]
+    /// TT cores: each core has shape [rank_left, modesize, rank_right]
     pub cores: Vec<Array3<F>>,
     /// Dimensions of each mode
-    pub mode_sizes: Vec<usize>,
+    pub modesizes: Vec<usize>,
     /// TT ranks (length = d+1, with r₀ = rᵈ = 1)
     pub ranks: Vec<usize>,
     /// Current relative accuracy of the representation
@@ -64,7 +64,7 @@ where
     ///
     /// # Arguments
     ///
-    /// * `cores` - Vector of TT cores, each with shape [rank_left, mode_size, rank_right]
+    /// * `cores` - Vector of TT cores, each with shape [rank_left, modesize, rank_right]
     ///
     /// # Returns
     ///
@@ -97,7 +97,7 @@ where
         }
 
         let d = cores.len();
-        let mut mode_sizes = Vec::with_capacity(d);
+        let mut modesizes = Vec::with_capacity(d);
         let mut ranks = Vec::with_capacity(d + 1);
 
         // Validate dimensions and extract sizes
@@ -111,7 +111,7 @@ where
                 )));
             }
 
-            mode_sizes.push(shape[1]);
+            modesizes.push(shape[1]);
             ranks.push(shape[2]); // rₖ
 
             // Check rank consistency
@@ -131,8 +131,8 @@ where
         }
 
         Ok(TTTensor {
-            cores: cores,
-            mode_sizes,
+            cores,
+            modesizes,
             ranks,
             accuracy: F::zero(), // Will be set by decomposition algorithms
         })
@@ -145,7 +145,7 @@ where
 
     /// Get the shape of the full tensor
     pub fn shape(&self) -> &[usize] {
-        &self.mode_sizes
+        &self.modesizes
     }
 
     /// Get the maximum TT rank
@@ -154,15 +154,15 @@ where
     }
 
     /// Get total storage size of TT representation
-    pub fn storage_size(&self) -> usize {
+    pub fn storagesize(&self) -> usize {
         self.cores.iter().map(|core| core.len()).sum()
     }
 
     /// Calculate compression ratio compared to full tensor
     pub fn compression_ratio(&self) -> f64 {
-        let full_size: usize = self.mode_sizes.iter().product();
-        let tt_size = self.storage_size();
-        full_size as f64 / tt_size as f64
+        let fullsize: usize = self.modesizes.iter().product();
+        let ttsize = self.storagesize();
+        fullsize as f64 / ttsize as f64
     }
 
     /// Extract a single element from the TT tensor
@@ -184,7 +184,7 @@ where
         }
 
         // Check bounds
-        for (k, (&idx, &size)) in indices.iter().zip(self.mode_sizes.iter()).enumerate() {
+        for (k, (&idx, &size)) in indices.iter().zip(self.modesizes.iter()).enumerate() {
             if idx >= size {
                 return Err(LinalgError::ShapeError(format!(
                     "Index {idx} out of bounds for dimension {k} (size {size})"
@@ -224,26 +224,26 @@ where
     /// This operation has exponential memory complexity and should only be used
     /// for small tensors or testing purposes.
     pub fn to_dense(&self) -> LinalgResult<ndarray::Array<F, IxDyn>> {
-        let shape: Vec<usize> = self.mode_sizes.clone();
-        let total_size: usize = shape.iter().product();
+        let shape: Vec<usize> = self.modesizes.clone();
+        let totalsize: usize = shape.iter().product();
 
         // Prevent excessive memory allocation
-        if total_size > 1_000_000 {
+        if totalsize > 1_000_000 {
             return Err(LinalgError::ShapeError(format!(
-                "Dense tensor would be too large: {total_size} elements"
+                "Dense tensor would be too large: {totalsize} elements"
             )));
         }
 
-        let mut data = Vec::with_capacity(total_size);
+        let mut data = Vec::with_capacity(totalsize);
         let mut indices = vec![0; self.ndim()];
 
         // Generate all possible index combinations
-        for flat_idx in 0..total_size {
+        for flat_idx in 0..totalsize {
             // Convert flat index to multi-index
             let mut remaining = flat_idx;
             for k in (0..self.ndim()).rev() {
-                indices[k] = remaining % self.mode_sizes[k];
-                remaining /= self.mode_sizes[k];
+                indices[k] = remaining % self.modesizes[k];
+                remaining /= self.modesizes[k];
             }
 
             // Extract element at this position
@@ -379,7 +379,7 @@ where
 
         Ok(TTTensor {
             cores: new_cores,
-            mode_sizes: self.mode_sizes.clone(),
+            modesizes: self.modesizes.clone(),
             ranks: new_ranks,
             accuracy: tolerance,
         })
@@ -460,11 +460,11 @@ where
     // Left-to-right decomposition
     for k in 0..d - 1 {
         let n_k = shape[k]; // Use original tensor shape for mode size
-        let remaining_size: usize = shape[k + 1..].iter().product();
+        let remainingsize: usize = shape[k + 1..].iter().product();
 
         // Reshape to matrix: r_{k-1} * n_k × remaining
         let matrix_rows = ranks[k] * n_k;
-        let matrix_cols = remaining_size;
+        let matrix_cols = remainingsize;
 
         if current_data.len() != matrix_rows * matrix_cols {
             return Err(LinalgError::ShapeError(format!(
@@ -568,15 +568,15 @@ pub fn tt_add<F>(a: &TTTensor<F>, b: &TTTensor<F>) -> LinalgResult<TTTensor<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
-    if a.mode_sizes != b.mode_sizes {
+    if a.modesizes != b.modesizes {
         return Err(LinalgError::ShapeError(
             "TT tensors must have the same dimensions for addition".to_string(),
         ));
     }
 
     // For simplicity and correctness, use dense addition for small tensors
-    let total_size: usize = a.mode_sizes.iter().product();
-    if total_size > 10000 {
+    let totalsize: usize = a.modesizes.iter().product();
+    if totalsize > 10000 {
         return Err(LinalgError::ShapeError(
             "TT addition only supported for small tensors in this implementation".to_string(),
         ));
@@ -642,7 +642,7 @@ pub fn tt_hadamard<F>(a: &TTTensor<F>, b: &TTTensor<F>) -> LinalgResult<TTTensor
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
-    if a.mode_sizes != b.mode_sizes {
+    if a.modesizes != b.modesizes {
         return Err(LinalgError::ShapeError(
             "TT tensors must have the same dimensions for Hadamard product".to_string(),
         ));
@@ -915,7 +915,7 @@ mod tests {
         assert_relative_eq!(compression, 1.0, epsilon = 1e-10);
 
         // Storage should match tensor size
-        assert_eq!(tt_tensor.storage_size(), 2);
+        assert_eq!(tt_tensor.storagesize(), 2);
     }
 
     #[test]

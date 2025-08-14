@@ -194,7 +194,7 @@ impl QuantumSparseProcessor {
         };
 
         Self {
-            config: config,
+            config,
             quantum_state,
             measurement_cache: HashMap::new(),
             operation_counter: AtomicUsize::new(0),

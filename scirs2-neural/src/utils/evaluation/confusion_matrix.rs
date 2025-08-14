@@ -122,7 +122,7 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
         }
 
         Ok(ConfusionMatrix {
-            matrix: matrix,
+            matrix,
             labels,
             num_classes: n_classes,
         })

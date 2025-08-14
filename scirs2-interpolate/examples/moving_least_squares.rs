@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let grid_points_array = Array2::fromshape_vec(
+    let grid_points_array = Array2::from_shape_vec(
         (n_grid * n_grid, 2),
         grid_points.into_iter().flatten().collect(),
     )?;
@@ -51,7 +51,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         sample_values.push(z);
     }
 
-    let sample_points_array = Array2::fromshape_vec(
+    let sample_points_array = Array2::from_shape_vec(
         (n_samples, 2),
         sample_points.into_iter().flatten().collect(),
     )?;

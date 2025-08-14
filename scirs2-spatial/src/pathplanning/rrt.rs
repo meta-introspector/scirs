@@ -118,7 +118,7 @@ impl RRTPlanner {
         let rng = StdRng::seed_from_u64(seed);
 
         RRTPlanner {
-            config: config,
+            config,
             collision_checker: None,
             rng,
             dimension,
@@ -197,8 +197,8 @@ impl RRTPlanner {
         kdtree: &KDTree<f64, EuclideanDistance<f64>>,
     ) -> SpatialResult<usize> {
         let point_vec = point.to_vec();
-        let (indices_, _) = kdtree.query(point_vec.as_slice(), 1)?;
-        Ok(indices_[0])
+        let (indices, _) = kdtree.query(point_vec.as_slice(), 1)?;
+        Ok(indices[0])
     }
 
     /// Compute a new point that is step_size distance from nearest toward randompoint
@@ -573,11 +573,11 @@ impl RRTPlanner {
                 .expect("Failed to build KDTree");
 
             // Find nearest node in tree A
-            let nearest_idx_a = self.find_nearest_node(&randompoint.view(), tree_a, &kdtree_a)?;
+            let nearest_idxa = self.find_nearest_node(&randompoint.view(), tree_a, &kdtree_a)?;
 
             // Create temporary copy to avoid borrowing conflicts
-            let nearest_position = tree_a[nearest_idx_a].position.clone();
-            let nearest_cost = tree_a[nearest_idx_a].cost;
+            let nearest_position = tree_a[nearest_idxa].position.clone();
+            let nearest_cost = tree_a[nearest_idxa].cost;
 
             // Steer from nearest in A toward random point
             let new_point = self.steer(&nearest_position.view(), &randompoint.view());
@@ -590,7 +590,7 @@ impl RRTPlanner {
                 let new_node_idx_a = tree_a.len();
                 tree_a.push(RRTNode {
                     position: new_point.clone(),
-                    parent: Some(nearest_idx_a),
+                    parent: Some(nearest_idxa),
                     cost: new_cost,
                 });
 
@@ -605,10 +605,10 @@ impl RRTPlanner {
                     .expect("Failed to build KDTree");
 
                 // Find nearest node in tree B
-                let nearest_idx_b = self.find_nearest_node(&new_point.view(), tree_b, &kdtree_b)?;
+                let nearest_idxb = self.find_nearest_node(&new_point.view(), tree_b, &kdtree_b)?;
 
                 // Create temporary copy to avoid borrowing conflicts
-                let nearest_position_b = tree_b[nearest_idx_b].position.clone();
+                let nearest_position_b = tree_b[nearest_idxb].position.clone();
 
                 // Check if trees can be connected
                 let dist_between_trees =
@@ -618,9 +618,9 @@ impl RRTPlanner {
                 {
                     // Trees can be connected! Store the connection indices
                     connection = if a_is_start {
-                        Some((new_node_idx_a, nearest_idx_b))
+                        Some((new_node_idx_a, nearest_idxb))
                     } else {
-                        Some((nearest_idx_b, new_node_idx_a))
+                        Some((nearest_idxb, new_node_idx_a))
                     };
                     break;
                 }
@@ -629,8 +629,7 @@ impl RRTPlanner {
 
         // Extract the path if trees were connected
         if let Some((start_idx, goalidx)) = connection {
-            let path =
-                self.extract_bidirectional_path(&start_tree, &goal_tree, start_idx, goalidx);
+            let path = self.extract_bidirectional_path(&start_tree, &goal_tree, start_idx, goalidx);
             Ok(Some(path))
         } else {
             Ok(None)

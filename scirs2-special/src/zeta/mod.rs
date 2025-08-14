@@ -38,7 +38,7 @@ use std::ops::AddAssign;
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::zeta;
+/// use scirs2_special::zeta;
 ///
 /// // ζ(2) = π²/6 ≈ 1.645
 /// let z2 = zeta(2.0f64).unwrap();
@@ -99,7 +99,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::hurwitz_zeta;
+/// use scirs2_special::hurwitz_zeta;
 ///
 /// // The Riemann zeta function is a special case of the Hurwitz zeta function
 /// // ζ(s) = ζ(s, 1)
@@ -157,7 +157,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::{zeta, zetac};
+/// use scirs2_special::{zeta, zetac};
 ///
 /// // ζ(2) - 1 = π²/6 - 1 ≈ 0.645
 /// let z2c = zetac(2.0f64).unwrap();
@@ -304,24 +304,24 @@ where
     }
 
     // Calculate 1-s
-    let one_minus_s = F::one() - s;
+    let oneminus_s = F::one() - s;
 
     // First, calculate ζ(1-s)
-    let zeta_1_minus_s = zeta(one_minus_s)?;
+    let zeta_1minus_s = zeta(oneminus_s)?;
 
     // Calculate 2^s * π^(s-1)
     let two_s = F::from(2.0).unwrap().powf(s);
-    let pi_s_minus_1 = F::from(f64::consts::PI).unwrap().powf(s - F::one());
+    let pi_sminus_1 = F::from(f64::consts::PI).unwrap().powf(s - F::one());
 
     // Calculate sin(πs/2)
     let pi_s_half = F::from(f64::consts::PI).unwrap() * s / F::from(2.0).unwrap();
     let sin_pi_s_half = pi_s_half.sin();
 
     // Calculate Γ(1-s)
-    let gamma_1_minus_s = gamma(one_minus_s);
+    let gamma_1minus_s = gamma(oneminus_s);
 
     // Combine all terms
-    let result = two_s * pi_s_minus_1 * sin_pi_s_half * gamma_1_minus_s * zeta_1_minus_s;
+    let result = two_s * pi_sminus_1 * sin_pi_s_half * gamma_1minus_s * zeta_1minus_s;
 
     Ok(result)
 }
@@ -336,22 +336,22 @@ where
     // ζ(s) = 2^s * π^(s-1) * sin(πs/2) * Γ(1-s) * ζ(1-s)
 
     // First, calculate ζ(1-s)
-    let one_minus_s = F::one() - s;
-    let zeta_1_minus_s = zeta_euler_maclaurin(one_minus_s)?;
+    let oneminus_s = F::one() - s;
+    let zeta_1minus_s = zeta_euler_maclaurin(oneminus_s)?;
 
     // Calculate 2^s * π^(s-1)
     let two_s = F::from(2.0).unwrap().powf(s);
-    let pi_s_minus_1 = F::from(f64::consts::PI).unwrap().powf(s - F::one());
+    let pi_sminus_1 = F::from(f64::consts::PI).unwrap().powf(s - F::one());
 
     // Calculate sin(πs/2)
     let pi_s_half = F::from(f64::consts::PI).unwrap() * s / F::from(2.0).unwrap();
     let sin_pi_s_half = pi_s_half.sin();
 
     // Calculate Γ(1-s)
-    let gamma_1_minus_s = gamma(one_minus_s);
+    let gamma_1minus_s = gamma(oneminus_s);
 
     // Combine all terms
-    let result = two_s * pi_s_minus_1 * sin_pi_s_half * gamma_1_minus_s * zeta_1_minus_s;
+    let result = two_s * pi_sminus_1 * sin_pi_s_half * gamma_1minus_s * zeta_1minus_s;
 
     Ok(result)
 }
@@ -513,7 +513,7 @@ where
 
     // For moderate negative values, use asymptotic expansion
     if s_f64 > -10.0 {
-        let one_minus_s = F::one() - s;
+        let oneminus_s = F::one() - s;
         let pi = F::from(std::f64::consts::PI).unwrap_or(F::zero());
         let two_pi = F::from(2.0).unwrap_or(F::zero()) * pi;
 
@@ -523,7 +523,7 @@ where
 
         for n in 1..=50 {
             let n_f = F::from(n).unwrap_or(F::zero());
-            let term_base = n_f.powf(-one_minus_s);
+            let term_base = n_f.powf(-oneminus_s);
             let angle = two_pi * n_f * q;
 
             sum_cos = sum_cos + angle.cos() * term_base;
@@ -532,8 +532,8 @@ where
 
         // Approximate the gamma function and trigonometric prefactors
         let gamma_val = gamma((F::one() - s).to_f64().unwrap_or(1.0));
-        let pi_power = (two_pi).powf(-one_minus_s);
-        let angle_factor = pi * (one_minus_s) / F::from(2.0).unwrap_or(F::one());
+        let pi_power = (two_pi).powf(-oneminus_s);
+        let angle_factor = pi * (oneminus_s) / F::from(2.0).unwrap_or(F::one());
 
         let result = F::from(2.0 * gamma_val).unwrap_or(F::zero()) / pi_power
             * (angle_factor.sin() * sum_cos + angle_factor.cos() * sum_sin);

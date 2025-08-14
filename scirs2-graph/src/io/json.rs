@@ -61,8 +61,8 @@
 //! use std::fs::File;
 //! use std::io::Write;
 //! use tempfile::NamedTempFile;
-//! use scirs2__graph::base::Graph;
-//! use scirs2__graph::io::json::{read_json_format, write_json_format};
+//! use scirs2_graph::base::Graph;
+//! use scirs2_graph::io::json::{read_json_format, write_json_format};
 //!
 //! // Create a temporary file with JSON data
 //! let mut temp_file = NamedTempFile::new().unwrap();

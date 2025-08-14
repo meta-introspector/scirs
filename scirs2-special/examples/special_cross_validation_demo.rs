@@ -3,7 +3,7 @@
 //! This example shows how to validate special functions against
 //! multiple reference implementations like SciPy, GSL, and MPFR.
 
-use scirs2__special::{
+use scirs2_special::{
     bessel::{j0, y0},
     beta,
     cross_validation::{CrossValidator, PythonValidator},

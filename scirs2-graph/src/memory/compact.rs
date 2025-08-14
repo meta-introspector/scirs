@@ -30,10 +30,7 @@ pub struct CSRGraph {
 
 impl CSRGraph {
     /// Create a new CSR graph from edge list (optimized version)
-    pub fn from_edges(
-        n_nodes: usize,
-        edges: Vec<(usize, usize, f64)>,
-    ) -> Result<Self, GraphError> {
+    pub fn from_edges(n_nodes: usize, edges: Vec<(usize, usize, f64)>) -> Result<Self, GraphError> {
         let n_edges = edges.len();
 
         // Pre-allocate with exact sizes to avoid reallocations
@@ -811,6 +808,9 @@ mod tests {
         let compressed_size = graph.memory_usage();
         // For small graphs, compression overhead may exceed savings
         // Just verify the compressed graph works correctly
-        println!("Uncompressed: {} bytes, Compressed: {} bytes", uncompressed_size, compressed_size);
+        println!(
+            "Uncompressed: {} bytes, Compressed: {} bytes",
+            uncompressed_size, compressed_size
+        );
     }
 }

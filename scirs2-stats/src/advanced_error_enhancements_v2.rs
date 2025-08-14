@@ -191,7 +191,7 @@ pub struct CpuInfo {
     pub architecture: String,
     pub core_count: usize,
     pub simd_support: Vec<String>,
-    pub cache_sizes: Vec<usize>,
+    pub cachesizes: Vec<usize>,
 }
 
 /// Memory information
@@ -261,7 +261,7 @@ pub struct ScalabilityAssessment {
     pub current_performance: PerformanceMetrics,
     pub predicted_performance: Vec<(usize, PerformanceMetrics)>, // (size, metrics)
     pub scaling_factor: f64,
-    pub recommended_max_size: Option<usize>,
+    pub recommended_maxsize: Option<usize>,
 }
 
 /// Performance metrics
@@ -434,7 +434,7 @@ pub struct ErrorEngineConfig {
     /// Maximum analysis time
     pub max_analysis_time: Duration,
     /// Cache size limit
-    pub cache_size_limit: usize,
+    pub cachesize_limit: usize,
 }
 
 /// Recovery statistics
@@ -491,7 +491,7 @@ impl AdvancedErrorEngine {
             self.error_history.push(enhanced_context.clone());
 
             // Limit history size
-            if self.error_history.len() > self.config.cache_size_limit {
+            if self.error_history.len() > self.config.cachesize_limit {
                 self.error_history.remove(0);
             }
         }
@@ -515,7 +515,7 @@ impl AdvancedErrorEngine {
         let related_errors = self.find_related_errors(error);
 
         // Assess data quality
-        let data_quality = self.assess_data_quality(&context.data_characteristics);
+        let data_quality = self.assessdata_quality(&context.data_characteristics);
 
         // Analyze computational complexity
         let complexity_analysis = self.analyze_complexity(context);
@@ -609,7 +609,7 @@ impl AdvancedErrorEngine {
     }
 
     /// Assess data quality
-    fn assess_data_quality(&self, characteristics: &DataCharacteristics) -> DataQuality {
+    fn assessdata_quality(&self, characteristics: &DataCharacteristics) -> DataQuality {
         let mut overall_score = 1.0;
         let mut issues = Vec::new();
 
@@ -689,7 +689,7 @@ impl AdvancedErrorEngine {
                     },
                 )],
                 scaling_factor: 1.0,
-                recommended_max_size: Some(1_000_000),
+                recommended_maxsize: Some(1_000_000),
             },
             bottleneck_analysis: vec![BottleneckInfo {
                 component: "Memory allocation".to_string(),
@@ -746,11 +746,11 @@ use ndarray::Array1;
 use rand::{rng, seq::SliceRandom};
 
 #[allow(dead_code)]
-fn bootstrap_augment(_data: &Array1<f64>, targetsize: usize) -> Array1<f64> {
+fn bootstrap_augment(data: &Array1<f64>, targetsize: usize) -> Array1<f64> {
     let mut rng = rand::rng();
-    let mut augmented = Vec::with_capacity(target_size);
+    let mut augmented = Vec::with_capacity(targetsize);
     
-    for _ in 0..target_size {
+    for _ in 0..targetsize {
         let sample = data.as_slice().unwrap().choose(&mut rng).unwrap();
         augmented.push(*sample);
     }
@@ -889,7 +889,7 @@ fn add_ridge_regularization(matrix: &mut Array2<f64>, lambda: f64) {
                 InteractiveOption {
                     option_type: InteractiveType::DataValidation,
                     description: "Run comprehensive data validation".to_string(),
-                    action: "validate_data_quality".to_string(),
+                    action: "validatedata_quality".to_string(),
                 },
             ],
         }
@@ -903,7 +903,7 @@ impl Default for ErrorEngineConfig {
             enable_performance_profiling: true,
             enable_learning: true,
             max_analysis_time: Duration::from_millis(100),
-            cache_size_limit: 1000,
+            cachesize_limit: 1000,
         }
     }
 }
@@ -914,7 +914,7 @@ pub fn create_enhanced_error_context(
     error: StatsError,
     function_name: &str,
     module_path: &str,
-    data_size: usize,
+    datasize: usize,
 ) -> AdvancedErrorContext {
     let mut engine = AdvancedErrorEngine::new(ErrorEngineConfig::default());
 
@@ -922,10 +922,10 @@ pub fn create_enhanced_error_context(
         function_name: function_name.to_string(),
         module_path: module_path.to_string(),
         data_characteristics: DataCharacteristics {
-            _size_info: SizeInfo {
-                dimensions: vec![data_size],
-                total_elements: data_size,
-                memory_footprint: data_size * 8,
+            size_info: SizeInfo {
+                dimensions: vec![datasize],
+                total_elements: datasize,
+                memory_footprint: datasize * 8,
                 sparsity: None,
             },
             type_info: TypeInfo {
@@ -954,7 +954,7 @@ pub fn create_enhanced_error_context(
                 architecture: "x86_64".to_string(),
                 core_count: num_cpus::get(),
                 simd_support: vec!["AVX2".to_string(), "SSE4.2".to_string()],
-                cache_sizes: vec![32_768, 262_144, 8_388_608], // L1, L2, L3
+                cachesizes: vec![32_768, 262_144, 8_388_608], // L1, L2, L3
             },
             memory_info: MemoryInfo {
                 total_memory: 16_000_000_000,    // 16GB
@@ -1038,7 +1038,7 @@ mod tests {
                     architecture: "x86_64".to_string(),
                     core_count: 4,
                     simd_support: vec!["AVX2".to_string()],
-                    cache_sizes: vec![32768],
+                    cachesizes: vec![32768],
                 },
                 memory_info: MemoryInfo {
                     total_memory: 8000000000,
@@ -1107,7 +1107,7 @@ mod tests {
                     architecture: "x86_64".to_string(),
                     core_count: 4,
                     simd_support: vec!["AVX2".to_string()],
-                    cache_sizes: vec![32768],
+                    cachesizes: vec![32768],
                 },
                 memory_info: MemoryInfo {
                     total_memory: 8000000000,

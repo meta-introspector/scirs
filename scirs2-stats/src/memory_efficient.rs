@@ -117,7 +117,7 @@ where
 
     if variance <= F::epsilon() {
         return Err(StatsError::InvalidArgument(
-            "Cannot normalize _data with zero variance".to_string(),
+            "Cannot normalize data with zero variance".to_string(),
         ));
     }
 
@@ -263,9 +263,9 @@ where
     let mut cov_matrix = ndarray::Array2::zeros((n_vars, n_vars));
 
     // Process data in chunks to compute covariance
-    let chunk_size = CHUNK_SIZE / n_vars;
-    for chunk_start in (0..n_obs).step_by(chunk_size) {
-        let chunk_end = (chunk_start + chunk_size).min(n_obs);
+    let chunksize = CHUNK_SIZE / n_vars;
+    for chunk_start in (0..n_obs).step_by(chunksize) {
+        let chunk_end = (chunk_start + chunksize).min(n_obs);
         let chunk = data.slice(s![chunk_start..chunk_end, ..]);
 
         // Update covariance for this chunk
@@ -461,7 +461,7 @@ impl<F: Float + NumCast + ndarray::ScalarOperand + std::fmt::Display> Incrementa
 /// Computes statistics over a sliding window without storing all data.
 #[allow(dead_code)]
 pub struct RollingStats<F: Float> {
-    window_size: usize,
+    windowsize: usize,
     buffer: Vec<F>,
     position: usize,
     is_full: bool,
@@ -475,12 +475,12 @@ impl<F: Float + NumCast + std::fmt::Display> RollingStats<F> {
     pub fn new(_windowsize: usize) -> StatsResult<Self> {
         if _windowsize == 0 {
             return Err(StatsError::InvalidArgument(
-                "Window _size must be positive".to_string(),
+                "Window size must be positive".to_string(),
             ));
         }
 
         Ok(Self {
-            window_size: _windowsize,
+            windowsize: _windowsize,
             buffer: vec![F::zero(); _windowsize],
             position: 0,
             is_full: false,
@@ -499,7 +499,7 @@ impl<F: Float + NumCast + std::fmt::Display> RollingStats<F> {
 
         // Store new value
         self.buffer[self.position] = value;
-        self.position = (self.position + 1) % self.window_size;
+        self.position = (self.position + 1) % self.windowsize;
 
         if !self.is_full && self.position == 0 {
             self.is_full = true;
@@ -509,7 +509,7 @@ impl<F: Float + NumCast + std::fmt::Display> RollingStats<F> {
     /// Get current window size
     pub fn len(&self) -> usize {
         if self.is_full {
-            self.window_size
+            self.windowsize
         } else {
             self.position
         }
@@ -570,7 +570,7 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
             .collect();
 
         Self {
-            bins: bins,
+            bins,
             counts: vec![0; _n_bins],
             min_val,
             max_val: maxval,
@@ -626,7 +626,7 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
 /// Processes data from files in chunks without loading entire dataset.
 #[allow(dead_code)]
 pub struct OutOfCoreStats<F: Float> {
-    chunk_size: usize,
+    chunksize: usize,
     _phantom: std::marker::PhantomData<F>,
 }
 
@@ -635,7 +635,7 @@ impl<F: Float + NumCast + std::str::FromStr + std::fmt::Display> OutOfCoreStats<
     /// Create a new out-of-core statistics processor
     pub fn new(_chunksize: usize) -> Self {
         Self {
-            chunk_size: _chunksize,
+            chunksize: _chunksize,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -782,15 +782,15 @@ impl<F: Float + NumCast + std::str::FromStr + std::fmt::Display> OutOfCoreStats<
             .map_err(|e| StatsError::InvalidArgument(format!("Failed to open file: {e}")))?;
         let mut reader = BufReader::new(file);
 
-        let element_size = mem::size_of::<F>();
-        let buffer_size = self.chunk_size * element_size;
-        let mut buffer = vec![0u8; buffer_size];
+        let elementsize = mem::size_of::<F>();
+        let buffersize = self.chunksize * elementsize;
+        let mut buffer = vec![0u8; buffersize];
 
         loop {
             match reader.read(&mut buffer) {
                 Ok(0) => break, // EOF
                 Ok(bytes_read) => {
-                    let n_elements = bytes_read / element_size;
+                    let n_elements = bytes_read / elementsize;
 
                     // Convert bytes to floats (unsafe but efficient)
                     let floats = unsafe {

@@ -5,12 +5,12 @@
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::Rng;
-use scirs2__graph::advanced::{
+use scirs2_graph::advanced::{
     create_enhanced_advanced_processor, create_large_graph_advanced_processor,
     create_realtime_advanced_processor, execute_with_enhanced_advanced, AdvancedConfig,
     AdvancedProcessor,
 };
-use scirs2__graph::base::Graph;
+use scirs2_graph::base::Graph;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -310,10 +310,10 @@ fn stress_test_algorithms(
     processor: &mut AdvancedProcessor,
     test_name: &str,
 ) -> HashMap<String, Duration> {
-    use scirs2__graph::algorithms::community::louvain_communities_result;
-    use scirs2__graph::algorithms::connectivity::connected_components;
-    use scirs2__graph::algorithms::dijkstra_path;
-    use scirs2__graph::algorithms::pagerank;
+    use scirs2_graph::algorithms::community::louvain_communities_result;
+    use scirs2_graph::algorithms::connectivity::connected_components;
+    use scirs2_graph::algorithms::dijkstra_path;
+    use scirs2_graph::algorithms::pagerank;
 
     let mut results = HashMap::new();
     println!(
@@ -453,7 +453,7 @@ fn extreme_stress_test(
     let start = Instant::now();
     let result =
         execute_with_enhanced_advanced(processor, graph, "extreme_connected_components", |g| {
-            use scirs2__graph::algorithms::connectivity::connected_components;
+            use scirs2_graph::algorithms::connectivity::connected_components;
             match connected_components(g) {
                 Ok(components) => Ok(format!("Found {} components", components.len())),
                 Err(e) => Err(format!("Error: {:?}", e)),
@@ -489,7 +489,7 @@ fn extreme_stress_test(
         println!("  📈 Testing streaming PageRank...");
         let start = Instant::now();
         let result = execute_with_enhanced_advanced(processor, graph, "extreme_pagerank", |g| {
-            use scirs2__graph::algorithms::pagerank;
+            use scirs2_graph::algorithms::pagerank;
             match pagerank(g, 0.85, Some(20), Some(1e-3)) {
                 // Reduced precision for speed
                 Ok(scores) => Ok(format!("Computed PageRank for {} nodes", scores.len())),
@@ -723,7 +723,7 @@ fn concurrent_processor_stress_test(
                 &graph_clone,
                 &format!("concurrent_cc_{}", i),
                 |g| {
-                    use scirs2__graph::algorithms::connectivity::connected_components;
+                    use scirs2_graph::algorithms::connectivity::connected_components;
                     Ok(connected_components(g))
                 },
             );
@@ -734,7 +734,7 @@ fn concurrent_processor_stress_test(
                     &graph_clone,
                     &format!("concurrent_pr_{}", i),
                     |g| {
-                        use scirs2__graph::algorithms::pagerank;
+                        use scirs2_graph::algorithms::pagerank;
                         pagerank(g, 0.85, Some(15), Some(1e-3))
                     },
                 )
@@ -1152,7 +1152,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
                 for _ in 0..iters {
                     let result =
                         execute_with_enhanced_advanced(&mut processor, &graph, "scaling_cc", |g| {
-                            use scirs2__graph::algorithms::connectivity::connected_components;
+                            use scirs2_graph::algorithms::connectivity::connected_components;
                             Ok(connected_components(g))
                         });
                     black_box(result);
@@ -1167,7 +1167,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
                 for _ in 0..iters {
                     let result =
                         execute_with_enhanced_advanced(&mut processor, &graph, "scaling_pr", |g| {
-                            use scirs2__graph::algorithms::pagerank;
+                            use scirs2_graph::algorithms::pagerank;
                             pagerank(g, 0.85, Some(30), Some(1e-4)) // Reduced iterations for scaling test
                         });
                     black_box(result);

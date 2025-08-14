@@ -90,8 +90,7 @@ where
     } else {
         // Complex data
         is_complex = true;
-        data
-            .iter()
+        data.iter()
             .map(|&val| {
                 num_traits::cast::cast::<T, Complex64>(val).ok_or_else(|| {
                     SignalError::ValueError(format!("Could not convert {:?} to Complex64", val))

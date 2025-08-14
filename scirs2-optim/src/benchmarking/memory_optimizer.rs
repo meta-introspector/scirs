@@ -801,7 +801,7 @@ impl MemoryOptimizer {
     /// Create a new memory optimizer
     pub fn new(config: MemoryOptimizerConfig) -> Self {
         Self {
-            config: config,
+            config,
             memory_tracker: AdvancedMemoryTracker::new(),
             leak_detector: MemoryLeakDetector::new(),
             optimization_engine: OptimizationEngine::new(),

@@ -54,7 +54,7 @@ fn main() {
     ];
 
     let sym =
-        SymmetricMatrix::from_matrix(&sym_data.view()).expect("Failed to create symmetric matrix");
+        SymmetricMatrix::frommatrix(&sym_data.view()).expect("Failed to create symmetric matrix");
 
     println!("Symmetric matrix created successfully!");
     println!("Size: {}x{}", sym.nrows(), sym.ncols());

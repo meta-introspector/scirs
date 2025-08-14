@@ -158,7 +158,11 @@ where
     let tol = 3.0 * SQRT_EPS;
     // a, b, c form the bracket, reorder if needed
     let (mut bracket_a, mut bracket_b) = if b < c { (b, c) } else { (c, b) };
-    let (mut a, mut b) = if a < bracket_a { (a, bracket_a) } else { (bracket_a, a) };
+    let (mut a, mut b) = if a < bracket_a {
+        (a, bracket_a)
+    } else {
+        (bracket_a, a)
+    };
 
     // Initialize
     let mut v = a + GOLDEN * (b - a);
@@ -448,7 +452,11 @@ where
 
     // a, b, c form the bracket, reorder if needed
     let (mut bracket_a, mut bracket_b) = if b < c { (b, c) } else { (c, b) };
-    let (mut a, mut b) = if a < bracket_a { (a, bracket_a) } else { (bracket_a, a) };
+    let (mut a, mut b) = if a < bracket_a {
+        (a, bracket_a)
+    } else {
+        (bracket_a, a)
+    };
 
     // Initialize points
     let mut x1 = a + (1.0 - GOLDEN) * (b - a);

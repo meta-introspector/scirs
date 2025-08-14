@@ -128,7 +128,7 @@ where
             shape: (coo.rows, coo.cols),
             nnz,
             format: SparseFormat::COO,
-            coo: coo,
+            coo,
             csr: None,
             csc: None,
             metadata: HashMap::new(),

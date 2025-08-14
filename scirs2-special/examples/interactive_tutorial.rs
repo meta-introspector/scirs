@@ -579,8 +579,8 @@ fn wright_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     println!("Wright functions are generalizations of Bessel functions with applications");
     println!("in fractional calculus, anomalous diffusion, and probability theory.\n");
 
-    println!("🔹 Wright Bessel Function J_{ρ,β}(z)");
-    println!("Series: J_{ρ,β}(z) = Σ (-z)^k / (k! Γ(ρk + β))");
+    println!("🔹 Wright Bessel Function J_{{ρ,β}}(z)");
+    println!("Series: J_{{ρ,β}}(z) = Σ (-z)^k / (k! Γ(ρk + β))");
     println!("Parameters: ρ > 0, β ∈ ℂ, z ∈ ℂ\n");
 
     // Basic examples
@@ -596,7 +596,7 @@ fn wright_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     for &(rho, beta, z) in &wright_examples {
         match wright_bessel(rho, beta, z) {
             Ok(result) => {
-                println!("J_{{{}},{}}({}) = {:.6}", rho, beta, z, result);
+                println!("J_{{{},{}}}({}) = {:.6}", rho, beta, z, result);
 
                 // Special cases
                 if (rho - 1.0).abs() < 1e-10 && (beta - 1.0).abs() < 1e-10 {
@@ -605,7 +605,7 @@ fn wright_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
                     println!("  → Related to J₀(2√z) = {:.6}", bessel_equivalent);
                 }
             }
-            Err(e) => println!("Error computing J_{{{}},{}}({}): {}", rho, beta, z, e),
+            Err(e) => println!("Error computing J_{{{},{}}}({}): {}", rho, beta, z, e),
         }
     }
 
@@ -670,7 +670,7 @@ fn wright_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
 
                 if rho > 0.0 {
                     match wright_bessel(rho, beta, z) {
-                        Ok(result) => println!("J_{{{}},{}}({}) = {:.10}", rho, beta, z, result),
+                        Ok(result) => println!("J_{{{},{}}}({}) = {:.10}", rho, beta, z, result),
                         Err(e) => println!("Error: {}", e),
                     }
                 } else {
@@ -951,18 +951,18 @@ fn spherical_harmonics_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     let phi = std::f64::consts::PI / 4.0;
 
     let y_lm = sph_harm(l, m, theta, phi);
-    let y_l_minus_m = sph_harm(l, -m, theta, phi);
+    let y_lminus_m = sph_harm(l, -m, theta, phi);
 
     println!("Y_{}^{}(θ,φ) = {:.4} + {:.4}i", l, m, y_lm.re, y_lm.im);
     println!(
         "Y_{}^{}(θ,φ) = {:.4} + {:.4}i",
-        l, -m, y_l_minus_m.re, y_l_minus_m.im
+        l, -m, y_lminus_m.re, y_lminus_m.im
     );
     println!("Relation: Y_ℓ^(-m) = (-1)^m [Y_ℓ^m]*");
 
     let expected = (-1.0_f64).powi(m) * y_lm.conj();
     println!("Expected: {:.4} + {:.4}i", expected.re, expected.im);
-    println!("Match: {}", (y_l_minus_m - expected).norm() < 1e-10);
+    println!("Match: {}", (y_lminus_m - expected).norm() < 1e-10);
 
     // Orthogonality demonstration
     println!("\n⊥ Orthogonality Check:");
@@ -1043,15 +1043,15 @@ fn spherical_harmonics_tutorial() -> Result<(), Box<dyn std::error::Error>> {
                 if l >= 0 && m.abs() <= l {
                     let theta = theta_deg * std::f64::consts::PI / 180.0;
                     let phi = phi_deg * std::f64::consts::PI / 180.0;
-                    let y = sph_harm(l, m, theta, phi);
+                    let y = sph_harm(l as usize, m, theta, phi).unwrap_or(0.0);
 
                     println!(
                         "Y_{}^{}({:.1}°, {:.1}°) = {:.6} + {:.6}i",
-                        l, m, theta_deg, phi_deg, y.re, y.im
+                        l, m, theta_deg, phi_deg, y, 0.0
                     );
-                    println!("Magnitude: |Y_{}^{}| = {:.6}", l, m, y.norm());
+                    println!("Magnitude: |Y_{}^{}| = {:.6}", l, m, y.abs());
 
-                    if y.im.abs() < 1e-10 {
+                    if y.abs() < 1e-10 {
                         println!("This is essentially real-valued at this point.");
                     }
                 } else {
@@ -1076,8 +1076,8 @@ fn spherical_harmonics_tutorial() -> Result<(), Box<dyn std::error::Error>> {
 
                 for l in 0..=3 {
                     for m in -l..=l {
-                        let y = sph_harm(l, m, theta, phi);
-                        print!("Y_{}^{:2}: {:7.4}+{:7.4}i  ", l, m, y.re, y.im);
+                        let y = sph_harm(l as usize, m, theta, phi).unwrap_or(0.0);
+                        print!("Y_{}^{:2}: {:7.4}+{:7.4}i  ", l, m, y, 0.0);
                         if m == l {
                             println!();
                         }
@@ -1093,8 +1093,8 @@ fn spherical_harmonics_tutorial() -> Result<(), Box<dyn std::error::Error>> {
                     for i in 0..=18 {
                         let theta_deg = i as f64 * 10.0;
                         let theta = theta_deg * std::f64::consts::PI / 180.0;
-                        let y = sph_harm(l, m, theta, 0.0);
-                        println!("θ={:3.0}°: Y={:8.4} + {:8.4}i", theta_deg, y.re, y.im);
+                        let y = sph_harm(l as usize, m, theta, 0.0).unwrap_or(0.0);
+                        println!("θ={:3.0}°: Y={:8.4} + {:8.4}i", theta_deg, y, 0.0);
                     }
                 } else {
                     println!("❌ Invalid quantum numbers");
@@ -1739,24 +1739,24 @@ fn advanced_features_tutorial() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Simple ASCII plotting function for demonstrations
 #[allow(dead_code)]
-fn plot_function_ascii<F>(_title: &str, x_min: f64, xmax: f64, width: usize, f: F)
+fn plot_function_ascii<F>(_title: &str, xmin: f64, xmax: f64, width: usize, f: F)
 where
     F: Fn(f64) -> f64,
 {
     println!("📈 {}", title);
 
     let mut values = Vec::new();
-    let mut y_min = f64::INFINITY;
-    let mut y_max = f64::NEG_INFINITY;
+    let mut ymin = f64::INFINITY;
+    let mut ymax = f64::NEG_INFINITY;
 
     // Collect function values
     for i in 0..width {
-        let x = x_min + (x_max - x_min) * i as f64 / (width - 1) as f64;
+        let x = xmin + (xmax - xmin) * i as f64 / (width - 1) as f64;
         let y = f(x);
         if y.is_finite() {
             values.push((x, y));
-            y_min = y_min._min(y);
-            y_max = y_max._max(y);
+            ymin = ymin.min(y);
+            ymax = ymax.max(y);
         }
     }
 
@@ -1767,15 +1767,15 @@ where
 
     // Plot parameters
     let height = 20;
-    let y_range = y_max - y_min;
+    let y_range = ymax - ymin;
     if y_range == 0.0 {
-        println!("Constant function: f(x) = {:.3}", y_min);
+        println!("Constant function: f(x) = {:.3}", ymin);
         return;
     }
 
     // Create the plot
     for row in 0..height {
-        let y_level = y_max - y_range * row as f64 / (height - 1) as f64;
+        let y_level = ymax - y_range * row as f64 / (height - 1) as f64;
 
         print!("{:8.3} │", y_level);
 
@@ -1801,7 +1801,7 @@ where
 
     print!("          ");
     for i in 0..5 {
-        let x = x_min + (x_max - x_min) * i as f64 / 4.0;
+        let x = xmin + (xmax - xmin) * i as f64 / 4.0;
         print!("{:8.1}  ", x);
     }
     println!();

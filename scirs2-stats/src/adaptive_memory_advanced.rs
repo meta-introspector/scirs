@@ -78,17 +78,17 @@ pub struct CacheOptimizationConfig {
 /// Cache hierarchy details for optimization
 #[derive(Debug, Clone)]
 pub struct CacheHierarchy {
-    pub l1_size: usize,
-    pub l1_line_size: usize,
+    pub l1size: usize,
+    pub l1_linesize: usize,
     pub l1_associativity: usize,
-    pub l2_size: usize,
-    pub l2_line_size: usize,
+    pub l2size: usize,
+    pub l2_linesize: usize,
     pub l2_associativity: usize,
-    pub l3_size: usize,
-    pub l3_line_size: usize,
+    pub l3size: usize,
+    pub l3_linesize: usize,
     pub l3_associativity: usize,
     pub tlb_entries: usize,
-    pub page_size: usize,
+    pub pagesize: usize,
 }
 
 /// Data layout strategy for cache optimization
@@ -131,7 +131,7 @@ pub struct AccessPatternConfig {
     /// Enable pattern detection
     pub enable_detection: bool,
     /// Pattern history size
-    pub history_size: usize,
+    pub historysize: usize,
     /// Pattern prediction window
     pub prediction_window: usize,
     /// Confidence threshold for predictions
@@ -193,7 +193,7 @@ pub struct PredictiveConfig {
     /// Machine learning model type
     pub model_type: PredictiveModelType,
     /// Training data collection
-    pub collect_training_data: bool,
+    pub collect_trainingdata: bool,
     /// Prediction accuracy target
     pub accuracy_target: f64,
     /// Model update frequency
@@ -332,7 +332,7 @@ pub struct OutOfCoreConfig {
     /// Enable out-of-core processing
     pub enable_out_of_core: bool,
     /// Chunk size for out-of-core operations
-    pub chunk_size: usize,
+    pub chunksize: usize,
     /// Number of chunks to keep in memory
     pub memory_chunks: usize,
     /// Disk storage configuration
@@ -501,7 +501,7 @@ pub struct GCTriggerConditions {
     /// Memory usage threshold
     pub memory_threshold: f64,
     /// Time-based triggers
-    pub time_based: Option<Duration>,
+    pub timebased: Option<Duration>,
     /// Allocation count threshold
     pub allocation_threshold: usize,
     /// Memory pressure trigger
@@ -518,7 +518,7 @@ pub struct GCPerformanceTuning {
     /// GC pause time target
     pub pause_time_target: Duration,
     /// Incremental GC chunk size
-    pub incremental_chunk_size: usize,
+    pub incremental_chunksize: usize,
     /// Concurrent GC enabled
     pub concurrent_enabled: bool,
     /// Background GC enabled
@@ -568,17 +568,17 @@ impl CacheHierarchy {
     fn detect() -> Self {
         // Enhanced cache detection - simplified for now
         Self {
-            l1_size: 32 * 1024,
-            l1_line_size: 64,
+            l1size: 32 * 1024,
+            l1_linesize: 64,
             l1_associativity: 8,
-            l2_size: 256 * 1024,
-            l2_line_size: 64,
+            l2size: 256 * 1024,
+            l2_linesize: 64,
             l2_associativity: 8,
-            l3_size: 8 * 1024 * 1024,
-            l3_line_size: 64,
+            l3size: 8 * 1024 * 1024,
+            l3_linesize: 64,
             l3_associativity: 16,
             tlb_entries: 1024,
-            page_size: 4096,
+            pagesize: 4096,
         }
     }
 }
@@ -600,7 +600,7 @@ impl Default for AccessPatternConfig {
     fn default() -> Self {
         Self {
             enable_detection: true,
-            history_size: 1000,
+            historysize: 1000,
             prediction_window: 100,
             confidence_threshold: 0.8,
             update_frequency: Duration::from_millis(100),
@@ -626,7 +626,7 @@ impl Default for PredictiveConfig {
         Self {
             enable_prediction: true,
             model_type: PredictiveModelType::Ensemble,
-            collect_training_data: true,
+            collect_trainingdata: true,
             accuracy_target: 0.85,
             model_update_frequency: Duration::from_secs(300),
             feature_config: FeatureExtractionConfig::default(),
@@ -704,7 +704,7 @@ impl Default for OutOfCoreConfig {
     fn default() -> Self {
         Self {
             enable_out_of_core: true,
-            chunk_size: 64 * 1024 * 1024, // 64MB chunks
+            chunksize: 64 * 1024 * 1024, // 64MB chunks
             memory_chunks: 16,
             storage_config: StorageConfig::default(),
             compression_config: CompressionConfig::default(),
@@ -763,7 +763,7 @@ impl Default for GCTriggerConditions {
     fn default() -> Self {
         Self {
             memory_threshold: 0.8,
-            time_based: Some(Duration::from_secs(60)),
+            timebased: Some(Duration::from_secs(60)),
             allocation_threshold: 1000000,
             pressure_trigger: true,
             predictive_trigger: true,
@@ -776,7 +776,7 @@ impl Default for GCPerformanceTuning {
         Self {
             parallel_threads: num_threads().max(2),
             pause_time_target: Duration::from_millis(10),
-            incremental_chunk_size: 1024,
+            incremental_chunksize: 1024,
             concurrent_enabled: true,
             background_enabled: true,
         }
@@ -810,7 +810,7 @@ pub struct AdaptiveMemoryManager<F> {
 
 /// Memory pool for efficient allocation
 pub struct MemoryPool {
-    chunk_size: usize,
+    chunksize: usize,
     available_chunks: Mutex<VecDeque<*mut u8>>,
     allocated_chunks: AtomicUsize,
     total_chunks: AtomicUsize,
@@ -965,7 +965,7 @@ pub struct AccessTracker {
 #[derive(Debug)]
 pub struct AccessPattern {
     region_start: usize,
-    region_size: usize,
+    regionsize: usize,
     access_frequency: f64,
     access_type_distribution: HashMap<AccessType, f64>,
     temporal_locality: f64,
@@ -1017,7 +1017,7 @@ pub struct NumaTopology {
 pub struct NumaNode {
     node_id: usize,
     cpus: Vec<usize>,
-    memory_size: usize,
+    memorysize: usize,
     available_memory: AtomicUsize,
     local_bandwidth: f64,
     remote_bandwidth: f64,
@@ -1092,14 +1092,14 @@ pub enum LoadBalancingStrategy {
 pub struct PredictiveEngine {
     models: RwLock<HashMap<PredictiveModelType, Box<dyn PredictiveModel + Send + Sync>>>,
     feature_extractor: FeatureExtractor,
-    training_data: RwLock<VecDeque<TrainingExample>>,
+    trainingdata: RwLock<VecDeque<TrainingExample>>,
     model_performance: RwLock<HashMap<PredictiveModelType, ModelPerformance>>,
 }
 
 /// Predictive model trait
 pub trait PredictiveModel: Send + Sync {
     fn predict(&self, features: &[f64]) -> f64;
-    fn train(&mut self, training_data: &[TrainingExample]) -> Result<(), String>;
+    fn train(&mut self, trainingdata: &[TrainingExample]) -> Result<(), String>;
     fn get_confidence(&self) -> f64;
     fn get_feature_importance(&self) -> Vec<f64>;
 }
@@ -1124,7 +1124,7 @@ pub struct TrainingExample {
 #[derive(Debug)]
 pub struct TrainingContext {
     operation_type: String,
-    data_size: usize,
+    datasize: usize,
     thread_count: usize,
     system_load: f64,
 }
@@ -1266,7 +1266,7 @@ pub struct FileSystemOptimizer {
 pub struct IOSchedulerManager {
     scheduler_type: IOScheduler,
     queue_depth: usize,
-    batch_size: usize,
+    batchsize: usize,
 }
 
 /// Async I/O pool
@@ -1365,7 +1365,7 @@ pub struct CompressionEngine {
 pub trait Compressor: Send + Sync {
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>, String>;
     fn decompress(&self, data: &[u8]) -> Result<Vec<u8>, String>;
-    fn compression_ratio(&self, original_size: usize, compressed_size: usize) -> f64;
+    fn compression_ratio(&self, originalsize: usize, compressedsize: usize) -> f64;
 }
 
 /// Compression statistics
@@ -1460,7 +1460,7 @@ pub struct OperationTracker {
 pub struct StatisticalOperation {
     operation_type: StatOperationType,
     start_time: Instant,
-    data_size: usize,
+    datasize: usize,
     memory_usage: usize,
     thread_id: usize,
 }
@@ -1900,21 +1900,21 @@ where
     /// Pool allocator
     fn allocate_pool(&self, size: usize) -> StatsResult<*mut u8> {
         // Get or create appropriate memory pool
-        let pool_size = self.calculate_pool_size(size);
-        let pool = self.get_or_create_pool(pool_size)?;
+        let poolsize = self.calculate_poolsize(size);
+        let pool = self.get_or_create_pool(poolsize)?;
 
         // Allocate from pool
         pool.allocate()
     }
 
     /// Calculate appropriate pool size for allocation
-    fn calculate_pool_size(&self, size: usize) -> usize {
+    fn calculate_poolsize(&self, size: usize) -> usize {
         // Round up to next power of 2
-        let mut pool_size = 1;
-        while pool_size < size {
-            pool_size *= 2;
+        let mut poolsize = 1;
+        while poolsize < size {
+            poolsize *= 2;
         }
-        pool_size
+        poolsize
     }
 
     /// Get or create memory pool
@@ -2012,8 +2012,8 @@ where
 
     /// Pool deallocation
     fn deallocate_pool(&self, ptr: *mut u8, size: usize) -> StatsResult<()> {
-        let pool_size = self.calculate_pool_size(size);
-        if let Some(pool) = self.memory_pools.read().unwrap().get(&pool_size) {
+        let poolsize = self.calculate_poolsize(size);
+        if let Some(pool) = self.memory_pools.read().unwrap().get(&poolsize) {
             pool.deallocate(ptr)
         } else {
             Err(StatsError::InvalidArgument("Pool not found".to_string()))
@@ -2084,7 +2084,7 @@ where
             .read()
             .unwrap()
             .values()
-            .map(|pool| pool.get_allocated_size())
+            .map(|pool| pool.get_allocatedsize())
             .sum()
     }
 
@@ -2094,7 +2094,7 @@ where
             .read()
             .unwrap()
             .values()
-            .map(|pool| pool.get_peak_size())
+            .map(|pool| pool.get_peaksize())
             .max()
             .unwrap_or(0)
     }
@@ -2143,7 +2143,7 @@ pub struct GCResult {
 impl MemoryPool {
     fn new(_chunksize: usize, strategy: AllocationStrategy) -> Self {
         Self {
-            chunk_size: _chunksize,
+            chunksize: _chunksize,
             available_chunks: Mutex::new(VecDeque::new()),
             allocated_chunks: AtomicUsize::new(0),
             total_chunks: AtomicUsize::new(0),
@@ -2169,7 +2169,7 @@ impl MemoryPool {
     fn allocate_new_chunk(&self) -> StatsResult<*mut u8> {
         use std::alloc::{alloc, Layout};
 
-        let layout = Layout::from_size_align(self.chunk_size, 64) // 64-byte alignment for SIMD
+        let layout = Layout::from_size_align(self.chunksize, 64) // 64-byte alignment for SIMD
             .map_err(|e| StatsError::InvalidArgument(format!("Invalid layout: {}", e)))?;
 
         let ptr = unsafe { alloc(layout) };
@@ -2191,12 +2191,12 @@ impl MemoryPool {
         Ok(())
     }
 
-    fn get_allocated_size(&self) -> usize {
-        self.allocated_chunks.load(Ordering::Relaxed) * self.chunk_size
+    fn get_allocatedsize(&self) -> usize {
+        self.allocated_chunks.load(Ordering::Relaxed) * self.chunksize
     }
 
-    fn get_peak_size(&self) -> usize {
-        self.total_chunks.load(Ordering::Relaxed) * self.chunk_size
+    fn get_peaksize(&self) -> usize {
+        self.total_chunks.load(Ordering::Relaxed) * self.chunksize
     }
 }
 
@@ -2336,7 +2336,7 @@ impl NumaTopology {
             nodes: vec![NumaNode {
                 node_id: 0,
                 cpus: (0..num_threads()).collect(),
-                memory_size: 16 * 1024 * 1024 * 1024, // 16GB
+                memorysize: 16 * 1024 * 1024 * 1024, // 16GB
                 available_memory: AtomicUsize::new(12 * 1024 * 1024 * 1024), // 12GB available
                 local_bandwidth: 50.0,
                 remote_bandwidth: 25.0,
@@ -2385,7 +2385,7 @@ impl PredictiveEngine {
         Self {
             models: RwLock::new(HashMap::new()),
             feature_extractor: FeatureExtractor::new(&config.feature_config),
-            training_data: RwLock::new(VecDeque::new()),
+            trainingdata: RwLock::new(VecDeque::new()),
             model_performance: RwLock::new(HashMap::new()),
         }
     }
@@ -2526,7 +2526,7 @@ impl IOSchedulerManager {
         Self {
             scheduler_type: _schedulertype,
             queue_depth: 32,
-            batch_size: 16,
+            batchsize: 16,
         }
     }
 }
@@ -2803,7 +2803,7 @@ mod tests {
     fn test_config_update() {
         let mut manager = AdaptiveMemoryManager::<f64>::new();
         let mut new_config = AdaptiveMemoryConfig::default();
-        newconfig.allocation_strategy = AllocationStrategy::NumaAware;
+        new_config.allocation_strategy = AllocationStrategy::NumaAware;
 
         manager.update_config(new_config);
         assert!(matches!(

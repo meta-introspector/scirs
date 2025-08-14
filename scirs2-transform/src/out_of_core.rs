@@ -261,7 +261,7 @@ impl OutOfCoreNormalizer {
     /// Create a new out-of-core normalizer
     pub fn new(method: NormalizationMethod) -> Self {
         OutOfCoreNormalizer {
-            method: method,
+            method,
             stats: None,
         }
     }

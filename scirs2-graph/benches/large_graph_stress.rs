@@ -7,7 +7,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use rand::rng;
-use scirs2__graph::{algorithms, generators, measures, DiGraph, EdgeWeight, Graph, Node};
+use scirs2_graph::{algorithms, generators, measures, DiGraph, EdgeWeight, Graph, Node};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};

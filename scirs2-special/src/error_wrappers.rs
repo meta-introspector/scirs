@@ -53,7 +53,7 @@ where
 {
     pub fn new(name: &'static str, func: F) -> Self {
         Self {
-            name: name,
+            name,
             func,
             config: ErrorConfig::default(),
             _phantom: std::marker::PhantomData,
@@ -149,7 +149,7 @@ where
 {
     pub fn new(name: &'static str, func: F) -> Self {
         Self {
-            name: name,
+            name,
             func,
             config: ErrorConfig::default(),
             _phantom: std::marker::PhantomData,
@@ -227,7 +227,7 @@ where
 {
     pub fn new(name: &'static str, func: F) -> Self {
         Self {
-            name: name,
+            name,
             func,
             config: ErrorConfig::default(),
             _phantom: std::marker::PhantomData,

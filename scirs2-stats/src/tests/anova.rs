@@ -115,11 +115,11 @@ where
 
     // Calculate means for each group
     let mut group_means = Vec::with_capacity(groups.len());
-    let mut group_sizes = Vec::with_capacity(groups.len());
+    let mut groupsizes = Vec::with_capacity(groups.len());
 
     for group in groups {
         group_means.push(mean(group)?);
-        group_sizes.push(group.len());
+        groupsizes.push(group.len());
     }
 
     // Calculate sum of squares
@@ -128,8 +128,8 @@ where
     let mut ss_total = F::zero();
 
     // Calculate treatment sum of squares
-    for (&group_mean, &group_size) in group_means.iter().zip(group_sizes.iter()) {
-        let size_f = F::from(group_size).unwrap();
+    for (&group_mean, &groupsize) in group_means.iter().zip(groupsizes.iter()) {
+        let size_f = F::from(groupsize).unwrap();
         ss_treatment = ss_treatment + size_f * (group_mean - grand_mean).powi(2);
     }
 
@@ -241,11 +241,11 @@ where
 
     // Calculate group means
     let mut group_means = Vec::with_capacity(groups.len());
-    let mut group_sizes = Vec::with_capacity(groups.len());
+    let mut groupsizes = Vec::with_capacity(groups.len());
 
     for group in groups {
         group_means.push(mean(group)?);
-        group_sizes.push(F::from(group.len()).unwrap());
+        groupsizes.push(F::from(group.len()).unwrap());
     }
 
     // Calculate the studentized range critical value
@@ -265,8 +265,8 @@ where
             let mean_diff = (group_means[i] - group_means[j]).abs();
 
             // Calculate the standard error for this comparison
-            let harmonic_mean_n = (F::from(2.0).unwrap() * group_sizes[i] * group_sizes[j])
-                / (group_sizes[i] + group_sizes[j]);
+            let harmonic_mean_n = (F::from(2.0).unwrap() * groupsizes[i] * groupsizes[j])
+                / (groupsizes[i] + groupsizes[j]);
             let std_error = (anova_result.ms_error / harmonic_mean_n).sqrt();
 
             // Calculate Tukey's q statistic

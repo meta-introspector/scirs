@@ -10,8 +10,8 @@
 //! Run with: cargo run --example mathematical_derivation_studio
 
 use ndarray::Array1;
-use num__complex::Complex64;
-use scirs2__special::*;
+use num_complex::Complex64;
+use scirs2_special::*;
 use std::f64::consts::{E, PI};
 use std::io::{self, Write};
 
@@ -105,14 +105,14 @@ fn gamma_reflection_formula_derivation() -> Result<(), Box<dyn std::error::Error
     // Demonstrate with numerical verification
     let z = 0.3;
     let gamma_z = gamma(z);
-    let gamma_1_minus_z = gamma(1.0 - z);
-    let product = gamma_z * gamma_1_minus_z;
+    let gamma_1minus_z = gamma(1.0 - z);
+    let product = gamma_z * gamma_1minus_z;
     let theoretical = PI / (PI * z).sin();
 
     println!("NUMERICAL VERIFICATION:");
     println!("For z = {:.3}:", z);
     println!("Γ({:.3}) = {:.8}", z, gamma_z);
-    println!("Γ({:.3}) = {:.8}", 1.0 - z, gamma_1_minus_z);
+    println!("Γ({:.3}) = {:.8}", 1.0 - z, gamma_1minus_z);
     println!("Product = {:.8}", product);
     println!("π/sin(πz) = {:.8}", theoretical);
     println!("Difference = {:.2e}", (product - theoretical).abs());
@@ -726,8 +726,8 @@ fn quantum_mechanics_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("RADIAL PROBABILITY DENSITIES:");
     let n_values = vec![(1, 0), (2, 0), (2, 1), (3, 0)];
     for &(n, l) in &n_values {
-        let r_max = find_radial_maximum(n, l);
-        println!("n={}, l={}: Maximum at r ≈ {:.2} a₀", n, l, r_max);
+        let rmax = find_radialmaximum(n, l);
+        println!("n={}, l={}: Maximum at r ≈ {:.2} a₀", n, l, rmax);
     }
     println!();
 
@@ -822,8 +822,8 @@ fn test_reflection_formula_values() -> Result<(), Box<dyn std::error::Error>> {
         if z != 1.0 {
             // Avoid pole
             let gamma_z = gamma(z);
-            let gamma_1_minus_z = gamma(1.0 - z);
-            let product = gamma_z * gamma_1_minus_z;
+            let gamma_1minus_z = gamma(1.0 - z);
+            let product = gamma_z * gamma_1minus_z;
             let theoretical = PI / (PI * z).sin();
             let error = ((product - theoretical) / theoretical).abs();
 
@@ -859,7 +859,7 @@ fn numerical_bessel_orthogonality_integral(
 }
 
 #[allow(dead_code)]
-fn find_radial_maximum(n: i32, l: i32) -> f64 {
+fn find_radialmaximum(n: i32, l: i32) -> f64 {
     // Approximate formula for radial maximum
     // Exact calculation would require numerical optimization
     let n_eff = n as f64;

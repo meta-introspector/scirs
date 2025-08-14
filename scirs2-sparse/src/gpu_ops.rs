@@ -527,7 +527,7 @@ impl SpMVKernel {
                 // Compile OpenCL SpMV kernel
                 let opencl_kernel_source = r#"
                 _kernel void spmv_csr_kernel(
-                    const int rows_global const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict x_global float* restrict y
+                    const int rowsglobal const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict x_global float* restrict y
                 ) {
                     int row = get_global_id(0);
                     if (row >= rows) return;
@@ -545,7 +545,7 @@ impl SpMVKernel {
                 }
                 
                 _kernel void spmv_csr_local_kernel(
-                    const int rows_global const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict x_global float* restrict y_local float* sdata
+                    const int rowsglobal const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict x_global float* restrict y_local float* sdata
                 ) {
                     int row = get_global_id(0);
                     int lid = get_local_id(0);
@@ -1134,7 +1134,7 @@ impl SpMSKernel {
                 }
                 
                 _kernel void symmetric_matvec_kernel(
-                    const int rows_global const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict x_global float* restrict y
+                    const int rowsglobal const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict x_global float* restrict y
                 ) {
                     int row = get_global_id(0);
                     if (row >= rows) return;
@@ -1273,7 +1273,7 @@ impl SpMSKernel {
                             atomic_fetch_add_explicit(
                                 reinterpret_cast<_device atomic<float>*>(&y[col]),
                                 val * x[row],
-                                memory_order_relaxed
+                                memory_orderrelaxed
                             );
                         }
                     }
@@ -2435,7 +2435,7 @@ where
     let device = GpuDevice::get_default(options.backend)
         .map_err(|e| format!("Failed to create GPU device: {e}"))?;
 
-    let (rows_cols) = matrix.shape();
+    let (rowscols) = matrix.shape();
 
     // For symmetric matrices, we exploit symmetry by processing both directions
     let indptr = &matrix.indptr;
@@ -2529,7 +2529,7 @@ impl GpuMemoryManager {
     /// Create a new GPU memory manager
     pub fn new(backend: GpuBackend) -> Self {
         Self {
-            backend: backend,
+            backend,
             allocated_buffers: Vec::new(),
         }
     }
@@ -2573,7 +2573,7 @@ impl GpuProfiler {
     /// Create a new GPU profiler
     pub fn new(backend: GpuBackend) -> Self {
         Self {
-            backend: backend,
+            backend,
             timing_data: Vec::new(),
         }
     }
@@ -2742,7 +2742,7 @@ impl AdvancedGpuOps {
                 let a_row_end = a_indptr[i + 1];
 
                 // Get elements of column j in B (inefficient but simple implementation)
-                let (b_rows_all, b_cols_all, b_vals_all) = b.find();
+                let (b_rowsall, b_cols_all, b_vals_all) = b.find();
 
                 // For each non-zero in row i of A
                 for a_idx in a_row_start..a_row_end {
@@ -2750,8 +2750,7 @@ impl AdvancedGpuOps {
                     let a_val = a_data[a_idx];
 
                     // Find corresponding element in column j of B
-                    for (k, (&b_row, &b_col)) in
-                        b_rows_all.iter().zip(b_cols_all.iter()).enumerate()
+                    for (k, (&b_row, &b_col)) in b_rowsall.iter().zip(b_cols_all.iter()).enumerate()
                     {
                         if b_row == a_col && b_col == j {
                             sum = sum + a_val * b_vals_all[k];
@@ -2922,7 +2921,7 @@ impl GpuKernelScheduler {
         };
 
         Self {
-            backend: backend,
+            backend,
             available_memory,
             compute_units,
             warp_size,
@@ -3468,15 +3467,15 @@ mod tests {
     #[test]
     fn test_advanced_gpu_operations() {
         // Create test matrices
-        let rows_a = vec![0, 0, 1, 2];
+        let rowsa = vec![0, 0, 1, 2];
         let cols_a = vec![0, 1, 1, 0];
         let data_a = vec![1.0, 2.0, 3.0, 4.0];
-        let matrix_a = CsrArray::from_triplets(&rows_a, &cols_a, &data_a, (3, 2), false).unwrap();
+        let matrix_a = CsrArray::from_triplets(&rowsa, &cols_a, &data_a, (3, 2), false).unwrap();
 
-        let rows_b = vec![0, 1, 1];
+        let rowsb = vec![0, 1, 1];
         let cols_b = vec![0, 0, 1];
         let data_b = vec![2.0, 1.0, 3.0];
-        let matrix_b = CsrArray::from_triplets(&rows_b, &cols_b, &data_b, (2, 2), false).unwrap();
+        let matrix_b = CsrArray::from_triplets(&rowsb, &cols_b, &data_b, (2, 2), false).unwrap();
 
         // Test SpMM (should fall back to CPU for small matrices)
         let options = GpuOptions::default();

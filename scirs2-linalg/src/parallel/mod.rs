@@ -127,7 +127,7 @@ pub struct WorkerConfig {
     /// Threshold for using parallel processing
     pub parallel_threshold: usize,
     /// Chunk size for batched operations
-    pub chunk_size: usize,
+    pub chunksize: usize,
 }
 
 impl Default for WorkerConfig {
@@ -135,7 +135,7 @@ impl Default for WorkerConfig {
         Self {
             workers: None,
             parallel_threshold: 1000,
-            chunk_size: 64,
+            chunksize: 64,
         }
     }
 }
@@ -159,8 +159,8 @@ impl WorkerConfig {
     }
 
     /// Set the chunk size for batched operations
-    pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
-        self.chunk_size = chunksize;
+    pub fn with_chunksize(mut self, chunksize: usize) -> Self {
+        self.chunksize = chunksize;
         self
     }
 
@@ -210,7 +210,7 @@ pub mod iter {
     /// # Arguments
     ///
     /// * `items` - Items to process
-    /// * `chunk_size` - Size of each chunk
+    /// * `chunksize` - Size of each chunk
     /// * `f` - Function to apply to each chunk
     ///
     /// # Returns
@@ -273,7 +273,7 @@ pub mod adaptive {
     ///
     /// # Arguments
     ///
-    /// * `data_size` - Size of the data to process
+    /// * `datasize` - Size of the data to process
     /// * `config` - Worker configuration
     ///
     /// # Returns
@@ -291,7 +291,7 @@ pub mod adaptive {
     ///
     /// # Arguments
     ///
-    /// * `data_size` - Size of the data to process
+    /// * `datasize` - Size of the data to process
     /// * `config` - Worker configuration
     ///
     /// # Returns
@@ -317,7 +317,7 @@ pub mod scheduler {
     /// across threads for improved performance on irregular workloads.
     pub struct WorkStealingScheduler {
         num_workers: usize,
-        chunk_size: usize,
+        chunksize: usize,
         adaptive_chunking: bool,
     }
 
@@ -332,7 +332,7 @@ pub mod scheduler {
             });
             Self {
                 num_workers,
-                chunk_size: config.chunk_size,
+                chunksize: config.chunksize,
                 adaptive_chunking: true,
             }
         }
@@ -360,10 +360,10 @@ pub mod scheduler {
             }
 
             // Determine chunk size based on workload characteristics
-            let chunk_size = if self.adaptive_chunking {
-                self.adaptive_chunk_size(n)
+            let chunksize = if self.adaptive_chunking {
+                self.adaptive_chunksize(n)
             } else {
-                self.chunk_size
+                self.chunksize
             };
 
             // Create shared work counter
@@ -382,12 +382,12 @@ pub mod scheduler {
                         s.spawn(move || {
                             loop {
                                 // Steal a chunk of work
-                                let start = work_counter.fetch_add(chunk_size, Ordering::SeqCst);
+                                let start = work_counter.fetch_add(chunksize, Ordering::SeqCst);
                                 if start >= n {
                                     break;
                                 }
 
-                                let end = std::cmp::min(start + chunk_size, n);
+                                let end = std::cmp::min(start + chunksize, n);
 
                                 // Process the chunk
                                 for i in start..end {
@@ -414,7 +414,7 @@ pub mod scheduler {
         }
 
         /// Determine adaptive chunk size based on workload size
-        fn adaptive_chunk_size(&self, totalitems: usize) -> usize {
+        fn adaptive_chunksize(&self, totalitems: usize) -> usize {
             // Use smaller chunks for better load balancing on smaller workloads
             // and larger chunks for better cache efficiency on larger workloads
             let items_per_worker = totalitems / self.num_workers;
@@ -427,7 +427,7 @@ pub mod scheduler {
                 items_per_worker / 8
             } else {
                 // Large workload: prioritize cache efficiency
-                std::cmp::min(self.chunk_size, items_per_worker / 16)
+                std::cmp::min(self.chunksize, items_per_worker / 16)
             }
         }
 
@@ -435,16 +435,16 @@ pub mod scheduler {
         ///
         /// Specialized version for matrix operations that takes into account
         /// cache line sizes and memory access patterns.
-        pub fn execute_matrix<R, F>(&self, rows: usize, cols: usize, f: F) -> ndarray::Array2<R>
+        pub fn executematrix<R, F>(&self, rows: usize, cols: usize, f: F) -> ndarray::Array2<R>
         where
             R: Send + Default + Clone,
             F: Fn(usize, usize) -> R + Send + Sync,
         {
             // Use block partitioning for better cache efficiency
-            let block_size = 64; // Typical cache line aligned block
+            let blocksize = 64; // Typical cache line aligned block
             let work_items: Vec<(usize, usize)> = (0..rows)
-                .step_by(block_size)
-                .flat_map(|i| (0..cols).step_by(block_size).map(move |j| (i, j)))
+                .step_by(blocksize)
+                .flat_map(|i| (0..cols).step_by(blocksize).map(move |j| (i, j)))
                 .collect();
 
             // Process blocks using work-stealing and collect results
@@ -469,8 +469,8 @@ pub mod scheduler {
                                 }
 
                                 let (block_i, block_j) = work_items_ref[idx];
-                                let i_end = std::cmp::min(block_i + block_size, rows);
-                                let j_end = std::cmp::min(block_j + block_size, cols);
+                                let i_end = std::cmp::min(block_i + blocksize, rows);
+                                let j_end = std::cmp::min(block_j + blocksize, cols);
 
                                 // Process the block
                                 for i in block_i..i_end {
@@ -642,7 +642,7 @@ pub mod scheduler {
     pub struct AdvancedWorkStealingScheduler {
         base_scheduler: WorkStealingScheduler,
         numa_aware: bool,
-        cache_line_size: usize,
+        cache_linesize: usize,
         #[allow(dead_code)]
         work_queue_per_thread: bool,
     }
@@ -653,7 +653,7 @@ pub mod scheduler {
             Self {
                 base_scheduler: WorkStealingScheduler::new(config),
                 numa_aware: true,
-                cache_line_size: 64, // Common cache line size
+                cache_linesize: 64, // Common cache line size
                 work_queue_per_thread: true,
             }
         }
@@ -665,8 +665,8 @@ pub mod scheduler {
         }
 
         /// Set cache line size for cache-aware optimization
-        pub fn with_cache_line_size(mut self, size: usize) -> Self {
-            self.cache_line_size = size;
+        pub fn with_cache_linesize(mut self, size: usize) -> Self {
+            self.cache_linesize = size;
             self
         }
 
@@ -694,7 +694,7 @@ pub mod scheduler {
             // Determine optimal chunking strategy
             let chunk_config = match workload_type {
                 WorkloadType::MemoryBound => ChunkConfig {
-                    size: self.cache_line_size / std::mem::size_of::<T>(),
+                    size: self.cache_linesize / std::mem::size_of::<T>(),
                     strategy: ChunkStrategy::Sequential,
                 },
                 WorkloadType::CpuBound => ChunkConfig {
@@ -702,7 +702,7 @@ pub mod scheduler {
                     strategy: ChunkStrategy::Interleaved,
                 },
                 WorkloadType::Mixed => ChunkConfig {
-                    size: self.adaptive_chunk_size_enhanced(n),
+                    size: self.adaptive_chunksize_enhanced(n),
                     strategy: ChunkStrategy::Dynamic,
                 },
             };
@@ -714,9 +714,9 @@ pub mod scheduler {
         /// Analyze workload characteristics to optimize scheduling
         fn analyze_workload(&self, size: usize) -> WorkloadType {
             let memory_footprint = size * std::mem::size_of::<usize>();
-            let cache_size = 8 * 1024 * 1024; // Approximate L3 cache size
+            let cachesize = 8 * 1024 * 1024; // Approximate L3 cache size
 
-            if memory_footprint > cache_size {
+            if memory_footprint > cachesize {
                 WorkloadType::MemoryBound
             } else if size < 1000 {
                 WorkloadType::CpuBound
@@ -726,19 +726,19 @@ pub mod scheduler {
         }
 
         /// Enhanced adaptive chunk size calculation
-        fn adaptive_chunk_size_enhanced(&self, totalitems: usize) -> usize {
+        fn adaptive_chunksize_enhanced(&self, totalitems: usize) -> usize {
             let num_workers = self.base_scheduler.num_workers;
             let items_per_worker = totalitems / num_workers;
 
             // Consider cache efficiency and load balancing
-            let cache_optimal_size = self.cache_line_size / std::mem::size_of::<usize>();
-            let load_balance_size = std::cmp::max(1, items_per_worker / 8);
+            let cache_optimalsize = self.cache_linesize / std::mem::size_of::<usize>();
+            let load_balancesize = std::cmp::max(1, items_per_worker / 8);
 
             // Choose the better of cache-optimal or load-balance size
-            if cache_optimal_size > 0 && cache_optimal_size < load_balance_size * 2 {
-                cache_optimal_size
+            if cache_optimalsize > 0 && cache_optimalsize < load_balancesize * 2 {
+                cache_optimalsize
             } else {
-                load_balance_size
+                load_balancesize
             }
         }
 
@@ -759,12 +759,7 @@ pub mod scheduler {
         }
 
         /// Execute with sequential chunk allocation
-        fn execute_sequential_chunks<T, R, F>(
-            &self,
-            items: &[T],
-            f: F,
-            _chunk_size: usize,
-        ) -> Vec<R>
+        fn execute_sequential_chunks<T, R, F>(&self, items: &[T], f: F, _chunksize: usize) -> Vec<R>
         where
             T: Send + Sync,
             R: Send + Default + Clone,
@@ -775,19 +770,14 @@ pub mod scheduler {
         }
 
         /// Execute with interleaved chunk allocation for better cache utilization
-        fn execute_interleaved_chunks<T, R, F>(
-            &self,
-            items: &[T],
-            f: F,
-            chunk_size: usize,
-        ) -> Vec<R>
+        fn execute_interleaved_chunks<T, R, F>(&self, items: &[T], f: F, chunksize: usize) -> Vec<R>
         where
             T: Send + Sync,
             R: Send + Default + Clone,
             F: Fn(&T) -> R + Send + Sync,
         {
             let n = items.len();
-            let chunk_size = chunk_size.max(1);
+            let chunksize = chunksize.max(1);
             let results = Arc::new(Mutex::new(vec![R::default(); n]));
             let work_counter = Arc::new(AtomicUsize::new(0));
 
@@ -802,13 +792,13 @@ pub mod scheduler {
                         s.spawn(move || {
                             loop {
                                 let chunk_id = work_counter.fetch_add(1, Ordering::SeqCst);
-                                let start = chunk_id * chunk_size;
+                                let start = chunk_id * chunksize;
 
                                 if start >= n {
                                     break;
                                 }
 
-                                let end = std::cmp::min(start + chunk_size, n);
+                                let end = std::cmp::min(start + chunksize, n);
 
                                 // Process interleaved indices for better cache utilization
                                 for i in start..end {
@@ -843,7 +833,7 @@ pub mod scheduler {
             &self,
             items: &[T],
             f: F,
-            _initial_chunk_size: usize,
+            _initial_chunksize: usize,
         ) -> Vec<R>
         where
             T: Send + Sync,
@@ -945,7 +935,7 @@ pub mod thread_pool {
     pub struct ThreadPoolManager {
         profile: ThreadPoolProfile,
         /// Stack size for worker threads (in bytes)
-        stack_size: Option<usize>,
+        stacksize: Option<usize>,
         /// Thread name prefix
         thread_name_prefix: String,
         /// Whether to pin threads to CPU cores
@@ -957,7 +947,7 @@ pub mod thread_pool {
         pub fn new() -> Self {
             Self {
                 profile: ThreadPoolProfile::Default,
-                stack_size: None,
+                stacksize: None,
                 thread_name_prefix: "linalg-worker".to_string(),
                 cpu_affinity: false,
             }
@@ -970,8 +960,8 @@ pub mod thread_pool {
         }
 
         /// Set the stack size for worker threads
-        pub fn with_stack_size(mut self, size: usize) -> Self {
-            self.stack_size = Some(size);
+        pub fn with_stacksize(mut self, size: usize) -> Self {
+            self.stacksize = Some(size);
             self
         }
 
@@ -997,8 +987,8 @@ pub mod thread_pool {
                 .num_threads(num_threads)
                 .thread_name(move |idx| format!("{thread_prefix}-{idx}"));
 
-            if let Some(stack_size) = self.stack_size {
-                pool_builder = pool_builder.stack_size(stack_size);
+            if let Some(stacksize) = self.stacksize {
+                pool_builder = pool_builder.stack_size(stacksize);
             }
 
             pool_builder
@@ -1020,7 +1010,7 @@ pub mod thread_pool {
                 num_threads: self.profile.num_threads(),
                 current_parallelism: num_threads(),
                 profile: self.profile,
-                stack_size: self.stack_size,
+                stacksize: self.stacksize,
             }
         }
     }
@@ -1037,7 +1027,7 @@ pub mod thread_pool {
         pub num_threads: usize,
         pub current_parallelism: usize,
         pub profile: ThreadPoolProfile,
-        pub stack_size: Option<usize>,
+        pub stacksize: Option<usize>,
     }
 
     /// Get the global thread pool manager
@@ -1578,13 +1568,13 @@ pub mod numa {
                     return Vec::new();
                 }
 
-                let node_matrix = matrix.slice(ndarray::s![start_row..start_row + node_rows, ..]);
+                let nodematrix = matrix.slice(ndarray::s![start_row..start_row + node_rows, ..]);
 
                 // Compute local result for this NUMA node
                 (0..node_rows)
                     .into_par_iter()
                     .map(|local_row| {
-                        node_matrix
+                        nodematrix
                             .row(local_row)
                             .iter()
                             .zip(vector.iter())
@@ -1719,19 +1709,17 @@ pub mod numa {
     impl NumaMemoryStrategy {
         /// Create a new NUMA memory strategy
         pub fn new(topology: NumaTopology) -> Self {
-            Self {
-                topology: topology,
-            }
+            Self { topology }
         }
 
         /// Get recommended memory allocation for a matrix operation
-        pub fn allocate_matrix_memory<F>(&self, rows: usize, cols: usize) -> NumaAllocationHint
+        pub fn allocatematrix_memory<F>(&self, rows: usize, cols: usize) -> NumaAllocationHint
         where
             F: Float,
         {
-            let element_size = std::mem::size_of::<F>();
-            let total_size = rows * cols * element_size;
-            let size_per_node = total_size / self.topology.num_nodes;
+            let elementsize = std::mem::size_of::<F>();
+            let totalsize = rows * cols * elementsize;
+            let size_per_node = totalsize / self.topology.num_nodes;
 
             NumaAllocationHint {
                 strategy: if size_per_node > 1024 * 1024 {
@@ -1746,7 +1734,7 @@ pub mod numa {
                 } else {
                     vec![0]
                 },
-                chunk_size: std::cmp::max(4096, size_per_node / 8),
+                chunksize: std::cmp::max(4096, size_per_node / 8),
             }
         }
 
@@ -1754,9 +1742,9 @@ pub mod numa {
         pub fn analyze_access_pattern(
             &self,
             operation: NumaOperation,
-            matrix_sizes: &[(usize, usize)],
+            matrixsizes: &[(usize, usize)],
         ) -> NumaOptimizationHint {
-            let total_memory = matrix_sizes.iter()
+            let total_memory = matrixsizes.iter()
                 .map(|(r, c)| r * c * 8) // Assume f64
                 .sum::<usize>();
 
@@ -1771,8 +1759,8 @@ pub mod numa {
             NumaOptimizationHint {
                 operation,
                 recommended_partitioning: NumaPartitioning::choose_optimal(
-                    matrix_sizes[0].0,
-                    matrix_sizes[0].1,
+                    matrixsizes[0].0,
+                    matrixsizes[0].1,
                     self.topology.num_nodes,
                 ),
                 memory_per_node,
@@ -1798,7 +1786,7 @@ pub mod numa {
     pub struct NumaAllocationHint {
         pub strategy: NumaAllocationStrategy,
         pub preferred_nodes: Vec<usize>,
-        pub chunk_size: usize,
+        pub chunksize: usize,
     }
 
     /// Type of NUMA operation
@@ -1852,13 +1840,13 @@ pub mod numa {
 
         config.apply();
 
-        let block_size = n / topology.num_nodes;
+        let blocksize = n / topology.num_nodes;
         let mut l = Array2::zeros((n, n));
 
         // Distribute blocks across NUMA nodes
-        for k in (0..n).step_by(block_size) {
-            let k_end = std::cmp::min(k + block_size, n);
-            let _current_node = k / block_size;
+        for k in (0..n).step_by(blocksize) {
+            let k_end = std::cmp::min(k + blocksize, n);
+            let _current_node = k / blocksize;
 
             // Factorize diagonal block on local node
             for i in k..k_end {
@@ -1887,11 +1875,11 @@ pub mod numa {
             // Update remaining blocks in parallel across nodes
             if k_end < n {
                 let remaining_blocks: Vec<Array2<F>> = (k_end..n)
-                    .step_by(block_size)
+                    .step_by(blocksize)
                     .collect::<Vec<_>>()
                     .into_par_iter()
                     .map(|block_start| {
-                        let block_end = std::cmp::min(block_start + block_size, n);
+                        let block_end = std::cmp::min(block_start + blocksize, n);
                         let mut block_result = Array2::zeros((block_end - block_start, k_end - k));
 
                         for i in 0..(block_end - block_start) {
@@ -1912,8 +1900,8 @@ pub mod numa {
                     .collect();
 
                 // Merge results back into L matrix
-                for (block_idx, block_start) in (k_end..n).step_by(block_size).enumerate() {
-                    let block_end = std::cmp::min(block_start + block_size, n);
+                for (block_idx, block_start) in (k_end..n).step_by(blocksize).enumerate() {
+                    let block_end = std::cmp::min(block_start + blocksize, n);
                     let block_result = &remaining_blocks[block_idx];
 
                     for i in 0..(block_end - block_start) {
@@ -1942,7 +1930,7 @@ pub mod numa {
         pub fn new(topology: NumaTopology) -> Self {
             let load_history = Arc::new(Mutex::new(vec![0.0; topology.num_nodes]));
             Self {
-                topology: topology,
+                topology,
                 load_history,
             }
         }
@@ -2150,7 +2138,7 @@ pub mod affinity {
         pub fn new(strategy: AffinityStrategy, topology: NumaTopology) -> Self {
             let thread_assignments = Arc::new(Mutex::new(Vec::new()));
             Self {
-                strategy: strategy,
+                strategy,
                 topology,
                 thread_assignments,
             }
@@ -2165,9 +2153,7 @@ pub mod affinity {
                 }
                 AffinityStrategy::Pinned => self.generate_pinned_assignments(numthreads),
                 AffinityStrategy::NumaSpread => self.generate_numa_spread_assignments(numthreads),
-                AffinityStrategy::NumaCompact => {
-                    self.generate_numa_compact_assignments(numthreads)
-                }
+                AffinityStrategy::NumaCompact => self.generate_numa_compact_assignments(numthreads),
                 AffinityStrategy::Custom => {
                     // Use existing assignments
                     self.thread_assignments
@@ -2565,11 +2551,11 @@ pub mod affinity {
         }
 
         /// Create optimized thread pool for matrix operations
-        pub fn create_matrix_thread_pool(
-            matrix_size: (usize, usize),
+        pub fn creatematrix_thread_pool(
+            matrixsize: (usize, usize),
             topology: NumaTopology,
         ) -> AffinityThreadPool {
-            let workload_type = if matrix_size.0 * matrix_size.1 > 1_000_000 {
+            let workload_type = if matrixsize.0 * matrixsize.1 > 1_000_000 {
                 WorkloadType::MemoryBound
             } else {
                 WorkloadType::CpuBound
@@ -2781,8 +2767,8 @@ pub mod algorithms {
             )));
         }
 
-        let data_size = m * n;
-        if !adaptive::should_use_parallel(data_size, config) {
+        let datasize = m * n;
+        if !adaptive::should_use_parallel(datasize, config) {
             // Fall back to serial computation
             return Ok(matrix.dot(vector));
         }
@@ -2825,8 +2811,8 @@ pub mod algorithms {
             ));
         }
 
-        let data_size = m * n;
-        if !adaptive::should_use_parallel(data_size, config) {
+        let datasize = m * n;
+        if !adaptive::should_use_parallel(datasize, config) {
             // Fall back to serial power iteration
             return crate::eigen::power_iteration(&matrix.view(), max_iter, tolerance);
         }
@@ -2896,8 +2882,8 @@ pub mod algorithms {
                 ));
             }
 
-            let data_size = x.len();
-            if !adaptive::should_use_parallel(data_size, config) {
+            let datasize = x.len();
+            if !adaptive::should_use_parallel(datasize, config) {
                 return Ok(x.iter().zip(y.iter()).map(|(&xi, &yi)| xi * yi).sum());
             }
 
@@ -2913,8 +2899,8 @@ pub mod algorithms {
         where
             F: Float + Send + Sync + Zero + Sum + 'static,
         {
-            let data_size = x.len();
-            if !adaptive::should_use_parallel(data_size, config) {
+            let datasize = x.len();
+            if !adaptive::should_use_parallel(datasize, config) {
                 return Ok(x.iter().map(|&xi| xi * xi).sum::<F>().sqrt());
             }
 
@@ -2944,8 +2930,8 @@ pub mod algorithms {
                 ));
             }
 
-            let data_size = x.len();
-            if !adaptive::should_use_parallel(data_size, config) {
+            let datasize = x.len();
+            if !adaptive::should_use_parallel(datasize, config) {
                 let result = x
                     .iter()
                     .zip(y.iter())
@@ -2986,15 +2972,15 @@ pub mod algorithms {
             )));
         }
 
-        let data_size = m * k * n;
-        if !adaptive::should_use_parallel(data_size, config) {
+        let datasize = m * k * n;
+        if !adaptive::should_use_parallel(datasize, config) {
             return Ok(a.dot(b));
         }
 
         config.apply();
 
         // Block size for cache-friendly computation
-        let block_size = config.chunk_size;
+        let blocksize = config.chunksize;
 
         let mut result = ndarray::Array2::zeros((m, n));
 
@@ -3006,8 +2992,8 @@ pub mod algorithms {
             .for_each(|(i, mut row)| {
                 for j in 0..n {
                     let mut sum = F::zero();
-                    for kb in (0..k).step_by(block_size) {
-                        let k_end = std::cmp::min(kb + block_size, k);
+                    for kb in (0..k).step_by(blocksize) {
+                        let k_end = std::cmp::min(kb + blocksize, k);
                         for ki in kb..k_end {
                             sum += a[[i, ki]] * b[[ki, j]];
                         }
@@ -3031,9 +3017,9 @@ pub mod algorithms {
         F: Float + Send + Sync + Zero + Sum + One + NumAssign + ndarray::ScalarOperand + 'static,
     {
         let (m, n) = matrix.dim();
-        let data_size = m * n;
+        let datasize = m * n;
 
-        if !adaptive::should_use_parallel(data_size, config) {
+        if !adaptive::should_use_parallel(datasize, config) {
             return crate::decomposition::qr(&matrix.view(), None);
         }
 
@@ -3120,18 +3106,18 @@ pub mod algorithms {
             ));
         }
 
-        let data_size = m * n;
-        if !adaptive::should_use_parallel(data_size, config) {
+        let datasize = m * n;
+        if !adaptive::should_use_parallel(datasize, config) {
             return crate::decomposition::cholesky(&matrix.view(), None);
         }
 
         config.apply();
 
         let mut l = ndarray::Array2::zeros((n, n));
-        let block_size = config.chunk_size;
+        let blocksize = config.chunksize;
 
-        for k in (0..n).step_by(block_size) {
-            let k_end = std::cmp::min(k + block_size, n);
+        for k in (0..n).step_by(blocksize) {
+            let k_end = std::cmp::min(k + blocksize, n);
 
             // Diagonal block factorization (serial for numerical stability)
             for i in k..k_end {
@@ -3186,9 +3172,9 @@ pub mod algorithms {
         F: Float + Send + Sync + Zero + Sum + One + NumAssign + ndarray::ScalarOperand + 'static,
     {
         let (m, n) = matrix.dim();
-        let data_size = m * n;
+        let datasize = m * n;
 
-        if !adaptive::should_use_parallel(data_size, config) {
+        if !adaptive::should_use_parallel(datasize, config) {
             return crate::decomposition::lu(&matrix.view(), None);
         }
 
@@ -3288,8 +3274,8 @@ pub mod algorithms {
             ));
         }
 
-        let data_size = m * n;
-        if !adaptive::should_use_parallel(data_size, config) {
+        let datasize = m * n;
+        if !adaptive::should_use_parallel(datasize, config) {
             return crate::iterative_solvers::conjugate_gradient(
                 &matrix.view(),
                 &b.view(),
@@ -3345,9 +3331,9 @@ pub mod algorithms {
         F: Float + Send + Sync + Zero + Sum + One + NumAssign + ndarray::ScalarOperand + 'static,
     {
         let (m, n) = matrix.dim();
-        let data_size = m * n;
+        let datasize = m * n;
 
-        if !adaptive::should_use_parallel(data_size, config) {
+        if !adaptive::should_use_parallel(datasize, config) {
             return crate::decomposition::svd(&matrix.view(), false, None);
         }
 
@@ -3403,8 +3389,8 @@ pub mod algorithms {
             ));
         }
 
-        let data_size = m * n;
-        if !adaptive::should_use_parallel(data_size, config) {
+        let datasize = m * n;
+        if !adaptive::should_use_parallel(datasize, config) {
             // Fall back to serial GMRES - use the iterative solver version
             let options = crate::solvers::iterative::IterativeSolverOptions {
                 max_iterations: max_iter,
@@ -3518,8 +3504,8 @@ pub mod algorithms {
             ));
         }
 
-        let data_size = m * n;
-        if !adaptive::should_use_parallel(data_size, config) {
+        let datasize = m * n;
+        if !adaptive::should_use_parallel(datasize, config) {
             return crate::iterative_solvers::bicgstab(
                 &matrix.view(),
                 &b.view(),
@@ -3633,8 +3619,8 @@ pub mod algorithms {
             ));
         }
 
-        let data_size = m * n;
-        if !adaptive::should_use_parallel(data_size, config) {
+        let datasize = m * n;
+        if !adaptive::should_use_parallel(datasize, config) {
             return crate::iterative_solvers::jacobi_method(
                 &matrix.view(),
                 &b.view(),
@@ -3726,8 +3712,8 @@ pub mod algorithms {
             ));
         }
 
-        let data_size = m * n;
-        if !adaptive::should_use_parallel(data_size, config) {
+        let datasize = m * n;
+        if !adaptive::should_use_parallel(datasize, config) {
             return crate::iterative_solvers::successive_over_relaxation(
                 &matrix.view(),
                 &b.view(),
@@ -4028,7 +4014,7 @@ pub mod advanced_work_stealing {
     pub struct MatrixAdaptiveChunking {
         /// Cache line size for optimal memory access
         #[allow(dead_code)]
-        cache_line_size: usize,
+        cache_linesize: usize,
         /// NUMA node information
         #[allow(dead_code)]
         numa_info: Option<NumaTopology>,
@@ -4038,7 +4024,7 @@ pub mod advanced_work_stealing {
 
     #[derive(Debug, Clone)]
     struct ChunkingPerformance {
-        chunk_size: usize,
+        chunksize: usize,
         matrix_dimensions: (usize, usize),
         throughput: f64, // operations per second
         #[allow(dead_code)]
@@ -4057,14 +4043,14 @@ pub mod advanced_work_stealing {
         /// Create new adaptive chunking strategy
         pub fn new() -> Self {
             Self {
-                cache_line_size: 64, // typical cache line size
+                cache_linesize: 64, // typical cache line size
                 numa_info: Some(NumaTopology::detect()),
                 performance_history: Mutex::new(VecDeque::with_capacity(100)),
             }
         }
 
         /// Calculate optimal chunk size for matrix operation
-        pub fn optimal_chunk_size(
+        pub fn optimal_chunksize(
             &self,
             matrix_dims: (usize, usize),
             operation_type: MatrixOperation,
@@ -4075,9 +4061,9 @@ pub mod advanced_work_stealing {
             let base_chunk = match operation_type {
                 MatrixOperation::MatrixMultiply => {
                     // For matrix multiplication, consider cache blocking
-                    let l1_cache_size = 32 * 1024; // 32KB typical L1 cache
-                    let element_size = std::mem::size_of::<f64>();
-                    let elements_per_cache = l1_cache_size / element_size;
+                    let l1_cachesize = 32 * 1024; // 32KB typical L1 cache
+                    let elementsize = std::mem::size_of::<f64>();
+                    let elements_per_cache = l1_cachesize / elementsize;
 
                     // Aim for square blocks that fit in cache
                     ((elements_per_cache as f64).sqrt() as usize).clamp(32, 512)
@@ -4145,8 +4131,7 @@ pub mod advanced_work_stealing {
                     if let Some(best) = best_perf {
                         // Interpolate between base _chunk and historically best
                         let weight = 0.7; // Favor historical data
-                        return (base_chunk as f64 * (1.0 - weight)
-                            + best.chunk_size as f64 * weight)
+                        return (base_chunk as f64 * (1.0 - weight) + best.chunksize as f64 * weight)
                             as usize;
                     }
                 }
@@ -4158,13 +4143,13 @@ pub mod advanced_work_stealing {
         /// Record performance data for future optimization
         pub fn record_performance(
             &self,
-            chunk_size: usize,
+            chunksize: usize,
             matrix_dims: (usize, usize),
             throughput: f64,
         ) {
             if let Ok(mut history) = self.performance_history.lock() {
                 let perf = ChunkingPerformance {
-                    chunk_size,
+                    chunksize,
                     matrix_dimensions: matrix_dims,
                     throughput,
                     cache_misses: 0, // Would be measured in practice
@@ -4216,7 +4201,7 @@ pub mod advanced_work_stealing {
 
             // Extract _features
             let _features = [
-                taskfeatures.data_size as f64,
+                taskfeatures.datasize as f64,
                 taskfeatures.complexity_factor,
                 taskfeatures.memory_access_pattern as f64,
                 taskfeatures.arithmetic_intensity,
@@ -4256,7 +4241,7 @@ pub mod advanced_work_stealing {
             // Record execution _time
             let task_type = format!(
                 "{}_{}",
-                task_features.data_size, task_features.complexity_factor as u32
+                task_features.datasize, task_features.complexity_factor as u32
             );
 
             if let Ok(mut history) = self.execution_history.lock() {
@@ -4288,7 +4273,7 @@ pub mod advanced_work_stealing {
             if let Ok(mut weights) = self.model_weights.lock() {
                 let learning_rate = 0.001;
                 let _features = [
-                    task_features.data_size as f64,
+                    task_features.datasize as f64,
                     task_features.complexity_factor,
                     task_features.memory_access_pattern as f64,
                     task_features.arithmetic_intensity,
@@ -4305,7 +4290,7 @@ pub mod advanced_work_stealing {
     /// Features describing a computational task for prediction
     #[derive(Debug, Clone)]
     pub struct TaskFeatures {
-        pub data_size: usize,
+        pub datasize: usize,
         pub complexity_factor: f64,
         pub memory_access_pattern: u32, // 0=sequential, 1=random, 2=strided
         pub arithmetic_intensity: f64,  // operations per byte
@@ -4313,30 +4298,30 @@ pub mod advanced_work_stealing {
 
     impl TaskFeatures {
         /// Create task features for matrix operation
-        pub fn for_matrix_operation(
+        pub fn formatrix_operation(
             matrix_dims: (usize, usize),
             operation: MatrixOperation,
         ) -> Self {
             let (rows, cols) = matrix_dims;
-            let data_size = rows * cols;
+            let datasize = rows * cols;
 
             let (complexity_factor, memory_pattern, arithmetic_intensity) = match operation {
                 MatrixOperation::MatrixMultiply => {
                     (rows as f64 * cols as f64 * 2.0, 1, 2.0) // O(n²) complexity, random access, 2 ops per element
                 }
                 MatrixOperation::ElementWise => {
-                    (data_size as f64, 0, 1.0) // O(n) complexity, sequential access, 1 op per element
+                    (datasize as f64, 0, 1.0) // O(n) complexity, sequential access, 1 op per element
                 }
                 MatrixOperation::Reduction => {
-                    (data_size as f64, 0, 1.0) // O(n) complexity, sequential access
+                    (datasize as f64, 0, 1.0) // O(n) complexity, sequential access
                 }
                 MatrixOperation::Decomposition => {
-                    (data_size as f64 * 1.5, 2, 3.0) // Higher complexity, strided access
+                    (datasize as f64 * 1.5, 2, 3.0) // Higher complexity, strided access
                 }
             };
 
             Self {
-                data_size,
+                datasize,
                 complexity_factor,
                 memory_access_pattern: memory_pattern,
                 arithmetic_intensity,
@@ -4391,11 +4376,11 @@ mod tests {
         let config = WorkerConfig::new()
             .with_workers(4)
             .with_threshold(2000)
-            .with_chunk_size(128);
+            .with_chunksize(128);
 
         assert_eq!(config.workers, Some(4));
         assert_eq!(config.parallel_threshold, 2000);
-        assert_eq!(config.chunk_size, 128);
+        assert_eq!(config.chunksize, 128);
     }
 
     #[test]

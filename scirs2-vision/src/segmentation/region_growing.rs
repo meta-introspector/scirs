@@ -135,10 +135,10 @@ fn grow_region(
 
     let neighbors = get_neighbors(params.connectivity);
 
-    while let Some((_x, y)) = queue.pop_front() {
+    while let Some((x, y)) = queue.pop_front() {
         for &(dx, dy) in &neighbors {
-            let nx = (_x as i32 + dx) as usize;
-            let ny = (_x as i32 + dy) as usize;
+            let nx = (x as i32 + dx) as usize;
+            let ny = (y as i32 + dy) as usize;
 
             if nx < width as usize && ny < height as usize && !visited[[ny, nx]] {
                 let pixel_value = img.get_pixel(nx as u32, ny as u32)[0] as f32;
@@ -201,7 +201,7 @@ fn get_neighbors(connectivity: u8) -> Vec<(i32, i32)> {
 
 /// Remove regions smaller than minimum size
 #[allow(dead_code)]
-fn remove_small_regions(_labels: &mut Array2<u32>, minsize: usize) {
+fn remove_small_regions(labels: &mut Array2<u32>, minsize: usize) {
     let (height, width) = labels.dim();
 
     // Count region sizes
@@ -215,14 +215,14 @@ fn remove_small_regions(_labels: &mut Array2<u32>, minsize: usize) {
     // Find small regions
     let small_regions: HashSet<_> = region_sizes
         .iter()
-        .filter(|(_, &_size)| _size < minsize)
-        .map(|(&label_)| label_)
+        .filter(|(_, &size)| size < minsize)
+        .map(|(&label_, _)| label_)
         .collect();
 
     // Remove small regions
     for y in 0..height {
         for x in 0..width {
-            if small_regions.contains(&_labels[[y, x]]) {
+            if small_regions.contains(&labels[[y, x]]) {
                 labels[[y, x]] = 0;
             }
         }
@@ -301,20 +301,20 @@ fn grow_region_adaptive(
     let mut region_sum = img.get_pixel(seed_x as u32, seed_y as u32)[0] as f32;
     let mut region_count = 1;
 
-    while let Some((_x, y)) = queue.pop_front() {
+    while let Some((x, y)) = queue.pop_front() {
         let region_mean = region_sum / region_count as f32;
 
         for &(dx, dy) in &[(-1, 0), (1, 0), (0, -1), (0, 1)] {
-            let nx = (_x as i32 + dx) as usize;
-            let ny = (_x as i32 + dy) as usize;
+            let nx = (x as i32 + dx) as usize;
+            let ny = (y as i32 + dy) as usize;
 
             if nx < width as usize && ny < height as usize && !visited[[ny, nx]] {
                 let pixel_value = img.get_pixel(nx as u32, ny as u32)[0] as f32;
 
-                // Adaptive _threshold based on local statistics
-                let _threshold = base_threshold * (1.0 + local_std[[ny, nx]] / 128.0);
+                // Adaptive threshold based on local statistics
+                let threshold = base_threshold * (1.0 + local_std[[ny, nx]] / 128.0);
 
-                if (pixel_value - region_mean).abs() <= _threshold {
+                if (pixel_value - region_mean).abs() <= threshold {
                     visited[[ny, nx]] = true;
                     labels[[ny, nx]] = label_;
                     queue.push_back((nx, ny));
@@ -330,7 +330,7 @@ fn grow_region_adaptive(
 
 /// Compute local mean and standard deviation
 #[allow(dead_code)]
-fn compute_local_stats(_img: &GrayImage, windowsize: usize) -> Result<(Array2<f32>, Array2<f32>)> {
+fn compute_local_stats(img: &GrayImage, windowsize: usize) -> Result<(Array2<f32>, Array2<f32>)> {
     let (width, height) = img.dimensions();
     let mut local_mean = Array2::zeros((height as usize, width as usize));
     let mut local_std = Array2::zeros((height as usize, width as usize));

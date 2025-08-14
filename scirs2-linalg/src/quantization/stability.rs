@@ -549,10 +549,10 @@ mod tests {
         // Test with different matrices
 
         // Symmetric matrix with moderate range
-        let symmetric_matrix = array![[1.0f32, -1.0, 2.0, -2.0], [3.0, -3.0, 4.0, -4.0]];
+        let symmetricmatrix = array![[1.0f32, -1.0, 2.0, -2.0], [3.0, -3.0, 4.0, -4.0]];
 
         let (_sym_bits, sym_method) = recommend_quantization_params(
-            &symmetric_matrix.view(),
+            &symmetricmatrix.view(),
             Some(25.0), // Lower target SQNR for the test
         )
         .unwrap();
@@ -565,10 +565,10 @@ mod tests {
         );
 
         // Asymmetric matrix with positive values
-        let asymmetric_matrix = array![[10.0f32, 11.0, 12.0, 13.0], [14.0, 15.0, 16.0, 17.0]];
+        let asymmetricmatrix = array![[10.0f32, 11.0, 12.0, 13.0], [14.0, 15.0, 16.0, 17.0]];
 
         let (_asym_bits, asym_method) = recommend_quantization_params(
-            &asymmetric_matrix.view(),
+            &asymmetricmatrix.view(),
             Some(25.0), // Lower target SQNR for the test
         )
         .unwrap();
@@ -581,10 +581,10 @@ mod tests {
         );
 
         // Test with high column variability
-        let variable_columns_matrix = array![[0.1f32, 10.0, 100.0], [0.2, 20.0, 200.0]];
+        let variable_columnsmatrix = array![[0.1f32, 10.0, 100.0], [0.2, 20.0, 200.0]];
 
         let (_var_bits, var_method) = recommend_quantization_params(
-            &variable_columns_matrix.view(),
+            &variable_columnsmatrix.view(),
             Some(25.0), // Lower target SQNR for the test
         )
         .unwrap();

@@ -52,7 +52,7 @@ where
         }
 
         Ok(Self {
-            mmap: mmap,
+            mmap,
             shape,
             _phantom: PhantomData,
         })
@@ -107,7 +107,7 @@ where
         }
 
         Ok(Self {
-            mmap: mmap,
+            mmap,
             shape,
             _phantom: PhantomData,
         })
@@ -254,10 +254,7 @@ pub struct ZeroCopyCsvReader<'a> {
 impl<'a> ZeroCopyCsvReader<'a> {
     /// Create a new zero-copy CSV reader
     pub fn new(data: &'a [u8], delimiter: u8) -> Self {
-        Self {
-            data: data,
-            delimiter,
-        }
+        Self { data, delimiter }
     }
 
     /// Iterate over lines without allocating
@@ -332,10 +329,7 @@ pub struct ZeroCopyBinaryReader<'a> {
 impl<'a> ZeroCopyBinaryReader<'a> {
     /// Create a new zero-copy binary reader
     pub fn new(data: &'a [u8]) -> Self {
-        Self {
-            data: data,
-            pos: 0,
-        }
+        Self { data, pos: 0 }
     }
 
     /// Read a value without copying

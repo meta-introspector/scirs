@@ -590,8 +590,8 @@ where
     let mut all_cols = Vec::new();
     let mut all_data = Vec::new();
 
-    for (mut rows_chunk, mut cols_chunk, mut data_chunk) in results {
-        all_rows.extend(rows_chunk);
+    for (mut rowschunk, mut cols_chunk, mut data_chunk) in results {
+        all_rows.extend(rowschunk);
         all_cols.append(&mut cols_chunk);
         all_data.append(&mut data_chunk);
     }

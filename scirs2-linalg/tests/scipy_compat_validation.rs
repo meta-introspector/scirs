@@ -76,15 +76,15 @@ mod reference_value_tests {
         // - Frobenius norm = sqrt(3^2 + 4^2) = 5
         // - 1-norm = max(3, 4) = 4
         // - inf-norm = 3 + 4 = 7
-        let test_matrix = array![[3.0, 4.0], [0.0, 0.0]];
+        let testmatrix = array![[3.0, 4.0], [0.0, 0.0]];
 
-        let fro_norm = compat::norm(&test_matrix.view(), Some("fro"), None, false, true).unwrap();
+        let fro_norm = compat::norm(&testmatrix.view(), Some("fro"), None, false, true).unwrap();
         assert!(close_f64(fro_norm, 5.0, VALIDATION_TOL));
 
-        let norm_1 = compat::norm(&test_matrix.view(), Some("1"), None, false, true).unwrap();
+        let norm_1 = compat::norm(&testmatrix.view(), Some("1"), None, false, true).unwrap();
         assert!(close_f64(norm_1, 4.0, VALIDATION_TOL));
 
-        let norm_inf = compat::norm(&test_matrix.view(), Some("inf"), None, false, true).unwrap();
+        let norm_inf = compat::norm(&testmatrix.view(), Some("inf"), None, false, true).unwrap();
         assert!(close_f64(norm_inf, 7.0, VALIDATION_TOL));
 
         // Vector [3,4] has 2-norm = 5, 1-norm = 7, inf-norm = 4
@@ -167,7 +167,7 @@ mod reference_value_tests {
     }
 
     #[test]
-    fn test_matrix_function_reference_values() {
+    fn testmatrix_function_reference_values() {
         // Matrix exponential of zero matrix should be identity
         let zero_2x2 = Array2::zeros((2, 2));
         let exp_zero = compat::expm(&zero_2x2.view(), None).unwrap();
@@ -175,8 +175,8 @@ mod reference_value_tests {
         assert!(arrays_close_f64(&exp_zero, &identity, VALIDATION_TOL));
 
         // exp(diag(a,b)) = diag(exp(a), exp(b))
-        let diag_matrix = array![[0.0, 0.0], [0.0, 1.0]];
-        let exp_diag = compat::expm(&diag_matrix.view(), None).unwrap();
+        let diagmatrix = array![[0.0, 0.0], [0.0, 1.0]];
+        let exp_diag = compat::expm(&diagmatrix.view(), None).unwrap();
         let expected_exp = array![[1.0, 0.0], [0.0, 1.0_f64.exp()]];
         assert!(arrays_close_f64(&exp_diag, &expected_exp, 1e-10));
 
@@ -194,9 +194,9 @@ mod reference_value_tests {
     #[test]
     fn test_decomposition_reference_values() {
         // QR decomposition of simple matrix
-        let simple_matrix = array![[1.0, 1.0], [0.0, 1.0]];
+        let simplematrix = array![[1.0, 1.0], [0.0, 1.0]];
         let (q_opt, r) =
-            compat::qr(&simple_matrix.view(), false, None, "full", false, true).unwrap();
+            compat::qr(&simplematrix.view(), false, None, "full", false, true).unwrap();
 
         if let Some(q) = q_opt {
             // Verify orthogonality: Q^T * Q = I
@@ -206,7 +206,7 @@ mod reference_value_tests {
 
             // Verify reconstruction: Q * R = A
             let qr = q.dot(&r);
-            assert!(arrays_close_f64(&qr, &simple_matrix, 1e-10));
+            assert!(arrays_close_f64(&qr, &simplematrix, 1e-10));
         }
 
         // SVD of rank-1 matrix should have one non-zero singular value
@@ -285,8 +285,8 @@ mod mathematical_property_tests {
         assert!(close_f64(norm_ka, k.abs() * norm_a, VALIDATION_TOL));
 
         // Positive definiteness: ||A|| = 0 iff A = 0
-        let zero_matrix = Array2::zeros((2, 2));
-        let norm_zero = compat::norm(&zero_matrix.view(), Some("fro"), None, false, true).unwrap();
+        let zeromatrix = Array2::zeros((2, 2));
+        let norm_zero = compat::norm(&zeromatrix.view(), Some("fro"), None, false, true).unwrap();
         assert!(close_f64(norm_zero, 0.0, VALIDATION_TOL));
         assert!(norm_a > 0.0);
     }
@@ -334,7 +334,7 @@ mod mathematical_property_tests {
     }
 
     #[test]
-    fn test_matrix_function_properties() {
+    fn testmatrix_function_properties() {
         let a = array![[1.0, 0.5], [0.5, 1.0]];
 
         // exp(log(A)) = A for positive definite matrices
@@ -411,14 +411,14 @@ mod mathematical_property_tests {
         assert!(close_f64(cond_identity, 1.0, VALIDATION_TOL));
 
         // Condition number should be >= 1
-        let random_matrix = array![[2.0, 1.0], [1.0, 1.5]];
-        let cond_random = compat::cond(&random_matrix.view(), Some("2")).unwrap();
+        let randommatrix = array![[2.0, 1.0], [1.0, 1.5]];
+        let cond_random = compat::cond(&randommatrix.view(), Some("2")).unwrap();
         assert!(cond_random >= 1.0 - VALIDATION_TOL);
 
         // Scaling matrix by positive constant doesn't change condition number
         let k = 5.0;
-        let scaled_matrix = &random_matrix * k;
-        let cond_scaled = compat::cond(&scaled_matrix.view(), Some("2")).unwrap();
+        let scaledmatrix = &randommatrix * k;
+        let cond_scaled = compat::cond(&scaledmatrix.view(), Some("2")).unwrap();
         assert!(close_f64(cond_random, cond_scaled, 1e-10));
     }
 
@@ -431,10 +431,10 @@ mod mathematical_property_tests {
 
         // Rank is preserved under multiplication by invertible matrices
         let invertible = array![[2.0, 1.0], [1.0, 1.0]];
-        let test_matrix = array![[1.0, 2.0], [0.0, 0.0]]; // rank 1
+        let testmatrix = array![[1.0, 2.0], [0.0, 0.0]]; // rank 1
 
-        let rank_original = compat::matrix_rank(&test_matrix.view(), None, false, true).unwrap();
-        let transformed = invertible.dot(&test_matrix);
+        let rank_original = compat::matrix_rank(&testmatrix.view(), None, false, true).unwrap();
+        let transformed = invertible.dot(&testmatrix);
         let rank_transformed = compat::matrix_rank(&transformed.view(), None, false, true).unwrap();
 
         assert_eq!(rank_original, rank_transformed);
@@ -482,7 +482,7 @@ mod numerical_stability_tests {
     }
 
     #[test]
-    fn test_orthogonal_matrix_properties() {
+    fn test_orthogonalmatrix_properties() {
         // Create a rotation matrix (orthogonal)
         let angle = PI / 4.0;
         let rotation = array![[angle.cos(), -angle.sin()], [angle.sin(), angle.cos()]];
@@ -579,8 +579,8 @@ mod numerical_stability_tests {
         // Test behavior near machine precision limits
 
         // Very small but non-zero matrix
-        let small_matrix = Array2::eye(2) * 1e-14;
-        let det_small = compat::det(&small_matrix.view(), false, true).unwrap();
+        let smallmatrix = Array2::eye(2) * 1e-14;
+        let det_small = compat::det(&smallmatrix.view(), false, true).unwrap();
         assert!(close_f64(det_small, 1e-28, 1e-30));
 
         // Matrix that should be ill-conditioned

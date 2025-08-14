@@ -6,7 +6,7 @@ use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use rand__distr::Distribution;
+use rand_distr::Distribution;
 // Use local GPU implementation instead of core to avoid feature flag issues
 use crate::gpu::GpuBackend as LocalGpuBackend;
 // Parallel operations will be added as needed
@@ -136,14 +136,14 @@ pub fn make_classification(
     let mut dataset = Dataset::new(data, Some(target));
 
     // Create feature names
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
+    let featurenames: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     // Create _class names
-    let _class_names: Vec<String> = (0..n_classes).map(|i| format!("class_{i}")).collect();
+    let _classnames: Vec<String> = (0..n_classes).map(|i| format!("class_{i}")).collect();
 
     dataset = dataset
-        .with_feature_names(feature_names)
-        .with_target_names(class_names)
+        .with_featurenames(featurenames)
+        .with_targetnames(classnames)
         .with_description(format!(
             "Synthetic classification dataset with {n_classes} _classes and {n_features} _features"
         ));
@@ -237,10 +237,10 @@ pub fn make_regression(
     let mut dataset = Dataset::new(data, Some(target));
 
     // Create feature names
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
+    let featurenames: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     dataset = dataset
-        .with_feature_names(feature_names)
+        .with_featurenames(featurenames)
         .with_description(format!(
             "Synthetic regression dataset with {n_features} _features ({n_informative} informative)"
         ))
@@ -338,10 +338,10 @@ pub fn make_time_series(
     let mut dataset = Dataset::new(data, None);
 
     // Create feature names
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
+    let featurenames: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     dataset = dataset
-        .with_feature_names(feature_names)
+        .with_featurenames(featurenames)
         .with_description(format!(
             "Synthetic time series dataset with {n_features} _features"
         ))
@@ -437,10 +437,10 @@ pub fn make_blobs(
     let mut dataset = Dataset::new(data, Some(target));
 
     // Create feature names
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
+    let featurenames: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     dataset = dataset
-        .with_feature_names(feature_names)
+        .with_featurenames(featurenames)
         .with_description(format!(
             "Synthetic clustering dataset with {centers} clusters and {n_features} _features"
         ))
@@ -530,8 +530,8 @@ pub fn make_spirals(
 
     let mut dataset = Dataset::new(data, Some(target));
     dataset = dataset
-        .with_feature_names(vec!["x".to_string(), "y".to_string()])
-        .with_target_names((0..n_spirals).map(|i| format!("spiral_{i}")).collect())
+        .with_featurenames(vec!["x".to_string(), "y".to_string()])
+        .with_targetnames((0..n_spirals).map(|i| format!("spiral_{i}")).collect())
         .with_description(format!("Spiral dataset with {n_spirals} _spirals"))
         .with_metadata("noise", &noise.to_string());
 
@@ -616,8 +616,8 @@ pub fn make_moons(_n_samples: usize, noise: f64, randomseed: Option<u64>) -> Res
 
     let mut dataset = Dataset::new(data, Some(target));
     dataset = dataset
-        .with_feature_names(vec!["x".to_string(), "y".to_string()])
-        .with_target_names(vec!["moon_0".to_string(), "moon_1".to_string()])
+        .with_featurenames(vec!["x".to_string(), "y".to_string()])
+        .with_targetnames(vec!["moon_0".to_string(), "moon_1".to_string()])
         .with_description("Two moons dataset for non-linear classification".to_string())
         .with_metadata("noise", &noise.to_string());
 
@@ -713,8 +713,8 @@ pub fn make_circles(
 
     let mut dataset = Dataset::new(data, Some(target));
     dataset = dataset
-        .with_feature_names(vec!["x".to_string(), "y".to_string()])
-        .with_target_names(vec!["outer_circle".to_string(), "inner_circle".to_string()])
+        .with_featurenames(vec!["x".to_string(), "y".to_string()])
+        .with_targetnames(vec!["outer_circle".to_string(), "inner_circle".to_string()])
         .with_description("Concentric circles dataset for non-linear classification".to_string())
         .with_metadata("factor", &factor.to_string())
         .with_metadata("noise", &noise.to_string());
@@ -781,7 +781,7 @@ pub fn make_swiss_roll(_n_samples: usize, noise: f64, randomseed: Option<u64>) -
 
     let mut dataset = Dataset::new(data, Some(color));
     dataset = dataset
-        .with_feature_names(vec!["x".to_string(), "y".to_string(), "z".to_string()])
+        .with_featurenames(vec!["x".to_string(), "y".to_string(), "z".to_string()])
         .with_description("Swiss roll manifold dataset for dimensionality reduction".to_string())
         .with_metadata("noise", &noise.to_string())
         .with_metadata("dimensions", "3")
@@ -907,10 +907,10 @@ pub fn make_anisotropic_blobs(
     }
 
     let mut dataset = Dataset::new(data, Some(target));
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
+    let featurenames: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     dataset = dataset
-        .with_feature_names(feature_names)
+        .with_featurenames(featurenames)
         .with_description(format!(
             "Anisotropic clustering dataset with {centers} elongated clusters and {n_features} _features"
         ))
@@ -1038,10 +1038,10 @@ pub fn make_hierarchical_clusters(
     }
 
     let mut dataset = Dataset::new(data, Some(main_target));
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
+    let featurenames: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     dataset = dataset
-        .with_feature_names(feature_names)
+        .with_featurenames(featurenames)
         .with_description(format!(
             "Hierarchical clustering dataset with {n_main_clusters} main clusters, {n_sub_clusters} sub-_clusters each"
         ))
@@ -1444,12 +1444,12 @@ pub fn make_corrupted_dataset(
     // Create new _dataset with corruption metadata
     let mut corrupted_dataset = Dataset::new(corrupted_data, corrupted_target);
 
-    if let Some(feature_names) = &base_dataset.feature_names {
-        corrupted_dataset = corrupted_dataset.with_feature_names(feature_names.clone());
+    if let Some(featurenames) = &base_dataset.featurenames {
+        corrupted_dataset = corrupted_dataset.with_featurenames(featurenames.clone());
     }
 
-    if let Some(target_names) = &base_dataset.target_names {
-        corrupted_dataset = corrupted_dataset.with_target_names(target_names.clone());
+    if let Some(targetnames) = &base_dataset.targetnames {
+        corrupted_dataset = corrupted_dataset.with_targetnames(targetnames.clone());
     }
 
     corrupted_dataset = corrupted_dataset
@@ -1640,7 +1640,7 @@ fn make_classification_gpu_impl(
     }
 
     // Convert to ndarray
-    let data = Array2::fromshape_vec((n_samples, n_features), all_data)
+    let data = Array2::from_shape_vec((n_samples, n_features), all_data)
         .map_err(|e| DatasetsError::Other(format!("Failed to create data array: {e}")))?;
 
     let target = Array1::from_vec(all_targets);
@@ -1649,12 +1649,12 @@ fn make_classification_gpu_impl(
     let mut dataset = Dataset::new(data, Some(target));
 
     // Add metadata
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
-    let _class_names: Vec<String> = (0..n_classes).map(|i| format!("class_{i}")).collect();
+    let featurenames: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
+    let _classnames: Vec<String> = (0..n_classes).map(|i| format!("class_{i}")).collect();
 
     dataset = dataset
-        .with_feature_names(feature_names)
-        .with_target_names(class_names)
+        .with_featurenames(featurenames)
+        .with_targetnames(classnames)
         .with_description(format!(
             "GPU-accelerated synthetic classification dataset with {n_classes} _classes and {n_features} _features"
         ));
@@ -1772,7 +1772,7 @@ fn generate_classification_gpu_optimized(
     // TODO: Implement proper GPU acceleration when core GPU _features are stabilized
 
     // CPU fallback implementation since GPU _features are not available
-    use rand__distr::Distribution;
+    use rand_distr::Distribution;
     let normal = rand_distr::Normal::new(0.0, 1.0).unwrap();
 
     let mut data = vec![0.0; n_samples * n_features];
@@ -1927,7 +1927,7 @@ fn make_regression_gpu_impl(
     }
 
     // Convert to ndarray
-    let data = Array2::fromshape_vec((n_samples, n_features), all_data)
+    let data = Array2::from_shape_vec((n_samples, n_features), all_data)
         .map_err(|e| DatasetsError::Other(format!("Failed to create data array: {e}")))?;
 
     let target = Array1::from_vec(all_targets);
@@ -1936,10 +1936,10 @@ fn make_regression_gpu_impl(
     let mut dataset = Dataset::new(data, Some(target));
 
     // Add metadata
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
+    let featurenames: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     dataset = dataset
-        .with_feature_names(feature_names)
+        .with_featurenames(featurenames)
         .with_description(format!(
             "GPU-accelerated synthetic regression dataset with {n_features} _features"
         ));
@@ -2022,7 +2022,7 @@ fn generate_regression_gpu_optimized(
     // TODO: Implement proper GPU acceleration when core GPU _features are stabilized
 
     // CPU fallback implementation since GPU _features are not available
-    use rand__distr::Distribution;
+    use rand_distr::Distribution;
     let normal = rand_distr::Normal::new(0.0, 1.0).unwrap();
 
     let mut targets = vec![0.0; n_samples];
@@ -2178,12 +2178,12 @@ fn make_blobs_gpu_impl(
     let mut dataset = Dataset::new(data, Some(target));
 
     // Add metadata
-    let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
-    let center_names: Vec<String> = (0..n_centers).map(|i| format!("center_{i}")).collect();
+    let featurenames: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
+    let centernames: Vec<String> = (0..n_centers).map(|i| format!("center_{i}")).collect();
 
     dataset = dataset
-        .with_feature_names(feature_names)
-        .with_target_names(center_names)
+        .with_featurenames(featurenames)
+        .with_targetnames(centernames)
         .with_description(format!(
             "GPU-accelerated synthetic blob dataset with {n_centers} _centers and {n_features} _features"
         ));
@@ -2209,7 +2209,7 @@ fn generate_blobs_center_gpu(
     let _center_coords: Vec<f64> = (0..n_features).map(|j| centers[[center_idx, j]]).collect();
 
     // CPU fallback implementation since GPU _features are not available
-    use rand__distr::Distribution;
+    use rand_distr::Distribution;
     let normal = rand_distr::Normal::new(0.0, cluster_std).unwrap();
 
     let mut result = Vec::with_capacity(n_samples_center);
@@ -2436,7 +2436,7 @@ pub fn make_s_curve(_n_samples: usize, noise: f64, randomseed: Option<u64>) -> R
 
     let mut dataset = Dataset::new(data, Some(color));
     dataset = dataset
-        .with_feature_names(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
+        .with_featurenames(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
         .with_description("S-curve manifold embedded in 3D space".to_string());
 
     Ok(dataset)
@@ -2507,7 +2507,7 @@ pub fn make_swiss_roll_advanced(
     };
 
     dataset = dataset
-        .with_feature_names(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
+        .with_featurenames(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
         .with_description(description.to_string());
 
     Ok(dataset)
@@ -2570,7 +2570,7 @@ pub fn make_severed_sphere(
 
     let mut dataset = Dataset::new(data, Some(color));
     dataset = dataset
-        .with_feature_names(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
+        .with_featurenames(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
         .with_description("Severed sphere manifold with discontinuities".to_string());
 
     Ok(dataset)
@@ -2630,8 +2630,8 @@ pub fn make_twin_peaks(_n_samples: usize, noise: f64, randomseed: Option<u64>) -
 
     let mut dataset = Dataset::new(data, Some(labels));
     dataset = dataset
-        .with_feature_names(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
-        .with_target_names(vec!["peak_0".to_string(), "peak_1".to_string()])
+        .with_featurenames(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
+        .with_targetnames(vec!["peak_0".to_string(), "peak_1".to_string()])
         .with_description("Twin peaks manifold with two connected Gaussian peaks".to_string());
 
     Ok(dataset)
@@ -2691,7 +2691,7 @@ pub fn make_helix(
 
     let mut dataset = Dataset::new(data, Some(color));
     dataset = dataset
-        .with_feature_names(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
+        .with_featurenames(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
         .with_description(format!("Helix manifold with {n_turns} _turns in 3D space"));
 
     Ok(dataset)
@@ -2763,8 +2763,8 @@ pub fn make_intersecting_manifolds(
 
     let mut dataset = Dataset::new(data, Some(labels));
     dataset = dataset
-        .with_feature_names(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
-        .with_target_names(vec!["manifold_0".to_string(), "manifold_1".to_string()])
+        .with_featurenames(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
+        .with_targetnames(vec!["manifold_0".to_string(), "manifold_1".to_string()])
         .with_description("Two intersecting plane manifolds in 3D space".to_string());
 
     Ok(dataset)
@@ -2834,7 +2834,7 @@ pub fn make_torus(
 
     let mut dataset = Dataset::new(data, Some(color));
     dataset = dataset
-        .with_feature_names(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
+        .with_featurenames(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
         .with_description(format!(
             "Torus manifold with major _radius {major_radius} and minor _radius {minor_radius}"
         ));
@@ -2909,7 +2909,7 @@ impl ManifoldConfig {
     }
 
     /// Set number of samples
-    pub fn with_samples(mut self, nsamples: usize) -> Self {
+    pub fn with_samples(mut self, n_samples: usize) -> Self {
         self.n_samples = n_samples;
         self
     }
@@ -2947,12 +2947,9 @@ pub fn make_manifold(config: ManifoldConfig) -> Result<Dataset> {
         ManifoldType::TwinPeaks => {
             make_twin_peaks(_config.n_samples, config.noise, config.random_seed)
         }
-        ManifoldType::Helix { n_turns } => make_helix(
-            config.n_samples,
-            n_turns,
-            config.noise,
-            config.random_seed,
-        ),
+        ManifoldType::Helix { n_turns } => {
+            make_helix(config.n_samples, n_turns, config.noise, config.random_seed)
+        }
         ManifoldType::IntersectingManifolds => {
             make_intersecting_manifolds(_config.n_samples, config.noise, config.random_seed)
         }
@@ -3046,8 +3043,8 @@ mod tests {
         assert_eq!(dataset.n_samples(), 20);
         assert_eq!(dataset.n_features(), 5);
         assert!(dataset.target.is_some());
-        assert!(dataset.feature_names.is_some());
-        assert!(dataset.target_names.is_some());
+        assert!(dataset.featurenames.is_some());
+        assert!(dataset.targetnames.is_some());
     }
 
     #[test]
@@ -3056,7 +3053,7 @@ mod tests {
         assert_eq!(dataset.n_samples(), 15);
         assert_eq!(dataset.n_features(), 4);
         assert!(dataset.target.is_some());
-        assert!(dataset.feature_names.is_some());
+        assert!(dataset.featurenames.is_some());
     }
 
     #[test]
@@ -3064,7 +3061,7 @@ mod tests {
         let dataset = make_time_series(25, 3, true, true, 0.1, Some(42)).unwrap();
         assert_eq!(dataset.n_samples(), 25);
         assert_eq!(dataset.n_features(), 3);
-        assert!(dataset.feature_names.is_some());
+        assert!(dataset.featurenames.is_some());
         // Time series doesn't have targets by default
         assert!(dataset.target.is_none());
     }
@@ -3075,7 +3072,7 @@ mod tests {
         assert_eq!(dataset.n_samples(), 30);
         assert_eq!(dataset.n_features(), 4);
         assert!(dataset.target.is_some());
-        assert!(dataset.feature_names.is_some());
+        assert!(dataset.featurenames.is_some());
     }
 
     #[test]
@@ -3096,7 +3093,7 @@ mod tests {
         assert_eq!(dataset.n_samples(), 100);
         assert_eq!(dataset.n_features(), 2);
         assert!(dataset.target.is_some());
-        assert!(dataset.feature_names.is_some());
+        assert!(dataset.featurenames.is_some());
 
         // Check that we have the right number of spirals
         if let Some(target) = &dataset.target {
@@ -3121,7 +3118,7 @@ mod tests {
         assert_eq!(dataset.n_samples(), 100);
         assert_eq!(dataset.n_features(), 2);
         assert!(dataset.target.is_some());
-        assert!(dataset.feature_names.is_some());
+        assert!(dataset.featurenames.is_some());
 
         // Check that we have exactly 2 classes (2 moons)
         if let Some(target) = &dataset.target {
@@ -3151,7 +3148,7 @@ mod tests {
         assert_eq!(dataset.n_samples(), 100);
         assert_eq!(dataset.n_features(), 2);
         assert!(dataset.target.is_some());
-        assert!(dataset.feature_names.is_some());
+        assert!(dataset.featurenames.is_some());
 
         // Check that we have exactly 2 classes (inner and outer circle)
         if let Some(target) = &dataset.target {
@@ -3176,7 +3173,7 @@ mod tests {
         assert_eq!(dataset.n_samples(), 100);
         assert_eq!(dataset.n_features(), 3);
         assert!(dataset.target.is_some()); // Color parameter
-        assert!(dataset.feature_names.is_some());
+        assert!(dataset.featurenames.is_some());
     }
 
     #[test]
@@ -3203,7 +3200,7 @@ mod tests {
         assert_eq!(dataset.n_samples(), 100);
         assert_eq!(dataset.n_features(), 3);
         assert!(dataset.target.is_some());
-        assert!(dataset.feature_names.is_some());
+        assert!(dataset.featurenames.is_some());
 
         // Check that we have the right number of clusters
         if let Some(target) = &dataset.target {
@@ -3240,7 +3237,7 @@ mod tests {
         assert_eq!(dataset.n_samples(), 120);
         assert_eq!(dataset.n_features(), 3);
         assert!(dataset.target.is_some());
-        assert!(dataset.feature_names.is_some());
+        assert!(dataset.featurenames.is_some());
 
         // Check that we have the right number of main clusters
         if let Some(target) = &dataset.target {
@@ -3255,7 +3252,7 @@ mod tests {
 
     #[test]
     fn test_inject_missing_data_invalid_params() {
-        let mut data = Array2::fromshape_vec((5, 3), vec![1.0; 15]).unwrap();
+        let mut data = Array2::from_shape_vec((5, 3), vec![1.0; 15]).unwrap();
 
         // Test invalid missing rate
         assert!(inject_missing_data(&mut data, -0.1, MissingPattern::MCAR, None).is_err());
@@ -3264,7 +3261,8 @@ mod tests {
 
     #[test]
     fn test_inject_missing_data_mcar() {
-        let mut data = Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+        let mut data =
+            Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let original_data = data.clone();
 
         let missing_mask =
@@ -3286,7 +3284,7 @@ mod tests {
 
     #[test]
     fn test_inject_outliers_invalid_params() {
-        let mut data = Array2::fromshape_vec((5, 3), vec![1.0; 15]).unwrap();
+        let mut data = Array2::from_shape_vec((5, 3), vec![1.0; 15]).unwrap();
 
         // Test invalid outlier rate
         assert!(inject_outliers(&mut data, -0.1, OutlierType::Point, 2.0, None).is_err());
@@ -3299,7 +3297,7 @@ mod tests {
 
     #[test]
     fn test_inject_outliers_point() {
-        let mut data = Array2::fromshape_vec((20, 2), vec![1.0; 40]).unwrap();
+        let mut data = Array2::from_shape_vec((20, 2), vec![1.0; 40]).unwrap();
 
         let outlier_mask =
             inject_outliers(&mut data, 0.2, OutlierType::Point, 3.0, Some(42)).unwrap();
@@ -3420,7 +3418,7 @@ mod tests {
 
     #[test]
     fn test_missing_patterns() {
-        let data = Array2::fromshape_vec((20, 4), (0..80).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((20, 4), (0..80).map(|x| x as f64).collect()).unwrap();
 
         // Test different missing patterns
         for pattern in [

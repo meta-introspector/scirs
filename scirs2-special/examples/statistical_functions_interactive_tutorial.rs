@@ -6,7 +6,7 @@
 //! Run with: cargo run --example statistical_functions_interactive_tutorial
 
 use ndarray::Array1;
-use scirs2__special::*;
+use scirs2_special::*;
 use std::f64::consts::PI;
 use std::io::{self, Write};
 
@@ -434,9 +434,9 @@ fn computational_experiments() -> Result<(), Box<dyn std::error::Error>> {
     let logistic_time = start.elapsed();
 
     // Time softmax function on chunks
-    let chunk_size = 1000;
+    let chunksize = 1000;
     let start = Instant::now();
-    for chunk in large_array.exact_chunks(chunk_size) {
+    for chunk in large_array.exact_chunks(chunksize) {
         let _ = softmax(chunk)?;
     }
     let softmax_time = start.elapsed();

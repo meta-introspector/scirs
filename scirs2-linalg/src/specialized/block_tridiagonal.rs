@@ -297,9 +297,9 @@ where
 
         // Process each block row
         for block_idx in 0..self.block_count() {
-            let block_size = self.block_dims[block_idx];
+            let blocksize = self.block_dims[block_idx];
             let mut result_block =
-                result.slice_mut(ndarray::s![row_offset..row_offset + block_size]);
+                result.slice_mut(ndarray::s![row_offset..row_offset + blocksize]);
 
             // Initialize with zeros
             for val in result_block.iter_mut() {
@@ -315,11 +315,11 @@ where
             for b in 0..block_idx {
                 col_offset += self.block_dims[b];
             }
-            let x_block = x.slice(ndarray::s![col_offset..col_offset + block_size]);
+            let x_block = x.slice(ndarray::s![col_offset..col_offset + blocksize]);
 
             // Multiply diagonal block: result_block += diag_block * x_block
-            for i in 0..block_size {
-                for j in 0..block_size {
+            for i in 0..blocksize {
+                for j in 0..blocksize {
                     result_block[i] += diag_block[[i, j]] * x_block[j];
                 }
             }
@@ -327,14 +327,14 @@ where
             // Superdiagonal block (if it exists)
             if block_idx < self.block_count() - 1 {
                 let super_block = &self.superdiagonal[block_idx];
-                let next_block_size = self.block_dims[block_idx + 1];
+                let next_blocksize = self.block_dims[block_idx + 1];
                 let x_next_block = x.slice(ndarray::s![
-                    col_offset + block_size..col_offset + block_size + next_block_size
+                    col_offset + blocksize..col_offset + blocksize + next_blocksize
                 ]);
 
                 // Multiply superdiagonal block: result_block += super_block * x_next_block
-                for i in 0..block_size {
-                    for j in 0..next_block_size {
+                for i in 0..blocksize {
+                    for j in 0..next_blocksize {
                         result_block[i] += super_block[[i, j]] * x_next_block[j];
                     }
                 }
@@ -342,19 +342,19 @@ where
 
             // Subdiagonal block (if it exists)
             if block_idx > 0 {
-                let prev_block_size = self.block_dims[block_idx - 1];
+                let prev_blocksize = self.block_dims[block_idx - 1];
                 let sub_block = &self.subdiagonal[block_idx - 1];
-                let x_prev_block = x.slice(ndarray::s![col_offset - prev_block_size..col_offset]);
+                let x_prev_block = x.slice(ndarray::s![col_offset - prev_blocksize..col_offset]);
 
                 // Multiply subdiagonal block: result_block += sub_block * x_prev_block
-                for i in 0..block_size {
-                    for j in 0..prev_block_size {
+                for i in 0..blocksize {
+                    for j in 0..prev_blocksize {
                         result_block[i] += sub_block[[i, j]] * x_prev_block[j];
                     }
                 }
             }
 
-            row_offset += block_size;
+            row_offset += blocksize;
         }
 
         Ok(result)
@@ -374,9 +374,9 @@ where
 
         // Process each block column
         for block_idx in 0..self.block_count() {
-            let block_size = self.block_dims[block_idx];
+            let blocksize = self.block_dims[block_idx];
             let mut result_block =
-                result.slice_mut(ndarray::s![col_offset..col_offset + block_size]);
+                result.slice_mut(ndarray::s![col_offset..col_offset + blocksize]);
 
             // Initialize with zeros
             for val in result_block.iter_mut() {
@@ -392,11 +392,11 @@ where
             for b in 0..block_idx {
                 row_offset += self.block_dims[b];
             }
-            let x_block = x.slice(ndarray::s![row_offset..row_offset + block_size]);
+            let x_block = x.slice(ndarray::s![row_offset..row_offset + blocksize]);
 
             // Multiply diagonal block transpose: result_block += diag_block^T * x_block
-            for i in 0..block_size {
-                for j in 0..block_size {
+            for i in 0..blocksize {
+                for j in 0..blocksize {
                     result_block[i] += diag_block[[j, i]] * x_block[j];
                 }
             }
@@ -404,14 +404,14 @@ where
             // Subdiagonal block (which becomes superdiagonal in transpose)
             if block_idx < self.block_count() - 1 {
                 let sub_block = &self.subdiagonal[block_idx];
-                let next_block_size = self.block_dims[block_idx + 1];
+                let next_blocksize = self.block_dims[block_idx + 1];
                 let x_next_block = x.slice(ndarray::s![
-                    row_offset + block_size..row_offset + block_size + next_block_size
+                    row_offset + blocksize..row_offset + blocksize + next_blocksize
                 ]);
 
                 // Multiply subdiagonal block transpose: result_block += sub_block^T * x_next_block
-                for i in 0..block_size {
-                    for j in 0..next_block_size {
+                for i in 0..blocksize {
+                    for j in 0..next_blocksize {
                         result_block[i] += sub_block[[j, i]] * x_next_block[j];
                     }
                 }
@@ -419,19 +419,19 @@ where
 
             // Superdiagonal block (which becomes subdiagonal in transpose)
             if block_idx > 0 {
-                let prev_block_size = self.block_dims[block_idx - 1];
+                let prev_blocksize = self.block_dims[block_idx - 1];
                 let super_block = &self.superdiagonal[block_idx - 1];
-                let x_prev_block = x.slice(ndarray::s![row_offset - prev_block_size..row_offset]);
+                let x_prev_block = x.slice(ndarray::s![row_offset - prev_blocksize..row_offset]);
 
                 // Multiply superdiagonal block transpose: result_block += super_block^T * x_prev_block
-                for i in 0..block_size {
-                    for j in 0..prev_block_size {
+                for i in 0..blocksize {
+                    for j in 0..prev_blocksize {
                         result_block[i] += super_block[[j, i]] * x_prev_block[j];
                     }
                 }
             }
 
-            col_offset += block_size;
+            col_offset += blocksize;
         }
 
         Ok(result)
@@ -442,12 +442,12 @@ where
 
         let mut row_offset = 0;
         for i in 0..self.block_count() {
-            let block_size_i = self.block_dims[i];
+            let blocksize_i = self.block_dims[i];
             let mut col_offset = 0;
 
             // Iterate through blocks in the same block row
             for j in 0..self.block_count() {
-                let block_size_j = self.block_dims[j];
+                let blocksize_j = self.block_dims[j];
 
                 // Determine which block to use
                 let block_opt = if i == j {
@@ -473,10 +473,10 @@ where
                     }
                 }
 
-                col_offset += block_size_j;
+                col_offset += blocksize_j;
             }
 
-            row_offset += block_size_i;
+            row_offset += blocksize_i;
         }
 
         Ok(result)
@@ -557,7 +557,7 @@ where
 
     // Convert back to block tridiagonal format
     // For simplicity, we'll create single-element blocks
-    let block_size = 1;
+    let blocksize = 1;
     let num_blocks = n;
 
     let mut l_diag = Vec::new();
@@ -570,25 +570,25 @@ where
 
     for i in 0..num_blocks {
         // Diagonal blocks
-        l_diag.push(Array2::from_elem((block_size, block_size), l[[i, i]]));
-        u_diag.push(Array2::from_elem((block_size, block_size), u[[i, i]]));
+        l_diag.push(Array2::from_elem((blocksize, blocksize), l[[i, i]]));
+        u_diag.push(Array2::from_elem((blocksize, blocksize), u[[i, i]]));
 
         // Off-diagonal blocks
         if i < num_blocks - 1 {
-            l_super.push(Array2::zeros((block_size, block_size)));
-            u_super.push(Array2::from_elem((block_size, block_size), u[[i, i + 1]]));
+            l_super.push(Array2::zeros((blocksize, blocksize)));
+            u_super.push(Array2::from_elem((blocksize, blocksize), u[[i, i + 1]]));
         }
 
         if i > 0 {
-            l_sub.push(Array2::from_elem((block_size, block_size), l[[i, i - 1]]));
-            u_sub.push(Array2::zeros((block_size, block_size)));
+            l_sub.push(Array2::from_elem((blocksize, blocksize), l[[i, i - 1]]));
+            u_sub.push(Array2::zeros((blocksize, blocksize)));
         }
     }
 
-    let l_matrix = BlockTridiagonalMatrix::new(l_diag, l_super, l_sub)?;
-    let u_matrix = BlockTridiagonalMatrix::new(u_diag, u_super, u_sub)?;
+    let lmatrix = BlockTridiagonalMatrix::new(l_diag, l_super, l_sub)?;
+    let umatrix = BlockTridiagonalMatrix::new(u_diag, u_super, u_sub)?;
 
-    Ok((l_matrix, u_matrix))
+    Ok((lmatrix, umatrix))
 }
 
 #[cfg(test)]
@@ -597,7 +597,7 @@ mod tests {
     use approx::assert_relative_eq;
     use ndarray::array;
 
-    fn create_test_matrix() -> BlockTridiagonalMatrix<f64> {
+    fn create_testmatrix() -> BlockTridiagonalMatrix<f64> {
         // Create 2×2 blocks
         let a1 = array![[1.0, 2.0], [3.0, 4.0]];
         let a2 = array![[5.0, 6.0], [7.0, 8.0]];
@@ -614,7 +614,7 @@ mod tests {
 
     #[test]
     fn test_constructor() {
-        let matrix = create_test_matrix();
+        let matrix = create_testmatrix();
 
         assert_eq!(matrix.block_count(), 3);
         assert_eq!(matrix.nrows(), 6);
@@ -624,7 +624,7 @@ mod tests {
 
     #[test]
     fn test_element_access() {
-        let matrix = create_test_matrix();
+        let matrix = create_testmatrix();
 
         // Test elements in diagonal blocks
         assert_eq!(matrix.get(0, 0).unwrap(), 1.0);
@@ -649,7 +649,7 @@ mod tests {
 
     #[test]
     fn test_to_dense() {
-        let matrix = create_test_matrix();
+        let matrix = create_testmatrix();
         let dense = matrix.to_dense().unwrap();
 
         // Expected dense matrix
@@ -672,7 +672,7 @@ mod tests {
 
     #[test]
     fn test_matvec() {
-        let matrix = create_test_matrix();
+        let matrix = create_testmatrix();
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let y = matrix.matvec(&x.view()).unwrap();
 
@@ -692,7 +692,7 @@ mod tests {
 
     #[test]
     fn test_matvec_transpose() {
-        let matrix = create_test_matrix();
+        let matrix = create_testmatrix();
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let y = matrix.matvec_transpose(&x.view()).unwrap();
 

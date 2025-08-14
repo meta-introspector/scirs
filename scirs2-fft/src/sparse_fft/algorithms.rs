@@ -43,10 +43,7 @@ impl SparseFFT {
         let seed = config.seed.unwrap_or_else(rand::random);
         let rng = rand::rngs::StdRng::seed_from_u64(seed);
 
-        Self {
-            config: config,
-            rng,
-        }
+        Self { config, rng }
     }
 
     /// Create a new sparse FFT processor with default configuration

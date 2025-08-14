@@ -196,7 +196,7 @@ pub struct AdvancedGenerator {
 
 impl AdvancedGenerator {
     /// Create a new advanced generator
-    pub fn new(_randomstate: Option<u64>) -> Self {
+    pub fn new(_random_state: Option<u64>) -> Self {
         Self { _random_state }
     }
 
@@ -241,7 +241,7 @@ impl AdvancedGenerator {
 
         let mut metadata = base_dataset.metadata.clone();
         let _old_description = metadata.get("description").cloned().unwrap_or_default();
-        let old_name = metadata.get("name").cloned().unwrap_or_default();
+        let oldname = metadata.get("name").cloned().unwrap_or_default();
 
         metadata.insert(
             "description".to_string(),
@@ -250,13 +250,13 @@ impl AdvancedGenerator {
                 config.attack_method
             ),
         );
-        metadata.insert("name".to_string(), format!("{old_name} (Adversarial)"));
+        metadata.insert("name".to_string(), format!("{oldname} (Adversarial)"));
 
         Ok(Dataset {
             data: clipped_data,
             target: adversarial_target,
-            target_names: base_dataset.target_names.clone(),
-            feature_names: base_dataset.feature_names.clone(),
+            targetnames: base_dataset.targetnames.clone(),
+            featurenames: base_dataset.featurenames.clone(),
             feature_descriptions: base_dataset.feature_descriptions.clone(),
             description: base_dataset.description.clone(),
             metadata,
@@ -310,7 +310,7 @@ impl AdvancedGenerator {
             n_samples,
             n_features,
             task_type: "anomaly_detection".to_string(),
-            target_names: Some(vec!["normal".to_string(), "anomaly".to_string()]),
+            targetnames: Some(vec!["normal".to_string(), "anomaly".to_string()]),
             ..Default::default()
         };
 
@@ -494,7 +494,7 @@ impl AdvancedGenerator {
         for task_id in 0..n_tasks {
             // Apply concept drift
             if task_id > 0 {
-                let drift = Array2::fromshape_fn((n_classes, n_features), |_| {
+                let drift = Array2::from_shape_fn((n_classes, n_features), |_| {
                     rand::rng().random::<f64>() * concept_drift_strength
                 });
                 base_centers = base_centers + drift;
@@ -520,8 +520,8 @@ impl AdvancedGenerator {
             task_datasets.push(Dataset {
                 data: task_dataset.data,
                 target: task_dataset.target,
-                target_names: task_dataset.target_names,
-                feature_names: task_dataset.feature_names,
+                targetnames: task_dataset.targetnames,
+                featurenames: task_dataset.featurenames,
                 feature_descriptions: task_dataset.feature_descriptions,
                 description: task_dataset.description,
                 metadata,
@@ -577,7 +577,7 @@ impl AdvancedGenerator {
             }
             AttackMethod::RandomNoise => {
                 // Random noise baseline
-                let perturbations = Array2::fromshape_fn((n_samples, n_features), |_| {
+                let perturbations = Array2::from_shape_fn((n_samples, n_features), |_| {
                     (rand::rng().random::<f64>() * 2.0 - 1.0) * config.epsilon
                 });
                 Ok(perturbations)
@@ -682,7 +682,7 @@ impl AdvancedGenerator {
         }
     }
 
-    fn generate_shuffle_indices(&self, nsamples: usize) -> Result<Vec<usize>> {
+    fn generate_shuffle_indices(&self, n_samples: usize) -> Result<Vec<usize>> {
         use rand::Rng;
         let mut rng = rand::rng();
         let mut indices: Vec<usize> = (0..n_samples).collect();
@@ -712,9 +712,9 @@ impl AdvancedGenerator {
         shuffled
     }
 
-    fn generate_shared_features(&self, n_samples: usize, nfeatures: usize) -> Result<Array2<f64>> {
+    fn generate_shared_features(&self, n_samples: usize, n_features: usize) -> Result<Array2<f64>> {
         // Generate shared _features using multivariate normal distribution
-        let data = Array2::fromshape_fn((n_samples, n_features), |_| {
+        let data = Array2::from_shape_fn((n_samples, n_features), |_| {
             rand::rng().random::<f64>() * 2.0 - 1.0 // Standard normal approximation
         });
         Ok(data)
@@ -728,13 +728,13 @@ impl AdvancedGenerator {
     ) -> Result<Array2<f64>> {
         // Generate task-specific _features with slight bias per task
         let task_bias = task_id as f64 * 0.1;
-        let data = Array2::fromshape_fn((n_samples, n_features), |_| {
+        let data = Array2::from_shape_fn((n_samples, n_features), |_| {
             rand::rng().random::<f64>() * 2.0 - 1.0 + task_bias
         });
         Ok(data)
     }
 
-    fn combine_features(&self, shared: &Array2<f64>, taskspecific: &Array2<f64>) -> Array2<f64> {
+    fn combine_features(&self, shared: &Array2<f64>, task_specific: &Array2<f64>) -> Array2<f64> {
         let n_samples = shared.nrows();
         let total_features = shared.ncols() + task_specific.ncols();
         let mut combined = Array2::zeros((n_samples, total_features));
@@ -761,7 +761,7 @@ impl AdvancedGenerator {
         match task_type {
             TaskType::Classification(n_classes) => {
                 // Generate classification target based on data
-                let target = Array1::fromshape_fn(n_samples, |i| {
+                let target = Array1::from_shape_fn(n_samples, |i| {
                     let feature_sum = data.row(i).sum();
                     let class = ((feature_sum * correlation).abs() as usize) % n_classes;
                     class as f64
@@ -770,7 +770,7 @@ impl AdvancedGenerator {
             }
             TaskType::Regression => {
                 // Generate regression target as linear combination of features
-                let target = Array1::fromshape_fn(n_samples, |i| {
+                let target = Array1::from_shape_fn(n_samples, |i| {
                     let weighted_sum = data
                         .row(i)
                         .iter()
@@ -783,7 +783,7 @@ impl AdvancedGenerator {
             }
             TaskType::Ordinal(n_levels) => {
                 // Generate ordinal target
-                let target = Array1::fromshape_fn(n_samples, |i| {
+                let target = Array1::from_shape_fn(n_samples, |i| {
                     let feature_sum = data.row(i).sum();
                     let level = ((feature_sum * correlation).abs() as usize) % n_levels;
                     level as f64
@@ -827,8 +827,8 @@ impl AdvancedGenerator {
         Ok(Dataset {
             data: shifted_data,
             target: base_dataset.target.clone(),
-            target_names: base_dataset.target_names.clone(),
-            feature_names: base_dataset.feature_names.clone(),
+            targetnames: base_dataset.targetnames.clone(),
+            featurenames: base_dataset.featurenames.clone(),
             feature_descriptions: base_dataset.feature_descriptions.clone(),
             description: base_dataset.description.clone(),
             metadata,
@@ -874,8 +874,8 @@ impl AdvancedGenerator {
         )
     }
 
-    fn generate_class_centers(&self, n_classes: usize, nfeatures: usize) -> Result<Array2<f64>> {
-        let centers = Array2::fromshape_fn((n_classes, n_features), |_| {
+    fn generate_class_centers(&self, n_classes: usize, n_features: usize) -> Result<Array2<f64>> {
+        let centers = Array2::from_shape_fn((n_classes, n_features), |_| {
             rand::rng().random::<f64>() * 4.0 - 2.0
         });
         Ok(centers)

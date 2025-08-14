@@ -1447,8 +1447,7 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
             let mut restored_word2vec = word2vec;
 
             // Apply configuration parameters if available
-            if let Some(window_size) = data.config.get("window_size").and_then(|s| s.parse().ok())
-            {
+            if let Some(window_size) = data.config.get("window_size").and_then(|s| s.parse().ok()) {
                 restored_word2vec = restored_word2vec.with_window_size(window_size);
             }
 

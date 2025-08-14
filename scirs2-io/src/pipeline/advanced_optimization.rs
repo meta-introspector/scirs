@@ -2607,7 +2607,7 @@ impl NeuromorphicMemory {
     pub fn new(capacity: usize) -> Self {
         Self {
             memory_traces: Vec::new(),
-            capacity: capacity,
+            capacity,
             consolidation_threshold: 0.8,
         }
     }
@@ -2825,7 +2825,7 @@ impl WorkingMemory {
     pub fn new(capacity: usize) -> Self {
         Self {
             items: Vec::new(),
-            capacity: capacity,
+            capacity,
             decay_rate: 0.1,
         }
     }
@@ -3684,9 +3684,7 @@ impl DQNAgent {
     pub fn new(state_dim: usize, hidden_dim: usize, action_dim: usize) -> Self {
         Self {
             q_network: NeuralNetwork::new(vec![state_dim, hidden_dim, hidden_dim, action_dim]),
-            target_network: NeuralNetwork::new(vec![
-                state_dim, hidden_dim, hidden_dim, action_dim,
-            ]),
+            target_network: NeuralNetwork::new(vec![state_dim, hidden_dim, hidden_dim, action_dim]),
             experience_buffer: Vec::new(),
             epsilon: 0.9, // High initial exploration
             learning_rate: 0.001,
@@ -3985,7 +3983,7 @@ impl ExperienceReplayBuffer {
     pub fn new(capacity: usize) -> Self {
         Self {
             buffer: Vec::with_capacity(capacity),
-            capacity: capacity,
+            capacity,
             position: 0,
         }
     }

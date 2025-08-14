@@ -148,9 +148,9 @@ pub mod gamma_stability {
             let h = 1e-8;
             let g: f64 = gamma(x);
             let g_plus: f64 = gamma(x + h);
-            let g_minus: f64 = gamma(x - h);
+            let gminus: f64 = gamma(x - h);
 
-            let derivative = (g_plus - g_minus) / (2.0 * h);
+            let derivative = (g_plus - gminus) / (2.0 * h);
             let condition = ((x * derivative / g).abs()) as f64;
 
             condition_numbers.insert(format!("x={x}"), condition);

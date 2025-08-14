@@ -234,7 +234,7 @@ impl NumericalStabilityAnalyzer {
     /// Create a new numerical stability analyzer
     pub fn new(config: StabilityConfig) -> Self {
         Self {
-            config: config,
+            config,
             analysis_results: HashMap::new(),
         }
     }
@@ -249,22 +249,22 @@ impl NumericalStabilityAnalyzer {
         &mut self,
         function_name: &str,
         function: F,
-        test_data: &ArrayView1<f64>,
+        testdata: &ArrayView1<f64>,
     ) -> StatsResult<StabilityAnalysisResult>
     where
         F: Fn(&ArrayView1<f64>) -> StatsResult<f64>,
     {
         // Condition number analysis
-        let condition_analysis = self.analyze_condition_number(test_data)?;
+        let condition_analysis = self.analyze_condition_number(testdata)?;
 
         // Error propagation analysis
-        let error_propagation = self.analyze_error_propagation(&function, test_data)?;
+        let error_propagation = self.analyze_error_propagation(&function, testdata)?;
 
         // Edge case robustness testing
         let edge_case_robustness = self.test_edge_case_robustness(&function)?;
 
         // Precision loss analysis
-        let precision_analysis = self.analyze_precision_loss(&function, test_data)?;
+        let precision_analysis = self.analyze_precision_loss(&function, testdata)?;
 
         // Generate recommendations
         let recommendations = self.generate_recommendations(
@@ -358,12 +358,11 @@ impl NumericalStabilityAnalyzer {
 
         // Perform perturbation tests
         for i in 0..self.config.perturbation_tests.min(data.len()) {
-            let mut perturbed_data = data.to_owned();
-            let perturbation =
-                self.config.perturbation_magnitude * perturbed_data[i].abs().max(1.0);
-            perturbed_data[i] += perturbation;
+            let mut perturbeddata = data.to_owned();
+            let perturbation = self.config.perturbation_magnitude * perturbeddata[i].abs().max(1.0);
+            perturbeddata[i] += perturbation;
 
-            if let Ok(perturbed_result) = function(&perturbed_data.view()) {
+            if let Ok(perturbed_result) = function(&perturbeddata.view()) {
                 let forward_error = (perturbed_result - reference_result).abs();
                 let backward_error = perturbation.abs();
 
@@ -410,8 +409,8 @@ impl NumericalStabilityAnalyzer {
         // Test with infinity
         if self.config.test_extreme_values {
             total_tests += 1;
-            let inf_data = Array1::from_vec(vec![f64::INFINITY, 1.0, 2.0]);
-            if let Ok(result) = function(&inf_data.view()) {
+            let infdata = Array1::from_vec(vec![f64::INFINITY, 1.0, 2.0]);
+            if let Ok(result) = function(&infdata.view()) {
                 if result.is_finite() || result.is_infinite() {
                     handles_infinity = true;
                     tests_passed += 1;
@@ -420,8 +419,8 @@ impl NumericalStabilityAnalyzer {
 
             // Test with NaN
             total_tests += 1;
-            let nan_data = Array1::from_vec(vec![f64::NAN, 1.0, 2.0]);
-            if let Ok(result) = function(&nan_data.view()) {
+            let nandata = Array1::from_vec(vec![f64::NAN, 1.0, 2.0]);
+            if let Ok(result) = function(&nandata.view()) {
                 if result.is_nan() || result.is_finite() {
                     handles_nan = true;
                     tests_passed += 1;
@@ -430,24 +429,24 @@ impl NumericalStabilityAnalyzer {
 
             // Test with zeros
             total_tests += 1;
-            let zero_data = Array1::from_vec(vec![0.0, 0.0, 0.0]);
-            if let Ok(_) = function(&zero_data.view()) {
+            let zerodata = Array1::from_vec(vec![0.0, 0.0, 0.0]);
+            if let Ok(_) = function(&zerodata.view()) {
                 handles_zero = true;
                 tests_passed += 1;
             }
 
             // Test with very large values
             total_tests += 1;
-            let large_data = Array1::from_vec(vec![1e100, 1e200, 1e300]);
-            if let Ok(_) = function(&large_data.view()) {
+            let largedata = Array1::from_vec(vec![1e100, 1e200, 1e300]);
+            if let Ok(_) = function(&largedata.view()) {
                 handles_large_values = true;
                 tests_passed += 1;
             }
 
             // Test with very small values
             total_tests += 1;
-            let small_data = Array1::from_vec(vec![1e-100, 1e-200, 1e-300]);
-            if let Ok(_) = function(&small_data.view()) {
+            let smalldata = Array1::from_vec(vec![1e-100, 1e-200, 1e-300]);
+            if let Ok(_) = function(&smalldata.view()) {
                 handles_small_values = true;
                 tests_passed += 1;
             }
@@ -496,7 +495,7 @@ impl NumericalStabilityAnalyzer {
         let mut cancellation_errors = Vec::new();
         if data.iter().any(|&x| x.abs() < self.config.zero_tolerance) {
             cancellation_errors.push(CancellationError {
-                location: "input_data".to_string(),
+                location: "inputdata".to_string(),
                 precision_loss: precision_loss_bits,
                 mitigation: "Use higher precision arithmetic or alternative algorithm".to_string(),
             });

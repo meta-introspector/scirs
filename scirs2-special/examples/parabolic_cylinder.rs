@@ -1,4 +1,4 @@
-use scirs2__special::{pbdv, pbdv_seq, pbvv, pbvv_seq, pbwa};
+use scirs2_special::{pbdv, pbdv_seq, pbvv, pbvv_seq, pbwa};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -104,11 +104,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let v = 2.0;
 
     // Verify the recurrence relation: D_{v+1}(x) = x*D_v(x) - v*D_{v-1}(x)
-    let (d_v_minus_1_) = pbdv(v - 1.0, x)?;
+    let (d_vminus_1_) = pbdv(v - 1.0, x)?;
     let (d_v_) = pbdv(v, x)?;
     let (d_v_plus_1_) = pbdv(v + 1.0, x)?;
 
-    let recurrence_value = x * d_v - v * d_v_minus_1;
+    let recurrence_value = x * d_v - v * d_vminus_1;
     println!("Recurrence relation for D_v:");
     println!(
         "  D_{:.0}({:.1}) from recurrence: {:.8e}",

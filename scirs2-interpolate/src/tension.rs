@@ -486,9 +486,9 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     /// let second_deriv = derivatives[2];
     /// ```
     pub fn derivatives_all(&self, x_val: T, maxorder: usize) -> InterpolateResult<Vec<T>> {
-        let mut derivatives = Vec::with_capacity(max_order + 1);
+        let mut derivatives = Vec::with_capacity(maxorder + 1);
 
-        for _order in 0..=max_order {
+        for _order in 0..=maxorder {
             derivatives.push(self.derivative_single(_order, x_val)?);
         }
 

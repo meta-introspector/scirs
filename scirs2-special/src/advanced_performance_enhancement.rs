@@ -27,7 +27,7 @@ pub struct PerformanceConfig {
     /// Enable parallel processing
     pub use_parallel: bool,
     /// Chunk size for large array processing
-    pub chunk_size: usize,
+    pub chunksize: usize,
     /// Lookup table resolution
     pub lookup_resolution: usize,
 }
@@ -38,7 +38,7 @@ impl Default for PerformanceConfig {
             use_lookup_tables: true,
             use_simd: cfg!(feature = "simd"),
             use_parallel: cfg!(feature = "parallel"),
-            chunk_size: 8192,
+            chunksize: 8192,
             lookup_resolution: 10000,
         }
     }
@@ -202,15 +202,15 @@ pub fn gamma_array_advancedfast(input: &ArrayView1<f64>, config: &PerformanceCon
     let mut output = Array1::zeros(len);
     
     // Adaptive processing based on array size
-    if len > config.chunk_size && config.use_parallel {
+    if len > config.chunksize && config.use_parallel {
         // Parallel processing for large arrays
         #[cfg(feature = "parallel")]
         {
             use scirs2_core::parallel_ops::*;
             
             input.as_slice().unwrap()
-                .par_chunks(config.chunk_size)
-                .zip(output.as_slice_mut().unwrap().par_chunks_mut(config.chunk_size))
+                .par_chunks(config.chunksize)
+                .zip(output.as_slice_mut().unwrap().par_chunks_mut(config.chunksize))
                 .try_for_each(|(input_chunk, output_chunk)| -> SpecialResult<()> {
                     for (i, &x) in input_chunk.iter().enumerate() {
                         output_chunk[i] = gamma_advancedfast(x)?;
@@ -231,13 +231,13 @@ pub fn gamma_array_advancedfast(input: &ArrayView1<f64>, config: &PerformanceCon
             for i in 0..simd_chunks {
                 let start = i * 4;
                 for j in 0..4 {
-                    output[start + j] = gamma_advancedfast(_input[start + j])?;
+                    output[start + j] = gamma_advancedfast(input[start + j])?;
                 }
             }
             
             // Handle remaining elements
             for i in (simd_chunks * 4)..len {
-                output[i] = gamma_advancedfast(_input[i])?;
+                output[i] = gamma_advancedfast(input[i])?;
             }
             
             return Ok(output);
@@ -256,7 +256,7 @@ pub fn gamma_array_advancedfast(input: &ArrayView1<f64>, config: &PerformanceCon
 #[derive(Debug, Clone)]
 pub struct PerformanceMetrics {
     pub function_name: String,
-    pub array_size: usize,
+    pub arraysize: usize,
     pub time_ns: u64,
     pub throughput_ops_per_sec: f64,
     pub memory_bandwidth_gb_per_sec: f64,
@@ -268,7 +268,7 @@ pub struct PerformanceMetrics {
 pub fn benchmark_function<F>(
     function_name: &str,
     test_function: F,
-    input_size: usize,
+    inputsize: usize,
     iterations: usize,
 ) -> PerformanceMetrics
 where
@@ -287,12 +287,12 @@ where
     let duration = start.elapsed();
     
     let time_ns = duration.as_nanos() as u64 / iterations as u64;
-    let ops_per_sec = (input_size as f64 * 1e9) / time_ns as f64;
-    let memory_bandwidth = (input_size * 16) as f64 * 1e9 / (1024.0 * 1024.0 * 1024.0) / (time_ns as f64 / 1e9);
+    let ops_per_sec = (inputsize as f64 * 1e9) / time_ns as f64;
+    let memory_bandwidth = (inputsize * 16) as f64 * 1e9 / (1024.0 * 1024.0 * 1024.0) / (time_ns as f64 / 1e9);
     
     PerformanceMetrics {
         _function_name: function_name.to_string(),
-        array_size: input_size,
+        arraysize: inputsize,
         time_ns,
         throughput_ops_per_sec: ops_per_sec,
         memory_bandwidth_gb_per_sec: memory_bandwidth,

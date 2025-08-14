@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("CSV dataset loaded successfully:");
     println!("  Samples: {}", dataset.n_samples());
     println!("  Features: {}", dataset.n_features());
-    println!("  Feature names: {:?}", dataset.feature_names);
+    println!("  Feature names: {:?}", dataset.featurenames);
 
     // Access data and target
     println!("\nFirst 3 samples:");

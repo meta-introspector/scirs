@@ -30,10 +30,10 @@ use num_traits::{Float, NumCast};
 /// use scirs2_stats::shapiro_wilk;
 ///
 /// // Create some normally distributed data
-/// let normal_data = array![0.1, -0.2, 0.3, -0.1, 0.2, -0.3, 0.1, 0.0, -0.2, 0.3];
+/// let normaldata = array![0.1, -0.2, 0.3, -0.1, 0.2, -0.3, 0.1, 0.0, -0.2, 0.3];
 ///
 /// // Test for normality
-/// let (stat, p_value) = shapiro_wilk(&normal_data.view()).unwrap();
+/// let (stat, p_value) = shapiro_wilk(&normaldata.view()).unwrap();
 ///
 /// println!("W statistic: {}, p-value: {}", stat, p_value);
 /// // For a significance level of 0.05, we would reject normality if p < 0.05
@@ -72,14 +72,14 @@ where
     }
 
     // Sort the data
-    let mut sorted_data = data.to_vec();
-    sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let mut sorteddata = data.to_vec();
+    sorteddata.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     // Calculate the sample mean
-    let mean = sorted_data.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let mean = sorteddata.iter().cloned().sum::<F>() / F::from(n).unwrap();
 
     // Calculate the sample variance
-    let var = sorted_data.iter().map(|&x| (x - mean).powi(2)).sum::<F>() / F::from(n).unwrap();
+    let var = sorteddata.iter().map(|&x| (x - mean).powi(2)).sum::<F>() / F::from(n).unwrap();
 
     if var <= F::epsilon() {
         return Err(StatsError::InvalidArgument(
@@ -88,7 +88,7 @@ where
     }
 
     // Calculate the Shapiro-Wilk test statistic
-    let (w, p_value) = compute_shapiro_wilk_statistic(&sorted_data, n)?;
+    let (w, p_value) = compute_shapiro_wilk_statistic(&sorteddata, n)?;
 
     Ok((w, p_value))
 }
@@ -340,10 +340,10 @@ fn approx_normal_cdf(z: f64) -> f64 {
 /// use scirs2_stats::anderson_darling;
 ///
 /// // Create some normally distributed data
-/// let normal_data = array![0.1, -0.2, 0.3, -0.1, 0.2, -0.3, 0.1, 0.0, -0.2, 0.3];
+/// let normaldata = array![0.1, -0.2, 0.3, -0.1, 0.2, -0.3, 0.1, 0.0, -0.2, 0.3];
 ///
 /// // Test for normality
-/// let (stat, p_value) = anderson_darling(&normal_data.view()).unwrap();
+/// let (stat, p_value) = anderson_darling(&normaldata.view()).unwrap();
 ///
 /// println!("A² statistic: {}, p-value: {}", stat, p_value);
 /// // For a significance level of 0.05, we would reject normality if p < 0.05
@@ -388,14 +388,14 @@ where
     let std_dev = variance.sqrt();
 
     // Sort the data
-    let mut sorted_data = data.to_vec();
-    sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let mut sorteddata = data.to_vec();
+    sorteddata.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     // Z-transform the data (standardize to N(0,1))
-    let z_data: Vec<F> = sorted_data.iter().map(|&x| (x - mean) / std_dev).collect();
+    let zdata: Vec<F> = sorteddata.iter().map(|&x| (x - mean) / std_dev).collect();
 
     // Compute the Anderson-Darling statistic
-    let (a_squared, p_value) = compute_anderson_darling_statistic(&z_data, n)?;
+    let (a_squared, p_value) = compute_anderson_darling_statistic(&zdata, n)?;
 
     Ok((a_squared, p_value))
 }
@@ -408,7 +408,7 @@ where
 {
     let n_f = F::from(n).unwrap();
 
-    // Calculate the cumulative distribution function for each sorted _data point
+    // Calculate the cumulative distribution function for each sorted data point
     let mut s = F::zero();
 
     for (i, &z) in zdata.iter().enumerate() {

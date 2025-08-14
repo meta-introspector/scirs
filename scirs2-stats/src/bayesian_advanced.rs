@@ -1112,7 +1112,7 @@ where
             .collect();
 
         Ok(Self {
-            architecture: architecture,
+            architecture,
             activations,
             weight_priors,
             bias_priors,
@@ -1189,7 +1189,7 @@ where
         weights: &Array2<F>,
         bias: &Array1<F>,
     ) -> StatsResult<Array2<F>> {
-        let (batch_size, input_dim) = x.dim();
+        let (batchsize, input_dim) = x.dim();
         let (weight_input_dim, output_dim) = weights.dim();
 
         if input_dim != weight_input_dim {
@@ -1205,9 +1205,9 @@ where
         }
 
         // Matrix multiplication: x * W
-        let mut result = Array2::zeros((batch_size, output_dim));
+        let mut result = Array2::zeros((batchsize, output_dim));
 
-        for i in 0..batch_size {
+        for i in 0..batchsize {
             for j in 0..output_dim {
                 let mut sum = F::zero();
                 for k in 0..input_dim {

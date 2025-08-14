@@ -8,7 +8,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Features: {}", iris.n_features());
     println!(
         "  Target classes: {}",
-        iris.target_names.as_ref().map_or(0, |v| v.len())
+        iris.targetnames.as_ref().map_or(0, |v| v.len())
     );
 
     let boston = load_boston()?;

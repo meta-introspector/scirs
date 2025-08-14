@@ -60,9 +60,7 @@ where
     ///
     /// * `optimizers` - List of optimizers to apply in sequence
     pub fn new(optimizers: Vec<Box<dyn Optimizer<A, D>>>) -> Self {
-        Self {
-            optimizers: optimizers,
-        }
+        Self { optimizers }
     }
 
     /// Add an optimizer to the sequence
@@ -532,10 +530,7 @@ where
     /// * `inner` - The inner optimizer, applied first
     /// * `outer` - The outer optimizer, applied to the result of the inner optimizer
     pub fn new(inner: Box<dyn Optimizer<A, D>>, outer: Box<dyn Optimizer<A, D>>) -> Self {
-        Self {
-            inner: inner,
-            outer,
-        }
+        Self { inner, outer }
     }
 
     /// Get a reference to the inner optimizer

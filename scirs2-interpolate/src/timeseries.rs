@@ -405,10 +405,13 @@ where
         // Add seasonal component if available
         if let Some(ref seasonal_interp) = self.seasonal_interpolator {
             // Convert 1D timestamps to 2D for RBF interpolator
-            let timestamps_2d = Array2::fromshape_vec((timestamps.len(), 1), timestamps.to_vec())
+            let timestamps_2d = Array2::from_shape_vec((timestamps.len(), 1), timestamps.to_vec())
                 .map_err(|e| {
-                InterpolateError::ComputationError(format!("Failed to reshape timestamps: {}", e))
-            })?;
+                    InterpolateError::ComputationError(format!(
+                        "Failed to reshape timestamps: {}",
+                        e
+                    ))
+                })?;
 
             let seasonal_values = seasonal_interp.interpolate(&timestamps_2d.view())?;
             interpolated_values = interpolated_values + seasonal_values;
@@ -502,7 +505,7 @@ where
         // Fit seasonal component using RBF if we have enough data
         if self.train_times.len() >= 8 {
             let times_2d =
-                Array2::fromshape_vec((self.train_times.len(), 1), self.train_times.to_vec())
+                Array2::from_shape_vec((self.train_times.len(), 1), self.train_times.to_vec())
                     .map_err(|e| {
                         InterpolateError::ComputationError(format!("Failed to reshape times: {e}"))
                     })?;
@@ -525,7 +528,7 @@ where
     fn fit_seasonal_only(&mut self) -> InterpolateResult<()> {
         if self.train_times.len() >= 8 {
             let times_2d =
-                Array2::fromshape_vec((self.train_times.len(), 1), self.train_times.to_vec())
+                Array2::from_shape_vec((self.train_times.len(), 1), self.train_times.to_vec())
                     .map_err(|e| {
                         InterpolateError::ComputationError(format!("Failed to reshape times: {e}"))
                     })?;
@@ -558,7 +561,7 @@ where
     }
 
     /// Estimate uncertainty for interpolated values
-    fn estimate_uncertainty(selftimestamps: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    fn estimate_uncertainty(&self, timestamps: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         // Simple uncertainty estimation based on local variance
         let n = timestamps.len();
         let base_uncertainty = self.temporal_stats.noise_level;

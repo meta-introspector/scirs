@@ -330,7 +330,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         Ok(TrainingResult {
             loss: F::zero(),             // Would be actual loss from training
             q_value_estimate: F::zero(), // Average Q-value
-            tderror: F::zero(),         // Temporal difference error
+            tderror: F::zero(),          // Temporal difference error
             exploration_rate: F::from(self.training_config.epsilon).unwrap(),
             training_performed: self.should_train()?,
         })
@@ -527,10 +527,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
 
     fn transfer_states_to_gpu(&self, batch: &[Experience<F>]) -> IntegrateResult<gpu::GpuPtr<F>> {
         // Simplified GPU transfer - allocate GPU memory
-        let states: Vec<F> = batch
-            .iter()
-            .flat_map(|e| e.state.iter().cloned())
-            .collect();
+        let states: Vec<F> = batch.iter().flat_map(|e| e.state.iter().cloned()).collect();
         gpu::GpuPtr::allocate(states.len())
             .map_err(|e| IntegrateError::ComputationError(format!("GPU allocation failed: {e:?}")))
     }
@@ -1084,7 +1081,7 @@ pub struct SumTree {
 impl SumTree {
     pub fn new(capacity: usize) -> Self {
         SumTree {
-            capacity: capacity,
+            capacity,
             tree: vec![0.0; 2 * capacity - 1],
             data_pointer: 0,
         }

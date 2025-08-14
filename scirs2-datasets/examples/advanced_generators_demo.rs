@@ -311,10 +311,10 @@ fn demonstrate_domain_adaptation() -> Result<(), Box<dyn std::error::Error>> {
     println!("    Total domains: {}", domain_dataset.domains.len());
     println!("    Source domains: {}", domain_dataset.n_source_domains);
 
-    for (domain_name, dataset) in &domain_dataset.domains {
+    for (domainname, dataset) in &domain_dataset.domains {
         println!(
             "    {}: {} samples, {} features",
-            domain_name,
+            domainname,
             dataset.n_samples(),
             dataset.n_features()
         );
@@ -739,7 +739,7 @@ fn demonstrate_federated_learning_setup() -> Result<(), Box<dyn std::error::Erro
         domain_data.n_source_domains
     );
 
-    for (i, (_domain_name, dataset)) in domain_data.domains.iter().enumerate() {
+    for (i, (_domainname, dataset)) in domain_data.domains.iter().enumerate() {
         if i < domain_data.n_source_domains {
             println!(
                 "    Client {}: {} samples (private data)",

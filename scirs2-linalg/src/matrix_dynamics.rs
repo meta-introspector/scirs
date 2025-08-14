@@ -260,7 +260,7 @@ where
     // Use multiple precision matrix exponential algorithm
     let exp_at = if n <= 4 {
         // Use Padé approximation with scaling and squaring for better precision
-        pade_matrix_exp(&scaled_a.view())?
+        padematrix_exp(&scaled_a.view())?
     } else {
         expm(&scaled_a.view(), None)?
     };
@@ -270,7 +270,7 @@ where
 
 /// High-precision Padé approximation for matrix exponential
 #[allow(dead_code)]
-fn pade_matrix_exp<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+fn padematrix_exp<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + 'static + ndarray::ScalarOperand,
 {
@@ -339,8 +339,8 @@ where
 
         // Build Krylov subspace using Arnoldi iteration
         let mut h = Array2::<F>::zeros((m + 1, m));
-        let mut v_matrix = Array2::<F>::zeros((n, m + 1));
-        v_matrix.column_mut(0).assign(&v);
+        let mut vmatrix = Array2::<F>::zeros((n, m + 1));
+        vmatrix.column_mut(0).assign(&v);
 
         for j_krylov in 0..m {
             // Compute A*v_j
@@ -349,7 +349,7 @@ where
             // Orthogonalize against previous vectors (modified Gram-Schmidt)
             let mut w = av;
             for i in 0..=j_krylov {
-                let v_i = v_matrix.column(i);
+                let v_i = vmatrix.column(i);
                 let hij = w.dot(&v_i);
                 h[[i, j_krylov]] = hij;
                 let scaled_vi = v_i.mapv(|x| x * hij);
@@ -360,7 +360,7 @@ where
             if j_krylov < m - 1 && norm_w > F::from(config.atol).unwrap() {
                 h[[j_krylov + 1, j_krylov]] = norm_w;
                 v = w / norm_w;
-                v_matrix.column_mut(j_krylov + 1).assign(&v);
+                vmatrix.column_mut(j_krylov + 1).assign(&v);
             } else {
                 break;
             }
@@ -377,7 +377,7 @@ where
         // Compute approximation: V_m * (beta * e_1^T * exp(H))
         let mut result_col = Array1::zeros(n);
         for i in 0..m {
-            let scaled_column = v_matrix.column(i).mapv(|x| x * coeffs[i] * beta);
+            let scaled_column = vmatrix.column(i).mapv(|x| x * coeffs[i] * beta);
             result_col = result_col + scaled_column;
         }
 
@@ -788,8 +788,8 @@ where
                 + &k3.mapv(|x| x * F::from(3.0).unwrap());
             let embedded_factor = dt / F::from(8.0).unwrap();
             let x_embedded = &x + &k_embedded_sum.mapv(|x| x * embedded_factor);
-            let error_matrix = &x_new - &x_embedded;
-            let error = matrix_norm(&error_matrix.view(), "fro", None).unwrap_or(F::zero());
+            let errormatrix = &x_new - &x_embedded;
+            let error = matrix_norm(&errormatrix.view(), "fro", None).unwrap_or(F::zero());
             let tolerance = atol + rtol * matrix_norm(&x.view(), "fro", None).unwrap_or(F::zero());
 
             if let Some(ref mut errors) = error_estimates {
@@ -994,7 +994,7 @@ mod tests {
     use std::f64::consts::PI;
 
     #[test]
-    fn test_matrix_exp_action_simple() {
+    fn testmatrix_exp_action_simple() {
         // Test with simple 2x2 rotation matrix
         let a = array![[0.0, -1.0], [1.0, 0.0]]; // 90-degree rotation generator
         let b = array![[1.0], [0.0]]; // Unit vector along x-axis
@@ -1081,7 +1081,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_ode_solve_linear() {
+    fn testmatrix_ode_solve_linear() {
         // Test linear ODE: dX/dt = AX
         let a = array![[-1.0, 0.0], [0.0, -2.0]]; // Stable diagonal
         let x0 = array![[1.0, 0.0], [0.0, 1.0]]; // Identity initial condition

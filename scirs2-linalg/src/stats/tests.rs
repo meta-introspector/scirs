@@ -11,7 +11,7 @@ use std::f64::consts::PI;
 use crate::basic::{det, inv};
 use crate::eigen::eigh;
 use crate::error::{LinalgError, LinalgResult};
-use crate::stats::covariance::covariance_matrix;
+use crate::stats::covariance::covariancematrix;
 
 /// Result of a statistical test
 #[derive(Debug, Clone)]
@@ -99,7 +99,7 @@ where
     }
 
     // Compute sample sizes and covariance matrices for each group
-    let mut sample_sizes = Vec::with_capacity(k);
+    let mut samplesizes = Vec::with_capacity(k);
     let mut group_covs = Vec::with_capacity(k);
     let mut log_dets = Vec::with_capacity(k);
 
@@ -111,8 +111,8 @@ where
             )));
         }
 
-        sample_sizes.push(n_i);
-        let mut cov_i = covariance_matrix(group, Some(1))?;
+        samplesizes.push(n_i);
+        let mut cov_i = covariancematrix(group, Some(1))?;
 
         // Add small regularization to diagonal for numerical stability
         let reg_factor = F::from(1e-10).unwrap();
@@ -137,11 +137,11 @@ where
     }
 
     // Compute pooled covariance matrix
-    let total_dof: usize = sample_sizes.iter().map(|&n| n - 1).sum();
+    let total_dof: usize = samplesizes.iter().map(|&n| n - 1).sum();
     let mut pooled_cov = Array2::zeros((p, p));
 
     for (i, cov_i) in group_covs.iter().enumerate() {
-        let weight = F::from(sample_sizes[i] - 1).unwrap() / F::from(total_dof).unwrap();
+        let weight = F::from(samplesizes[i] - 1).unwrap() / F::from(total_dof).unwrap();
         pooled_cov += &(cov_i * weight);
     }
 
@@ -166,11 +166,11 @@ where
     let mut m_statistic = F::from(total_dof).unwrap() * log_det_pooled;
 
     for (i, &log_det_i) in log_dets.iter().enumerate() {
-        m_statistic -= F::from(sample_sizes[i] - 1).unwrap() * log_det_i;
+        m_statistic -= F::from(samplesizes[i] - 1).unwrap() * log_det_i;
     }
 
     // Convert to chi-square statistic using Box's correction
-    let c1 = compute_box_correction_c1(&sample_sizes, p)?;
+    let c1 = compute_box_correction_c1(&samplesizes, p)?;
     let chi_square_stat = m_statistic * (F::one() - c1);
 
     // Check for finite statistic
@@ -236,7 +236,7 @@ where
     }
 
     // Compute sample covariance matrix
-    let cov = covariance_matrix(data, Some(1))?;
+    let cov = covariancematrix(data, Some(1))?;
 
     // Compute eigenvalues
     let (eigenvals, _) = eigh(&cov.view(), None)?;
@@ -311,7 +311,7 @@ where
 
     // Compute sample mean and covariance with regularization
     let mean = data.mean_axis(Axis(0)).unwrap();
-    let mut cov = covariance_matrix(data, Some(1))?;
+    let mut cov = covariancematrix(data, Some(1))?;
 
     // Add small regularization to diagonal for numerical stability
     let reg_factor = F::from(1e-10).unwrap();
@@ -444,7 +444,7 @@ where
     let diff = &sample_mean - &hypothesized_mean;
 
     // Compute sample covariance matrix with regularization for numerical stability
-    let mut cov = covariance_matrix(data, Some(1))?;
+    let mut cov = covariancematrix(data, Some(1))?;
 
     // Add small regularization to diagonal for numerical stability
     let reg_factor = F::from(1e-10).unwrap();

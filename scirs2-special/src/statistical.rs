@@ -214,17 +214,17 @@ pub fn softmax(x: ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
     }
 
     // Find maximum for numerical stability
-    let x_max = x.fold(f64::NEG_INFINITY, |acc, &val| acc.max(val));
+    let xmax = x.fold(f64::NEG_INFINITY, |acc, &val| acc.max(val));
 
     // Handle case where all values are -infinity
-    if x_max == f64::NEG_INFINITY {
+    if xmax == f64::NEG_INFINITY {
         return Err(SpecialError::DomainError(
             "All input values are negative infinity".to_string(),
         ));
     }
 
-    // Compute exp(x_i - x_max)
-    let exp_shifted: Array1<f64> = x.mapv(|val| (val - x_max).exp());
+    // Compute exp(x_i - xmax)
+    let exp_shifted: Array1<f64> = x.mapv(|val| (val - xmax).exp());
 
     // Compute sum of exponentials
     let sum_exp = exp_shifted.sum();
@@ -281,17 +281,17 @@ pub fn log_softmax(x: ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
     }
 
     // Find maximum for numerical stability
-    let x_max = x.fold(f64::NEG_INFINITY, |acc, &val| acc.max(val));
+    let xmax = x.fold(f64::NEG_INFINITY, |acc, &val| acc.max(val));
 
     // Handle case where all values are -infinity
-    if x_max == f64::NEG_INFINITY {
+    if xmax == f64::NEG_INFINITY {
         return Err(SpecialError::DomainError(
             "All input values are negative infinity".to_string(),
         ));
     }
 
-    // Compute log(sum(exp(x_i - x_max))) + x_max
-    let log_sum_exp = x.fold(0.0, |acc, &val| acc + (val - x_max).exp()).ln() + x_max;
+    // Compute log(sum(exp(x_i - xmax))) + xmax
+    let log_sum_exp = x.fold(0.0, |acc, &val| acc + (val - xmax).exp()).ln() + xmax;
 
     // Handle numerical issues
     if !log_sum_exp.is_finite() {
@@ -341,23 +341,23 @@ pub fn logsumexp(x: ArrayView1<f64>) -> SpecialResult<f64> {
     }
 
     // Find maximum for numerical stability
-    let x_max = x.fold(f64::NEG_INFINITY, |acc, &val| acc.max(val));
+    let xmax = x.fold(f64::NEG_INFINITY, |acc, &val| acc.max(val));
 
     // Handle case where all values are -infinity
-    if x_max == f64::NEG_INFINITY {
+    if xmax == f64::NEG_INFINITY {
         return Ok(f64::NEG_INFINITY);
     }
 
     // Handle case where maximum is +infinity
-    if x_max == f64::INFINITY {
+    if xmax == f64::INFINITY {
         return Ok(f64::INFINITY);
     }
 
-    // Compute sum(exp(x_i - x_max))
-    let sum_exp = x.fold(0.0, |acc, &val| acc + (val - x_max).exp());
+    // Compute sum(exp(x_i - xmax))
+    let sum_exp = x.fold(0.0, |acc, &val| acc + (val - xmax).exp());
 
-    // Return log(sum_exp) + x_max
-    Ok(sum_exp.ln() + x_max)
+    // Return log(sum_exp) + xmax
+    Ok(sum_exp.ln() + xmax)
 }
 
 /// Computes log(1 + x) with improved numerical stability for small x.

@@ -27,12 +27,9 @@ impl SimdIoProcessor {
 
         // Use parallel processing for large arrays
         if input.len() > 1000 {
-            output
-                .iter_mut()
-                .zip(input.iter())
-                .for_each(|(out, &inp)| {
-                    *out = inp as f32;
-                });
+            output.iter_mut().zip(input.iter()).for_each(|(out, &inp)| {
+                *out = inp as f32;
+            });
         } else {
             // Use sequential processing for small arrays
             for (out, &inp) in output.iter_mut().zip(input.iter()) {

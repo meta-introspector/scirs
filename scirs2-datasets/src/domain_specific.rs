@@ -83,14 +83,14 @@ pub mod astronomy {
     impl StellarDatasets {
         /// Create a new stellar datasets client
         pub fn new() -> Result<Self> {
-            let cache_dir = dirs::cache_dir()
+            let cachedir = dirs::cachedir()
                 .ok_or_else(|| {
                     DatasetsError::Other("Could not determine cache directory".to_string())
                 })?
                 .join("scirs2-datasets");
             Ok(Self {
                 client: ExternalClient::new()?,
-                cache: DatasetCache::new(cache_dir),
+                cache: DatasetCache::new(cachedir),
             })
         }
 
@@ -115,7 +115,7 @@ pub mod astronomy {
         }
 
         fn load_synthetic_stellar_data(&self, catalog: &str, nstars: usize) -> Result<Dataset> {
-            use rand__distr::{Distribution, Normal};
+            use rand_distr::{Distribution, Normal};
 
             let mut rng = rand::rng();
 
@@ -164,7 +164,7 @@ pub mod astronomy {
                 spectral_classes.push(spectral_class as f64);
             }
 
-            let data_array = Array2::fromshape_vec((n_stars, 8), data)
+            let data_array = Array2::from_shape_vec((n_stars, 8), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(spectral_classes);
@@ -172,7 +172,7 @@ pub mod astronomy {
             Ok(Dataset {
                 data: data_array,
                 target: Some(target),
-                feature_names: Some(vec![
+                featurenames: Some(vec![
                     "ra".to_string(),
                     "dec".to_string(),
                     "magnitude".to_string(),
@@ -182,7 +182,7 @@ pub mod astronomy {
                     "pm_dec".to_string(),
                     "radial_velocity".to_string(),
                 ]),
-                target_names: Some(vec![
+                targetnames: Some(vec![
                     "O".to_string(),
                     "B".to_string(),
                     "A".to_string(),
@@ -209,7 +209,7 @@ pub mod astronomy {
         }
 
         fn load_synthetic_exoplanet_data(&self, nplanets: usize) -> Result<Dataset> {
-            use rand__distr::{Distribution, LogNormal, Normal};
+            use rand_distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rand::rng();
 
@@ -251,7 +251,7 @@ pub mod astronomy {
                 planet_types.push(planet_type as f64);
             }
 
-            let data_array = Array2::fromshape_vec((n_planets, 6), data)
+            let data_array = Array2::from_shape_vec((n_planets, 6), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(planet_types);
@@ -259,7 +259,7 @@ pub mod astronomy {
             Ok(Dataset {
                 data: data_array,
                 target: Some(target),
-                feature_names: Some(vec![
+                featurenames: Some(vec![
                     "period".to_string(),
                     "radius".to_string(),
                     "mass".to_string(),
@@ -267,7 +267,7 @@ pub mod astronomy {
                     "stellar_temp".to_string(),
                     "metallicity".to_string(),
                 ]),
-                target_names: Some(vec![
+                targetnames: Some(vec![
                     "Rocky".to_string(),
                     "Super-Earth".to_string(),
                     "Sub-Neptune".to_string(),
@@ -290,7 +290,7 @@ pub mod astronomy {
         }
 
         fn load_synthetic_supernova_data(&self, nsupernovae: usize) -> Result<Dataset> {
-            use rand__distr::{Distribution, Normal};
+            use rand_distr::{Distribution, Normal};
 
             let mut rng = rand::rng();
 
@@ -341,7 +341,7 @@ pub mod astronomy {
                 sn_types.push(sn_type as f64);
             }
 
-            let data_array = Array2::fromshape_vec((n_supernovae..10), data)
+            let data_array = Array2::from_shape_vec((n_supernovae..10), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(sn_types);
@@ -349,7 +349,7 @@ pub mod astronomy {
             Ok(Dataset {
                 data: data_array,
                 target: Some(target),
-                feature_names: Some(vec![
+                featurenames: Some(vec![
                     "peak_magnitude".to_string(),
                     "decline_rate".to_string(),
                     "color_max".to_string(),
@@ -361,7 +361,7 @@ pub mod astronomy {
                     "discovery_mag".to_string(),
                     "galactic_lat".to_string(),
                 ]),
-                target_names: Some(vec![
+                targetnames: Some(vec![
                     "Type Ia".to_string(),
                     "Type Ib/c".to_string(),
                     "Type II-P".to_string(),
@@ -403,20 +403,20 @@ pub mod genomics {
     impl GenomicsDatasets {
         /// Create a new genomics datasets client
         pub fn new() -> Result<Self> {
-            let cache_dir = dirs::cache_dir()
+            let cachedir = dirs::cachedir()
                 .ok_or_else(|| {
                     DatasetsError::Other("Could not determine cache directory".to_string())
                 })?
                 .join("scirs2-datasets");
             Ok(Self {
                 client: ExternalClient::new()?,
-                cache: DatasetCache::new(cache_dir),
+                cache: DatasetCache::new(cachedir),
             })
         }
 
         /// Load synthetic gene expression data
         pub fn load_gene_expression(&self, n_samples: usize, ngenes: usize) -> Result<Dataset> {
-            use rand__distr::{Distribution, LogNormal, Normal};
+            use rand_distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rand::rng();
 
@@ -453,19 +453,19 @@ pub mod genomics {
                 phenotypes.push(condition as f64);
             }
 
-            let data_array = Array2::fromshape_vec((n_samples, n_genes), data)
+            let data_array = Array2::from_shape_vec((n_samples, n_genes), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(phenotypes);
 
             // Generate gene names
-            let feature_names: Vec<String> = (0..n_genes).map(|i| format!("GENE_{i:06}")).collect();
+            let featurenames: Vec<String> = (0..n_genes).map(|i| format!("GENE_{i:06}")).collect();
 
             Ok(Dataset {
                 data: data_array,
                 target: Some(target),
-                feature_names: Some(feature_names.clone()),
-                target_names: Some(vec![
+                featurenames: Some(featurenames.clone()),
+                targetnames: Some(vec![
                     "Control".to_string(),
                     "Treatment_A".to_string(),
                     "Treatment_B".to_string(),
@@ -473,7 +473,7 @@ pub mod genomics {
                     "Disease_Y".to_string(),
                 ]),
                 feature_descriptions: Some(
-                    feature_names
+                    featurenames
                         .iter()
                         .map(|name| format!("Expression level of {name}"))
                         .collect(),
@@ -557,7 +557,7 @@ pub mod genomics {
             }
 
             let n_features = 4_usize.pow(k as u32); // 4^k possible k-mers
-            let data_array = Array2::fromshape_vec((n_sequences, n_features), data)
+            let data_array = Array2::from_shape_vec((n_sequences, n_features), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(sequence_types);
@@ -565,8 +565,8 @@ pub mod genomics {
             Ok(Dataset {
                 data: data_array,
                 target: Some(target),
-                feature_names: Some(kmers.clone()),
-                target_names: Some(vec![
+                featurenames: Some(kmers.clone()),
+                targetnames: Some(vec![
                     "GC-rich".to_string(),
                     "AT-rich".to_string(),
                     "Random".to_string(),
@@ -653,14 +653,14 @@ pub mod climate {
     impl ClimateDatasets {
         /// Create a new climate datasets client
         pub fn new() -> Result<Self> {
-            let cache_dir = dirs::cache_dir()
+            let cachedir = dirs::cachedir()
                 .ok_or_else(|| {
                     DatasetsError::Other("Could not determine cache directory".to_string())
                 })?
                 .join("scirs2-datasets");
             Ok(Self {
                 client: ExternalClient::new()?,
-                cache: DatasetCache::new(cache_dir),
+                cache: DatasetCache::new(cachedir),
             })
         }
 
@@ -670,7 +670,7 @@ pub mod climate {
             n_stations: usize,
             n_years: usize,
         ) -> Result<Dataset> {
-            use rand__distr::{Distribution, Normal};
+            use rand_distr::{Distribution, Normal};
 
             let mut rng = rand::rng();
             let days_per_year = 365;
@@ -754,7 +754,7 @@ pub mod climate {
                 ]);
             }
 
-            let data_array = Array2::fromshape_vec((n_stations, 8), data)
+            let data_array = Array2::from_shape_vec((n_stations, 8), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(climate_zones);
@@ -762,7 +762,7 @@ pub mod climate {
             Ok(Dataset {
                 data: data_array,
                 target: Some(target),
-                feature_names: Some(vec![
+                featurenames: Some(vec![
                     "mean_temperature".to_string(),
                     "temperature_range".to_string(),
                     "annual_precipitation".to_string(),
@@ -772,7 +772,7 @@ pub mod climate {
                     "latitude_proxy".to_string(),
                     "daily_precip_avg".to_string(),
                 ]),
-                target_names: Some(vec![
+                targetnames: Some(vec![
                     "Tropical".to_string(),
                     "Temperate".to_string(),
                     "Continental".to_string(),
@@ -798,7 +798,7 @@ pub mod climate {
 
         /// Load atmospheric chemistry data
         pub fn load_atmospheric_chemistry(&self, nmeasurements: usize) -> Result<Dataset> {
-            use rand__distr::{Distribution, LogNormal, Normal};
+            use rand_distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rand::rng();
 
@@ -856,7 +856,7 @@ pub mod climate {
                 air_quality_index.push(aqi);
             }
 
-            let data_array = Array2::fromshape_vec((n_measurements, 12), data)
+            let data_array = Array2::from_shape_vec((n_measurements, 12), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(air_quality_index);
@@ -864,7 +864,7 @@ pub mod climate {
             Ok(Dataset {
                 data: data_array,
                 target: Some(target),
-                feature_names: Some(vec![
+                featurenames: Some(vec![
                     "pm2_5".to_string(),
                     "pm10".to_string(),
                     "no2".to_string(),
@@ -878,7 +878,7 @@ pub mod climate {
                     "visibility".to_string(),
                     "uv_index".to_string(),
                 ]),
-                target_names: None,
+                targetnames: None,
                 feature_descriptions: Some(vec![
                     "PM2.5 concentration (µg/m³)".to_string(),
                     "PM10 concentration (µg/m³)".to_string(),

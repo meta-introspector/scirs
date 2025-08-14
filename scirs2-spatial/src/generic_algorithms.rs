@@ -134,7 +134,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
 
         Ok(Self {
             root,
-            points: points,
+            points,
             dimension,
             leaf_size: 32, // Optimized leaf size for better cache performance
         })
@@ -1599,7 +1599,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
     /// Create a new GMM clusterer
     pub fn new(_ncomponents: usize) -> Self {
         Self {
-            _ncomponents: _ncomponents,
+            _ncomponents,
             max_iterations: 3, // Further reduced for faster testing
             tolerance: T::from_f64(1e-1).unwrap_or(<T as SpatialScalar>::epsilon()), // Much more relaxed tolerance
             reg_covar: T::from_f64(1e-6).unwrap_or(<T as SpatialScalar>::epsilon()),
@@ -1658,13 +1658,15 @@ impl<T: SpatialScalar> GenericGMM<T> {
                 .assignments
                 .iter()
                 .enumerate()
-                .filter_map(|(i, &cluster)| {
-                    if cluster == k {
-                        Some(&points[i])
-                    } else {
-                        None
-                    }
-                })
+                .filter_map(
+                    |(i, &cluster)| {
+                        if cluster == k {
+                            Some(&points[i])
+                        } else {
+                            None
+                        }
+                    },
+                )
                 .collect();
 
             if !cluster_points.is_empty() {

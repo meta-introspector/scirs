@@ -123,8 +123,8 @@ pub struct MethodDocumentation {
 
 /// Generate documentation for common interpolation methods
 #[allow(dead_code)]
-pub fn get_method_documentation(_methodname: &str) -> Option<MethodDocumentation> {
-    match _method_name {
+pub fn get_method_documentation(method_name: &str) -> Option<MethodDocumentation> {
+    match method_name {
         "linear" => Some(linear_interpolation_docs()),
         "cubic" => Some(cubic_interpolation_docs()),
         "pchip" => Some(pchip_interpolation_docs()),

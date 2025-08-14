@@ -3,7 +3,7 @@
 //! This example demonstrates the new enhanced linear operators that provide
 //! performance optimizations using SIMD acceleration and parallel processing.
 
-use scirs2__sparse::{
+use scirs2_sparse::{
     convolution_operator, enhanced_add, enhanced_diagonal, enhanced_scale,
     finite_difference_operator, BoundaryCondition, ConvolutionMode, EnhancedDiagonalOperator,
     EnhancedOperatorOptions, LinearOperator,

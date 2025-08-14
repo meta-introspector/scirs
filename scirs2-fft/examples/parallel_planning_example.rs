@@ -8,9 +8,9 @@
 // 4. Execute FFTs in parallel using the created plans
 // 5. Perform batch FFT execution for multiple inputs
 
-use num__complex::Complex64;
+use num_complex::Complex64;
 // Import from the main API instead of the internal module
-use scirs2__fft::{ParallelExecutor, ParallelPlanner, ParallelPlanningConfig};
+use scirs2_fft::{ParallelExecutor, ParallelPlanner, ParallelPlanningConfig};
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]

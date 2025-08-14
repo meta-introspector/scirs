@@ -17,7 +17,7 @@ pub struct ChunkedConfig {
     /// Whether to use parallel processing for chunks
     pub parallel_chunks: bool,
     /// Minimum array size to trigger chunking (in elements)
-    pub min_array_size: usize,
+    pub min_arraysize: usize,
     /// Whether to prefetch next chunk while processing current
     pub prefetch: bool,
 }
@@ -28,7 +28,7 @@ impl Default for ChunkedConfig {
             // Default to 64MB chunks
             max_chunk_bytes: 64 * 1024 * 1024,
             parallel_chunks: true,
-            min_array_size: 100_000,
+            min_arraysize: 100_000,
             prefetch: true,
         }
     }
@@ -62,19 +62,19 @@ where
     /// Create a new chunked processor
     pub fn new(config: ChunkedConfig, function: F) -> Self {
         Self {
-            config: config,
+            config,
             function,
             _phantom: PhantomData,
         }
     }
 
     /// Calculate optimal chunk size based on element size and config
-    fn calculate_chunk_size(&self, totalelements: usize) -> usize {
-        let element_size = std::mem::size_of::<T>();
-        let max_elements = self.config.max_chunk_bytes / element_size;
+    fn calculate_chunksize(&self, totalelements: usize) -> usize {
+        let elementsize = std::mem::size_of::<T>();
+        let max_elements = self.config.max_chunk_bytes / elementsize;
 
         // Don't chunk if array is small
-        if totalelements < self.config.min_array_size {
+        if totalelements < self.config.min_arraysize {
             return totalelements;
         }
 
@@ -83,9 +83,9 @@ where
 
         // Try to find a divisor of totalelements close to ideal_chunk
         for divisor in 1..=100 {
-            let chunk_size = totalelements / divisor;
-            if chunk_size <= ideal_chunk && totalelements % divisor == 0 {
-                return chunk_size;
+            let chunksize = totalelements / divisor;
+            if chunksize <= ideal_chunk && totalelements % divisor == 0 {
+                return chunksize;
             }
         }
 
@@ -105,9 +105,9 @@ where
         }
 
         let totalelements = input.len();
-        let chunk_size = self.calculate_chunk_size(totalelements);
+        let chunksize = self.calculate_chunksize(totalelements);
 
-        if chunk_size == totalelements {
+        if chunksize == totalelements {
             // Process without chunking
             self.function
                 .apply_chunk(&input.view(), &mut output.view_mut())?;
@@ -116,9 +116,9 @@ where
 
         // Process in chunks
         if self.config.parallel_chunks {
-            self.process_chunks_parallel(input, output, chunk_size)
+            self.process_chunks_parallel(input, output, chunksize)
         } else {
-            self.process_chunks_sequential(input, output, chunk_size)
+            self.process_chunks_sequential(input, output, chunksize)
         }
     }
 
@@ -127,13 +127,13 @@ where
         &self,
         input: &Array<T, Ix1>,
         output: &mut Array<T, Ix1>,
-        chunk_size: usize,
+        chunksize: usize,
     ) -> SpecialResult<()> {
         let totalelements = input.len();
         let mut offset = 0;
 
         while offset < totalelements {
-            let end = (offset + chunk_size).min(totalelements);
+            let end = (offset + chunksize).min(totalelements);
             let input_chunk = input.slice(ndarray::s![offset..end]);
             let mut output_chunk = output.slice_mut(ndarray::s![offset..end]);
 
@@ -151,18 +151,18 @@ where
         &self,
         input: &Array<T, Ix1>,
         output: &mut Array<T, Ix1>,
-        chunk_size: usize,
+        chunksize: usize,
     ) -> SpecialResult<()> {
         use scirs2_core::parallel_ops::*;
 
         let totalelements = input.len();
-        let num_chunks = (totalelements + chunk_size - 1) / chunk_size;
+        let num_chunks = (totalelements + chunksize - 1) / chunksize;
 
         // Collect chunk boundaries
         let chunks: Vec<(usize, usize)> = (0..num_chunks)
             .map(|i| {
-                let start = i * chunk_size;
-                let end = ((i + 1) * chunk_size).min(totalelements);
+                let start = i * chunksize;
+                let end = ((i + 1) * chunksize).min(totalelements);
                 (start, end)
             })
             .collect();
@@ -207,10 +207,10 @@ where
         &self,
         input: &Array<T, Ix1>,
         output: &mut Array<T, Ix1>,
-        chunk_size: usize,
+        chunksize: usize,
     ) -> SpecialResult<()> {
         // Fall back to sequential processing
-        self.process_chunks_sequential(input, output, chunk_size)
+        self.process_chunks_sequential(input, output, chunksize)
     }
 }
 
@@ -380,17 +380,18 @@ mod tests {
     use ndarray::Array1;
 
     #[test]
-    fn test_chunk_size_calculation() {
+    fn test_chunksize_calculation() {
         let config = ChunkedConfig::default();
-        let processor: ChunkedProcessor<f64_> = ChunkedProcessor::new(config, ChunkedGamma::new());
+        let processor: ChunkedProcessor<f64, ChunkedGamma> =
+            ChunkedProcessor::new(config, ChunkedGamma::new());
 
         // Small array - no chunking
-        assert_eq!(processor.calculate_chunk_size(1000), 1000);
+        assert_eq!(processor.calculate_chunksize(1000), 1000);
 
         // Large array - should chunk
-        let chunk_size = processor.calculate_chunk_size(10_000_000);
-        assert!(chunk_size < 10_000_000);
-        assert!(chunk_size > 0);
+        let chunksize = processor.calculate_chunksize(10_000_000);
+        assert!(chunksize < 10_000_000);
+        assert!(chunksize > 0);
     }
 
     #[test]
@@ -410,7 +411,7 @@ mod tests {
         let config = ChunkedConfig {
             max_chunk_bytes: 1024, // Very small chunks for testing
             parallel_chunks: false,
-            min_array_size: 10,
+            min_arraysize: 10,
             prefetch: false,
         };
 

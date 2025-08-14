@@ -94,7 +94,7 @@ fn demo_ppoly_interface() -> Result<(), Box<dyn std::error::Error>> {
     // Piece 2 [1,2]: p(x) = 4 - 2(x-1) + (x-1)^2 = 4 - 2(x-1) + (x-1)^2
 
     // Coefficients matrix: [constant, linear, quadratic] for each piece
-    let coefficients = Array2::fromshape_vec(
+    let coefficients = Array2::from_shape_vec(
         (3, 2), // 3 coefficients (degree 2), 2 pieces
         vec![
             1.0, 4.0, // constant terms

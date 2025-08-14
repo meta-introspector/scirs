@@ -5,8 +5,8 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2};
-use num__complex::Complex64;
-use scirs2__fft::{
+use num_complex::Complex64;
+use scirs2_fft::{
     dct, dct::DCTType, dst, dst::DSTType, fft, fft2, fftn, frft, hfft::hfft, ifft, irfft, rfft,
     worker_pool::set_workers,
 };

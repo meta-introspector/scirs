@@ -10,7 +10,7 @@ fn main() {
     println!("==================================\n");
 
     // Common setup
-    let batch_size = 4;
+    let batchsize = 4;
     let seq_len = 8;
     let d_model = 16;
     let scale = 1.0 / (d_model as f32).sqrt();
@@ -22,7 +22,7 @@ fn main() {
     println!("Example 1: Batch Multi-Query Attention");
 
     // Create query batch (each batch element has its own query matrix)
-    let batch_query = Array3::<f32>::from_elem((batch_size, seq_len, d_model), 0.1);
+    let batch_query = Array3::<f32>::from_elem((batchsize, seq_len, d_model), 0.1);
 
     // Create shared key and value matrices
     let key = Array2::<f32>::from_elem((seq_len, d_model), 0.1);
@@ -46,9 +46,9 @@ fn main() {
     println!("Example 2: Batch Multi-Head Attention with Causal Masking");
 
     // Create query, key, value batches
-    let batch_query = Array3::<f32>::from_elem((batch_size, seq_len, d_model), 0.1);
-    let batch_key = Array3::<f32>::from_elem((batch_size, seq_len, d_model), 0.1);
-    let batch_value = Array3::<f32>::from_elem((batch_size, seq_len, d_model), 0.1);
+    let batch_query = Array3::<f32>::from_elem((batchsize, seq_len, d_model), 0.1);
+    let batch_key = Array3::<f32>::from_elem((batchsize, seq_len, d_model), 0.1);
+    let batch_value = Array3::<f32>::from_elem((batchsize, seq_len, d_model), 0.1);
 
     // Setup for multi-head attention
     let num_heads = 4;
@@ -87,8 +87,8 @@ fn main() {
     .unwrap();
 
     println!(
-        "Input shapes - batch_size: {}, seq_len: {}, d_model: {}",
-        batch_size, seq_len, d_model
+        "Input shapes - batchsize: {}, seq_len: {}, d_model: {}",
+        batchsize, seq_len, d_model
     );
     println!(
         "Multi-head config - heads: {}, head_dim: {}",
@@ -104,12 +104,12 @@ fn main() {
     println!("Example 3: Batch Flash Attention");
 
     // Create query, key, value batches
-    let batch_query = Array3::<f32>::from_elem((batch_size, seq_len, d_model), 0.1);
-    let batch_key = Array3::<f32>::from_elem((batch_size, seq_len, d_model), 0.1);
-    let batch_value = Array3::<f32>::from_elem((batch_size, seq_len, d_model), 0.1);
+    let batch_query = Array3::<f32>::from_elem((batchsize, seq_len, d_model), 0.1);
+    let batch_key = Array3::<f32>::from_elem((batchsize, seq_len, d_model), 0.1);
+    let batch_value = Array3::<f32>::from_elem((batchsize, seq_len, d_model), 0.1);
 
     // Block size for memory efficiency (smaller blocks use less memory but might be slower)
-    let block_size = 4;
+    let blocksize = 4;
 
     // Compute batch flash attention
     let output = batch_flash_attention(
@@ -118,15 +118,15 @@ fn main() {
         &batch_value.view(),
         None,
         scale,
-        block_size,
+        blocksize,
     )
     .unwrap();
 
     println!(
-        "Input shapes - batch_size: {}, seq_len: {}, d_model: {}",
-        batch_size, seq_len, d_model
+        "Input shapes - batchsize: {}, seq_len: {}, d_model: {}",
+        batchsize, seq_len, d_model
     );
-    println!("Block size: {}", block_size);
+    println!("Block size: {}", blocksize);
     println!("Output shape: {:?}", output.shape());
     println!("First value: {:.6}", output[[0, 0, 0]]);
     println!();

@@ -6,7 +6,7 @@
 //! The CSV format is:
 //! x, J0(x), J1(x), J2(x), J3(x), Y0(x), Y1(x), I0(x), I1(x), K0(x), K1(x)
 
-use scirs2__special::bessel::{i0, i1, j0, j1, jn, k0, k1, y0, y1};
+use scirs2_special::bessel::{i0, i1, j0, j1, jn, k0, k1, y0, y1};
 use std::fs::File;
 use std::io::{self, Write};
 

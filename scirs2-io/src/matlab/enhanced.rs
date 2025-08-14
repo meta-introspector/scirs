@@ -682,9 +682,8 @@ pub fn create_complex_array(real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatT
     }
 
     // Create a complex array by combining _real and imaginary parts
-    let _complex_array = ArrayD::from_shape_fn(real.raw_dim(), |idx| {
-        Complex64::new(real[&idx], imag[&idx])
-    });
+    let _complex_array =
+        ArrayD::from_shape_fn(real.raw_dim(), |idx| Complex64::new(real[&idx], imag[&idx]));
 
     // For now, store as a struct with _real and imag fields
     // This is how MATLAB v7.3 stores complex data internally

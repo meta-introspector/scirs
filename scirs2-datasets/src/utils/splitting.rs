@@ -39,7 +39,7 @@ pub type CrossValidationFolds = Vec<(Vec<usize>, Vec<usize>)>;
 /// use ndarray::Array2;
 /// use scirs2__datasets::utils::{Dataset, train_test_split};
 ///
-/// let data = Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+/// let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
 /// let dataset = Dataset::new(data, None);
 ///
 /// let (train, test) = train_test_split(&dataset, 0.3, Some(42)).unwrap();
@@ -89,8 +89,8 @@ pub fn train_test_split(
         .map(|t| t.select(ndarray::Axis(0), train_indices));
 
     let mut train_dataset = Dataset::new(train_data, train_target);
-    if let Some(feature_names) = &dataset.feature_names {
-        train_dataset = train_dataset.with_feature_names(feature_names.clone());
+    if let Some(featurenames) = &dataset.featurenames {
+        train_dataset = train_dataset.with_featurenames(featurenames.clone());
     }
     if let Some(description) = &dataset.description {
         train_dataset = train_dataset.with_description(description.clone());
@@ -104,8 +104,8 @@ pub fn train_test_split(
         .map(|t| t.select(ndarray::Axis(0), test_indices));
 
     let mut test_dataset = Dataset::new(test_data, test_target);
-    if let Some(feature_names) = &dataset.feature_names {
-        test_dataset = test_dataset.with_feature_names(feature_names.clone());
+    if let Some(featurenames) = &dataset.featurenames {
+        test_dataset = test_dataset.with_featurenames(featurenames.clone());
     }
     if let Some(description) = &dataset.description {
         test_dataset = test_dataset.with_description(description.clone());

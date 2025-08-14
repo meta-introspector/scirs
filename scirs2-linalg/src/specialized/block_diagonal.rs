@@ -63,7 +63,7 @@ where
         let size = offset;
 
         Ok(Self {
-            blocks: blocks,
+            blocks,
             size,
             block_offsets,
         })
@@ -91,7 +91,7 @@ where
     }
 
     /// Get the size of a specific block
-    pub fn block_size(&self, index: usize) -> Option<usize> {
+    pub fn blocksize(&self, index: usize) -> Option<usize> {
         self.blocks.get(index).map(|b| b.nrows())
     }
 
@@ -107,8 +107,8 @@ where
         }
 
         for (block_idx, &offset) in self.block_offsets.iter().enumerate() {
-            let block_size = self.blocks[block_idx].nrows();
-            if index >= offset && index < offset + block_size {
+            let blocksize = self.blocks[block_idx].nrows();
+            if index >= offset && index < offset + blocksize {
                 return Some(block_idx);
             }
         }
@@ -130,16 +130,16 @@ where
         // Solve each block independently
         for (block_idx, block) in self.blocks.iter().enumerate() {
             let offset = self.block_offsets[block_idx];
-            let block_size = block.nrows();
+            let blocksize = block.nrows();
 
-            let b_block = b.slice(ndarray::s![offset..offset + block_size]);
+            let b_block = b.slice(ndarray::s![offset..offset + blocksize]);
             let x_block = crate::solve::solve(
                 &block.view(),
                 &b_block,
                 Some(1), // workers
             )?;
 
-            x.slice_mut(ndarray::s![offset..offset + block_size])
+            x.slice_mut(ndarray::s![offset..offset + blocksize])
                 .assign(&x_block);
         }
 
@@ -234,13 +234,13 @@ where
         // Multiply each block independently
         for (block_idx, block) in self.blocks.iter().enumerate() {
             let offset = self.block_offsets[block_idx];
-            let block_size = block.nrows();
+            let blocksize = block.nrows();
 
-            let x_block = x.slice(ndarray::s![offset..offset + block_size]);
+            let x_block = x.slice(ndarray::s![offset..offset + blocksize]);
             let y_block = block.dot(&x_block);
 
             result
-                .slice_mut(ndarray::s![offset..offset + block_size])
+                .slice_mut(ndarray::s![offset..offset + blocksize])
                 .assign(&y_block);
         }
 
@@ -261,14 +261,14 @@ where
         // Multiply each block transpose independently
         for (block_idx, block) in self.blocks.iter().enumerate() {
             let offset = self.block_offsets[block_idx];
-            let block_size = block.nrows();
+            let blocksize = block.nrows();
 
-            let x_block = x.slice(ndarray::s![offset..offset + block_size]);
+            let x_block = x.slice(ndarray::s![offset..offset + blocksize]);
             let block_t = block.t();
             let y_block = block_t.dot(&x_block);
 
             result
-                .slice_mut(ndarray::s![offset..offset + block_size])
+                .slice_mut(ndarray::s![offset..offset + blocksize])
                 .assign(&y_block);
         }
 
@@ -280,11 +280,11 @@ where
 
         for (block_idx, block) in self.blocks.iter().enumerate() {
             let offset = self.block_offsets[block_idx];
-            let block_size = block.nrows();
+            let blocksize = block.nrows();
 
             let mut dense_block = dense.slice_mut(ndarray::s![
-                offset..offset + block_size,
-                offset..offset + block_size
+                offset..offset + blocksize,
+                offset..offset + blocksize
             ]);
             dense_block.assign(block);
         }
@@ -335,13 +335,13 @@ mod tests {
         let block3 = array![[9.0]];
 
         let blocks = vec![block1, block2, block3];
-        let bd_matrix = BlockDiagonalMatrix::new(blocks).unwrap();
+        let bdmatrix = BlockDiagonalMatrix::new(blocks).unwrap();
 
-        assert_eq!(bd_matrix.size, 5);
-        assert_eq!(bd_matrix.num_blocks(), 3);
-        assert_eq!(bd_matrix.block_size(0), Some(2));
-        assert_eq!(bd_matrix.block_size(1), Some(2));
-        assert_eq!(bd_matrix.block_size(2), Some(1));
+        assert_eq!(bdmatrix.size, 5);
+        assert_eq!(bdmatrix.num_blocks(), 3);
+        assert_eq!(bdmatrix.blocksize(0), Some(2));
+        assert_eq!(bdmatrix.blocksize(1), Some(2));
+        assert_eq!(bdmatrix.blocksize(2), Some(1));
     }
 
     #[test]
@@ -349,17 +349,17 @@ mod tests {
         let block1 = array![[1.0, 2.0], [3.0, 4.0]];
         let block2 = array![[5.0]];
         let blocks = vec![block1, block2];
-        let bd_matrix = BlockDiagonalMatrix::new(blocks).unwrap();
+        let bdmatrix = BlockDiagonalMatrix::new(blocks).unwrap();
 
-        assert_eq!(bd_matrix.get(0, 0).unwrap(), 1.0);
-        assert_eq!(bd_matrix.get(0, 1).unwrap(), 2.0);
-        assert_eq!(bd_matrix.get(1, 0).unwrap(), 3.0);
-        assert_eq!(bd_matrix.get(1, 1).unwrap(), 4.0);
-        assert_eq!(bd_matrix.get(2, 2).unwrap(), 5.0);
+        assert_eq!(bdmatrix.get(0, 0).unwrap(), 1.0);
+        assert_eq!(bdmatrix.get(0, 1).unwrap(), 2.0);
+        assert_eq!(bdmatrix.get(1, 0).unwrap(), 3.0);
+        assert_eq!(bdmatrix.get(1, 1).unwrap(), 4.0);
+        assert_eq!(bdmatrix.get(2, 2).unwrap(), 5.0);
 
         // Off-diagonal elements should be zero
-        assert_eq!(bd_matrix.get(0, 2).unwrap(), 0.0);
-        assert_eq!(bd_matrix.get(2, 0).unwrap(), 0.0);
+        assert_eq!(bdmatrix.get(0, 2).unwrap(), 0.0);
+        assert_eq!(bdmatrix.get(2, 0).unwrap(), 0.0);
     }
 
     #[test]
@@ -367,10 +367,10 @@ mod tests {
         let block1 = array![[2.0, 0.0], [0.0, 3.0]];
         let block2 = array![[4.0]];
         let blocks = vec![block1, block2];
-        let bd_matrix = BlockDiagonalMatrix::new(blocks).unwrap();
+        let bdmatrix = BlockDiagonalMatrix::new(blocks).unwrap();
 
         let x = array![1.0, 2.0, 3.0];
-        let result = bd_matrix.matvec(&x.view()).unwrap();
+        let result = bdmatrix.matvec(&x.view()).unwrap();
 
         // Expected: [2*1, 3*2, 4*3] = [2, 6, 12]
         assert_eq!(result, array![2.0, 6.0, 12.0]);
@@ -381,9 +381,9 @@ mod tests {
         let block1 = array![[2.0, 0.0], [0.0, 3.0]];
         let block2 = array![[4.0]];
         let blocks = vec![block1, block2];
-        let bd_matrix = BlockDiagonalMatrix::new(blocks).unwrap();
+        let bdmatrix = BlockDiagonalMatrix::new(blocks).unwrap();
 
-        let det = bd_matrix.determinant().unwrap();
+        let det = bdmatrix.determinant().unwrap();
         // Expected: det(block1) * det(block2) = 6 * 4 = 24
         assert!((det - 24.0).abs() < 1e-10);
     }
@@ -393,9 +393,9 @@ mod tests {
         let block1 = array![[1.0, 2.0], [3.0, 4.0]];
         let block2 = array![[5.0]];
         let blocks = vec![block1, block2];
-        let bd_matrix = BlockDiagonalMatrix::new(blocks).unwrap();
+        let bdmatrix = BlockDiagonalMatrix::new(blocks).unwrap();
 
-        let dense = bd_matrix.to_dense().unwrap();
+        let dense = bdmatrix.to_dense().unwrap();
         let expected = array![[1.0, 2.0, 0.0], [3.0, 4.0, 0.0], [0.0, 0.0, 5.0]];
 
         assert_eq!(dense, expected);

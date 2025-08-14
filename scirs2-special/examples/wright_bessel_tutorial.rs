@@ -11,7 +11,7 @@
 //! - Explore applications in fractional differential equations
 //! - Appreciate computational challenges and numerical strategies
 
-use scirs2__special::{wright_bessel, wright_bessel_zeros};
+use scirs2_special::{wright_bessel, wright_bessel_zeros};
 use std::f64::consts::{E, PI};
 
 /// Demonstrate basic properties of Wright Bessel functions

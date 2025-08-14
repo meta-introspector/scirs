@@ -127,7 +127,7 @@ pub struct TargetPlatform {
     pub hardware_profile: HardwareProfile,
     pub software_environment: SoftwareEnvironment,
     pub testing_priority: TestingPriority,
-    pub expected_performance_baseline: Option<PerformanceBaseline>,
+    pub expected_performancebaseline: Option<PerformanceBaseline>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -151,7 +151,7 @@ pub struct HardwareProfile {
     pub cpu_cores: usize,
     pub cpu_threads: usize,
     pub cpu_features: Vec<String>,
-    pub memory_size_gb: f64,
+    pub memorysize_gb: f64,
     pub memory_speed_mhz: f64,
     pub cache_hierarchy: CacheHierarchy,
     pub numa_topology: Option<NumaTopology>,
@@ -160,11 +160,11 @@ pub struct HardwareProfile {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheHierarchy {
-    pub l1_data_kb: usize,
+    pub l1data_kb: usize,
     pub l1_instruction_kb: usize,
     pub l2_kb: usize,
     pub l3_kb: usize,
-    pub cache_line_size: usize,
+    pub cache_linesize: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -178,7 +178,7 @@ pub struct NumaTopology {
 pub struct NumaNode {
     pub node_id: usize,
     pub cpu_cores: Vec<usize>,
-    pub memory_size_gb: f64,
+    pub memorysize_gb: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -370,7 +370,7 @@ impl AdvancedCrossPlatformTester {
         // Store result for regression detection
         if self.config.enable_regression_detection {
             self.regression_detector.write().unwrap()
-                .store_baseline_result(function_name, &result);
+                .storebaseline_result(function_name, &result);
         }
 
         Ok(result)
@@ -1545,14 +1545,14 @@ impl PlatformDetector {
                 cpu_cores: 8,
                 cpu_threads: 16,
                 cpu_features: vec!["AVX2".to_string(), "SSE4.2".to_string()],
-                memory_size_gb: 32.0,
+                memorysize_gb: 32.0,
                 memory_speed_mhz: 3200.0,
                 cache_hierarchy: CacheHierarchy {
-                    l1_data_kb: 32,
+                    l1data_kb: 32,
                     l1_instruction_kb: 32,
                     l2_kb: 256,
                     l3_kb: 8192,
-                    cache_line_size: 64,
+                    cache_linesize: 64,
                 },
                 numa_topology: None,
                 accelerators: vec![],
@@ -1809,7 +1809,7 @@ impl CrossPlatformRegressionDetector {
         }
     }
 
-    pub fn store_baseline_result(
+    pub fn storebaseline_result(
         &mut self,
         function_name: &str,
         result: &ComprehensiveCrossPlatformResult,
@@ -1818,7 +1818,7 @@ impl CrossPlatformRegressionDetector {
     }
 
     pub fn detect_regressions(
-        &self, _function_name: &str, _baseline: &ComprehensiveCrossPlatformResult, current: &ComprehensiveCrossPlatformResult,
+        &self, _function_name: &str, baseline: &ComprehensiveCrossPlatformResult, current: &ComprehensiveCrossPlatformResult,
     ) -> StatsResult<CrossPlatformRegressionResult> {
         // Placeholder implementation
         Ok(CrossPlatformRegressionResult {
@@ -2000,14 +2000,14 @@ mod tests {
             cpu_cores: 8,
             cpu_threads: 16,
             cpu_features: vec!["AVX2".to_string()],
-            memory_size_gb: 32.0,
+            memorysize_gb: 32.0,
             memory_speed_mhz: 3200.0,
             cache_hierarchy: CacheHierarchy {
-                l1_data_kb: 32,
+                l1data_kb: 32,
                 l1_instruction_kb: 32,
                 l2_kb: 256,
                 l3_kb: 8192,
-                cache_line_size: 64,
+                cache_linesize: 64,
             },
             numa_topology: None,
             accelerators: vec![],
@@ -2015,7 +2015,7 @@ mod tests {
         
         assert_eq!(hardware_profile.cpu_cores, 8);
         assert_eq!(hardware_profile.cpu_threads, 16);
-        assert_eq!(hardware_profile.memory_size_gb, 32.0);
+        assert_eq!(hardware_profile.memorysize_gb, 32.0);
     }
 
     #[test]

@@ -351,7 +351,7 @@ mod tests {
     #[test]
     fn test_pad_reflect() {
         let array =
-            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
                 .unwrap();
 
         let padded = pad_reflect(&array, 1);
@@ -402,7 +402,7 @@ mod tests {
 
     #[test]
     fn test_nlm_denoise_parallel() {
-        let input = Array2::fromshape_fn((20, 20), |(i, j)| ((i + j) % 2) as f32);
+        let input = Array2::from_shape_fn((20, 20), |(i, j)| ((i + j) % 2) as f32);
 
         let serial = nlm_denoise(&input, 0.1, 3, 7).unwrap();
         let parallel = nlm_denoise_parallel(&input, 0.1, 3, 7).unwrap();

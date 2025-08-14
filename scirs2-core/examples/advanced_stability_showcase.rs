@@ -232,20 +232,33 @@ fn demonstrate_performance_modeling(
 
         // Convert RuntimePerformanceMetrics to PerformanceMetrics
         let mut operation_times = std::collections::HashMap::new();
-        operation_times.insert("matrix_multiply".to_string(), performance.execution_time.as_secs_f64());
-        
+        operation_times.insert(
+            "matrix_multiply".to_string(),
+            performance.execution_time.as_secs_f64(),
+        );
+
         let mut strategy_success_rates = std::collections::HashMap::new();
-        strategy_success_rates.insert(scirs2_core::performance_optimization::OptimizationStrategy::VectorOptimized, 0.9);
-        
+        strategy_success_rates.insert(
+            scirs2_core::performance_optimization::OptimizationStrategy::VectorOptimized,
+            0.9,
+        );
+
         let perf_metrics = scirs2_core::performance_optimization::PerformanceMetrics {
             operation_times,
             strategy_success_rates,
-            memorybandwidth_utilization: performance.memory_usage as f64 / (1024.0 * 1024.0 * 1024.0), // Convert to GB
+            memorybandwidth_utilization: performance.memory_usage as f64
+                / (1024.0 * 1024.0 * 1024.0), // Convert to GB
             cache_hit_rate: performance.cache_hit_rate,
             parallel_efficiency: performance.cpu_usage / performance.thread_count as f64,
         };
-        
-        manager.record_performance("matrix_multiply", "linalg", system_state, input_chars, perf_metrics);
+
+        manager.record_performance(
+            "matrix_multiply",
+            "linalg",
+            system_state,
+            input_chars,
+            perf_metrics,
+        );
 
         println!("📈 Recorded performance for {size}x{size} matrix");
     }

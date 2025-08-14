@@ -61,7 +61,7 @@ impl<T: Clone> WorkItem<T> {
     /// Create a new work item
     pub fn new(id: usize, payload: T) -> Self {
         Self {
-            id: id,
+            id,
             payload,
             estimated_time: None,
         }
@@ -196,7 +196,7 @@ pub struct LoadBalancingParams {
     /// Maximum backoff time
     pub max_backoff: Duration,
     /// Work chunk size for splitting large tasks
-    pub chunk_size: usize,
+    pub chunksize: usize,
     /// Enable work item priority scheduling
     pub priority_scheduling: bool,
 }
@@ -208,7 +208,7 @@ impl Default for LoadBalancingParams {
             max_steal_attempts: 3,
             backoff_base: Duration::from_micros(10),
             max_backoff: Duration::from_millis(1),
-            chunk_size: 100,
+            chunksize: 100,
             priority_scheduling: false,
         }
     }
@@ -306,10 +306,10 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
     }
 
     /// Create optimized scheduler for specific matrix operations
-    pub fn for_matrix_operation(
+    pub fn formatrix_operation(
         num_workers: usize,
         operation_type: MatrixOperationType,
-        matrix_size: (usize, usize),
+        matrixsize: (usize, usize),
     ) -> Self {
         let (strategy, params) = match operation_type {
             MatrixOperationType::MatrixVectorMultiplication => {
@@ -319,7 +319,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
                     LoadBalancingParams {
                         steal_threshold: 4,
                         max_steal_attempts: 2,
-                        chunk_size: matrix_size.0 / num_workers,
+                        chunksize: matrixsize.0 / num_workers,
                         priority_scheduling: false,
                         ..LoadBalancingParams::default()
                     },
@@ -332,7 +332,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
                     LoadBalancingParams {
                         steal_threshold: 2,
                         max_steal_attempts: 4,
-                        chunk_size: (matrix_size.0 * matrix_size.1) / (num_workers * 8),
+                        chunksize: (matrixsize.0 * matrixsize.1) / (num_workers * 8),
                         priority_scheduling: true,
                         ..LoadBalancingParams::default()
                     },
@@ -345,7 +345,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
                     LoadBalancingParams {
                         steal_threshold: 1,
                         max_steal_attempts: 6,
-                        chunk_size: matrix_size.0 / (num_workers * 2),
+                        chunksize: matrixsize.0 / (num_workers * 2),
                         priority_scheduling: true,
                         backoff_base: Duration::from_micros(5),
                         max_backoff: Duration::from_millis(2),
@@ -359,7 +359,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
                     LoadBalancingParams {
                         steal_threshold: 8,
                         max_steal_attempts: 2,
-                        chunk_size: matrix_size.0 / num_workers,
+                        chunksize: matrixsize.0 / num_workers,
                         priority_scheduling: false,
                         ..LoadBalancingParams::default()
                     },
@@ -372,7 +372,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
                     LoadBalancingParams {
                         steal_threshold: 3,
                         max_steal_attempts: 3,
-                        chunk_size: matrix_size.0 / (num_workers * 4),
+                        chunksize: matrixsize.0 / (num_workers * 4),
                         priority_scheduling: false,
                         ..LoadBalancingParams::default()
                     },
@@ -444,9 +444,9 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
             }
             StealingStrategy::LocalityAware => {
                 // Try to maintain work locality (simplified implementation)
-                let chunk_size = self.load_balancing_params.chunk_size;
-                for chunk in items.chunks(chunk_size) {
-                    let worker_id = (chunk.as_ptr() as usize / chunk_size) % self.num_workers;
+                let chunksize = self.load_balancing_params.chunksize;
+                for chunk in items.chunks(chunksize) {
+                    let worker_id = (chunk.as_ptr() as usize / chunksize) % self.num_workers;
                     if let Ok(mut queue) = self.worker_queues[worker_id].lock() {
                         for item in chunk {
                             queue.push_front(item.clone());
@@ -871,7 +871,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
     /// Dynamic chunk size adjustment based on performance history
     pub fn adaptive_chunk_sizing(
         &self,
-        base_work_size: usize,
+        base_worksize: usize,
         worker_efficiency: &[f64],
     ) -> Vec<usize> {
         let total_efficiency: f64 = worker_efficiency.iter().sum();
@@ -882,8 +882,8 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
             .iter()
             .map(|&_efficiency| {
                 let efficiency_ratio = _efficiency / avg_efficiency;
-                let chunk_size = (base_work_size as f64 * efficiency_ratio) as usize;
-                chunk_size.max(1).min(base_work_size) // Clamp to reasonable bounds
+                let chunksize = (base_worksize as f64 * efficiency_ratio) as usize;
+                chunksize.max(1).min(base_worksize) // Clamp to reasonable bounds
             })
             .collect()
     }
@@ -1023,11 +1023,11 @@ pub mod matrix_ops {
         let mut result = Array2::zeros((m, n));
 
         // Create work items for blocks of the result matrix
-        let block_size = (m * n / (num_workers * 4)).max(1);
+        let blocksize = (m * n / (num_workers * 4)).max(1);
         let mut work_items = Vec::new();
 
-        for block_start in (0..m * n).step_by(block_size) {
-            let block_end = (block_start + block_size).min(m * n);
+        for block_start in (0..m * n).step_by(blocksize) {
+            let block_end = (block_start + blocksize).min(m * n);
             let indices: Vec<(usize, usize)> = (block_start..block_end)
                 .map(|idx| (idx / n, idx % n))
                 .collect();
@@ -1160,8 +1160,8 @@ pub mod matrix_ops {
 
                 if !work_items.is_empty() {
                     scheduler.submit_work(work_items)?;
-                    let results = scheduler.execute(move |(j, v_col, r_matrix)| {
-                        let col = r_matrix.slice(s![k.., j]).to_owned();
+                    let results = scheduler.execute(move |(j, v_col, rmatrix)| {
+                        let col = rmatrix.slice(s![k.., j]).to_owned();
                         let dot_product = v_col
                             .iter()
                             .zip(col.iter())
@@ -1189,8 +1189,8 @@ pub mod matrix_ops {
                     .collect();
 
                 scheduler.submit_work(q_work_items)?;
-                let q_results = scheduler.execute(move |(i, v_col, q_matrix)| {
-                    let row = q_matrix.slice(s![i, k..]).to_owned();
+                let q_results = scheduler.execute(move |(i, v_col, qmatrix)| {
+                    let row = qmatrix.slice(s![i, k..]).to_owned();
                     let dot_product = row
                         .iter()
                         .zip(v_col.iter())
@@ -1231,7 +1231,7 @@ pub mod matrix_ops {
         if m.min(n) > 32 {
             // Compute A^T * A for eigenvalue decomposition approach
             let scheduler = WorkStealingScheduler::new(num_workers);
-            let ata = parallel_matrix_multiply_ata(&a.view(), &scheduler)?;
+            let ata = parallelmatrix_multiply_ata(&a.view(), &scheduler)?;
 
             // This is a simplified implementation - in practice you'd use more sophisticated methods
             let u = Array2::eye(m);
@@ -1271,7 +1271,7 @@ pub mod matrix_ops {
     }
 
     /// Helper function for parallel A^T * A computation
-    fn parallel_matrix_multiply_ata<F>(
+    fn parallelmatrix_multiply_ata<F>(
         matrix: &ArrayView2<F>,
         scheduler: &WorkStealingScheduler<(usize, usize, Array2<F>)>,
     ) -> LinalgResult<Array2<F>>
@@ -1488,8 +1488,8 @@ pub mod matrix_ops {
 
                 if !work_items.is_empty() {
                     scheduler.submit_work(work_items)?;
-                    let results = scheduler.execute(move |(j, v_col, h_matrix)| {
-                        let col = h_matrix.slice(s![(k + 1).., j]).to_owned();
+                    let results = scheduler.execute(move |(j, v_col, hmatrix)| {
+                        let col = hmatrix.slice(s![(k + 1).., j]).to_owned();
                         let dot_product = v_col
                             .iter()
                             .zip(col.iter())
@@ -1518,8 +1518,8 @@ pub mod matrix_ops {
                     .collect();
 
                 scheduler.submit_work(row_work_items)?;
-                let row_results = scheduler.execute(move |(i, v_col, h_matrix)| {
-                    let row = h_matrix.slice(s![i, (k + 1)..]).to_owned();
+                let row_results = scheduler.execute(move |(i, v_col, hmatrix)| {
+                    let row = hmatrix.slice(s![i, (k + 1)..]).to_owned();
                     let dot_product = row
                         .iter()
                         .zip(v_col.iter())
@@ -1547,8 +1547,8 @@ pub mod matrix_ops {
                     .collect();
 
                 scheduler.submit_work(q_work_items)?;
-                let q_results = scheduler.execute(move |(i, v_col, q_matrix)| {
-                    let row = q_matrix.slice(s![i, (k + 1)..]).to_owned();
+                let q_results = scheduler.execute(move |(i, v_col, qmatrix)| {
+                    let row = qmatrix.slice(s![i, (k + 1)..]).to_owned();
                     let dot_product = row
                         .iter()
                         .zip(v_col.iter())
@@ -1580,7 +1580,7 @@ pub mod matrix_ops {
         a: &ArrayView2<F>,
         b: &ArrayView2<F>,
         num_workers: usize,
-        block_size: Option<usize>,
+        blocksize: Option<usize>,
     ) -> LinalgResult<Array2<F>>
     where
         F: Float + NumAssign + Zero + Sum + Send + Sync + ScalarOperand + 'static,
@@ -1594,11 +1594,11 @@ pub mod matrix_ops {
             ));
         }
 
-        // Adaptive block _size based on cache _size and matrix dimensions
-        let optimal_block_size = block_size.unwrap_or_else(|| {
-            let l1_cache_size = 32 * 1024; // 32KB L1 cache assumption
-            let element_size = std::mem::size_of::<F>();
-            (l1_cache_size / (3 * element_size)).clamp(64, 512)
+        // Adaptive block size based on cache size and matrix dimensions
+        let optimal_blocksize = blocksize.unwrap_or_else(|| {
+            let l1_cachesize = 32 * 1024; // 32KB L1 cache assumption
+            let elementsize = std::mem::size_of::<F>();
+            (l1_cachesize / (3 * elementsize)).clamp(64, 512)
         });
 
         let mut result = Array2::zeros((m, n));
@@ -1608,10 +1608,10 @@ pub mod matrix_ops {
         let mut work_items = Vec::new();
         let mut block_id = 0;
 
-        for i in (0..m).step_by(optimal_block_size) {
-            for j in (0..n).step_by(optimal_block_size) {
-                let i_end = (i + optimal_block_size).min(m);
-                let j_end = (j + optimal_block_size).min(n);
+        for i in (0..m).step_by(optimal_blocksize) {
+            for j in (0..n).step_by(optimal_blocksize) {
+                let i_end = (i + optimal_blocksize).min(m);
+                let j_end = (j + optimal_blocksize).min(n);
 
                 work_items.push(WorkItem::new(
                     block_id,
@@ -1628,8 +1628,8 @@ pub mod matrix_ops {
                 let mut block_result = Array2::zeros((i_end - i_start, j_end - j_start));
 
                 // Block multiplication with cache-friendly access pattern
-                for k in (0..k1).step_by(optimal_block_size) {
-                    let k_end = (k + optimal_block_size).min(k1);
+                for k in (0..k1).step_by(optimal_blocksize) {
+                    let k_end = (k + optimal_blocksize).min(k1);
 
                     for i in 0..(i_end - i_start) {
                         for j in 0..(j_end - j_start) {
@@ -1659,7 +1659,7 @@ pub mod matrix_ops {
 
     /// Parallel Band matrix solver with optimized memory access
     pub fn parallel_band_solve<F>(
-        band_matrix: &ArrayView2<F>,
+        bandmatrix: &ArrayView2<F>,
         rhs: &ArrayView1<F>,
         bandwidth: usize,
         num_workers: usize,
@@ -1667,7 +1667,7 @@ pub mod matrix_ops {
     where
         F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
     {
-        let n = band_matrix.nrows();
+        let n = bandmatrix.nrows();
         if n != rhs.len() {
             return Err(LinalgError::ShapeError(
                 "Matrix and RHS dimensions don't match".to_string(),
@@ -1684,7 +1684,7 @@ pub mod matrix_ops {
 
             if end_j > i + 1 {
                 let work_items: Vec<BandSolveWorkItem<F>> = ((i + 1)..end_j)
-                    .map(|j| WorkItem::new(j, (i, j, start_j, band_matrix.to_owned(), x.clone())))
+                    .map(|j| WorkItem::new(j, (i, j, start_j, bandmatrix.to_owned(), x.clone())))
                     .collect();
 
                 if !work_items.is_empty() {
@@ -1699,7 +1699,7 @@ pub mod matrix_ops {
 
                     // Update x vector
                     for (j, sum) in results {
-                        x[j] -= sum / band_matrix[(j, j)];
+                        x[j] -= sum / bandmatrix[(j, j)];
                     }
                 }
             }
@@ -1762,7 +1762,7 @@ pub mod matrix_ops {
     /// # Returns
     ///
     /// * Matrix exponential exp(A)
-    pub fn parallel_matrix_exponential_work_stealing<F>(
+    pub fn parallelmatrix_exponential_work_stealing<F>(
         a: &ArrayView2<F>,
         workers: usize,
     ) -> LinalgResult<Array2<F>>
@@ -1788,11 +1788,11 @@ pub mod matrix_ops {
 
         // Scale matrix
         let scaled_factor = F::from(2.0).unwrap().powi(-(scaling_factor as i32));
-        let mut scaled_matrix = a.to_owned();
-        scaled_matrix *= scaled_factor;
+        let mut scaledmatrix = a.to_owned();
+        scaledmatrix *= scaled_factor;
 
         // Parallel Padé approximation
-        let result = parallel_pade_approximation(&scaled_matrix.view(), 13, workers)?;
+        let result = parallel_pade_approximation(&scaledmatrix.view(), 13, workers)?;
 
         // Square the result `scaling_factor` times
         let mut final_result = result;
@@ -1816,7 +1816,7 @@ pub mod matrix_ops {
     /// # Returns
     ///
     /// * Matrix square root
-    pub fn parallel_matrix_sqrt_work_stealing<F>(
+    pub fn parallelmatrix_sqrt_work_stealing<F>(
         a: &ArrayView2<F>,
         workers: usize,
     ) -> LinalgResult<Array2<F>>
@@ -1852,9 +1852,9 @@ pub mod matrix_ops {
             let z_squared = parallel_gemm_work_stealing(&z.view(), &z.view(), workers)?;
 
             // Convergence check
-            let error_matrix = &x_squared - a;
+            let errormatrix = &x_squared - a;
             let error_norm =
-                parallel_matrix_norm_work_stealing(&error_matrix.view(), "fro", workers)?;
+                parallelmatrix_norm_work_stealing(&errormatrix.view(), "fro", workers)?;
 
             if error_norm < tolerance {
                 break;
@@ -1911,13 +1911,13 @@ pub mod matrix_ops {
         }
 
         // Process matrices in parallel using chunks
-        let chunk_size = matrices.len().div_ceil(workers);
+        let chunksize = matrices.len().div_ceil(workers);
 
         let results = std::thread::scope(|s| {
             let handles: Vec<_> = (0..workers)
                 .map(|worker_id| {
-                    let start_idx = worker_id * chunk_size;
-                    let end_idx = ((worker_id + 1) * chunk_size).min(matrices.len());
+                    let start_idx = worker_id * chunksize;
+                    let end_idx = ((worker_id + 1) * chunksize).min(matrices.len());
                     let op_ref = &operation;
 
                     s.spawn(move || {
@@ -1954,7 +1954,7 @@ pub mod matrix_ops {
     /// # Returns
     ///
     /// * Computed norm value
-    pub fn parallel_matrix_norm_work_stealing<F>(
+    pub fn parallelmatrix_norm_work_stealing<F>(
         a: &ArrayView2<F>,
         norm_type: &str,
         workers: usize,
@@ -1965,9 +1965,9 @@ pub mod matrix_ops {
         match norm_type {
             "fro" | "frobenius" => parallel_frobenius_norm(a, workers),
             "nuc" | "nuclear" => parallel_nuclear_norm(a, workers),
-            "1" => parallel_matrix_1_norm(a, workers),
+            "1" => parallelmatrix_1_norm(a, workers),
             "2" | "spectral" => parallel_spectral_norm(a, workers),
-            "inf" | "infinity" => parallel_matrix_inf_norm(a, workers),
+            "inf" | "infinity" => parallelmatrix_inf_norm(a, workers),
             _ => Err(LinalgError::InvalidInputError(format!(
                 "Unknown norm type: {norm_type}"
             ))),
@@ -2122,7 +2122,7 @@ pub struct CacheAwareWorkStealer<T: Clone + Send + 'static> {
     base_scheduler: WorkStealingScheduler<T>,
     /// Cache line size for optimization
     #[allow(dead_code)]
-    cache_line_size: usize,
+    cache_linesize: usize,
     /// Memory affinity mapping for workers
     worker_affinity: Vec<usize>,
     /// Cache miss rate tracking per worker
@@ -2139,9 +2139,9 @@ pub struct NumaTopology {
     /// CPUs per NUMA node
     pub cpus_per_node: Vec<Vec<usize>>,
     /// Memory bandwidth between nodes (relative)
-    pub bandwidth_matrix: Array2<f64>,
+    pub bandwidthmatrix: Array2<f64>,
     /// Latency between nodes (nanoseconds)
-    pub latency_matrix: Array2<f64>,
+    pub latencymatrix: Array2<f64>,
 }
 
 impl NumaTopology {
@@ -2151,8 +2151,8 @@ impl NumaTopology {
         Self {
             node_count: 1,
             cpus_per_node: vec![(0..cpu_count).collect()],
-            bandwidth_matrix: Array2::from_elem((1, 1), 1.0),
-            latency_matrix: Array2::from_elem((1, 1), 0.0),
+            bandwidthmatrix: Array2::from_elem((1, 1), 1.0),
+            latencymatrix: Array2::from_elem((1, 1), 0.0),
         }
     }
 
@@ -2181,19 +2181,19 @@ impl NumaTopology {
             }
 
             // Default bandwidth and latency matrices for dual-socket
-            let mut bandwidth_matrix = Array2::from_elem((nodes, nodes), 0.6); // Cross-node bandwidth
-            let mut latency_matrix = Array2::from_elem((nodes, nodes), 100.0); // Cross-node latency
+            let mut bandwidthmatrix = Array2::from_elem((nodes, nodes), 0.6); // Cross-node bandwidth
+            let mut latencymatrix = Array2::from_elem((nodes, nodes), 100.0); // Cross-node latency
 
             for i in 0..nodes {
-                bandwidth_matrix[[i, i]] = 1.0; // Local bandwidth
-                latency_matrix[[i, i]] = 0.0; // Local latency
+                bandwidthmatrix[[i, i]] = 1.0; // Local bandwidth
+                latencymatrix[[i, i]] = 0.0; // Local latency
             }
 
             Self {
                 node_count: nodes,
                 cpus_per_node,
-                bandwidth_matrix,
-                latency_matrix,
+                bandwidthmatrix,
+                latencymatrix,
             }
         }
     }
@@ -2232,7 +2232,7 @@ impl<T: Clone + Send + 'static> CacheAwareWorkStealer<T> {
 
         Ok(Self {
             base_scheduler,
-            cache_line_size: 64, // Common cache line size
+            cache_linesize: 64, // Common cache line size
             worker_affinity,
             cache_miss_rates: Arc::new(Mutex::new(vec![0.0; _num_workers])),
             numa_topology,
@@ -2269,15 +2269,15 @@ impl<T: Clone + Send + 'static> CacheAwareWorkStealer<T> {
             }
             CacheAwareStrategy::Balanced => {
                 // Interleave local and distributed work
-                let chunk_size = work_items.len() / self.numa_topology.node_count;
+                let chunksize = work_items.len() / self.numa_topology.node_count;
                 let mut redistributed = Vec::new();
 
                 for node in 0..self.numa_topology.node_count {
-                    let start = node * chunk_size;
+                    let start = node * chunksize;
                     let end = if node == self.numa_topology.node_count - 1 {
                         work_items.len()
                     } else {
-                        (node + 1) * chunk_size
+                        (node + 1) * chunksize
                     };
 
                     redistributed.extend(work_items.drain(start..end));
@@ -2371,16 +2371,16 @@ where
     let mut result = Array2::zeros((m, n));
 
     // Create work items for cache-optimized block multiplication
-    let block_size = 64; // Optimize for L1 cache
+    let blocksize = 64; // Optimize for L1 cache
     let mut work_items = Vec::new();
     let mut work_id = 0;
 
-    for i in (0..m).step_by(block_size) {
-        for j in (0..n).step_by(block_size) {
-            for kk in (0..k).step_by(block_size) {
-                let i_end = (i + block_size).min(m);
-                let j_end = (j + block_size).min(n);
-                let k_end = (kk + block_size).min(k);
+    for i in (0..m).step_by(blocksize) {
+        for j in (0..n).step_by(blocksize) {
+            for kk in (0..k).step_by(blocksize) {
+                let i_end = (i + blocksize).min(m);
+                let j_end = (j + blocksize).min(n);
+                let k_end = (kk + blocksize).min(k);
 
                 let block_work = BlockMultiplyWork {
                     i_start: i,
@@ -2656,8 +2656,8 @@ where
         }
 
         // Apply QR step with Wilkinson shift to block [start..=end]
-        let block_size = end - start + 1;
-        if block_size >= 4 && workers > 1 {
+        let blocksize = end - start + 1;
+        if blocksize >= 4 && workers > 1 {
             // Parallel QR step for larger blocks
             parallel_qr_step_with_shift(&mut diagonal, &mut sub_diagonal, q, start, end, workers)?;
         } else {
@@ -2715,11 +2715,11 @@ where
     }
 
     // Parallel Givens rotations to restore tridiagonal form
-    let chunk_size = ((end - start + 1) / workers).max(1);
+    let chunksize = ((end - start + 1) / workers).max(1);
     let chunks: Vec<_> = (start..end)
         .step_by(2) // Process even-indexed positions to avoid dependencies
         .collect::<Vec<_>>()
-        .chunks(chunk_size)
+        .chunks(chunksize)
         .map(|chunk| chunk.to_vec())
         .collect();
 
@@ -2875,15 +2875,15 @@ fn apply_givens_rotation<F>(
 /// Parallel Padé approximation
 #[allow(dead_code)]
 fn parallel_pade_approximation<F>(
-    _matrix: &ArrayView2<F>,
+    matrix: &ArrayView2<F>,
     _order: usize,
     _workers: usize,
 ) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    // Simplified implementation - returns identity _matrix
-    let n = _matrix.nrows();
+    // Simplified implementation - returns identity matrix
+    let n = matrix.nrows();
     Ok(Array2::eye(n))
 }
 
@@ -2909,7 +2909,7 @@ where
 
 /// Parallel matrix 1-norm
 #[allow(dead_code)]
-fn parallel_matrix_1_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
+fn parallelmatrix_1_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
@@ -2936,7 +2936,7 @@ where
 
 /// Parallel matrix infinity norm
 #[allow(dead_code)]
-fn parallel_matrix_inf_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
+fn parallelmatrix_inf_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
@@ -2959,11 +2959,11 @@ where
 #[derive(Debug, Clone)]
 pub struct AdaptiveChunking {
     /// Minimum chunk size
-    min_chunk_size: usize,
+    min_chunksize: usize,
     /// Maximum chunk size
-    max_chunk_size: usize,
+    max_chunksize: usize,
     /// Current optimal chunk size
-    current_chunk_size: usize,
+    current_chunksize: usize,
     /// Performance history for adaptation
     performance_history: Vec<ChunkPerformance>,
     /// Maximum history entries to maintain
@@ -2974,7 +2974,7 @@ pub struct AdaptiveChunking {
 #[derive(Debug, Clone)]
 pub struct ChunkPerformance {
     /// Chunk size used
-    chunk_size: usize,
+    chunksize: usize,
     /// Execution time in nanoseconds
     execution_time_ns: u64,
     /// Work complexity estimate
@@ -2987,11 +2987,11 @@ pub struct ChunkPerformance {
 
 impl AdaptiveChunking {
     /// Create a new adaptive chunking strategy
-    pub fn new(_min_size: usize, maxsize: usize) -> Self {
+    pub fn new(_minsize: usize, maxsize: usize) -> Self {
         Self {
-            min_chunk_size: _min_size,
-            max_chunk_size: maxsize,
-            current_chunk_size: (_min_size + maxsize) / 2,
+            min_chunksize: _minsize,
+            max_chunksize: maxsize,
+            current_chunksize: (_minsize + maxsize) / 2,
             performance_history: Vec::new(),
             max_history: 50,
         }
@@ -3007,11 +3007,11 @@ impl AdaptiveChunking {
         }
 
         // Adapt chunk size based on recent performance
-        self.adapt_chunk_size();
+        self.adapt_chunksize();
     }
 
     /// Enhanced adaptive chunk size optimization with statistical analysis
-    fn adapt_chunk_size(&mut self) {
+    fn adapt_chunksize(&mut self) {
         if self.performance_history.len() < 5 {
             return;
         }
@@ -3028,16 +3028,16 @@ impl AdaptiveChunking {
             let throughput =
                 entry.work_complexity / (entry.execution_time_ns as f64 / 1_000_000_000.0);
             chunk_performance
-                .entry(entry.chunk_size)
+                .entry(entry.chunksize)
                 .or_default()
                 .push(throughput);
         }
 
         // Find optimal chunk size considering both performance and stability
         let mut best_score = f64::NEG_INFINITY;
-        let mut best_chunk_size = self.current_chunk_size;
+        let mut best_chunksize = self.current_chunksize;
 
-        for (&chunk_size, throughputs) in &chunk_performance {
+        for (&chunksize, throughputs) in &chunk_performance {
             if throughputs.len() < 2 {
                 continue; // Need at least 2 samples for variance calculation
             }
@@ -3057,7 +3057,7 @@ impl AdaptiveChunking {
 
             if score > best_score {
                 best_score = score;
-                best_chunk_size = chunk_size;
+                best_chunksize = chunksize;
             }
         }
 
@@ -3076,43 +3076,42 @@ impl AdaptiveChunking {
         let mut hasher = DefaultHasher::new();
         self.performance_history.len().hash(&mut hasher);
         let pseudo_random = (hasher.finish() % 1000) as f64 / 1000.0;
-        let exploration_offset =
-            (pseudo_random - 0.5) * exploration_factor * best_chunk_size as f64;
+        let exploration_offset = (pseudo_random - 0.5) * exploration_factor * best_chunksize as f64;
 
-        let target_size = best_chunk_size as f64 + exploration_offset;
-        let current_size = self.current_chunk_size as f64;
-        let new_size = current_size + (target_size - current_size) * adjustment_factor;
+        let targetsize = best_chunksize as f64 + exploration_offset;
+        let currentsize = self.current_chunksize as f64;
+        let newsize = currentsize + (targetsize - currentsize) * adjustment_factor;
 
-        self.current_chunk_size = (new_size as usize)
-            .max(self.min_chunk_size)
-            .min(self.max_chunk_size);
+        self.current_chunksize = (newsize as usize)
+            .max(self.min_chunksize)
+            .min(self.max_chunksize);
 
         // Adaptive bounds adjustment - expand search space if we're hitting boundaries
-        if self.current_chunk_size == self.min_chunk_size && best_score > 0.0 {
-            self.min_chunk_size = (self.min_chunk_size as f64 * 0.8) as usize;
+        if self.current_chunksize == self.min_chunksize && best_score > 0.0 {
+            self.min_chunksize = (self.min_chunksize as f64 * 0.8) as usize;
         }
-        if self.current_chunk_size == self.max_chunk_size && best_score > 0.0 {
-            self.max_chunk_size = (self.max_chunk_size as f64 * 1.2) as usize;
+        if self.current_chunksize == self.max_chunksize && best_score > 0.0 {
+            self.max_chunksize = (self.max_chunksize as f64 * 1.2) as usize;
         }
     }
 
     /// Get the current optimal chunk size
-    pub fn get_chunk_size(&self) -> usize {
-        self.current_chunk_size
+    pub fn get_chunksize(&self) -> usize {
+        self.current_chunksize
     }
 
     /// Predict optimal chunk size for a given matrix operation without execution
-    pub fn predict_optimal_chunk_size(
+    pub fn predict_optimal_chunksize(
         &self,
-        matrix_size: (usize, usize),
+        matrixsize: (usize, usize),
         operation_type: MatrixOperationType,
         num_workers: usize,
     ) -> usize {
         // Base prediction using matrix characteristics
-        let (rows, cols) = matrix_size;
+        let (rows, cols) = matrixsize;
         let total_elements = rows * cols;
 
-        let base_chunk_size = match operation_type {
+        let base_chunksize = match operation_type {
             MatrixOperationType::MatrixVectorMultiplication => {
                 // For matvec, chunk by rows to maintain cache locality
                 (rows / num_workers).clamp(16, 1024)
@@ -3142,12 +3141,12 @@ impl AdaptiveChunking {
             // Find similar matrix sizes in history
             let mut similar_performance = Vec::new();
             for entry in &self.performance_history {
-                // Consider operations on matrices within 20% _size difference as "similar"
+                // Consider operations on matrices within 20% size difference as "similar"
                 let size_ratio = (total_elements as f64) / entry.work_complexity;
                 if size_ratio > 0.8 && size_ratio < 1.2 {
                     let throughput =
                         entry.work_complexity / (entry.execution_time_ns as f64 / 1_000_000_000.0);
-                    similar_performance.push((entry.chunk_size, throughput));
+                    similar_performance.push((entry.chunksize, throughput));
                 }
             }
 
@@ -3156,22 +3155,22 @@ impl AdaptiveChunking {
                 let historical_optimum = similar_performance
                     .iter()
                     .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
-                    .map(|&(chunk_size_, _)| chunk_size_)
-                    .unwrap_or(base_chunk_size);
+                    .map(|&(chunksize_, _)| chunksize_)
+                    .unwrap_or(base_chunksize);
 
                 // Blend base prediction with historical optimum
                 let blend_factor = 0.7; // Favor historical data
-                let predicted = (base_chunk_size as f64 * (1.0 - blend_factor)
+                let predicted = (base_chunksize as f64 * (1.0 - blend_factor)
                     + historical_optimum as f64 * blend_factor)
                     as usize;
 
-                return predicted.max(self.min_chunk_size).min(self.max_chunk_size);
+                return predicted.max(self.min_chunksize).min(self.max_chunksize);
             }
         }
 
-        base_chunk_size
-            .max(self.min_chunk_size)
-            .min(self.max_chunk_size)
+        base_chunksize
+            .max(self.min_chunksize)
+            .min(self.max_chunksize)
     }
 
     /// Get performance statistics
@@ -3209,7 +3208,7 @@ impl AdaptiveChunking {
             });
 
         AdaptiveChunkingStats {
-            current_chunk_size: self.current_chunk_size,
+            current_chunksize: self.current_chunksize,
             avg_execution_time_ms: avg_execution_time / 1_000_000.0,
             avg_thread_utilization: avg_utilization,
             avg_cache_miss_rate: cache_miss_rate,
@@ -3222,7 +3221,7 @@ impl AdaptiveChunking {
 #[derive(Debug, Clone, Default)]
 pub struct AdaptiveChunkingStats {
     /// Current chunk size
-    pub current_chunk_size: usize,
+    pub current_chunksize: usize,
     /// Average execution time in milliseconds
     pub avg_execution_time_ms: f64,
     /// Average thread utilization percentage
@@ -3357,11 +3356,11 @@ pub struct CacheLocalityOptimizer {
     /// Memory access patterns
     access_patterns: Vec<MemoryAccessPattern>,
     /// Cache line size (typically 64 bytes)
-    cache_line_size: usize,
+    cache_linesize: usize,
     /// L1 cache size estimate
-    l1_cache_size: usize,
+    l1_cachesize: usize,
     /// L2 cache size estimate
-    l2_cache_size: usize,
+    l2_cachesize: usize,
 }
 
 /// Memory access pattern for cache optimization
@@ -3382,9 +3381,9 @@ impl CacheLocalityOptimizer {
     pub fn new() -> Self {
         Self {
             access_patterns: Vec::new(),
-            cache_line_size: 64,       // Common cache line size
-            l1_cache_size: 32 * 1024,  // 32KB typical L1
-            l2_cache_size: 256 * 1024, // 256KB typical L2
+            cache_linesize: 64,       // Common cache line size
+            l1_cachesize: 32 * 1024,  // 32KB typical L1
+            l2_cachesize: 256 * 1024, // 256KB typical L2
         }
     }
 
@@ -3412,10 +3411,10 @@ impl CacheLocalityOptimizer {
 
         // Simple locality-aware distribution
         // Group adjacent work _items to the same worker to improve cache locality
-        let chunk_size = work_items.len().div_ceil(num_workers);
+        let chunksize = work_items.len().div_ceil(num_workers);
 
         for (i, &work_item) in work_items.iter().enumerate() {
-            let worker_id = (i / chunk_size).min(num_workers - 1);
+            let worker_id = (i / chunksize).min(num_workers - 1);
             worker_assignments[worker_id].push(work_item);
         }
 
@@ -3440,21 +3439,21 @@ impl CacheLocalityOptimizer {
             0.5
         };
 
-        let working_set_size = self
+        let working_setsize = self
             .access_patterns
             .iter()
             .map(|p| p.address_end - p.address_start)
             .sum::<usize>();
 
         CacheOptimizationRecommendations {
-            recommended_block_size: if avg_sequential_ratio > 0.7 {
-                self.cache_line_size * 4 // Larger blocks for sequential access
+            recommended_blocksize: if avg_sequential_ratio > 0.7 {
+                self.cache_linesize * 4 // Larger blocks for sequential access
             } else {
-                self.cache_line_size // Smaller blocks for random access
+                self.cache_linesize // Smaller blocks for random access
             },
             locality_friendly: avg_sequential_ratio > 0.5,
-            working_set_fits_l1: working_set_size <= self.l1_cache_size,
-            working_set_fits_l2: working_set_size <= self.l2_cache_size,
+            working_set_fits_l1: working_setsize <= self.l1_cachesize,
+            working_set_fits_l2: working_setsize <= self.l2_cachesize,
             prefetch_beneficial: avg_sequential_ratio > 0.6,
         }
     }
@@ -3464,7 +3463,7 @@ impl CacheLocalityOptimizer {
 #[derive(Debug, Clone)]
 pub struct CacheOptimizationRecommendations {
     /// Recommended block size for optimal cache usage
-    pub recommended_block_size: usize,
+    pub recommended_blocksize: usize,
     /// Whether the access pattern is locality-friendly
     pub locality_friendly: bool,
     /// Whether the working set fits in L1 cache
@@ -3495,9 +3494,9 @@ impl<T: Clone + Send + 'static> OptimizedWorkStealingScheduler<T> {
         let start_time = std::time::Instant::now();
 
         // Get current chunk size from adaptive chunking
-        let chunk_size = {
+        let chunksize = {
             let chunking = self.adaptive_chunking.lock().unwrap();
-            chunking.get_chunk_size()
+            chunking.get_chunksize()
         };
 
         // Use parallel processing from scirs2-core as per project policy
@@ -3517,7 +3516,7 @@ impl<T: Clone + Send + 'static> OptimizedWorkStealingScheduler<T> {
         {
             let mut chunking = self.adaptive_chunking.lock().unwrap();
             chunking.record_performance(ChunkPerformance {
-                chunk_size,
+                chunksize,
                 execution_time_ns: execution_time.as_nanos() as u64,
                 work_complexity: results.len() as f64, // Simple complexity estimate
                 cache_miss_rate: None,                 // Would need hardware performance counters
@@ -3583,11 +3582,11 @@ mod optimization_tests {
     #[test]
     fn test_adaptive_chunking() {
         let mut chunking = AdaptiveChunking::new(8, 512);
-        assert_eq!(chunking.get_chunk_size(), 260); // (8 + 512) / 2
+        assert_eq!(chunking.get_chunksize(), 260); // (8 + 512) / 2
 
         // Record some performance data
         chunking.record_performance(ChunkPerformance {
-            chunk_size: 64,
+            chunksize: 64,
             execution_time_ns: 1_000_000,
             work_complexity: 100.0,
             cache_miss_rate: Some(0.05),
@@ -3636,6 +3635,6 @@ mod optimization_tests {
 
         // Check that stats are properly initialized
         assert_eq!(stats.performance_stats.total_tasks, 0);
-        assert!(stats.cache_recommendations.recommended_block_size > 0);
+        assert!(stats.cache_recommendations.recommended_blocksize > 0);
     }
 }

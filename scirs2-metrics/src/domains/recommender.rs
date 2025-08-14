@@ -140,8 +140,8 @@ impl RecommenderRankingMetrics {
     /// Evaluate recommender ranking performance
     pub fn evaluate_ranking(
         &self,
-        y_true: &[Array1<f64>],           // Relevance scores per user
-        y_score: &[Array1<f64>],          // Predicted scores per user
+        y_true: &[Array1<f64>],          // Relevance scores per user
+        y_score: &[Array1<f64>],         // Predicted scores per user
         recommendeditems: &[Vec<usize>], // Item IDs recommended per user
     ) -> Result<RecommenderRankingResults> {
         if y_true.len() != y_score.len() || y_true.len() != recommendeditems.len() {

@@ -1,5 +1,5 @@
-use num__complex::Complex64;
-use scirs2__special::{wright_omega, wright_omega_real};
+use num_complex::Complex64;
+use scirs2_special::{wright_omega, wright_omega_real};
 
 #[allow(dead_code)]
 fn main() {

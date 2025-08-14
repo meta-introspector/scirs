@@ -50,8 +50,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Train LDA model
     let mut lda = LdaBuilder::new()
-        .n_topics(3)
-        .max_iter(100)
+        .ntopics(3)
+        .maxiter(100)
         .random_seed(42)
         .doc_topic_prior(0.1)
         .topic_word_prior(0.01)
@@ -69,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(idx_)| idx)
+            .map(|(idx_, _)| idx_)
             .unwrap();
 
         println!(
@@ -109,13 +109,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create another LDA model with different configuration
     println!("\n\nTrying different LDA configuration:");
-    let mut lda2 = LatentDirichletAllocation::with_n_topics(4);
+    let mut lda2 = LatentDirichletAllocation::with_ntopics(4);
     lda2.fit(&doc_term_matrix)?;
 
     let topics2 = lda2.get_topics(5, &word_index_map)?;
     println!("Discovered {} topics with top 5 words each:", topics2.len());
     for topic in &topics2 {
-        let words: Vec<String> = topic.top_words.iter().map(|(word_)| word.clone()).collect();
+        let words: Vec<String> = topic
+            .top_words
+            .iter()
+            .map(|(word_, _)| word_.clone())
+            .collect();
         println!("Topic {}: {}", topic.id, words.join(", "));
     }
 

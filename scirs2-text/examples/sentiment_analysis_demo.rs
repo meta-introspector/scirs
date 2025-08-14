@@ -8,8 +8,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("======================\n");
 
     // Create sentiment analyzers
-    let basic_analyzer = LexiconSentimentAnalyzer::with_basic_lexicon();
-    let rule_based_analyzer = RuleBasedSentimentAnalyzer::with_basic_lexicon();
+    let basic_analyzer = LexiconSentimentAnalyzer::with_basiclexicon();
+    let rule_based_analyzer = RuleBasedSentimentAnalyzer::with_basiclexicon();
 
     // Example texts for analysis
     let texts = vec![

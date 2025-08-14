@@ -116,11 +116,7 @@ impl Edge {
     /// Create a new edge between two points
     fn new(start: Point2D, end: Point2D) -> Self {
         let weight = start.distance(&end);
-        Edge {
-            start: start,
-            end,
-            weight,
-        }
+        Edge { start, end, weight }
     }
 
     /// Check if this edge intersects with a polygon edge
@@ -363,7 +359,7 @@ impl VisibilityGraphPlanner {
     /// Create a new visibility graph planner with the given obstacles
     pub fn new(obstacles: Vec<Array2<f64>>) -> Self {
         VisibilityGraphPlanner {
-            obstacles: obstacles,
+            obstacles,
             visibility_graph: None,
             use_fast_path: true,
         }

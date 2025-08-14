@@ -36,7 +36,7 @@ struct TcpMessageHeader {
     /// Message tag
     tag: u32,
     /// Data size in bytes
-    data_size: usize,
+    datasize: usize,
     /// Sequence number
     sequence: u64,
     /// Timestamp
@@ -176,14 +176,14 @@ impl DistributedCommunicator {
     }
     
     /// Send a matrix to another node
-    pub fn send_matrix<T>(&self, matrix: &ArrayView2<T>, dest: usize, tag: MessageTag) -> LinalgResult<()>
+    pub fn sendmatrix<T>(&self, matrix: &ArrayView2<T>, dest: usize, tag: MessageTag) -> LinalgResult<()>
     where
         T: Clone + Send + Sync + Serialize,
     {
         let start_time = Instant::now();
         
         // Serialize matrix data
-        let serialized = self.serialize_matrix(matrix)?;
+        let serialized = self.serializematrix(matrix)?;
         
         // Create message
         let sequence = self.next_sequence();
@@ -216,7 +216,7 @@ impl DistributedCommunicator {
     }
     
     /// Receive a matrix from another node
-    pub fn recv_matrix<T>(&self, source: usize, tag: MessageTag) -> LinalgResult<Array2<T>>
+    pub fn recvmatrix<T>(&self, source: usize, tag: MessageTag) -> LinalgResult<Array2<T>>
     where
         T: Clone + Send + Sync + for<'de> Deserialize<'de>,
     {
@@ -242,7 +242,7 @@ impl DistributedCommunicator {
         };
         
         // Deserialize matrix
-        let matrix = self.deserialize_matrix(&message.data)?;
+        let matrix = self.deserializematrix(&message.data)?;
         
         // Update statistics
         let elapsed = start_time.elapsed();
@@ -252,14 +252,14 @@ impl DistributedCommunicator {
     }
     
     /// Broadcast a matrix to all nodes
-    pub fn broadcast_matrix<T>(&self, matrix: &ArrayView2<T>) -> LinalgResult<()>
+    pub fn broadcastmatrix<T>(&self, matrix: &ArrayView2<T>) -> LinalgResult<()>
     where
         T: Clone + Send + Sync + Serialize,
     {
         if self.rank == 0 {
             // Root node sends to all others
             for dest in 1..self.size {
-                self.send_matrix(matrix, dest, MessageTag::Data)?;
+                self.sendmatrix(matrix, dest, MessageTag::Data)?;
             }
         }
         Ok(())
@@ -274,19 +274,19 @@ impl DistributedCommunicator {
             // Root node collects from all others
             let mut matrices = Vec::with_capacity(self.size);
             
-            // Add local _matrix
-            matrices.push(local_matrix.to_owned());
+            // Add local matrix
+            matrices.push(localmatrix.to_owned());
             
             // Receive from other nodes
             for source in 1..self.size {
-                let _matrix = self.recv_matrix(source, MessageTag::Data)?;
-                matrices.push(_matrix);
+                let matrix = self.recvmatrix(source, MessageTag::Data)?;
+                matrices.push(matrix);
             }
             
             Ok(Some(matrices))
         } else {
             // Non-root nodes send their data
-            self.send_matrix(local_matrix, 0, MessageTag::Data)?;
+            self.sendmatrix(localmatrix, 0, MessageTag::Data)?;
             Ok(None)
         }
     }
@@ -297,24 +297,24 @@ impl DistributedCommunicator {
         T: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de> + num_traits::Zero + std::ops::Add<Output = T>,
     {
         // Gather all matrices to root
-        if let Some(matrices) = self.gather_matrices(local_matrix)? {
+        if let Some(matrices) = self.gather_matrices(localmatrix)? {
             // Sum all matrices (only on root)
             let mut result = matrices[0].clone();
-            for _matrix in matrices.iter().skip(1) {
+            for matrix in matrices.iter().skip(1) {
                 result = &result + matrix;
             }
             
             // Broadcast result to all nodes
-            self.broadcast_matrix(&result.view())?;
+            self.broadcastmatrix(&result.view())?;
             Ok(result)
         } else {
             // Non-root nodes receive the result
-            self.recv_matrix(0, MessageTag::Data)
+            self.recvmatrix(0, MessageTag::Data)
         }
     }
     
     /// Scatter operation (distribute parts of a matrix to all nodes)
-    pub fn scatter_matrix<T>(&self, matrix: Option<&ArrayView2<T>>) -> LinalgResult<Array2<T>>
+    pub fn scattermatrix<T>(&self, matrix: Option<&ArrayView2<T>>) -> LinalgResult<Array2<T>>
     where
         T: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>,
     {
@@ -334,7 +334,7 @@ impl DistributedCommunicator {
                 let end_row = start_row + chunk_rows;
                 
                 let chunk = matrix.slice(ndarray::s![start_row..end_row, ..]);
-                self.send_matrix(&chunk, dest, MessageTag::Data)?;
+                self.sendmatrix(&chunk, dest, MessageTag::Data)?;
                 
                 start_row = end_row;
             }
@@ -344,7 +344,7 @@ impl DistributedCommunicator {
             Ok(matrix.slice(ndarray::s![..root_rows, ..]).to_owned())
         } else {
             // Receive chunk from root
-            self.recv_matrix(0, MessageTag::Data)
+            self.recvmatrix(0, MessageTag::Data)
         }
     }
     
@@ -354,19 +354,19 @@ impl DistributedCommunicator {
         if self.rank == 0 {
             // Root waits for all nodes to arrive
             for source in 1..self.size {
-                let _: Array2<f64> = self.recv_matrix(source, MessageTag::Sync)?;
+                let _: Array2<f64> = self.recvmatrix(source, MessageTag::Sync)?;
             }
             
             // Send release signal to all nodes
             let dummy = Array2::<f64>::zeros((1, 1));
             for dest in 1..self.size {
-                self.send_matrix(&dummy.view(), dest, MessageTag::Sync)?;
+                self.sendmatrix(&dummy.view(), dest, MessageTag::Sync)?;
             }
         } else {
             // Non-root nodes signal arrival and wait for release
             let dummy = Array2::<f64>::zeros((1, 1));
-            self.send_matrix(&dummy.view(), 0, MessageTag::Sync)?;
-            let _: Array2<f64> = self.recv_matrix(0, MessageTag::Sync)?;
+            self.sendmatrix(&dummy.view(), 0, MessageTag::Sync)?;
+            let _: Array2<f64> = self.recvmatrix(0, MessageTag::Sync)?;
         }
         
         Ok(())
@@ -403,7 +403,7 @@ impl DistributedCommunicator {
         *counter
     }
     
-    fn serialize_matrix<T>(&self, matrix: &ArrayView2<T>) -> LinalgResult<Vec<u8>>
+    fn serializematrix<T>(&self, matrix: &ArrayView2<T>) -> LinalgResult<Vec<u8>>
     where
         T: Serialize,
     {
@@ -412,7 +412,7 @@ impl DistributedCommunicator {
         })
     }
     
-    fn deserialize_matrix<T>(&self, data: &[u8]) -> LinalgResult<Array2<T>>
+    fn deserializematrix<T>(&self, data: &[u8]) -> LinalgResult<Array2<T>>
     where
         T: for<'de> Deserialize<'de>,
     {
@@ -470,7 +470,7 @@ impl DistributedCommunicator {
             source: message.metadata.source,
             destination: message.metadata.destination,
             tag: message.metadata.tag as u32,
-            data_size: message.data.len(),
+            datasize: message.data.len(),
             sequence: message.metadata.sequence,
             timestamp: message.metadata.timestamp,
             checksum: self.calculate_checksum(&message.data),
@@ -480,8 +480,8 @@ impl DistributedCommunicator {
             .map_err(|e| LinalgError::SerializationError(format!("Header serialization failed: {}", e)))?;
         
         // Send header size first (4 bytes)
-        let header_size = header_bytes.len() as u32;
-        stream.write_all(&header_size.to_be_bytes())
+        let headersize = header_bytes.len() as u32;
+        stream.write_all(&headersize.to_be_bytes())
             .map_err(|e| LinalgError::CommunicationError(format!("Failed to send header size: {}", e)))?;
         
         // Send header
@@ -518,13 +518,13 @@ impl DistributedCommunicator {
             .map_err(|e| LinalgError::CommunicationError(format!("Failed to accept connection: {}", e)))?;
         
         // Read header size
-        let mut header_size_bytes = [0u8; 4];
-        stream.read_exact(&mut header_size_bytes)
+        let mut headersize_bytes = [0u8; 4];
+        stream.read_exact(&mut headersize_bytes)
             .map_err(|e| LinalgError::CommunicationError(format!("Failed to read header size: {}", e)))?;
-        let header_size = u32::from_be_bytes(header_size_bytes) as usize;
+        let headersize = u32::from_be_bytes(headersize_bytes) as usize;
         
         // Read header
-        let mut header_bytes = vec![0u8; header_size];
+        let mut header_bytes = vec![0u8; headersize];
         stream.read_exact(&mut header_bytes)
             .map_err(|e| LinalgError::CommunicationError(format!("Failed to read header: {}", e)))?;
         
@@ -547,16 +547,16 @@ impl DistributedCommunicator {
         }
         
         // Read data
-        let mut data = vec![0u8; header.data_size];
+        let mut data = vec![0u8; header.datasize];
         let mut bytes_read = 0;
-        while bytes_read < header.data_size {
-            let chunk_size = std::cmp::min(header.data_size - bytes_read, 64 * 1024);
-            let mut chunk = vec![0u8; chunk_size];
+        while bytes_read < header.datasize {
+            let chunksize = std::cmp::min(header.datasize - bytes_read, 64 * 1024);
+            let mut chunk = vec![0u8; chunksize];
             stream.read_exact(&mut chunk)
                 .map_err(|e| LinalgError::CommunicationError(format!("Failed to read data chunk: {}", e)))?;
             
-            data[bytes_read..bytes_read + chunk_size].copy_from_slice(&chunk);
-            bytes_read += chunk_size;
+            data[bytes_read..bytes_read + chunksize].copy_from_slice(&chunk);
+            bytes_read += chunksize;
         }
         
         // Verify checksum
@@ -739,8 +739,8 @@ mod tests {
         
         // Test serialization
         let matrix = Array2::from_shape_fn((3, 3), |(i, j)| (i + j) as f64);
-        let serialized = comm.serialize_matrix(&matrix.view()).unwrap();
-        let deserialized: Array2<f64> = comm.deserialize_matrix(&serialized).unwrap();
+        let serialized = comm.serializematrix(&matrix.view()).unwrap();
+        let deserialized: Array2<f64> = comm.deserializematrix(&serialized).unwrap();
         
         assert_eq!(matrix, deserialized);
     }

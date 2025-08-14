@@ -69,7 +69,7 @@ pub mod helpers {
     }
 
     /// Create an invalid argument error for insufficient data
-    pub fn insufficient_data(required: usize, actual: usize, context: &str) -> StatsError {
+    pub fn insufficientdata(required: usize, actual: usize, context: &str) -> StatsError {
         StatsError::invalid_argument(format!(
             "Insufficient data for {context}: requires at least {required} samples, got {actual}"
         ))
@@ -149,13 +149,9 @@ pub mod validation {
     }
 
     /// Validate that we have sufficient data
-    pub fn ensure_sufficient_data(
-        actual: usize,
-        required: usize,
-        context: &str,
-    ) -> StatsResult<()> {
+    pub fn ensure_sufficientdata(actual: usize, required: usize, context: &str) -> StatsResult<()> {
         if actual < required {
-            Err(helpers::insufficient_data(required, actual, context))
+            Err(helpers::insufficientdata(required, actual, context))
         } else {
             Ok(())
         }

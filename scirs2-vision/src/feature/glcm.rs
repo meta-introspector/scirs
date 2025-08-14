@@ -309,7 +309,7 @@ pub struct ExtendedGLCMFeatures {
 #[allow(dead_code)]
 pub fn compute_extendedglcm_features(glcm: &Array2<f64>) -> ExtendedGLCMFeatures {
     let haralick = compute_haralick_features(glcm);
-    let (n) = glcm.dim();
+    let (n, _) = glcm.dim();
 
     // Compute p_x+y and p_x-y
     let mut p_sum = vec![0.0; 2 * n - 1];
@@ -359,7 +359,7 @@ pub fn compute_extendedglcm_features(glcm: &Array2<f64>) -> ExtendedGLCMFeatures
     }
 
     // Compute cluster shade and prominence
-    let (_px_py, mean_x, mean_y) = compute_marginals(glcm);
+    let (_px, _py, mean_x, mean_y) = compute_marginals(glcm);
 
     let mut cluster_shade = 0.0;
     let mut cluster_prominence = 0.0;
@@ -387,7 +387,7 @@ pub fn compute_extendedglcm_features(glcm: &Array2<f64>) -> ExtendedGLCMFeatures
 /// Compute marginal probabilities and means
 #[allow(dead_code)]
 fn compute_marginals(glcm: &Array2<f64>) -> (Vec<f64>, Vec<f64>, f64, f64) {
-    let (n) = glcm.dim();
+    let (n, _) = glcm.dim();
 
     let px = glcm.sum_axis(Axis(1)).to_vec();
     let py = glcm.sum_axis(Axis(0)).to_vec();

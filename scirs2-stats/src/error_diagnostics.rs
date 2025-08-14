@@ -78,7 +78,7 @@ pub struct ErrorMonitor {
     /// Known error patterns
     patterns: Vec<ErrorPattern>,
     /// Maximum history size
-    max_history_size: usize,
+    max_historysize: usize,
     /// Pattern detection enabled
     pattern_detection_enabled: bool,
     /// Error rate thresholds
@@ -94,7 +94,7 @@ impl ErrorMonitor {
             error_history: Arc::new(Mutex::new(VecDeque::new())),
             error_counts: Arc::new(Mutex::new(HashMap::new())),
             patterns: Vec::new(),
-            max_history_size: 1000,
+            max_historysize: 1000,
             pattern_detection_enabled: true,
             error_rate_thresholds: HashMap::new(),
             start_time: Instant::now(),
@@ -180,7 +180,7 @@ impl ErrorMonitor {
         // Update history
         {
             let mut history = self.error_history.lock().unwrap();
-            if history.len() >= self.max_history_size {
+            if history.len() >= self.max_historysize {
                 history.pop_front();
             }
             history.push_back(occurrence);

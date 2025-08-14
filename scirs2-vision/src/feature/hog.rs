@@ -312,7 +312,7 @@ fn normalize_block_features(features: &mut [f32], method: HogNormalization) {
             // Clip values
             let clip_threshold = 0.2;
             for feature in features.iter_mut() {
-                *feature = "feature".min(clip_threshold);
+                *feature = feature.min(clip_threshold);
             }
 
             // Renormalize
@@ -342,7 +342,7 @@ fn normalize_block_features(features: &mut [f32], method: HogNormalization) {
 
             // Square root
             for feature in features.iter_mut() {
-                *feature = "feature".signum() * feature.abs().sqrt();
+                *feature = feature.signum() * feature.abs().sqrt();
             }
         }
     }

@@ -140,7 +140,7 @@ pub struct ManifoldConfig<F> {
     /// Intrinsic dimensionality estimation
     pub estimate_intrinsic_dim: bool,
     /// Neighborhood size for local methods
-    pub neighborhood_size: usize,
+    pub neighborhoodsize: usize,
     /// Distance metric
     pub distance_metric: DistanceMetric,
     /// Manifold regularization parameter
@@ -552,7 +552,7 @@ where
     /// Create new advanced multivariate analysis
     pub fn new(config: AdvancedMultivariateConfig<F>) -> Self {
         Self {
-            config: config,
+            config,
             models: HashMap::new(),
             performance: PerformanceMetrics {
                 computation_time: 0.0,
@@ -676,10 +676,10 @@ where
             let column = data.column(j);
             mean[j] = F::simd_mean(&column);
         }
-        let centered_data = self.center_data(data, &mean)?;
+        let centereddata = self.centerdata(data, &mean)?;
 
         // Compute covariance matrix using SIMD
-        let covariance = self.compute_covariance_simd(&centered_data.view())?;
+        let covariance = self.compute_covariance_simd(&centereddata.view())?;
 
         // Perform eigendecomposition (simplified)
         let (eigenvalues, eigenvectors) = self.eigen_decomposition_simd(&covariance.view())?;
@@ -697,7 +697,7 @@ where
         let singular_values = explained_variance.mapv(|x| x.sqrt());
 
         let pca_model = PCAModel {
-            components: components,
+            components,
             explained_variance,
             explained_variance_ratio,
             singular_values,
@@ -709,7 +709,7 @@ where
     }
 
     /// Center data using SIMD operations
-    fn center_data(&self, data: &ArrayView2<F>, mean: &Array1<F>) -> StatsResult<Array2<F>> {
+    fn centerdata(&self, data: &ArrayView2<F>, mean: &Array1<F>) -> StatsResult<Array2<F>> {
         let mut centered = data.to_owned();
         for (i, row) in data.rows().into_iter().enumerate() {
             let centered_row = F::simd_sub(&row, &mean.view());
@@ -776,7 +776,7 @@ where
         };
 
         let ica_model = ICAModel {
-            components: components,
+            components,
             mixing_matrix,
             sources,
             mean,
@@ -942,7 +942,7 @@ where
     fn validate_results(
         &self,
         results: &HashMap<String, MultivariateModel<F>>,
-        _data: &ArrayView2<F>,
+        data: &ArrayView2<F>,
     ) -> StatsResult<ValidationResults<F>> {
         let mut cross_validation_scores = HashMap::new();
         let mut bootstrap_confidence_intervals = HashMap::new();
@@ -1003,7 +1003,7 @@ where
             }],
             manifold_config: ManifoldConfig {
                 estimate_intrinsic_dim: true,
-                neighborhood_size: 10,
+                neighborhoodsize: 10,
                 distance_metric: DistanceMetric::Euclidean,
                 regularization: F::from(0.01).unwrap(),
                 adaptive_neighborhoods: false,

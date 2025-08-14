@@ -249,7 +249,7 @@ impl GpuInfo {
     pub fn create_from_pci_ids(vendor_id: &str, device_id: &str) -> Self {
         // Strip 0x prefix if present
         let vendor_id = vendor_id.strip_prefix("0x").unwrap_or(vendor_id);
-        
+
         let vendor = match vendor_id {
             "10de" => GpuVendor::Nvidia,
             "1002" => GpuVendor::Amd,

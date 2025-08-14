@@ -824,7 +824,7 @@ impl QuantumSpatialOptimizer {
         let gamma_params = vec![PI / 8.0; _numlayers];
 
         Self {
-            _numlayers: _numlayers,
+            _numlayers,
             beta_params,
             gamma_params,
             max_iterations: 100,
@@ -911,11 +911,7 @@ impl QuantumSpatialOptimizer {
     }
 
     /// Calculate TSP expectation value
-    fn calculate_tsp_expectation(
-        &self,
-        state: &QuantumState,
-        distancematrix: &Array2<f64>,
-    ) -> f64 {
+    fn calculate_tsp_expectation(&self, state: &QuantumState, distancematrix: &Array2<f64>) -> f64 {
         let mut expectation = 0.0;
         let ncities = distancematrix.nrows();
 
@@ -2052,10 +2048,7 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Compute various coherence measures
-    fn compute_coherence_measures(
-        &self,
-        state: &QuantumState,
-    ) -> SpatialResult<CoherenceMeasures> {
+    fn compute_coherence_measures(&self, state: &QuantumState) -> SpatialResult<CoherenceMeasures> {
         let l1_coherence = VariationalQuantumEigensolver::compute_l1_coherence(state)?;
         let relative_entropy_coherence =
             VariationalQuantumEigensolver::compute_relative_entropy_coherence(state)?;
@@ -3108,11 +3101,7 @@ impl QuantumSpatialPatternMatcher {
         Ok(fidelity)
     }
 
-    fn quantum_fidelity(
-        &self,
-        state1: &QuantumState,
-        state2: &QuantumState,
-    ) -> SpatialResult<f64> {
+    fn quantum_fidelity(&self, state1: &QuantumState, state2: &QuantumState) -> SpatialResult<f64> {
         if state1.amplitudes.len() != state2.amplitudes.len() {
             return Err(SpatialError::InvalidInput(
                 "Quantum states must have same dimension".to_string(),
@@ -3702,7 +3691,7 @@ impl QuantumKernelMachine {
 
         Self {
             feature_mapdepth,
-            numqubits: numqubits,
+            numqubits,
             kernel_params,
             quantum_training_data: Vec::new(),
             training_labels: Array1::zeros(0),
@@ -4144,7 +4133,7 @@ impl QuantumVariationalClassifier {
         };
 
         Self {
-            numqubits: numqubits,
+            numqubits,
             circuitdepth,
             parameters,
             optimizer,

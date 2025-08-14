@@ -3,7 +3,7 @@ use scirs2_linalg::{matrix_rank, svd};
 
 #[test]
 #[allow(dead_code)]
-fn debug_nearly_singular_matrix_rank() {
+fn debug_nearly_singularmatrix_rank() {
     // Create a nearly singular matrix (rank should be 1)
     let matrix = array![
         [1.0, 2.0],

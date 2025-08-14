@@ -1374,10 +1374,7 @@ pub mod analysis {
     /// # Returns
     ///
     /// * Window analysis results
-    pub fn analyze_window(
-        window: &[f64],
-        fft_size: Option<usize>,
-    ) -> SignalResult<WindowAnalysis> {
+    pub fn analyze_window(window: &[f64], fft_size: Option<usize>) -> SignalResult<WindowAnalysis> {
         if window.is_empty() {
             return Err(SignalError::ValueError(
                 "Window cannot be empty".to_string(),

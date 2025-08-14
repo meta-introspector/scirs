@@ -1,5 +1,5 @@
-use scirs2__special::{elliptic_e, elliptic_e_inc, elliptic_f, elliptic_k, elliptic_pi};
-use scirs2__special::{jacobi_cn, jacobi_dn, jacobi_sn};
+use scirs2_special::{elliptic_e, elliptic_e_inc, elliptic_f, elliptic_k, elliptic_pi};
+use scirs2_special::{jacobi_cn, jacobi_dn, jacobi_sn};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

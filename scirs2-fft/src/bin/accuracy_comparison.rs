@@ -24,7 +24,7 @@ pub struct AccuracyResult {
 /// Calculate error metrics between two complex vectors
 #[allow(dead_code)]
 fn calculate_complex_error(actual: &[Complex64], expected: &[Complex64]) -> (f64, f64, f64, f64) {
-    assert_eq!(_actual.len(), expected.len());
+    assert_eq!(actual.len(), expected.len());
 
     let mut max_error: f64 = 0.0;
     let mut sum_error: f64 = 0.0;
@@ -54,7 +54,7 @@ fn calculate_complex_error(actual: &[Complex64], expected: &[Complex64]) -> (f64
 /// Calculate error metrics between two real vectors
 #[allow(dead_code)]
 fn calculate_real_error(actual: &[f64], expected: &[f64]) -> (f64, f64, f64, f64) {
-    assert_eq!(_actual.len(), expected.len());
+    assert_eq!(actual.len(), expected.len());
 
     let mut max_error: f64 = 0.0;
     let mut sum_error: f64 = 0.0;
@@ -366,7 +366,7 @@ pub fn generate_accuracy_report(results: &[AccuracyResult]) {
     println!("Operation | Size | Max Error | Mean Error | RMS Error | Rel Error | Notes");
     println!("{}", "-".repeat(100));
 
-    for result in _results {
+    for result in results {
         println!(
             "{:15} | {:4} | {:9.2e} | {:10.2e} | {:9.2e} | {:9.2e} | {}",
             result.operation,

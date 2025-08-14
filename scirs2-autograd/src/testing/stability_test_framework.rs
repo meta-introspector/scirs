@@ -538,10 +538,19 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             (StabilityGrade::Excellent, _) => true,
             (StabilityGrade::Good, StabilityGrade::Excellent) => false,
             (StabilityGrade::Good, StabilityGrade::Good) => true,
-            (StabilityGrade::Good, StabilityGrade::Fair | StabilityGrade::Poor | StabilityGrade::Unstable | StabilityGrade::Critical) => true,
+            (
+                StabilityGrade::Good,
+                StabilityGrade::Fair
+                | StabilityGrade::Poor
+                | StabilityGrade::Unstable
+                | StabilityGrade::Critical,
+            ) => true,
             (StabilityGrade::Fair, StabilityGrade::Excellent | StabilityGrade::Good) => false,
             (StabilityGrade::Fair, StabilityGrade::Fair) => true,
-            (StabilityGrade::Fair, StabilityGrade::Poor | StabilityGrade::Unstable | StabilityGrade::Critical) => true,
+            (
+                StabilityGrade::Fair,
+                StabilityGrade::Poor | StabilityGrade::Unstable | StabilityGrade::Critical,
+            ) => true,
             (StabilityGrade::Poor, StabilityGrade::Unstable | StabilityGrade::Critical) => true,
             (StabilityGrade::Poor, _) => false,
             (StabilityGrade::Unstable, StabilityGrade::Critical) => true,

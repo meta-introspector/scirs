@@ -548,7 +548,7 @@ impl NetCDFFile {
                 // but in this case HDF5 backend already handles decompression transparently
 
                 // Check for chunking information
-                if let Some(chunk_attr) = dataset.get_attribute("chunksizes") {
+                if let Some(chunk_attr) = dataset.get_attribute("chunk_sizes") {
                     // Process chunked data if needed
                     self.process_chunked_data(&array_data, chunk_attr)?;
                 }

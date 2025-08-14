@@ -245,9 +245,7 @@ impl<T: StreamingObjective> IncrementalNewton<T> {
             IncrementalNewtonMethod::Exact => {
                 // Use exact Hessian if available from objective function
                 if let Some(data_point) = self.get_current_data_point() {
-                    if let Some(hessian) =
-                        T::hessian(&self.parameters.view(), &data_point)
-                    {
+                    if let Some(hessian) = T::hessian(&self.parameters.view(), &data_point) {
                         // Add regularization for numerical stability
                         let mut reg_hessian = hessian;
                         for i in 0..reg_hessian.nrows() {

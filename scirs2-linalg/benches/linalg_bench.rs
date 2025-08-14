@@ -17,7 +17,7 @@ use std::time::Duration;
 
 /// Create a well-conditioned test matrix
 #[allow(dead_code)]
-fn create_test_matrix(n: usize) -> Array2<f64> {
+fn create_testmatrix(n: usize) -> Array2<f64> {
     let mut matrix = Array2::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
@@ -33,7 +33,7 @@ fn create_test_matrix(n: usize) -> Array2<f64> {
 
 /// Create a symmetric positive definite matrix
 #[allow(dead_code)]
-fn create_spd_matrix(n: usize) -> Array2<f64> {
+fn create_spdmatrix(n: usize) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     a.t().dot(&a) + Array2::<f64>::eye(n) * (n as f64)
 }
@@ -52,7 +52,7 @@ fn bench_blas_operations(c: &mut Criterion) {
     for &size in &[100, 1000, 10000] {
         let x = create_test_vector(size);
         let y = create_test_vector(size);
-        let matrix = create_test_matrix(size.min(500)); // Limit matrix size for efficiency
+        let matrix = create_testmatrix(size.min(500)); // Limit matrix size for efficiency
 
         group.throughput(Throughput::Elements(size as u64));
 
@@ -68,10 +68,10 @@ fn bench_blas_operations(c: &mut Criterion) {
 
         // Matrix-vector multiplication (if matrix size allows)
         if size <= 500 {
-            let mv_size = size.min(matrix.nrows());
-            let v = x.slice(s![..mv_size]).to_owned();
+            let mvsize = size.min(matrix.nrows());
+            let v = x.slice(s![..mvsize]).to_owned();
             group.bench_with_input(
-                BenchmarkId::new("matvec", mv_size),
+                BenchmarkId::new("matvec", mvsize),
                 &(&matrix, &v),
                 |b, (m, v)| b.iter(|| m.dot(&v.view())), // Use view for proper reference type
             );
@@ -85,11 +85,11 @@ fn bench_blas_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_iterative_solvers(c: &mut Criterion) {
     let mut group = c.benchmark_group("iterative_solvers");
-    group.sample_size(10);
+    group.samplesize(10);
     group.measurement_time(Duration::from_secs(30));
 
     for &size in &[50, 100, 200] {
-        let matrix = create_spd_matrix(size);
+        let matrix = create_spdmatrix(size);
         let rhs = create_test_vector(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
@@ -135,7 +135,7 @@ fn bench_mixed_precision(c: &mut Criterion) {
     let mut group = c.benchmark_group("mixed_precision");
 
     for &size in &[50, 100, 200] {
-        let matrix_f64 = create_test_matrix(size);
+        let matrix_f64 = create_testmatrix(size);
         let matrix_f32 = matrix_f64.mapv(|x| x as f32);
         let vector_f64 = create_test_vector(size);
         let vector_f32 = vector_f64.mapv(|x| x as f32);
@@ -221,12 +221,12 @@ fn bench_structured_matrices(c: &mut Criterion) {
 
 /// Benchmark matrix factorizations
 #[allow(dead_code)]
-fn bench_matrix_factorizations(c: &mut Criterion) {
+fn benchmatrix_factorizations(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_factorizations");
-    group.sample_size(10);
+    group.samplesize(10);
 
     for &size in &[20, 50, 100] {
-        let matrix = create_test_matrix(size);
+        let matrix = create_testmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -354,8 +354,8 @@ fn bench_kronecker_operations(c: &mut Criterion) {
 
     for &size in &[10, 20, 30] {
         // Keep sizes small for Kronecker products
-        let matrix_a = create_test_matrix(size);
-        let matrix_b = create_test_matrix(size);
+        let matrix_a = create_testmatrix(size);
+        let matrix_b = create_testmatrix(size);
         let vector = create_test_vector(size * size);
 
         group.throughput(Throughput::Elements(
@@ -396,7 +396,7 @@ fn bench_projection_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("projection_operations");
 
     for &size in &[100, 500, 1000] {
-        let matrix = create_test_matrix(size.min(200)); // Limit for efficiency
+        let matrix = create_testmatrix(size.min(200)); // Limit for efficiency
         let target_dim = size / 4;
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
@@ -406,9 +406,9 @@ fn bench_projection_operations(c: &mut Criterion) {
             BenchmarkId::new("gaussian_projection", size),
             &(&matrix, target_dim),
             |bencher, (m, d)| {
-                let proj_matrix =
-                    gaussian_random_matrix(black_box(*d), black_box(m.ncols())).unwrap();
-                bencher.iter(|| project(black_box(&m.view()), black_box(&proj_matrix.view())))
+                let projmatrix =
+                    gaussian_randommatrix(black_box(*d), black_box(m.ncols())).unwrap();
+                bencher.iter(|| project(black_box(&m.view()), black_box(&projmatrix.view())))
             },
         );
 
@@ -436,7 +436,7 @@ criterion_group!(
     bench_iterative_solvers,
     bench_mixed_precision,
     bench_structured_matrices,
-    bench_matrix_factorizations,
+    benchmatrix_factorizations,
     bench_complex_operations,
     bench_random_matrices,
     bench_kronecker_operations,

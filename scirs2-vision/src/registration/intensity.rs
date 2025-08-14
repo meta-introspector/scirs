@@ -162,7 +162,7 @@ fn single_level_register(
     }
 
     Ok(RegistrationResult {
-        _transform: current_transform,
+        transform: current_transform,
         final_cost: current_cost,
         iterations: iteration,
         converged,
@@ -201,7 +201,7 @@ fn multi_resolution_register(
             config,
         )?;
 
-        current_transform = result._transform.clone();
+        current_transform = result.transform.clone();
 
         // Scale _transform back up for next level
         if level > 0 {
@@ -268,7 +268,7 @@ fn downsample_image(image: &GrayImage) -> GrayImage {
                 count += 1;
             }
 
-            downsampled.put_pixel(x, y_image::Luma([(sum / count) as u8]));
+            downsampled.put_pixel(x, y, image::Luma([(sum / count) as u8]));
         }
     }
 

@@ -678,8 +678,8 @@ where
         }
 
         // Check effective sample size (simplified)
-        let eff_sample_size = self.compute_effective_sample_size(noise_precision_samples_)?;
-        if eff_sample_size < 100.0 {
+        let eff_samplesize = self.compute_effective_samplesize(noise_precision_samples_)?;
+        if eff_samplesize < 100.0 {
             return Ok(false); // Need larger effective sample size
         }
 
@@ -704,7 +704,7 @@ where
     }
 
     /// Compute effective sample size (simplified autocorrelation-based estimate)
-    fn compute_effective_sample_size(&self, samples: &[F]) -> StatsResult<f64> {
+    fn compute_effective_samplesize(&self, samples: &[F]) -> StatsResult<f64> {
         if samples.len() < 10 {
             return Ok(samples.len() as f64);
         }

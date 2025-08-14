@@ -31,10 +31,10 @@
 /// Common utilities for benchmarking
 pub mod common {
     use ndarray::{Array1, Array2};
+    use ndarray_rand::rand::distributions::Uniform;
+    use ndarray_rand::rand::SeedableRng;
+    use ndarray_rand::rand_chacha::ChaCha8Rng;
     use ndarray_rand::RandomExt;
-    use rand::distributions::Uniform;
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
 
     /// Standard seed for reproducible benchmarks
     pub const BENCHMARK_SEED: u64 = 42;

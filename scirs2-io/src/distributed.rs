@@ -21,7 +21,7 @@
 //!
 //! // Create a distributed reader for a large CSV file
 //! let reader = DistributedReader::new("large_dataset.csv")
-//!     .partition_strategy(PartitionStrategy::RowBased { chunksize: 1_000_000 })
+//!     .partition_strategy(PartitionStrategy::RowBased { chunk_size: 1_000_000 })
 //!     .num_workers(4);
 //!
 //! // Process chunks in parallel

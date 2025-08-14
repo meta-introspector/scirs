@@ -361,7 +361,7 @@ impl PerformanceAnalyzer {
 
         for &k in k_values {
             let start = Instant::now();
-            let (_indices_distances) =
+            let (_indicesdistances) =
                 simd_knn_search(&query_points.view(), &data_points.view(), k, "euclidean").unwrap();
             let duration = start.elapsed();
 

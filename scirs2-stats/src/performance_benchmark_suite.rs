@@ -106,7 +106,7 @@ pub enum PrecisionLevel {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StressTestConfig {
     pub name: String,
-    pub data_size_multiplier: f64,
+    pub datasize_multiplier: f64,
     pub concurrent_operations: usize,
     pub memory_pressure: f64, // 0.0 to 1.0
     pub thermal_stress: bool,
@@ -155,7 +155,7 @@ pub struct ScalabilityMetrics {
     /// Measured scaling factor
     pub measured_scaling_factor: f64,
     /// Efficiency at different scales
-    pub scale_efficiency: Vec<(usize, f64)>, // (data_size, efficiency)
+    pub scale_efficiency: Vec<(usize, f64)>, // (datasize, efficiency)
     /// Memory scaling characteristics
     pub memory_scaling: MemoryScalingMetrics,
     /// Parallel scaling efficiency
@@ -467,10 +467,10 @@ impl AdvancedBenchmarkSuite {
     fn benchmark_descriptive_stats(&self) -> StatsResult<Vec<AdvancedBenchmarkMetrics>> {
         let mut metrics = Vec::new();
 
-        for &size in &self.config.base_config.data_sizes {
+        for &size in &self.config.base_config.datasizes {
             // Generate test data for different distributions
             for distribution in &self.config.data_distributions {
-                let data = self.generate_test_data(size, distribution)?;
+                let data = self.generate_testdata(size, distribution)?;
 
                 // Benchmark mean calculation
                 let mean_metrics =
@@ -496,9 +496,9 @@ impl AdvancedBenchmarkSuite {
     fn benchmark_correlation_operations(&self) -> StatsResult<Vec<AdvancedBenchmarkMetrics>> {
         let mut metrics = Vec::new();
 
-        for &size in &self.config.base_config.data_sizes {
-            let x = self.generate_test_data(size, &DataDistribution::Normal)?;
-            let y = self.generate_test_data(size, &DataDistribution::Normal)?;
+        for &size in &self.config.base_config.datasizes {
+            let x = self.generate_testdata(size, &DataDistribution::Normal)?;
+            let y = self.generate_testdata(size, &DataDistribution::Normal)?;
 
             // Benchmark Pearson correlation
             let pearson_metrics =
@@ -522,9 +522,9 @@ impl AdvancedBenchmarkSuite {
     fn benchmark_regression_operations(&self) -> StatsResult<Vec<AdvancedBenchmarkMetrics>> {
         let mut metrics = Vec::new();
 
-        for &size in &self.config.base_config.data_sizes {
-            let x = self.generate_test_data(size, &DataDistribution::Normal)?;
-            let y = self.generate_test_data(size, &DataDistribution::Normal)?;
+        for &size in &self.config.base_config.datasizes {
+            let x = self.generate_testdata(size, &DataDistribution::Normal)?;
+            let y = self.generate_testdata(size, &DataDistribution::Normal)?;
 
             // Benchmark linear regression
             let linear_metrics =
@@ -541,8 +541,8 @@ impl AdvancedBenchmarkSuite {
     fn benchmark_distribution_operations(&self) -> StatsResult<Vec<AdvancedBenchmarkMetrics>> {
         let mut metrics = Vec::new();
 
-        for &size in &self.config.base_config.data_sizes {
-            let data = self.generate_test_data(size, &DataDistribution::Normal)?;
+        for &size in &self.config.base_config.datasizes {
+            let data = self.generate_testdata(size, &DataDistribution::Normal)?;
 
             // Benchmark normality tests
             let shapiro_metrics =
@@ -558,23 +558,23 @@ impl AdvancedBenchmarkSuite {
         let mut metrics = Vec::new();
 
         // Test with extreme values
-        for &size in &self.config.base_config.data_sizes {
+        for &size in &self.config.base_config.datasizes {
             // Test with very small values
-            let small_data = Array1::from_elem(size, 1e-100_f64);
-            let small_metrics = self.benchmark_stability("mean_small_values", &small_data)?;
+            let smalldata = Array1::from_elem(size, 1e-100_f64);
+            let small_metrics = self.benchmark_stability("mean_small_values", &smalldata)?;
             metrics.push(small_metrics);
 
             // Test with very large values
-            let large_data = Array1::from_elem(size, 1e100_f64);
-            let large_metrics = self.benchmark_stability("mean_large_values", &large_data)?;
+            let largedata = Array1::from_elem(size, 1e100_f64);
+            let large_metrics = self.benchmark_stability("mean_large_values", &largedata)?;
             metrics.push(large_metrics);
 
             // Test with mixed scales
-            let mut mixed_data = Array1::zeros(size);
-            for (i, val) in mixed_data.iter_mut().enumerate() {
+            let mut mixeddata = Array1::zeros(size);
+            for (i, val) in mixeddata.iter_mut().enumerate() {
                 *val = if i % 2 == 0 { 1e-50 } else { 1e50 };
             }
-            let mixed_metrics = self.benchmark_stability("mean_mixed_scales", &mixed_data)?;
+            let mixed_metrics = self.benchmark_stability("mean_mixed_scales", &mixeddata)?;
             metrics.push(mixed_metrics);
         }
 
@@ -586,15 +586,15 @@ impl AdvancedBenchmarkSuite {
         let mut metrics = Vec::new();
 
         // Generate data sizes for scalability testing
-        let mut test_sizes = Vec::new();
-        let mut current_size = 100;
-        while current_size <= 10_000_000 {
-            test_sizes.push(current_size);
-            current_size = (current_size as f64 * 1.5) as usize;
+        let mut testsizes = Vec::new();
+        let mut currentsize = 100;
+        while currentsize <= 10_000_000 {
+            testsizes.push(currentsize);
+            currentsize = (currentsize as f64 * 1.5) as usize;
         }
 
-        for &size in &test_sizes {
-            let data = self.generate_test_data(size, &DataDistribution::Normal)?;
+        for &size in &testsizes {
+            let data = self.generate_testdata(size, &DataDistribution::Normal)?;
 
             let scalability_metrics =
                 self.benchmark_scalability("mean_scalability", &data, size)?;
@@ -614,8 +614,8 @@ impl AdvancedBenchmarkSuite {
         // Note: In a real implementation, this would involve
         // running tests on actual different platforms
 
-        for &size in &self.config.base_config.data_sizes {
-            let data = self.generate_test_data(size, &DataDistribution::Normal)?;
+        for &size in &self.config.base_config.datasizes {
+            let data = self.generate_testdata(size, &DataDistribution::Normal)?;
 
             let cross_platform_metrics =
                 self.benchmark_cross_platform("mean_cross_platform", &data)?;
@@ -626,7 +626,7 @@ impl AdvancedBenchmarkSuite {
     }
 
     /// Generate test data based on distribution type
-    fn generate_test_data(
+    fn generate_testdata(
         &self,
         size: usize,
         distribution: &DataDistribution,
@@ -716,7 +716,7 @@ impl AdvancedBenchmarkSuite {
             timings.push(duration.as_nanos() as f64);
         }
 
-        let base_metrics = self.calculate_base_metrics(name, data.len(), &timings);
+        let base_metrics = self.calculatebase_metrics(name, data.len(), &timings);
         let stability_metrics = self.calculate_stability_metrics(data);
         let scalability_metrics = self.calculate_scalability_metrics(data.len(), &timings);
 
@@ -757,7 +757,7 @@ impl AdvancedBenchmarkSuite {
             timings.push(duration.as_nanos() as f64);
         }
 
-        let base_metrics = self.calculate_base_metrics(name, x.len(), &timings);
+        let base_metrics = self.calculatebase_metrics(name, x.len(), &timings);
         let stability_metrics = self.calculate_stability_metrics(x);
         let scalability_metrics = self.calculate_scalability_metrics(x.len(), &timings);
 
@@ -796,7 +796,7 @@ impl AdvancedBenchmarkSuite {
 
         let base_metrics = crate::benchmark_suite::BenchmarkMetrics {
             function_name: name.to_string(),
-            data_size: data.len(),
+            datasize: data.len(),
             timing: crate::benchmark_suite::TimingStats {
                 mean_ns: 1000.0,
                 std_dev_ns: 100.0,
@@ -852,7 +852,7 @@ impl AdvancedBenchmarkSuite {
 
         let base_metrics = crate::benchmark_suite::BenchmarkMetrics {
             function_name: name.to_string(),
-            data_size: size,
+            datasize: size,
             timing: crate::benchmark_suite::TimingStats {
                 mean_ns: (size as f64 * 10.0), // Simulated linear scaling
                 std_dev_ns: (size as f64 * 1.0),
@@ -909,7 +909,7 @@ impl AdvancedBenchmarkSuite {
 
         let base_metrics = crate::benchmark_suite::BenchmarkMetrics {
             function_name: name.to_string(),
-            data_size: data.len(),
+            datasize: data.len(),
             timing: crate::benchmark_suite::TimingStats {
                 mean_ns: 1000.0,
                 std_dev_ns: 100.0,
@@ -979,7 +979,7 @@ impl AdvancedBenchmarkSuite {
     }
 
     /// Calculate base metrics from timing data
-    fn calculate_base_metrics(
+    fn calculatebase_metrics(
         &self,
         name: &str,
         size: usize,
@@ -995,7 +995,7 @@ impl AdvancedBenchmarkSuite {
 
         crate::benchmark_suite::BenchmarkMetrics {
             function_name: name.to_string(),
-            data_size: size,
+            datasize: size,
             timing: crate::benchmark_suite::TimingStats {
                 mean_ns: mean,
                 std_dev_ns: std_dev,
@@ -1099,7 +1099,7 @@ impl AdvancedBenchmarkSuite {
         let n = metrics.len() as f64;
         let sum_x = metrics
             .iter()
-            .map(|m| m.base_metrics.data_size as f64)
+            .map(|m| m.base_metrics.datasize as f64)
             .sum::<f64>();
         let sum_y = metrics
             .iter()
@@ -1107,11 +1107,11 @@ impl AdvancedBenchmarkSuite {
             .sum::<f64>();
         let sum_xy = metrics
             .iter()
-            .map(|m| m.base_metrics.data_size as f64 * m.base_metrics.timing.mean_ns)
+            .map(|m| m.base_metrics.datasize as f64 * m.base_metrics.timing.mean_ns)
             .sum::<f64>();
         let sum_x2 = metrics
             .iter()
-            .map(|m| (m.base_metrics.data_size as f64).powi(2))
+            .map(|m| (m.base_metrics.datasize as f64).powi(2))
             .sum::<f64>();
 
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x.powi(2));
@@ -1126,7 +1126,7 @@ impl AdvancedBenchmarkSuite {
         let ss_res = metrics
             .iter()
             .map(|m| {
-                let predicted = slope * m.base_metrics.data_size as f64 + intercept;
+                let predicted = slope * m.base_metrics.datasize as f64 + intercept;
                 (m.base_metrics.timing.mean_ns - predicted).powi(2)
             })
             .sum::<f64>();
@@ -1141,7 +1141,7 @@ impl AdvancedBenchmarkSuite {
                 root_mean_square_error: (ss_res / n).sqrt(),
                 cross_validation_score: r_squared * 0.9, // Approximate
             },
-            feature_importance: [("data_size".to_string(), 1.0)].iter().cloned().collect(),
+            feature_importance: [("datasize".to_string(), 1.0)].iter().cloned().collect(),
         })
     }
 
@@ -1262,7 +1262,7 @@ if data.len() > 10_000 {
 fn kahan_sum(data: &[f64]) -> f64 {
     let mut sum = 0.0;
     let mut c = 0.0;
-    for &value in _data {
+    for &value in data {
         let y = value - c;
         let t = sum + y;
         c = (t - sum) - y;
@@ -1315,7 +1315,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
             scaling_efficiency: 0.85, // Average efficiency across data sizes
             memory_efficiency: 0.90,
             parallel_efficiency: 0.75,
-            recommended_max_data_size: 1_000_000,
+            recommended_maxdatasize: 1_000_000,
         }
     }
 
@@ -1475,7 +1475,7 @@ pub struct ScalabilityAssessment {
     pub scaling_efficiency: f64,
     pub memory_efficiency: f64,
     pub parallel_efficiency: f64,
-    pub recommended_max_data_size: usize,
+    pub recommended_maxdatasize: usize,
 }
 
 /// Stability assessment
@@ -1555,7 +1555,7 @@ impl Default for AdvancedBenchmarkConfig {
             precision_levels: vec![PrecisionLevel::Single, PrecisionLevel::Double],
             stress_test_configs: vec![StressTestConfig {
                 name: "High memory pressure".to_string(),
-                data_size_multiplier: 10.0,
+                datasize_multiplier: 10.0,
                 concurrent_operations: 4,
                 memory_pressure: 0.8,
                 thermal_stress: false,
@@ -1587,19 +1587,19 @@ mod tests {
     }
 
     #[test]
-    fn test_data_generation() {
+    fn testdata_generation() {
         let config = AdvancedBenchmarkConfig::default();
         let suite = AdvancedBenchmarkSuite::new(config);
 
         let data = suite
-            .generate_test_data(100, &DataDistribution::Normal)
+            .generate_testdata(100, &DataDistribution::Normal)
             .unwrap();
         assert_eq!(data.len(), 100);
 
-        let sparse_data = suite
-            .generate_test_data(100, &DataDistribution::Sparse(0.9))
+        let sparsedata = suite
+            .generate_testdata(100, &DataDistribution::Sparse(0.9))
             .unwrap();
-        let zero_count = sparse_data.iter().filter(|&&x| x == 0.0).count();
+        let zero_count = sparsedata.iter().filter(|&&x| x == 0.0).count();
         assert!(zero_count > 50); // Should have many zeros
     }
 
@@ -1612,7 +1612,7 @@ mod tests {
         let mock_metrics = vec![AdvancedBenchmarkMetrics {
             base_metrics: crate::benchmark_suite::BenchmarkMetrics {
                 function_name: "test".to_string(),
-                data_size: 100,
+                datasize: 100,
                 timing: crate::benchmark_suite::TimingStats {
                     mean_ns: 1000.0,
                     std_dev_ns: 100.0,

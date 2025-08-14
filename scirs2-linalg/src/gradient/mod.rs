@@ -195,7 +195,7 @@ where
 ///
 /// let gradient = softmax_crossentropy_gradient(&softmax_output.view(), &targets.view()).unwrap();
 ///
-/// // For each example, gradient = (softmax_output - targets) / batch_size
+/// // For each example, gradient = (softmax_output - targets) / batchsize
 /// // = ([0.7, 0.2, 0.1] - [1.0, 0.0, 0.0]) / 2
 /// // = [-0.15, 0.1, 0.05]
 /// // For the second example:
@@ -227,8 +227,8 @@ where
     }
 
     // Check that softmax outputs sum to 1 for each example
-    let (batch_size, num_classes) = softmax_output.dim();
-    for i in 0..batch_size {
+    let (batchsize, num_classes) = softmax_output.dim();
+    for i in 0..batchsize {
         let row_sum = softmax_output.slice(s![i, ..]).sum();
         if (row_sum - F::one()).abs() > F::from(1e-5).unwrap() {
             return Err(LinalgError::InvalidInputError(format!(
@@ -238,7 +238,7 @@ where
     }
 
     // Check that targets are valid one-hot vectors
-    for i in 0..batch_size {
+    for i in 0..batchsize {
         let row_sum = targets.slice(s![i, ..]).sum();
         if (row_sum - F::one()).abs() > F::from(1e-6).unwrap() {
             return Err(LinalgError::InvalidInputError(format!(
@@ -272,13 +272,13 @@ where
         }
     }
 
-    let batch_size_f = F::from(batch_size).unwrap();
+    let batchsize_f = F::from(batchsize).unwrap();
 
     // Compute softmax_output - targets
     let mut gradient = softmax_output.to_owned() - targets;
 
-    // Scale by 1/batch_size
-    gradient /= batch_size_f;
+    // Scale by 1/batchsize
+    gradient /= batchsize_f;
 
     Ok(gradient)
 }
@@ -537,7 +537,7 @@ mod tests {
         let gradient =
             softmax_crossentropy_gradient(&softmax_output.view(), &targets.view()).unwrap();
 
-        // For each example, gradient = (softmax_output - targets) / batch_size
+        // For each example, gradient = (softmax_output - targets) / batchsize
         // = ([0.7, 0.2, 0.1] - [1.0, 0.0, 0.0]) / 2
         // = [-0.15, 0.1, 0.05]
         // For the second example:

@@ -455,9 +455,10 @@ impl OptimizationVisualizer {
 
     /// Create loss curve plot
     pub fn plot_loss_curve(&self, metricname: &str) -> Result<String> {
-        let metric = self.metrics.get(metricname).ok_or_else(|| {
-            OptimError::InvalidConfig(format!("Metric '{metricname}' not found"))
-        })?;
+        let metric = self
+            .metrics
+            .get(metricname)
+            .ok_or_else(|| OptimError::InvalidConfig(format!("Metric '{metricname}' not found")))?;
 
         let steps: Vec<f64> = metric.steps.iter().map(|&s| s as f64).collect();
         let values = metric.get_smoothed_values();

@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array1;
 use rand::Rng;
-use scirs2__sparse::*;
+use scirs2_sparse::*;
 use std::hint::black_box;
 
 #[allow(dead_code)]

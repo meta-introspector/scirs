@@ -58,7 +58,7 @@ impl SuggestionEngine {
                     example: Some(
                         r#"
 // Remove NaN values
-let clean_data: Vec<f64> = data.iter()
+let cleandata: Vec<f64> = data.iter()
     .filter(|&&x| !x.is_nan())
     .copied()
     .collect();
@@ -105,7 +105,7 @@ let imputed = data.mapv(|x| if x.is_nan() { mean } else { x });
                 example: Some(
                     r#"
 // Add validation after loading
-let data = load_data(path)?;
+let data = loaddata(path)?;
 if data.is_empty() {
     eprintln!("Warning: Loaded data is empty from {}", path);
     return Err(StatsError::invalid_argument("No data loaded"));

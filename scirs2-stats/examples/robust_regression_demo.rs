@@ -5,7 +5,7 @@ use scirs2_stats::regression::{
 use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
-fn generate_data_with_outliers() -> (Array2<f64>, Array1<f64>) {
+fn generatedata_with_outliers() -> (Array2<f64>, Array1<f64>) {
     // Generate simple linear data with slope ~2, intercept ~1
     let x_values = vec![0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0];
     let n = x_values.len();
@@ -55,7 +55,7 @@ fn print_regression_summary(name: &str, results: &RegressionResults<f64>) {
 #[allow(dead_code)]
 fn main() {
     // Generate data with outliers
-    let (x, y) = generate_data_with_outliers();
+    let (x, y) = generatedata_with_outliers();
 
     println!("Data points:");
     for i in 0..y.len() {

@@ -515,26 +515,26 @@ impl AdvancedSystem {
 // Helper functions for generating test data
 #[allow(dead_code)]
 fn generate_short_documents(count: usize) -> Vec<String> {
-    (0.._count).map(|i| format!("Short doc {i}.")).collect()
+    (0..count).map(|i| format!("Short doc {i}.")).collect()
 }
 
 #[allow(dead_code)]
 fn generate_medium_documents(count: usize) -> Vec<String> {
-    (0.._count)
+    (0..count)
         .map(|i| format!("Medium length document {i} with additional content for processing analysis and performance testing."))
         .collect()
 }
 
 #[allow(dead_code)]
 fn generate_long_documents(count: usize) -> Vec<String> {
-    (0.._count)
+    (0..count)
         .map(|i| format!("This is a long document number {i} that contains significant amounts of text content designed to test the performance characteristics of the Advanced text processing system under heavy load conditions with complex linguistic patterns and varied vocabulary usage."))
         .collect()
 }
 
 #[allow(dead_code)]
 fn generate_mixed_workload(count: usize) -> Vec<String> {
-    (0.._count)
+    (0..count)
         .map(|i| match i % 3 {
             0 => format!("Short {i}"),
             1 => format!("Medium document {i} with some content."),
@@ -545,7 +545,7 @@ fn generate_mixed_workload(count: usize) -> Vec<String> {
 
 #[allow(dead_code)]
 fn calculate_system_health_score(
-    report: &scirs2text::performance::DetailedPerformanceReport,
+    report: &scirs2_text::performance::DetailedPerformanceReport,
 ) -> f64 {
     let mut score: f64 = 100.0;
 

@@ -1114,10 +1114,7 @@ impl AdvancedNeuromorphicProcessor {
     }
 
     /// ✅ Advanced OPTIMIZATION: SIMD-accelerated feature encoding
-    fn advanced_feature_encoding(
-        &self,
-        metafeatures: &DatasetMetaFeatures,
-    ) -> Result<Array1<f64>> {
+    fn advanced_feature_encoding(&self, metafeatures: &DatasetMetaFeatures) -> Result<Array1<f64>> {
         // ✅ Advanced MODE: Use SIMD operations for feature normalization
         let raw_features = vec![
             (metafeatures.n_samples as f64).ln().max(0.0),

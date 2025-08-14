@@ -1,4 +1,4 @@
-use scirs2__special::{ai, aip, bi, bip};
+use scirs2_special::{ai, aip, bi, bip};
 
 #[allow(dead_code)]
 fn main() {

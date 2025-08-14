@@ -102,6 +102,7 @@ pub mod factory_pattern {
 /// ```
 pub mod builder_pattern {
     use super::*;
+    use crate::api_standards::factory_pattern::StandardConfig;
 
     /// Example builder structure
     #[derive(Debug, Clone)]
@@ -113,31 +114,31 @@ pub mod builder_pattern {
         /// Create a new builder with default configuration
         pub fn new() -> Self {
             Self {
-                config: Default::default(),
+                config_factory_pattern: Default::default(),
             }
         }
 
         /// Set smoothing parameter
         pub fn with_smoothing(mut self, smoothing: T) -> Self {
-            self.config.smoothing = Some(smoothing);
+            self.config_factory_pattern.smoothing = Some(smoothing);
             self
         }
 
         /// Set regularization parameter  
         pub fn with_regularization(mut self, regularization: T) -> Self {
-            self.config.regularization = Some(regularization);
+            self.config_factory_pattern.regularization = Some(regularization);
             self
         }
 
         /// Set maximum iterations
         pub fn with_max_iterations(mut self, maxiterations: usize) -> Self {
-            self.config.max_iterations = max_iterations;
+            self.config_factory_pattern.max_iterations = maxiterations;
             self
         }
 
         /// Set convergence tolerance
         pub fn with_tolerance(mut self, tolerance: T) -> Self {
-            self.config.tolerance = tolerance;
+            self.config_factory_pattern.tolerance = tolerance;
             self
         }
 
@@ -155,7 +156,7 @@ pub mod builder_pattern {
             )>,
         {
             validation::validate_data_consistency(points, values)?;
-            self.config.validate()?;
+            self.config_factory_pattern.validate()?;
 
             Ok(I::from((points.view(), values.view(), self.config)))
         }
@@ -208,12 +209,12 @@ pub mod error_handling {
 
     /// Create standard dimension mismatch error using structured error type
     pub fn dimension_mismatch(expected: usize, actual: usize, context: &str) -> InterpolateError {
-        InterpolateError::dimension_mismatch(_expected, actual, context)
+        InterpolateError::dimension_mismatch(expected, actual, context)
     }
 
     /// Create standard empty data error using structured error type
     pub fn empty_data(context: &str) -> InterpolateError {
-        InterpolateError::empty_data(_context)
+        InterpolateError::empty_data(context)
     }
 
     /// Create standard invalid parameter error using structured error type
@@ -228,12 +229,12 @@ pub mod error_handling {
 
     /// Create standard convergence failure error using structured error type
     pub fn convergence_failure(method: &str, iterations: usize) -> InterpolateError {
-        InterpolateError::convergence_failure(_method, iterations)
+        InterpolateError::convergence_failure(method, iterations)
     }
 
     /// Create standard numerical instability error
     pub fn numerical_instability(context: &str, details: &str) -> InterpolateError {
-        InterpolateError::numerical_instability(_context, details)
+        InterpolateError::numerical_instability(context, details)
     }
 
     /// Create standard insufficient points error

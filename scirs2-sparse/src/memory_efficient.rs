@@ -31,7 +31,7 @@ impl MemoryTracker {
         Self {
             current_usage: 0,
             peak_usage: 0,
-            _memorylimit: _memorylimit,
+            _memorylimit,
         }
     }
 
@@ -179,7 +179,7 @@ where
         let chunk_size = _memorylimit / (8 * std::mem::size_of::<T>()); // Conservative estimate
 
         Self {
-            _memorylimit: _memorylimit,
+            _memorylimit,
             chunk_size,
             temp_storage: VecDeque::new(),
         }
@@ -528,7 +528,7 @@ where
         Self {
             available_buffers: Vec::new(),
             allocated_buffers: Vec::new(),
-            _pool_sizelimit: _pool_sizelimit,
+            _pool_sizelimit,
         }
     }
 
@@ -590,8 +590,8 @@ impl ChunkedOperations {
         let element_size = std::mem::size_of::<T>();
 
         // Extract elements from both matrices once
-        let (a_rows_idx, a_cols_idx, a_values) = a.find();
-        let (b_rows_idx, b_cols_idx, b_values) = b.find();
+        let (a_rowsidx, a_cols_idx, a_values) = a.find();
+        let (b_rowsidx, b_cols_idx, b_values) = b.find();
 
         // Process matrices in row chunks
         for chunk_start in (0..a_rows).step_by(chunk_size) {
@@ -615,7 +615,7 @@ impl ChunkedOperations {
                 std::collections::HashMap::new();
 
             // Add elements from matrix A
-            for (k, (&row, &col)) in a_rows_idx.iter().zip(a_cols_idx.iter()).enumerate() {
+            for (k, (&row, &col)) in a_rowsidx.iter().zip(a_cols_idx.iter()).enumerate() {
                 if row >= chunk_start && row < chunk_end {
                     let local_row = row - chunk_start;
                     let key = (local_row, col);
@@ -628,7 +628,7 @@ impl ChunkedOperations {
             }
 
             // Add elements from matrix B
-            for (k, (&row, &col)) in b_rows_idx.iter().zip(b_cols_idx.iter()).enumerate() {
+            for (k, (&row, &col)) in b_rowsidx.iter().zip(b_cols_idx.iter()).enumerate() {
                 if row >= chunk_start && row < chunk_end {
                     let local_row = row - chunk_start;
                     let key = (local_row, col);
@@ -965,16 +965,16 @@ mod tests {
 
         // Create small test matrices
         // A = [[2, 0], [1, 3]]
-        let rows_a = vec![0, 1, 1];
+        let rowsa = vec![0, 1, 1];
         let cols_a = vec![0, 0, 1];
         let data_a = vec![2.0, 1.0, 3.0];
-        let matrix_a = CsrArray::from_triplets(&rows_a, &cols_a, &data_a, (2, 2), false).unwrap();
+        let matrix_a = CsrArray::from_triplets(&rowsa, &cols_a, &data_a, (2, 2), false).unwrap();
 
         // B = [[1, 0], [0, 2]]
-        let rows_b = vec![0, 1];
+        let rowsb = vec![0, 1];
         let cols_b = vec![0, 1];
         let data_b = vec![1.0, 2.0];
-        let matrix_b = CsrArray::from_triplets(&rows_b, &cols_b, &data_b, (2, 2), false).unwrap();
+        let matrix_b = CsrArray::from_triplets(&rowsb, &cols_b, &data_b, (2, 2), false).unwrap();
 
         let result = processor.out_of_core_matmul(&matrix_a, &matrix_b).unwrap();
 
@@ -1058,15 +1058,15 @@ mod tests {
     #[test]
     fn test_chunked_sparse_add() {
         // Create two test matrices
-        let rows_a = vec![0, 1, 2];
+        let rowsa = vec![0, 1, 2];
         let cols_a = vec![0, 1, 2];
         let data_a = vec![1.0, 2.0, 3.0];
-        let matrix_a = CsrArray::from_triplets(&rows_a, &cols_a, &data_a, (3, 3), false).unwrap();
+        let matrix_a = CsrArray::from_triplets(&rowsa, &cols_a, &data_a, (3, 3), false).unwrap();
 
-        let rows_b = vec![0, 1, 2];
+        let rowsb = vec![0, 1, 2];
         let cols_b = vec![0, 1, 2];
         let data_b = vec![4.0, 5.0, 6.0];
-        let matrix_b = CsrArray::from_triplets(&rows_b, &cols_b, &data_b, (3, 3), false).unwrap();
+        let matrix_b = CsrArray::from_triplets(&rowsb, &cols_b, &data_b, (3, 3), false).unwrap();
 
         let mut tracker = MemoryTracker::new(10000);
         let result =
@@ -1175,15 +1175,15 @@ mod tests {
     #[test]
     fn test_chunked_add_different_sparsity_patterns() {
         // Create matrices with different sparsity patterns
-        let rows_a = vec![0, 2];
+        let rowsa = vec![0, 2];
         let cols_a = vec![0, 2];
         let data_a = vec![1.0, 3.0];
-        let matrix_a = CsrArray::from_triplets(&rows_a, &cols_a, &data_a, (3, 3), false).unwrap();
+        let matrix_a = CsrArray::from_triplets(&rowsa, &cols_a, &data_a, (3, 3), false).unwrap();
 
-        let rows_b = vec![1, 2];
+        let rowsb = vec![1, 2];
         let cols_b = vec![1, 0];
         let data_b = vec![2.0, 1.0];
-        let matrix_b = CsrArray::from_triplets(&rows_b, &cols_b, &data_b, (3, 3), false).unwrap();
+        let matrix_b = CsrArray::from_triplets(&rowsb, &cols_b, &data_b, (3, 3), false).unwrap();
 
         let result = ChunkedOperations::chunked_sparse_add(&matrix_a, &matrix_b, 1, None).unwrap();
 

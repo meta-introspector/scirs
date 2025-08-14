@@ -29,13 +29,13 @@ pub struct MemoryOptimizationConfig {
     /// Enable adaptive memory allocation
     pub enable_adaptive_allocation: bool,
     /// Target cache line size for optimization
-    pub cache_line_size: usize,
+    pub cache_linesize: usize,
     /// Memory pool initial size
-    pub memory_pool_size: usize,
+    pub memory_poolsize: usize,
     /// Enable memory compression for intermediate results
     pub enable_compression: bool,
     /// Chunk size for streaming operations
-    pub streaming_chunk_size: usize,
+    pub streaming_chunksize: usize,
 }
 
 impl Default for MemoryOptimizationConfig {
@@ -46,10 +46,10 @@ impl Default for MemoryOptimizationConfig {
             enable_memory_mapping: true,
             enable_cache_optimization: true,
             enable_adaptive_allocation: true,
-            cache_line_size: 64,                // Typical cache line size
-            memory_pool_size: 64 * 1024 * 1024, // 64MB pool
-            enable_compression: false,          // Disabled by default due to CPU overhead
-            streaming_chunk_size: 10000,        // Default chunk size
+            cache_linesize: 64,                // Typical cache line size
+            memory_poolsize: 64 * 1024 * 1024, // 64MB pool
+            enable_compression: false,         // Disabled by default due to CPU overhead
+            streaming_chunksize: 10000,        // Default chunk size
         }
     }
 }
@@ -83,13 +83,13 @@ pub struct MemoryPoolStats {
     /// Pool identifier
     pub pool_id: String,
     /// Pool size in bytes
-    pub pool_size: usize,
+    pub poolsize: usize,
     /// Used bytes in pool
     pub used_bytes: usize,
     /// Number of allocations from this pool
     pub allocations: usize,
     /// Average allocation size
-    pub avg_allocation_size: f64,
+    pub avg_allocationsize: f64,
 }
 
 /// Streaming statistics calculator for large datasets
@@ -114,9 +114,9 @@ pub struct StreamingStatsCalculator<F> {
 /// Cache-aware matrix operations optimized for memory locality
 pub struct CacheOptimizedMatrix<F> {
     data: Array2<F>,
-    block_size: usize,
+    blocksize: usize,
     memory_layout: MatrixLayout,
-    cache_line_size: usize,
+    cache_linesize: usize,
 }
 
 /// Memory layout optimization strategies
@@ -143,8 +143,8 @@ pub struct AdaptiveStatsAllocator {
 struct MemoryPool {
     pool_id: String,
     base_ptr: *mut u8,
-    pool_size: usize,
-    used_size: usize,
+    poolsize: usize,
+    usedsize: usize,
     free_blocks: Vec<MemoryBlock>,
     used_blocks: Vec<MemoryBlock>,
     allocation_count: usize,
@@ -183,7 +183,7 @@ struct AllocationEvent {
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
 struct AllocationPattern {
-    typical_size: usize,
+    typicalsize: usize,
     typical_alignment: usize,
     expected_lifetime: std::time::Duration,
     frequency: f64,
@@ -201,7 +201,7 @@ pub struct MemoryMappedStatsProcessor {
 #[allow(dead_code)]
 struct MemoryMappedFile {
     file_path: String,
-    file_size: usize,
+    filesize: usize,
     mapped_ptr: *const u8,
     access_pattern: AccessPattern,
 }
@@ -226,7 +226,7 @@ struct MemoryRegion {
 /// Cache manager for optimizing memory access patterns
 #[allow(dead_code)]
 struct CacheManager {
-    cache_size: usize,
+    cachesize: usize,
     cache_entries: HashMap<u64, CacheEntry>,
     access_order: VecDeque<u64>,
     hit_count: usize,
@@ -289,7 +289,7 @@ where
             }
 
             // Manage computation buffer to prevent memory growth
-            if self.computation_buffer.len() >= self.config.streaming_chunk_size {
+            if self.computation_buffer.len() >= self.config.streaming_chunksize {
                 self.computation_buffer.pop_front();
             }
             self.computation_buffer.push_back(value);
@@ -379,14 +379,14 @@ where
 {
     /// Create a cache-optimized matrix with specified layout
     pub fn new(data: Array2<F>, layout: MatrixLayout, cache_linesize: usize) -> Self {
-        let optimal_block_size =
-            Self::calculate_optimal_block_size(data.nrows(), data.ncols(), cache_linesize);
+        let optimal_blocksize =
+            Self::calculate_optimal_blocksize(data.nrows(), data.ncols(), cache_linesize);
 
         let mut matrix = Self {
             data,
-            block_size: optimal_block_size,
+            blocksize: optimal_blocksize,
             memory_layout: layout,
-            cache_line_size: cache_linesize,
+            cache_linesize,
         };
 
         matrix.optimize_layout();
@@ -404,7 +404,7 @@ where
             ));
         }
 
-        let result_data = match self.memory_layout {
+        let resultdata = match self.memory_layout {
             MatrixLayout::BlockedRowMajor | MatrixLayout::BlockedColumnMajor => {
                 self.blocked_multiply(&other.data)?
             }
@@ -412,9 +412,9 @@ where
         };
 
         Ok(CacheOptimizedMatrix::new(
-            result_data,
+            resultdata,
             self.memory_layout,
-            self.cache_line_size,
+            self.cache_linesize,
         ))
     }
 
@@ -428,11 +428,11 @@ where
         // Compute correlation matrix using blocked algorithm
         let mut correlation = Array2::zeros((n_features, n_features));
 
-        let block_size = self.block_size;
-        for i_block in (0..n_features).step_by(block_size) {
-            for j_block in (0..n_features).step_by(block_size) {
-                let i_end = (i_block + block_size).min(n_features);
-                let j_end = (j_block + block_size).min(n_features);
+        let blocksize = self.blocksize;
+        for i_block in (0..n_features).step_by(blocksize) {
+            for j_block in (0..n_features).step_by(blocksize) {
+                let i_end = (i_block + blocksize).min(n_features);
+                let j_end = (j_block + blocksize).min(n_features);
 
                 for i in i_block..i_end {
                     for j in j_block..j_end {
@@ -446,17 +446,17 @@ where
         Ok(CacheOptimizedMatrix::new(
             correlation,
             MatrixLayout::BlockedRowMajor,
-            self.cache_line_size,
+            self.cache_linesize,
         ))
     }
 
     /// Calculate optimal block size for cache efficiency
-    fn calculate_optimal_block_size(_rows: usize, cols: usize, cache_linesize: usize) -> usize {
-        let element_size = mem::size_of::<F>();
-        let elements_per_cache_line = cache_linesize / element_size;
+    fn calculate_optimal_blocksize(_rows: usize, cols: usize, cache_linesize: usize) -> usize {
+        let elementsize = mem::size_of::<F>();
+        let elements_per_cache_line = cache_linesize / elementsize;
 
-        // Find block _size that maximizes cache utilization
-        let target_block_elements = (32 * 1024) / element_size; // Target 32KB blocks
+        // Find block size that maximizes cache utilization
+        let target_block_elements = (32 * 1024) / elementsize; // Target 32KB blocks
         let max_dimension = _rows.max(cols);
 
         ((target_block_elements as f64).sqrt() as usize)
@@ -507,15 +507,15 @@ where
         }
 
         let mut result = Array2::zeros((m, n));
-        let block_size = self.block_size;
+        let blocksize = self.blocksize;
 
         // Blocked multiplication to improve cache locality
-        for i_block in (0..m).step_by(block_size) {
-            for j_block in (0..n).step_by(block_size) {
-                for k_block in (0..k).step_by(block_size) {
-                    let i_end = (i_block + block_size).min(m);
-                    let j_end = (j_block + block_size).min(n);
-                    let k_end = (k_block + block_size).min(k);
+        for i_block in (0..m).step_by(blocksize) {
+            for j_block in (0..n).step_by(blocksize) {
+                for k_block in (0..k).step_by(blocksize) {
+                    let i_end = (i_block + blocksize).min(m);
+                    let j_end = (j_block + blocksize).min(n);
+                    let k_end = (k_block + blocksize).min(k);
 
                     for i in i_block..i_end {
                         for j in j_block..j_end {
@@ -546,9 +546,9 @@ where
         let mut means = Array1::zeros(n_features);
 
         // Process columns in blocks to improve cache locality
-        let block_size = self.block_size;
-        for col_block in (0..n_features).step_by(block_size) {
-            let col_end = (col_block + block_size).min(n_features);
+        let blocksize = self.blocksize;
+        for col_block in (0..n_features).step_by(blocksize) {
+            let col_end = (col_block + blocksize).min(n_features);
 
             for col in col_block..col_end {
                 let column_sum = self.data.column(col).sum();
@@ -610,9 +610,9 @@ impl AdaptiveStatsAllocator {
         };
 
         // Initialize default memory pools
-        let _ = allocator.create_memory_pool("float_arrays", config.memory_pool_size / 4);
-        let _ = allocator.create_memory_pool("matrix_operations", config.memory_pool_size / 2);
-        let _ = allocator.create_memory_pool("temporary_buffers", config.memory_pool_size / 4);
+        let _ = allocator.create_memory_pool("float_arrays", config.memory_poolsize / 4);
+        let _ = allocator.create_memory_pool("matrix_operations", config.memory_poolsize / 2);
+        let _ = allocator.create_memory_pool("temporary_buffers", config.memory_poolsize / 4);
 
         allocator
     }
@@ -664,9 +664,9 @@ impl AdaptiveStatsAllocator {
         if let Ok(analyzer) = self.allocation_patterns.read() {
             if let Some(pattern) = analyzer.get_pattern(operationtype) {
                 // Use pattern analysis to select optimal pool
-                if pattern.typical_size <= 1024 {
+                if pattern.typicalsize <= 1024 {
                     return "temporary_buffers".to_string();
-                } else if pattern.typical_size <= 64 * 1024 {
+                } else if pattern.typicalsize <= 64 * 1024 {
                     return "float_arrays".to_string();
                 } else {
                     return "matrix_operations".to_string();
@@ -719,8 +719,8 @@ impl AdaptiveStatsAllocator {
                     .filter(|(_, pattern)| pattern.confidence > 0.8)
                     .map(|(operation_type, pattern)| {
                         let pool_name = format!("specialized_{}", operation_type);
-                        let optimal_size = (pattern.typical_size * 100).max(64 * 1024);
-                        (pool_name, optimal_size)
+                        let optimalsize = (pattern.typicalsize * 100).max(64 * 1024);
+                        (pool_name, optimalsize)
                     })
                     .collect()
             } else {
@@ -729,8 +729,8 @@ impl AdaptiveStatsAllocator {
         };
 
         // Now create the pools
-        for (pool_name, optimal_size) in pools_to_create {
-            self.create_memory_pool(&pool_name, optimal_size)?;
+        for (pool_name, optimalsize) in pools_to_create {
+            self.create_memory_pool(&pool_name, optimalsize)?;
         }
         Ok(())
     }
@@ -752,8 +752,8 @@ impl MemoryPool {
         Ok(Self {
             pool_id: poolid.to_string(),
             base_ptr,
-            pool_size: size,
-            used_size: 0,
+            poolsize: size,
+            usedsize: 0,
             free_blocks: vec![MemoryBlock {
                 offset: 0,
                 size,
@@ -770,9 +770,9 @@ impl MemoryPool {
         // Find suitable free block
         for (index, block) in self.free_blocks.iter().enumerate() {
             let aligned_offset = self.align_offset(block.offset, alignment);
-            let total_size = aligned_offset - block.offset + size;
+            let totalsize = aligned_offset - block.offset + size;
 
-            if total_size <= block.size {
+            if totalsize <= block.size {
                 // Split the block if necessary
                 let used_block = MemoryBlock {
                     offset: aligned_offset,
@@ -781,11 +781,11 @@ impl MemoryPool {
                     allocation_time: std::time::Instant::now(),
                 };
 
-                let remaining_size = block.size - total_size;
-                if remaining_size > 0 {
+                let remainingsize = block.size - totalsize;
+                if remainingsize > 0 {
                     let remaining_block = MemoryBlock {
                         offset: aligned_offset + size,
-                        size: remaining_size,
+                        size: remainingsize,
                         alignment: 1,
                         allocation_time: std::time::Instant::now(),
                     };
@@ -795,7 +795,7 @@ impl MemoryPool {
                 }
 
                 self.used_blocks.push(used_block);
-                self.used_size += size;
+                self.usedsize += size;
                 self.allocation_count += 1;
 
                 let ptr = unsafe { self.base_ptr.add(aligned_offset) };
@@ -868,16 +868,16 @@ impl AllocationPatternAnalyzer {
         let sizes: Vec<usize> = events.iter().map(|e| e.size).collect();
         let alignments: Vec<usize> = events.iter().map(|e| e.alignment).collect();
 
-        let typical_size = self.calculate_median(&sizes);
+        let typicalsize = self.calculate_median(&sizes);
         let typical_alignment = self.calculate_mode(&alignments);
         let frequency = events.len() as f64 / self.allocation_history.len() as f64;
 
         // Simple confidence based on consistency
         let size_variance = self.calculate_variance(&sizes);
-        let confidence = 1.0 / (1.0 + size_variance / typical_size as f64);
+        let confidence = 1.0 / (1.0 + size_variance / typicalsize as f64);
 
         AllocationPattern {
-            typical_size,
+            typicalsize,
             typical_alignment,
             expected_lifetime: std::time::Duration::from_millis(100), // Placeholder
             frequency,
@@ -945,7 +945,7 @@ impl MemoryOptimizationSuite {
     /// Create a new memory optimization suite
     pub fn new(config: MemoryOptimizationConfig) -> Self {
         let allocator = AdaptiveStatsAllocator::new(config.clone());
-        let cache_manager = CacheManager::new(config.memory_pool_size / 8); // Use 1/8 of pool for cache
+        let cache_manager = CacheManager::new(config.memory_poolsize / 8); // Use 1/8 of pool for cache
 
         Self {
             config,
@@ -960,9 +960,9 @@ impl MemoryOptimizationSuite {
         F: Float + NumCast + Zero + One + Clone + Send + Sync + 'static + std::fmt::Display,
     {
         let (n_samples_, n_features) = data.dim();
-        let data_size = n_samples_ * n_features * mem::size_of::<F>();
+        let datasize = n_samples_ * n_features * mem::size_of::<F>();
 
-        if data_size > self.config.memory_limit {
+        if datasize > self.config.memory_limit {
             // Use streaming algorithm for large datasets
             self.streaming_correlation_matrix(data)
         } else {
@@ -970,7 +970,7 @@ impl MemoryOptimizationSuite {
             let cache_optimized = CacheOptimizedMatrix::new(
                 data.to_owned(),
                 MatrixLayout::BlockedRowMajor,
-                self.config.cache_line_size,
+                self.config.cache_linesize,
             );
 
             let result = cache_optimized.correlation_matrix()?;
@@ -984,15 +984,15 @@ impl MemoryOptimizationSuite {
         F: Float + NumCast + Zero + One + Clone + 'static + std::fmt::Display,
     {
         let (n_samples_, n_features) = data.dim();
-        let chunk_size = self.config.streaming_chunk_size;
+        let chunksize = self.config.streaming_chunksize;
 
         // Initialize streaming calculators for each feature pair
         let mut means = vec![F::zero(); n_features];
         let _variances = vec![F::zero(); n_features];
 
         // First pass: compute means
-        for chunk_start in (0..n_samples_).step_by(chunk_size) {
-            let chunk_end = (chunk_start + chunk_size).min(n_samples_);
+        for chunk_start in (0..n_samples_).step_by(chunksize) {
+            let chunk_end = (chunk_start + chunksize).min(n_samples_);
             let chunk = data.slice(ndarray::s![chunk_start..chunk_end, ..]);
 
             for (feature_idx, column) in chunk.axis_iter(Axis(1)).enumerate() {
@@ -1041,11 +1041,11 @@ impl MemoryOptimizationSuite {
         let mut sum_sq_i = F::zero();
         let mut sum_sq_j = F::zero();
 
-        let chunk_size = self.config.streaming_chunk_size;
+        let chunksize = self.config.streaming_chunksize;
         let n_samples_ = data.nrows();
 
-        for chunk_start in (0..n_samples_).step_by(chunk_size) {
-            let chunk_end = (chunk_start + chunk_size).min(n_samples_);
+        for chunk_start in (0..n_samples_).step_by(chunksize) {
+            let chunk_end = (chunk_start + chunksize).min(n_samples_);
 
             for row in chunk_start..chunk_end {
                 let val_i = data[[row, feature_i]] - mean_i;
@@ -1121,9 +1121,9 @@ impl MemoryOptimizationSuite {
 }
 
 impl CacheManager {
-    fn new(cache_size: usize) -> Self {
+    fn new(cachesize: usize) -> Self {
         Self {
-            cache_size,
+            cachesize,
             cache_entries: HashMap::new(),
             access_order: VecDeque::new(),
             hit_count: 0,
@@ -1142,7 +1142,7 @@ impl CacheManager {
         CacheStatistics {
             hit_ratio,
             total_entries: self.cache_entries.len(),
-            total_size: self.cache_entries.values().map(|e| e.size).sum(),
+            totalsize: self.cache_entries.values().map(|e| e.size).sum(),
             total_accesses,
         }
     }
@@ -1164,7 +1164,7 @@ pub struct MemoryOptimizationReport {
 pub struct CacheStatistics {
     pub hit_ratio: f64,
     pub total_entries: usize,
-    pub total_size: usize,
+    pub totalsize: usize,
     pub total_accesses: usize,
 }
 

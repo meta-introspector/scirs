@@ -125,5 +125,5 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 #[allow(dead_code)]
 fn words_per_ms(_wordcount: usize, iterations: usize, duration: Duration) -> f64 {
-    (_word_count * iterations) as f64 / duration.as_millis() as f64
+    (_wordcount * iterations) as f64 / duration.as_millis() as f64
 }

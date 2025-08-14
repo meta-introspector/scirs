@@ -191,13 +191,13 @@ fn compute_characteristic_determinant(
     let c2 = c.powi(2);
 
     // Matrix size for truncation (should be large enough for convergence)
-    let matrix_size = 20.max(2 * (n as usize) + 10);
+    let matrixsize = 20.max(2 * (n as usize) + 10);
 
     // Build the characteristic matrix A - λI where A contains the recurrence coefficients
-    let mut matrix = vec![vec![0.0; matrix_size]; matrix_size];
-    let mut deriv_matrix = vec![vec![0.0; matrix_size]; matrix_size];
+    let mut matrix = vec![vec![0.0; matrixsize]; matrixsize];
+    let mut deriv_matrix = vec![vec![0.0; matrixsize]; matrixsize];
 
-    for i in 0..matrix_size {
+    for i in 0..matrixsize {
         let r = (i as i32 + m - n) * 2 + n; // Index mapping
         let r_f64 = r as f64;
 
@@ -207,7 +207,7 @@ fn compute_characteristic_determinant(
         deriv_matrix[i][i] = -1.0;
 
         // Off-diagonal elements: β_r terms
-        if i + 2 < matrix_size {
+        if i + 2 < matrixsize {
             let beta_r = c2 / (4.0 * (2.0 * r_f64 + 1.0) * (2.0 * r_f64 + 3.0));
             matrix[i][i + 2] = beta_r;
             matrix[i + 2][i] = beta_r;
@@ -219,15 +219,15 @@ fn compute_characteristic_determinant(
     // the determinant behavior is dominated by the central elements
 
     // Focus on the central part of the matrix near the main diagonal
-    let center = matrix_size / 2;
-    let window = 6.min(matrix_size / 2);
+    let center = matrixsize / 2;
+    let window = 6.min(matrixsize / 2);
 
     let mut det_val = 1.0;
     let mut det_prime = 0.0;
 
     // Simplified determinant calculation using the central 6x6 submatrix
-    for i in (center - window / 2)..(center + window / 2).min(matrix_size) {
-        if i < matrix_size {
+    for i in (center - window / 2)..(center + window / 2).min(matrixsize) {
+        if i < matrixsize {
             det_val *= matrix[i][i];
             det_prime += deriv_matrix[i][i] / matrix[i][i];
         }
@@ -237,7 +237,7 @@ fn compute_characteristic_determinant(
 
     // Add contribution from off-diagonal terms (perturbative correction)
     let mut off_diag_correction = 0.0;
-    for i in 0..(matrix_size - 2) {
+    for i in 0..(matrixsize - 2) {
         if matrix[i][i].abs() > 1e-10 && matrix[i + 2][i + 2].abs() > 1e-10 {
             off_diag_correction += matrix[i][i + 2].powi(2) / (matrix[i][i] * matrix[i + 2][i + 2]);
         }
@@ -321,7 +321,7 @@ fn pro_cv_asymptotic(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::pro_cv;
+/// use scirs2_special::pro_cv;
 ///
 /// // Special case: c=0 reduces to Legendre functions
 /// let lambda_00 = pro_cv(0, 0, 0.0).unwrap();
@@ -464,7 +464,7 @@ pub fn pro_cv(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::pro_cv_seq;
+/// use scirs2_special::pro_cv_seq;
 ///
 /// // Test for c=0 case
 /// let values = pro_cv_seq(0, 3, 0.0).unwrap();
@@ -582,12 +582,12 @@ fn compute_oblate_characteristic_determinant(
     let m_f64 = m as f64;
     let c2 = c.powi(2);
 
-    let matrix_size = 20.max(2 * (n as usize) + 10);
+    let matrixsize = 20.max(2 * (n as usize) + 10);
 
-    let mut matrix = vec![vec![0.0; matrix_size]; matrix_size];
-    let mut deriv_matrix = vec![vec![0.0; matrix_size]; matrix_size];
+    let mut matrix = vec![vec![0.0; matrixsize]; matrixsize];
+    let mut deriv_matrix = vec![vec![0.0; matrixsize]; matrixsize];
 
-    for i in 0..matrix_size {
+    for i in 0..matrixsize {
         let r = (i as i32 + m - n) * 2 + n;
         let r_f64 = r as f64;
 
@@ -597,7 +597,7 @@ fn compute_oblate_characteristic_determinant(
         deriv_matrix[i][i] = -1.0;
 
         // Off-diagonal elements with sign change for oblate
-        if i + 2 < matrix_size {
+        if i + 2 < matrixsize {
             let beta_r = -c2 / (4.0 * (2.0 * r_f64 + 1.0) * (2.0 * r_f64 + 3.0)); // Negative for oblate
             matrix[i][i + 2] = beta_r;
             matrix[i + 2][i] = beta_r;
@@ -605,14 +605,14 @@ fn compute_oblate_characteristic_determinant(
     }
 
     // Similar determinant computation as prolate case
-    let center = matrix_size / 2;
-    let window = 6.min(matrix_size / 2);
+    let center = matrixsize / 2;
+    let window = 6.min(matrixsize / 2);
 
     let mut det_val = 1.0;
     let mut det_prime = 0.0;
 
-    for i in (center - window / 2)..(center + window / 2).min(matrix_size) {
-        if i < matrix_size {
+    for i in (center - window / 2)..(center + window / 2).min(matrixsize) {
+        if i < matrixsize {
             det_val *= matrix[i][i];
             det_prime += deriv_matrix[i][i] / matrix[i][i];
         }
@@ -622,7 +622,7 @@ fn compute_oblate_characteristic_determinant(
 
     // Off-diagonal correction for oblate case
     let mut off_diag_correction = 0.0;
-    for i in 0..(matrix_size - 2) {
+    for i in 0..(matrixsize - 2) {
         if matrix[i][i].abs() > 1e-10 && matrix[i + 2][i + 2].abs() > 1e-10 {
             off_diag_correction += matrix[i][i + 2].powi(2) / (matrix[i][i] * matrix[i + 2][i + 2]);
         }
@@ -671,8 +671,8 @@ fn obl_cv_asymptotic(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// # use scirs2__special::obl_cv;
-/// # use scirs2__special::error::SpecialError;
+/// # use scirs2_special::obl_cv;
+/// # use scirs2_special::error::SpecialError;
 /// # fn test() -> Result<(), SpecialError> {
 /// // Test the special case c=0
 /// let cv = obl_cv(0, 0, 0.0)?;
@@ -752,8 +752,8 @@ pub fn obl_cv(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// # use scirs2__special::obl_cv_seq;
-/// # use scirs2__special::error::SpecialError;
+/// # use scirs2_special::obl_cv_seq;
+/// # use scirs2_special::error::SpecialError;
 /// # fn test() -> Result<(), SpecialError> {
 /// // Test the special case c=0
 /// let values = obl_cv_seq(0, 3, 0.0)?;
@@ -814,7 +814,7 @@ pub fn obl_cv_seq(m: i32, n: i32, c: f64) -> SpecialResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::pro_ang1;
+/// use scirs2_special::pro_ang1;
 ///
 /// // Case c=0: reduces to associated Legendre functions
 /// let (s_val, s_prime) = pro_ang1(0, 1, 0.0, 0.5).unwrap();
@@ -855,10 +855,10 @@ pub fn pro_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
         // For the derivative, use finite difference approximation
         let h = 1e-8;
         let x_plus = if x + h <= 1.0 { x + h } else { x - h };
-        let x_minus = if x - h >= -1.0 { x - h } else { x + h };
+        let xminus = if x - h >= -1.0 { x - h } else { x + h };
         let p_mn_plus = crate::orthogonal::legendre_assoc(n as usize, m, x_plus);
-        let p_mn_minus = crate::orthogonal::legendre_assoc(n as usize, m, x_minus);
-        let p_mn_prime = (p_mn_plus - p_mn_minus) / (2.0 * h);
+        let p_mnminus = crate::orthogonal::legendre_assoc(n as usize, m, xminus);
+        let p_mn_prime = (p_mn_plus - p_mnminus) / (2.0 * h);
 
         return Ok((p_mn, p_mn_prime));
     }
@@ -938,7 +938,7 @@ pub fn pro_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::pro_rad1;
+/// use scirs2_special::pro_rad1;
 ///
 /// // Case c=0: reduces to associated Legendre functions
 /// let (r_val, r_prime) = pro_rad1(0, 1, 0.0, 1.5).unwrap();
@@ -1004,10 +1004,10 @@ pub fn pro_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
         // Derivative using finite difference
         let h = 1e-8;
         let x_plus = x + h;
-        let x_minus = x - h;
+        let xminus = x - h;
         let p_mn_plus = crate::orthogonal::legendre_assoc(n as usize, m, x_plus);
-        let p_mn_minus = crate::orthogonal::legendre_assoc(n as usize, m, x_minus);
-        let p_mn_prime = (p_mn_plus - p_mn_minus) / (2.0 * h);
+        let p_mnminus = crate::orthogonal::legendre_assoc(n as usize, m, xminus);
+        let p_mn_prime = (p_mn_plus - p_mnminus) / (2.0 * h);
 
         return Ok((p_mn, p_mn_prime));
     }
@@ -1027,17 +1027,17 @@ pub fn pro_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
         // Derivative correction
         let h = 1e-8;
         let x_plus = x + h;
-        let x_minus = x - h;
+        let xminus = x - h;
 
         let p_plus = crate::orthogonal::legendre_assoc(n as usize, m, x_plus);
-        let p_minus = crate::orthogonal::legendre_assoc(n as usize, m, x_minus);
+        let pminus = crate::orthogonal::legendre_assoc(n as usize, m, xminus);
         let xi_plus = (x_plus.powi(2) - 1.0).sqrt();
-        let xi_minus = (x_minus.powi(2) - 1.0).sqrt();
+        let ximinus = (xminus.powi(2) - 1.0).sqrt();
         let correction_plus = c.powi(2) * xi_plus * p_plus / (4.0 * lambda.abs().sqrt());
-        let correction_minus = c.powi(2) * xi_minus * p_minus / (4.0 * lambda.abs().sqrt());
+        let correctionminus = c.powi(2) * ximinus * pminus / (4.0 * lambda.abs().sqrt());
 
         let perturbed_derivative =
-            ((p_plus + correction_plus) - (p_minus + correction_minus)) / (2.0 * h);
+            ((p_plus + correction_plus) - (pminus + correctionminus)) / (2.0 * h);
 
         return Ok((perturbed_value, perturbed_derivative));
     }
@@ -1111,7 +1111,7 @@ pub fn pro_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::pro_rad2;
+/// use scirs2_special::pro_rad2;
 ///
 /// // Test basic functionality - pro_rad2 is the second kind radial function
 /// let (q_val, q_prime) = pro_rad2(0, 0, 0.5, 2.0).unwrap();
@@ -1168,19 +1168,19 @@ pub fn pro_rad2(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
         // Derivative correction
         let h = 1e-8;
         let x_plus = x + h;
-        let x_minus = x - h;
+        let xminus = x - h;
 
         let p_plus = crate::orthogonal::legendre_assoc(n as usize, m, x_plus);
-        let p_minus = crate::orthogonal::legendre_assoc(n as usize, m, x_minus);
+        let pminus = crate::orthogonal::legendre_assoc(n as usize, m, xminus);
         let q_plus = p_plus * (x_plus + 1.0).ln() / (x_plus - 1.0).ln();
-        let q_minus = p_minus * (x_minus + 1.0).ln() / (x_minus - 1.0).ln();
+        let qminus = pminus * (xminus + 1.0).ln() / (xminus - 1.0).ln();
         let xi_plus = (x_plus.powi(2) - 1.0).sqrt();
-        let xi_minus = (x_minus.powi(2) - 1.0).sqrt();
+        let ximinus = (xminus.powi(2) - 1.0).sqrt();
         let correction_plus = c.powi(2) * xi_plus * q_plus / (4.0 * lambda.abs().sqrt());
-        let correction_minus = c.powi(2) * xi_minus * q_minus / (4.0 * lambda.abs().sqrt());
+        let correctionminus = c.powi(2) * ximinus * qminus / (4.0 * lambda.abs().sqrt());
 
         let perturbed_derivative =
-            ((q_plus + correction_plus) - (q_minus + correction_minus)) / (2.0 * h);
+            ((q_plus + correction_plus) - (qminus + correctionminus)) / (2.0 * h);
 
         return Ok((perturbed_value, perturbed_derivative));
     }
@@ -1254,7 +1254,7 @@ pub fn pro_rad2(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::obl_ang1;
+/// use scirs2_special::obl_ang1;
 ///
 /// // Case c=0: oblate functions reduce to prolate (Legendre) functions
 /// let (t_val, t_prime) = obl_ang1(0, 1, 0.0, 0.5).unwrap();
@@ -1295,10 +1295,10 @@ pub fn obl_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
         // For the derivative, use finite difference approximation
         let h = 1e-8;
         let x_plus = if x + h <= 1.0 { x + h } else { x - h };
-        let x_minus = if x - h >= -1.0 { x - h } else { x + h };
+        let xminus = if x - h >= -1.0 { x - h } else { x + h };
         let p_mn_plus = crate::orthogonal::legendre_assoc(n as usize, m, x_plus);
-        let p_mn_minus = crate::orthogonal::legendre_assoc(n as usize, m, x_minus);
-        let p_mn_prime = (p_mn_plus - p_mn_minus) / (2.0 * h);
+        let p_mnminus = crate::orthogonal::legendre_assoc(n as usize, m, xminus);
+        let p_mn_prime = (p_mn_plus - p_mnminus) / (2.0 * h);
 
         return Ok((p_mn, p_mn_prime));
     }
@@ -1315,16 +1315,15 @@ pub fn obl_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
         // Derivative correction (finite difference)
         let h = 1e-8;
         let x_plus = if x + h <= 1.0 { x + h } else { x - h };
-        let x_minus = if x - h >= -1.0 { x - h } else { x + h };
+        let xminus = if x - h >= -1.0 { x - h } else { x + h };
 
         let p_plus = crate::orthogonal::legendre_assoc(n as usize, m, x_plus);
-        let p_minus = crate::orthogonal::legendre_assoc(n as usize, m, x_minus);
+        let pminus = crate::orthogonal::legendre_assoc(n as usize, m, xminus);
         let correction_plus = -c.powi(2) * x_plus * p_plus / (4.0 * (n as f64 * (n as f64 + 1.0)));
-        let correction_minus =
-            -c.powi(2) * x_minus * p_minus / (4.0 * (n as f64 * (n as f64 + 1.0)));
+        let correctionminus = -c.powi(2) * xminus * pminus / (4.0 * (n as f64 * (n as f64 + 1.0)));
 
         let perturbed_derivative =
-            ((p_plus + correction_plus) - (p_minus + correction_minus)) / (2.0 * h);
+            ((p_plus + correction_plus) - (pminus + correctionminus)) / (2.0 * h);
 
         return Ok((perturbed_value, perturbed_derivative));
     }
@@ -1339,10 +1338,10 @@ pub fn obl_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // Rough derivative approximation
     let h = 1e-8;
     let x_plus = if x + h <= 1.0 { x + h } else { x - h };
-    let x_minus = if x - h >= -1.0 { x - h } else { x + h };
+    let xminus = if x - h >= -1.0 { x - h } else { x + h };
     let p_plus = crate::orthogonal::legendre_assoc(n as usize, m, x_plus) * scaling_factor;
-    let p_minus = crate::orthogonal::legendre_assoc(n as usize, m, x_minus) * scaling_factor;
-    let p_mn_prime = (p_plus - p_minus) / (2.0 * h);
+    let pminus = crate::orthogonal::legendre_assoc(n as usize, m, xminus) * scaling_factor;
+    let p_mn_prime = (p_plus - pminus) / (2.0 * h);
 
     Ok((p_mn, p_mn_prime))
 }
@@ -1363,7 +1362,7 @@ pub fn obl_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::obl_rad1;
+/// use scirs2_special::obl_rad1;
 ///
 /// // Basic test for oblate radial function of the first kind
 /// let (r_val, r_prime) = obl_rad1(0, 0, 0.5, 1.5).unwrap();
@@ -1411,29 +1410,25 @@ pub fn obl_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
         // Derivative using finite difference
         let h = 1e-8;
         let x_plus = x + h;
-        let x_minus = if x - h >= 0.0 { x - h } else { x + h };
+        let xminus = if x - h >= 0.0 { x - h } else { x + h };
 
         let legendre_plus = if x_plus > 1.0 { 1.0 / x_plus } else { x_plus };
-        let legendre_minus = if x_minus > 1.0 {
-            1.0 / x_minus
-        } else {
-            x_minus
-        };
+        let legendreminus = if xminus > 1.0 { 1.0 / xminus } else { xminus };
         let p_plus = crate::orthogonal::legendre_assoc(n as usize, m, legendre_plus);
-        let p_minus = crate::orthogonal::legendre_assoc(n as usize, m, legendre_minus);
+        let pminus = crate::orthogonal::legendre_assoc(n as usize, m, legendreminus);
 
         let trans_plus = if x_plus > 1.0 {
             x_plus.powi(-{ n })
         } else {
             1.0
         };
-        let trans_minus = if x_minus > 1.0 {
-            x_minus.powi(-{ n })
+        let transminus = if xminus > 1.0 {
+            xminus.powi(-{ n })
         } else {
             1.0
         };
 
-        let radial_derivative = ((p_plus * trans_plus) - (p_minus * trans_minus)) / (2.0 * h);
+        let radial_derivative = ((p_plus * trans_plus) - (pminus * transminus)) / (2.0 * h);
 
         return Ok((radial_value, radial_derivative));
     }
@@ -1460,45 +1455,41 @@ pub fn obl_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
         // Derivative correction
         let h = 1e-8;
         let x_plus = x + h;
-        let x_minus = if x - h >= 0.0 { x - h } else { x + h };
+        let xminus = if x - h >= 0.0 { x - h } else { x + h };
 
         let legendre_plus = if x_plus > 1.0 { 1.0 / x_plus } else { x_plus };
-        let legendre_minus = if x_minus > 1.0 {
-            1.0 / x_minus
-        } else {
-            x_minus
-        };
+        let legendreminus = if xminus > 1.0 { 1.0 / xminus } else { xminus };
         let p_plus = crate::orthogonal::legendre_assoc(n as usize, m, legendre_plus);
-        let p_minus = crate::orthogonal::legendre_assoc(n as usize, m, legendre_minus);
+        let pminus = crate::orthogonal::legendre_assoc(n as usize, m, legendreminus);
 
         let trans_plus = if x_plus > 1.0 {
             x_plus.powi(-{ n })
         } else {
             1.0
         };
-        let trans_minus = if x_minus > 1.0 {
-            x_minus.powi(-{ n })
+        let transminus = if xminus > 1.0 {
+            xminus.powi(-{ n })
         } else {
             1.0
         };
         let base_plus = p_plus * trans_plus;
-        let base_minus = p_minus * trans_minus;
+        let baseminus = pminus * transminus;
 
         let eta_plus = if x_plus >= 1.0 {
             (x_plus.powi(2) - 1.0).sqrt()
         } else {
             (1.0 - x_plus.powi(2)).sqrt()
         };
-        let eta_minus = if x_minus >= 1.0 {
-            (x_minus.powi(2) - 1.0).sqrt()
+        let etaminus = if xminus >= 1.0 {
+            (xminus.powi(2) - 1.0).sqrt()
         } else {
-            (1.0 - x_minus.powi(2)).sqrt()
+            (1.0 - xminus.powi(2)).sqrt()
         };
         let correction_plus = -c.powi(2) * eta_plus * base_plus / (4.0 * lambda.abs().sqrt());
-        let correction_minus = -c.powi(2) * eta_minus * base_minus / (4.0 * lambda.abs().sqrt());
+        let correctionminus = -c.powi(2) * etaminus * baseminus / (4.0 * lambda.abs().sqrt());
 
         let perturbed_derivative =
-            ((base_plus + correction_plus) - (base_minus + correction_minus)) / (2.0 * h);
+            ((base_plus + correction_plus) - (baseminus + correctionminus)) / (2.0 * h);
 
         return Ok((perturbed_value, perturbed_derivative));
     }
@@ -1535,7 +1526,7 @@ pub fn obl_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
         // Derivative approximation
         let h = 1e-8;
         let x_plus = x + h;
-        let _x_minus = if x - h >= 0.0 { x - h } else { x + h };
+        let _xminus = if x - h >= 0.0 { x - h } else { x + h };
 
         let eta_plus = if x_plus >= 1.0 {
             (x_plus.powi(2) - 1.0).sqrt()
@@ -1607,7 +1598,7 @@ pub fn obl_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::obl_rad2;
+/// use scirs2_special::obl_rad2;
 ///
 /// // Basic test for oblate radial function of the second kind
 /// let (q_val, q_prime) = obl_rad2(0, 0, 0.5, 1.5).unwrap();
@@ -1657,32 +1648,28 @@ pub fn obl_rad2(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
         // Derivative using finite difference
         let h = 1e-8;
         let x_plus = x + h;
-        let x_minus = if x - h >= 0.0 { x - h } else { x + h };
+        let xminus = if x - h >= 0.0 { x - h } else { x + h };
 
         let legendre_plus = if x_plus > 1.0 { 1.0 / x_plus } else { x_plus };
-        let legendre_minus = if x_minus > 1.0 {
-            1.0 / x_minus
-        } else {
-            x_minus
-        };
+        let legendreminus = if xminus > 1.0 { 1.0 / xminus } else { xminus };
         let p_plus = crate::orthogonal::legendre_assoc(n as usize, m, legendre_plus);
-        let p_minus = crate::orthogonal::legendre_assoc(n as usize, m, legendre_minus);
+        let pminus = crate::orthogonal::legendre_assoc(n as usize, m, legendreminus);
 
         let q_plus = p_plus * (legendre_plus + 1.0).ln() / (legendre_plus - 1.0).ln().abs();
-        let q_minus = p_minus * (legendre_minus + 1.0).ln() / (legendre_minus - 1.0).ln().abs();
+        let qminus = pminus * (legendreminus + 1.0).ln() / (legendreminus - 1.0).ln().abs();
 
         let trans_plus = if x_plus > 1.0 {
             x_plus.powi(-(n + 1))
         } else {
             1.0
         };
-        let trans_minus = if x_minus > 1.0 {
-            x_minus.powi(-(n + 1))
+        let transminus = if xminus > 1.0 {
+            xminus.powi(-(n + 1))
         } else {
             1.0
         };
 
-        let radial_derivative = ((q_plus * trans_plus) - (q_minus * trans_minus)) / (2.0 * h);
+        let radial_derivative = ((q_plus * trans_plus) - (qminus * transminus)) / (2.0 * h);
 
         return Ok((radial_value, radial_derivative));
     }
@@ -1710,48 +1697,44 @@ pub fn obl_rad2(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
         // Derivative correction
         let h = 1e-8;
         let x_plus = x + h;
-        let x_minus = if x - h >= 0.0 { x - h } else { x + h };
+        let xminus = if x - h >= 0.0 { x - h } else { x + h };
 
         let legendre_plus = if x_plus > 1.0 { 1.0 / x_plus } else { x_plus };
-        let legendre_minus = if x_minus > 1.0 {
-            1.0 / x_minus
-        } else {
-            x_minus
-        };
+        let legendreminus = if xminus > 1.0 { 1.0 / xminus } else { xminus };
         let p_plus = crate::orthogonal::legendre_assoc(n as usize, m, legendre_plus);
-        let p_minus = crate::orthogonal::legendre_assoc(n as usize, m, legendre_minus);
+        let pminus = crate::orthogonal::legendre_assoc(n as usize, m, legendreminus);
 
         let q_plus = p_plus * (legendre_plus + 1.0).ln() / (legendre_plus - 1.0).ln().abs();
-        let q_minus = p_minus * (legendre_minus + 1.0).ln() / (legendre_minus - 1.0).ln().abs();
+        let qminus = pminus * (legendreminus + 1.0).ln() / (legendreminus - 1.0).ln().abs();
 
         let trans_plus = if x_plus > 1.0 {
             x_plus.powi(-(n + 1))
         } else {
             1.0
         };
-        let trans_minus = if x_minus > 1.0 {
-            x_minus.powi(-(n + 1))
+        let transminus = if xminus > 1.0 {
+            xminus.powi(-(n + 1))
         } else {
             1.0
         };
         let base_plus = q_plus * trans_plus;
-        let base_minus = q_minus * trans_minus;
+        let baseminus = qminus * transminus;
 
         let eta_plus = if x_plus >= 1.0 {
             (x_plus.powi(2) - 1.0).sqrt()
         } else {
             (1.0 - x_plus.powi(2)).sqrt()
         };
-        let eta_minus = if x_minus >= 1.0 {
-            (x_minus.powi(2) - 1.0).sqrt()
+        let etaminus = if xminus >= 1.0 {
+            (xminus.powi(2) - 1.0).sqrt()
         } else {
-            (1.0 - x_minus.powi(2)).sqrt()
+            (1.0 - xminus.powi(2)).sqrt()
         };
         let correction_plus = -c.powi(2) * eta_plus * base_plus / (4.0 * lambda.abs().sqrt());
-        let correction_minus = -c.powi(2) * eta_minus * base_minus / (4.0 * lambda.abs().sqrt());
+        let correctionminus = -c.powi(2) * etaminus * baseminus / (4.0 * lambda.abs().sqrt());
 
         let perturbed_derivative =
-            ((base_plus + correction_plus) - (base_minus + correction_minus)) / (2.0 * h);
+            ((base_plus + correction_plus) - (baseminus + correctionminus)) / (2.0 * h);
 
         return Ok((perturbed_value, perturbed_derivative));
     }
@@ -1788,7 +1771,7 @@ pub fn obl_rad2(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
         // Derivative approximation
         let h = 1e-8;
         let x_plus = x + h;
-        let _x_minus = if x - h >= 0.0 { x - h } else { x + h };
+        let _xminus = if x - h >= 0.0 { x - h } else { x + h };
 
         let eta_plus = if x_plus >= 1.0 {
             (x_plus.powi(2) - 1.0).sqrt()
@@ -1884,12 +1867,12 @@ fn compute_prolate_angular_perturbation(
     if m > 0 && n > m {
         // Add coupling to neighboring Legendre functions
         if n >= 2 {
-            let p_n_minus_2 = crate::orthogonal::legendre_assoc((n - 2) as usize, m, x);
-            let p_n_minus_2_prime = compute_legendre_assoc_derivative((n - 2) as usize, m, x);
+            let p_nminus_2 = crate::orthogonal::legendre_assoc((n - 2) as usize, m, x);
+            let p_nminus_2_prime = compute_legendre_assoc_derivative((n - 2) as usize, m, x);
             let coupling_coeff =
                 m_f64 * (m_f64 + 1.0) / (4.0 * (2.0 * n_f64 - 1.0) * (2.0 * n_f64 + 1.0));
-            cross_correction += c2 * coupling_coeff * p_n_minus_2;
-            cross_correction_prime += c2 * coupling_coeff * p_n_minus_2_prime;
+            cross_correction += c2 * coupling_coeff * p_nminus_2;
+            cross_correction_prime += c2 * coupling_coeff * p_nminus_2_prime;
         }
 
         // Coupling to P_{n+2}^m
@@ -1948,12 +1931,12 @@ fn compute_prolate_angular_series(m: i32, n: i32, c: f64, x: f64) -> SpecialResu
             let k_f64 = k as f64;
             let m_f64 = m as f64;
             let alpha_k = (k_f64 + m_f64) * (k_f64 + m_f64 + 1.0);
-            let beta_k_minus_2 =
+            let beta_kminus_2 =
                 c.powi(2) / (4.0 * (2.0 * (k_f64 - 2.0) + 1.0) * (2.0 * (k_f64 - 2.0) + 3.0));
 
             if alpha_k - improved_lambda != 0.0 {
                 coefficients[k] =
-                    -beta_k_minus_2 * coefficients[k - 2] / (alpha_k - improved_lambda);
+                    -beta_kminus_2 * coefficients[k - 2] / (alpha_k - improved_lambda);
             }
         }
     }
@@ -2018,12 +2001,12 @@ fn compute_legendre_assoc_derivative(n: usize, m: i32, x: f64) -> f64 {
         return 0.0;
     }
 
-    let p_n_minus_1 = crate::orthogonal::legendre_assoc(n - 1, m, x);
+    let p_nminus_1 = crate::orthogonal::legendre_assoc(n - 1, m, x);
     let n_f64 = n as f64;
     let m_f64 = m as f64;
 
     // Standard derivative formula
-    let numerator = n_f64 * x * p_n - (n_f64 + m_f64) * p_n_minus_1;
+    let numerator = n_f64 * x * p_n - (n_f64 + m_f64) * p_nminus_1;
     let denominator = x * x - 1.0;
 
     if denominator.abs() < 1e-10 {
@@ -2135,22 +2118,22 @@ fn legendre_second_kind_general(n: i32, m: i32, x: f64) -> SpecialResult<(f64, f
 
     // Start with Q_n^0
     let (mut q_nm, mut q_nm_prime) = legendre_second_kind_m0(n, x)?;
-    let sqrt_x2_minus_1 = (x * x - 1.0).sqrt();
+    let sqrt_x2minus_1 = (x * x - 1.0).sqrt();
 
     // Apply the recurrence relation to build up to Q_n^m
     for k in 1..=m_abs {
         let k_f = k as f64;
-        let x2_minus_1 = x * x - 1.0;
+        let x2minus_1 = x * x - 1.0;
 
         // Q_n^k(x) = sqrt(x^2-1) * [k*x/(x^2-1) * Q_n^{k-1}(x) + Q_n^{k-1}'(x)]
-        let new_q_nm = sqrt_x2_minus_1 * (k_f * x / x2_minus_1 * q_nm + q_nm_prime);
+        let new_q_nm = sqrt_x2minus_1 * (k_f * x / x2minus_1 * q_nm + q_nm_prime);
 
         // Derivative: d/dx Q_n^k(x)
-        let new_q_nm_prime = x / sqrt_x2_minus_1 * (k_f * x / x2_minus_1 * q_nm + q_nm_prime)
-            + sqrt_x2_minus_1
+        let new_q_nm_prime = x / sqrt_x2minus_1 * (k_f * x / x2minus_1 * q_nm + q_nm_prime)
+            + sqrt_x2minus_1
                 * (
-                    k_f / x2_minus_1 * q_nm + k_f * x / x2_minus_1 * q_nm_prime
-                        - 2.0 * k_f * x * x / (x2_minus_1 * x2_minus_1) * q_nm
+                    k_f / x2minus_1 * q_nm + k_f * x / x2minus_1 * q_nm_prime
+                        - 2.0 * k_f * x * x / (x2minus_1 * x2minus_1) * q_nm
                         + q_nm_prime
                     // derivative of Q_n^{k-1}'
                 );
@@ -2185,8 +2168,8 @@ fn solve_spheroidal_eigenvalue_improved(m: i32, n: i32, c: f64) -> SpecialResult
     }
 
     // For larger c, use matrix methods to solve the infinite system
-    let matrix_size = (4 * n.abs() + 20).min(100) as usize;
-    solve_eigenvalue_matrix_method(m, n, c, matrix_size)
+    let matrixsize = (4 * n.abs() + 20).min(100) as usize;
+    solve_eigenvalue_matrix_method(m, n, c, matrixsize)
 }
 
 /// Solve eigenvalue using perturbation theory for small c
@@ -2215,12 +2198,7 @@ fn solve_eigenvalue_perturbation(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 
 /// Solve eigenvalue using matrix methods for the three-term recurrence
 #[allow(dead_code)]
-fn solve_eigenvalue_matrix_method(
-    m: i32,
-    n: i32,
-    c: f64,
-    matrix_size: usize,
-) -> SpecialResult<f64> {
+fn solve_eigenvalue_matrix_method(m: i32, n: i32, c: f64, matrixsize: usize) -> SpecialResult<f64> {
     // Set up the tridiagonal matrix for the recurrence relation
     // (α_r - λ)a_r + β_{r+1}a_{r+2} + β_{r-1}a_{r-2} = 0
 
@@ -2228,11 +2206,11 @@ fn solve_eigenvalue_matrix_method(
     let c2 = c * c;
 
     // Create the coefficient matrix
-    let mut main_diag = vec![0.0; matrix_size];
-    let mut upper_diag = vec![0.0; matrix_size - 1];
-    let mut lower_diag = vec![0.0; matrix_size - 1];
+    let mut main_diag = vec![0.0; matrixsize];
+    let mut upper_diag = vec![0.0; matrixsize - 1];
+    let mut lower_diag = vec![0.0; matrixsize - 1];
 
-    for i in 0..matrix_size {
+    for i in 0..matrixsize {
         let r = (i as i32 + m - n).abs();
         let r_f = r as f64;
 
@@ -2240,7 +2218,7 @@ fn solve_eigenvalue_matrix_method(
         main_diag[i] = (r_f + m_f) * (r_f + m_f + 1.0);
 
         // β_r coefficients
-        if i < matrix_size - 1 {
+        if i < matrixsize - 1 {
             let beta = c2 / (4.0 * (2.0 * r_f + 1.0) * (2.0 * r_f + 3.0));
             upper_diag[i] = beta;
         }
@@ -2254,14 +2232,14 @@ fn solve_eigenvalue_matrix_method(
 
     // For simplicity, use a basic eigenvalue approximation
     // In a full implementation, this would use proper matrix eigenvalue solvers
-    let central_index = matrix_size / 2;
+    let central_index = matrixsize / 2;
     let approximate_lambda = main_diag[central_index]
         + if central_index > 0 {
             lower_diag[central_index - 1]
         } else {
             0.0
         }
-        + if central_index < matrix_size - 1 {
+        + if central_index < matrixsize - 1 {
             upper_diag[central_index]
         } else {
             0.0

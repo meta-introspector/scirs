@@ -150,7 +150,7 @@ where
                 None
             };
 
-            return Err(LinalgError::singular_matrix_with_suggestions(
+            return Err(LinalgError::singularmatrix_with_suggestions(
                 "matrix inverse",
                 a.dim(),
                 cond_estimate,
@@ -179,7 +179,7 @@ where
     match solve_multiple(a, &identity.view(), workers) {
         Err(LinalgError::SingularMatrixError(_)) => {
             // Use enhanced error with regularization suggestions
-            Err(LinalgError::singular_matrix_with_suggestions(
+            Err(LinalgError::singularmatrix_with_suggestions(
                 "matrix inverse via solve",
                 a.dim(),
                 None, // Could compute condition number here for better diagnostics
@@ -437,7 +437,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_power() {
+    fn testmatrix_power() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
 
         // Power 0 should give identity matrix

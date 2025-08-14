@@ -185,7 +185,7 @@ impl Trajectory {
     /// Create a new trajectory
     fn new(points: Vec<TrajectoryPoint>, duration: f64, method: OptimizationMethod) -> Self {
         Self {
-            points: points,
+            points,
             duration,
             method,
         }
@@ -274,9 +274,7 @@ impl Trajectory {
 
     /// Check if the trajectory satisfies velocity constraints
     pub fn satisfies_velocity_constraints(&self, _maxvelocity: f64) -> bool {
-        self.points
-            .iter()
-            .all(|p| p.speed() <= _maxvelocity + 1e-6)
+        self.points.iter().all(|p| p.speed() <= _maxvelocity + 1e-6)
     }
 
     /// Check if the trajectory satisfies acceleration constraints
@@ -304,9 +302,7 @@ impl TrajectoryOptimizer {
     ///
     /// * A new TrajectoryOptimizer instance
     pub fn new(constraints: TrajectoryConstraints) -> Self {
-        Self {
-            constraints: constraints,
-        }
+        Self { constraints }
     }
 
     /// Optimize a quintic polynomial trajectory between two points
@@ -479,10 +475,8 @@ impl TrajectoryOptimizer {
             + 5.0 * coeffs[5] * t4;
 
         // Acceleration: p''(t) = 2*c2 + 6*c3*t + 12*c4*t^2 + 20*c5*t^3
-        let acceleration = 2.0 * coeffs[2]
-            + 6.0 * coeffs[3] * t
-            + 12.0 * coeffs[4] * t2
-            + 20.0 * coeffs[5] * t3;
+        let acceleration =
+            2.0 * coeffs[2] + 6.0 * coeffs[3] * t + 12.0 * coeffs[4] * t2 + 20.0 * coeffs[5] * t3;
 
         (position, velocity, acceleration)
     }

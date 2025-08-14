@@ -315,7 +315,7 @@ where
     if constraint_matrix.shape()[0] == 0 {
         #[cfg(feature = "linalg")]
         {
-            use scirs2__linalg::solve;
+            use scirs2_linalg::solve;
             let ata_f64 = ata.mapv(|x| x.to_f64().unwrap());
             let aty_f64 = aty.mapv(|x| x.to_f64().unwrap());
             match solve(&ata_f64.view(), &aty_f64.view(), None) {
@@ -337,7 +337,7 @@ where
     // Use a similar approach as the non-penalized case
     #[cfg(feature = "linalg")]
     let mut c = {
-        use scirs2__linalg::solve;
+        use scirs2_linalg::solve;
         let ata_f64 = ata.mapv(|x| x.to_f64().unwrap());
         let aty_f64 = aty.mapv(|x| x.to_f64().unwrap());
         match solve(&ata_f64.view(), &aty_f64.view(), None) {

@@ -81,7 +81,7 @@ pub struct RansacResult {
 impl PerspectiveTransform {
     /// Create a new perspective transformation matrix from raw data
     pub fn new(data: [f64; 9]) -> Self {
-        let matrix = Array2::fromshape_vec((3, 3), data.to_vec()).unwrap();
+        let matrix = Array2::from_shape_vec((3, 3), data.to_vec()).unwrap();
         Self { matrix }
     }
 
@@ -141,7 +141,7 @@ impl PerspectiveTransform {
         let h = Self::compute_homography_from_system(&a)?;
 
         // Create homography matrix
-        let h_matrix = Array2::fromshape_vec((3, 3), h.to_vec())?;
+        let h_matrix = Array2::from_shape_vec((3, 3), h.to_vec())?;
 
         // Normalize so that h[2,2] = 1
         let norm_factor = h_matrix[[2, 2]];
@@ -2035,11 +2035,7 @@ fn calculate_curvature_at_point(contour: &[(f64, f64)], point: (f64, f64)) -> f6
     let prev_idx = (closest_idx + contour.len() - window) % contour.len();
     let next_idx = (closest_idx + window) % contour.len();
 
-    calculate_curvature(
-        contour[prev_idx],
-        contour[closest_idx],
-        contour[next_idx],
-    )
+    calculate_curvature(contour[prev_idx], contour[closest_idx], contour[next_idx])
 }
 
 /// Calculate perimeter of a polygon
@@ -2143,11 +2139,11 @@ pub fn correct_perspective(
     // Intentionally truncating float to integer for pixel dimensions
     let max_height = height_left.max(height_right).round() as u32;
 
-    // Adjust for aspect _ratio if provided
-    let (dst_width, dst_height) = if let Some(_ratio) = aspect_ratio {
+    // Adjust for aspect ratio if provided
+    let (dst_width, dst_height) = if let Some(ratio) = aspect_ratio {
         let current_ratio = f64::from(max_width) / f64::from(max_height);
 
-        if current_ratio > _ratio {
+        if current_ratio > ratio {
             // Width is too large relative to height
             // Intentionally truncating float to integer for pixel dimensions
             let new_width = (f64::from(max_height) * ratio).round() as u32;

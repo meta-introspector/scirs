@@ -335,7 +335,7 @@ impl Track {
         }
 
         Self {
-            id: id,
+            id,
             kalman_filter,
             features,
             max_features: 10,
@@ -469,7 +469,7 @@ impl Detection {
     /// Create a new detection
     pub fn new(bbox: BoundingBox) -> Self {
         Self {
-            bbox: bbox,
+            bbox,
             feature: None,
             timestamp: Instant::now(),
         }
@@ -478,7 +478,7 @@ impl Detection {
     /// Create detection with appearance feature
     pub fn with_feature(bbox: BoundingBox, feature: Array1<f32>) -> Self {
         Self {
-            bbox: bbox,
+            bbox,
             feature: Some(feature),
             timestamp: Instant::now(),
         }

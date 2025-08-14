@@ -130,14 +130,14 @@ impl GpuOptimizationContext {
         let shape = data.dim();
         let total_size = shape.0 * shape.1;
         let flat_data = data.as_slice().unwrap();
-        
+
         // Create a GPU buffer with the flattened data
         // Note: GpuBuffer creation API may vary based on scirs2-core implementation
         // For now, we'll return an error since we can't directly create a GpuBuffer
         Err(ScirsError::NotImplementedError(
             scirs2_core::error::ErrorContext::new(
-                "GPU buffer creation not yet implemented".to_string()
-            )
+                "GPU buffer creation not yet implemented".to_string(),
+            ),
         ))
     }
 
@@ -151,16 +151,18 @@ impl GpuOptimizationContext {
         // This is a simplification since GpuBuffer doesn't have shape method
         let total_size = gpu_data.len();
         let dims = (total_size as f64).sqrt() as usize;
-        
+
         // Allocate host memory and copy from GPU
         let mut host_data = vec![T::default(); total_size];
         gpu_data.copy_to_host(&mut host_data)?;
-        
+
         // Reshape to ndarray (assume square for now)
-        Array2::from_shape_vec((dims, dims), host_data)
-            .map_err(|e| ScirsError::ComputationError(
-                scirs2_core::error::ErrorContext::new(format!("Shape error: {}", e))
-            ))
+        Array2::from_shape_vec((dims, dims), host_data).map_err(|e| {
+            ScirsError::ComputationError(scirs2_core::error::ErrorContext::new(format!(
+                "Shape error: {}",
+                e
+            )))
+        })
     }
 
     /// Upload array to GPU (alias for transfer_to_gpu)
@@ -190,7 +192,9 @@ impl GpuOptimizationContext {
     {
         if !function.supports_gpu() {
             return Err(ScirsError::InvalidInput(
-                scirs2_core::error::ErrorContext::new("Function does not support GPU acceleration".to_string()),
+                scirs2_core::error::ErrorContext::new(
+                    "Function does not support GPU acceleration".to_string(),
+                ),
             ));
         }
 
@@ -213,7 +217,9 @@ impl GpuOptimizationContext {
     {
         if !function.supports_gpu() {
             return Err(ScirsError::InvalidInput(
-                scirs2_core::error::ErrorContext::new("Function does not support GPU acceleration".to_string()),
+                scirs2_core::error::ErrorContext::new(
+                    "Function does not support GPU acceleration".to_string(),
+                ),
             ));
         }
 

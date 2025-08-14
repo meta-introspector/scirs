@@ -145,9 +145,9 @@ impl LKTracker {
         self.prev_frame = Some(gray_frame);
 
         // Update feature points for next iteration
-        self.feature_points = self._features.iter().map(|f| f.position).collect();
+        self.feature_points = self.features.iter().map(|f| f.position).collect();
 
-        Ok(&self._features)
+        Ok(&self.features)
     }
 
     /// Track existing features using optical flow
@@ -248,14 +248,11 @@ impl LKTracker {
 
     /// Add new features to track
     fn add_new_features(&mut self, newfeatures: &[(f32, f32)]) {
-        let remaining_capacity = self
-            .params
-            .max_features
-            .saturating_sub(self._features.len());
+        let remaining_capacity = self.params.max_features.saturating_sub(self.features.len());
 
         for &position in newfeatures.iter().take(remaining_capacity) {
             // Check if this position is too close to existing _features
-            let too_close = self._features.iter().any(|f| {
+            let too_close = self.features.iter().any(|f| {
                 let distance = ((f.position.0 - position.0).powi(2)
                     + (f.position.1 - position.1).powi(2))
                 .sqrt();
@@ -263,7 +260,7 @@ impl LKTracker {
             });
 
             if !too_close {
-                self._features.push(TrackedFeature {
+                self.features.push(TrackedFeature {
                     position,
                     prev_position: position,
                     velocity: (0.0, 0.0),
@@ -398,7 +395,7 @@ impl PyramidTracker {
             // Scale _features back to original resolution
             let scale = 2.0_f32.powi(level as i32);
             for feature in level_features {
-                let mut scaled_feature = "" * feature;
+                let mut scaled_feature = *feature;
                 scaled_feature.position.0 *= scale;
                 scaled_feature.position.1 *= scale;
                 scaled_feature.prev_position.0 *= scale;
@@ -474,7 +471,7 @@ mod tests {
     use image::{ImageBuffer, Luma};
 
     fn create_test_image(width: u32, height: u32) -> DynamicImage {
-        let img = ImageBuffer::from_fn(_width, height, |x, y| {
+        let img = ImageBuffer::from_fn(width, height, |x, y| {
             let val = ((x + y) % 256) as u8;
             Luma([val])
         });

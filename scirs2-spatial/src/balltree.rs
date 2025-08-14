@@ -202,7 +202,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         // Create node
         let node_idx = self.nodes.len();
         let node = BallTreeNode {
-            start_idx: start_idx,
+            start_idx,
             endidx,
             centroid,
             radius,
@@ -756,12 +756,12 @@ mod tests {
         let tree = BallTree::with_euclidean_distance(&data.view(), 2).unwrap();
 
         // Search with small radius
-        let (indices_distances) = tree.query_radius(&[5.0, 6.0], 1.0, true).unwrap();
+        let (indicesdistances) = tree.query_radius(&[5.0, 6.0], 1.0, true).unwrap();
         assert_eq!(indices.len(), 1);
         assert_eq!(indices[0], 2); // Only [5.0, 6.0] itself should be within radius 1.0
 
         // Search with larger radius
-        let (indices_distances) = tree.query_radius(&[5.0, 6.0], 3.0, true).unwrap();
+        let (indicesdistances) = tree.query_radius(&[5.0, 6.0], 3.0, true).unwrap();
         assert!(indices.len() > 1); // Should include neighbors
 
         // Test without distances

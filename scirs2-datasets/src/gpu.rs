@@ -345,7 +345,7 @@ impl GpuContext {
             || std::env::var("CUDA_HOME").is_ok();
 
         // 3. Check for CUDA installation paths
-        let cuda_paths = [
+        let cudapaths = [
             "/usr/local/cuda",
             "/opt/cuda",
             "/usr/lib/x86_64-linux-gnu/libcuda.so",
@@ -356,7 +356,7 @@ impl GpuContext {
             "C:\\Windows\\System32\\nvcuda.dll",
         ];
 
-        let cuda_path_available = cuda_paths
+        let cudapath_available = cudapaths
             .iter()
             .any(|path| std::path::Path::new(path).exists());
 
@@ -367,7 +367,7 @@ impl GpuContext {
             .map(|output| output.status.success())
             .unwrap_or(false);
 
-        cuda_env_available || cuda_path_available || nvidia_smi_available
+        cuda_env_available || cudapath_available || nvidia_smi_available
     }
 
     fn is_opencl_available(&self) -> bool {
@@ -379,7 +379,7 @@ impl GpuContext {
         }
 
         // 2. Check for common OpenCL library paths
-        let opencl_paths = [
+        let openclpaths = [
             "/usr/lib/libOpenCL.so",
             "/usr/lib/libOpenCL.so.1",
             "/usr/lib64/libOpenCL.so",
@@ -391,18 +391,18 @@ impl GpuContext {
             "C:\\Windows\\System32\\OpenCL.dll",                  // Windows
         ];
 
-        let opencl_lib_available = opencl_paths
+        let opencl_lib_available = openclpaths
             .iter()
             .any(|path| std::path::Path::new(path).exists());
 
         // 3. Check for vendor-specific OpenCL installations
-        let vendor_opencl_paths = [
+        let vendor_openclpaths = [
             "/usr/lib/x86_64-linux-gnu/mesa", // Mesa OpenCL
             "/opt/amdgpu-pro",                // AMD Pro drivers
             "/opt/intel/opencl",              // Intel OpenCL
         ];
 
-        let vendor_opencl_available = vendor_opencl_paths
+        let vendor_opencl_available = vendor_openclpaths
             .iter()
             .any(|path| std::path::Path::new(path).exists());
 
@@ -870,7 +870,7 @@ pub fn is_cuda_available() -> bool {
         || std::env::var("CUDA_HOME").is_ok();
 
     // 2. Check for CUDA installation paths (cross-platform)
-    let cuda_paths = [
+    let cudapaths = [
         "/usr/local/cuda",
         "/opt/cuda",
         "/usr/lib/x86_64-linux-gnu/libcuda.so",
@@ -882,7 +882,7 @@ pub fn is_cuda_available() -> bool {
         "/System/Library/Frameworks/CUDA.framework", // macOS (if applicable)
     ];
 
-    let cuda_path_available = cuda_paths
+    let cudapath_available = cudapaths
         .iter()
         .any(|path| std::path::Path::new(path).exists());
 
@@ -896,14 +896,14 @@ pub fn is_cuda_available() -> bool {
     // 4. Check for NVIDIA devices in /proc (Linux-specific)
     let nvidia_proc_available = std::path::Path::new("/proc/driver/nvidia").exists();
 
-    cuda_env_available || cuda_path_available || nvidia_smi_available || nvidia_proc_available
+    cuda_env_available || cudapath_available || nvidia_smi_available || nvidia_proc_available
 }
 
 /// Check if OpenCL is available on the system
 #[allow(dead_code)]
 pub fn is_opencl_available() -> bool {
     // 1. Check for common OpenCL library paths (cross-platform)
-    let opencl_paths = [
+    let openclpaths = [
         "/usr/lib/libOpenCL.so",
         "/usr/lib/libOpenCL.so.1",
         "/usr/lib64/libOpenCL.so",
@@ -915,19 +915,19 @@ pub fn is_opencl_available() -> bool {
         "C:\\Windows\\System32\\OpenCL.dll",                  // Windows
     ];
 
-    let opencl_lib_available = opencl_paths
+    let opencl_lib_available = openclpaths
         .iter()
         .any(|path| std::path::Path::new(path).exists());
 
     // 2. Check for vendor-specific OpenCL installations
-    let vendor_opencl_paths = [
+    let vendor_openclpaths = [
         "/usr/lib/x86_64-linux-gnu/mesa",                   // Mesa OpenCL
         "/opt/amdgpu-pro",                                  // AMD Pro drivers
         "/opt/intel/opencl",                                // Intel OpenCL
         "/usr/lib/x86_64-linux-gnu/libmali-bifrost-dev.so", // ARM Mali
     ];
 
-    let vendor_opencl_available = vendor_opencl_paths
+    let vendor_opencl_available = vendor_openclpaths
         .iter()
         .any(|path| std::path::Path::new(path).exists());
 

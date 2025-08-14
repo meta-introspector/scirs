@@ -135,8 +135,8 @@ pub fn slic(
 
 /// Initialize superpixel centers on a regular grid
 #[allow(dead_code)]
-fn initialize_centers(_lab: &Array3<f32>, gridstep: usize) -> Vec<SuperpixelCenter> {
-    let (height, width_) = lab.dim();
+fn initialize_centers(lab: &Array3<f32>, gridstep: usize) -> Vec<SuperpixelCenter> {
+    let (height, width_, _) = lab.dim();
     let mut centers = Vec::new();
 
     let half_step = gridstep / 2;
@@ -160,7 +160,7 @@ fn initialize_centers(_lab: &Array3<f32>, gridstep: usize) -> Vec<SuperpixelCent
 /// Move centers to positions with lowest gradient
 #[allow(dead_code)]
 fn perturb_centers(centers: &mut [SuperpixelCenter], lab: &Array3<f32>) {
-    let (height, width_) = lab.dim();
+    let (height, width_, _) = lab.dim();
 
     for center in centers.iter_mut() {
         let y = center.y as usize;
@@ -237,7 +237,7 @@ fn compute_distance(
 /// Update superpixel centers based on assigned pixels
 #[allow(dead_code)]
 fn update_centers(centers: &mut [SuperpixelCenter], lab: &Array3<f32>, labels: &Array2<u32>) {
-    let (height, width_) = lab.dim();
+    let (height, width_, _) = lab.dim();
 
     // Reset _centers
     for center in centers.iter_mut() {
@@ -279,7 +279,7 @@ fn update_centers(centers: &mut [SuperpixelCenter], lab: &Array3<f32>, labels: &
 
 /// Enforce connectivity of superpixels
 #[allow(dead_code)]
-fn enforce_connectivity(_labels: &mut Array2<u32>, nsegments: usize) {
+fn enforce_connectivity(labels: &mut Array2<u32>, nsegments: usize) {
     let (height, width_) = labels.dim();
     let min_size = (height * width_) / (nsegments * 4);
 
@@ -291,13 +291,13 @@ fn enforce_connectivity(_labels: &mut Array2<u32>, nsegments: usize) {
         for x in 0..width_ {
             if !visited[[y, x]] {
                 let old_label = labels[[y, x]];
-                let size = flood_fill(_labels, &mut visited, y, x, old_label, new_label);
+                let size = flood_fill(labels, &mut visited, y, x, old_label, new_label);
 
                 if size >= min_size {
                     new_label += 1;
                 } else {
                     // Merge with nearest neighbor
-                    merge_small_segment(_labels, y, x, new_label);
+                    merge_small_segment(labels, y, x, new_label);
                 }
             }
         }
@@ -318,27 +318,27 @@ fn flood_fill(
     let mut stack = vec![(start_y, start_x)];
     let mut size = 0;
 
-    while let Some((_y, x)) = stack.pop() {
-        if visited[[_y_x]] || labels[[_y_x]] != old_label {
+    while let Some((y, x)) = stack.pop() {
+        if visited[[y, x]] || labels[[y, x]] != old_label {
             continue;
         }
 
-        visited[[_y_x]] = true;
-        labels[[_y_x]] = new_label;
+        visited[[y, x]] = true;
+        labels[[y, x]] = new_label;
         size += 1;
 
         // Check 4-neighbors
-        if _y > 0 {
-            stack.push((_y - 1, x));
+        if y > 0 {
+            stack.push((y - 1, x));
         }
-        if _y < height - 1 {
-            stack.push((_y + 1, x));
+        if y < height - 1 {
+            stack.push((y + 1, x));
         }
-        if _y > 0 {
-            stack.push((_y, _y - 1));
+        if x > 0 {
+            stack.push((y, x - 1));
         }
-        if _y < width_ - 1 {
-            stack.push((_y, _y + 1));
+        if x < width_ - 1 {
+            stack.push((y, x + 1));
         }
     }
 
@@ -347,7 +347,7 @@ fn flood_fill(
 
 /// Merge small segment with neighbor
 #[allow(dead_code)]
-fn merge_small_segment(_labels: &mut Array2<u32>, y: usize, x: usize, currentlabel: u32) {
+fn merge_small_segment(labels: &mut Array2<u32>, y: usize, x: usize, currentlabel: u32) {
     let (height, width_) = labels.dim();
     let neighbors = [
         (y.wrapping_sub(1), x),
@@ -360,7 +360,7 @@ fn merge_small_segment(_labels: &mut Array2<u32>, y: usize, x: usize, currentlab
         if ny < height && nx < width_ && labels[[ny, nx]] != currentlabel {
             // Replace current segment with neighbor's _label
             let neighbor_label = labels[[ny, nx]];
-            flood_fill_replace(_labels, y, x, currentlabel, neighbor_label);
+            flood_fill_replace(labels, y, x, currentlabel, neighbor_label);
             break;
         }
     }
@@ -378,24 +378,24 @@ fn flood_fill_replace(
     let (height, width_) = labels.dim();
     let mut stack = vec![(start_y, start_x)];
 
-    while let Some((_y, x)) = stack.pop() {
-        if labels[[_y_x]] != old_label {
+    while let Some((y, x)) = stack.pop() {
+        if labels[[y, x]] != old_label {
             continue;
         }
 
-        labels[[_y_x]] = new_label;
+        labels[[y, x]] = new_label;
 
-        if _y > 0 {
-            stack.push((_y - 1, x));
+        if y > 0 {
+            stack.push((y - 1, x));
         }
-        if _y < height - 1 {
-            stack.push((_y + 1, x));
+        if y < height - 1 {
+            stack.push((y + 1, x));
         }
-        if _y > 0 {
-            stack.push((_y, _y - 1));
+        if x > 0 {
+            stack.push((y, x - 1));
         }
-        if _y < width_ - 1 {
-            stack.push((_y, _y + 1));
+        if x < width_ - 1 {
+            stack.push((y, x + 1));
         }
     }
 }
@@ -583,7 +583,7 @@ mod tests {
         assert!(b.abs() < 1.0);
 
         // Test black
-        let (l_a_b) = rgb_to_lab(0, 0, 0);
+        let (l, _a, _b) = rgb_to_lab(0, 0, 0);
         assert!(l < 1.0); // L should be ~0 for black
     }
 

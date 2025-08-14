@@ -352,19 +352,19 @@ where
 
     /// Set covariance function
     pub fn cov_fn(mut self, covfn: CovarianceFunction) -> Self {
-        self.cov_fn = cov_fn;
+        self.cov_fn = covfn;
         self
     }
 
     /// Set length scales for anisotropy
     pub fn length_scales(mut self, lengthscales: Array1<F>) -> Self {
-        self.length_scales = Some(length_scales);
+        self.length_scales = Some(lengthscales);
         self
     }
 
     /// Set signal variance parameter
     pub fn sigma_sq(mut self, sigmasq: F) -> Self {
-        self.sigma_sq = sigma_sq;
+        self.sigma_sq = sigmasq;
         self
     }
 
@@ -382,13 +382,13 @@ where
 
     /// Set extra parameters for specific covariance functions
     pub fn extra_params(mut self, extraparams: F) -> Self {
-        self.extra_params = extra_params;
+        self.extra_params = extraparams;
         self
     }
 
     /// Set anisotropic covariance specification
     pub fn anisotropic_cov(mut self, anisotropiccov: AnisotropicCovariance<F>) -> Self {
-        self.anisotropic_cov = Some(anisotropic_cov);
+        self.anisotropic_cov = Some(anisotropiccov);
         self
     }
 
@@ -400,25 +400,25 @@ where
 
     /// Set number of posterior samples
     pub fn n_samples(mut self, nsamples: usize) -> Self {
-        self.n_samples = n_samples;
+        self.n_samples = nsamples;
         self
     }
 
     /// Enable or disable full posterior covariance computation
     pub fn compute_full_covariance(mut self, compute_fullcovariance: bool) -> Self {
-        self.compute_full_covariance = compute_full_covariance;
+        self.compute_full_covariance = compute_fullcovariance;
         self
     }
 
     /// Enable or disable exact computation
     pub fn use_exact_computation(mut self, use_exactcomputation: bool) -> Self {
-        self.use_exact_computation = use_exact_computation;
+        self.use_exact_computation = use_exactcomputation;
         self
     }
 
     /// Enable or disable parameter optimization
     pub fn optimize_parameters(mut self, optimizeparameters: bool) -> Self {
-        self.optimize_parameters = optimize_parameters;
+        self.optimize_parameters = optimizeparameters;
         self
     }
 
@@ -610,7 +610,7 @@ where
         }
         let mut size = 0;
         for d in 0..=degree {
-            size += Self::binomial_coefficient(n_dims + d - 1, d);
+            size += Self::binomial_coefficient(_ndims + d - 1, d);
         }
         size
     }
@@ -731,7 +731,7 @@ where
                     for k in 0..j {
                         sum += cholesky[[i, k]] * cholesky[[j, k]];
                     }
-                    cholesky[[i, j]] = (_matrix[[i, j]] - sum) / cholesky[[j, j]];
+                    cholesky[[i, j]] = (matrix[[i, j]] - sum) / cholesky[[j, j]];
                 }
             }
         }
@@ -1167,27 +1167,27 @@ where
     ///
     /// # Arguments
     ///
-    /// * `query_points` - Points at which to predict with shape (n_query, n_dims)
+    /// * `querypoints` - Points at which to predict with shape (n_query, n_dims)
     ///
     /// # Returns
     ///
     /// Prediction results with enhanced Bayesian information
     pub fn predict(&self, querypoints: &ArrayView2<F>) -> InterpolateResult<PredictionResult<F>> {
         // Check dimensions
-        if query_points.shape()[1] != self._points.shape()[1] {
+        if querypoints.shape()[1] != self._points.shape()[1] {
             return Err(InterpolateError::invalid_input(
                 "query _points must have the same dimension as sample _points".to_string(),
             ));
         }
 
-        let n_query = query_points.shape()[0];
+        let n_query = querypoints.shape()[0];
         let n_points = self._points.shape()[0];
 
         let mut values = Array1::zeros(n_query);
         let mut variances = Array1::zeros(n_query);
 
         for i in 0..n_query {
-            let query_point = query_points.slice(ndarray::s![i, ..]);
+            let query_point = querypoints.slice(ndarray::s![i, ..]);
 
             // Compute covariance vector k* between query point and training _points
             let mut k_star = Array1::zeros(n_points);
@@ -1260,7 +1260,7 @@ where
     ///
     /// # Arguments
     ///
-    /// * `query_points` - Points at which to predict
+    /// * `querypoints` - Points at which to predict
     /// * `quantile_levels` - Quantile levels to compute (e.g., [0.05, 0.95] for 90% CI)
     /// * `n_samples` - Number of posterior samples to generate
     ///
@@ -1269,14 +1269,14 @@ where
     /// Enhanced Bayesian prediction result with posterior samples and quantiles
     pub fn predict_bayesian(
         &self,
-        query_points: &ArrayView2<F>,
+        querypoints: &ArrayView2<F>,
         quantile_levels: &[F],
         n_samples: usize,
     ) -> InterpolateResult<BayesianPredictionResult<F>> {
         // Get basic prediction first
-        let basic_result = self.predict(query_points)?;
+        let basic_result = self.predict(querypoints)?;
 
-        let n_query = query_points.shape()[0];
+        let n_query = querypoints.shape()[0];
 
         // For this implementation, generate simple posterior _samples
         // In a full implementation, this would use MCMC or other sampling methods
@@ -1411,7 +1411,7 @@ where
 /// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create sample 2D spatial data
-/// let points = Array2::fromshape_vec((4, 2), vec![
+/// let points = Array2::from_shape_vec((4, 2), vec![
 ///     0.0, 0.0,
 ///     1.0, 0.0,
 ///     0.0, 1.0,
@@ -1435,8 +1435,8 @@ where
 pub fn make_enhanced_kriging<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
-    _cov_fn: CovarianceFunction_length,
-    _scale: F_sigma,
+    _cov_fn: CovarianceFunction,
+    _scale: F,
     sq: F,
 ) -> InterpolateResult<EnhancedKriging<F>>
 where
@@ -1487,7 +1487,7 @@ where
 /// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create data with a linear trend: z = x + y + noise
-/// let points = Array2::fromshape_vec((6, 2), vec![
+/// let points = Array2::from_shape_vec((6, 2), vec![
 ///     0.0, 0.0,  // z ≈ 0
 ///     1.0, 0.0,  // z ≈ 1
 ///     0.0, 1.0,  // z ≈ 1
@@ -1513,9 +1513,9 @@ where
 pub fn make_universal_kriging<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
-    _cov_fn: CovarianceFunction_length,
-    _scale: F_sigma,
-    sq: F_trend,
+    _cov_fn: CovarianceFunction,
+    _scale: F,
+    sq: F,
     _fn: TrendFunction,
 ) -> InterpolateResult<EnhancedKriging<F>>
 where
@@ -1565,7 +1565,7 @@ where
 /// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create noisy observational data
-/// let points = Array2::fromshape_vec((8, 1), vec![
+/// let points = Array2::from_shape_vec((8, 1), vec![
 ///     0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5
 /// ]).unwrap();
 /// let values = Array1::from_vec(vec![

@@ -447,7 +447,7 @@ mod tests {
     }
 
     // Helper to add noise to signals
-    fn add_noise(_signal: &[f64], noiselevel: f64) -> Vec<f64> {
+    fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
         use rand::Rng;
         let mut rng = rand::rng();
         _signal

@@ -4,7 +4,7 @@
 //! SciPy compatibility functions to ensure they meet mathematical properties
 //! and numerical accuracy requirements.
 
-use scirs2__special::extended_scipy_validation::run_extended_validation_tests;
+use scirs2_special::extended_scipy_validation::run_extended_validation_tests;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

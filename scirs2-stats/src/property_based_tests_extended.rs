@@ -199,15 +199,15 @@ pub struct MathematicalInvariantTester;
 impl MathematicalInvariantTester {
     /// Test that correlation coefficients are bounded [-1, 1]
     pub fn test_correlation_bounds(
-        test_data1: &StatisticalTestData,
-        test_data2: &StatisticalTestData,
+        testdata1: &StatisticalTestData,
+        testdata2: &StatisticalTestData,
     ) -> bool {
-        if test_data1.data.len() != test_data2.data.len() || test_data1.data.len() < 2 {
+        if testdata1.data.len() != testdata2.data.len() || testdata1.data.len() < 2 {
             return false;
         }
 
-        let arr1 = Array1::from_vec(test_data1.data.clone());
-        let arr2 = Array1::from_vec(test_data2.data.clone());
+        let arr1 = Array1::from_vec(testdata1.data.clone());
+        let arr2 = Array1::from_vec(testdata2.data.clone());
 
         match pearson_r(&arr1.view(), &arr2.view()) {
             Ok(corr) => corr >= -1.0 && corr <= 1.0,
@@ -234,8 +234,8 @@ impl MathematicalInvariantTester {
         }
 
         // Test 2: Var(X + c) = Var(X) for constant c
-        let shifted_data: Vec<f64> = testdata.data.iter().map(|&x| x + 100.0).collect();
-        let shifted_arr = Array1::from_vec(shifted_data);
+        let shifteddata: Vec<f64> = testdata.data.iter().map(|&x| x + 100.0).collect();
+        let shifted_arr = Array1::from_vec(shifteddata);
 
         match (var(&arr.view(), 1, None), var(&shifted_arr.view(), 1, None)) {
             (Ok(var1), Ok(var2)) => {
@@ -320,8 +320,8 @@ impl MathematicalInvariantTester {
         let b = 10.0;
 
         // Test: E[aX + b] = a*E[X] + b
-        let transformed_data: Vec<f64> = testdata.data.iter().map(|&x| a * x + b).collect();
-        let transformed_arr = Array1::from_vec(transformed_data);
+        let transformeddata: Vec<f64> = testdata.data.iter().map(|&x| a * x + b).collect();
+        let transformed_arr = Array1::from_vec(transformeddata);
 
         match (mean(&arr.view()), mean(&transformed_arr.view())) {
             (Ok(mean_x), Ok(mean_ax_b)) => {
@@ -343,8 +343,8 @@ impl MathematicalInvariantTester {
         let a = 3.0;
 
         // Test: Var(aX) = a²*Var(X)
-        let scaled_data: Vec<f64> = testdata.data.iter().map(|&x| a * x).collect();
-        let scaled_arr = Array1::from_vec(scaled_data);
+        let scaleddata: Vec<f64> = testdata.data.iter().map(|&x| a * x).collect();
+        let scaled_arr = Array1::from_vec(scaleddata);
 
         match (var(&arr.view(), 1, None), var(&scaled_arr.view(), 1, None)) {
             (Ok(var_x), Ok(var_ax)) => {
@@ -358,23 +358,23 @@ impl MathematicalInvariantTester {
 
     /// Test that adding a constant doesn't change correlation
     pub fn test_correlation_translation_invariance(
-        test_data1: &StatisticalTestData,
-        test_data2: &StatisticalTestData,
+        testdata1: &StatisticalTestData,
+        testdata2: &StatisticalTestData,
     ) -> bool {
-        if test_data1.data.len() != test_data2.data.len() || test_data1.data.len() < 2 {
+        if testdata1.data.len() != testdata2.data.len() || testdata1.data.len() < 2 {
             return false;
         }
 
-        let arr1 = Array1::from_vec(test_data1.data.clone());
-        let arr2 = Array1::from_vec(test_data2.data.clone());
+        let arr1 = Array1::from_vec(testdata1.data.clone());
+        let arr2 = Array1::from_vec(testdata2.data.clone());
 
         // Add constants to both arrays
         let c1 = 50.0;
         let c2 = -30.0;
-        let shifted_data1: Vec<f64> = test_data1.data.iter().map(|&x| x + c1).collect();
-        let shifted_data2: Vec<f64> = test_data2.data.iter().map(|&x| x + c2).collect();
-        let shifted_arr1 = Array1::from_vec(shifted_data1);
-        let shifted_arr2 = Array1::from_vec(shifted_data2);
+        let shifteddata1: Vec<f64> = testdata1.data.iter().map(|&x| x + c1).collect();
+        let shifteddata2: Vec<f64> = testdata2.data.iter().map(|&x| x + c2).collect();
+        let shifted_arr1 = Array1::from_vec(shifteddata1);
+        let shifted_arr2 = Array1::from_vec(shifteddata2);
 
         match (
             pearson_r(&arr1.view(), &arr2.view()),
@@ -396,12 +396,12 @@ impl MathematicalInvariantTester {
 
         let _arr = Array1::from_vec(testdata.data.clone());
 
-        // Create right-skewed _data (add some large values)
+        // Create right-skewed data (add some large values)
         let mut right_skewed = testdata.data.clone();
         right_skewed.extend(vec![100.0, 200.0, 300.0]);
         let right_skewed_arr = Array1::from_vec(right_skewed);
 
-        // Create left-skewed _data (add some small values)
+        // Create left-skewed data (add some small values)
         let mut left_skewed = testdata.data.clone();
         left_skewed.extend(vec![-100.0, -200.0, -300.0]);
         let left_skewed_arr = Array1::from_vec(left_skewed);
@@ -411,8 +411,8 @@ impl MathematicalInvariantTester {
             skew(&left_skewed_arr.view(), false, None),
         ) {
             (Ok(right_skew), Ok(left_skew)) => {
-                // Right-skewed _data should have positive skewness
-                // Left-skewed _data should have negative skewness
+                // Right-skewed data should have positive skewness
+                // Left-skewed data should have negative skewness
                 right_skew > 0.0 && left_skew < 0.0
             }
             _ => false,
@@ -427,8 +427,8 @@ impl MathematicalInvariantTester {
 
         // Test with normal distribution approximation (kurtosis ≈ 3 for excess = false)
         // For a uniform distribution, kurtosis should be < 3
-        let uniform_data: Vec<f64> = (0..100).map(|i| i as f64 / 100.0).collect();
-        let uniform_arr = Array1::from_vec(uniform_data);
+        let uniformdata: Vec<f64> = (0..100).map(|i| i as f64 / 100.0).collect();
+        let uniform_arr = Array1::from_vec(uniformdata);
 
         match kurtosis(&uniform_arr.view(), false, false, None) {
             Ok(kurt) => {
@@ -608,12 +608,12 @@ impl NumericalStabilityTester {
     /// Test behavior with extreme values
     pub fn test_extreme_values() -> bool {
         // Test with very large values
-        let large_data = vec![1e15, 1e15 + 1.0, 1e15 + 2.0, 1e15 + 3.0];
-        let large_arr = Array1::from_vec(large_data);
+        let largedata = vec![1e15, 1e15 + 1.0, 1e15 + 2.0, 1e15 + 3.0];
+        let large_arr = Array1::from_vec(largedata);
 
         // Test with very small values
-        let small_data = vec![1e-15, 2e-15, 3e-15, 4e-15];
-        let small_arr = Array1::from_vec(small_data);
+        let smalldata = vec![1e-15, 2e-15, 3e-15, 4e-15];
+        let small_arr = Array1::from_vec(smalldata);
 
         // Both should compute without errors and produce finite results
         match (mean(&large_arr.view()), mean(&small_arr.view())) {
@@ -693,8 +693,8 @@ impl NumericalStabilityTester {
 
     /// Test with zero variance data
     pub fn test_zero_variance() -> bool {
-        let constant_data = vec![5.0, 5.0, 5.0, 5.0, 5.0];
-        let arr = Array1::from_vec(constant_data);
+        let constantdata = vec![5.0, 5.0, 5.0, 5.0, 5.0];
+        let arr = Array1::from_vec(constantdata);
 
         // Variance should be exactly zero
         match var(&arr.view(), 1, None) {
@@ -729,7 +729,7 @@ pub struct FuzzingTester;
 
 impl FuzzingTester {
     /// Generate random data with various characteristics for stress testing
-    pub fn generate_random_data(size: usize, seed: u64) -> StatisticalTestData {
+    pub fn generate_randomdata(size: usize, seed: u64) -> StatisticalTestData {
         use rand::rngs::StdRng;
         use rand::{Rng, SeedableRng};
 
@@ -741,7 +741,7 @@ impl FuzzingTester {
     }
 
     /// Generate data with specific distribution characteristics
-    pub fn generate_skewed_data(
+    pub fn generate_skeweddata(
         size: usize,
         skew_direction: f64,
         seed: u64,
@@ -766,7 +766,7 @@ impl FuzzingTester {
     }
 
     /// Generate outlier-prone data
-    pub fn generate_outlier_data(
+    pub fn generate_outlierdata(
         size: usize,
         outlier_fraction: f64,
         seed: u64,
@@ -789,8 +789,8 @@ impl FuzzingTester {
     /// Test function stability with random inputs
     pub fn test_mean_stability_fuzz(iterations: usize) -> bool {
         for i in 0..iterations {
-            let test_data = Self::generate_random_data(100, i as u64);
-            let arr = Array1::from_vec(test_data.data);
+            let testdata = Self::generate_randomdata(100, i as u64);
+            let arr = Array1::from_vec(testdata.data);
 
             match mean(&arr.view()) {
                 Ok(result) => {
@@ -815,8 +815,8 @@ impl FuzzingTester {
             // Test with different skewness levels
             let skew_levels = [-2.0, -0.5, 0.0, 0.5, 2.0];
             for &skew in &skew_levels {
-                let test_data = Self::generate_skewed_data(100, skew, i as u64);
-                let arr = Array1::from_vec(test_data.data);
+                let testdata = Self::generate_skeweddata(100, skew, i as u64);
+                let arr = Array1::from_vec(testdata.data);
 
                 if arr.len() < 2 {
                     continue;
@@ -840,11 +840,11 @@ impl FuzzingTester {
         for i in 0..iterations {
             let outlier_fractions = [0.0, 0.1, 0.2, 0.3];
             for &fraction in &outlier_fractions {
-                let test_data1 = Self::generate_outlier_data(50, fraction, i as u64);
-                let test_data2 = Self::generate_outlier_data(50, fraction, (i + 1) as u64);
+                let testdata1 = Self::generate_outlierdata(50, fraction, i as u64);
+                let testdata2 = Self::generate_outlierdata(50, fraction, (i + 1) as u64);
 
-                let arr1 = Array1::from_vec(test_data1.data);
-                let arr2 = Array1::from_vec(test_data2.data);
+                let arr1 = Array1::from_vec(testdata1.data);
+                let arr2 = Array1::from_vec(testdata2.data);
 
                 match pearson_r(&arr1.view(), &arr2.view()) {
                     Ok(corr) => {
@@ -871,8 +871,8 @@ impl CrossPlatformTester {
         }
 
         // Convert to f32 and back to f64 to test precision handling
-        let f32_data: Vec<f32> = testdata.data.iter().map(|&x| x as f32).collect();
-        let f64_from_f32: Vec<f64> = f32_data.iter().map(|&x| x as f64).collect();
+        let f32data: Vec<f32> = testdata.data.iter().map(|&x| x as f32).collect();
+        let f64_from_f32: Vec<f64> = f32data.iter().map(|&x| x as f64).collect();
 
         let original_arr = Array1::from_vec(testdata.data.clone());
         let converted_arr = Array1::from_vec(f64_from_f32);
@@ -920,12 +920,12 @@ impl RobustnessTester {
     /// Test behavior with NaN and infinity values
     pub fn test_nan_infinity_handling() -> bool {
         // Test with NaN
-        let nan_data = vec![1.0, 2.0, f64::NAN, 4.0, 5.0];
-        let nan_arr = Array1::from_vec(nan_data);
+        let nandata = vec![1.0, 2.0, f64::NAN, 4.0, 5.0];
+        let nan_arr = Array1::from_vec(nandata);
 
         // Test with infinity
-        let inf_data = vec![1.0, 2.0, f64::INFINITY, 4.0, 5.0];
-        let inf_arr = Array1::from_vec(inf_data);
+        let infdata = vec![1.0, 2.0, f64::INFINITY, 4.0, 5.0];
+        let inf_arr = Array1::from_vec(infdata);
 
         // Functions should either handle gracefully or return appropriate errors
         let nan_result = mean(&nan_arr.view());
@@ -943,10 +943,10 @@ impl RobustnessTester {
     }
 
     /// Test with extremely large datasets
-    pub fn test_large_dataset_stability() -> bool {
+    pub fn test_largedataset_stability() -> bool {
         // Create a large dataset that might stress memory or algorithms
-        let large_size = 100_000;
-        let data: Vec<f64> = (0..large_size).map(|i| (i as f64).sin()).collect();
+        let largesize = 100_000;
+        let data: Vec<f64> = (0..largesize).map(|i| (i as f64).sin()).collect();
         let arr = Array1::from_vec(data);
 
         match mean(&arr.view()) {
@@ -957,8 +957,8 @@ impl RobustnessTester {
 
     /// Test with single-element arrays
     pub fn test_single_element_arrays() -> bool {
-        let single_data = vec![42.0];
-        let arr = Array1::from_vec(single_data);
+        let singledata = vec![42.0];
+        let arr = Array1::from_vec(singledata);
 
         // Mean should work with single element
         match mean(&arr.view()) {
@@ -981,8 +981,8 @@ impl RobustnessTester {
 
     /// Test with arrays containing only zeros
     pub fn test_zero_arrays() -> bool {
-        let zero_data = vec![0.0; 100];
-        let arr = Array1::from_vec(zero_data);
+        let zerodata = vec![0.0; 100];
+        let arr = Array1::from_vec(zerodata);
 
         match (mean(&arr.view()), var(&arr.view(), 1, None)) {
             (Ok(mean_val), Ok(var_val)) => {
@@ -995,8 +995,8 @@ impl RobustnessTester {
     /// Test with arrays where all elements are the same
     pub fn test_constant_arrays() -> bool {
         let constant_value = 123.456;
-        let constant_data = vec![constant_value; 50];
-        let arr = Array1::from_vec(constant_data);
+        let constantdata = vec![constant_value; 50];
+        let arr = Array1::from_vec(constantdata);
 
         match (mean(&arr.view()), var(&arr.view(), 1, None)) {
             (Ok(mean_val), Ok(var_val)) => {
@@ -1098,17 +1098,17 @@ pub struct ExtendedMathematicalTester;
 impl ExtendedMathematicalTester {
     /// Test Cauchy-Schwarz inequality for correlations
     pub fn test_cauchy_schwarz_inequality(
-        x_data: &StatisticalTestData,
+        xdata: &StatisticalTestData,
         y_data: &StatisticalTestData,
-        z_data: &StatisticalTestData,
+        zdata: &StatisticalTestData,
     ) -> bool {
-        if x_data.data.len() != y_data.data.len() || y_data.data.len() != z_data.data.len() {
+        if xdata.data.len() != y_data.data.len() || y_data.data.len() != zdata.data.len() {
             return false;
         }
 
-        let x_arr = Array1::from_vec(x_data.data.clone());
+        let x_arr = Array1::from_vec(xdata.data.clone());
         let y_arr = Array1::from_vec(y_data.data.clone());
-        let z_arr = Array1::from_vec(z_data.data.clone());
+        let z_arr = Array1::from_vec(zdata.data.clone());
 
         match (
             pearson_r(&x_arr.view(), &y_arr.view()),
@@ -1127,17 +1127,17 @@ impl ExtendedMathematicalTester {
 
     /// Test triangle inequality for statistical distances
     pub fn test_triangle_inequality_property(
-        x_data: &StatisticalTestData,
+        xdata: &StatisticalTestData,
         y_data: &StatisticalTestData,
-        z_data: &StatisticalTestData,
+        zdata: &StatisticalTestData,
     ) -> bool {
-        if x_data.data.len() != y_data.data.len() || y_data.data.len() != z_data.data.len() {
+        if xdata.data.len() != y_data.data.len() || y_data.data.len() != zdata.data.len() {
             return false;
         }
 
-        let x_arr = Array1::from_vec(x_data.data.clone());
+        let x_arr = Array1::from_vec(xdata.data.clone());
         let y_arr = Array1::from_vec(y_data.data.clone());
-        let z_arr = Array1::from_vec(z_data.data.clone());
+        let z_arr = Array1::from_vec(zdata.data.clone());
 
         // Use correlation distance: d(x,y) = 1 - |r(x,y)|
         match (
@@ -1164,12 +1164,12 @@ impl ExtendedMathematicalTester {
         }
 
         // Test with exp function (convex)
-        let positive_data: Vec<f64> = testdata.data.iter()
+        let positivedata: Vec<f64> = testdata.data.iter()
             .map(|&x| x.abs().min(10.0)) // Bound to prevent overflow
             .collect();
 
-        let arr = Array1::from_vec(positive_data.clone());
-        let exp_arr = Array1::from_vec(positive_data.iter().map(|&x| x.exp()).collect());
+        let arr = Array1::from_vec(positivedata.clone());
+        let exp_arr = Array1::from_vec(positivedata.iter().map(|&x| x.exp()).collect());
 
         match (mean(&arr.view()), mean(&exp_arr.view())) {
             (Ok(mean_x), Ok(mean_exp_x)) => {
@@ -1183,24 +1183,24 @@ impl ExtendedMathematicalTester {
 
     /// Test Minkowski inequality for norms
     pub fn test_minkowski_inequality(
-        x_data: &StatisticalTestData,
+        xdata: &StatisticalTestData,
         y_data: &StatisticalTestData,
     ) -> bool {
-        if x_data.data.len() != y_data.data.len() || x_data.data.len() < 2 {
+        if xdata.data.len() != y_data.data.len() || xdata.data.len() < 2 {
             return false;
         }
 
-        let x_arr = Array1::from_vec(x_data.data.clone());
+        let x_arr = Array1::from_vec(xdata.data.clone());
         let y_arr = Array1::from_vec(y_data.data.clone());
 
         // Compute sum array
-        let sum_data: Vec<f64> = x_data
+        let sumdata: Vec<f64> = xdata
             .data
             .iter()
             .zip(y_data.data.iter())
             .map(|(&x, &y)| x + y)
             .collect();
-        let sum_arr = Array1::from_vec(sum_data);
+        let sum_arr = Array1::from_vec(sumdata);
 
         // Test with p=2 (Euclidean norm related to standard deviation)
         match (
@@ -1234,7 +1234,7 @@ impl ExtendedMathematicalTester {
             (Ok(mean_val), Ok(var_val)) => {
                 let std_val = var_val.sqrt();
                 if std_val <= 1e-10 {
-                    return true; // Skip for near-constant _data
+                    return true; // Skip for near-constant data
                 }
 
                 // Count values within k standard deviations
@@ -1267,12 +1267,12 @@ mod tests {
     #[test]
     #[ignore] // Temporarily disabled due to hanging issues
     fn test_simd_consistency() {
-        let test_data = StatisticalTestData::generate_large_sample();
+        let testdata = StatisticalTestData::generate_large_sample();
 
-        assert!(SimdConsistencyTester::test_mean_consistency(&test_data));
-        assert!(SimdConsistencyTester::test_variance_consistency(&test_data));
-        assert!(SimdConsistencyTester::test_skewness_consistency(&test_data));
-        assert!(SimdConsistencyTester::test_kurtosis_consistency(&test_data));
+        assert!(SimdConsistencyTester::test_mean_consistency(&testdata));
+        assert!(SimdConsistencyTester::test_variance_consistency(&testdata));
+        assert!(SimdConsistencyTester::test_skewness_consistency(&testdata));
+        assert!(SimdConsistencyTester::test_kurtosis_consistency(&testdata));
     }
 
     #[test]
@@ -1284,38 +1284,38 @@ mod tests {
     #[test]
     #[ignore] // Temporarily disabled due to hanging issues
     fn test_mathematical_invariants() {
-        let test_data1 = StatisticalTestData::generate_sample(); // 10 elements
-        let test_data2 = StatisticalTestData::new(vec![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0]); // 10 elements
+        let testdata1 = StatisticalTestData::generate_sample(); // 10 elements
+        let testdata2 = StatisticalTestData::new(vec![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0]); // 10 elements
         let matrixdata = MatrixTestData::generate_sample();
 
         assert!(MathematicalInvariantTester::test_correlation_bounds(
-            &test_data1,
-            &test_data1
+            &testdata1,
+            &testdata1
         ));
         assert!(MathematicalInvariantTester::test_variance_properties(
-            &test_data1
+            &testdata1
         ));
         assert!(MathematicalInvariantTester::test_moment_properties(
-            &test_data1
+            &testdata1
         ));
         assert!(MathematicalInvariantTester::test_correlation_matrix_symmetry(&matrixdata));
         assert!(MathematicalInvariantTester::test_mean_linearity(
-            &test_data1
+            &testdata1
         ));
         assert!(MathematicalInvariantTester::test_variance_scaling(
-            &test_data1
+            &testdata1
         ));
         assert!(
             MathematicalInvariantTester::test_correlation_translation_invariance(
-                &test_data1,
-                &test_data2
+                &testdata1,
+                &testdata2
             )
         );
         assert!(MathematicalInvariantTester::test_skewness_properties(
-            &test_data1
+            &testdata1
         ));
         assert!(MathematicalInvariantTester::test_kurtosis_properties(
-            &test_data1
+            &testdata1
         ));
     }
 
@@ -1360,12 +1360,12 @@ mod tests {
 
     #[test]
     fn test_cross_platform_consistency() {
-        let test_data = StatisticalTestData::generate_sample();
+        let testdata = StatisticalTestData::generate_sample();
         assert!(CrossPlatformTester::test_floating_point_consistency(
-            &test_data
+            &testdata
         ));
         assert!(CrossPlatformTester::test_endianness_independence(
-            &test_data
+            &testdata
         ));
     }
 
@@ -1373,7 +1373,7 @@ mod tests {
     #[ignore] // Temporarily disabled due to hanging issues
     fn test_robustness() {
         assert!(RobustnessTester::test_nan_infinity_handling());
-        assert!(RobustnessTester::test_large_dataset_stability());
+        assert!(RobustnessTester::test_largedataset_stability());
         assert!(RobustnessTester::test_single_element_arrays());
         assert!(RobustnessTester::test_empty_arrays());
         assert!(RobustnessTester::test_zero_arrays());
@@ -1409,50 +1409,50 @@ mod tests {
     #[test]
     fn test_extended_mathematical_properties() {
         // Use test data of the same length for Cauchy-Schwarz inequality
-        let test_data1 = StatisticalTestData::generate_sample(); // 10 elements
-        let test_data2 = StatisticalTestData::new(vec![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0]); // 10 elements
-        let test_data3 = StatisticalTestData::new(vec![1.0, 4.0, 2.0, 8.0, 5.0, 7.0, 3.0, 9.0, 6.0, 10.0]); // 10 elements
+        let testdata1 = StatisticalTestData::generate_sample(); // 10 elements
+        let testdata2 = StatisticalTestData::new(vec![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0]); // 10 elements
+        let testdata3 = StatisticalTestData::new(vec![1.0, 4.0, 2.0, 8.0, 5.0, 7.0, 3.0, 9.0, 6.0, 10.0]); // 10 elements
 
         // Test advanced mathematical properties
         assert!(ExtendedMathematicalTester::test_cauchy_schwarz_inequality(
-            &test_data1,
-            &test_data2,
-            &test_data3
+            &testdata1,
+            &testdata2,
+            &testdata3
         ));
         assert!(
             ExtendedMathematicalTester::test_triangle_inequality_property(
-                &test_data1,
-                &test_data2,
-                &test_data3
+                &testdata1,
+                &testdata2,
+                &testdata3
             )
         );
         assert!(ExtendedMathematicalTester::test_jensen_inequality(
-            &test_data1
+            &testdata1
         ));
         assert!(ExtendedMathematicalTester::test_minkowski_inequality(
-            &test_data1,
-            &test_data2
+            &testdata1,
+            &testdata2
         ));
         assert!(ExtendedMathematicalTester::test_chebyshev_inequality(
-            &test_data2
+            &testdata2
         )); // Use larger dataset
     }
 
     #[test]
-    fn test_data_generators() {
+    fn testdata_generators() {
         // Test that our data generators work correctly
-        let random_data = FuzzingTester::generate_random_data(100, 42);
-        assert_eq!(random_data.data.len(), 100);
+        let randomdata = FuzzingTester::generate_randomdata(100, 42);
+        assert_eq!(randomdata.data.len(), 100);
 
-        let skewed_data = FuzzingTester::generate_skewed_data(50, 2.0, 123);
-        assert_eq!(skewed_data.data.len(), 50);
+        let skeweddata = FuzzingTester::generate_skeweddata(50, 2.0, 123);
+        assert_eq!(skeweddata.data.len(), 50);
 
-        let outlier_data = FuzzingTester::generate_outlier_data(75, 0.1, 456);
-        assert_eq!(outlier_data.data.len(), 75);
+        let outlierdata = FuzzingTester::generate_outlierdata(75, 0.1, 456);
+        assert_eq!(outlierdata.data.len(), 75);
 
         // Test reproducibility with same seed
-        let data1 = FuzzingTester::generate_random_data(10, 999);
-        let data2 = FuzzingTester::generate_random_data(10, 999);
+        let data1 = FuzzingTester::generate_randomdata(10, 999);
+        let data2 = FuzzingTester::generate_randomdata(10, 999);
         assert_eq!(data1.data, data2.data);
     }
 }

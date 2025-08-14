@@ -589,10 +589,10 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
 
                 // Add intersections between half-plane boundaries
                 for k in 0..half_planes.len() {
-                    let (mp_k, n_k_) = &half_planes[k];
+                    let (mp_k, n_k_, _) = &half_planes[k];
 
                     for half_plane_l in half_planes.iter().skip(k + 1) {
-                        let (mp_l, n_l_) = half_plane_l;
+                        let (mp_l, n_l_, _) = half_plane_l;
 
                         // Compute intersection of two lines:
                         // Line 1: mp_k + t * perpendicular(n_k)
@@ -705,7 +705,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
             let max_z = self.bounds[5];
 
             // Define domain vertices (8 corners of the bounding box)
-            let _domain_vertices = Array2::fromshape_vec(
+            let _domain_vertices = Array2::from_shape_vec(
                 (8, 3),
                 vec![
                     min_x, min_y, min_z, max_x, min_y, min_z, max_x, max_y, min_z, min_x, max_y,
@@ -800,7 +800,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
                 cell_bounds[5] = cell_bounds[5].min(max_z);
 
                 // Create vertices for the cell (8 corners of the bounding box)
-                let vertices = Array2::fromshape_vec(
+                let vertices = Array2::from_shape_vec(
                     (8, 3),
                     vec![
                         cell_bounds[0],
@@ -873,7 +873,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
             let max_x = self.bounds[2];
             let max_y = self.bounds[3];
 
-            let corners = Array2::fromshape_vec(
+            let corners = Array2::from_shape_vec(
                 (4, 2),
                 vec![min_x, min_y, max_x, min_y, max_x, max_y, min_x, max_y],
             )
@@ -913,7 +913,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
             let max_z = self.bounds[5];
 
             // Create a box for the query cell
-            let corners = Array2::fromshape_vec(
+            let corners = Array2::from_shape_vec(
                 (8, 3),
                 vec![
                     min_x, min_y, min_z, max_x, min_y, min_z, max_x, max_y, min_z, min_x, max_y,

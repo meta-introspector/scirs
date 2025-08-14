@@ -422,7 +422,7 @@ impl SceneUnderstandingEngine {
 
     /// Perform advanced-accurate semantic segmentation
     fn perform_semantic_segmentation(&self, image: &ArrayView3<f32>) -> Result<Array2<u32>> {
-        let (height, width_) = image.dim();
+        let (height, width, _channels) = image.dim();
         let mut segmentation_map = Array2::zeros((height, width));
 
         // Multi-scale segmentation for enhanced accuracy
@@ -640,7 +640,7 @@ impl SceneUnderstandingEngine {
         _frame_idx: usize,
     ) -> Result<TemporalInfo> {
         Ok(TemporalInfo {
-            _frame_index: frame_idx,
+            frame_index: _frame_idx,
             timestamp: _frame_idx as f64 / 30.0, // Assuming 30 FPS
             motion_vectors: Array3::zeros((100, 100, 2)),
             scene_changes: Vec::new(),

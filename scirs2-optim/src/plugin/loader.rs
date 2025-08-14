@@ -510,7 +510,7 @@ impl PluginLoader {
     pub fn new(config: LoaderConfig) -> Self {
         let security_manager = SecurityManager::new(config.security_policy.clone());
         Self {
-            config: config,
+            config,
             security_manager,
             loaded_plugins: HashMap::new(),
             dependency_graph: DependencyGraph::new(),
@@ -1316,7 +1316,7 @@ impl SecurityManager {
         );
 
         Self {
-            policy: policy,
+            policy,
             permission_validator: PermissionValidator::new(),
             code_scanner: CodeScanner::new(),
             crypto_validator,
@@ -1516,7 +1516,7 @@ impl PermissionValidator {
 impl CryptographicValidator {
     fn new(_trustedcas: Vec<TrustedCA>, config: SignatureVerificationConfig) -> Self {
         Self {
-            _trustedcas: _trustedcas,
+            _trustedcas,
             config,
         }
     }
@@ -1820,7 +1820,7 @@ impl PluginLoadResult {
         Self {
             success: false,
             plugin_info: None,
-            errors: errors,
+            errors,
             warnings: Vec::new(),
             load_time: std::time::Duration::from_secs(0),
             security_results: SecurityScanResult::default(),

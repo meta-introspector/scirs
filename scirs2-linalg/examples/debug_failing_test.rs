@@ -16,12 +16,12 @@ fn arrays_consistent(a: &ndarray::Array2<f64>, b: &ndarray::Array2<f64>, tol: f6
 fn main() {
     println!("Testing the specific failing 3x3 matrix...");
 
-    let symmetric_matrix = array![[4.0, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]];
-    println!("Matrix: {:?}", symmetric_matrix);
+    let symmetricmatrix = array![[4.0, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]];
+    println!("Matrix: {:?}", symmetricmatrix);
 
     // Test eigenvalues + eigenvectors
     match compat::eigh(
-        &symmetric_matrix.view(),
+        &symmetricmatrix.view(),
         None,
         false,
         false, // Get eigenvectors
@@ -39,7 +39,7 @@ fn main() {
                 println!("Eigenvectors: {:?}", eigenvecs);
 
                 // Test A*V = V*Λ
-                let av = symmetric_matrix.dot(&eigenvecs);
+                let av = symmetricmatrix.dot(&eigenvecs);
                 let vl = eigenvecs.dot(&ndarray::Array2::from_diag(&eigenvals_with_vecs));
                 println!("A*V: {:?}", av);
                 println!("V*Λ: {:?}", vl);

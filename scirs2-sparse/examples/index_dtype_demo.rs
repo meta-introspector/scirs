@@ -4,7 +4,7 @@
 // the appropriate dtype for sparse array indices and safely cast index arrays.
 
 use ndarray::Array1;
-use scirs2__sparse::{
+use scirs2_sparse::{
     can_cast_safely, get_index_dtype, safely_cast_index_arrays, CooArray, SparseArray,
 };
 
@@ -106,9 +106,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let shape = (3, 3);
 
     // Determine the best index dtype
-    let rows_array = Array1::from_vec(rows.clone());
+    let rowsarray = Array1::from_vec(rows.clone());
     let cols_array = Array1::from_vec(cols.clone());
-    let dtype = get_index_dtype(shape, &[rows_array.view(), cols_array.view()]);
+    let dtype = get_index_dtype(shape, &[rowsarray.view(), cols_array.view()]);
 
     println!(
         "  For a sparse array with shape {:?}, recommended index dtype: {}",

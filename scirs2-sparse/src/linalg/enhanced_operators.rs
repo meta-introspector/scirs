@@ -53,7 +53,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedD
     #[allow(dead_code)]
     pub fn new(diagonal: Vec<F>) -> Self {
         Self {
-            diagonal: diagonal,
+            diagonal,
             options: EnhancedOperatorOptions::default(),
         }
     }
@@ -61,10 +61,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedD
     /// Create with custom options
     #[allow(dead_code)]
     pub fn with_options(diagonal: Vec<F>, options: EnhancedOperatorOptions) -> Self {
-        Self {
-            diagonal: diagonal,
-            options,
-        }
+        Self { diagonal, options }
     }
 
     /// Get the diagonal values
@@ -324,7 +321,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedS
     #[allow(dead_code)]
     pub fn new(alpha: F, operator: Box<dyn LinearOperator<F>>) -> Self {
         Self {
-            alpha: alpha,
+            alpha,
             operator,
             options: EnhancedOperatorOptions::default(),
         }
@@ -432,8 +429,8 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
         };
 
         Self {
-            kernel: kernel,
-            input_size: input_size,
+            kernel,
+            input_size,
             output_size,
             mode,
             options: EnhancedOperatorOptions::default(),
@@ -760,7 +757,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> FiniteDif
     #[allow(dead_code)]
     pub fn new(size: usize, order: usize, spacing: F, boundary: BoundaryCondition) -> Self {
         Self {
-            size: size,
+            size,
             order,
             spacing,
             boundary,
@@ -1070,11 +1067,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
 
     /// Create with custom options
     #[allow(dead_code)]
-    pub fn with_options<Func>(
-        function: Func,
-        size: usize,
-        options: EnhancedOperatorOptions,
-    ) -> Self
+    pub fn with_options<Func>(function: Func, size: usize, options: EnhancedOperatorOptions) -> Self
     where
         Func: Fn(F) -> F + Send + Sync + 'static,
     {
@@ -1137,7 +1130,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Kronecker
     #[allow(dead_code)]
     pub fn new(left: Box<dyn LinearOperator<F>>, right: Box<dyn LinearOperator<F>>) -> Self {
         Self {
-            left: left,
+            left,
             right,
             options: EnhancedOperatorOptions::default(),
         }

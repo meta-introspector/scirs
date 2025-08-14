@@ -346,7 +346,7 @@ where
     }
 
     // For small bandwidth, reduce to tridiagonal form
-    let (tri_diag, tri_sub, q_matrix) = reduce_banded_to_tridiagonal(matrix, bandwidth)?;
+    let (tri_diag, tri_sub, qmatrix) = reduce_banded_to_tridiagonal(matrix, bandwidth)?;
 
     // Solve tridiagonal eigenvalue problem
     let (eigenvals, tri_eigenvecs) =
@@ -354,7 +354,7 @@ where
 
     // Transform _eigenvectors back if needed
     let eigenvecs = if compute_eigenvectors {
-        if let (Some(q), Some(tri_vecs)) = (q_matrix, tri_eigenvecs) {
+        if let (Some(q), Some(tri_vecs)) = (qmatrix, tri_eigenvecs) {
             Some(q.dot(&tri_vecs))
         } else {
             None
@@ -502,24 +502,24 @@ where
 
     // Simplified Lanczos algorithm
     let m = std::cmp::min(max_iter, n);
-    let mut q_matrix = Array2::zeros((n, m + 1));
+    let mut qmatrix = Array2::zeros((n, m + 1));
     let mut alpha = Array1::zeros(m);
     let mut beta = Array1::zeros(m);
 
     // Initialize with random vector
     let mut rng = rand::rng();
     for i in 0..n {
-        q_matrix[[i, 0]] = F::from(rng.gen_range(-1.0..=1.0)).unwrap();
+        qmatrix[[i, 0]] = F::from(rng.gen_range(-1.0..=1.0)).unwrap();
     }
 
     // Normalize
     let mut norm = F::zero();
     for i in 0..n {
-        norm += q_matrix[[i, 0]] * q_matrix[[i, 0]];
+        norm += qmatrix[[i, 0]] * qmatrix[[i, 0]];
     }
     norm = norm.sqrt();
     for i in 0..n {
-        q_matrix[[i, 0]] /= norm;
+        qmatrix[[i, 0]] /= norm;
     }
 
     for j in 0..m {
@@ -527,25 +527,25 @@ where
         let mut w = Array1::zeros(n);
         for i in 0..n {
             for l in 0..n {
-                w[i] += matrix[[i, l]] * q_matrix[[l, j]];
+                w[i] += matrix[[i, l]] * qmatrix[[l, j]];
             }
         }
 
         // Compute alpha_j = q_j^T * w
         alpha[j] = F::zero();
         for i in 0..n {
-            alpha[j] += q_matrix[[i, j]] * w[i];
+            alpha[j] += qmatrix[[i, j]] * w[i];
         }
 
         // Update w = w - alpha_j * q_j
         for i in 0..n {
-            w[i] -= alpha[j] * q_matrix[[i, j]];
+            w[i] -= alpha[j] * qmatrix[[i, j]];
         }
 
         // Orthogonalize against previous vector if j > 0
         if j > 0 {
             for i in 0..n {
-                w[i] -= beta[j - 1] * q_matrix[[i, j - 1]];
+                w[i] -= beta[j - 1] * qmatrix[[i, j - 1]];
             }
         }
 
@@ -559,7 +559,7 @@ where
         if j + 1 < m && beta[j] > tol {
             // q_{j+1} = w / beta_j
             for i in 0..n {
-                q_matrix[[i, j + 1]] = w[i] / beta[j];
+                qmatrix[[i, j + 1]] = w[i] / beta[j];
             }
         } else {
             break;
@@ -609,7 +609,7 @@ where
             for row in 0..n {
                 let mut sum = F::zero();
                 for col in 0..m_actual {
-                    sum += q_matrix[[row, col]] * tri_vecs[[col, tri_idx]];
+                    sum += qmatrix[[row, col]] * tri_vecs[[col, tri_idx]];
                 }
                 result_eigenvecs[[row, i]] = sum;
             }

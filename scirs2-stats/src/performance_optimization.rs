@@ -96,13 +96,13 @@ impl OptimizedLinearDiscriminantAnalysis {
     pub fn new(config: PerformanceConfig) -> Self {
         Self {
             lda: LinearDiscriminantAnalysis::new(),
-            config: config,
+            config,
             metrics: None,
         }
     }
 
     /// Validate data with performance-aware checks
-    fn validate_data_optimized(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<()>
+    fn validatedata_optimized(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<()>
     where
         f64: std::fmt::Display,
         i32: std::fmt::Display,
@@ -135,24 +135,24 @@ impl OptimizedLinearDiscriminantAnalysis {
         };
         let _handler = global_error_handler();
         // Use comprehensive validation with performance considerations
-        self.validate_data_optimized(x, y)?;
+        self.validatedata_optimized(x, y)?;
 
         let (n_samples_, n_features) = x.dim();
-        let data_size = n_samples_ * n_features;
+        let datasize = n_samples_ * n_features;
 
         // Auto-tune thresholds if enabled
         if self.config.auto_tune {
-            self.auto_tune_thresholds(data_size);
+            self.auto_tune_thresholds(datasize);
         }
 
         // Decide on optimization strategy
-        let use_simd = self.config.enable_simd && data_size >= self.config.simd_threshold;
+        let use_simd = self.config.enable_simd && datasize >= self.config.simd_threshold;
         let use_parallel =
             self.config.enable_parallel && n_samples_ >= self.config.parallel_threshold;
 
         let result = if use_parallel && n_samples_ > 5000 {
             self.fit_parallel(x, y)?
-        } else if use_simd && data_size > self.config.simd_threshold {
+        } else if use_simd && datasize > self.config.simd_threshold {
             self.fit_simd(x, y)?
         } else {
             self.lda.fit(x, y)?
@@ -163,7 +163,7 @@ impl OptimizedLinearDiscriminantAnalysis {
             let execution_time = start.elapsed().as_secs_f64() * 1000.0;
             self.metrics = Some(PerformanceMetrics {
                 execution_time_ms: execution_time,
-                memory_usage: Some(data_size * 8), // Approximate
+                memory_usage: Some(datasize * 8), // Approximate
                 operations_count: n_samples_ * n_features,
                 ops_per_second: (n_samples_ * n_features) as f64 / (execution_time / 1000.0),
                 used_simd: use_simd,
@@ -261,7 +261,7 @@ impl OptimizedLinearDiscriminantAnalysis {
                 continue;
             }
 
-            let class_size = class_indices.len();
+            let classsize = class_indices.len();
 
             // Use SIMD for mean computation when beneficial
             if n_features >= self.config.simd_threshold {
@@ -278,7 +278,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
                 class_means
                     .row_mut(class_idx)
-                    .assign(&(sum / class_size as f64));
+                    .assign(&(sum / classsize as f64));
             } else {
                 // Regular computation for small features
                 let mut sum = Array1::zeros(n_features);
@@ -287,7 +287,7 @@ impl OptimizedLinearDiscriminantAnalysis {
                 }
                 class_means
                     .row_mut(class_idx)
-                    .assign(&(sum / class_size as f64));
+                    .assign(&(sum / classsize as f64));
             }
         }
 
@@ -460,9 +460,9 @@ impl OptimizedLinearDiscriminantAnalysis {
 
     /// Transform data with optimizations
     pub fn transform(&self, x: ArrayView2<f64>, result: &LDAResult) -> Result<Array2<f64>> {
-        let data_size = x.nrows() * x.ncols();
+        let datasize = x.nrows() * x.ncols();
 
-        if self.config.enable_simd && data_size >= self.config.simd_threshold {
+        if self.config.enable_simd && datasize >= self.config.simd_threshold {
             self.transform_simd(x, result)
         } else {
             self.lda.transform(x, result)
@@ -506,7 +506,7 @@ impl OptimizedCanonicalCorrelationAnalysis {
     pub fn new(config: PerformanceConfig) -> Self {
         Self {
             cca: CanonicalCorrelationAnalysis::new(),
-            config: config,
+            config,
             metrics: None,
         }
     }
@@ -525,7 +525,7 @@ impl OptimizedCanonicalCorrelationAnalysis {
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "Optimized CCA fit");
         validate_or_error!(finite: y.as_slice().unwrap(), "y", "Optimized CCA fit");
 
-        let data_size = x.nrows() * (x.ncols() + y.ncols());
+        let datasize = x.nrows() * (x.ncols() + y.ncols());
         let use_parallel =
             self.config.enable_parallel && x.nrows() >= self.config.parallel_threshold;
 
@@ -540,9 +540,9 @@ impl OptimizedCanonicalCorrelationAnalysis {
             let execution_time = start.elapsed().as_secs_f64() * 1000.0;
             self.metrics = Some(PerformanceMetrics {
                 execution_time_ms: execution_time,
-                memory_usage: Some(data_size * 8),
-                operations_count: data_size,
-                ops_per_second: data_size as f64 / (execution_time / 1000.0),
+                memory_usage: Some(datasize * 8),
+                operations_count: datasize,
+                ops_per_second: datasize as f64 / (execution_time / 1000.0),
                 used_simd: false, // CCA eigenvalue ops don't benefit much from SIMD
                 used_parallel: use_parallel,
                 threads_used: if use_parallel { num_cpus::get() } else { 1 },
@@ -644,15 +644,15 @@ pub struct PerformanceBenchmark;
 impl PerformanceBenchmark {
     /// Benchmark LDA performance across different configurations
     pub fn benchmark_lda(
-        data_sizes: &[(usize, usize)], // (n_samples_, n_features)
+        datasizes: &[(usize, usize)], // (n_samples_, n_features)
         n_classes: usize,
     ) -> Result<Vec<(String, PerformanceMetrics)>> {
         let mut results = Vec::new();
 
-        for &(n_samples_, n_features) in data_sizes {
+        for &(n_samples_, n_features) in datasizes {
             // Generate synthetic data
             let (x, y) =
-                Self::generate_synthetic_classification_data(n_samples_, n_features, n_classes)?;
+                Self::generate_synthetic_classificationdata(n_samples_, n_features, n_classes)?;
 
             // Test different configurations
             let configs = vec![
@@ -711,7 +711,7 @@ impl PerformanceBenchmark {
     }
 
     /// Generate synthetic classification data for benchmarking
-    fn generate_synthetic_classification_data(
+    fn generate_synthetic_classificationdata(
         n_samples_: usize,
         n_features: usize,
         n_classes: usize,

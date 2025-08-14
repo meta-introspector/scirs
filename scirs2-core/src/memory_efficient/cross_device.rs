@@ -1057,10 +1057,7 @@ impl CrossDeviceManager {
             let gpu_device = DeviceType::Gpu(gpu_backend);
             let gpu_manager = DeviceMemoryManager::new(max_cachesize)?;
             memory_managers.insert(gpu_device, gpu_manager);
-            memory_pools.insert(
-                gpu_device,
-                DeviceMemoryPool::new(gpu_device, max_cachesize),
-            );
+            memory_pools.insert(gpu_device, DeviceMemoryPool::new(gpu_device, max_cachesize));
         }
 
         Ok(Self {

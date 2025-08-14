@@ -13,7 +13,7 @@
 
 use ndarray::{Array2, ArrayBase, ArrayView1, Data, Ix2};
 use num_traits::{Float, FromPrimitive};
-use ordered__float::OrderedFloat;
+use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -51,7 +51,7 @@ struct KdNode<F: Float> {
 /// use scirs2__interpolate::spatial::kdtree::KdTree;
 ///
 /// // Create sample 2D points
-/// let points = Array2::fromshape_vec((5, 2), vec![
+/// let points = Array2::from_shape_vec((5, 2), vec![
 ///     0.0, 0.0,
 ///     1.0, 0.0,
 ///     0.0, 1.0,
@@ -148,7 +148,8 @@ where
                 nodes: Vec::new(),
                 root: None,
                 dim,
-                leaf_size_phantom: PhantomData,
+                leaf_size,
+                _phantom: PhantomData,
             };
 
             if n_points > 0 {
@@ -174,7 +175,8 @@ where
             nodes: Vec::with_capacity(est_nodes),
             root: None,
             dim,
-            leaf_size_phantom: PhantomData,
+            leaf_size,
+            _phantom: PhantomData,
         };
 
         // Build the tree
@@ -334,7 +336,7 @@ where
         // Use a BinaryHeap as a priority queue to keep track of k nearest points
         // We use BinaryHeap as a max-heap, so we can easily remove the farthest point
         // when the heap is full
-        use ordered__float::OrderedFloat;
+        use ordered_float::OrderedFloat;
         use std::collections::BinaryHeap;
 
         let mut heap: BinaryHeap<(OrderedFloat<F>, usize)> = BinaryHeap::with_capacity(k + 1);
@@ -763,7 +765,7 @@ where
             return self.linear_k_nearest_neighbors_optimized(query, k, max_distance);
         }
 
-        use ordered__float::OrderedFloat;
+        use ordered_float::OrderedFloat;
         use std::collections::BinaryHeap;
 
         let mut heap: BinaryHeap<(OrderedFloat<F>, usize)> = BinaryHeap::with_capacity(k + 1);
@@ -805,7 +807,7 @@ where
 
         for i in 0..n_points {
             let point = self.points.row(i);
-            let dist = self._distance(&point.to_vec(), query);
+            let dist = self.distance(&point.to_vec(), query);
 
             // Early termination if _distance exceeds maximum
             if dist <= max_dist {
@@ -949,7 +951,7 @@ where
     // Partition around the pivot
     let mut store_idx = 0;
     for i in 0..len - 1 {
-        if key_fn(&_items[i]) <= key_fn(&_items[len - 1]) {
+        if keyfn(&_items[i]) <= keyfn(&_items[len - 1]) {
             items.swap(i, store_idx);
             store_idx += 1;
         }
@@ -960,9 +962,9 @@ where
 
     // Recursively partition the right part only as needed
     match k.cmp(&store_idx) {
-        Ordering::Less => quickselect_by_key(&mut items[0..store_idx], k, key_fn),
+        Ordering::Less => quickselect_by_key(&mut items[0..store_idx], k, keyfn),
         Ordering::Greater => {
-            quickselect_by_key(&mut items[store_idx + 1..], k - store_idx - 1, key_fn)
+            quickselect_by_key(&mut items[store_idx + 1..], k - store_idx - 1, keyfn)
         }
         Ordering::Equal => (), // We found the k-th element
     }

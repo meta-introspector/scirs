@@ -100,8 +100,8 @@ where
             a.to_owned()
         }
         "omit" => {
-            let valid_data: Vec<F> = a.iter().filter(|&&x| !x.is_nan()).copied().collect();
-            Array1::from(valid_data)
+            let validdata: Vec<F> = a.iter().filter(|&&x| !x.is_nan()).copied().collect();
+            Array1::from(validdata)
         }
         _ => {
             return Err(StatsError::InvalidArgument(format!(
@@ -380,7 +380,7 @@ where
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     // Handle NaN values and pair the data
-    let paired_data = match nan_policy {
+    let paireddata = match nan_policy {
         "propagate" => {
             // If any pair has a NaN, the result will be NaN
             if a.len() != b.len() {
@@ -438,14 +438,14 @@ where
     };
 
     // Check if we have enough data after NaN handling
-    if paired_data.is_empty() {
+    if paireddata.is_empty() {
         return Err(StatsError::InvalidArgument(
             "No valid paired data after NaN removal".to_string(),
         ));
     }
 
     // Perform one-sample t-test on the differences (testing if the mean difference is different from 0)
-    let one_sample_result = ttest_1samp(&paired_data.view(), F::zero(), alternative, "omit")?;
+    let one_sample_result = ttest_1samp(&paireddata.view(), F::zero(), alternative, "omit")?;
 
     // Calculate means of both arrays for additional info
     let valid_a: Vec<F> = a.iter().filter(|&&x| !x.is_nan()).copied().collect();
@@ -469,7 +469,7 @@ where
         mean_a,
         mean_b,
         one_sample_result.statistic * one_sample_result.statistic.signum(),
-        paired_data.len()
+        paireddata.len()
     );
 
     Ok(TTestResult {

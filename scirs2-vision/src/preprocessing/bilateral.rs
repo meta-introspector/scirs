@@ -131,14 +131,8 @@ fn bilateral_filter_rgb(img: &RgbImage, params: &BilateralParams) -> Result<RgbI
             (0..width)
                 .into_par_iter()
                 .map(move |x| {
-                    let filtered_rgb = apply_bilateral_pixel_rgb(
-                        img,
-                        x,
-                        y,
-                        radius,
-                        &spatial_weights,
-                        sigma_range,
-                    );
+                    let filtered_rgb =
+                        apply_bilateral_pixel_rgb(img, x, y, radius, &spatial_weights, sigma_range);
                     (x, y, filtered_rgb)
                 })
                 .collect::<Vec<_>>()

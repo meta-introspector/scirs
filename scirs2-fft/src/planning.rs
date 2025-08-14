@@ -225,7 +225,7 @@ impl AdvancedFftPlanner {
         };
 
         Self {
-            config: config,
+            config,
             cache: Arc::new(Mutex::new(HashMap::new())),
             serialization_manager,
             auto_tuner,
@@ -486,7 +486,7 @@ impl FftPlanExecutor {
     /// Create a new executor for the given plan
     pub fn new(plan: Arc<FftPlan>) -> Self {
         Self {
-            plan: plan,
+            plan,
             context: None,
         }
     }
@@ -494,7 +494,7 @@ impl FftPlanExecutor {
     /// Create a new executor with a specific context
     pub fn with_context(plan: Arc<FftPlan>, context: BackendContext) -> Self {
         Self {
-            plan: plan,
+            plan,
             context: Some(context),
         }
     }

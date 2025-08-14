@@ -32,7 +32,7 @@ use crate::gamma::{gamma, gammaln};
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::pbdv;
+/// use scirs2_special::pbdv;
 ///
 /// let (d, dp) = pbdv(1.0, 0.5).unwrap();
 /// println!("D_1(0.5) = {}, D_1'(0.5) = {}", d, dp);
@@ -280,8 +280,8 @@ fn pbdv_series(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
             let new_term = coef * x_pow_k;
 
             // For derivatives, we need x^(k-1)
-            let x_pow_k_minus_1 = if k > 0 { x_pow_k / x } else { 1.0 };
-            let new_dp_term = coef * x_pow_k_minus_1 * k_f64;
+            let x_pow_kminus_1 = if k > 0 { x_pow_k / x } else { 1.0 };
+            let new_dp_term = coef * x_pow_kminus_1 * k_f64;
 
             if new_term.is_finite() {
                 term = new_term;
@@ -544,7 +544,7 @@ fn pbdv_asymptotic_neg(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::pbvv;
+/// use scirs2_special::pbvv;
 ///
 /// let (v, vp) = pbvv(1.0, 0.5).unwrap();
 /// println!("V_1(0.5) = {}, V_1'(0.5) = {}", v, vp);
@@ -573,28 +573,28 @@ fn pbvv_integer(v: i32, x: f64) -> SpecialResult<(f64, f64)> {
 
     if v >= 0 {
         // For v ≥ 0
-        let (d_neg_v_minus_1, d_neg_v_minus_1_prime) = pbdv(-(v as f64) - 1.0, x)?;
+        let (d_neg_vminus_1, d_neg_vminus_1_prime) = pbdv(-(v as f64) - 1.0, x)?;
 
         let gamma_arg1 = v as f64 + 1.0;
         let gamma_v_plus_1 = gamma(gamma_arg1);
 
         // Formula: V_v(x) = D_v(x)·cos(πv) - D_{-v-1}(x)·√(2/π)·Γ(v+1)
         let v_val =
-            d_v * (PI * v as f64).cos() - d_neg_v_minus_1 * (2.0 / PI).sqrt() * gamma_v_plus_1;
+            d_v * (PI * v as f64).cos() - d_neg_vminus_1 * (2.0 / PI).sqrt() * gamma_v_plus_1;
         let vp_val = d_v_prime * (PI * v as f64).cos()
-            - d_neg_v_minus_1_prime * (2.0 / PI).sqrt() * gamma_v_plus_1;
+            - d_neg_vminus_1_prime * (2.0 / PI).sqrt() * gamma_v_plus_1;
 
         Ok((v_val, vp_val))
     } else {
         // For v < 0
-        let (d_neg_v_minus_1, d_neg_v_minus_1_prime) = pbdv(-(v as f64) - 1.0, x)?;
+        let (d_neg_vminus_1, d_neg_vminus_1_prime) = pbdv(-(v as f64) - 1.0, x)?;
 
         let gamma_arg1 = -(v as f64);
         let _gamma_neg_v = gamma(gamma_arg1);
 
         // Formula for v < 0
-        let v_val = d_neg_v_minus_1;
-        let vp_val = d_neg_v_minus_1_prime;
+        let v_val = d_neg_vminus_1;
+        let vp_val = d_neg_vminus_1_prime;
 
         Ok((v_val, vp_val))
     }
@@ -718,8 +718,8 @@ fn pbvv_series(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
             let new_term = coef * x_pow_k;
 
             // For derivatives, we need x^(k-1)
-            let x_pow_k_minus_1 = if k > 0 { x_pow_k / x } else { 1.0 };
-            let new_vp_term = coef * x_pow_k_minus_1 * k_f64;
+            let x_pow_kminus_1 = if k > 0 { x_pow_k / x } else { 1.0 };
+            let new_vp_term = coef * x_pow_kminus_1 * k_f64;
 
             if new_term.is_finite() {
                 term = new_term;
@@ -743,14 +743,14 @@ fn pbvv_series(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
             let new_term = coef * x_pow_k;
 
             // For derivatives
-            let sign_correction_minus_1 = if x < 0.0 && (k - 1) % 2 == 1 {
+            let sign_correctionminus_1 = if x < 0.0 && (k - 1) % 2 == 1 {
                 -1.0
             } else {
                 1.0
             };
-            let log_x_pow_k_minus_1 = (k_f64 - 1.0) * x.abs().ln();
-            let x_pow_k_minus_1 = sign_correction_minus_1 * log_x_pow_k_minus_1.exp();
-            let new_vp_term = coef * x_pow_k_minus_1 * k_f64;
+            let log_x_pow_kminus_1 = (k_f64 - 1.0) * x.abs().ln();
+            let x_pow_kminus_1 = sign_correctionminus_1 * log_x_pow_kminus_1.exp();
+            let new_vp_term = coef * x_pow_kminus_1 * k_f64;
 
             if new_term.is_finite() {
                 term = new_term;
@@ -991,7 +991,7 @@ fn pbvv_asymptotic(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::pbdv_seq;
+/// use scirs2_special::pbdv_seq;
 ///
 /// let (d_values, dp_values) = pbdv_seq(3, 0.5).unwrap();
 /// println!("D_0(0.5) = {}, D_1(0.5) = {}, D_2(0.5) = {}, D_3(0.5) = {}",
@@ -1051,7 +1051,7 @@ pub fn pbdv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::pbvv_seq;
+/// use scirs2_special::pbvv_seq;
 ///
 /// let (v_values, vp_values) = pbvv_seq(3, 0.5).unwrap();
 /// println!("V_0(0.5) = {}, V_1(0.5) = {}, V_2(0.5) = {}, V_3(0.5) = {}",
@@ -1097,7 +1097,7 @@ pub fn pbvv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::pbwa;
+/// use scirs2_special::pbwa;
 ///
 /// let (w, wp) = pbwa(1.0, 0.5).unwrap();
 /// println!("W(1.0, 0.5) = {}, W'(1.0, 0.5) = {}", w, wp);

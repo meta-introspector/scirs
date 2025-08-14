@@ -283,15 +283,15 @@ impl MLPipeline {
         let mut transformed_data = dataset.data.clone();
 
         for (col_idx, mut column) in transformed_data.columns_mut().into_iter().enumerate() {
-            let default_name = format!("feature_{col_idx}");
-            let feature_name = dataset
-                .feature_names
+            let defaultname = format!("feature_{col_idx}");
+            let featurename = dataset
+                .featurenames
                 .as_ref()
                 .and_then(|names| names.get(col_idx))
                 .map(|s| s.as_str())
-                .unwrap_or(&default_name);
+                .unwrap_or(&defaultname);
 
-            if let Some(scaler) = scalers.get(feature_name) {
+            if let Some(scaler) = scalers.get(featurename) {
                 Self::apply_scaler_to_column(&mut column, scaler)?;
             }
         }
@@ -299,8 +299,8 @@ impl MLPipeline {
         Ok(Dataset {
             data: transformed_data,
             target: dataset.target.clone(),
-            feature_names: dataset.feature_names.clone(),
-            target_names: dataset.target_names.clone(),
+            featurenames: dataset.featurenames.clone(),
+            targetnames: dataset.targetnames.clone(),
             feature_descriptions: dataset.feature_descriptions.clone(),
             description: Some("Transformed dataset".to_string()),
             metadata: dataset.metadata.clone(),
@@ -433,8 +433,8 @@ impl MLPipeline {
         Ok(Dataset {
             data: balanced_data,
             target: Some(balanced_target),
-            feature_names: dataset.feature_names.clone(),
-            target_names: dataset.target_names.clone(),
+            featurenames: dataset.featurenames.clone(),
+            targetnames: dataset.targetnames.clone(),
             feature_descriptions: dataset.feature_descriptions.clone(),
             description: Some("Undersampled dataset".to_string()),
             metadata: dataset.metadata.clone(),
@@ -511,8 +511,8 @@ impl MLPipeline {
         Ok(Dataset {
             data: oversampled_data,
             target: Some(oversampled_target),
-            feature_names: dataset.feature_names.clone(),
-            target_names: dataset.target_names.clone(),
+            featurenames: dataset.featurenames.clone(),
+            targetnames: dataset.targetnames.clone(),
             feature_descriptions: dataset.feature_descriptions.clone(),
             description: Some(format!(
                 "Random oversampled dataset (original: {} samples, oversampled: {} samples)",
@@ -532,8 +532,8 @@ impl MLPipeline {
         let mut scaled_data = dataset.data.clone();
 
         for (col_idx, mut column) in scaled_data.columns_mut().into_iter().enumerate() {
-            let feature_name = dataset
-                .feature_names
+            let featurename = dataset
+                .featurenames
                 .as_ref()
                 .and_then(|names| names.get(col_idx))
                 .cloned()
@@ -543,7 +543,7 @@ impl MLPipeline {
             let scaler_params = Self::fit_scaler(&column_view, method)?;
             Self::apply_scaler_to_column(&mut column, &scaler_params)?;
 
-            scalers.insert(feature_name, scaler_params);
+            scalers.insert(featurename, scaler_params);
         }
 
         self.fitted_scalers = Some(scalers);
@@ -551,8 +551,8 @@ impl MLPipeline {
         Ok(Dataset {
             data: scaled_data,
             target: dataset.target.clone(),
-            feature_names: dataset.feature_names.clone(),
-            target_names: dataset.target_names.clone(),
+            featurenames: dataset.featurenames.clone(),
+            targetnames: dataset.targetnames.clone(),
             feature_descriptions: dataset.feature_descriptions.clone(),
             description: Some("Scaled dataset".to_string()),
             metadata: dataset.metadata.clone(),
@@ -798,8 +798,8 @@ impl MLPipeline {
             let mut class_counts: HashMap<String, usize> = HashMap::new();
             for &value in target.iter() {
                 if !value.is_nan() {
-                    let class_name = format!("{value:.0}");
-                    *class_counts.entry(class_name).or_insert(0) += 1;
+                    let classname = format!("{value:.0}");
+                    *class_counts.entry(classname).or_insert(0) += 1;
                 }
             }
 
@@ -878,7 +878,7 @@ pub mod convenience {
     /// Create a simple ML experiment
     pub fn create_experiment(name: &str, dataset: &Dataset) -> MLExperiment {
         let pipeline = MLPipeline::default();
-        pipeline.create_experiment(_name, dataset)
+        pipeline.create_experiment(name, dataset)
     }
 }
 

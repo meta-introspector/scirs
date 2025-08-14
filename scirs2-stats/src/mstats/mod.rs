@@ -30,7 +30,7 @@ impl<T: Copy> MaskedArray<T> {
     }
 
     /// Create a masked array with all values unmasked (valid)
-    pub fn from_data(data: Array1<T>) -> Self {
+    pub fn fromdata(data: Array1<T>) -> Self {
         let mask = Array1::from_elem(data.len(), true);
         Self { data, mask }
     }
@@ -77,7 +77,7 @@ impl<T: Copy> MaskedArray2<T> {
     }
 
     /// Create a masked array with all values unmasked (valid)
-    pub fn from_data(data: Array2<T>) -> Self {
+    pub fn fromdata(data: Array2<T>) -> Self {
         let mask = Array2::from_elem(data.dim(), true);
         Self { data, mask }
     }

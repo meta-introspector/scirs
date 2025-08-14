@@ -110,8 +110,9 @@ fn main() -> IntegrateResult<()> {
     if results.len() > 1 {
         println!("\nEfficiency comparison (relative to finite difference):");
 
-        let base_time = if let Some((_, time_, _)) =
-            results.iter().find(|(name_, _, _)| *name_ == "Finite Difference")
+        let base_time = if let Some((_, time_, _)) = results
+            .iter()
+            .find(|(name_, _, _)| *name_ == "Finite Difference")
         {
             *time_
         } else {

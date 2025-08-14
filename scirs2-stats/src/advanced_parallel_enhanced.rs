@@ -144,7 +144,7 @@ impl AdvancedParallelProcessor {
         + std::fmt::Display,
     {
         let start_time = Instant::now();
-        let data_characteristics = self.analyze_data_characteristics(data);
+        let data_characteristics = self.analyzedata_characteristics(data);
 
         // Predict optimal execution strategy
         let execution_strategy = if self.config.enable_ml_optimization {
@@ -161,7 +161,7 @@ impl AdvancedParallelProcessor {
             self.numa_optimizer
                 .read()
                 .unwrap()
-                .optimize_data_placement(&data_characteristics)?
+                .optimizedata_placement(&data_characteristics)?
         } else {
             MemoryLayout::default()
         };
@@ -259,7 +259,7 @@ impl AdvancedParallelProcessor {
     pub fn advanced_parallel_streaming<F, D>(
         &self,
         data_stream: &mut dyn Iterator<Item = ArrayBase<D, Ix1>>,
-        window_size: usize,
+        windowsize: usize,
         operations: &[StreamingOperation],
     ) -> StatsResult<AdvancedParallelStreamingResult<F>>
     where
@@ -267,7 +267,7 @@ impl AdvancedParallelProcessor {
         D: Data<Elem = F> + Sync
         + std::fmt::Display,
     {
-        let mut streaming_buffer = StreamingBuffer::new(window_size);
+        let mut streaming_buffer = StreamingBuffer::new(windowsize);
         let mut results = Vec::new();
         let start_time = Instant::now();
 
@@ -370,7 +370,7 @@ impl AdvancedParallelProcessor {
 
     // Helper methods for data analysis and characteristics detection
 
-    fn analyze_data_characteristics<F, D>(&self, data: &ArrayBase<D, Ix1>) -> DataCharacteristics
+    fn analyzedata_characteristics<F, D>(&self, data: &ArrayBase<D, Ix1>) -> DataCharacteristics
     where
         F: Float + NumCast + Send + Sync + Copy,
         D: Data<Elem = F> + Sync
@@ -379,14 +379,14 @@ impl AdvancedParallelProcessor {
         DataCharacteristics {
             size: data.len(),
             memory_footprint: data.len() * std::mem::size_of::<F>(),
-            data_distribution: self.detect_data_distribution(data),
+            data_distribution: self.detectdata_distribution(data),
             access_pattern: AccessPattern::Sequential, // Default for 1D arrays
             cache_efficiency_estimate: self.estimate_cache_efficiency(data.len()),
             numa_locality_potential: self.estimate_numa_locality(data.len()),
         }
     }
 
-    fn detect_data_distribution<F, D>(&self, data: &ArrayBase<D, Ix1>) -> DataDistribution
+    fn detectdata_distribution<F, D>(&self, data: &ArrayBase<D, Ix1>) -> DataDistribution
     where
         F: Float + NumCast + Send + Sync + Copy,
         D: Data<Elem = F> + Sync
@@ -418,16 +418,16 @@ impl AdvancedParallelProcessor {
     }
 
     fn estimate_cache_efficiency(&self, datasize: usize) -> f64 {
-        // Simplified cache efficiency estimation based on data _size
-        let l1_cache_size = 32 * 1024; // 32KB typical L1 cache
-        let l2_cache_size = 256 * 1024; // 256KB typical L2 cache
-        let l3_cache_size = 8 * 1024 * 1024; // 8MB typical L3 cache
+        // Simplified cache efficiency estimation based on data size
+        let l1_cachesize = 32 * 1024; // 32KB typical L1 cache
+        let l2_cachesize = 256 * 1024; // 256KB typical L2 cache
+        let l3_cachesize = 8 * 1024 * 1024; // 8MB typical L3 cache
 
-        if data_size * 8 <= l1_cache_size {
+        if datasize * 8 <= l1_cachesize {
             0.95 // Excellent L1 cache fit
-        } else if data_size * 8 <= l2_cache_size {
+        } else if datasize * 8 <= l2_cachesize {
             0.85 // Good L2 cache fit
-        } else if data_size * 8 <= l3_cache_size {
+        } else if datasize * 8 <= l3_cachesize {
             0.70 // Reasonable L3 cache fit
         } else {
             0.40 // Poor cache efficiency
@@ -435,10 +435,10 @@ impl AdvancedParallelProcessor {
     }
 
     fn estimate_numa_locality(&self, datasize: usize) -> f64 {
-        // Estimate NUMA locality potential based on data _size
+        // Estimate NUMA locality potential based on data size
         let numa_node_memory = 64 * 1024 * 1024 * 1024; // 64GB per NUMA node typical
 
-        if data_size * 8 <= numa_node_memory {
+        if datasize * 8 <= numa_node_memory {
             0.90 // Excellent NUMA locality potential
         } else {
             0.50 // May require cross-NUMA access
@@ -470,7 +470,7 @@ impl AdvancedParallelProcessor {
         D: Send + Sync,
     {
         ChunkCharacteristics {
-            chunk_size: buffer.current_size(),
+            chunksize: buffer.currentsize(),
             temporal_locality: 0.8, // Assume good temporal locality in streaming
             processing_complexity: ProcessingComplexity::Medium,
             memory_requirements: buffer.memory_footprint(),
@@ -489,13 +489,13 @@ impl AdvancedParallelProcessor {
         BatchCharacteristics {
             batch_count: batches.len(),
             total_elements: batches.iter().map(|b| b.len()).sum(),
-            size_variance: self.calculate_batch_size_variance(batches),
+            size_variance: self.calculate_batchsize_variance(batches),
             memory_distribution: MemoryDistribution::Uniform, // Simplified
             interdependency: BatchInterdependency::Independent,
         }
     }
 
-    fn calculate_batch_size_variance<F, D>(&self, batches: &[ArrayBase<D, Ix1>]) -> f64
+    fn calculate_batchsize_variance<F, D>(&self, batches: &[ArrayBase<D, Ix1>]) -> f64
     where
         F: Float + NumCast + Send + Sync + Copy,
         D: Data<Elem = F> + Sync
@@ -679,7 +679,7 @@ pub enum NumericalStability {
 
 #[derive(Debug, Clone)]
 pub struct ChunkCharacteristics {
-    pub chunk_size: usize,
+    pub chunksize: usize,
     pub temporal_locality: f64,
     pub processing_complexity: ProcessingComplexity,
     pub memory_requirements: usize,
@@ -759,7 +759,7 @@ pub enum BatchOperation {
 #[derive(Debug, Clone)]
 pub struct ExecutionStrategy {
     pub thread_count: usize,
-    pub chunk_size: usize,
+    pub chunksize: usize,
     pub memory_strategy: MemoryStrategy,
     pub load_balancing: LoadBalancingStrategy,
 }
@@ -768,7 +768,7 @@ impl Default for ExecutionStrategy {
     fn default() -> Self {
         Self {
             thread_count: num_threads(),
-            chunk_size: 1000,
+            chunksize: 1000,
             memory_strategy: MemoryStrategy::Standard,
             load_balancing: LoadBalancingStrategy::Dynamic,
         }
@@ -828,8 +828,8 @@ pub enum CacheOptimization {
 #[derive(Debug, Clone)]
 pub struct LoadBalancingConfig {
     pub strategy: LoadBalancingStrategy,
-    pub chunk_size_min: usize,
-    pub chunk_size_max: usize,
+    pub chunksize_min: usize,
+    pub chunksize_max: usize,
     pub load_threshold: f64,
 }
 
@@ -1149,8 +1149,8 @@ impl IntelligentLoadBalancer {
         // Placeholder implementation
         Ok(LoadBalancingConfig {
             _strategy: LoadBalancingStrategy::Dynamic,
-            chunk_size_min: 100,
-            chunk_size_max: 10000,
+            chunksize_min: 100,
+            chunksize_max: 10000,
             load_threshold: 0.8,
         })
     }
@@ -1176,7 +1176,7 @@ impl NumaOptimizer {
         }
     }
 
-    pub fn optimize_data_placement(
+    pub fn optimizedata_placement(
         &self, &DataCharacteristics,
     ) -> StatsResult<MemoryLayout> {
         // Placeholder implementation
@@ -1209,7 +1209,7 @@ pub struct NumaTopology {
 pub struct NumaNode {
     pub id: usize,
     pub cpu_cores: Vec<usize>,
-    pub memory_size_gb: f64,
+    pub memorysize_gb: f64,
     pub local_bandwidth_gbps: f64,
 }
 
@@ -1323,7 +1323,7 @@ impl ThreadPoolManager {
 #[derive(Debug, Clone)]
 pub struct ThreadPool {
     pub thread_count: usize,
-    pub work_queue_size: usize,
+    pub work_queuesize: usize,
     pub numa_affinity: Option<usize>,
 }
 
@@ -1423,14 +1423,14 @@ impl Default for LatencyPredictor {
 
 #[derive(Debug, Clone)]
 pub struct BufferOptimizer {
-    pub optimal_sizes: HashMap<String, usize>,
+    pub optimalsizes: HashMap<String, usize>,
     pub performance_history: VecDeque<BufferPerformance>,
 }
 
 impl Default for BufferOptimizer {
     fn default() -> Self {
         Self {
-            optimal_sizes: HashMap::new(),
+            optimalsizes: HashMap::new(),
             performance_history: VecDeque::new(),
         }
     }
@@ -1438,7 +1438,7 @@ impl Default for BufferOptimizer {
 
 #[derive(Debug, Clone)]
 pub struct BufferPerformance {
-    pub buffer_size: usize,
+    pub buffersize: usize,
     pub throughput: f64,
     pub memory_efficiency: f64,
 }
@@ -1460,31 +1460,31 @@ pub enum AdaptationType {
 
 pub struct StreamingBuffer<D> {
     data: VecDeque<D>,
-    max_size: usize,
+    maxsize: usize,
     current_memory_footprint: usize,
 }
 
 impl<D> StreamingBuffer<D> {
     pub fn new(_maxsize: usize) -> Self {
         Self {
-            data: VecDeque::with_capacity(_max_size),
-            max_size,
+            data: VecDeque::with_capacity(_maxsize),
+            maxsize,
             current_memory_footprint: 0,
         }
     }
 
     pub fn push(&mut self, item: D) {
-        if self.data.len() >= self.max_size {
+        if self.data.len() >= self.maxsize {
             self.data.pop_front();
         }
         self.data.push_back(item);
     }
 
     pub fn is_ready(&self) -> bool {
-        self.data.len() >= self.max_size
+        self.data.len() >= self.maxsize
     }
 
-    pub fn current_size(&self) -> usize {
+    pub fn currentsize(&self) -> usize {
         self.data.len()
     }
 
@@ -1502,7 +1502,7 @@ fn detect_numa_topology() -> NumaTopology {
         nodes: vec![NumaNode {
             id: 0,
             cpu_cores: (0..8).collect(),
-            memory_size_gb: 64.0,
+            memorysize_gb: 64.0,
             local_bandwidth_gbps: 100.0,
         }],
         distance_matrix: Array2::eye(1),
@@ -1540,7 +1540,7 @@ pub fn create_configured_advanced_think_parallel_processor(
 
 /// Create high-performance parallel processor optimized for large datasets
 #[allow(dead_code)]
-pub fn create_large_dataset_parallel_processor() -> AdvancedParallelProcessor {
+pub fn create_largedataset_parallel_processor() -> AdvancedParallelProcessor {
     let config = AdvancedParallelConfig {
         enable_ml_optimization: true,
         enable_predictive_scheduling: true,
@@ -1583,24 +1583,24 @@ mod tests {
     }
 
     #[test]
-    fn test_data_characteristics_analysis() {
+    fn testdata_characteristics_analysis() {
         let processor = create_advanced_think_parallel_processor();
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let characteristics = processor.analyze_data_characteristics(&data.view());
+        let characteristics = processor.analyzedata_characteristics(&data.view());
 
         assert_eq!(characteristics.size, 5);
         assert!(characteristics.cache_efficiency_estimate > 0.8);
     }
 
     #[test]
-    fn test_batch_size_variance_calculation() {
+    fn test_batchsize_variance_calculation() {
         let processor = create_advanced_think_parallel_processor();
         let batch1 = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let batch2 = Array1::from_vec(vec![4.0, 5.0, 6.0, 7.0]);
         let batch3 = Array1::from_vec(vec![8.0, 9.0]);
 
         let batches = vec![batch1.view(), batch2.view(), batch3.view()];
-        let variance = processor.calculate_batch_size_variance(&batches);
+        let variance = processor.calculate_batchsize_variance(&batches);
 
         assert!(variance > 0.0);
     }
@@ -1621,17 +1621,17 @@ mod tests {
     }
 
     #[test]
-    fn test_data_distribution_detection() {
+    fn testdata_distribution_detection() {
         let processor = create_advanced_think_parallel_processor();
 
         // Test low variance data
-        let low_var_data = Array1::from_vec(vec![1.0; 100]);
-        let distribution = processor.detect_data_distribution(&low_var_data.view());
+        let low_vardata = Array1::from_vec(vec![1.0; 100]);
+        let distribution = processor.detectdata_distribution(&low_vardata.view());
         assert_eq!(distribution, DataDistribution::LowVariance);
 
         // Test normal variance data
-        let normal_data = Array1::from_vec((0..100).map(|i| i as f64).collect());
-        let distribution = processor.detect_data_distribution(&normal_data.view());
+        let normaldata = Array1::from_vec((0..100).map(|i| i as f64).collect());
+        let distribution = processor.detectdata_distribution(&normaldata.view());
         assert_eq!(distribution, DataDistribution::HighVariance);
     }
 
@@ -1659,17 +1659,17 @@ mod tests {
 
         buffer.push(3);
         assert!(buffer.is_ready());
-        assert_eq!(buffer.current_size(), 3);
+        assert_eq!(buffer.currentsize(), 3);
 
         buffer.push(4);
-        assert_eq!(buffer.current_size(), 3); // Should maintain max size
+        assert_eq!(buffer.currentsize(), 3); // Should maintain max size
     }
 
     #[test]
     fn test_specialized_processor_creation() {
-        let large_dataset_processor = create_large_dataset_parallel_processor();
+        let largedataset_processor = create_largedataset_parallel_processor();
         assert_eq!(
-            large_dataset_processor.config.memory_awareness_level,
+            largedataset_processor.config.memory_awareness_level,
             MemoryAwarenessLevel::Expert
         );
 

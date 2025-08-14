@@ -112,10 +112,7 @@ enum ForwardOpData<T: Float> {
 impl<T: Float + Default + Clone> DualNumber<T> {
     /// Create a new dual number
     pub fn new(value: T, tangent: T) -> Self {
-        Self {
-            value: value,
-            tangent,
-        }
+        Self { value, tangent }
     }
 
     /// Create a constant (zero tangent)
@@ -132,10 +129,7 @@ impl<T: Float + Default + Clone> DualNumber<T> {
 impl<T: Float + Default + Clone> VectorDual<T> {
     /// Create a new vector dual number
     pub fn new(value: Array1<T>, tangent: Array1<T>) -> Self {
-        Self {
-            value: value,
-            tangent,
-        }
+        Self { value, tangent }
     }
 
     /// Create a constant vector

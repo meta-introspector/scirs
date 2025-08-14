@@ -387,7 +387,7 @@ where
     pub fn new(_qualityfunction: Box<dyn Fn(&T) -> T + Send + Sync>) -> Self {
         Self {
             rng: scirs2_core::random::Random::seed(44), // Use seeded RNG for thread safety
-            _qualityfunction: _qualityfunction,
+            _qualityfunction,
             _phantom: PhantomData,
         }
     }

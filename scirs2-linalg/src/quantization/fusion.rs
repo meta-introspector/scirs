@@ -6,7 +6,7 @@
 
 use crate::error::{LinalgError, LinalgResult};
 use crate::quantization::{
-    dequantize_matrix, get_quantized_matrix_2d_i8, QuantizationMethod, QuantizationParams,
+    dequantize_matrix, get_quantizedmatrix_2d_i8, QuantizationMethod, QuantizationParams,
     QuantizedData2D, QuantizedMatrix,
 };
 use ndarray::{Array1, Array2, ArrayView1};
@@ -98,7 +98,7 @@ fn fused_quantized_matmul_chain_int8_symmetric(
     // Extract Int8 data from matrices
     let int8_matrices: Vec<&Array2<i8>> = matrices
         .iter()
-        .map(|m| get_quantized_matrix_2d_i8(m).unwrap())
+        .map(|m| get_quantizedmatrix_2d_i8(m).unwrap())
         .collect();
 
     // Scales from the quantization parameters
@@ -303,7 +303,7 @@ fn fused_quantized_matvec_sequence_int8(
     // Extract Int8 data
     let int8_matrices: Vec<&Array2<i8>> = matrices
         .iter()
-        .map(|m| get_quantized_matrix_2d_i8(m).unwrap())
+        .map(|m| get_quantizedmatrix_2d_i8(m).unwrap())
         .collect();
 
     // Get scales from the parameters

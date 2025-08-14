@@ -808,7 +808,8 @@ pub fn parallel_adaptive_lms_filter(
             delay_line[0] = signal[i];
 
             // Filter output using efficient dot product (avoid array allocation)
-            output[i] = delay_line.iter()
+            output[i] = delay_line
+                .iter()
                 .zip(coeffs.iter())
                 .map(|(&d, &c)| d * c)
                 .sum();
@@ -1559,7 +1560,11 @@ pub fn parallel_bilateral_filter(
 
     // Process signal in overlapping chunks (safe arithmetic to prevent overflow)
     let effective_chunk_size = if chunk > overlap { chunk - overlap } else { n }; // Use full signal if overlap too large
-    let n_chunks = if effective_chunk_size >= n { 1 } else { (n + effective_chunk_size - 1) / effective_chunk_size };
+    let n_chunks = if effective_chunk_size >= n {
+        1
+    } else {
+        (n + effective_chunk_size - 1) / effective_chunk_size
+    };
 
     let results = par_iter_with_setup(
         0..n_chunks,
@@ -2207,8 +2212,8 @@ fn compute_matched_filter_chunk(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::f64::consts::PI;
     use num_complex::Complex64;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_parallel_fir_filter_bank() {
@@ -2248,8 +2253,14 @@ mod tests {
             .collect();
 
         // Simple Haar wavelet filters
-        let lowpass = vec![std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2];
-        let highpass = vec![std::f64::consts::FRAC_1_SQRT_2, -std::f64::consts::FRAC_1_SQRT_2];
+        let lowpass = vec![
+            std::f64::consts::FRAC_1_SQRT_2,
+            std::f64::consts::FRAC_1_SQRT_2,
+        ];
+        let highpass = vec![
+            std::f64::consts::FRAC_1_SQRT_2,
+            -std::f64::consts::FRAC_1_SQRT_2,
+        ];
         let wavelet_filters = (lowpass, highpass);
 
         let results = parallel_wavelet_filter_bank(&signal, &wavelet_filters, 3, None).unwrap();

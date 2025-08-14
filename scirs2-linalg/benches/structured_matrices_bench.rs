@@ -12,7 +12,7 @@ use scirs2__linalg::specialized::{
 };
 use scirs2__linalg::structured::{
     circulant_determinant, circulant_eigenvalues, circulant_inverse_fft, circulant_matvec_direct,
-    circulant_matvec_fft, dft_matrix_multiply, fast_toeplitz_inverse, gohberg_semencul_inverse,
+    circulant_matvec_fft, dftmatrix_multiply, fast_toeplitz_inverse, gohberg_semencul_inverse,
     hadamard_transform, hankel_determinant, hankel_matvec, hankel_matvec_fft, hankel_svd,
     levinson_durbin, solve_circulant_fft, solve_tridiagonal_lu, solve_tridiagonal_thomas,
     tridiagonal_determinant, tridiagonal_eigenvalues, tridiagonal_eigenvectors, tridiagonal_matvec,
@@ -28,16 +28,16 @@ fn create_test_vector(n: usize) -> Array1<f64> {
 
 /// Create a general test matrix for comparison
 #[allow(dead_code)]
-fn create_general_matrix(n: usize) -> Array2<f64> {
+fn create_generalmatrix(n: usize) -> Array2<f64> {
     Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin())
 }
 
 /// Create block matrices for testing
 #[allow(dead_code)]
-fn create_block_matrices(_block_size: usize, numblocks: usize) -> Vec<Array2<f64>> {
+fn create_block_matrices(_blocksize: usize, numblocks: usize) -> Vec<Array2<f64>> {
     (0..num_blocks)
         .map(|k| {
-            Array2::from_shape_fn((_block_size, block_size), |(i, j)| {
+            Array2::from_shape_fn((_blocksize, blocksize), |(i, j)| {
                 ((i + j + k + 1) as f64 * 0.1).sin()
             })
         })
@@ -48,7 +48,7 @@ fn create_block_matrices(_block_size: usize, numblocks: usize) -> Vec<Array2<f64
 #[allow(dead_code)]
 fn bench_toeplitz_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("toeplitz_operations");
-    group.sample_size(20);
+    group.samplesize(20);
 
     for &size in &[100, 500, 1000, 2000] {
         let first_row = create_test_vector(size);
@@ -159,7 +159,7 @@ fn bench_toeplitz_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_circulant_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("circulant_operations");
-    group.sample_size(25);
+    group.samplesize(25);
 
     for &size in &[100, 500, 1000, 2000] {
         let first_row = create_test_vector(size);
@@ -257,7 +257,7 @@ fn bench_circulant_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_hankel_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("hankel_operations");
-    group.sample_size(20);
+    group.samplesize(20);
 
     for &size in &[100, 500, 1000] {
         let first_row = create_test_vector(size);
@@ -339,7 +339,7 @@ fn bench_hankel_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_tridiagonal_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("tridiagonal_operations");
-    group.sample_size(30);
+    group.samplesize(30);
 
     for &size in &[1000, 5000, 10000, 20000] {
         let diagonal = create_test_vector(size);
@@ -480,7 +480,7 @@ fn bench_tridiagonal_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_banded_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("banded_operations");
-    group.sample_size(25);
+    group.samplesize(25);
 
     for &size in &[500, 1000, 2000] {
         for &bandwidth in &[5, 10, 20, 50] {
@@ -582,22 +582,22 @@ fn bench_banded_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_block_diagonal_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("block_diagonal_operations");
-    group.sample_size(20);
+    group.samplesize(20);
 
-    for &block_size in &[10, 20, 50] {
+    for &blocksize in &[10, 20, 50] {
         for &num_blocks in &[5, 10, 20, 50] {
-            let blocks = create_block_matrices(block_size, num_blocks);
-            let vector = create_test_vector(block_size * num_blocks);
-            let rhs = create_test_vector(block_size * num_blocks);
+            let blocks = create_block_matrices(blocksize, num_blocks);
+            let vector = create_test_vector(blocksize * num_blocks);
+            let rhs = create_test_vector(blocksize * num_blocks);
 
-            let total_size = block_size * num_blocks;
-            group.throughput(Throughput::Elements(total_size as u64 * total_size as u64));
+            let totalsize = blocksize * num_blocks;
+            group.throughput(Throughput::Elements(totalsize as u64 * totalsize as u64));
 
             // Block diagonal matrix creation
             group.bench_with_input(
                 BenchmarkId::new(
-                    format!("block_diag_create_{}x{}", num_blocks, block_size),
-                    total_size,
+                    format!("block_diag_create_{}x{}", num_blocks, blocksize),
+                    totalsize,
                 ),
                 &blocks,
                 |b, blocks| {
@@ -611,8 +611,8 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
             // Block diagonal matrix-vector multiplication
             group.bench_with_input(
                 BenchmarkId::new(
-                    format!("block_diag_matvec_{}x{}", num_blocks, block_size),
-                    total_size,
+                    format!("block_diag_matvec_{}x{}", num_blocks, blocksize),
+                    totalsize,
                 ),
                 &(&blocks, &vector),
                 |b, (blocks, v)| {
@@ -629,8 +629,8 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
             // Block diagonal linear system solver
             group.bench_with_input(
                 BenchmarkId::new(
-                    format!("block_diag_solve_{}x{}", num_blocks, block_size),
-                    total_size,
+                    format!("block_diag_solve_{}x{}", num_blocks, blocksize),
+                    totalsize,
                 ),
                 &(&blocks, &rhs),
                 |b, (blocks, rhs)| {
@@ -644,11 +644,11 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
             );
 
             // Block diagonal determinant
-            if block_size <= 20 && num_blocks <= 20 {
+            if blocksize <= 20 && num_blocks <= 20 {
                 group.bench_with_input(
                     BenchmarkId::new(
-                        format!("block_diag_determinant_{}x{}", num_blocks, block_size),
-                        total_size,
+                        format!("block_diag_determinant_{}x{}", num_blocks, blocksize),
+                        totalsize,
                     ),
                     &blocks,
                     |b, blocks| {
@@ -663,11 +663,11 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
             }
 
             // Block diagonal inverse
-            if block_size <= 20 && num_blocks <= 10 {
+            if blocksize <= 20 && num_blocks <= 10 {
                 group.bench_with_input(
                     BenchmarkId::new(
-                        format!("block_diag_inverse_{}x{}", num_blocks, block_size),
-                        total_size,
+                        format!("block_diag_inverse_{}x{}", num_blocks, blocksize),
+                        totalsize,
                     ),
                     &blocks,
                     |b, blocks| {
@@ -689,23 +689,23 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_block_tridiagonal_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("block_tridiagonal_operations");
-    group.sample_size(20);
+    group.samplesize(20);
 
-    for &block_size in &[10, 20, 50] {
+    for &blocksize in &[10, 20, 50] {
         for &num_blocks in &[5, 10, 20] {
-            let diagonal_blocks = create_block_matrices(block_size, num_blocks);
-            let off_diagonal_blocks = create_block_matrices(block_size, num_blocks - 1);
-            let vector = create_test_vector(block_size * num_blocks);
-            let rhs = create_test_vector(block_size * num_blocks);
+            let diagonal_blocks = create_block_matrices(blocksize, num_blocks);
+            let off_diagonal_blocks = create_block_matrices(blocksize, num_blocks - 1);
+            let vector = create_test_vector(blocksize * num_blocks);
+            let rhs = create_test_vector(blocksize * num_blocks);
 
-            let total_size = block_size * num_blocks;
-            group.throughput(Throughput::Elements(total_size as u64 * total_size as u64));
+            let totalsize = blocksize * num_blocks;
+            group.throughput(Throughput::Elements(totalsize as u64 * totalsize as u64));
 
             // Block tridiagonal matrix creation
             group.bench_with_input(
                 BenchmarkId::new(
-                    format!("block_tridiag_create_{}x{}", num_blocks, block_size),
-                    total_size,
+                    format!("block_tridiag_create_{}x{}", num_blocks, blocksize),
+                    totalsize,
                 ),
                 &(&diagonal_blocks, &off_diagonal_blocks),
                 |b, (diag, off_diag)| {
@@ -725,8 +725,8 @@ fn bench_block_tridiagonal_operations(c: &mut Criterion) {
             // Block tridiagonal matrix-vector multiplication
             group.bench_with_input(
                 BenchmarkId::new(
-                    format!("block_tridiag_matvec_{}x{}", num_blocks, block_size),
-                    total_size,
+                    format!("block_tridiag_matvec_{}x{}", num_blocks, blocksize),
+                    totalsize,
                 ),
                 &(&diagonal_blocks, &off_diagonal_blocks, &vector),
                 |b, (diag, off_diag, v)| {
@@ -748,8 +748,8 @@ fn bench_block_tridiagonal_operations(c: &mut Criterion) {
             // Block tridiagonal linear system solver
             group.bench_with_input(
                 BenchmarkId::new(
-                    format!("block_tridiag_solve_{}x{}", num_blocks, block_size),
-                    total_size,
+                    format!("block_tridiag_solve_{}x{}", num_blocks, blocksize),
+                    totalsize,
                 ),
                 &(&diagonal_blocks, &off_diagonal_blocks, &rhs),
                 |b, (diag, off_diag_rhs)| {
@@ -770,11 +770,11 @@ fn bench_block_tridiagonal_operations(c: &mut Criterion) {
             );
 
             // Block tridiagonal LU decomposition
-            if block_size <= 20 && num_blocks <= 10 {
+            if blocksize <= 20 && num_blocks <= 10 {
                 group.bench_with_input(
                     BenchmarkId::new(
-                        format!("block_tridiag_lu_{}x{}", num_blocks, block_size),
-                        total_size,
+                        format!("block_tridiag_lu_{}x{}", num_blocks, blocksize),
+                        totalsize,
                     ),
                     &(&diagonal_blocks, &off_diagonal_blocks),
                     |b, (diag, off_diag)| {
@@ -802,12 +802,12 @@ fn bench_block_tridiagonal_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_structured_vs_general_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("structured_vs_general_comparison");
-    group.sample_size(20);
+    group.samplesize(20);
 
     for &size in &[500, 1000, 2000] {
         let first_row = create_test_vector(size);
         let vector = create_test_vector(size);
-        let general_matrix = create_general_matrix(size);
+        let generalmatrix = create_generalmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -826,7 +826,7 @@ fn bench_structured_vs_general_comparison(c: &mut Criterion) {
 
         group.bench_with_input(
             BenchmarkId::new("toeplitz_vs_general_matvec_general", size),
-            &(&general_matrix, &vector),
+            &(&generalmatrix, &vector),
             |b, (m, v)| b.iter(|| m.dot(black_box(&v.view()))),
         );
 
@@ -844,7 +844,7 @@ fn bench_structured_vs_general_comparison(c: &mut Criterion) {
 
         group.bench_with_input(
             BenchmarkId::new("circulant_vs_general_matvec_general", size),
-            &(&general_matrix, &vector),
+            &(&generalmatrix, &vector),
             |b, (m, v)| b.iter(|| m.dot(black_box(&v.view()))),
         );
 
@@ -866,7 +866,7 @@ fn bench_structured_vs_general_comparison(c: &mut Criterion) {
             &size,
             |b, &s| {
                 b.iter(|| {
-                    let _matrix = Array2::<f64>::zeros((black_box(s), black_box(s)));
+                    let matrix = Array2::<f64>::zeros((black_box(s), black_box(s)));
                     // Just creation to measure memory allocation
                 })
             },
@@ -880,7 +880,7 @@ fn bench_structured_vs_general_comparison(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_specialized_algorithms(c: &mut Criterion) {
     let mut group = c.benchmark_group("specialized_algorithms");
-    group.sample_size(15);
+    group.samplesize(15);
 
     for &size in &[100, 500, 1000] {
         let first_row = create_test_vector(size);
@@ -934,21 +934,18 @@ fn bench_specialized_algorithms(c: &mut Criterion) {
 
         // Discrete Fourier Transform matrix operations
         group.bench_with_input(
-            BenchmarkId::new("dft_matrix_multiply", size),
+            BenchmarkId::new("dftmatrix_multiply", size),
             &first_row,
-            |b, data: &Array1<f64>| b.iter(|| dft_matrix_multiply(black_box(&data.view()))),
+            |b, data: &Array1<f64>| b.iter(|| dftmatrix_multiply(black_box(&data.view()))),
         );
 
         // Hadamard matrix operations (sizes must be powers of 2)
-        let hadamard_size = (size as f64).log2().floor() as usize;
-        let hadamard_size = 2_usize.pow(hadamard_size as u32);
-        if hadamard_size >= 4 {
-            let hadamard_vector = create_test_vector(hadamard_size);
+        let hadamardsize = (size as f64).log2().floor() as usize;
+        let hadamardsize = 2_usize.pow(hadamardsize as u32);
+        if hadamardsize >= 4 {
+            let hadamard_vector = create_test_vector(hadamardsize);
             group.bench_with_input(
-                BenchmarkId::new(
-                    format!("hadamard_transform_{}", hadamard_size),
-                    hadamard_size,
-                ),
+                BenchmarkId::new(format!("hadamard_transform_{}", hadamardsize), hadamardsize),
                 &hadamard_vector,
                 |b, v| b.iter(|| hadamard_transform(black_box(&v.view()))),
             );

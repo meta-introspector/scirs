@@ -32,9 +32,9 @@ pub struct CrossPlatformRegressionConfig {
     /// Minimum number of samples for statistical analysis
     pub min_samples_: usize,
     /// Maximum historical data retention (days)
-    pub max_data_retention_days: usize,
+    pub maxdata_retention_days: usize,
     /// Enable platform-specific baselines
-    pub platform_specific_baselines: bool,
+    pub platform_specificbaselines: bool,
     /// Enable hardware-aware normalization
     pub hardware_aware_normalization: bool,
     /// Enable compiler optimization detection
@@ -50,12 +50,12 @@ pub struct CrossPlatformRegressionConfig {
 impl Default for CrossPlatformRegressionConfig {
     fn default() -> Self {
         Self {
-            baseline_storage_path: "./performance_baselines".to_string(),
+            baseline_storage_path: "./performancebaselines".to_string(),
             regression_threshold_percent: 10.0, // 10% performance degradation
             significance_level: 0.05,
             min_samples_: 30,
-            max_data_retention_days: 90,
-            platform_specific_baselines: true,
+            maxdata_retention_days: 90,
+            platform_specificbaselines: true,
             hardware_aware_normalization: true,
             compiler_optimization_detection: true,
             trend_analysis: true,
@@ -376,24 +376,24 @@ pub enum RecommendationPriority {
 pub struct CrossPlatformRegressionDetector {
     config: CrossPlatformRegressionConfig,
     baselines: HashMap<String, PerformanceBaseline>,
-    historical_data: BTreeMap<u64, Vec<PerformanceMeasurement>>,
+    historicaldata: BTreeMap<u64, Vec<PerformanceMeasurement>>,
 }
 
 impl CrossPlatformRegressionDetector {
     /// Create a new regression detector
     pub fn new(config: CrossPlatformRegressionConfig) -> StatsResult<Self> {
         let mut detector = Self {
-            config: config,
+            config,
             baselines: HashMap::new(),
-            historical_data: BTreeMap::new(),
+            historicaldata: BTreeMap::new(),
         };
 
-        detector.load_baselines()?;
+        detector.loadbaselines()?;
         Ok(detector)
     }
 
     /// Load existing baseline data from storage
-    fn load_baselines(&mut self) -> StatsResult<()> {
+    fn loadbaselines(&mut self) -> StatsResult<()> {
         if !Path::new(&self.config.baseline_storage_path).exists() {
             fs::create_dir_all(&self.config.baseline_storage_path).map_err(|e| {
                 StatsError::InvalidInput(format!("Failed to create baseline directory: {}", e))
@@ -429,7 +429,7 @@ impl CrossPlatformRegressionDetector {
     }
 
     /// Save baseline data to storage
-    fn save_baseline(&self, baseline: &PerformanceBaseline) -> StatsResult<()> {
+    fn savebaseline(&self, baseline: &PerformanceBaseline) -> StatsResult<()> {
         let filename = format!(
             "{}-{}.json",
             baseline.platform.platform_id(),
@@ -472,7 +472,7 @@ impl CrossPlatformRegressionDetector {
         };
 
         // Add to historical data
-        self.historical_data
+        self.historicaldata
             .entry(timestamp)
             .or_insert_with(Vec::new)
             .push(measurement.clone());
@@ -511,7 +511,7 @@ impl CrossPlatformRegressionDetector {
             };
 
             self.baselines.insert(baseline_key, baseline.clone());
-            self.save_baseline(&baseline)?;
+            self.savebaseline(&baseline)?;
         }
 
         Ok(())
@@ -678,7 +678,7 @@ impl CrossPlatformRegressionDetector {
     fn analyze_trend(&self, _functionname: &str) -> StatsResult<TrendAnalysis> {
         // Get historical measurements for this function
         let measurements: Vec<_> = self
-            .historical_data
+            .historicaldata
             .values()
             .flatten()
             .filter(|_m| {
@@ -940,7 +940,7 @@ impl CrossPlatformRegressionDetector {
             functions_with_regressions: 0, // Would calculate
             average_performance_change: 0.0,
             max_performance_change: 0.0,
-            total_measurements: self.historical_data.values().map(|v| v.len()).sum(),
+            total_measurements: self.historicaldata.values().map(|v| v.len()).sum(),
         })
     }
 }
@@ -1010,7 +1010,7 @@ mod tests {
         let mut detector = create_regression_detector().unwrap();
         let result = detector.record_measurement(
             "test_function",
-            "input_size_100",
+            "inputsize_100",
             1000.0, // 1 microsecond
             1024,   // 1KB
             100,    // 100 iterations
@@ -1019,7 +1019,7 @@ mod tests {
     }
 
     #[test]
-    fn test_baseline_statistics_calculation() {
+    fn testbaseline_statistics_calculation() {
         let detector = create_regression_detector().unwrap();
         let measurements = vec![
             PerformanceMeasurement {

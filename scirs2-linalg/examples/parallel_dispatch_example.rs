@@ -17,14 +17,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Parallel Cholesky Decomposition ===");
 
     // Small matrix - will use serial implementation
-    let small_matrix = array![[4.0, 2.0], [2.0, 5.0]];
-    let l_small = ParallelDecomposition::cholesky(&small_matrix.view(), Some(4))?;
+    let smallmatrix = array![[4.0, 2.0], [2.0, 5.0]];
+    let l_small = ParallelDecomposition::cholesky(&smallmatrix.view(), Some(4))?;
     println!("Small matrix Cholesky result shape: {:?}", l_small.shape());
 
     // Large matrix - will use parallel implementation if workers > 0
     let n = 100;
-    let large_matrix = create_spd_matrix(n);
-    let l_large = ParallelDecomposition::cholesky(&large_matrix.view(), Some(4))?;
+    let largematrix = create_spdmatrix(n);
+    let l_large = ParallelDecomposition::cholesky(&largematrix.view(), Some(4))?;
     println!("Large matrix Cholesky result shape: {:?}", l_large.shape());
 
     // Example 2: Parallel LU decomposition
@@ -46,8 +46,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 3: Parallel iterative solvers
     println!("\n=== Parallel Iterative Solvers ===");
-    let a = create_spd_matrix(50);
-    let b = Array2::from_shape_fn((50, 1), |(i_)| (i_ as f64).sin())
+    let a = create_spdmatrix(50);
+    let b = Array2::from_shape_fn((50, 1), |(i, _j)| (i as f64).sin())
         .column(0)
         .to_owned();
 
@@ -72,7 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Matrix multiplication result shape: {:?}", c.shape());
 
     // Matrix-vector multiplication
-    let vec = Array2::from_shape_fn((80, 1), |(i_)| (i_ as f64).sin())
+    let vec = Array2::from_shape_fn((80, 1), |(i, _j)| (i as f64).sin())
         .column(0)
         .to_owned();
     let result = ParallelOperations::matvec(&mat_a.view(), &vec.view(), Some(4))?;
@@ -85,7 +85,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Performance Comparison ===");
     use std::time::Instant;
 
-    let large_mat = create_spd_matrix(200);
+    let large_mat = create_spdmatrix(200);
 
     // Serial execution (no workers specified)
     let start = Instant::now();
@@ -107,7 +107,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create a symmetric positive definite matrix
 #[allow(dead_code)]
-fn create_spd_matrix(n: usize) -> Array2<f64> {
+fn create_spdmatrix(n: usize) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     // Make it symmetric positive definite
     let sym = &a + &a.t();

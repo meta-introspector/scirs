@@ -225,7 +225,7 @@ where
 ///     let x = (i as f64) / 1000.0;
 ///     xi_vec.extend_from_slice(&[x, x]);
 /// }
-/// let xi = Array2::fromshape_vec((1000, 2), xi_vec).unwrap();
+/// let xi = Array2::from_shape_vec((1000, 2), xi_vec).unwrap();
 ///
 /// // Use 4 worker threads for parallel interpolation
 /// let result = griddata_parallel(&points.view(), &values.view(), &xi.view(),

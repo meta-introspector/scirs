@@ -9,7 +9,7 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use scirs2__graph::{
+use scirs2_graph::{
     barabasi_albert_graph,
     betweenness_centrality,
     // Algorithms

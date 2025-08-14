@@ -122,12 +122,12 @@ pub mod helpers {
         ctx: &'g ag::Context<'g, F>,
     ) -> ag::Tensor<'g, F> {
         // Extract diagonal values from tensor
-        let diag_array = ag::integration::tensor_conversion::to_ndarray(diagonal).unwrap();
-        let n = diag_array.len();
+        let diagarray = ag::integration::tensor_conversion::to_ndarray(diagonal).unwrap();
+        let n = diagarray.len();
 
         let mut matrix_data = vec![F::zero(); n * n];
         for i in 0..n {
-            matrix_data[i * n + i] = diag_array[i];
+            matrix_data[i * n + i] = diagarray[i];
         }
 
         ag::tensor_ops::convert_to_tensor(
@@ -139,7 +139,7 @@ pub mod helpers {
     /// Compute Frobenius norm using available operations
     pub fn frobenius_norm<'g, F: ag::Float>(matrix: &ag::Tensor<'g, F>) -> ag::Tensor<'g, F> {
         // ||A||_F = sqrt(sum(A .* A))
-        let squared = _matrix * matrix;
+        let squared = matrix * matrix;
         let sum_squared = ag::tensor_ops::sum_all(squared);
         ag::tensor_ops::sqrt(sum_squared)
     }
@@ -160,21 +160,21 @@ pub mod helpers {
 
         if n == 2 {
             // 2x2 determinant: ad - bc
-            let mat_array = ag::integration::tensor_conversion::to_ndarray(matrix).unwrap();
+            let matarray = ag::integration::tensor_conversion::to_ndarray(matrix).unwrap();
             let a = ag::tensor_ops::convert_to_tensor(
-                ag::ndarray::Array2::from_elem((1, 1), mat_array[[0, 0]]),
+                ag::ndarray::Array2::from_elem((1, 1), matarray[[0, 0]]),
                 ctx,
             );
             let b = ag::tensor_ops::convert_to_tensor(
-                ag::ndarray::Array2::from_elem((1, 1), mat_array[[0, 1]]),
+                ag::ndarray::Array2::from_elem((1, 1), matarray[[0, 1]]),
                 ctx,
             );
             let c = ag::tensor_ops::convert_to_tensor(
-                ag::ndarray::Array2::from_elem((1, 1), mat_array[[1, 0]]),
+                ag::ndarray::Array2::from_elem((1, 1), matarray[[1, 0]]),
                 ctx,
             );
             let d = ag::tensor_ops::convert_to_tensor(
-                ag::ndarray::Array2::from_elem((1, 1), mat_array[[1, 1]]),
+                ag::ndarray::Array2::from_elem((1, 1), matarray[[1, 1]]),
                 ctx,
             );
 
@@ -197,8 +197,8 @@ pub mod helpers {
         ctx: &'g ag::Context<'g, F>,
     ) -> ag::Tensor<'g, F> {
         // Initialize x as zeros
-        let b_array = ag::integration::tensor_conversion::to_ndarray(b).unwrap();
-        let n = b_array.len();
+        let barray = ag::integration::tensor_conversion::to_ndarray(b).unwrap();
+        let n = barray.len();
         let mut x = ag::tensor_ops::convert_to_tensor(ag::ndarray::Array2::zeros((n, 1)), ctx);
 
         let lr_tensor = ag::tensor_ops::convert_to_tensor(
@@ -276,7 +276,7 @@ pub mod helpers {
     ///
     /// This is a simplified rank estimation - actual rank would require full SVD
     pub fn rank_approximation<'g, F: ag::Float>(
-        _matrix: &ag::Tensor<'g, F>,
+        matrix: &ag::Tensor<'g, F>,
         _tolerance: F,
         ctx: &'g ag::Context<'g, F>,
     ) -> ag::Tensor<'g, F> {

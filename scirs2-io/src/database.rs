@@ -71,7 +71,7 @@ impl DatabaseConfig {
     /// Create a new database configuration
     pub fn new(db_type: DatabaseType, database: impl Into<String>) -> Self {
         Self {
-            db_type: db_type,
+            db_type,
             host: None,
             port: None,
             database: database.into(),
@@ -327,7 +327,7 @@ impl ResultSet {
     /// Create new result set
     pub fn new(columns: Vec<String>) -> Self {
         Self {
-            columns: columns,
+            columns,
             rows: Vec::new(),
             metadata: Metadata::new(),
         }
@@ -2174,7 +2174,7 @@ impl ConnectionPool {
     pub fn new(config: DatabaseConfig, max_connections: usize) -> Self {
         Self {
             db_type: config.db_type,
-            config: config,
+            config,
             connections: Arc::new(Mutex::new(Vec::new())),
             max_connections,
         }
@@ -2236,7 +2236,7 @@ impl Transaction {
         connection.execute_sql(&format!("SAVEPOINT {savepoint}"), &[])?;
 
         Ok(Self {
-            connection: connection,
+            connection,
             savepoint,
             committed: false,
         })
@@ -2465,7 +2465,7 @@ pub mod orm {
     impl<T: Model> ActiveRecord<T> {
         pub fn new(model: T) -> Self {
             Self {
-                model: model,
+                model,
                 changed: false,
             }
         }
@@ -2535,9 +2535,7 @@ pub mod cdc {
 
     impl CDCListener {
         pub fn new(receiver: mpsc::Receiver<ChangeEvent>) -> Self {
-            Self {
-                receiver: receiver,
-            }
+            Self { receiver }
         }
 
         /// Get next change event
@@ -2558,7 +2556,7 @@ pub mod cdc {
 
     impl CDCPublisher {
         pub fn new(sender: mpsc::Sender<ChangeEvent>) -> Self {
-            Self { sender: sender }
+            Self { sender }
         }
 
         /// Publish change event

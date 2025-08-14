@@ -410,7 +410,7 @@ where
         };
 
         // Convert 1D data to 2D format expected by RBFInterpolator
-        let points_2d = Array2::fromshape_vec((self.x_data.len(), 1), self.x_data.to_vec())
+        let points_2d = Array2::from_shape_vec((self.x_data.len(), 1), self.x_data.to_vec())
             .map_err(|e| {
                 InterpolateError::ComputationError(format!("Failed to reshape points: {}", e))
             })?;
@@ -430,7 +430,7 @@ where
     fn evaluate_cpu(&self, xeval: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         if let Some(ref cpu_interpolator) = self.cpu_fallback {
             // Convert 1D evaluation points to 2D format
-            let eval_points_2d = Array2::fromshape_vec((x_eval.len(), 1), x_eval.to_vec())
+            let eval_points_2d = Array2::from_shape_vec((x_eval.len(), 1), x_eval.to_vec())
                 .map_err(|e| {
                     InterpolateError::ComputationError(format!(
                         "Failed to reshape _eval points: {}",

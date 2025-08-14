@@ -39,7 +39,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::second_kind::y0;
+/// use scirs2_special::bessel::second_kind::y0;
 ///
 /// // Y₀(1) ≈ 0.0883
 /// assert!((y0(1.0f64) - 0.0883).abs() < 1e-4);
@@ -205,7 +205,7 @@ fn enhanced_asymptotic_y0<F: Float + FromPrimitive>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::second_kind::y1;
+/// use scirs2_special::bessel::second_kind::y1;
 ///
 /// // Y₁(1) - test that it returns a reasonable negative value
 /// let y1_1 = y1(1.0f64);
@@ -253,7 +253,7 @@ pub fn y1<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::second_kind::{y0, y1, yn};
+/// use scirs2_special::bessel::second_kind::{y0, y1, yn};
 ///
 /// // Y₀(x) comparison
 /// let x = 3.0f64;
@@ -285,16 +285,16 @@ pub fn yn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     }
 
     // Basic recurrence relation for now - simplified for initial testing
-    let y_n_minus_1 = y0(x);
+    let y_nminus_1 = y0(x);
     let y_n = y1(x);
 
-    let mut y_n_minus_2 = y_n_minus_1;
+    let mut y_nminus_2 = y_nminus_1;
     let mut y_n_cur = y_n;
 
     for k in 1..n {
         let k_f = F::from(k).unwrap();
-        let y_n_plus_1 = (k_f + k_f) / x * y_n_cur - y_n_minus_2;
-        y_n_minus_2 = y_n_cur;
+        let y_n_plus_1 = (k_f + k_f) / x * y_n_cur - y_nminus_2;
+        y_nminus_2 = y_n_cur;
         y_n_cur = y_n_plus_1;
     }
 
@@ -320,12 +320,12 @@ fn enhanced_asymptotic_yn<F: Float + FromPrimitive>(n: i32, x: F) -> F {
 
     // Calculate leading terms of asymptotic expansion
     let mu = F::from(4.0).unwrap() * n_f * n_f;
-    let mu_minus_1 = mu - F::one();
+    let muminus_1 = mu - F::one();
 
     // Enhanced formula for large x and moderate to large n
-    let term_1 = mu_minus_1 / (F::from(8.0).unwrap() * x);
+    let term_1 = muminus_1 / (F::from(8.0).unwrap() * x);
     let term_2 =
-        mu_minus_1 * (mu_minus_1 - F::from(8.0).unwrap()) / (F::from(128.0).unwrap() * x * x);
+        muminus_1 * (muminus_1 - F::from(8.0).unwrap()) / (F::from(128.0).unwrap() * x * x);
 
     // Amplitude with enhanced precision
     let ampl = F::one() + term_1 + term_2;
@@ -352,7 +352,7 @@ fn enhanced_asymptotic_yn<F: Float + FromPrimitive>(n: i32, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::second_kind::y0e;
+/// use scirs2_special::bessel::second_kind::y0e;
 ///
 /// // For real arguments, y0e(x) = y0(x)
 /// let x = 2.0f64;
@@ -384,7 +384,7 @@ pub fn y0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::second_kind::y1e;
+/// use scirs2_special::bessel::second_kind::y1e;
 ///
 /// // For real arguments, y1e(x) = y1(x)
 /// let x = 2.0f64;
@@ -417,7 +417,7 @@ pub fn y1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::bessel::second_kind::yne;
+/// use scirs2_special::bessel::second_kind::yne;
 ///
 /// // For real arguments, yne(n, x) = yn(n, x)
 /// let x = 2.0f64;

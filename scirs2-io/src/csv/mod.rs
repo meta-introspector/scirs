@@ -1296,7 +1296,7 @@ impl<R: BufRead> StreamingCsvReader<R> {
     /// Create a new streaming CSV reader
     pub fn new(reader: R, config: StreamingCsvConfig) -> Result<Self> {
         let mut reader = Self {
-            reader: reader,
+            reader,
             config,
             headers: None,
             current_line: 0,
@@ -1729,8 +1729,7 @@ impl ColumnStats {
         let max_val = values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let mean = values.iter().sum::<f64>() / values.len() as f64;
 
-        let variance =
-            values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;
+        let variance = values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;
         let std_dev = variance.sqrt();
 
         Self {

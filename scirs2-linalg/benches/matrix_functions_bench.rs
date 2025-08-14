@@ -16,7 +16,7 @@ use std::time::Duration;
 
 /// Create a well-conditioned test matrix scaled for matrix functions
 #[allow(dead_code)]
-fn create_matrix_function_test_matrix(n: usize, scale: f64) -> Array2<f64> {
+fn creatematrix_function_testmatrix(n: usize, scale: f64) -> Array2<f64> {
     let mut matrix = Array2::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
@@ -32,14 +32,14 @@ fn create_matrix_function_test_matrix(n: usize, scale: f64) -> Array2<f64> {
 
 /// Create a symmetric positive definite matrix for matrix functions
 #[allow(dead_code)]
-fn create_spd_matrix_scaled(n: usize, scale: f64) -> Array2<f64> {
+fn create_spdmatrix_scaled(n: usize, scale: f64) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1 * scale).sin());
     a.t().dot(&a) * scale + Array2::<f64>::eye(n) * (n as f64 * scale)
 }
 
 /// Create a nilpotent matrix for testing convergent series
 #[allow(dead_code)]
-fn create_nilpotent_matrix(n: usize) -> Array2<f64> {
+fn create_nilpotentmatrix(n: usize) -> Array2<f64> {
     let mut matrix = Array2::zeros((n, n));
     // Upper triangular with small entries
     for i in 0..n {
@@ -52,7 +52,7 @@ fn create_nilpotent_matrix(n: usize) -> Array2<f64> {
 
 /// Create a matrix with specific eigenvalue distribution
 #[allow(dead_code)]
-fn create_eigenvalue_controlled_matrix(n: usize, min_eig: f64, maxeig: f64) -> Array2<f64> {
+fn create_eigenvalue_controlledmatrix(n: usize, min_eig: f64, maxeig: f64) -> Array2<f64> {
     // Create a diagonal matrix with controlled eigenvalues
     let mut diag = Array2::zeros((n, n));
     for i in 0..n {
@@ -61,13 +61,13 @@ fn create_eigenvalue_controlled_matrix(n: usize, min_eig: f64, maxeig: f64) -> A
     }
 
     // Apply a random orthogonal transformation to mix eigenvalues
-    let q = orthogonal_matrix(n);
+    let q = orthogonalmatrix(n);
     q.t().dot(&diag).dot(&q)
 }
 
 /// Create an orthogonal matrix for transformations
 #[allow(dead_code)]
-fn orthogonal_matrix(n: usize) -> Array2<f64> {
+fn orthogonalmatrix(n: usize) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     let (q_) = qr(&a.view(), None).unwrap();
     q
@@ -75,38 +75,38 @@ fn orthogonal_matrix(n: usize) -> Array2<f64> {
 
 /// Benchmark matrix exponential variants
 #[allow(dead_code)]
-fn bench_matrix_exponential(c: &mut Criterion) {
+fn benchmatrix_exponential(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_exponential");
-    group.sample_size(10); // Matrix functions are expensive
+    group.samplesize(10); // Matrix functions are expensive
     group.measurement_time(Duration::from_secs(30));
 
     for &size in &[10, 20, 30, 50] {
         // Different matrix types and scales for robustness testing
-        let small_matrix = create_matrix_function_test_matrix(size, 0.1);
-        let medium_matrix = create_matrix_function_test_matrix(size, 1.0);
-        let large_matrix = create_matrix_function_test_matrix(size, 5.0);
-        let nilpotent = create_nilpotent_matrix(size);
+        let smallmatrix = creatematrix_function_testmatrix(size, 0.1);
+        let mediummatrix = creatematrix_function_testmatrix(size, 1.0);
+        let largematrix = creatematrix_function_testmatrix(size, 5.0);
+        let nilpotent = create_nilpotentmatrix(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
         // Standard matrix exponential (small eigenvalues)
         group.bench_with_input(
             BenchmarkId::new("expm_small_eigenvals", size),
-            &small_matrix,
+            &smallmatrix,
             |b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),
         );
 
         // Matrix exponential (medium eigenvalues)
         group.bench_with_input(
             BenchmarkId::new("expm_medium_eigenvals", size),
-            &medium_matrix,
+            &mediummatrix,
             |b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),
         );
 
         // Matrix exponential (large eigenvalues - more challenging)
         group.bench_with_input(
             BenchmarkId::new("expm_large_eigenvals", size),
-            &large_matrix,
+            &largematrix,
             |b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),
         );
 
@@ -120,7 +120,7 @@ fn bench_matrix_exponential(c: &mut Criterion) {
         // Matrix exponential with Padé approximation (if available)
         group.bench_with_input(
             BenchmarkId::new("expm_pade", size),
-            &medium_matrix,
+            &mediummatrix,
             |b, m| {
                 b.iter(|| {
                     // expm_pade not available, use standard expm
@@ -132,7 +132,7 @@ fn bench_matrix_exponential(c: &mut Criterion) {
         // Matrix exponential with scaling and squaring (if available)
         group.bench_with_input(
             BenchmarkId::new("expm_scaling_squaring", size),
-            &medium_matrix,
+            &mediummatrix,
             |b, m| {
                 b.iter(|| {
                     // expm_scaling_squaring not available, use standard expm
@@ -147,20 +147,20 @@ fn bench_matrix_exponential(c: &mut Criterion) {
 
 /// Benchmark matrix logarithm variants
 #[allow(dead_code)]
-fn bench_matrix_logarithm(c: &mut Criterion) {
+fn benchmatrix_logarithm(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_logarithm");
-    group.sample_size(10);
+    group.samplesize(10);
     group.measurement_time(Duration::from_secs(30));
 
     for &size in &[10, 20, 30] {
         // Use SPD matrices to ensure real logarithm exists
-        let spd_matrix = create_spd_matrix_scaled(size, 1.0);
-        let well_conditioned = create_eigenvalue_controlled_matrix(size, 0.1, 10.0);
+        let spdmatrix = create_spdmatrix_scaled(size, 1.0);
+        let well_conditioned = create_eigenvalue_controlledmatrix(size, 0.1, 10.0);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
         // Matrix logarithm (SPD matrix)
-        group.bench_with_input(BenchmarkId::new("logm_spd", size), &spd_matrix, |b, m| {
+        group.bench_with_input(BenchmarkId::new("logm_spd", size), &spdmatrix, |b, m| {
             b.iter(|| logm(black_box(&m.view())).unwrap())
         });
 
@@ -172,7 +172,7 @@ fn bench_matrix_logarithm(c: &mut Criterion) {
         );
 
         // Matrix logarithm with specific algorithm (if available)
-        group.bench_with_input(BenchmarkId::new("logm_schur", size), &spd_matrix, |b, m| {
+        group.bench_with_input(BenchmarkId::new("logm_schur", size), &spdmatrix, |b, m| {
             b.iter(|| {
                 // logm_schur not available, use standard logm
                 matrix__functions::logm(black_box(&m.view())).unwrap()
@@ -182,7 +182,7 @@ fn bench_matrix_logarithm(c: &mut Criterion) {
         // Matrix logarithm with inverse scaling and squaring (if available)
         group.bench_with_input(
             BenchmarkId::new("logm_inverse_scaling", size),
-            &spd_matrix,
+            &spdmatrix,
             |b, m| {
                 b.iter(|| {
                     // logm_inverse_scaling_squaring not available, use standard logm
@@ -197,13 +197,13 @@ fn bench_matrix_logarithm(c: &mut Criterion) {
 
 /// Benchmark matrix power functions
 #[allow(dead_code)]
-fn bench_matrix_power(c: &mut Criterion) {
+fn benchmatrix_power(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_power");
-    group.sample_size(15);
+    group.samplesize(15);
 
     for &size in &[10, 20, 30, 50] {
-        let spd_matrix = create_spd_matrix_scaled(size, 1.0);
-        let general_matrix = create_matrix_function_test_matrix(size, 0.5);
+        let spdmatrix = create_spdmatrix_scaled(size, 1.0);
+        let generalmatrix = creatematrix_function_testmatrix(size, 0.5);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -211,7 +211,7 @@ fn bench_matrix_power(c: &mut Criterion) {
         for &power in &[2, 3, 5, 10] {
             group.bench_with_input(
                 BenchmarkId::new(format!("matrix_power_int_{}", power), size),
-                &(&spd_matrix, power),
+                &(&spdmatrix, power),
                 |b, (m, p)| {
                     b.iter(|| {
                         // matrix_power_int not available, use matrix_power
@@ -225,7 +225,7 @@ fn bench_matrix_power(c: &mut Criterion) {
         for &power in &[0.5, 1.5, 2.5, -0.5] {
             group.bench_with_input(
                 BenchmarkId::new(format!("matrix_power_real_{}", power), size),
-                &(&spd_matrix, power),
+                &(&spdmatrix, power),
                 |b, (m, p)| {
                     b.iter(|| {
                         // matrix_power_real not available for fractional powers
@@ -244,7 +244,7 @@ fn bench_matrix_power(c: &mut Criterion) {
         // Matrix power via eigendecomposition
         group.bench_with_input(
             BenchmarkId::new("matrix_power_eig", size),
-            &(&spd_matrix, 2.5),
+            &(&spdmatrix, 2.5),
             |b, (m_p)| {
                 b.iter(|| {
                     // matrix_power_via_eig not available
@@ -257,7 +257,7 @@ fn bench_matrix_power(c: &mut Criterion) {
         // Matrix power via Schur decomposition
         group.bench_with_input(
             BenchmarkId::new("matrix_power_schur", size),
-            &(&general_matrix, 3.0),
+            &(&generalmatrix, 3.0),
             |b, (m, p)| {
                 b.iter(|| {
                     // matrix_power_via_schur not available
@@ -273,32 +273,32 @@ fn bench_matrix_power(c: &mut Criterion) {
 
 /// Benchmark matrix square root variants
 #[allow(dead_code)]
-fn bench_matrix_sqrt(c: &mut Criterion) {
+fn benchmatrix_sqrt(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_sqrt");
-    group.sample_size(15);
+    group.samplesize(15);
 
     for &size in &[10, 20, 30, 50] {
-        let spd_matrix = create_spd_matrix_scaled(size, 1.0);
-        let general_matrix = create_matrix_function_test_matrix(size, 0.5);
+        let spdmatrix = create_spdmatrix_scaled(size, 1.0);
+        let generalmatrix = creatematrix_function_testmatrix(size, 0.5);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
         // Matrix square root (SPD)
-        group.bench_with_input(BenchmarkId::new("sqrtm_spd", size), &spd_matrix, |b, m| {
+        group.bench_with_input(BenchmarkId::new("sqrtm_spd", size), &spdmatrix, |b, m| {
             b.iter(|| sqrtm(black_box(&m.view()), 100, 1e-12).unwrap())
         });
 
         // Matrix square root (general)
         group.bench_with_input(
             BenchmarkId::new("sqrtm_general", size),
-            &general_matrix,
+            &generalmatrix,
             |b, m| b.iter(|| sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()),
         );
 
         // Matrix square root via Schur decomposition
         group.bench_with_input(
             BenchmarkId::new("sqrtm_schur", size),
-            &general_matrix,
+            &generalmatrix,
             |b, m| {
                 b.iter(|| {
                     // sqrtm_schur not available, use standard sqrtm
@@ -310,7 +310,7 @@ fn bench_matrix_sqrt(c: &mut Criterion) {
         // Matrix square root via Denman-Beavers iteration
         group.bench_with_input(
             BenchmarkId::new("sqrtm_denman_beavers", size),
-            &spd_matrix,
+            &spdmatrix,
             |b, m| {
                 b.iter(|| {
                     // sqrtm_denman_beavers not available, use standard sqrtm
@@ -322,7 +322,7 @@ fn bench_matrix_sqrt(c: &mut Criterion) {
         // Matrix square root via Newton iteration
         group.bench_with_input(
             BenchmarkId::new("sqrtm_newton", size),
-            &spd_matrix,
+            &spdmatrix,
             |b, m| {
                 b.iter(|| {
                     // sqrtm_newton not available, use standard sqrtm
@@ -337,13 +337,13 @@ fn bench_matrix_sqrt(c: &mut Criterion) {
 
 /// Benchmark matrix sign function
 #[allow(dead_code)]
-fn bench_matrix_sign(c: &mut Criterion) {
+fn benchmatrix_sign(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_sign");
-    group.sample_size(15);
+    group.samplesize(15);
 
     for &size in &[10, 20, 30] {
-        let matrix = create_matrix_function_test_matrix(size, 1.0);
-        let controlled_eigenvals = create_eigenvalue_controlled_matrix(size, -5.0, 5.0);
+        let matrix = creatematrix_function_testmatrix(size, 1.0);
+        let controlled_eigenvals = create_eigenvalue_controlledmatrix(size, -5.0, 5.0);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -384,12 +384,12 @@ fn bench_matrix_sign(c: &mut Criterion) {
 
 /// Benchmark trigonometric matrix functions
 #[allow(dead_code)]
-fn bench_matrix_trigonometric(c: &mut Criterion) {
+fn benchmatrix_trigonometric(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_trigonometric");
-    group.sample_size(15);
+    group.samplesize(15);
 
     for &size in &[10, 20, 30] {
-        let matrix = create_matrix_function_test_matrix(size, 0.5); // Small for convergence
+        let matrix = creatematrix_function_testmatrix(size, 0.5); // Small for convergence
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -429,19 +429,19 @@ fn bench_matrix_trigonometric(c: &mut Criterion) {
 
 /// Benchmark inverse trigonometric matrix functions
 #[allow(dead_code)]
-fn bench_matrix_inverse_trigonometric(c: &mut Criterion) {
+fn benchmatrix_inverse_trigonometric(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_inverse_trigonometric");
-    group.sample_size(10);
+    group.samplesize(10);
 
     for &size in &[10, 20, 30] {
         // Create matrices with eigenvalues in appropriate ranges
-        let small_matrix = create_matrix_function_test_matrix(size, 0.1); // For arcsin, arccos
-        let positive_matrix = create_spd_matrix_scaled(size, 0.5); // For arctan, etc.
+        let smallmatrix = creatematrix_function_testmatrix(size, 0.1); // For arcsin, arccos
+        let positivematrix = create_spdmatrix_scaled(size, 0.5); // For arctan, etc.
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
         // Matrix arcsine (eigenvalues in [-1, 1])
-        group.bench_with_input(BenchmarkId::new("arcsinm", size), &small_matrix, |b, m| {
+        group.bench_with_input(BenchmarkId::new("arcsinm", size), &smallmatrix, |b, m| {
             b.iter(|| {
                 // arcsinm not available, use asinm
                 matrix__functions::asinm(black_box(&m.view())).unwrap()
@@ -449,7 +449,7 @@ fn bench_matrix_inverse_trigonometric(c: &mut Criterion) {
         });
 
         // Matrix arccosine (eigenvalues in [-1, 1])
-        group.bench_with_input(BenchmarkId::new("arccosm", size), &small_matrix, |b, m| {
+        group.bench_with_input(BenchmarkId::new("arccosm", size), &smallmatrix, |b, m| {
             b.iter(|| {
                 // arccosm not available, use acosm
                 matrix__functions::acosm(black_box(&m.view())).unwrap()
@@ -459,7 +459,7 @@ fn bench_matrix_inverse_trigonometric(c: &mut Criterion) {
         // Matrix arctangent
         group.bench_with_input(
             BenchmarkId::new("arctanm", size),
-            &positive_matrix,
+            &positivematrix,
             |b, m| {
                 b.iter(|| {
                     // arctanm not available, use atanm
@@ -471,7 +471,7 @@ fn bench_matrix_inverse_trigonometric(c: &mut Criterion) {
         // Matrix inverse hyperbolic sine
         group.bench_with_input(
             BenchmarkId::new("arcsinhm", size),
-            &positive_matrix,
+            &positivematrix,
             |b, m| {
                 b.iter(|| {
                     // arcsinhm not available, just return matrix
@@ -481,8 +481,8 @@ fn bench_matrix_inverse_trigonometric(c: &mut Criterion) {
         );
 
         // Matrix inverse hyperbolic cosine (eigenvalues >= 1)
-        let cosh_matrix = create_eigenvalue_controlled_matrix(size, 1.1, 5.0);
-        group.bench_with_input(BenchmarkId::new("arccoshm", size), &cosh_matrix, |b, m| {
+        let coshmatrix = create_eigenvalue_controlledmatrix(size, 1.1, 5.0);
+        group.bench_with_input(BenchmarkId::new("arccoshm", size), &coshmatrix, |b, m| {
             b.iter(|| {
                 // arccoshm not available, just return matrix
                 m.clone()
@@ -490,7 +490,7 @@ fn bench_matrix_inverse_trigonometric(c: &mut Criterion) {
         });
 
         // Matrix inverse hyperbolic tangent (eigenvalues in (-1, 1))
-        group.bench_with_input(BenchmarkId::new("arctanhm", size), &small_matrix, |b, m| {
+        group.bench_with_input(BenchmarkId::new("arctanhm", size), &smallmatrix, |b, m| {
             b.iter(|| {
                 // arctanhm not available, just return matrix
                 m.clone()
@@ -503,12 +503,12 @@ fn bench_matrix_inverse_trigonometric(c: &mut Criterion) {
 
 /// Benchmark general matrix function evaluation
 #[allow(dead_code)]
-fn bench_general_matrix_function(c: &mut Criterion) {
-    let mut group = c.benchmark_group("general_matrix_function");
-    group.sample_size(10);
+fn bench_generalmatrix_function(c: &mut Criterion) {
+    let mut group = c.benchmark_group("generalmatrix_function");
+    group.samplesize(10);
 
     for &size in &[10, 20, 30] {
-        let matrix = create_matrix_function_test_matrix(size, 0.5);
+        let matrix = creatematrix_function_testmatrix(size, 0.5);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -560,10 +560,10 @@ fn bench_general_matrix_function(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_accuracy_performance_tradeoffs(c: &mut Criterion) {
     let mut group = c.benchmark_group("accuracy_performance_tradeoffs");
-    group.sample_size(20);
+    group.samplesize(20);
 
     let size = 20;
-    let matrix = create_matrix_function_test_matrix(size, 1.0);
+    let matrix = creatematrix_function_testmatrix(size, 1.0);
 
     group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -597,13 +597,13 @@ fn bench_accuracy_performance_tradeoffs(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_conditioning_effects(c: &mut Criterion) {
     let mut group = c.benchmark_group("conditioning_effects");
-    group.sample_size(15);
+    group.samplesize(15);
 
     let size = 20;
 
     // Different condition numbers
     for &condition_number in &[1e2, 1e4, 1e6, 1e8] {
-        let matrix = create_eigenvalue_controlled_matrix(size, 1.0, condition_number);
+        let matrix = create_eigenvalue_controlledmatrix(size, 1.0, condition_number);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
 
@@ -626,14 +626,14 @@ fn bench_conditioning_effects(c: &mut Criterion) {
 // Group all benchmarks
 criterion_group!(
     benches,
-    bench_matrix_exponential,
-    bench_matrix_logarithm,
-    bench_matrix_power,
-    bench_matrix_sqrt,
-    bench_matrix_sign,
-    bench_matrix_trigonometric,
-    bench_matrix_inverse_trigonometric,
-    bench_general_matrix_function,
+    benchmatrix_exponential,
+    benchmatrix_logarithm,
+    benchmatrix_power,
+    benchmatrix_sqrt,
+    benchmatrix_sign,
+    benchmatrix_trigonometric,
+    benchmatrix_inverse_trigonometric,
+    bench_generalmatrix_function,
     bench_accuracy_performance_tradeoffs,
     bench_conditioning_effects
 );

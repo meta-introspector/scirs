@@ -298,7 +298,7 @@ impl AutoTuner {
     /// Create new auto-tuner with detected hardware
     pub fn new(hardware: HardwareInfo) -> Self {
         Self {
-            hardware: hardware,
+            hardware,
             cache: HashMap::new(),
         }
     }

@@ -972,7 +972,7 @@ impl EnsembleNeuralNetwork {
         let network_performance = vec![1.0; num_networks];
 
         Self {
-            networks: networks,
+            networks,
             ensemble_weights,
             network_performance,
         }

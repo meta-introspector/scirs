@@ -191,7 +191,7 @@ mod tests {
     #[test]
     #[cfg(feature = "simd")]
     #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
-    fn test_simd_transpose_large_matrix() {
+    fn test_simd_transpose_largematrix() {
         // Test with larger matrix to exercise blocking
         let size = 100;
         let mut matrix = Array2::zeros((size, size));

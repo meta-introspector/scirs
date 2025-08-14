@@ -19,7 +19,7 @@ pub struct DeviceCapabilities {
     /// Maximum shared memory per block
     pub max_shared_memory: usize,
     /// Warp/wavefront size
-    pub warp_size: usize,
+    pub warpsize: usize,
 }
 
 /// Performance characteristics of a GPU device
@@ -34,7 +34,7 @@ pub struct DevicePerformance {
     /// Memory latency in nanoseconds
     pub memory_latency_ns: f64,
     /// Cache size in bytes
-    pub cache_size: usize,
+    pub cachesize: usize,
 }
 
 /// Extended device information with capabilities and performance data
@@ -97,7 +97,7 @@ impl ExtendedDeviceInfo {
     }
 
     /// Get recommended block size for this device
-    pub fn recommended_block_size(&self) -> (usize, usize) {
+    pub fn recommended_blocksize(&self) -> (usize, usize) {
         match self.basic_info.device_type {
             GpuDeviceType::Cuda => (32, 32),   // Common CUDA block size
             GpuDeviceType::OpenCl => (16, 16), // Conservative OpenCL size
@@ -119,7 +119,7 @@ fn estimate_cuda_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerfo
         supports_p2p: true,
         max_threads_per_block: 1024,
         max_shared_memory: 48 * 1024, // 48KB typical
-        warp_size: 32,
+        warpsize: 32,
     };
 
     // Rough estimates based on compute units and clock frequency
@@ -131,7 +131,7 @@ fn estimate_cuda_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerfo
         peak_gflops_fp32: peak_gflops,
         peak_gflops_fp64: peak_gflops * 0.5, // Typical ratio
         memory_latency_ns: 400.0,
-        cache_size: 256 * 1024, // L2 cache estimate
+        cachesize: 256 * 1024, // L2 cache estimate
     };
 
     (capabilities, performance)
@@ -144,9 +144,9 @@ fn estimate_opencl_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
         supports_fp16: info.supports_fp16,
         supports_unified_memory: false, // Conservative assumption
         supports_p2p: false,
-        max_threads_per_block: info.max_work_group_size,
+        max_threads_per_block: info.max_work_groupsize,
         max_shared_memory: 32 * 1024, // Conservative estimate
-        warp_size: 64,                // AMD wavefront size or conservative estimate
+        warpsize: 64,                 // AMD wavefront size or conservative estimate
     };
 
     let estimated_cores = info.compute_units * 64;
@@ -157,7 +157,7 @@ fn estimate_opencl_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
         peak_gflops_fp32: peak_gflops,
         peak_gflops_fp64: peak_gflops * 0.25, // More conservative
         memory_latency_ns: 500.0,
-        cache_size: 128 * 1024,
+        cachesize: 128 * 1024,
     };
 
     (capabilities, performance)
@@ -172,7 +172,7 @@ fn estimate_rocm_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerfo
         supports_p2p: true,
         max_threads_per_block: 1024,
         max_shared_memory: 64 * 1024, // LDS on AMD
-        warp_size: 64,                // AMD wavefront size
+        warpsize: 64,                 // AMD wavefront size
     };
 
     let estimated_cores = info.compute_units * 64;
@@ -183,7 +183,7 @@ fn estimate_rocm_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerfo
         peak_gflops_fp32: peak_gflops,
         peak_gflops_fp64: peak_gflops * 0.5,
         memory_latency_ns: 350.0,
-        cache_size: 512 * 1024,
+        cachesize: 512 * 1024,
     };
 
     (capabilities, performance)
@@ -197,9 +197,9 @@ fn estimate_vulkan_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
         supports_fp16: info.supports_fp16,
         supports_unified_memory: false,
         supports_p2p: false,
-        max_threads_per_block: info.max_work_group_size,
+        max_threads_per_block: info.max_work_groupsize,
         max_shared_memory: 32 * 1024,
-        warp_size: 32, // Conservative estimate
+        warpsize: 32, // Conservative estimate
     };
 
     let estimated_cores = info.compute_units * 32;
@@ -210,7 +210,7 @@ fn estimate_vulkan_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
         peak_gflops_fp32: peak_gflops,
         peak_gflops_fp64: peak_gflops * 0.25,
         memory_latency_ns: 600.0,
-        cache_size: 64 * 1024,
+        cachesize: 64 * 1024,
     };
 
     (capabilities, performance)
@@ -225,7 +225,7 @@ fn estimate_metal_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerf
         supports_p2p: false,
         max_threads_per_block: 1024,
         max_shared_memory: 32 * 1024,
-        warp_size: 32, // SIMD group size on Apple GPUs
+        warpsize: 32, // SIMD group size on Apple GPUs
     };
 
     let estimated_cores = info.compute_units * 32; // Conservative estimate
@@ -236,7 +236,7 @@ fn estimate_metal_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerf
         peak_gflops_fp32: peak_gflops,
         peak_gflops_fp64: peak_gflops * 0.5,
         memory_latency_ns: 200.0, // Unified memory has lower latency
-        cache_size: 128 * 1024,
+        cachesize: 128 * 1024,
     };
 
     (capabilities, performance)
@@ -251,7 +251,7 @@ fn estimate_oneapi_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
         supports_p2p: false,
         max_threads_per_block: 256,
         max_shared_memory: 64 * 1024,
-        warp_size: 16, // Intel GPU execution units
+        warpsize: 16, // Intel GPU execution units
     };
 
     let estimated_cores = info.compute_units * 16;
@@ -262,7 +262,7 @@ fn estimate_oneapi_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
         peak_gflops_fp32: peak_gflops,
         peak_gflops_fp64: peak_gflops * 0.5,
         memory_latency_ns: 300.0,
-        cache_size: 32 * 1024,
+        cachesize: 32 * 1024,
     };
 
     (capabilities, performance)
@@ -277,7 +277,7 @@ fn estimate_webgpu_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
         supports_p2p: false,
         max_threads_per_block: 256,
         max_shared_memory: 16 * 1024, // Limited by web constraints
-        warp_size: 32,
+        warpsize: 32,
     };
 
     let estimated_cores = info.compute_units * 8; // Conservative for web
@@ -288,7 +288,7 @@ fn estimate_webgpu_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
         peak_gflops_fp32: peak_gflops,
         peak_gflops_fp64: 0.0,     // No fp64 support
         memory_latency_ns: 1000.0, // Higher latency in web environment
-        cache_size: 8 * 1024,
+        cachesize: 8 * 1024,
     };
 
     (capabilities, performance)
@@ -319,12 +319,12 @@ mod tests {
             clock_frequency: 1500,
             supports_fp64: true,
             supports_fp16: true,
-            max_work_group_size: 1024,
+            max_work_groupsize: 1024,
             memory_bandwidth: 900.0,
-            l2_cache_size: 6 * 1024 * 1024,     // 6MB
+            l2_cachesize: 6 * 1024 * 1024,      // 6MB
             shared_memory_per_block: 48 * 1024, // 48KB
             registers_per_block: 65536,
-            warp_size: 32,
+            warpsize: 32,
             max_threads_per_mp: 2048,
             multiprocessor_count: 80,
             supports_tensor_cores: true,
@@ -335,7 +335,7 @@ mod tests {
         let extended_info = ExtendedDeviceInfo::from_basic(basic_info);
 
         assert_eq!(extended_info.basic_info.device_type, GpuDeviceType::Cuda);
-        assert_eq!(extended_info.capabilities.warp_size, 32);
+        assert_eq!(extended_info.capabilities.warpsize, 32);
         assert!(extended_info.performance.peak_gflops_fp32 > 0.0);
     }
 
@@ -349,12 +349,12 @@ mod tests {
             clock_frequency: 1000,
             supports_fp64: false,
             supports_fp16: true,
-            max_work_group_size: 1024,
+            max_work_groupsize: 1024,
             memory_bandwidth: 400.0,
-            l2_cache_size: 1024 * 1024,         // 1MB
+            l2_cachesize: 1024 * 1024,          // 1MB
             shared_memory_per_block: 32 * 1024, // 32KB
             registers_per_block: 32768,
-            warp_size: 32,
+            warpsize: 32,
             max_threads_per_mp: 1536,
             multiprocessor_count: 10,
             supports_tensor_cores: false,
@@ -384,12 +384,12 @@ mod tests {
             clock_frequency: 1500,
             supports_fp64: true,
             supports_fp16: true,
-            max_work_group_size: 1024,
+            max_work_groupsize: 1024,
             memory_bandwidth: 900.0,
-            l2_cache_size: 6 * 1024 * 1024,     // 6MB
+            l2_cachesize: 6 * 1024 * 1024,      // 6MB
             shared_memory_per_block: 48 * 1024, // 48KB
             registers_per_block: 65536,
-            warp_size: 32,
+            warpsize: 32,
             max_threads_per_mp: 2048,
             multiprocessor_count: 80,
             supports_tensor_cores: true,

@@ -74,7 +74,7 @@ pub struct PropertyTestFailure {
     /// Error or discrepancy magnitude
     pub error_magnitude: f64,
     /// Input data that caused the failure
-    pub input_data: Vec<f64>,
+    pub inputdata: Vec<f64>,
 }
 
 /// Status of a property test
@@ -152,7 +152,7 @@ impl PropertyBasedValidator {
                     expected: "property_holds".to_string(),
                     actual: "property_violated".to_string(),
                     error_magnitude: 0.0, // Would be calculated from actual test
-                    input_data: vec![],   // Would contain actual input data
+                    inputdata: vec![],   // Would contain actual input data
                 });
             }
         }
@@ -296,7 +296,7 @@ impl MathematicalProperty<Array1<f64>> for MeanTranslationInvariance {
                     expected: "mean(x + c) = mean(x) + c".to_string(),
                     actual: "property_violated".to_string(),
                     error_magnitude: 0.0,
-                    input_data: input.to_vec(),
+                    inputdata: input.to_vec(),
                 }]
             },
             status: if property_holds {
@@ -373,7 +373,7 @@ impl MathematicalProperty<Array1<f64>> for VarianceTranslationInvariance {
                     expected: "var(x + c) = var(x)".to_string(),
                     actual: "property_violated".to_string(),
                     error_magnitude: 0.0,
-                    input_data: input.to_vec(),
+                    inputdata: input.to_vec(),
                 }]
             },
             status: if property_holds {
@@ -440,7 +440,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationBounds {
                     expected: "-1 <= correlation <= 1".to_string(),
                     actual: format!("correlation = {:?}", correlation),
                     error_magnitude: 0.0,
-                    input_data: vec![],
+                    inputdata: vec![],
                 }]
             },
             status: if property_holds {
@@ -632,7 +632,7 @@ impl MathematicalProperty<Array1<f64>> for StandardDeviationScale {
                     expected: "std(a*x) = |a| * std(x)".to_string(),
                     actual: "property_violated".to_string(),
                     error_magnitude: 0.0,
-                    input_data: input.to_vec(),
+                    inputdata: input.to_vec(),
                 }]
             },
             status: if property_holds {
@@ -682,7 +682,7 @@ impl MathematicalProperty<Array1<f64>> for StandardDeviationNonNegativity {
                     expected: "std(x) >= 0".to_string(),
                     actual: format!("std(x) = {:?}", result),
                     error_magnitude: 0.0,
-                    input_data: input.to_vec(),
+                    inputdata: input.to_vec(),
                 }]
             },
             status: if property_holds {
@@ -759,7 +759,7 @@ impl MathematicalProperty<Array1<f64>> for QuantileMonotonicity {
                     expected: "Q25 <= Q50 <= Q75".to_string(),
                     actual: format!("Q25={:?}, Q50={:?}, Q75={:?}", q25, q50, q75),
                     error_magnitude: 0.0,
-                    input_data: input.to_vec(),
+                    inputdata: input.to_vec(),
                 }]
             },
             status: if property_holds {
@@ -839,7 +839,7 @@ impl MathematicalProperty<Array1<f64>> for QuantileBounds {
                         min_val, max_val, q25, q75
                     ),
                     error_magnitude: 0.0,
-                    input_data: input.to_vec(),
+                    inputdata: input.to_vec(),
                 }]
             },
             status: if property_holds {
@@ -913,7 +913,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for MeanLinearity {
                     expected: "mean(a*x + b*y) = a*mean(x) + b*mean(y)".to_string(),
                     actual: "linearity_violated".to_string(),
                     error_magnitude: 0.0,
-                    input_data: vec![],
+                    inputdata: vec![],
                 }]
             },
             status: if property_holds {
@@ -979,7 +979,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationSymmetry {
                     expected: "corr(x, y) = corr(y, x)".to_string(),
                     actual: format!("corr(x,y)={:?}, corr(y,x)={:?}", corr_xy, corr_yx),
                     error_magnitude: 0.0,
-                    input_data: vec![],
+                    inputdata: vec![],
                 }]
             },
             status: if property_holds {
@@ -1043,8 +1043,8 @@ mod tests {
     #[test]
     fn test_mean_translation_invariance() {
         let property = MeanTranslationInvariance;
-        let test_data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let result = property.test(&test_data);
+        let testdata = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        let result = property.test(&testdata);
 
         assert_eq!(result.property_name, "mean_translation_invariance");
         assert_eq!(result.status, PropertyTestStatus::Pass);
@@ -1053,8 +1053,8 @@ mod tests {
     #[test]
     fn test_variance_translation_invariance() {
         let property = VarianceTranslationInvariance;
-        let test_data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let result = property.test(&test_data);
+        let testdata = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        let result = property.test(&testdata);
 
         assert_eq!(result.property_name, "variance_translation_invariance");
         assert_eq!(result.status, PropertyTestStatus::Pass);

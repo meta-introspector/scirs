@@ -1205,17 +1205,17 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             forward_instance[i] = forward_instance[i] + epsilon;
             let forward_input = Array2::from_shape_vec((1, n_features), forward_instance.to_vec())
                 .map_err(|_| {
-                MetricsError::InvalidInput("Failed to create forward array".to_string())
-            })?;
+                    MetricsError::InvalidInput("Failed to create forward array".to_string())
+                })?;
             let forward_pred = model(&forward_input.view())[0];
 
             // Backward step
             let mut backward_instance = instance.to_owned();
             backward_instance[i] = backward_instance[i] - epsilon;
-            let backward_input = Array2::from_shape_vec((1, n_features), backward_instance.to_vec())
-                .map_err(|_| {
-                    MetricsError::InvalidInput("Failed to create backward array".to_string())
-                })?;
+            let backward_input =
+                Array2::from_shape_vec((1, n_features), backward_instance.to_vec()).map_err(
+                    |_| MetricsError::InvalidInput("Failed to create backward array".to_string()),
+                )?;
             let backward_pred = model(&backward_input.view())[0];
 
             // Central difference approximation

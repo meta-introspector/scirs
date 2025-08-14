@@ -4836,7 +4836,7 @@ impl<T: Float + Default + Clone> OutputProjectionLayer<T> {
 impl DropoutLayer {
     fn new(prob: f64) -> Self {
         Self {
-            prob: prob,
+            prob,
             training: true,
         }
     }

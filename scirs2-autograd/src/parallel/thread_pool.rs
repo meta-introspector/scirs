@@ -27,9 +27,7 @@ impl AdvancedThreadPool {
     pub fn new(config: ThreadPoolConfig) -> Self {
         let global_queue = Arc::new(Mutex::new(VecDeque::new()));
         let running = Arc::new(AtomicBool::new(true));
-        let stats = Arc::new(Mutex::new(AdvancedThreadPoolStats::new(
-            config.num_threads,
-        )));
+        let stats = Arc::new(Mutex::new(AdvancedThreadPoolStats::new(config.num_threads)));
 
         let mut workers = Vec::with_capacity(config.num_threads);
 

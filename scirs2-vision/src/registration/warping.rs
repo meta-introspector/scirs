@@ -127,7 +127,7 @@ pub fn warp_image_gpu(
     let _transform_buffer = gpu_context.create_buffer_from_slice(&transform_flat);
 
     // Generate GPU operation for image warping
-    let _operation = create_image_warp_operation(
+    let operation = create_image_warp_operation(
         in_width,
         in_height,
         out_width,
@@ -290,7 +290,7 @@ fn generate_warp_shader_code(
         r#"
         #version 450
 
-        layout(local_size_x = 16, local_size_y = 16) in;
+        layout(local_sizex = 16, local_size_y = 16) in;
 
         layout(set = 0, binding = 0) restrict readonly buffer InputBuffer {{
             float input_data[];
@@ -325,20 +325,20 @@ fn generate_warp_shader_code(
             }}
 
             // Apply inverse transformation
-            float out_x = float(coord.x);
+            float outx = float(coord.x);
             float out_y = float(coord.y);
             
-            float in_x = transform_matrix[0] * out_x + transform_matrix[1] * out_y + transform_matrix[2];
-            float in_y = transform_matrix[3] * out_x + transform_matrix[4] * out_y + transform_matrix[5];
-            float w = transform_matrix[6] * out_x + transform_matrix[7] * out_y + transform_matrix[8];
+            float inx = transform_matrix[0] * outx + transform_matrix[1] * out_y + transform_matrix[2];
+            float in_y = transform_matrix[3] * outx + transform_matrix[4] * out_y + transform_matrix[5];
+            float w = transform_matrix[6] * outx + transform_matrix[7] * out_y + transform_matrix[8];
             
             if (abs(w) > 1e-6) {{
-                in_x /= w;
+                inx /= w;
                 in_y /= w;
             }}
 
             // Sample using specified interpolation method
-            float value = sample_image(in_x, in_y);
+            float value = sample_image(inx, in_y);
             
             uint output_idx = uint(coord.y) * OUT_WIDTH + uint(coord.x);
             output_data[output_idx] = value;
@@ -678,6 +678,39 @@ fn get_pixel_value(
         match boundary {
             BoundaryMethod::Zero => 0.0,
             BoundaryMethod::Constant(value) => value,
+            BoundaryMethod::Reflect => {
+                // Reflect coordinates at boundaries
+                let rx = if nx < 0 {
+                    -nx
+                } else if nx >= width as i32 {
+                    2 * (width as i32 - 1) - nx
+                } else {
+                    nx
+                };
+                let ry = if ny < 0 {
+                    -ny
+                } else if ny >= height as i32 {
+                    2 * (height as i32 - 1) - ny
+                } else {
+                    ny
+                };
+                image.get_pixel(
+                    rx.min(width as i32 - 1).max(0) as u32,
+                    ry.min(height as i32 - 1).max(0) as u32,
+                )[0] as f32
+            }
+            BoundaryMethod::Wrap => {
+                // Wrap coordinates around boundaries
+                let wx = ((nx % width as i32) + width as i32) % width as i32;
+                let wy = ((ny % height as i32) + height as i32) % height as i32;
+                image.get_pixel(wx as u32, wy as u32)[0] as f32
+            }
+            BoundaryMethod::Clamp => {
+                // Clamp coordinates to image boundaries
+                let cx = nx.max(0).min(width as i32 - 1);
+                let cy = ny.max(0).min(height as i32 - 1);
+                image.get_pixel(cx as u32, cy as u32)[0] as f32
+            }
         }
     }
 }
@@ -701,6 +734,39 @@ fn get_rgb_pixel_value(
         match boundary {
             BoundaryMethod::Zero => 0.0,
             BoundaryMethod::Constant(value) => value,
+            BoundaryMethod::Reflect => {
+                // Reflect coordinates at boundaries
+                let rx = if nx < 0 {
+                    -nx
+                } else if nx >= width as i32 {
+                    2 * (width as i32 - 1) - nx
+                } else {
+                    nx
+                };
+                let ry = if ny < 0 {
+                    -ny
+                } else if ny >= height as i32 {
+                    2 * (height as i32 - 1) - ny
+                } else {
+                    ny
+                };
+                image.get_pixel(
+                    rx.min(width as i32 - 1).max(0) as u32,
+                    ry.min(height as i32 - 1).max(0) as u32,
+                )[channel] as f32
+            }
+            BoundaryMethod::Wrap => {
+                // Wrap coordinates around boundaries
+                let wx = ((nx % width as i32) + width as i32) % width as i32;
+                let wy = ((ny % height as i32) + height as i32) % height as i32;
+                image.get_pixel(wx as u32, wy as u32)[channel] as f32
+            }
+            BoundaryMethod::Clamp => {
+                // Clamp coordinates to image boundaries
+                let cx = nx.max(0).min(width as i32 - 1);
+                let cy = ny.max(0).min(height as i32 - 1);
+                image.get_pixel(cx as u32, cy as u32)[channel] as f32
+            }
         }
     }
 }
@@ -1016,18 +1082,18 @@ fn compute_rectification_transforms(
     fundamentalmatrix: &TransformMatrix,
 ) -> Result<(TransformMatrix, TransformMatrix)> {
     let (width, height) = image_size;
-    let center_x = width as f64 / 2.0;
+    let centerx = width as f64 / 2.0;
     let center_y = height as f64 / 2.0;
 
     // Compute left rectification transform
     let left_transform =
-        compute_single_rectification_transform(left_epipole, (center_x, center_y), image_size)?;
+        compute_single_rectification_transform(left_epipole, (centerx, center_y), image_size)?;
 
     // For the right transform, we need to ensure epipolar lines are horizontal
     // and corresponding to the left transform
     let right_transform = compute_right_rectification_transform(
         right_epipole,
-        (center_x, center_y),
+        (centerx, center_y),
         image_size,
         &left_transform,
         fundamentalmatrix,
@@ -1044,7 +1110,7 @@ fn compute_single_rectification_transform(
     image_size: (u32, u32),
 ) -> Result<TransformMatrix> {
     let (_width_height) = image_size;
-    let (center_x, center_y) = center;
+    let (centerx, center_y) = center;
 
     // If epipole is at infinity (parallel cameras), use identity transform
     if epipole.x.abs() > 1e5 || epipole.y.abs() > 1e5 {
@@ -1053,11 +1119,11 @@ fn compute_single_rectification_transform(
 
     // Translate epipole to origin
     let mut t1 = identity_transform();
-    t1[[0, 2]] = -center_x;
+    t1[[0, 2]] = -centerx;
     t1[[1, 2]] = -center_y;
 
     // Rotate so that epipole is on positive x-axis
-    let ex = epipole.x - center_x;
+    let ex = epipole.x - centerx;
     let ey = epipole.y - center_y;
     let e_dist = (ex * ex + ey * ey).sqrt();
 
@@ -1081,7 +1147,7 @@ fn compute_single_rectification_transform(
 
     // Translate back to center
     let mut t2 = identity_transform();
-    t2[[0, 2]] = center_x;
+    t2[[0, 2]] = centerx;
     t2[[1, 2]] = center_y;
 
     // Combine transforms: T2 * Shear * Rotation * T1
@@ -1127,7 +1193,7 @@ fn compute_right_rectification_transform(
 /// Compute vertical adjustment to align epipolar lines between left and right images
 #[allow(dead_code)]
 fn compute_vertical_alignment(
-    left_transform: &TransformMatrix_right,
+    left_transform: &TransformMatrix,
     _transform: &TransformMatrix,
     fundamentalmatrix: &TransformMatrix,
     image_size: (u32, u32),
@@ -1170,9 +1236,9 @@ fn compute_vertical_alignment(
 
 /// Compute epipolar line in the right image corresponding to a point in the left image
 #[allow(dead_code)]
-fn compute_epipolar_line(_point: Point2D, fundamentalmatrix: &TransformMatrix) -> (f64, f64, f64) {
+fn compute_epipolar_line(point: Point2D, fundamentalmatrix: &TransformMatrix) -> (f64, f64, f64) {
     // Epipolar line l = F * p where p is in homogeneous coordinates
-    let p = [_point.x, point.y, 1.0];
+    let p = [point.x, point.y, 1.0];
     let mut line = [0.0; 3];
 
     for i in 0..3 {
@@ -1383,7 +1449,7 @@ impl TileConfig {
         let tile_width = tile_dimension.min(width).max(512);
         let tile_height = tile_dimension.min(height).max(512);
 
-        let tiles_x = width.div_ceil(tile_width);
+        let tilesx = width.div_ceil(tile_width);
         let tiles_y = height.div_ceil(tile_height);
 
         let overlap = 64; // 64 pixel overlap for blending
@@ -1392,7 +1458,7 @@ impl TileConfig {
         Self {
             tile_size: (tile_width, tile_height),
             overlap,
-            tile_count: (tiles_x, tiles_y),
+            tile_count: (tilesx, tiles_y),
             memory_budget,
         }
     }
@@ -1464,9 +1530,9 @@ impl StreamingPanoramaProcessor {
         let rgb_image = image.to_rgb8();
 
         // Process image tile by tile
-        for tile_x in 0..self.tile_config.tile_count.1 {
-            for tile_x in 0..self.tile_config.tile_count.0 {
-                self.process_tile_for_image(tile_x, tile_x, &rgb_image, transform)?;
+        for tilex in 0..self.tile_config.tile_count.1 {
+            for tilex in 0..self.tile_config.tile_count.0 {
+                self.process_tile_for_image(tilex, tilex, &rgb_image, transform)?;
             }
         }
 
@@ -1478,8 +1544,8 @@ impl StreamingPanoramaProcessor {
     ///
     /// # Arguments
     ///
-    /// * `tile_x` - Tile x coordinate
-    /// * `tile_x` - Tile y coordinate  
+    /// * `tilex` - Tile x coordinate
+    /// * `tilex` - Tile y coordinate  
     /// * `image` - Source image
     /// * `transform` - Transformation matrix
     ///
@@ -1488,19 +1554,19 @@ impl StreamingPanoramaProcessor {
     /// * Result indicating success or failure
     fn process_tile_for_image(
         &mut self,
-        tile_x: u32,
+        tilex: u32,
         tile_y: u32,
         image: &RgbImage,
         transform: &TransformMatrix,
     ) -> Result<()> {
         // Calculate tile bounds
-        let tile_bounds = self.calculate_tile_bounds(tile_x, tile_y);
+        let tile_bounds = self.calculate_tile_bounds(tilex, tile_y);
 
         // Warp only the relevant portion of the image for this tile
         let warpedtile = self.warp_image_for_tile(image, transform, &tile_bounds)?;
 
         // Blend with existing tile data
-        self.blend_tile(tile_x, tile_y, &warpedtile)?;
+        self.blend_tile(tilex, tile_y, &warpedtile)?;
 
         Ok(())
     }
@@ -1509,24 +1575,24 @@ impl StreamingPanoramaProcessor {
     ///
     /// # Arguments
     ///
-    /// * `tile_x` - Tile x coordinate
-    /// * `tile_x` - Tile y coordinate
+    /// * `tilex` - Tile x coordinate
+    /// * `tilex` - Tile y coordinate
     ///
     /// # Returns
     ///
     /// * Tile bounds as (x, y, width, height)
-    fn calculate_tile_bounds(&self, tile_x: u32, tiley: u32) -> (u32, u32, u32, u32) {
+    fn calculate_tile_bounds(&self, tilex: u32, tiley: u32) -> (u32, u32, u32, u32) {
         let (tile_width, tile_height) = self.tile_config.tile_size;
         let overlap = self.tile_config.overlap;
 
-        let start_x = tile_x * tile_width;
-        let start_y = tile_x * tile_height;
+        let startx = tilex * tile_width;
+        let start_y = tilex * tile_height;
 
         // Add overlap, but clamp to image bounds
-        let actual_width = (tile_width + overlap).min(self._outputsize.0 - start_x);
+        let actual_width = (tile_width + overlap).min(self._outputsize.0 - startx);
         let actual_height = (tile_height + overlap).min(self._outputsize.1 - start_y);
 
-        (start_x, start_y, actual_width, actual_height)
+        (startx, start_y, actual_width, actual_height)
     }
 
     /// Warp image for a specific tile region
@@ -1546,10 +1612,10 @@ impl StreamingPanoramaProcessor {
         transform: &TransformMatrix,
         tile_bounds: &(u32, u32, u32, u32),
     ) -> Result<RgbImage> {
-        let (tile_x, tile_y, tile_width, tile_height) = *tile_bounds;
+        let (tilex, tile_y, tile_width, tile_height) = *tile_bounds;
 
         // Create a sub-transformation that maps tile coordinates to image coordinates
-        let tile_transform = self.create_tile_transform(transform, tile_x, tile_y);
+        let tile_transform = self.create_tile_transform(transform, tilex, tile_y);
 
         // Warp only the tile region
         warp_rgb_image(
@@ -1566,8 +1632,8 @@ impl StreamingPanoramaProcessor {
     /// # Arguments
     ///
     /// * `base_transform` - Base transformation matrix
-    /// * `tile_x` - Tile x offset
-    /// * `tile_x` - Tile y offset
+    /// * `tilex` - Tile x offset
+    /// * `tilex` - Tile y offset
     ///
     /// # Returns
     ///
@@ -1575,13 +1641,13 @@ impl StreamingPanoramaProcessor {
     fn create_tile_transform(
         &self,
         base_transform: &TransformMatrix,
-        tile_x: u32,
+        tilex: u32,
         tile_y: u32,
     ) -> TransformMatrix {
         // Create translation matrix for tile offset
         let mut tile_offset = identity_transform();
-        tile_offset[[0, 2]] = tile_x as f64;
-        tile_offset[[1, 2]] = tile_x as f64;
+        tile_offset[[0, 2]] = tilex as f64;
+        tile_offset[[1, 2]] = tilex as f64;
 
         // Combine transforms: tile_offset * base_transform
         matrix_multiply(&tile_offset, base_transform).unwrap_or_else(|_| base_transform.clone())
@@ -1591,42 +1657,32 @@ impl StreamingPanoramaProcessor {
     ///
     /// # Arguments
     ///
-    /// * `tile_x` - Tile x coordinate
-    /// * `tile_x` - Tile y coordinate
+    /// * `tilex` - Tile x coordinate
+    /// * `tilex` - Tile y coordinate
     /// * `warpedtile` - Warped tile image
     ///
     /// # Returns
     ///
     /// * Result indicating success or failure
-    fn blend_tile(&mut self, tile_x: u32, tile_y: u32, warpedtile: &RgbImage) -> Result<()> {
+    fn blend_tile(&mut self, tilex: u32, tile_y: u32, warpedtile: &RgbImage) -> Result<()> {
         match self.blending_mode {
-            BlendingMode::Linear => self.blend_tile_linear(tile_x, tile_y, warpedtile),
-            BlendingMode::MultiBandBlending => {
-                self.blend_tile_multiband(tile_x, tile_y, warpedtile)
-            }
-            BlendingMode::GraphCutSeaming => self.blend_tile_graphcut(tile_x, tile_y, warpedtile),
+            BlendingMode::Linear => self.blend_tile_linear(tilex, tile_y, warpedtile),
+            BlendingMode::MultiBandBlending => self.blend_tile_multiband(tilex, tile_y, warpedtile),
+            BlendingMode::GraphCutSeaming => self.blend_tile_graphcut(tilex, tile_y, warpedtile),
         }
     }
 
     /// Linear blending for tile
-    fn blend_tile_linear(
-        &mut self,
-        tile_x: u32,
-        tile_y: u32,
-        warpedtile: &RgbImage,
-    ) -> Result<()> {
-        let tileid = TileId {
-            x: tile_x,
-            y: tile_x,
-        };
+    fn blend_tile_linear(&mut self, tilex: u32, tile_y: u32, warpedtile: &RgbImage) -> Result<()> {
+        let tileid = TileId { x: tilex, y: tilex };
         let existing_tile = self.tile_cache.get_or_create_tile(tileid)?;
 
         // Simple averaging blend
         let (tile_width, tile_height) = warpedtile.dimensions();
         for y in 0..tile_height {
-            for _x in 0..tile_width {
-                let new_pixel = warpedtile.get_pixel(_x_y);
-                let existing_pixel = existing_tile.get_pixel_mut(_x_y);
+            for x in 0..tile_width {
+                let new_pixel = warpedtile.get_pixel(x, y);
+                let existing_pixel = existing_tile.get_pixel_mut(x, y);
 
                 // Check if new pixel has valid data
                 if new_pixel[0] > 0 || new_pixel[1] > 0 || new_pixel[2] > 0 {
@@ -1650,25 +1706,25 @@ impl StreamingPanoramaProcessor {
     /// Multi-band blending for tile (simplified implementation)
     fn blend_tile_multiband(
         &mut self,
-        tile_x: u32,
+        tilex: u32,
         tile_y: u32,
         warpedtile: &RgbImage,
     ) -> Result<()> {
         // For now, use linear blending as a placeholder
         // In a full implementation, this would use Laplacian pyramids
-        self.blend_tile_linear(tile_x, tile_x, warpedtile)
+        self.blend_tile_linear(tilex, tilex, warpedtile)
     }
 
     /// Graph-cut seaming for tile (simplified implementation)
     fn blend_tile_graphcut(
         &mut self,
-        tile_x: u32,
+        tilex: u32,
         tile_y: u32,
         warpedtile: &RgbImage,
     ) -> Result<()> {
         // For now, use linear blending as a placeholder
         // In a full implementation, this would use graph-cut optimization
-        self.blend_tile_linear(tile_x, tile_x, warpedtile)
+        self.blend_tile_linear(tilex, tilex, warpedtile)
     }
 
     /// Finalize panorama and return result
@@ -1681,14 +1737,11 @@ impl StreamingPanoramaProcessor {
         let (width, height) = self._outputsize;
         let mut output = RgbImage::new(width, height);
 
-        for tile_x in 0..self.tile_config.tile_count.1 {
-            for tile_x in 0..self.tile_config.tile_count.0 {
-                let tileid = TileId {
-                    x: tile_x,
-                    y: tile_x,
-                };
+        for tilex in 0..self.tile_config.tile_count.1 {
+            for tilex in 0..self.tile_config.tile_count.0 {
+                let tileid = TileId { x: tilex, y: tilex };
                 if let Ok(tile) = self.tile_cache.get_tile(tileid) {
-                    self.copy_tile_to_output(tile, tile_x, tile_x, &mut output)?;
+                    self.copy_tile_to_output(tile, tilex, tilex, &mut output)?;
                 }
             }
         }
@@ -1701,8 +1754,8 @@ impl StreamingPanoramaProcessor {
     /// # Arguments
     ///
     /// * `tile` - Source tile
-    /// * `tile_x` - Tile x coordinate
-    /// * `tile_x` - Tile y coordinate
+    /// * `tilex` - Tile x coordinate
+    /// * `tilex` - Tile y coordinate
     /// * `output` - Destination output image
     ///
     /// # Returns
@@ -1711,21 +1764,21 @@ impl StreamingPanoramaProcessor {
     fn copy_tile_to_output(
         &self,
         tile: &RgbImage,
-        tile_x: u32,
+        tilex: u32,
         tile_y: u32,
         output: &mut RgbImage,
     ) -> Result<()> {
-        let tile_bounds = self.calculate_tile_bounds(tile_x, tile_x);
-        let (start_x, start_y, tile_width, tile_height) = tile_bounds;
+        let tile_bounds = self.calculate_tile_bounds(tilex, tilex);
+        let (startx, start_y, tile_width, tile_height) = tile_bounds;
 
         for y in 0..tile_height {
-            for _x in 0..tile_width {
-                let output_x = start_x + x;
+            for x in 0..tile_width {
+                let outputx = startx + x;
                 let output_y = start_y + y;
 
-                if output_x < self._outputsize.0 && output_y < self._outputsize.1 {
-                    let pixel = tile.get_pixel(_x_y);
-                    output.put_pixel(output_x, output_y, *pixel);
+                if outputx < self._outputsize.0 && output_y < self._outputsize.1 {
+                    let pixel = tile.get_pixel(x, y);
+                    output.put_pixel(outputx, output_y, *pixel);
                 }
             }
         }
@@ -1761,7 +1814,7 @@ impl TileCache {
     fn new(config: &TileConfig) -> Result<Self> {
         Ok(Self {
             tiles: std::collections::HashMap::new(),
-            _config: config.clone(),
+            config: config.clone(),
             memory_usage: 0,
         })
     }
@@ -1818,8 +1871,8 @@ impl TileCache {
         // Simple LRU eviction strategy
         while self.memory_usage > self.config.memory_budget && !self.tiles.is_empty() {
             // Remove the first tile (in a real implementation, we'd use proper LRU)
-            if let Some((tile_id_)) = self.tiles.iter().next() {
-                let tileid = *tileid;
+            if let Some((tile_id_, _)) = self.tiles.iter().next() {
+                let tileid = *tile_id_;
                 let (tile_width, tile_height) = self.config.tile_size;
                 let tile_memory = (tile_width * tile_height * 3) as usize;
 
@@ -1845,8 +1898,7 @@ fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
     }
 
     // Compute determinant
-    let det = matrix[[0, 0]]
-        * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
+    let det = matrix[[0, 0]] * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
         - matrix[[0, 1]] * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
         + matrix[[0, 2]] * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
 
@@ -2112,7 +2164,7 @@ pub fn compute_depth_map(
 #[allow(dead_code)]
 fn image_to_array2(image: &GrayImage) -> Array2<f32> {
     let (width, height) = image.dimensions();
-    Array2::fromshape_fn((height as usize, width as usize), |(y, x)| {
+    Array2::from_shape_fn((height as usize, width as usize), |(y, x)| {
         image.get_pixel(x as u32, y as u32)[0] as f32 / 255.0
     })
 }
@@ -2256,9 +2308,9 @@ fn compute_sad_cost_simd(
     use scirs2_core::simd_ops::SimdUnifiedOps;
 
     let half_block = blocksize / 2;
-    let right_x = x as i32 - disparity;
+    let rightx = x as i32 - disparity;
 
-    if right_x < half_block as i32 || right_x >= (right_image.dim().1 - half_block) as i32 {
+    if rightx < half_block as i32 || rightx >= (right_image.dim().1 - half_block) as i32 {
         return Ok(f32::INFINITY); // Invalid disparity
     }
 
@@ -2275,7 +2327,7 @@ fn compute_sad_cost_simd(
             .collect();
 
         let right_row: Vec<f32> = (-(half_block as i32)..=(half_block as i32))
-            .map(|dx| right_image[[ry, (right_x + dx) as usize]])
+            .map(|dx| right_image[[ry, (rightx + dx) as usize]])
             .collect();
 
         let left_array = Array1::from_vec(left_row);
@@ -2305,9 +2357,9 @@ fn compute_ssd_cost_simd(
     use scirs2_core::simd_ops::SimdUnifiedOps;
 
     let half_block = blocksize / 2;
-    let right_x = x as i32 - disparity;
+    let rightx = x as i32 - disparity;
 
-    if right_x < half_block as i32 || right_x >= (right_image.dim().1 - half_block) as i32 {
+    if rightx < half_block as i32 || rightx >= (right_image.dim().1 - half_block) as i32 {
         return Ok(f32::INFINITY);
     }
 
@@ -2322,7 +2374,7 @@ fn compute_ssd_cost_simd(
             .collect();
 
         let right_row: Vec<f32> = (-(half_block as i32)..=(half_block as i32))
-            .map(|dx| right_image[[ry, (right_x + dx) as usize]])
+            .map(|dx| right_image[[ry, (rightx + dx) as usize]])
             .collect();
 
         let left_array = Array1::from_vec(left_row);
@@ -2352,9 +2404,9 @@ fn compute_ncc_cost_simd(
     use scirs2_core::simd_ops::SimdUnifiedOps;
 
     let half_block = blocksize / 2;
-    let right_x = x as i32 - disparity;
+    let rightx = x as i32 - disparity;
 
-    if right_x < half_block as i32 || right_x >= (right_image.dim().1 - half_block) as i32 {
+    if rightx < half_block as i32 || rightx >= (right_image.dim().1 - half_block) as i32 {
         return Ok(f32::INFINITY);
     }
 
@@ -2367,7 +2419,7 @@ fn compute_ncc_cost_simd(
             let ly = (y as i32 + dy) as usize;
             let lx = (x as i32 + dx) as usize;
             let ry = ly;
-            let rx = (right_x + dx) as usize;
+            let rx = (rightx + dx) as usize;
 
             left_block.push(left_image[[ly, lx]]);
             right_block.push(right_image[[ry, rx]]);
@@ -2415,15 +2467,15 @@ fn compute_census_cost_simd(
     blocksize: usize,
 ) -> Result<f32> {
     let half_block = blocksize / 2;
-    let right_x = x as i32 - disparity;
+    let rightx = x as i32 - disparity;
 
-    if right_x < half_block as i32 || right_x >= (right_image.dim().1 - half_block) as i32 {
+    if rightx < half_block as i32 || rightx >= (right_image.dim().1 - half_block) as i32 {
         return Ok(f32::INFINITY);
     }
 
     // Compute Census transform for both blocks
     let left_census = compute_census_transform(left_image, x, y, blocksize);
-    let right_census = compute_census_transform(right_image, right_x as usize, y, blocksize);
+    let right_census = compute_census_transform(right_image, rightx as usize, y, blocksize);
 
     // Hamming distance between census transforms
     let hamming_distance = (left_census ^ right_census).count_ones() as f32;
@@ -2433,7 +2485,7 @@ fn compute_census_cost_simd(
 
 /// Compute Census transform for a block
 #[allow(dead_code)]
-fn compute_census_transform(_image: &Array2<f32>, x: usize, y: usize, blocksize: usize) -> u32 {
+fn compute_census_transform(image: &Array2<f32>, x: usize, y: usize, blocksize: usize) -> u32 {
     let half_block = blocksize / 2;
     let center_value = image[[y, x]];
     let mut census = 0u32;
@@ -2507,7 +2559,7 @@ fn compute_hybrid_cost_simd(
 ///
 /// * Result containing aggregated cost volume
 #[allow(dead_code)]
-fn aggregate_costs_sgm(_cost_volume: &Array3<f32>, sgmparams: &SgmParams) -> Result<Array3<f32>> {
+fn aggregate_costs_sgm(cost_volume: &Array3<f32>, sgmparams: &SgmParams) -> Result<Array3<f32>> {
     let (height, width, num_disparities) = cost_volume.dim();
     let mut aggregated_costs = Array3::zeros((height, width, num_disparities));
 
@@ -2556,7 +2608,7 @@ fn aggregate_costs_direction(
     dx: i32,
     sgmparams: &SgmParams,
 ) -> Result<Array3<f32>> {
-    let (height, width_num_disparities) = cost_volume.dim();
+    let (height, width, _num_disparities) = cost_volume.dim();
     let mut direction_costs = cost_volume.clone();
 
     // Dynamic programming aggregation
@@ -2566,7 +2618,7 @@ fn aggregate_costs_direction(
             for y in 1..height {
                 for x in 0..width {
                     let prev_y = (y as i32 - dy) as usize;
-                    let prev_x = if dx != 0 {
+                    let prevx = if dx != 0 {
                         let px = x as i32 - dx;
                         if px >= 0 && px < width as i32 {
                             px as usize
@@ -2577,15 +2629,8 @@ fn aggregate_costs_direction(
                         x
                     };
 
-                    if prev_y < height && prev_x < width {
-                        aggregate_pixel_costs(
-                            &mut direction_costs,
-                            y,
-                            x,
-                            prev_y,
-                            prev_x,
-                            sgmparams,
-                        );
+                    if prev_y < height && prevx < width {
+                        aggregate_pixel_costs(&mut direction_costs, y, x, prev_y, prevx, sgmparams);
                     }
                 }
             }
@@ -2595,7 +2640,7 @@ fn aggregate_costs_direction(
             for y in (0..height - 1).rev() {
                 for x in 0..width {
                     let prev_y = (y as i32 - dy) as usize;
-                    let prev_x = if dx != 0 {
+                    let prevx = if dx != 0 {
                         let px = x as i32 - dx;
                         if px >= 0 && px < width as i32 {
                             px as usize
@@ -2606,15 +2651,8 @@ fn aggregate_costs_direction(
                         x
                     };
 
-                    if prev_y < height && prev_x < width {
-                        aggregate_pixel_costs(
-                            &mut direction_costs,
-                            y,
-                            x,
-                            prev_y,
-                            prev_x,
-                            sgmparams,
-                        );
+                    if prev_y < height && prevx < width {
+                        aggregate_pixel_costs(&mut direction_costs, y, x, prev_y, prevx, sgmparams);
                     }
                 }
             }
@@ -2629,9 +2667,9 @@ fn aggregate_costs_direction(
 
             for x in x_range {
                 for y in 0..height {
-                    let prev_x = (x as i32 - dx) as usize;
-                    if prev_x < width {
-                        aggregate_pixel_costs(&mut direction_costs, y, x, y, prev_x, sgmparams);
+                    let prevx = (x as i32 - dx) as usize;
+                    if prevx < width {
+                        aggregate_pixel_costs(&mut direction_costs, y, x, y, prevx, sgmparams);
                     }
                 }
             }
@@ -2648,7 +2686,7 @@ fn aggregate_pixel_costs(
     y: usize,
     x: usize,
     prev_y: usize,
-    prev_x: usize,
+    prevx: usize,
     sgmparams: &SgmParams,
 ) {
     let num_disparities = direction_costs.dim().2;
@@ -2660,7 +2698,7 @@ fn aggregate_pixel_costs(
         let mut min_aggregated_cost = f32::INFINITY;
 
         for prev_d in 0..num_disparities {
-            let prev_cost = direction_costs[[prev_y, prev_x, prev_d]];
+            let prev_cost = direction_costs[[prev_y, prevx, prev_d]];
 
             let smoothness_penalty = if d == prev_d {
                 0.0 // No penalty for same disparity
@@ -2737,7 +2775,7 @@ fn compute_right_disparity(
     right_params.max_disparity = -params.min_disparity;
 
     let cost_volume = compute_cost_volume(right_image, left_image, &right_params)?;
-    let (right_disparity_) = compute_disparity_wta(&cost_volume, &right_params)?;
+    let (right_disparity_, _) = compute_disparity_wta(&cost_volume, &right_params)?;
 
     // Negate disparities to convert back to left _image coordinate system
     Ok(right_disparity_.mapv(|d| -d))
@@ -2756,10 +2794,10 @@ fn apply_lr_consistency_check(
     for y in 0..height {
         for x in 0..width {
             let left_d = left_disparity[[y, x]];
-            let right_x = (x as f32 - left_d).round() as i32;
+            let rightx = (x as f32 - left_d).round() as i32;
 
-            if right_x >= 0 && right_x < width as i32 {
-                let right_d = right_disparity_[[y, right_x as usize]];
+            if rightx >= 0 && rightx < width as i32 {
+                let right_d = right_disparity_[[y, rightx as usize]];
 
                 if (left_d - right_d).abs() > threshold {
                     consistent_disparity[[y, x]] = f32::NAN; // Mark as invalid
@@ -2866,7 +2904,7 @@ fn fill_holes_and_filter(
 
 /// Apply median filter to disparity map
 #[allow(dead_code)]
-fn apply_median_filter(_disparity_map: &Array2<f32>, windowsize: usize) -> Result<Array2<f32>> {
+fn apply_median_filter(disparity_map: &Array2<f32>, windowsize: usize) -> Result<Array2<f32>> {
     let (height, width) = disparity_map.dim();
     let mut filtered = disparity_map.clone();
     let half_window = windowsize / 2;
@@ -2896,10 +2934,7 @@ fn apply_median_filter(_disparity_map: &Array2<f32>, windowsize: usize) -> Resul
 
 /// Apply speckle filter to remove small isolated regions
 #[allow(dead_code)]
-fn apply_speckle_filter(
-    disparity_map: &Array2<f32>,
-    sgmparams: &SgmParams,
-) -> Result<Array2<f32>> {
+fn apply_speckle_filter(disparity_map: &Array2<f32>, sgmparams: &SgmParams) -> Result<Array2<f32>> {
     let (height, width) = disparity_map.dim();
     let mut filtered = disparity_map.clone();
     let mut visited = Array2::from_elem((height, width), false);
@@ -2938,40 +2973,40 @@ fn apply_speckle_filter(
 fn flood_fill_region_size(
     disparity_map: &Array2<f32>,
     visited: &mut Array2<bool>,
-    start_x: usize,
+    startx: usize,
     start_y: usize,
     target_disparity: f32,
     range: f32,
 ) -> usize {
     let (height, width) = disparity_map.dim();
-    let mut stack = vec![(start_x, start_y)];
+    let mut stack = vec![(startx, start_y)];
     let mut region_size = 0;
 
-    while let Some((_x, y)) = stack.pop() {
-        if _x >= width || y >= height || visited[[_y_x]] {
+    while let Some((x, y)) = stack.pop() {
+        if x >= width || y >= height || visited[[y, x]] {
             continue;
         }
 
-        let _disparity = disparity_map[[_y_x]];
-        if disparity.is_nan() || (_disparity - target_disparity).abs() > range {
+        let disparity = disparity_map[[y, x]];
+        if disparity.is_nan() || (disparity - target_disparity).abs() > range {
             continue;
         }
 
-        visited[[_y_x]] = true;
+        visited[[y, x]] = true;
         region_size += 1;
 
         // Add neighbors
-        if _x > 0 {
-            stack.push((_x - 1, y));
+        if x > 0 {
+            stack.push((x - 1, y));
         }
-        if _x < width - 1 {
-            stack.push((_x + 1, y));
+        if x < width - 1 {
+            stack.push((x + 1, y));
         }
         if y > 0 {
-            stack.push((_x, y - 1));
+            stack.push((x, y - 1));
         }
         if y < height - 1 {
-            stack.push((_x, y + 1));
+            stack.push((x, y + 1));
         }
     }
 
@@ -2982,38 +3017,38 @@ fn flood_fill_region_size(
 #[allow(dead_code)]
 fn flood_fill_mark_invalid(
     disparity_map: &mut Array2<f32>,
-    start_x: usize,
+    startx: usize,
     start_y: usize,
     target_disparity: f32,
     range: f32,
 ) {
     let (height, width) = disparity_map.dim();
-    let mut stack = vec![(start_x, start_y)];
+    let mut stack = vec![(startx, start_y)];
 
-    while let Some((_x, y)) = stack.pop() {
-        if _x >= width || y >= height {
+    while let Some((x, y)) = stack.pop() {
+        if x >= width || y >= height {
             continue;
         }
 
-        let _disparity = disparity_map[[_y_x]];
-        if disparity.is_nan() || (_disparity - target_disparity).abs() > range {
+        let disparity = disparity_map[[y, x]];
+        if disparity.is_nan() || (disparity - target_disparity).abs() > range {
             continue;
         }
 
-        disparity_map[[_y_x]] = f32::NAN;
+        disparity_map[[y, x]] = f32::NAN;
 
         // Add neighbors
-        if _x > 0 {
-            stack.push((_x - 1, y));
+        if x > 0 {
+            stack.push((x - 1, y));
         }
-        if _x < width - 1 {
-            stack.push((_x + 1, y));
+        if x < width - 1 {
+            stack.push((x + 1, y));
         }
         if y > 0 {
-            stack.push((_x, y - 1));
+            stack.push((x, y - 1));
         }
         if y < height - 1 {
-            stack.push((_x, y + 1));
+            stack.push((x, y + 1));
         }
     }
 }

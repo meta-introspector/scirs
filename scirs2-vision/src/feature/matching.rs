@@ -813,7 +813,7 @@ impl RansacMatcher {
 
             for &idx in &sample_indices {
                 let m = &matches[idx];
-                src_points.push([keypoints1[m.query_idx].x..keypoints1[m.query_idx].y]);
+                src_points.push([keypoints1[m.query_idx].x, keypoints1[m.query_idx].y]);
                 dstpoints.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
             }
 
@@ -884,7 +884,7 @@ impl RansacMatcher {
 
             for &idx in &sample_indices {
                 let m = &matches[idx];
-                src_points.push([keypoints1[m.query_idx].x..keypoints1[m.query_idx].y]);
+                src_points.push([keypoints1[m.query_idx].x, keypoints1[m.query_idx].y]);
                 dstpoints.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
             }
 
@@ -953,7 +953,7 @@ impl RansacMatcher {
 
             for &idx in &sample_indices {
                 let m = &matches[idx];
-                src_points.push([keypoints1[m.query_idx].x..keypoints1[m.query_idx].y]);
+                src_points.push([keypoints1[m.query_idx].x, keypoints1[m.query_idx].y]);
                 dstpoints.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
             }
 
@@ -1023,7 +1023,7 @@ impl RansacMatcher {
 
             for &idx in &sample_indices {
                 let m = &matches[idx];
-                src_points.push([keypoints1[m.query_idx].x..keypoints1[m.query_idx].y]);
+                src_points.push([keypoints1[m.query_idx].x, keypoints1[m.query_idx].y]);
                 dstpoints.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
             }
 
@@ -1098,7 +1098,7 @@ fn estimate_homography(src_points: &[[f32; 2]], dstpoints: &[[f32; 2]]) -> Resul
     let h_vec = find_smallest_eigenvector_homography(&ata)?;
 
     // Reshape to 3x3 matrix
-    let mut h_norm = Array2::fromshape_vec((3, 3), h_vec)
+    let mut h_norm = Array2::from_shape_vec((3, 3), h_vec)
         .map_err(|e| VisionError::OperationError(format!("Failed to reshape homography: {e}")))?;
 
     // Denormalize: H = T_dst^(-1) * H_norm * Tsrc
@@ -1589,7 +1589,7 @@ fn estimate_fundamental_matrix(
     let f_vec = find_smallest_eigenvector_homography(&ata)?;
 
     // Reshape to 3x3 matrix
-    let mut f_norm = Array2::fromshape_vec((3, 3), f_vec).map_err(|e| {
+    let mut f_norm = Array2::from_shape_vec((3, 3), f_vec).map_err(|e| {
         VisionError::OperationError(format!("Failed to reshape fundamental matrix: {e}"))
     })?;
 

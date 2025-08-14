@@ -248,7 +248,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         let config = Self::default_config_for_strategy(&strategy);
 
         Self {
-            strategy: strategy,
+            strategy,
             config,
             domain_performance: HashMap::new(),
             transfer_knowledge: Vec::new(),

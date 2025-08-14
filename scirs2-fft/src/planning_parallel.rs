@@ -268,7 +268,7 @@ impl ParallelExecutor {
         };
 
         Self {
-            plan: plan,
+            plan,
             config,
             worker_pool,
         }

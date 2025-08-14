@@ -476,7 +476,7 @@ impl<F: IntegrateFloat> RichardsonExtrapolator<F> {
     /// Create new Richardson extrapolator
     pub fn new(order: usize) -> Self {
         Self {
-            order: order,
+            order,
             step_ratios: vec![F::from(0.5).unwrap(), F::from(0.25).unwrap()],
             solutions: Vec::new(),
         }

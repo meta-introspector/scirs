@@ -24,7 +24,7 @@ use std::ops::{AddAssign, MulAssign, SubAssign};
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::incomplete_gamma::gammainc_lower;
+/// use scirs2_special::incomplete_gamma::gammainc_lower;
 ///
 /// let result = gammainc_lower(2.0, 1.0).unwrap();
 /// assert!((result - 0.2642411176571153).abs() < 1e-10);

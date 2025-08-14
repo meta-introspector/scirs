@@ -448,8 +448,7 @@ impl AdvancedPerformanceMonitor {
             aggregator.increment_alert("high_processing_time");
         }
 
-        let throughput =
-            datapoint.itemsprocessed as f64 / datapoint.processing_time.as_secs_f64();
+        let throughput = datapoint.itemsprocessed as f64 / datapoint.processing_time.as_secs_f64();
         if throughput < self.alert_thresholds.min_throughput {
             aggregator.increment_alert("low_throughput");
         }

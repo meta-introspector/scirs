@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )?;
 
         // Test prediction
-        let query_points = Array2::fromshape_vec(
+        let query_points = Array2::from_shape_vec(
             (3, 2),
             vec![
                 0.25, 0.25, // Point 1

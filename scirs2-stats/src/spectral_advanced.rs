@@ -121,7 +121,7 @@ pub struct CoherenceConfig<F> {
 #[derive(Debug, Clone)]
 pub struct NonStationaryConfig<F> {
     /// Short-time Fourier transform window size
-    pub stft_window_size: usize,
+    pub stft_windowsize: usize,
     /// STFT overlap percentage
     pub stft_overlap: F,
     /// Spectrogram type
@@ -151,7 +151,7 @@ pub struct MLSpectralConfig<F> {
 #[derive(Debug, Clone)]
 pub struct NetworkParams<F> {
     /// Hidden layer sizes
-    pub hidden_sizes: Vec<usize>,
+    pub hiddensizes: Vec<usize>,
     /// Activation function
     pub activation: ActivationFunction,
     /// Learning rate
@@ -433,7 +433,7 @@ where
         };
 
         Self {
-            config: config,
+            config,
             cache,
             performance: SpectralPerformanceMetrics {
                 timing: HashMap::new(),
@@ -567,30 +567,30 @@ where
         checkarray_finite(signal, "signal")?;
 
         let n_samples_ = signal.len();
-        let window_size = self.config.nonstationary_config.stft_window_size;
+        let windowsize = self.config.nonstationary_config.stft_windowsize;
         let overlap = self.config.nonstationary_config.stft_overlap;
 
-        let hop_size = ((F::one() - overlap) * F::from(window_size).unwrap())
+        let hopsize = ((F::one() - overlap) * F::from(windowsize).unwrap())
             .to_usize()
             .unwrap();
-        let n_windows = (n_samples_ - window_size) / hop_size + 1;
-        let n_freqs = window_size / 2 + 1;
+        let n_windows = (n_samples_ - windowsize) / hopsize + 1;
+        let n_freqs = windowsize / 2 + 1;
 
         let mut spectrogram = Array3::zeros((n_freqs, n_windows, 1));
 
         // Generate window function
-        let window = self.generate_window(WindowFunction::Hann, window_size)?;
+        let window = self.generate_window(WindowFunction::Hann, windowsize)?;
 
         // Compute STFT
-        for (win_idx, window_start) in (0..n_samples_ - window_size + 1)
-            .step_by(hop_size)
+        for (win_idx, window_start) in (0..n_samples_ - windowsize + 1)
+            .step_by(hopsize)
             .enumerate()
         {
             if win_idx >= n_windows {
                 break;
             }
 
-            let window_end = window_start + window_size;
+            let window_end = window_start + windowsize;
             let windowed_signal = self.apply_window(
                 &signal.slice(ndarray::s![window_start..window_end]),
                 &window.view(),
@@ -1032,7 +1032,7 @@ where
                 confidence_level: F::from(0.95).unwrap(),
             },
             nonstationary_config: NonStationaryConfig {
-                stft_window_size: 256,
+                stft_windowsize: 256,
                 stft_overlap: F::from(0.75).unwrap(),
                 spectrogram_type: SpectrogramType::PowerSpectralDensity,
                 time_varying: true,
@@ -1044,7 +1044,7 @@ where
                 adversarial_sr: false,
                 rl_adaptation: false,
                 network_params: NetworkParams {
-                    hidden_sizes: vec![128, 64, 32],
+                    hiddensizes: vec![128, 64, 32],
                     activation: ActivationFunction::ReLU,
                     learning_rate: F::from(0.001).unwrap(),
                     regularization: F::from(0.01).unwrap(),
@@ -1115,7 +1115,7 @@ mod tests {
     #[test]
     fn test_time_frequency_analysis() {
         let mut config = AdvancedSpectralConfig::default();
-        config.nonstationary_config.stft_window_size = 32;
+        config.nonstationary_config.stft_windowsize = 32;
         config.nonstationary_config.stft_overlap = 0.5;
 
         let mut analyzer = AdvancedSpectralAnalyzer::<f64>::new(config);

@@ -227,7 +227,7 @@ impl ReLU {
     }
 
     pub fn leaky(alpha: f64) -> Self {
-        Self { alpha: alpha }
+        Self { alpha }
     }
 }
 
@@ -281,7 +281,7 @@ pub struct Softmax {
 
 impl Softmax {
     pub fn new(axis: isize) -> Self {
-        Self { axis: axis }
+        Self { axis }
     }
 }
 

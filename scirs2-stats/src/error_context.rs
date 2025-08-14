@@ -23,7 +23,7 @@ impl EnhancedError {
     /// Create a new enhanced error
     pub fn new(error: StatsError, context: impl Into<String>) -> Self {
         Self {
-            error: error,
+            error,
             context: context.into(),
             suggestions: Vec::new(),
             see_also: Vec::new(),
@@ -270,40 +270,36 @@ pub mod data_validation {
     use num_traits::Float;
 
     /// Validate input data with enhanced error messages
-    pub fn validate_data_quality<T>(
-        _data: &[T],
-        context: &str,
-        allow_empty: bool,
-    ) -> StatsResult<()>
+    pub fn validatedata_quality<T>(data: &[T], context: &str, allow_empty: bool) -> StatsResult<()>
     where
         T: Float + Display,
     {
-        if _data.is_empty() && !allow_empty {
+        if data.is_empty() && !allow_empty {
             return Err(EnhancedError::new(
-                StatsError::invalid_argument("Empty _data array"),
-                format!("Empty input _data for {}", context),
+                StatsError::invalid_argument("Empty data array"),
+                format!("Empty input data for {}", context),
             )
             .with_suggestions(vec![
-                "Ensure your _data loading process completed successfully",
-                "Check if filters removed all _data points",
-                "Verify the _data source is not _empty",
+                "Ensure your data loading process completed successfully",
+                "Check if filters removed all data points",
+                "Verify the data source is not _empty",
             ])
             .into_error());
         }
 
         // Check for NaN or infinite values
-        let nan_count = _data.iter().filter(|&&x| x.is_nan()).count();
-        let inf_count = _data.iter().filter(|&&x| x.is_infinite()).count();
+        let nan_count = data.iter().filter(|&&x| x.is_nan()).count();
+        let inf_count = data.iter().filter(|&&x| x.is_infinite()).count();
 
         if nan_count > 0 {
             return Err(EnhancedError::new(
                 StatsError::invalid_argument(format!("Found {} NaN values", nan_count)),
-                format!("Invalid _data values in {}", context),
+                format!("Invalid data values in {}", context),
             )
             .with_suggestions(vec![
                 "Use dropna() or similar to remove NaN values",
                 "Check for division by zero in calculations",
-                "Verify _data import didn't introduce NaN values",
+                "Verify data import didn't introduce NaN values",
                 "Consider imputation methods if appropriate",
             ])
             .see_also("data_preprocessing")
@@ -313,7 +309,7 @@ pub mod data_validation {
         if inf_count > 0 {
             return Err(EnhancedError::new(
                 StatsError::invalid_argument(format!("Found {} infinite values", inf_count)),
-                format!("Invalid _data values in {}", context),
+                format!("Invalid data values in {}", context),
             )
             .with_suggestions(vec![
                 "Check for numerical overflow in calculations",

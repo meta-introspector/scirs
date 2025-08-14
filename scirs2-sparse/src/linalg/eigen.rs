@@ -1454,8 +1454,7 @@ where
     // Solve tridiagonal eigenvalue problem
     let alpha_vec: Vec<T> = alpha.slice(s![..j]).to_vec();
     let beta_vec: Vec<T> = beta.slice(s![1..j]).to_vec();
-    let (mut eigenvalues, eigenvectors) =
-        solve_tridiagonal_eigenproblem(&alpha_vec, &beta_vec, k)?;
+    let (mut eigenvalues, eigenvectors) = solve_tridiagonal_eigenproblem(&alpha_vec, &beta_vec, k)?;
 
     // Transform eigenvalues back: lambda = sigma + 1/mu
     for eval in eigenvalues.iter_mut() {
@@ -3167,10 +3166,7 @@ where
         + 'static
         + std::iter::Sum,
 {
-    pub fn new(
-        _shiftedmatrix: &SymCsrMatrix<T>,
-        bmatrix: &SymCsrMatrix<T>,
-    ) -> SparseResult<Self> {
+    pub fn new(_shiftedmatrix: &SymCsrMatrix<T>, bmatrix: &SymCsrMatrix<T>) -> SparseResult<Self> {
         let shifted_solver = EnhancedShiftInvertSolver::with_factorization(_shiftedmatrix)?;
 
         Ok(Self {
@@ -3242,10 +3238,7 @@ where
         + 'static
         + std::iter::Sum,
 {
-    pub fn new(
-        _shiftedmatrix: &SymCsrMatrix<T>,
-        amatrix: &SymCsrMatrix<T>,
-    ) -> SparseResult<Self> {
+    pub fn new(_shiftedmatrix: &SymCsrMatrix<T>, amatrix: &SymCsrMatrix<T>) -> SparseResult<Self> {
         let shifted_solver = EnhancedShiftInvertSolver::with_factorization(_shiftedmatrix)?;
 
         Ok(Self {
@@ -4264,7 +4257,7 @@ mod tests {
             max_iter: 100,
             max_subspace_size: 2, // Matrix is 2x2
             tol: 1e-6,            // More reasonable tolerance
-            numeigenvalues: 1,   // Find the largest eigenvalue
+            numeigenvalues: 1,    // Find the largest eigenvalue
             compute_eigenvectors: true,
         };
 

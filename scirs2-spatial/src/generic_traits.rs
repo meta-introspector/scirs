@@ -499,7 +499,7 @@ pub struct Point<T: SpatialScalar> {
 impl<T: SpatialScalar> Point<T> {
     /// Create a new point from coordinates
     pub fn new(coords: Vec<T>) -> Self {
-        Self { coords: coords }
+        Self { coords }
     }
 
     /// Create a point with the given dimension filled with zeros
@@ -774,7 +774,7 @@ pub mod ndarray_integration {
 
     impl<'a, T: SpatialScalar> NdArray2Wrapper<'a, T> {
         pub fn new(array: ArrayView2<'a, T>) -> Self {
-            Self { array: array }
+            Self { array }
         }
     }
 

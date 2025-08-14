@@ -64,10 +64,7 @@ pub struct Triangle {
 impl Triangle {
     /// Create a new triangle
     pub fn new(nodes: [usize; 3], marker: Option<i32>) -> Self {
-        Triangle {
-            nodes: nodes,
-            marker,
-        }
+        Triangle { nodes, marker }
     }
 }
 

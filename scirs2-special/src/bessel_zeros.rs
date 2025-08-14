@@ -304,8 +304,8 @@ where
             // ∫₀^∞ t J₀(t) Y₀(xt) dt = -2x/(π(1-x²)²) for |x| < 1
             if x < T::one() {
                 let pi = T::from_f64(PI).unwrap();
-                let one_minus_x_sq = T::one() - x * x;
-                let denom = pi * one_minus_x_sq * one_minus_x_sq;
+                let oneminus_x_sq = T::one() - x * x;
+                let denom = pi * oneminus_x_sq * oneminus_x_sq;
                 let integral1 = -T::from_f64(2.0).unwrap() * x / denom;
                 // For the second integral, we use a similar form but with different scaling
                 let integral2 = integral1 * T::from_f64(0.5).unwrap(); // Simplified approximation
@@ -321,9 +321,9 @@ where
             if x < T::one() {
                 let pi = T::from_f64(PI).unwrap();
                 let x_sq = x * x;
-                let one_minus_x_sq = T::one() - x_sq;
+                let oneminus_x_sq = T::one() - x_sq;
                 let numerator = T::from_f64(2.0).unwrap() * (T::one() + x_sq);
-                let denom = pi * one_minus_x_sq * one_minus_x_sq * one_minus_x_sq;
+                let denom = pi * oneminus_x_sq * oneminus_x_sq * oneminus_x_sq;
                 let integral1 = -numerator / denom;
                 let integral2 = integral1 * T::from_f64(0.75).unwrap(); // Approximation
                 Ok((integral1, integral2))
@@ -338,9 +338,9 @@ where
             if x < T::one() {
                 let pi = T::from_f64(PI).unwrap();
                 let x_sq = x * x;
-                let one_minus_x_sq = T::one() - x_sq;
+                let oneminus_x_sq = T::one() - x_sq;
                 let numerator = T::from_f64(2.0).unwrap() * x * (T::from_f64(3.0).unwrap() + x_sq);
-                let denom = pi * one_minus_x_sq.powi(4);
+                let denom = pi * oneminus_x_sq.powi(4);
                 let integral1 = -numerator / denom;
                 let integral2 = integral1 * T::from_f64(0.6).unwrap(); // Approximation
                 Ok((integral1, integral2))
@@ -356,10 +356,10 @@ where
                 let pi = T::from_f64(PI).unwrap();
                 let x_sq = x * x;
                 let x_fourth = x_sq * x_sq;
-                let one_minus_x_sq = T::one() - x_sq;
+                let oneminus_x_sq = T::one() - x_sq;
                 let numerator = T::from_f64(2.0).unwrap()
                     * (T::from_f64(3.0).unwrap() + T::from_f64(6.0).unwrap() * x_sq + x_fourth);
-                let denom = pi * one_minus_x_sq.powi(5);
+                let denom = pi * oneminus_x_sq.powi(5);
                 let integral1 = -numerator / denom;
                 let integral2 = integral1 * T::from_f64(0.5).unwrap(); // Approximation
                 Ok((integral1, integral2))

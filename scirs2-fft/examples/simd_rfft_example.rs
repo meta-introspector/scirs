@@ -3,10 +3,10 @@
 //! This example demonstrates the use of SIMD-accelerated real-valued FFT operations
 //! for improved performance, particularly on ARM platforms with NEON.
 
-use num__complex::Complex64;
-use scirs2__fft::rfft;
-use scirs2__fft::simd_fft::simd_support_available;
-use scirs2__fft::simd_rfft::rfft_adaptive;
+use num_complex::Complex64;
+use scirs2_fft::rfft;
+use scirs2_fft::simd_fft::simd_support_available;
+use scirs2_fft::simd_rfft::rfft_adaptive;
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 

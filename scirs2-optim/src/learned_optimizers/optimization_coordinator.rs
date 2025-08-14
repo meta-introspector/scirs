@@ -1065,7 +1065,7 @@ impl<
             knowledge_base: OptimizationKnowledgeBase::new()?,
             state: CoordinatorState::new(),
             performance_history: VecDeque::new(),
-            config: config,
+            config,
         };
 
         // Initialize the coordinator
@@ -3488,9 +3488,7 @@ pub struct PerformanceDegradationTrigger<T: Float> {
 
 impl<T: Float + Send + Sync> PerformanceDegradationTrigger<T> {
     fn new(threshold: T) -> Self {
-        Self {
-            threshold: threshold,
-        }
+        Self { threshold }
     }
 }
 

@@ -9,7 +9,7 @@ use num_traits::{Float, One, Zero};
 
 use crate::decomposition::cholesky;
 use crate::error::{LinalgError, LinalgResult};
-use crate::random::random_normal_matrix;
+use crate::random::random_normalmatrix;
 use crate::stats::distributions::{MatrixNormalParams, WishartParams};
 
 /// Generate samples from a multivariate normal distribution
@@ -57,7 +57,7 @@ where
     }
 
     // Generate standard normal _samples
-    let z = random_normal_matrix::<F>((n_samples, p), rng_seed)?;
+    let z = random_normalmatrix::<F>((n_samples, p), rng_seed)?;
 
     // Compute Cholesky factorization of covariance matrix
     let l = cholesky(cov, None)?;
@@ -87,7 +87,7 @@ where
 ///
 /// * Vector of matrix samples
 #[allow(dead_code)]
-pub fn sample_matrix_normal_multiple<F>(
+pub fn samplematrix_normal_multiple<F>(
     params: &MatrixNormalParams<F>,
     n_samples: usize,
     rng_seed: Option<u64>,
@@ -110,7 +110,7 @@ where
 
     for i in 0..n_samples {
         let seed = rng_seed.map(|s| s.wrapping_add(i as u64));
-        let sample = crate::stats::distributions::sample_matrix_normal(params, seed)?;
+        let sample = crate::stats::distributions::samplematrix_normal(params, seed)?;
         samples.push(sample);
     }
 
@@ -231,7 +231,7 @@ where
 ///
 /// * Vector of matrix samples
 #[allow(dead_code)]
-pub fn sample_matrix_t<F>(
+pub fn samplematrix_t<F>(
     mean: &ArrayView2<F>,
     row_cov: &ArrayView2<F>,
     col_cov: &ArrayView2<F>,
@@ -271,10 +271,10 @@ where
         let matrix_normal_params =
             MatrixNormalParams::new(mean.to_owned(), row_cov.to_owned(), col_cov.to_owned())?;
         let normal_sample =
-            crate::stats::distributions::sample_matrix_normal(&matrix_normal_params, _seed)?;
+            crate::stats::distributions::samplematrix_normal(&matrix_normal_params, _seed)?;
 
         // Sample chi-square for scaling (simplified - using normal approximation)
-        let chi_approx = random_normal_matrix::<F>((1, 1), _seed)?;
+        let chi_approx = random_normalmatrix::<F>((1, 1), _seed)?;
         let scale_factor = (dof / (dof + chi_approx[[0, 0]] * chi_approx[[0, 0]])).sqrt();
 
         // Scale the normal sample
@@ -291,7 +291,7 @@ where
 ///
 /// * `data` - Original dataset matrix (samples as rows)
 /// * `n_bootstrap` - Number of bootstrap samples
-/// * `sample_size` - Size of each bootstrap sample (if None, use original size)
+/// * `samplesize` - Size of each bootstrap sample (if None, use original size)
 /// * `rng_seed` - Optional random seed
 ///
 /// # Returns
@@ -301,7 +301,7 @@ where
 pub fn bootstrap_sample<F>(
     data: &ArrayView2<F>,
     n_bootstrap: usize,
-    sample_size: Option<usize>,
+    samplesize: Option<usize>,
     rng_seed: Option<u64>,
 ) -> LinalgResult<Vec<Array2<F>>>
 where
@@ -309,7 +309,7 @@ where
 {
     let n_original = data.nrows();
     let p = data.ncols();
-    let n_sample = sample_size.unwrap_or(n_original);
+    let n_sample = samplesize.unwrap_or(n_original);
 
     let mut samples = Vec::with_capacity(n_bootstrap);
 
@@ -437,7 +437,7 @@ where
         let _seed = rng_seed.map(|s| s.wrapping_add(i as u64));
 
         // Generate proposal
-        let noise = random_normal_matrix::<F>((m, n), _seed)?;
+        let noise = random_normalmatrix::<F>((m, n), _seed)?;
         let proposal_noise = l.t().dot(&noise);
         let proposal = &current + &proposal_noise;
 
@@ -450,7 +450,7 @@ where
         let log_alpha = proposal_log_density - current_log_density;
 
         // Accept or reject
-        let uniform_sample = random_normal_matrix::<F>((1, 1), _seed)?;
+        let uniform_sample = random_normalmatrix::<F>((1, 1), _seed)?;
         let uniform = (uniform_sample[[0, 0]].abs() % F::one()).abs(); // Rough uniform approximation
 
         if log_alpha > uniform.ln() {
@@ -525,13 +525,13 @@ mod tests {
     }
 
     #[test]
-    fn test_sample_matrix_normal_multiple() {
+    fn test_samplematrix_normal_multiple() {
         let mean = array![[0.0, 0.0], [0.0, 0.0]];
         let row_cov = array![[1.0, 0.0], [0.0, 1.0]];
         let col_cov = array![[1.0, 0.0], [0.0, 1.0]];
 
         let params = MatrixNormalParams::new(mean, row_cov, col_cov).unwrap();
-        let samples = sample_matrix_normal_multiple(&params, 5, Some(42)).unwrap();
+        let samples = samplematrix_normal_multiple(&params, 5, Some(42)).unwrap();
 
         assert_eq!(samples.len(), 5);
         for sample in &samples {

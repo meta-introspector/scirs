@@ -121,7 +121,7 @@ impl<F: Float> GraphOptimizer<F> {
     /// Create a new graph optimizer with custom configuration
     pub fn with_config(config: OptimizationConfig) -> Self {
         Self {
-            config: config,
+            config,
             _phantom: std::marker::PhantomData,
         }
     }

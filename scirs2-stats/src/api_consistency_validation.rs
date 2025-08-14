@@ -392,7 +392,7 @@ impl APIConsistencyValidator {
     /// Create new API consistency validator
     pub fn new(config: ValidationConfig) -> Self {
         Self {
-            config: config,
+            config,
             results: ValidationResults::new(),
             function_registry: FunctionRegistry::new(),
         }

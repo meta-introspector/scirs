@@ -50,7 +50,13 @@ impl TopicCoherence {
         // Get top word_s for each topic
         let top_words_per_topic: Vec<Vec<String>> = topics
             .iter()
-            .map(|topic| topic.top_words.iter().map(|(word_, _)| word_.clone()).collect())
+            .map(|topic| {
+                topic
+                    .top_words
+                    .iter()
+                    .map(|(word_, _)| word_.clone())
+                    .collect()
+            })
             .collect();
 
         // Calculate segmented document frequency

@@ -19,7 +19,7 @@ pub struct AdaptiveThreshold {
     base_threshold: usize,
     cpu_cores: usize,
     simd_available: bool,
-    cache_line_size: usize,
+    cache_linesize: usize,
 }
 
 impl AdaptiveThreshold {
@@ -30,12 +30,12 @@ impl AdaptiveThreshold {
             base_threshold: 10_000,
             cpu_cores: num_threads(),
             simd_available: caps.simd_available,
-            cache_line_size: 64, // Common cache line size
+            cache_linesize: 64, // Common cache line size
         }
     }
 
     /// Calculate the optimal threshold for parallel processing
-    pub fn calculate(&self, element_size: usize, operationcomplexity: f64) -> usize {
+    pub fn calculate(&self, elementsize: usize, operationcomplexity: f64) -> usize {
         // Adjust threshold based on:
         // 1. Number of CPU cores
         // 2. SIMD availability (SIMD reduces the need for parallelism)
@@ -44,7 +44,7 @@ impl AdaptiveThreshold {
 
         let simd_factor = if self.simd_available { 2.0 } else { 1.0 };
         let core_factor = (self.cpu_cores as f64).sqrt();
-        let cache_factor = (self.cache_line_size / element_size).max(1) as f64;
+        let cache_factor = (self.cache_linesize / elementsize).max(1) as f64;
 
         let adjusted_threshold =
             (self.base_threshold as f64 * simd_factor / core_factor / operationcomplexity
@@ -54,19 +54,19 @@ impl AdaptiveThreshold {
     }
 
     /// Calculate optimal chunk size for cache efficiency
-    pub fn optimal_chunk_size(&self, total_elements: usize, elementsize: usize) -> usize {
+    pub fn optimal_chunksize(&self, total_elements: usize, elementsize: usize) -> usize {
         // L1 cache is typically 32KB per core
-        let l1_cache_size = 32 * 1024;
-        let elements_per_cache = l1_cache_size / elementsize;
+        let l1_cachesize = 32 * 1024;
+        let elements_per_cache = l1_cachesize / elementsize;
 
-        // Optimal chunk _size should fit in L1 cache
+        // Optimal chunk size should fit in L1 cache
         let ideal_chunk = elements_per_cache / 2; // Leave room for other data
 
         // Balance between cache efficiency and parallelism
         let min_chunks = self.cpu_cores * 4; // At least 4 chunks per core
-        let max_chunk_size = total_elements / min_chunks;
+        let max_chunksize = total_elements / min_chunks;
 
-        ideal_chunk.min(max_chunk_size).max(64)
+        ideal_chunk.min(max_chunksize).max(64)
     }
 }
 
@@ -87,18 +87,18 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
     {
         if data.is_empty() {
             return Err(StatsError::InvalidArgument(
-                "Cannot create histogram from empty _data".to_string(),
+                "Cannot create histogram from empty data".to_string(),
             ));
         }
 
         let threshold = AdaptiveThreshold::new();
         let parallel_threshold = threshold.calculate(std::mem::size_of::<F>(), 1.0);
 
-        // Find min/max in parallel if _data is large enough
+        // Find min/max in parallel if data is large enough
         let (min_val, max_val) = if data.len() >= parallel_threshold {
-            let chunk_size = threshold.optimal_chunk_size(data.len(), std::mem::size_of::<F>());
+            let chunksize = threshold.optimal_chunksize(data.len(), std::mem::size_of::<F>());
 
-            let (min, max) = par_chunks(data.as_slice().unwrap(), chunk_size)
+            let (min, max) = par_chunks(data.as_slice().unwrap(), chunksize)
                 .map(|chunk| {
                     let mut local_min = chunk[0];
                     let mut local_max = chunk[0];
@@ -123,7 +123,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
                 );
             (min, max)
         } else {
-            // Sequential for small _data
+            // Sequential for small data
             let mut min = data[0];
             let mut max = data[0];
             for &val in data.iter().skip(1) {
@@ -146,7 +146,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
             .collect();
 
         let mut histogram = Self {
-            bins: bins,
+            bins,
             counts: vec![0; nbins],
             min_val,
             max_val,
@@ -183,31 +183,30 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
             }
         } else {
             // Parallel computation with thread-local histograms
-            let chunk_size = threshold.optimal_chunk_size(data.len(), std::mem::size_of::<F>());
+            let chunksize = threshold.optimal_chunksize(data.len(), std::mem::size_of::<F>());
             let bin_width = (self.max_val - self.min_val) / F::from(self.n_bins).unwrap();
             let n_bins = self.n_bins;
             let min_val = self.min_val;
 
             // Each thread maintains its own histogram
-            let local_histograms: Vec<Vec<usize>> =
-                par_chunks(data.as_slice().unwrap(), chunk_size)
-                    .map(|chunk| {
-                        let mut local_counts = vec![0; n_bins];
+            let local_histograms: Vec<Vec<usize>> = par_chunks(data.as_slice().unwrap(), chunksize)
+                .map(|chunk| {
+                    let mut local_counts = vec![0; n_bins];
 
-                        for &val in chunk {
-                            if val >= min_val && val <= self.max_val {
-                                let bin_idx = ((val - min_val) / bin_width)
-                                    .floor()
-                                    .to_usize()
-                                    .unwrap()
-                                    .min(n_bins - 1);
-                                local_counts[bin_idx] += 1;
-                            }
+                    for &val in chunk {
+                        if val >= min_val && val <= self.max_val {
+                            let bin_idx = ((val - min_val) / bin_width)
+                                .floor()
+                                .to_usize()
+                                .unwrap()
+                                .min(n_bins - 1);
+                            local_counts[bin_idx] += 1;
                         }
+                    }
 
-                        local_counts
-                    })
-                    .collect();
+                    local_counts
+                })
+                .collect();
 
             // Merge local histograms
             for local_counts in local_histograms {
@@ -271,10 +270,10 @@ where
         let data_slice = data.as_slice().unwrap();
 
         let densities: Vec<F> = parallel_map(&eval_vec, |&x| {
-            let chunk_size = threshold.optimal_chunk_size(n, std::mem::size_of::<F>());
+            let chunksize = threshold.optimal_chunksize(n, std::mem::size_of::<F>());
 
             // Compute density for this evaluation point in parallel
-            let density: F = par_chunks(data_slice, chunk_size)
+            let density: F = par_chunks(data_slice, chunksize)
                 .map(|chunk| {
                     let mut local_sum = F::zero();
                     for &xi in chunk {
@@ -294,7 +293,7 @@ where
 
 /// Parallel moving statistics (rolling mean, std, etc.)
 pub struct ParallelMovingStats<F: Float> {
-    window_size: usize,
+    windowsize: usize,
     data: Arc<Vec<F>>,
 }
 
@@ -306,12 +305,12 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> Para
     {
         if windowsize == 0 || windowsize > data.len() {
             return Err(StatsError::InvalidArgument(
-                "Invalid window _size".to_string(),
+                "Invalid window size".to_string(),
             ));
         }
 
         Ok(Self {
-            window_size: windowsize,
+            windowsize,
             data: Arc::new(data.to_vec()),
         })
     }
@@ -319,7 +318,7 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> Para
     /// Compute moving average in parallel
     pub fn moving_mean(&self) -> StatsResult<Array1<F>> {
         let n = self.data.len();
-        let output_len = n - self.window_size + 1;
+        let output_len = n - self.windowsize + 1;
 
         let threshold = AdaptiveThreshold::new();
         let parallel_threshold = threshold.calculate(std::mem::size_of::<F>(), 2.0);
@@ -327,18 +326,18 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> Para
         if output_len < parallel_threshold {
             // Sequential computation
             let mut result = Array1::zeros(output_len);
-            let window_size_f = F::from(self.window_size).unwrap();
+            let windowsize_f = F::from(self.windowsize).unwrap();
 
             // Initial window sum
-            let mut window_sum = self.data[..self.window_size]
+            let mut window_sum = self.data[..self.windowsize]
                 .iter()
                 .fold(F::zero(), |acc, &x| acc + x);
-            result[0] = window_sum / window_size_f;
+            result[0] = window_sum / windowsize_f;
 
             // Sliding window
             for i in 1..output_len {
-                window_sum = window_sum - self.data[i - 1] + self.data[i + self.window_size - 1];
-                result[i] = window_sum / window_size_f;
+                window_sum = window_sum - self.data[i - 1] + self.data[i + self.windowsize - 1];
+                result[i] = window_sum / windowsize_f;
             }
 
             Ok(result)
@@ -346,14 +345,14 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> Para
             // Parallel computation
             let indices: Vec<usize> = (0..output_len).collect();
             let data_ref = Arc::clone(&self.data);
-            let window_size = self.window_size;
-            let window_size_f = F::from(window_size).unwrap();
+            let windowsize = self.windowsize;
+            let windowsize_f = F::from(windowsize).unwrap();
 
             let means: Vec<F> = parallel_map(&indices, |&i| {
-                let window_sum = data_ref[i..i + window_size]
+                let window_sum = data_ref[i..i + windowsize]
                     .iter()
                     .fold(F::zero(), |acc, &x| acc + x);
-                window_sum / window_size_f
+                window_sum / windowsize_f
             });
 
             Ok(Array1::from_vec(means))
@@ -363,9 +362,9 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> Para
     /// Compute moving standard deviation in parallel
     pub fn moving_std(&self, ddof: usize) -> StatsResult<Array1<F>> {
         let n = self.data.len();
-        let output_len = n - self.window_size + 1;
+        let output_len = n - self.windowsize + 1;
 
-        if self.window_size <= ddof {
+        if self.windowsize <= ddof {
             return Err(StatsError::InvalidArgument(
                 "Window size must be greater than ddof".to_string(),
             ));
@@ -377,12 +376,12 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> Para
         if output_len < parallel_threshold {
             // Sequential computation using Welford's algorithm
             let mut result = Array1::zeros(output_len);
-            let divisor = F::from(self.window_size - ddof).unwrap();
+            let divisor = F::from(self.windowsize - ddof).unwrap();
 
             for i in 0..output_len {
-                let window = &self.data[i..i + self.window_size];
+                let window = &self.data[i..i + self.windowsize];
                 let mean = window.iter().fold(F::zero(), |acc, &x| acc + x)
-                    / F::from(self.window_size).unwrap();
+                    / F::from(self.windowsize).unwrap();
 
                 let variance = window
                     .iter()
@@ -401,13 +400,13 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> Para
             // Parallel computation
             let indices: Vec<usize> = (0..output_len).collect();
             let data_ref = Arc::clone(&self.data);
-            let window_size = self.window_size;
-            let divisor = F::from(window_size - ddof).unwrap();
+            let windowsize = self.windowsize;
+            let divisor = F::from(windowsize - ddof).unwrap();
 
             let stds: Vec<F> = parallel_map(&indices, |&i| {
-                let window = &data_ref[i..i + window_size];
-                let mean = window.iter().fold(F::zero(), |acc, &x| acc + x)
-                    / F::from(window_size).unwrap();
+                let window = &data_ref[i..i + windowsize];
+                let mean =
+                    window.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(windowsize).unwrap();
 
                 let variance = window
                     .iter()
@@ -533,7 +532,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidati
     /// Create a new cross-validation splitter
     pub fn new(n_folds: usize, shuffle: bool, randomstate: Option<u64>) -> Self {
         Self {
-            n_folds: n_folds,
+            n_folds,
             shuffle,
             random_state: randomstate,
             _phantom: std::marker::PhantomData,
@@ -571,13 +570,13 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidati
         };
 
         // Split into folds
-        let fold_size = n_samples_ / self.n_folds;
+        let foldsize = n_samples_ / self.n_folds;
         let remainder = n_samples_ % self.n_folds;
 
         let fold_indices: Vec<(usize, usize)> = (0..self.n_folds)
             .map(|i| {
-                let start = i * fold_size + i.min(remainder);
-                let size = fold_size + if i < remainder { 1 } else { 0 };
+                let start = i * foldsize + i.min(remainder);
+                let size = foldsize + if i < remainder { 1 } else { 0 };
                 (start, start + size)
             })
             .collect();

@@ -560,7 +560,7 @@ where
         // Solve the system for coefficients
         #[cfg(feature = "linalg")]
         let coefficients = {
-            use scirs2__linalg::solve;
+            use scirs2_linalg::solve;
             let xtx_f64 = xtx.mapv(|_x| x.to_f64().unwrap());
             let xty_f64 = xty.mapv(|_x| x.to_f64().unwrap());
             match solve(&xtx_f64.view(), &xty_f64.view(), None) {
@@ -622,7 +622,7 @@ where
         // Try to compute the inverse of X'WX
         #[cfg(feature = "linalg")]
         let xtx_inv = {
-            use scirs2__linalg::inv;
+            use scirs2_linalg::inv;
             let xtx_f64 = xtx.mapv(|_x| x.to_f64().unwrap());
             match inv(&xtx_f64.view(), None) {
                 Ok(inv) => inv.mapv(|_x| F::from_f64(_x).unwrap()),

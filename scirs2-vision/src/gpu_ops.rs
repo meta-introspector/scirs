@@ -250,7 +250,7 @@ pub fn gpu_convolve_2d(
                 .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
             // Reshape to 2D array
-            Ok(Array2::fromshape_vec((out_height, out_width), result_flat)
+            Ok(Array2::from_shape_vec((out_height, out_width), result_flat)
                 .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))?)
         }
         Err(_) => {
@@ -388,7 +388,7 @@ fn conv2d_vision(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 output_buffer.copy_to_host(&mut result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
-                Array2::fromshape_vec((height, width), result_flat)
+                Array2::from_shape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
             }
             Err(compile_error) => {
@@ -556,7 +556,7 @@ fn gradient_magnitude(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 output_buffer.copy_to_host(&mut result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
-                Array2::fromshape_vec((height, width), result_flat)
+                Array2::from_shape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
             }
             Err(compile_error) => {
@@ -667,7 +667,7 @@ fn gpu_separable_convolution(
         false, // vertical
     )?;
 
-    Array2::fromshape_vec((height, width), final_result)
+    Array2::from_shape_vec((height, width), final_result)
         .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
 }
 
@@ -945,7 +945,7 @@ fn element_wise_multiply(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 output_buffer.copy_to_host(&mut result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
-                Array2::fromshape_vec((height, width), result_flat)
+                Array2::from_shape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
             }
             Err(compile_error) => {
@@ -1075,7 +1075,7 @@ fn harris_response(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 output_buffer.copy_to_host(&mut result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
-                Array2::fromshape_vec((height, width), result_flat)
+                Array2::from_shape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
             }
             Err(compile_error) => {
@@ -1425,7 +1425,7 @@ fn batch_conv2d(@builtin(global_invocation_id) global_id: vec3<u32>) {
                     let end = start + height * width;
                     let image_data = &result_flat[start..end];
 
-                    let result_array = Array2::fromshape_vec((height, width), image_data.to_vec())
+                    let result_array = Array2::from_shape_vec((height, width), image_data.to_vec())
                         .map_err(|e| {
                             VisionError::Other(format!("Failed to reshape output: {e}"))
                         })?;
@@ -1476,7 +1476,7 @@ impl AsyncGpuProcessor {
             }
             GpuOperation::GaussianBlur(sigma) => gpu_gaussian_blur(&self.context, image, sigma),
             GpuOperation::SobelEdges => {
-                let (_, magnitude) = gpu_sobel_gradients(&self.context, image)?;
+                let (_, _, magnitude) = gpu_sobel_gradients(&self.context, image)?;
                 Ok(magnitude)
             }
         }
@@ -1783,7 +1783,7 @@ pub fn gpu_multi_head_attention(
     // Execute GPU kernel
     match ctx.context.execute_kernel(
         attention_kernel,
-        &[&q_buffer, &k_buffer, &v_buffer, &output_buffer],
+        &[q_buffer, k_buffer, v_buffer, output_buffer],
         (seq_len as u32, num_heads as u32, 1),
         &[
             seq_len as u32,
@@ -1795,7 +1795,7 @@ pub fn gpu_multi_head_attention(
     ) {
         Ok(_) => {
             let result_flat: Vec<f32> = ctx.context.read_buffer(&output_buffer)?;
-            Array2::fromshape_vec((seq_len, hidden_dim), result_flat)
+            Array2::from_shape_vec((seq_len, hidden_dim), result_flat)
                 .map_err(|e| VisionError::Other(format!("Failed to reshape attention output: {e}")))
         }
         Err(_) => {
@@ -1927,7 +1927,7 @@ pub fn gpu_batch_matmul_transformer(
     // Execute tiled matmul kernel
     match ctx.context.execute_kernel(
         &matmul_kernel,
-        &[&a_buffer, &b_buffer, &c_buffer],
+        &[a_buffer, b_buffer, c_buffer],
         (
             (m.div_ceil(16) * 16) as u32,
             (n.div_ceil(16) * 16) as u32,
@@ -1938,7 +1938,7 @@ pub fn gpu_batch_matmul_transformer(
     ) {
         Ok(_) => {
             let result_flat: Vec<f32> = ctx.context.read_buffer(&c_buffer)?;
-            Array2::fromshape_vec((m, n), result_flat)
+            Array2::from_shape_vec((m, n), result_flat)
                 .map_err(|e| VisionError::Other(format!("Failed to reshape matmul output: {e}")))
         }
         Err(_) => {
@@ -2069,12 +2069,7 @@ pub fn gpu_feature_matching_advanced(
     // Execute matching kernel
     match ctx.context.execute_kernel(
         &matching_kernel,
-        &[
-            &desc1_buffer,
-            &desc2_buffer,
-            &matches_buffer,
-            &distances_buffer,
-        ],
+        &[desc1_buffer, desc2_buffer, matches_buffer, distances_buffer],
         ((n1.div_ceil(256) * 256) as u32, 1, 1),
         &[n1 as u32, n2 as u32, dim1 as u32],
         &[threshold],
@@ -2178,7 +2173,7 @@ pub fn gpu_neural_feature_extraction(
         ));
     }
 
-    Array2::fromshape_vec(currentshape, result_flat)
+    Array2::from_shape_vec(currentshape, result_flat)
         .map_err(|e| VisionError::Other(format!("Failed to reshape neural output: {e}")))
 }
 

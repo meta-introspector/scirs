@@ -1731,10 +1731,7 @@ impl<A: Float + Default + Clone> LSTMState<A> {
             hidden_states,
             cell_states,
             attention_weights: if config.use_attention {
-                Some(Array2::zeros((
-                    config.attention_heads,
-                    config.hidden_size,
-                )))
+                Some(Array2::zeros((config.attention_heads, config.hidden_size)))
             } else {
                 None
             },
@@ -1769,8 +1766,7 @@ impl<A: Float + Default + Clone> LSTMParameters<A> {
             bias_hh.push(Array1::zeros(4 * hidden_size));
         }
 
-        let output_weights =
-            Self::random_array_2d(config.output_features, config.hidden_size, 0.1);
+        let output_weights = Self::random_array_2d(config.output_features, config.hidden_size, 0.1);
         let output_bias = Array1::zeros(config.output_features);
 
         let attention_params = if config.use_attention {

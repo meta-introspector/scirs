@@ -545,7 +545,7 @@ impl CiCdAutomation {
 
         Ok(Self {
             regression_detector,
-            config: config,
+            config,
             environment,
             test_suite,
             report_generator,

@@ -225,9 +225,9 @@ where
 ///
 /// # Example
 /// ```rust
-/// use scirs2__graph::{Graph, dijkstra_path};
+/// use scirs2_graph::{Graph, dijkstra_path};
 ///
-/// let mut graph = Graph::new();
+/// let mut graph: Graph<String, f64> = Graph::new();
 /// graph.add_node("A".to_string());
 /// graph.add_node("B".to_string());
 /// graph.add_edge("A".to_string(), "B".to_string(), 1.0).unwrap();

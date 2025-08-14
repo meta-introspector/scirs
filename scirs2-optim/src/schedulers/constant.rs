@@ -36,7 +36,9 @@ impl<A: Float + Debug + ScalarOperand> ConstantScheduler<A> {
     /// assert_eq!(scheduler.get_learning_rate(), 0.1);
     /// ```
     pub fn new(learningrate: A) -> Self {
-        Self { learning_rate: learningrate }
+        Self {
+            learning_rate: learningrate,
+        }
     }
 }
 

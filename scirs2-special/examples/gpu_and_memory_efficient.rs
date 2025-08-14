@@ -4,12 +4,12 @@
 //! implementations of special functions for large arrays.
 
 use ndarray::Array1;
-use scirs2__special::error::SpecialResult;
+use scirs2_special::error::SpecialResult;
 
 #[cfg(feature = "gpu")]
-use scirs2__special::gpu_ops::{erf_gpu, gamma_gpu, j0_gpu};
+use scirs2_special::gpu_ops::{erf_gpu, gamma_gpu, j0_gpu};
 
-use scirs2__special::memory_efficient::{erf_chunked, gamma_chunked, j0_chunked, ChunkedConfig};
+use scirs2_special::memory_efficient::{erf_chunked, gamma_chunked, j0_chunked, ChunkedConfig};
 
 #[allow(dead_code)]
 fn main() -> SpecialResult<()> {
@@ -50,19 +50,19 @@ fn test_chunked_processing(input: &Array1<f64>) -> SpecialResult<()> {
 
     // Gamma function
     let start = Instant::now();
-    let _gamma_result = gamma_chunked(_input, None)?;
+    let _gamma_result = gamma_chunked(input, None)?;
     let gamma_time = start.elapsed();
     println!("    - Gamma function: {:?}", gamma_time);
 
     // Bessel J0 function
     let start = Instant::now();
-    let _j0_result = j0_chunked(_input, None)?;
+    let _j0_result = j0_chunked(input, None)?;
     let j0_time = start.elapsed();
     println!("    - Bessel J0 function: {:?}", j0_time);
 
     // Error function
     let start = Instant::now();
-    let _erf_result = erf_chunked(_input, None)?;
+    let _erf_result = erf_chunked(input, None)?;
     let erf_time = start.elapsed();
     println!("    - Error function: {:?}", erf_time);
 
@@ -77,11 +77,11 @@ fn test_gpu_acceleration(input: &Array1<f64>) -> SpecialResult<()> {
 
     println!("\n  GPU Acceleration (if available):");
 
-    let mut output = Array1::zeros(_input.len());
+    let mut output = Array1::zeros(input.len());
 
     // Gamma function
     let start = Instant::now();
-    match gamma_gpu(&_input.view(), &mut output.view_mut()) {
+    match gamma_gpu(&input.view(), &mut output.view_mut()) {
         Ok(_) => {
             let gpu_time = start.elapsed();
             println!("    - Gamma function (GPU): {:?}", gpu_time);
@@ -93,7 +93,7 @@ fn test_gpu_acceleration(input: &Array1<f64>) -> SpecialResult<()> {
 
     // Bessel J0 function
     let start = Instant::now();
-    match j0_gpu(&_input.view(), &mut output.view_mut()) {
+    match j0_gpu(&input.view(), &mut output.view_mut()) {
         Ok(_) => {
             let gpu_time = start.elapsed();
             println!("    - Bessel J0 function (GPU): {:?}", gpu_time);
@@ -105,7 +105,7 @@ fn test_gpu_acceleration(input: &Array1<f64>) -> SpecialResult<()> {
 
     // Error function
     let start = Instant::now();
-    match erf_gpu(&_input.view(), &mut output.view_mut()) {
+    match erf_gpu(&input.view(), &mut output.view_mut()) {
         Ok(_) => {
             let gpu_time = start.elapsed();
             println!("    - Error function (GPU): {:?}", gpu_time);
@@ -137,7 +137,7 @@ fn demonstrate_custom_chunking() -> SpecialResult<()> {
     let small_chunk_config = ChunkedConfig {
         max_chunk_bytes: 1024 * 1024, // 1MB chunks
         parallel_chunks: true,
-        min_array_size: 1000,
+        min_arraysize: 1000,
         prefetch: false,
     };
     println!("\nSmall chunks (1MB):");
@@ -149,7 +149,7 @@ fn demonstrate_custom_chunking() -> SpecialResult<()> {
     let large_chunk_config = ChunkedConfig {
         max_chunk_bytes: 256 * 1024 * 1024, // 256MB chunks
         parallel_chunks: true,
-        min_array_size: 1000,
+        min_arraysize: 1000,
         prefetch: true,
     };
     println!("\nLarge chunks (256MB):");
@@ -161,7 +161,7 @@ fn demonstrate_custom_chunking() -> SpecialResult<()> {
     let sequential_config = ChunkedConfig {
         max_chunk_bytes: 64 * 1024 * 1024, // 64MB chunks
         parallel_chunks: false,            // Sequential
-        min_array_size: 1000,
+        min_arraysize: 1000,
         prefetch: false,
     };
     println!("\nSequential processing:");

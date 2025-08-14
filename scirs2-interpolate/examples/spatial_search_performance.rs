@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         values_vec.push(value);
     }
 
-    let points = Array2::fromshape_vec((n_points, dim), points_vec)?;
+    let points = Array2::from_shape_vec((n_points, dim), points_vec)?;
     let values = Array1::from_vec(values_vec);
 
     // Generate query points
@@ -50,7 +50,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let query_points = Array2::fromshape_vec((n_queries, dim), query_vec)?;
+    let query_points = Array2::from_shape_vec((n_queries, dim), query_vec)?;
 
     // Build spatial data structures
     println!("Building spatial data structures...");

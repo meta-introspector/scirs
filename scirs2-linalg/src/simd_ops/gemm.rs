@@ -51,7 +51,7 @@ impl Default for GemmBlockSizes {
 /// * `b` - Right matrix B (K x N)
 /// * `beta` - Scalar multiplier for C
 /// * `c` - Result matrix C (M x N), updated in-place
-/// * `_block_sizes` - Cache-friendly block size configuration (unused in unified implementation)
+/// * `_blocksizes` - Cache-friendly block size configuration (unused in unified implementation)
 ///
 /// # Returns
 ///
@@ -64,7 +64,7 @@ pub fn simd_gemm_f32(
     b: &ArrayView2<f32>,
     beta: f32,
     c: &mut Array2<f32>,
-    _block_sizes: Option<GemmBlockSizes>,
+    _blocksizes: Option<GemmBlockSizes>,
 ) -> LinalgResult<()> {
     let (m, k1) = a.dim();
     let (k2, n) = b.dim();
@@ -99,7 +99,7 @@ pub fn simd_gemm_f32(
 /// * `b` - Right matrix B (K x N)
 /// * `beta` - Scalar multiplier for C
 /// * `c` - Result matrix C (M x N), updated in-place
-/// * `_block_sizes` - Cache-friendly block size configuration (unused in unified implementation)
+/// * `_blocksizes` - Cache-friendly block size configuration (unused in unified implementation)
 ///
 /// # Returns
 ///
@@ -112,7 +112,7 @@ pub fn simd_gemm_f64(
     b: &ArrayView2<f64>,
     beta: f64,
     c: &mut Array2<f64>,
-    _block_sizes: Option<GemmBlockSizes>,
+    _blocksizes: Option<GemmBlockSizes>,
 ) -> LinalgResult<()> {
     let (m, k1) = a.dim();
     let (k2, n) = b.dim();
@@ -425,7 +425,7 @@ mod tests {
     #[test]
     #[cfg(feature = "simd")]
     #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
-    fn test_simd_gemm_large_matrix() {
+    fn test_simd_gemm_largematrix() {
         // Test with larger matrices to exercise blocking
         let m = 100;
         let k = 80;
@@ -436,7 +436,7 @@ mod tests {
         let mut c = Array2::zeros((m, n));
 
         // Test with custom block sizes
-        let block_sizes = GemmBlockSizes {
+        let blocksizes = GemmBlockSizes {
             mc: 32,
             kc: 64,
             nc: 48,
@@ -444,7 +444,7 @@ mod tests {
             nr: 8,
         };
 
-        simd_gemm_f32(1.0, &a.view(), &b.view(), 0.0, &mut c, Some(block_sizes)).unwrap();
+        simd_gemm_f32(1.0, &a.view(), &b.view(), 0.0, &mut c, Some(blocksizes)).unwrap();
 
         // Verify with reference implementation (naive multiplication)
         let c_ref = a.dot(&b);

@@ -3,8 +3,8 @@
 //! This example shows various physics and engineering functions available
 //! in the scirs2-special module.
 
-use num__complex::Complex64;
-use scirs2__special::physics_engineering::*;
+use num_complex::Complex64;
+use scirs2_special::physics_engineering::*;
 
 #[allow(dead_code)]
 fn main() {
@@ -14,10 +14,10 @@ fn main() {
     println!("1. Blackbody Radiation");
     println!("----------------------");
     let sun_temp = 5778.0; // K
-    let wavelength_max = blackbody::wien_displacement(sun_temp).unwrap();
+    let wavelengthmax = blackbody::wien_displacement(sun_temp).unwrap();
     println!(
         "Sun's peak emission wavelength: {:.1} nm",
-        wavelength_max * 1e9
+        wavelengthmax * 1e9
     );
 
     let power = blackbody::stefan_boltzmann_law(sun_temp).unwrap();

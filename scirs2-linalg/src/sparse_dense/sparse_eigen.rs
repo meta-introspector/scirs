@@ -120,10 +120,10 @@ where
         }
     }
     
-    let krylov_size = j;
+    let krylovsize = j;
     
     // Extract Hessenberg matrix for eigenvalue computation
-    let h_active = h.slice(ndarray::s![0..krylov_size, 0..krylov_size]).to_owned();
+    let h_active = h.slice(ndarray::s![0..krylovsize, 0..krylovsize]).to_owned();
     
     // Compute eigenvalues of the Hessenberg matrix
     let (h_eigenvals, h_eigenvecs) = compute_hessenberg_eigenvalues(&h_active)?;
@@ -149,7 +149,7 @@ where
         // Reconstruct eigenvector: eigenvector = V * h_eigenvector
         for j in 0..n {
             let mut sum = Complex::new(T::zero(), T::zero());
-            for l in 0..krylov_size {
+            for l in 0..krylovsize {
                 sum += Complex::new(v[[j, l]], T::zero()) * h_eigenvecs[[l, idx]];
             }
             eigenvectors[[j, i]] = sum;
@@ -264,11 +264,11 @@ where
         }
     }
     
-    let lanczos_size = j;
+    let lanczossize = j;
     
     // Construct tridiagonal matrix
-    let mut t = Array2::zeros((lanczos_size, lanczos_size));
-    for i in 0..lanczos_size {
+    let mut t = Array2::zeros((lanczossize, lanczossize));
+    for i in 0..lanczossize {
         t[[i, i]] = alpha[i];
         if i > 0 {
             t[[i - 1, i]] = beta[i];
@@ -335,7 +335,7 @@ where
         // Reconstruct eigenvector: eigenvector = V * t_eigenvector
         for j in 0..n {
             let mut sum = T::zero();
-            for l in 0..lanczos_size {
+            for l in 0..lanczossize {
                 sum += v[[j, l]] * t_eigenvecs[[l, idx]];
             }
             eigenvectors[[j, i]] = sum;
@@ -494,7 +494,7 @@ mod tests {
     use crate::sparse_dense::sparse_from_ndarray;
 
     #[test]
-    fn test_sparse_lanczos_small_matrix() {
+    fn test_sparse_lanczos_smallmatrix() {
         // Create a small symmetric test matrix
         let dense = array![
             [4.0, 1.0, 0.0],

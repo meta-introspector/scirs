@@ -77,7 +77,7 @@ impl<A: Float + ScalarOperand + Debug> Lion<A> {
     /// * `weight_decay` - Weight decay factor for L2 regularization (default: 0.0)
     pub fn new_with_config(learning_rate: A, beta1: A, beta2: A, weight_decay: A) -> Self {
         Self {
-            learning_rate: learning_rate,
+            learning_rate,
             beta1,
             beta2,
             weight_decay,

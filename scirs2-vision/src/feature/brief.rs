@@ -244,7 +244,7 @@ pub fn match_brief_descriptors(
     }
 
     // Sort matches by _distance
-    matches.sort_by_key(|&(__, dist)| dist);
+    matches.sort_by_key(|&(_, _, dist)| dist);
 
     matches
 }

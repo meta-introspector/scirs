@@ -79,7 +79,7 @@ pub struct StandardizedResult<T> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResultMetadata {
     /// Sample size used in computation
-    pub sample_size: usize,
+    pub samplesize: usize,
     /// Degrees of freedom (where applicable)
     pub degrees_of_freedom: Option<usize>,
     /// Confidence level used (where applicable)
@@ -176,7 +176,7 @@ pub struct TestResult<F> {
     pub statistic: F,
     pub p_value: F,
     pub confidence_interval: Option<(F, F)>,
-    pub effect_size: Option<F>,
+    pub effectsize: Option<F>,
     pub power: Option<F>,
 }
 
@@ -269,25 +269,25 @@ where
         }
 
         // Handle null values based on strategy
-        let (cleaned_data, sample_size) = self.handle_null_values(&data, &mut warnings)?;
+        let (cleaneddata, samplesize) = self.handle_null_values(&data, &mut warnings)?;
 
         // Select computation method based on configuration
         let stats = if self.config.auto_optimize {
-            self.compute_optimized(&cleaned_data, &mut warnings)?
+            self.compute_optimized(&cleaneddata, &mut warnings)?
         } else {
-            self.compute_standard(&cleaned_data, &mut warnings)?
+            self.compute_standard(&cleaneddata, &mut warnings)?
         };
 
         let computation_time = start_time.elapsed().as_secs_f64() * 1000.0;
 
         // Build metadata
         let metadata = ResultMetadata {
-            sample_size,
-            degrees_of_freedom: Some(sample_size.saturating_sub(self.ddof.unwrap_or(1))),
+            samplesize,
+            degrees_of_freedom: Some(samplesize.saturating_sub(self.ddof.unwrap_or(1))),
             confidence_level: None,
             method: self.select_method_name(),
             computation_time_ms: computation_time,
-            memory_usage_bytes: self.estimate_memory_usage(sample_size),
+            memory_usage_bytes: self.estimate_memory_usage(samplesize),
             optimized: self.config.simd || self.config.parallel,
             extra: HashMap::new(),
         };
@@ -307,22 +307,22 @@ where
     ) -> StatsResult<(Array1<F>, usize)> {
         // For now, assume no null values in numeric arrays
         // In a real implementation, this would detect and handle NaN values
-        let finite_data: Vec<F> = data.iter().filter(|&&x| x.is_finite()).cloned().collect();
+        let finitedata: Vec<F> = data.iter().filter(|&&x| x.is_finite()).cloned().collect();
 
-        if finite_data.len() != data.len() {
+        if finitedata.len() != data.len() {
             warnings.push(format!(
                 "Removed {} non-finite values",
-                data.len() - finite_data.len()
+                data.len() - finitedata.len()
             ));
         }
 
-        let finite_count = finite_data.len();
+        let finite_count = finitedata.len();
         match self.config.null_handling {
-            NullHandling::Exclude => Ok((Array1::from_vec(finite_data), finite_count)),
+            NullHandling::Exclude => Ok((Array1::from_vec(finitedata), finite_count)),
             NullHandling::Fail if finite_count != data.len() => Err(StatsError::InvalidArgument(
                 "Null values encountered with Fail strategy".to_string(),
             )),
-            _ => Ok((Array1::from_vec(finite_data), finite_count)),
+            _ => Ok((Array1::from_vec(finitedata), finite_count)),
         }
     }
 
@@ -358,8 +358,8 @@ where
 
         // Compute other statistics
         let (min, max) = self.compute_min_max(data);
-        let sorted_data = self.getsorted_data(data);
-        let percentiles = self.compute_percentiles(&sorted_data)?;
+        let sorteddata = self.getsorteddata(data);
+        let percentiles = self.compute_percentiles(&sorteddata)?;
 
         // Use existing functions for skewness and kurtosis
         let skewness = crate::descriptive::skew(&data.view(), false, None)?;
@@ -394,8 +394,8 @@ where
 
         // Compute other statistics
         let (min, max) = self.compute_min_max(data);
-        let sorted_data = self.getsorted_data(data);
-        let percentiles = self.compute_percentiles(&sorted_data)?;
+        let sorteddata = self.getsorteddata(data);
+        let percentiles = self.compute_percentiles(&sorteddata)?;
 
         // Use existing functions for skewness and kurtosis
         let skewness = crate::descriptive::skew(&data.view(), false, None)?;
@@ -427,8 +427,8 @@ where
         let std = variance.sqrt();
 
         let (min, max) = self.compute_min_max(data);
-        let sorted_data = self.getsorted_data(data);
-        let percentiles = self.compute_percentiles(&sorted_data)?;
+        let sorteddata = self.getsorteddata(data);
+        let percentiles = self.compute_percentiles(&sorteddata)?;
 
         let skewness = crate::descriptive::skew(&data.view(), false, None)?;
         let kurtosis = crate::descriptive::kurtosis(&data.view(), true, false, None)?;
@@ -466,7 +466,7 @@ where
     }
 
     /// Get sorted copy of data for percentile calculations
-    fn getsorted_data(&self, data: &Array1<F>) -> Vec<F> {
+    fn getsorteddata(&self, data: &Array1<F>) -> Vec<F> {
         let mut sorted = data.to_vec();
         sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         sorted
@@ -640,7 +640,7 @@ where
         };
 
         let metadata = ResultMetadata {
-            sample_size: x.len(),
+            samplesize: x.len(),
             degrees_of_freedom: Some(x.len().saturating_sub(2)),
             confidence_level: Some(self.config.confidence_level),
             method: format!("{:?}", self.method),
@@ -679,7 +679,7 @@ where
         let computation_time = start_time.elapsed().as_secs_f64() * 1000.0;
 
         let metadata = ResultMetadata {
-            sample_size: data.nrows(),
+            samplesize: data.nrows(),
             degrees_of_freedom: Some(data.nrows().saturating_sub(2)),
             confidence_level: Some(self.config.confidence_level),
             method: format!("Matrix {:?}", self.method),
@@ -1265,7 +1265,7 @@ pub enum MemoryUsagePattern {
 #[derive(Debug, Clone)]
 pub struct ScalabilityRequirement {
     /// Maximum data size for reasonable performance
-    pub max_data_size: usize,
+    pub maxdatasize: usize,
     /// Expected parallel scaling efficiency
     pub parallel_efficiency: f64,
     /// SIMD acceleration factor

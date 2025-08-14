@@ -466,9 +466,9 @@ where
 
     // Handle special case x = 0
     if x == F::zero() {
-        let one_minus_b_plus_a = F::one() - b + a;
+        let oneminus_b_plus_a = F::one() - b + a;
         // Use Pochhammer symbol: U(a,b,0) = Γ(1-b+a)/Γ(a) = (1-b+a)_{-a}
-        return Ok(pochhammer(one_minus_b_plus_a, 0) / gamma(a));
+        return Ok(pochhammer(oneminus_b_plus_a, 0) / gamma(a));
     }
 
     // For small x and b=1, use recurrence relation to avoid numerical instability

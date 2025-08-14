@@ -873,7 +873,7 @@ impl VisualSLAMSystem {
 
         // Process each frame
         for (i, (frame, &timestamp)) in frames.iter().zip(timestamps.iter()).enumerate() {
-            let scene_analysis = scene_analyses.and_then(|_analyses| analyses.get(i));
+            let scene_analysis = scene_analyses.and_then(|analyses| analyses.get(i));
             let frame_result = self.process_frame(frame, timestamp, scene_analysis)?;
 
             // Accumulate results
@@ -958,15 +958,13 @@ impl VisualSLAMSystem {
     }
 
     // Helper methods (placeholder implementations)
-    fn adapt_processing_parameters(&mut selfbudget: f64) -> Result<()> {
+    fn adapt_processing_parameters(selfbudget: f64) -> Result<()> {
         // Adapt feature extraction, tracking, and optimization parameters
         // based on available computational _budget
         Ok(())
     }
 
-    fn compute_trajectory_metrics(
-        self_trajectory: &CameraTrajectory,
-    ) -> Result<TrajectoryMetrics> {
+    fn compute_trajectory_metrics(self_trajectory: &CameraTrajectory) -> Result<TrajectoryMetrics> {
         // Compute various _trajectory quality metrics
         Ok(TrajectoryMetrics {
             smoothness_score: 0.85,
@@ -1085,7 +1083,7 @@ impl CameraPoseEstimator {
         }
     }
 
-    fn initialize(&mut selfcalibration: &Array2<f64>) -> Result<()> {
+    fn initialize(selfcalibration: &Array2<f64>) -> Result<()> {
         Ok(())
     }
 
@@ -1132,11 +1130,11 @@ impl Map3DBuilder {
         }
     }
 
-    fn initialize(&mut selfframe: &ArrayView3<f32>) -> Result<()> {
+    fn initialize(selfframe: &ArrayView3<f32>) -> Result<()> {
         Ok(())
     }
 
-    fn update_map(&mut self_features: &[Feature2D], pose: &CameraPose) -> Result<Map3D> {
+    fn update_map(self_features: &[Feature2D], pose: &CameraPose) -> Result<Map3D> {
         Ok(Map3D {
             landmarks: Vec::new(),
             structure: MapStructure {
@@ -1215,12 +1213,12 @@ impl BundleAdjustmentOptimizer {
         }
     }
 
-    fn optimize_map(&mut self_map: &Map3D_loop, closures: &[LoopClosure]) -> Result<()> {
+    fn optimize_map(self_map: &Map3D, closures: &[LoopClosure]) -> Result<()> {
         Ok(())
     }
 
     fn global_optimization(
-        &mut self_trajectory: &CameraTrajectory_loop,
+        self_trajectory: &CameraTrajectory,
         _closures: &[LoopClosure],
     ) -> Result<Map3D> {
         Ok(Map3D {
@@ -1269,11 +1267,11 @@ impl AdvancedFeatureTracker {
         }
     }
 
-    fn initialize(&mut selfframe: &ArrayView3<f32>) -> Result<()> {
+    fn initialize(selfframe: &ArrayView3<f32>) -> Result<()> {
         Ok(())
     }
 
-    fn extract_and_track_features(&mut selfframe: &ArrayView3<f32>) -> Result<Vec<Feature2D>> {
+    fn extract_and_track_features(selfframe: &ArrayView3<f32>) -> Result<Vec<Feature2D>> {
         Ok(Vec::new()) // Placeholder
     }
 }
@@ -1302,13 +1300,13 @@ impl SemanticMapper {
     }
 
     fn update_semantic_map(
-        &mut self_scene: &SceneAnalysisResult,
+        self_scene: &SceneAnalysisResult,
         _pose: &CameraPose,
     ) -> Result<SemanticMap> {
         Ok(SemanticMap {
             semantic_objects: Vec::new(),
             object_relationships: Vec::new(),
-            _scene_understanding: Vec::new(),
+            scene_understanding: Vec::new(),
             consistency_metrics: SemanticConsistencyMetrics {
                 temporal_consistency: 0.8,
                 spatial_consistency: 0.85,
@@ -1407,7 +1405,7 @@ pub fn process_visual_slam_realtime(
     processing_budget: Option<f64>,
 ) -> Result<SLAMResult> {
     match processing_budget {
-        Some(_budget) => slam_system.process_realtime(frame, timestamp, budget),
+        Some(budget) => slam_system.process_realtime(frame, timestamp, budget),
         None => slam_system.process_frame(frame, timestamp, None),
     }
 }

@@ -255,7 +255,10 @@ impl<F: Float> NumericalAnalyzer<F> {
         Ok(inf_norm * inverse_inf_norm)
     }
 
-    fn compute_singular_values(&self, matrix: &Array<F, IxDyn>) -> Result<Vec<f64>, StabilityError> {
+    fn compute_singular_values(
+        &self,
+        matrix: &Array<F, IxDyn>,
+    ) -> Result<Vec<f64>, StabilityError> {
         // Simplified - would use actual SVD computation
         Ok(vec![10.0, 5.0, 1.0, 0.1])
     }
@@ -308,7 +311,8 @@ impl<F: Float> NumericalAnalyzer<F> {
         Ok(max_row_sum)
     }
 
-    fn estimate_inverse_frobenius_norm(&self, 
+    fn estimate_inverse_frobenius_norm(
+        &self,
         self_matrix: &Array<F, IxDyn>,
     ) -> Result<f64, StabilityError> {
         // Simplified estimation

@@ -236,10 +236,10 @@ where
     /// Set anisotropic scale factors for each dimension
     pub fn with_scale_factors(mut self, scalefactors: Array1<F>) -> Self {
         // Ensure all scale _factors are positive
-        if scale_factors.iter().any(|&s| s <= F::zero()) {
+        if scalefactors.iter().any(|&s| s <= F::zero()) {
             panic!("scale _factors must be positive");
         }
-        self.scale_factors = Some(scale_factors);
+        self.scale_factors = Some(scalefactors);
         self
     }
 
@@ -254,22 +254,22 @@ where
 
     /// Enable or disable using a polynomial trend
     pub fn with_polynomial(mut self, usepolynomial: bool) -> Self {
-        self.use_polynomial = use_polynomial;
+        self.use_polynomial = usepolynomial;
         self
     }
 
     /// Enable or disable the multi-scale approach
     pub fn with_multiscale(mut self, usemultiscale: bool) -> Self {
-        self.use_multiscale = use_multiscale;
+        self.use_multiscale = usemultiscale;
         self
     }
 
     /// Set scale parameters for multi-scale approach
     pub fn with_scale_parameters(mut self, scaleparameters: Array1<F>) -> Self {
-        if scale_parameters.iter().any(|&s| s <= F::zero()) {
+        if scaleparameters.iter().any(|&s| s <= F::zero()) {
             panic!("scale _parameters must be positive");
         }
-        self.scale_parameters = Some(scale_parameters);
+        self.scale_parameters = Some(scaleparameters);
         self
     }
 
@@ -539,12 +539,12 @@ where
             let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());
 
             // Use scirs2-linalg's solve function
-            use scirs2__linalg::solve;
+            use scirs2_linalg::solve;
             match solve(&a_matrix_f64.view(), &rhs_f64.view(), None) {
                 Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),
                 Err(_) => {
                     // If the system is singular or near-singular, try SVD-based solution
-                    use scirs2__linalg::lstsq;
+                    use scirs2_linalg::lstsq;
                     match lstsq(&a_matrix_f64.view(), &rhs_f64.view(), None) {
                         Ok(result) => result.x.mapv(|x| F::from_f64(x).unwrap()),
                         Err(_) => {
@@ -676,12 +676,12 @@ where
             let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());
 
             // Use scirs2-linalg's solve function
-            use scirs2__linalg::solve;
+            use scirs2_linalg::solve;
             match solve(&a_matrix_f64.view(), &rhs_f64.view(), None) {
                 Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),
                 Err(_) => {
                     // If the system is singular or near-singular, try SVD-based solution
-                    use scirs2__linalg::lstsq;
+                    use scirs2_linalg::lstsq;
                     match lstsq(&a_matrix_f64.view(), &rhs_f64.view(), None) {
                         Ok(result) => result.x.mapv(|x| F::from_f64(x).unwrap()),
                         Err(_) => {
@@ -698,9 +698,9 @@ where
     }
 
     /// Calculate the Euclidean distance between two points with anisotropic scaling
-    fn scaled_distance(_p1: &ArrayView1<F>, p2: &ArrayView1<F>, scalefactors: &Array1<F>) -> F {
+    fn scaled_distance(p1: &ArrayView1<F>, p2: &ArrayView1<F>, scalefactors: &Array1<F>) -> F {
         let mut sum_sq = F::zero();
-        for ((&x1, &x2), &scale) in p1.iter().zip(p2.iter()).zip(scale_factors.iter()) {
+        for ((&x1, &x2), &scale) in p1.iter().zip(p2.iter()).zip(scalefactors.iter()) {
             let diff = (x1 - x2) / scale;
             sum_sq += diff * diff;
         }
@@ -930,7 +930,7 @@ where
     }
 
     /// Helper function to calculate mean distance between all pairs of points
-    fn calculate_mean_distance(_points: &ArrayView2<F>, scalefactors: &Array1<F>) -> F {
+    fn calculate_mean_distance(points: &ArrayView2<F>, scalefactors: &Array1<F>) -> F {
         let n_points = points.shape()[0];
         let mut total_dist = F::zero();
         let mut pair_count = 0;
@@ -939,7 +939,7 @@ where
             for j in i + 1..n_points {
                 let point_i = points.slice(ndarray::s![i, ..]);
                 let point_j = points.slice(ndarray::s![j, ..]);
-                total_dist += Self::scaled_distance(&point_i, &point_j, scale_factors);
+                total_dist += Self::scaled_distance(&point_i, &point_j, scalefactors);
                 pair_count += 1;
             }
         }
@@ -1178,13 +1178,13 @@ where
     /// Interpolate at new points
     pub fn interpolate(&self, querypoints: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check dimensions
-        if query_points.shape()[1] != self._points.shape()[1] {
+        if querypoints.shape()[1] != self._points.shape()[1] {
             return Err(InterpolateError::DimensionMismatch(
                 "query _points must have the same dimension as sample _points".to_string(),
             ));
         }
 
-        let n_query = query_points.shape()[0];
+        let n_query = querypoints.shape()[0];
         let n_points = self._points.shape()[0];
         let n_dims = self._points.shape()[1];
         let mut result = Array1::zeros(n_query);
@@ -1194,7 +1194,7 @@ where
             let n_scales = self.scale_parameters.as_ref().unwrap().len();
 
             for q in 0..n_query {
-                let query_point = query_points.slice(ndarray::s![q, ..]);
+                let query_point = querypoints.slice(ndarray::s![q, ..]);
                 let mut value = F::zero();
 
                 // Evaluate contribution from each scale
@@ -1231,7 +1231,7 @@ where
         } else {
             // Single-scale evaluation
             for q in 0..n_query {
-                let query_point = query_points.slice(ndarray::s![q, ..]);
+                let query_point = querypoints.slice(ndarray::s![q, ..]);
                 let mut value = F::zero();
 
                 // Evaluate RBF contribution
@@ -1299,7 +1299,7 @@ where
 
         // For a basic implementation, just compute error at sample points
         // and apply a correction factor
-        let (mse__) = self.calculate_error()?;
+        let mse = self.calculate_error()?;
 
         // Apply a correction factor to estimate LOO error
         // This is a very rough approximation
@@ -1560,18 +1560,16 @@ where
         + 'static,
 {
     // Extract data from the standard RBF interpolator
-    let _points = _rbf
-        .interpolate(&Array2::ones((1, 2)).view())
-        .map_err(|_| {
-            InterpolateError::InvalidState(
-                "Failed to extract data from standard RBF interpolator".to_string(),
-            )
-        })?;
+    let _points = rbf.interpolate(&Array2::ones((1, 2)).view()).map_err(|_| {
+        InterpolateError::InvalidState(
+            "Failed to extract data from standard RBF interpolator".to_string(),
+        )
+    })?;
 
     // Create an enhanced RBF interpolator with equivalent parameters
     EnhancedRBFInterpolator::builder()
-        .with_standard_kernel(_rbf.kernel())
-        .with_epsilon(_rbf.epsilon())
+        .with_standard_kernel(rbf.kernel())
+        .with_epsilon(rbf.epsilon())
         .build(&Array2::ones((1, 2)).view(), &Array1::zeros(1).view())
 }
 
@@ -1584,7 +1582,7 @@ mod tests {
     #[test]
     fn test_enhanced_rbf_builder() {
         // Create 2D points
-        let points = Array2::fromshape_vec(
+        let points = Array2::from_shape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -1665,7 +1663,7 @@ mod tests {
     #[test]
     fn test_multiscale_rbf() {
         // Create 2D points
-        let points = Array2::fromshape_vec(
+        let points = Array2::from_shape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -1716,7 +1714,7 @@ mod tests {
     #[test]
     fn test_polynomial_trend() {
         // Create 2D points
-        let points = Array2::fromshape_vec(
+        let points = Array2::from_shape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -1734,7 +1732,7 @@ mod tests {
 
         // Test that we can call interpolate without errors
         let test_points =
-            Array2::fromshape_vec((3, 2), vec![2.0, 1.0, 1.0, 2.0, 3.0, 0.0]).unwrap();
+            Array2::from_shape_vec((3, 2), vec![2.0, 1.0, 1.0, 2.0, 3.0, 0.0]).unwrap();
         let result = interp.interpolate(&test_points.view());
         assert!(result.is_ok());
 
@@ -1757,7 +1755,7 @@ mod tests {
     #[test]
     fn test_convenience_functions() {
         // Create 2D points
-        let points = Array2::fromshape_vec(
+        let points = Array2::from_shape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -1776,7 +1774,7 @@ mod tests {
         let fast_rbf = make_fast_rbf(&points.view(), &values.view()).unwrap();
 
         // Verify that all interpolators can evaluate at a test point
-        let test_point = Array2::fromshape_vec((1, 2), vec![0.25, 0.25]).unwrap();
+        let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
 
         let result_auto = auto_rbf.interpolate(&test_point.view()).unwrap();
         let result_accurate = accurate_rbf.interpolate(&test_point.view()).unwrap();

@@ -5,8 +5,8 @@
 //! performance tuning, and cross-domain knowledge transfer.
 
 use ndarray::Array1;
-use num__complex::Complex64;
-use scirs2__fft::{
+use num_complex::Complex64;
+use scirs2_fft::{
     advancedFftConfig,
     advanced_coordinator::{FftAlgorithmType, MemoryAllocationStrategy},
     create_advanced_fft_coordinator,

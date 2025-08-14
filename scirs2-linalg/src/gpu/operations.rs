@@ -175,16 +175,12 @@ where
         c_buffer.copy_to_host(&mut result_data)?;
 
         // Convert to ndarray
-        let result_array = Array2::from_shape_vec((m, n), result_data)
+        let resultarray = Array2::from_shape_vec((m, n), result_data)
             .map_err(|e| LinalgError::ComputationError(format!("Shape error: {}", e)))?;
-        Ok(result_array)
+        Ok(resultarray)
     }
 
-    fn gpu_dot(
-        self_ctx: &dyn GpuContext,
-        x: &ArrayView1<T>,
-        y: &ArrayView1<T>,
-    ) -> LinalgResult<T> {
+    fn gpu_dot(self_ctx: &dyn GpuContext, x: &ArrayView1<T>, y: &ArrayView1<T>) -> LinalgResult<T> {
         if x.len() != y.len() {
             return Err(LinalgError::ShapeError(format!(
                 "Vector lengths must match: {} != {}",
@@ -832,7 +828,7 @@ struct CompiledKernel {
 struct KernelMetadata {
     name: String,
     data_types: Vec<String>,
-    work_group_size: Option<usize>,
+    work_groupsize: Option<usize>,
     local_memory_usage: usize,
     register_usage: usize,
     optimization_level: OptimizationLevel,
@@ -845,7 +841,7 @@ struct KernelPerformanceData {
     theoretical_peak_gflops: f64,
     memory_bandwidth_efficiency: f64,
     occupancy_percentage: f64,
-    optimal_work_group_sizes: Vec<usize>,
+    optimal_work_groupsizes: Vec<usize>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -858,9 +854,9 @@ pub enum OptimizationLevel {
 
 #[derive(Debug, Clone)]
 struct DeviceCapabilities {
-    max_work_group_size: usize,
+    max_work_groupsize: usize,
     max_work_item_dimensions: usize,
-    local_memory_size: usize,
+    local_memorysize: usize,
     supports_fp64: bool,
     supports_fp16: bool,
     compute_units: u32,
@@ -975,7 +971,7 @@ impl GpuKernelManager {
     pub fn benchmark_kernel(
         &mut self,
         name: &str,
-        problem_sizes: &[usize],
+        problemsizes: &[usize],
     ) -> LinalgResult<BenchmarkResults> {
         let kernel = self
             .kernel_cache
@@ -984,7 +980,7 @@ impl GpuKernelManager {
 
         let mut results = BenchmarkResults::new(name);
 
-        for &size in problem_sizes {
+        for &size in problemsizes {
             let runtime = self.simulate_kernel_execution(kernel, size)?;
             let gflops = self.calculate_gflops(kernel, size, runtime);
             let efficiency = self.calculate_efficiency(kernel, runtime);
@@ -1005,7 +1001,7 @@ impl GpuKernelManager {
     pub fn auto_tune_kernel(
         &mut self,
         name: &str,
-        target_problem_size: usize,
+        target_problemsize: usize,
     ) -> LinalgResult<AutoTuneResults> {
         let kernel = self
             .kernel_cache
@@ -1017,21 +1013,21 @@ impl GpuKernelManager {
         let mut best_performance = 0.0;
 
         // Search space for work group sizes
-        let work_group_sizes = self.generate_work_group_candidates();
+        let work_groupsizes = self.generate_work_group_candidates();
 
-        for work_group_size in &work_group_sizes {
-            if *work_group_size > self.device_capabilities.max_work_group_size {
+        for work_groupsize in &work_groupsizes {
+            if *work_groupsize > self.device_capabilities.max_work_groupsize {
                 continue;
             }
 
             let config = AutoTuneConfig {
-                work_group_size: *work_group_size,
-                local_memory_usage: self.estimate_optimal_local_memory(*work_group_size),
-                unroll_factor: self.estimate_optimal_unroll_factor(*work_group_size),
-                vectorization_width: self.estimate_optimal_vectorization(*work_group_size),
+                work_groupsize: *work_groupsize,
+                local_memory_usage: self.estimate_optimal_local_memory(*work_groupsize),
+                unroll_factor: self.estimate_optimal_unroll_factor(*work_groupsize),
+                vectorization_width: self.estimate_optimal_vectorization(*work_groupsize),
             };
 
-            let performance = self.evaluate_configuration(&kernel, &config, target_problem_size)?;
+            let performance = self.evaluate_configuration(&kernel, &config, target_problemsize)?;
 
             if performance > best_performance {
                 best_performance = performance;
@@ -1042,7 +1038,7 @@ impl GpuKernelManager {
         Ok(AutoTuneResults {
             optimal_config: best_config,
             performance_improvement: best_performance,
-            tuning_iterations: work_group_sizes.len(),
+            tuning_iterations: work_groupsizes.len(),
         })
     }
 
@@ -1164,7 +1160,7 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
     // Tensor contraction with optimized memory access patterns
     {{CONTRACTION_LOOP}}
     
-    result[gid_y * get_global_size(0) + gid_x] = accumulator;
+    result[gid_y * get_globalsize(0) + gid_x] = accumulator;
 }
 "#
             .to_string(),
@@ -1238,7 +1234,7 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
         // Add memory access optimizations
         optimized = optimized.replace(
             "_global",
-            "_global _attribute_((reqd_work_group_size(16,16,1)))",
+            "_global _attribute_((reqd_work_groupsize(16,16,1)))",
         );
 
         Ok(optimized)
@@ -1289,7 +1285,7 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
         Ok(KernelMetadata {
             name: "analyzed_kernel".to_string(),
             data_types: vec!["float".to_string()],
-            work_group_size: Some(256),
+            work_groupsize: Some(256),
             local_memory_usage: 4096,
             register_usage: 32,
             optimization_level: self.optimization_level,
@@ -1297,16 +1293,14 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
         })
     }
 
-    fn estimate_performance(
-        self_metadata: &KernelMetadata,
-    ) -> LinalgResult<KernelPerformanceData> {
+    fn estimate_performance(self_metadata: &KernelMetadata) -> LinalgResult<KernelPerformanceData> {
         // Mock performance estimation
         Ok(KernelPerformanceData {
             compile_time_ms: 150.0,
             theoretical_peak_gflops: 1200.0,
             memory_bandwidth_efficiency: 0.85,
             occupancy_percentage: 75.0,
-            optimal_work_group_sizes: vec![16, 32, 64, 128, 256],
+            optimal_work_groupsizes: vec![16, 32, 64, 128, 256],
         })
     }
 
@@ -1340,15 +1334,15 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
 
     fn simulate_kernel_execution(
         self_kernel: &CompiledKernel,
-        problem_size: usize,
+        problemsize: usize,
     ) -> LinalgResult<f64> {
         // Mock execution simulation
-        Ok(0.001 * problem_size as f64 / 1000000.0) // Mock runtime in seconds
+        Ok(0.001 * problemsize as f64 / 1000000.0) // Mock runtime in seconds
     }
 
-    fn calculate_gflops(self_kernel: &CompiledKernel, problem_size: usize, runtime: f64) -> f64 {
+    fn calculate_gflops(self_kernel: &CompiledKernel, problemsize: usize, runtime: f64) -> f64 {
         // Mock GFLOPS calculation
-        let operations = problem_size as f64 * problem_size as f64 * 2.0; // Mock operation count
+        let operations = problemsize as f64 * problemsize as f64 * 2.0; // Mock operation count
         operations / (0.001 * 1e9) // Mock with fixed _runtime
     }
 
@@ -1360,21 +1354,21 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
     fn generate_work_group_candidates(&self) -> Vec<usize> {
         vec![8, 16, 32, 64, 128, 256, 512]
             .into_iter()
-            .filter(|&size| size <= self.device_capabilities.max_work_group_size)
+            .filter(|&size| size <= self.device_capabilities.max_work_groupsize)
             .collect()
     }
 
     fn estimate_optimal_local_memory(&self, work_groupsize: usize) -> usize {
         std::cmp::min(
-            work_group_size * 64,
-            self.device_capabilities.local_memory_size,
+            work_groupsize * 64,
+            self.device_capabilities.local_memorysize,
         )
     }
 
     fn estimate_optimal_unroll_factor(&self, work_groupsize: usize) -> usize {
-        if work_group_size >= 256 {
+        if work_groupsize >= 256 {
             8
-        } else if work_group_size >= 64 {
+        } else if work_groupsize >= 64 {
             4
         } else {
             2
@@ -1393,7 +1387,7 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
     ) -> LinalgResult<f64> {
         // Mock performance evaluation
         let base_performance = kernel.performance_data.theoretical_peak_gflops;
-        let work_group_efficiency = (config.work_group_size as f64 / 256.0).min(1.0);
+        let work_group_efficiency = (config.work_groupsize as f64 / 256.0).min(1.0);
         Ok(base_performance * work_group_efficiency)
     }
 }
@@ -1401,9 +1395,9 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
 impl Default for DeviceCapabilities {
     fn default() -> Self {
         Self {
-            max_work_group_size: 1024,
+            max_work_groupsize: 1024,
             max_work_item_dimensions: 3,
-            local_memory_size: 48 * 1024, // 48KB
+            local_memorysize: 48 * 1024, // 48KB
             supports_fp64: true,
             supports_fp16: false,
             compute_units: 32,
@@ -1421,7 +1415,7 @@ pub struct BenchmarkResults {
 
 #[derive(Debug, Clone)]
 struct BenchmarkMeasurement {
-    problem_size: usize,
+    problemsize: usize,
     runtime_seconds: f64,
     gflops: f64,
     efficiency: f64,
@@ -1437,7 +1431,7 @@ impl BenchmarkResults {
 
     fn add_measurement(&mut self, size: usize, runtime: f64, gflops: f64, efficiency: f64) {
         self.measurements.push(BenchmarkMeasurement {
-            problem_size: size,
+            problemsize: size,
             runtime_seconds: runtime,
             gflops,
             efficiency,
@@ -1462,7 +1456,7 @@ impl BenchmarkResults {
 
 #[derive(Debug, Clone)]
 struct AutoTuneConfig {
-    work_group_size: usize,
+    work_groupsize: usize,
     local_memory_usage: usize,
     unroll_factor: usize,
     vectorization_width: usize,
@@ -1471,7 +1465,7 @@ struct AutoTuneConfig {
 impl Default for AutoTuneConfig {
     fn default() -> Self {
         Self {
-            work_group_size: 256,
+            work_groupsize: 256,
             local_memory_usage: 16384,
             unroll_factor: 4,
             vectorization_width: 4,
@@ -1593,14 +1587,14 @@ where
     dispatcher: GpuOperationDispatcher<T>,
     kernel_manager: GpuKernelManager,
     profiler: GpuPerformanceProfiler,
-    batch_size_optimizer: BatchSizeOptimizer,
+    batchsize_optimizer: BatchSizeOptimizer,
 }
 
 /// Batch size optimizer for GPU operations
 #[derive(Debug)]
 pub struct BatchSizeOptimizer {
     /// Optimal batch sizes for different operations
-    optimal_sizes: std::collections::HashMap<String, usize>,
+    optimalsizes: std::collections::HashMap<String, usize>,
     /// Memory constraints
     memory_limit: usize,
     /// Performance history
@@ -1610,7 +1604,7 @@ pub struct BatchSizeOptimizer {
 #[derive(Debug, Clone)]
 struct BatchPerformanceRecord {
     operation: String,
-    batch_size: usize,
+    batchsize: usize,
     execution_time: f64,
     memory_usage: usize,
     throughput: f64,
@@ -1619,17 +1613,17 @@ struct BatchPerformanceRecord {
 impl BatchSizeOptimizer {
     pub fn new(_memorylimit: usize) -> Self {
         Self {
-            optimal_sizes: std::collections::HashMap::new(),
+            optimalsizes: std::collections::HashMap::new(),
             memory_limit,
             performance_history: Vec::new(),
         }
     }
 
     /// Find optimal batch size for an operation
-    pub fn optimize_batch_size(&mut self, operation: &str, datasize: usize) -> usize {
+    pub fn optimize_batchsize(&mut self, operation: &str, datasize: usize) -> usize {
         // Check if we have historical data
-        if let Some(&optimal) = self.optimal_sizes.get(operation) {
-            return optimal.min(data_size);
+        if let Some(&optimal) = self.optimalsizes.get(operation) {
+            return optimal.min(datasize);
         }
 
         // Default heuristics based on operation type
@@ -1641,7 +1635,7 @@ impl BatchSizeOptimizer {
             _ => (self.memory_limit / 8).min(1024),
         };
 
-        default_batch.min(data_size)
+        default_batch.min(datasize)
     }
 
     /// Record performance for batch size optimization
@@ -1650,7 +1644,7 @@ impl BatchSizeOptimizer {
 
         // Update optimal size if this is better
         let _current_optimal = self
-            .optimal_sizes
+            .optimalsizes
             .get(&record.operation)
             .copied()
             .unwrap_or(0);
@@ -1663,8 +1657,8 @@ impl BatchSizeOptimizer {
                 .max_by(|a, b| a.throughput.partial_cmp(&b.throughput).unwrap());
 
             if let Some(best) = best_record {
-                self.optimal_sizes
-                    .insert(record.operation.clone(), best.batch_size);
+                self.optimalsizes
+                    .insert(record.operation.clone(), best.batchsize);
             }
         }
     }
@@ -1680,7 +1674,7 @@ where
             dispatcher: GpuOperationDispatcher::new(),
             kernel_manager: GpuKernelManager::new(),
             profiler: GpuPerformanceProfiler::new(),
-            batch_size_optimizer: BatchSizeOptimizer::new(1024 * 1024 * 1024), // 1GB default
+            batchsize_optimizer: BatchSizeOptimizer::new(1024 * 1024 * 1024), // 1GB default
         }
     }
 
@@ -1697,16 +1691,16 @@ where
         }
 
         let batch_count = matrices_a.len();
-        let optimal_batch_size = self
-            .batch_size_optimizer
-            .optimize_batch_size("batched_matmul", batch_count);
+        let optimal_batchsize = self
+            .batchsize_optimizer
+            .optimize_batchsize("batched_matmul", batch_count);
 
         let mut results = Vec::with_capacity(batch_count);
 
         // Process in optimal-sized batches
-        for batch_start in (0..batch_count).step_by(optimal_batch_size) {
-            let batch_end = (batch_start + optimal_batch_size).min(batch_count);
-            let batch_size = batch_end - batch_start;
+        for batch_start in (0..batch_count).step_by(optimal_batchsize) {
+            let batch_end = (batch_start + optimal_batchsize).min(batch_count);
+            let batchsize = batch_end - batch_start;
 
             let start_time = std::time::Instant::now();
 
@@ -1723,13 +1717,13 @@ where
             // Record performance
             let record = BatchPerformanceRecord {
                 operation: "batched_matmul".to_string(),
-                batch_size,
+                batchsize,
                 execution_time,
-                memory_usage: batch_size * 1000, // Estimate
-                throughput: batch_size as f64 / execution_time,
+                memory_usage: batchsize * 1000, // Estimate
+                throughput: batchsize as f64 / execution_time,
             };
 
-            self.batch_size_optimizer.record_performance(record);
+            self.batchsize_optimizer.record_performance(record);
         }
 
         Ok(results)
@@ -1826,9 +1820,9 @@ where
 
         // Update batch size optimizer with new requirements
         for (op, req) in memory_requirements {
-            let optimal_batch = (self.batch_size_optimizer.memory_limit / req).max(1);
-            self.batch_size_optimizer
-                .optimal_sizes
+            let optimal_batch = (self.batchsize_optimizer.memory_limit / req).max(1);
+            self.batchsize_optimizer
+                .optimalsizes
                 .insert(op, optimal_batch);
         }
 
@@ -2349,8 +2343,8 @@ pub struct DeviceProfile {
     pub peak_flops_sp: f64,
     pub peak_flops_dp: f64,
     pub memory_bandwidth: f64,
-    pub l1_cache_size: usize,
-    pub l2_cache_size: usize,
+    pub l1_cachesize: usize,
+    pub l2_cachesize: usize,
     pub shared_memory: usize,
     pub register_count: usize,
     pub tensor_core_support: bool,
@@ -2579,8 +2573,8 @@ where
     }
 
     fn estimate_cache_efficiency(&selfshape: (usize, usize), pattern: &MemoryAccessPattern) -> f64 {
-        let cache_line_size = 64; // bytes
-        let elements_per_line = cache_line_size / std::mem::size_of::<T>();
+        let cache_linesize = 64; // bytes
+        let elements_per_line = cache_linesize / std::mem::size_of::<T>();
 
         match pattern {
             MemoryAccessPattern::Sequential => 0.9,

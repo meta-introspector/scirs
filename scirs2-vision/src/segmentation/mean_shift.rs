@@ -135,7 +135,7 @@ pub fn mean_shift(img: &DynamicImage, params: &MeanShiftParams) -> Result<Array2
     let labels = cluster_modes(&modes, params.spatial_bandwidth, params.colorbandwidth);
 
     // Reshape to image dimensions
-    let label_map = Array2::fromshape_vec((height as usize, width as usize), labels)?;
+    let label_map = Array2::from_shape_vec((height as usize, width as usize), labels)?;
 
     // Merge small regions
     let final_labels = merge_small_regions(&label_map, params.min_region_size);
@@ -182,7 +182,7 @@ fn compute_mean_shift(
     let mut weight_sum = 0.0f32;
 
     for i in 0..n_points {
-        let feature = "features".slice(ndarray::s![i, ..]);
+        let feature = features.slice(ndarray::s![i, ..]);
 
         // Compute spatial distance
         let spatial_dist =
@@ -197,8 +197,8 @@ fn compute_mean_shift(
         // Check if within _bandwidth
         if spatial_dist <= spatial_bandwidth && color_dist <= colorbandwidth {
             // Gaussian kernel weights
-            let spatial_weight = (-0.5 * (spatial_dist / spatial_bandwidth).powi(2)).exp();
-            let color_weight = (-0.5 * (color_dist / colorbandwidth).powi(2)).exp();
+            let spatial_weight = (-0.5f32 * (spatial_dist / spatial_bandwidth).powi(2)).exp();
+            let color_weight = (-0.5f32 * (color_dist / colorbandwidth).powi(2)).exp();
             let weight = spatial_weight * color_weight;
 
             weighted_sum += &(feature.to_owned() * weight);
@@ -215,7 +215,7 @@ fn compute_mean_shift(
 
 /// Cluster modes and assign labels
 #[allow(dead_code)]
-fn cluster_modes(_modes: &Array2<f32>, spatial_bandwidth: f32, colorbandwidth: f32) -> Vec<u32> {
+fn cluster_modes(modes: &Array2<f32>, spatial_bandwidth: f32, colorbandwidth: f32) -> Vec<u32> {
     let n_points = modes.nrows();
     let mut labels = vec![u32::MAX; n_points];
     let mut current_label = 0u32;
@@ -265,7 +265,7 @@ fn euclidean_distance(a: &Array1<f32>, b: &Array1<f32>) -> f32 {
 
 /// Merge small regions with neighbors
 #[allow(dead_code)]
-fn merge_small_regions(_labels: &Array2<u32>, minsize: usize) -> Array2<u32> {
+fn merge_small_regions(labels: &Array2<u32>, minsize: usize) -> Array2<u32> {
     let (height, width) = labels.dim();
     let mut result = labels.clone();
 
@@ -279,7 +279,7 @@ fn merge_small_regions(_labels: &Array2<u32>, minsize: usize) -> Array2<u32> {
     let small_regions: Vec<_> = region_sizes
         .iter()
         .filter(|(_, &_size)| _size < minsize)
-        .map(|(&label_)| label_)
+        .map(|(&label_, _)| label_)
         .collect();
 
     // Merge each small region with its largest neighbor
@@ -307,7 +307,7 @@ fn merge_small_regions(_labels: &Array2<u32>, minsize: usize) -> Array2<u32> {
         }
 
         // Find most common neighbor
-        if let Some((&new_label_)) = neighbor_counts.iter().max_by_key(|(_, &count)| count) {
+        if let Some((&new_label_, _)) = neighbor_counts.iter().max_by_key(|(_, &count)| count) {
             // Replace small region with neighbor label_
             for y in 0..height {
                 for x in 0..width {

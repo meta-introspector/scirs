@@ -909,9 +909,10 @@ fn generate_validation_data(size: usize) -> Vec<u8> {
 fn generate_challenge_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
-            let chaotic =
-                (i as f32 * std::f32::consts::PI / 100.0).sin() * (i as f32 * std::f32::consts::E / 150.0).cos() * 127.0
-                    + 128.0;
+            let chaotic = (i as f32 * std::f32::consts::PI / 100.0).sin()
+                * (i as f32 * std::f32::consts::E / 150.0).cos()
+                * 127.0
+                + 128.0;
             chaotic as u8
         })
         .collect()

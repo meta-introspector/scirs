@@ -97,11 +97,9 @@ impl TypeConverter {
             // Use parallel processing for large arrays
             if array.len() > 10000 {
                 let mut result = Array2::zeros(array.raw_dim());
-                Zip::from(&mut result)
-                    .and(array)
-                    .par_for_each(|out, &inp| {
-                        *out = num_traits::cast::<T, f64>(inp).unwrap_or(0.0);
-                    });
+                Zip::from(&mut result).and(array).par_for_each(|out, &inp| {
+                    *out = num_traits::cast::<T, f64>(inp).unwrap_or(0.0);
+                });
                 result
             } else {
                 array.mapv(|x| num_traits::cast::<T, f64>(x).unwrap_or(0.0))
@@ -135,11 +133,9 @@ impl TypeConverter {
 
         let result = if array.len() > 10000 {
             let mut result = Array2::zeros(array.raw_dim());
-            Zip::from(&mut result)
-                .and(array)
-                .par_for_each(|out, &inp| {
-                    *out = inp as f64;
-                });
+            Zip::from(&mut result).and(array).par_for_each(|out, &inp| {
+                *out = inp as f64;
+            });
             result
         } else {
             array.mapv(|x| x as f64)

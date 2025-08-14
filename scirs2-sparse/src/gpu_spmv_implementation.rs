@@ -31,10 +31,7 @@ impl GpuSpMV {
             SparseError::ComputationError(format!("Failed to initialize GPU device: {e}"))
         })?;
 
-        Ok(Self {
-            device,
-            backend: backend,
-        })
+        Ok(Self { device, backend })
     }
 
     /// Initialize the best available GPU backend
@@ -393,7 +390,7 @@ impl GpuSpMV {
     fn get_opencl_spmv_kernel_source(&self) -> String {
         r#"
         _kernel void spmv_csr_kernel(
-            const int rows_global const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict x_global float* restrict y
+            const int rowsglobal const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict x_global float* restrict y
         ) {
             int row = get_global_id(0);
             if (row >= rows) return;

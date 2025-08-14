@@ -921,7 +921,7 @@ pub fn estimate_arma_enhanced(
         aic: diagnostics.aic,
         bic: diagnostics.bic,
         standard_errors: None, // TODO: Implement standard error calculation
-        confidence_intervals: None, // TODO: Implement confidence interval calculation  
+        confidence_intervals: None, // TODO: Implement confidence interval calculation
         residuals: Array1::zeros(signal.len()), // TODO: Calculate proper residuals
         diagnostics,
         validation,
@@ -1476,7 +1476,7 @@ impl<T: Clone> CircularBuffer<T> {
     pub fn new(capacity: usize) -> Self {
         Self {
             buffer: Vec::with_capacity(capacity),
-            capacity: capacity,
+            capacity,
             head: 0,
             tail: 0,
             full: false,
@@ -1740,7 +1740,7 @@ fn estimate_ma_durbin(signal: &Array1<f64>, order: usize) -> SignalResult<MAResu
     }
 
     Ok(MAResult {
-        ma_coeffs: ma_coeffs,
+        ma_coeffs,
         variance,
         likelihood: 0.0,
         residuals: Array1::zeros(1),
@@ -2212,7 +2212,9 @@ fn optimize_arma_parameters(
 ) -> SignalResult<ARMAParameters> {
     // Basic validation - check signal is not empty
     if signal.is_empty() {
-        return Err(SignalError::ValueError("Signal cannot be empty".to_string()));
+        return Err(SignalError::ValueError(
+            "Signal cannot be empty".to_string(),
+        ));
     }
     check_positive(opts.max_iterations, "max_iterations")?;
 
@@ -2512,7 +2514,9 @@ fn compute_arma_diagnostics(
 ) -> SignalResult<ARMADiagnostics> {
     // Basic validation - check signal is not empty
     if signal.is_empty() {
-        return Err(SignalError::ValueError("Signal cannot be empty".to_string()));
+        return Err(SignalError::ValueError(
+            "Signal cannot be empty".to_string(),
+        ));
     }
 
     let n = signal.len() as f64;
@@ -2563,9 +2567,7 @@ fn compute_ljung_box_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<
     // Compute sample autocorrelations
     let mut autocorrs = Vec::with_capacity(lags);
     let mean = residuals.mean().unwrap_or(0.0);
-    let variance = residuals
-        .mapv(|x| (x - mean).powi(2))
-        .mean();
+    let variance = residuals.mapv(|x| (x - mean).powi(2)).mean();
 
     for lag in 1..=lags {
         let mut sum = 0.0;
@@ -2608,9 +2610,7 @@ fn compute_jarque_bera_test(residuals: &Array1<f64>) -> SignalResult<JarqueBeraT
     }
 
     let mean = residuals.mean().unwrap_or(0.0);
-    let variance = residuals
-        .mapv(|x| (x - mean).powi(2))
-        .mean();
+    let variance = residuals.mapv(|x| (x - mean).powi(2)).mean();
     let std_dev = variance.sqrt();
 
     if std_dev < 1e-10 {
@@ -2939,8 +2939,8 @@ pub fn state_space_parametric_estimation(
 
     // Compute model diagnostics
     let aic = -2.0 * log_likelihood + 2.0 * (stateorder * stateorder + stateorder + 2) as f64;
-    let bic = -2.0 * log_likelihood
-        + (stateorder * stateorder + stateorder + 2) as f64 * (n as f64).ln();
+    let bic =
+        -2.0 * log_likelihood + (stateorder * stateorder + stateorder + 2) as f64 * (n as f64).ln();
 
     // Convert state-space form back to ARMA representation if requested
     let arma_equivalent = if opts.compute_arma_equivalent {

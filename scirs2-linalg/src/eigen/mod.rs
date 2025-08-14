@@ -276,7 +276,7 @@ where
             let lambda = eigenvalues[i];
 
             // Compute Av using compensated summation (Kahan algorithm)
-            let av = kahan_matrix_vector_product(a, &v);
+            let av = kahanmatrix_vector_product(a, &v);
 
             // Enhanced residual computation: Av - λv
             let lambda_v = v.mapv(|x| x * lambda);
@@ -395,7 +395,7 @@ where
 
 /// Kahan summation algorithm for numerically stable matrix-vector multiplication
 #[allow(dead_code)]
-fn kahan_matrix_vector_product<F>(a: &ArrayView2<F>, v: &ArrayView1<F>) -> Array1<F>
+fn kahanmatrix_vector_product<F>(a: &ArrayView2<F>, v: &ArrayView1<F>) -> Array1<F>
 where
     F: Float + Sum,
 {
@@ -508,19 +508,19 @@ where
     let mut refined_v = v.clone();
 
     // Create (A - λI)
-    let mut shifted_matrix = a.to_owned();
+    let mut shiftedmatrix = a.to_owned();
     for i in 0..n {
-        shifted_matrix[[i, i]] -= lambda;
+        shiftedmatrix[[i, i]] -= lambda;
     }
 
     // Add regularization for numerical stability
     let regularization = tolerance * F::from(1e-6).unwrap();
     for i in 0..n {
-        shifted_matrix[[i, i]] += regularization;
+        shiftedmatrix[[i, i]] += regularization;
     }
 
     // Solve (A - λI + εI) * y = v for improved eigenvector
-    if let Ok(y) = crate::solve::solve(&shifted_matrix.view(), &refined_v.view(), None) {
+    if let Ok(y) = crate::solve::solve(&shiftedmatrix.view(), &refined_v.view(), None) {
         // Normalize the result
         let norm = y.dot(&y).sqrt();
         if norm > F::epsilon() {
@@ -583,7 +583,7 @@ where
         let v = eigenvectors.column(i);
         let lambda = eigenvalues[i];
 
-        let av = kahan_matrix_vector_product(a, &v);
+        let av = kahanmatrix_vector_product(a, &v);
         let lambda_v = v.mapv(|x| x * lambda);
         let residual = kahan_vector_subtraction(&av, &lambda_v);
         let residual_norm = kahan_dot_product(&residual, &residual).sqrt();

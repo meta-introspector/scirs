@@ -102,7 +102,7 @@ impl<F: Float + fmt::Display> fmt::Display for MatrixDiagnostics<F> {
 
 /// Analyze a matrix and provide diagnostic information
 #[allow(dead_code)]
-pub fn analyze_matrix<F>(a: &ArrayView2<F>) -> MatrixDiagnostics<F>
+pub fn analyzematrix<F>(a: &ArrayView2<F>) -> MatrixDiagnostics<F>
 where
     F: Float + NumAssign + std::iter::Sum + fmt::Display + ndarray::ScalarOperand + Send + Sync,
 {
@@ -355,7 +355,7 @@ where
     F: Float + NumAssign + std::iter::Sum + fmt::Display + ndarray::ScalarOperand + Send + Sync,
 {
     if let Some(a) = matrix {
-        let diagnostics = analyze_matrix(a);
+        let diagnostics = analyzematrix(a);
         let message = format!("{base_error}\n\nOperation: {operation}\n{diagnostics}");
         LinalgError::ComputationError(message)
     } else {
@@ -369,7 +369,7 @@ pub fn regularization_suggestions<F>(matrix: &ArrayView2<F>, operation: &str) ->
 where
     F: Float + NumAssign + std::iter::Sum + fmt::Display + ndarray::ScalarOperand + Send + Sync,
 {
-    let mut diagnostics = analyze_matrix(matrix);
+    let mut diagnostics = analyzematrix(matrix);
 
     // Add specific regularization suggestions
     diagnostics.suggestions.push(
@@ -471,7 +471,7 @@ where
         _phantom: std::marker::PhantomData,
     };
 
-    let diagnostics = analyze_matrix(a);
+    let diagnostics = analyzematrix(a);
 
     // Check condition number
     if let Some(cond) = diagnostics.condition_number {
@@ -623,9 +623,9 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_analyze_matrix() {
+    fn test_analyzematrix() {
         let a = array![[1.0, 2.0], [2.0, 4.0]];
-        let diagnostics = analyze_matrix(&a.view());
+        let diagnostics = analyzematrix(&a.view());
 
         assert_eq!(diagnostics.shape, (2, 2));
         assert!(diagnostics.is_symmetric);
@@ -633,9 +633,9 @@ mod tests {
     }
 
     #[test]
-    fn test_ill_conditioned_matrix() {
+    fn test_ill_conditionedmatrix() {
         let a = array![[1.0, 1.0], [1.0, 1.0 + 1e-10]];
-        let diagnostics = analyze_matrix(&a.view());
+        let diagnostics = analyzematrix(&a.view());
 
         // Debug print
         println!("Condition number: {:?}", diagnostics.condition_number);

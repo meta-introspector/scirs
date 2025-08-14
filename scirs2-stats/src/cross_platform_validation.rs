@@ -67,9 +67,9 @@ pub struct PlatformInfo {
     /// Floating-point model
     pub float_model: FloatingPointModel,
     /// Memory page size
-    pub memory_page_size: usize,
+    pub memory_pagesize: usize,
     /// Cache line size
-    pub cache_line_size: usize,
+    pub cache_linesize: usize,
     /// Threading model
     pub threading_model: ThreadingModel,
 }
@@ -505,12 +505,12 @@ impl CrossPlatformValidator {
         let start_time = std::time::Instant::now();
 
         // Test statistical functions with known results
-        let test_data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        let testdata = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         
-        let computed_mean = crate::descriptive::mean(&test_data.view())?;
+        let computed_mean = crate::descriptive::mean(&testdata.view())?;
         let expected_mean = 3.0;
         
-        let computed_var = crate::descriptive::var(&test_data.view(), 1, None)?;
+        let computed_var = crate::descriptive::var(&testdata.view(), 1, None)?;
         let expected_var = 2.5; // Sample variance
         
         let test_cases = vec![
@@ -557,7 +557,7 @@ impl CrossPlatformValidator {
             category: TestCategory::NumericalPrecision,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(test_data.len() * std::mem::size_of::<f64>()),
+            memory_usage_bytes: Some(testdata.len() * std::mem::size_of::<f64>()),
             notes: vec!["Testing core statistical function precision".to_string()],
             accuracy_metrics: Some(accuracy_metrics),
         })
@@ -630,11 +630,11 @@ impl CrossPlatformValidator {
         let start_time = std::time::Instant::now();
         let mut notes = Vec::new();
 
-        let test_data = Array1::from_vec((1..=1000).map(|x| x as f64).collect());
+        let testdata = Array1::from_vec((1..=1000).map(|x| x as f64).collect());
         
         // Compare SIMD and scalar implementations
-        let scalar_mean = crate::descriptive::mean(&test_data.view())?;
-        let simd_result = crate::descriptive_simd::mean_simd(&test_data.view());
+        let scalar_mean = crate::descriptive::mean(&testdata.view())?;
+        let simd_result = crate::descriptive_simd::mean_simd(&testdata.view());
         
         let (status, accuracy_metrics) = match simd_result {
             Ok(simd_mean) => {
@@ -671,7 +671,7 @@ impl CrossPlatformValidator {
             category: TestCategory::SIMDCompatibility,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(test_data.len() * std::mem::size_of::<f64>()),
+            memory_usage_bytes: Some(testdata.len() * std::mem::size_of::<f64>()),
             notes,
             accuracy_metrics,
         })
@@ -682,11 +682,11 @@ impl CrossPlatformValidator {
         let start_time = std::time::Instant::now();
         let mut notes = Vec::new();
 
-        let test_data = Array1::from_vec((1..=1000).map(|x| x as f64).collect());
+        let testdata = Array1::from_vec((1..=1000).map(|x| x as f64).collect());
         
         // Compare SIMD and scalar implementations
-        let scalar_var = crate::descriptive::var(&test_data.view(), 1, None)?;
-        let simd_result = crate::descriptive_simd::variance_simd(&test_data.view(), 1);
+        let scalar_var = crate::descriptive::var(&testdata.view(), 1, None)?;
+        let simd_result = crate::descriptive_simd::variance_simd(&testdata.view(), 1);
         
         let (status, accuracy_metrics) = match simd_result {
             Ok(simd_var) => {
@@ -723,7 +723,7 @@ impl CrossPlatformValidator {
             category: TestCategory::SIMDCompatibility,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(test_data.len() * std::mem::size_of::<f64>()),
+            memory_usage_bytes: Some(testdata.len() * std::mem::size_of::<f64>()),
             notes,
             accuracy_metrics,
         })
@@ -779,12 +779,12 @@ impl CrossPlatformValidator {
         let start_time = std::time::Instant::now();
         let mut notes = Vec::new();
 
-        let test_data = Array1::from_vec((1..=10000).map(|x| x as f64).collect());
+        let testdata = Array1::from_vec((1..=10000).map(|x| x as f64).collect());
         
         // Compare parallel and serial implementations
-        let serial_mean = crate::descriptive::mean(&test_data.view())?;
+        let serial_mean = crate::descriptive::mean(&testdata.view())?;
         let parallel_result = crate::parallel_stats::mean_parallel(
-            &test_data.view(),
+            &testdata.view(),
             num_threads()
         );
         
@@ -824,7 +824,7 @@ impl CrossPlatformValidator {
             category: TestCategory::ParallelProcessing,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(test_data.len() * std::mem::size_of::<f64>()),
+            memory_usage_bytes: Some(testdata.len() * std::mem::size_of::<f64>()),
             notes,
             accuracy_metrics,
         })
@@ -836,15 +836,15 @@ impl CrossPlatformValidator {
         let mut notes = Vec::new();
 
         // Test concurrent access to statistical functions
-        let test_data = Array1::from_vec((1..=1000).map(|x| x as f64).collect());
-        let data_clone = test_data.clone();
+        let testdata = Array1::from_vec((1..=1000).map(|x| x as f64).collect());
+        let data_clone = testdata.clone();
         
         let handle1 = std::thread::spawn(move || {
             crate::descriptive::mean(&data_clone.view())
         });
         
         let handle2 = std::thread::spawn(move || {
-            crate::descriptive::mean(&test_data.view())
+            crate::descriptive::mean(&testdata.view())
         });
         
         let result1 = handle1.join();
@@ -928,18 +928,18 @@ impl CrossPlatformValidator {
         let mut notes = Vec::new();
 
         // Test allocation of large arrays
-        let large_size = 1_000_000;
+        let largesize = 1_000_000;
         let allocation_result = std::panic::catch_unwind(|| {
-            Array1::zeros(large_size)
+            Array1::zeros(largesize)
         });
 
         let status = match allocation_result {
             Ok(_array) => {
-                notes.push(format!("Large allocation successful: {} elements", large_size));
+                notes.push(format!("Large allocation successful: {} elements", largesize));
                 TestStatus::Passed
             }
             Err(_) => {
-                notes.push(format!("Large allocation failed: {} elements", large_size));
+                notes.push(format!("Large allocation failed: {} elements", largesize));
                 TestStatus::Failed
             }
         };
@@ -949,7 +949,7 @@ impl CrossPlatformValidator {
             category: TestCategory::MemoryAllocation,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(large_size * std::mem::size_of::<f64>()),
+            memory_usage_bytes: Some(largesize * std::mem::size_of::<f64>()),
             notes,
             accuracy_metrics: None,
         })
@@ -1106,8 +1106,8 @@ impl CrossPlatformValidator {
         let mut notes = Vec::new();
 
         notes.push(format!("Operating System: {}", self.platform_info.os));
-        notes.push(format!("Memory page size: {} bytes", self.platform_info.memory_page_size));
-        notes.push(format!("Cache line size: {} bytes", self.platform_info.cache_line_size));
+        notes.push(format!("Memory page size: {} bytes", self.platform_info.memory_pagesize));
+        notes.push(format!("Cache line size: {} bytes", self.platform_info.cache_linesize));
 
         // OS-specific optimizations would be tested here
         // For now, just report OS information
@@ -1228,24 +1228,24 @@ impl CrossPlatformValidator {
         let mut benchmarks = HashMap::new();
 
         // Benchmark basic operations
-        let test_data = Array1::from_vec((1..=10000).map(|x| x as f64).collect());
+        let testdata = Array1::from_vec((1..=10000).map(|x| x as f64).collect());
 
         // Mean computation benchmark
         let start = std::time::Instant::now();
-        let _ = crate::descriptive::mean(&test_data.view())?;
+        let _ = crate::descriptive::mean(&testdata.view())?;
         let mean_time = start.elapsed().as_secs_f64() * 1000.0;
         benchmarks.insert("mean_computation_ms".to_string(), mean_time);
 
         // Variance computation benchmark
         let start = std::time::Instant::now();
-        let _ = crate::descriptive::var(&test_data.view(), 1, None)?;
+        let _ = crate::descriptive::var(&testdata.view(), 1, None)?;
         let var_time = start.elapsed().as_secs_f64() * 1000.0;
         benchmarks.insert("variance_computation_ms".to_string(), var_time);
 
         // SIMD benchmarks (if available)
         if scirs2_core::simd_ops::PlatformCapabilities::detect().simd_available {
             let start = std::time::Instant::now();
-            let _ = crate::descriptive_simd::mean_simd(&test_data.view())?;
+            let _ = crate::descriptive_simd::mean_simd(&testdata.view())?;
             let simd_mean_time = start.elapsed().as_secs_f64() * 1000.0;
             benchmarks.insert("simd_mean_computation_ms".to_string(), simd_mean_time);
         }
@@ -1329,8 +1329,8 @@ impl CrossPlatformValidator {
             simd_capabilities: Self::detect_simd_capabilities(),
             endianness: Self::detect_endianness(),
             float_model: Self::detect_float_model(),
-            memory_page_size: Self::detect_memory_page_size(),
-            cache_line_size: 64, // Typical cache line size
+            memory_pagesize: Self::detect_memory_pagesize(),
+            cache_linesize: 64, // Typical cache line size
             threading_model: Self::detect_threading_model(),
         }
     }
@@ -1374,7 +1374,7 @@ impl CrossPlatformValidator {
     }
 
     /// Detect memory page size
-    fn detect_memory_page_size() -> usize {
+    fn detect_memory_pagesize() -> usize {
         // Default page size - would use platform-specific detection in practice
         4096
     }
@@ -1433,8 +1433,8 @@ mod tests {
         assert!(!platform_info.os.is_empty());
         assert!(!platform_info.arch.is_empty());
         assert!(platform_info.cpu_cores > 0);
-        assert!(platform_info.memory_page_size > 0);
-        assert!(platform_info.cache_line_size > 0);
+        assert!(platform_info.memory_pagesize > 0);
+        assert!(platform_info.cache_linesize > 0);
     }
 
     #[test]

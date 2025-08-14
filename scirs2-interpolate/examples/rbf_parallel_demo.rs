@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     points_data.truncate(n_points * n_dims);
     values_data.truncate(n_points);
 
-    let points = Array2::fromshape_vec((n_points, n_dims), points_data)?;
+    let points = Array2::from_shape_vec((n_points, n_dims), points_data)?;
     let values = Array1::from(values_data);
 
     println!("Dataset: {} points in {}D space", n_points, n_dims);
@@ -97,7 +97,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("  Speedup (auto):         {:.2}x", speedup_auto);
 
         // Test that all methods give the same results
-        let test_points = Array2::fromshape_vec((3, 2), vec![0.25, 0.25, 0.5, 0.75, 0.8, 0.3])?;
+        let test_points = Array2::from_shape_vec((3, 2), vec![0.25, 0.25, 0.5, 0.75, 0.8, 0.3])?;
 
         let result_serial = interp_serial.interpolate(&test_points.view())?;
         let result_parallel = interp_parallel.interpolate(&test_points.view())?;

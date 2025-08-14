@@ -96,7 +96,7 @@ impl StatsError {
     }
 
     /// Create an insufficient data error with context
-    pub fn insufficient_data<S: Into<String>>(message: S) -> Self {
+    pub fn insufficientdata<S: Into<String>>(message: S) -> Self {
         StatsError::InsufficientData(message.into())
     }
 

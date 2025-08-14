@@ -504,7 +504,7 @@ mod tests {
             assert!(sample >= -PI && sample <= PI);
         }
 
-        // Check that mean is close to the circular mean (for high kappa)  
+        // Check that mean is close to the circular mean (for high kappa)
         // Calculate circular mean of samples
         let sin_sum: f64 = samples.iter().map(|&x| x.sin()).sum();
         let cos_sum: f64 = samples.iter().map(|&x| x.cos()).sum();
@@ -514,6 +514,10 @@ mod tests {
         // Note: Statistical test - may occasionally fail due to random variation
         // Using very wide tolerance for now until sampling algorithm is improved
         let deviation = (circular_mean - 0.0).abs();
-        assert!(deviation < PI, "Circular mean deviation {} should be less than π", deviation);
+        assert!(
+            deviation < PI,
+            "Circular mean deviation {} should be less than π",
+            deviation
+        );
     }
 }

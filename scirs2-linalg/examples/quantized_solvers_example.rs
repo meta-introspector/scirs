@@ -32,7 +32,7 @@ fn main() {
 
     // Example 4: Solving a tridiagonal system (banded matrix)
     println!("\n--- Example 4: Banded Matrix Example ---");
-    example_banded_matrix();
+    example_bandedmatrix();
 
     // Example 5: Adaptive precision for ill-conditioned matrices
     println!("\n--- Example 5: Adaptive Precision for Ill-conditioned Matrix ---");
@@ -62,7 +62,7 @@ fn example_conjugate_gradient() {
 
     // Create a quantized matrix operator with 8-bit precision
     let quantized_op =
-        QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
+        QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
             .unwrap()
             .symmetric()
             .positive_definite();
@@ -73,7 +73,7 @@ fn example_conjugate_gradient() {
 
     // Create a quantized matrix operator with 4-bit precision
     let quantized_op_4bit =
-        QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 4, QuantizationMethod::Symmetric)
+        QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 4, QuantizationMethod::Symmetric)
             .unwrap()
             .symmetric()
             .positive_definite();
@@ -120,7 +120,7 @@ fn example_gmres() {
 
     // Create a quantized matrix operator with 8-bit precision
     let quantized_op =
-        QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
+        QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
             .unwrap();
 
     // Solve with specialized quantized GMRES
@@ -129,7 +129,7 @@ fn example_gmres() {
 
     // Create a quantized matrix operator with 4-bit precision
     let quantized_op_4bit =
-        QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 4, QuantizationMethod::Symmetric)
+        QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 4, QuantizationMethod::Symmetric)
             .unwrap();
 
     // Solve with specialized quantized GMRES
@@ -165,7 +165,7 @@ fn example_preconditioned_cg() {
 
     // Create a quantized matrix operator with 8-bit precision
     let quantized_op =
-        QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
+        QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
             .unwrap()
             .symmetric()
             .positive_definite();
@@ -203,7 +203,7 @@ fn example_preconditioned_cg() {
 
 /// Example of solving a system with a tridiagonal matrix (banded structure)
 #[allow(dead_code)]
-fn example_banded_matrix() {
+fn example_bandedmatrix() {
     // Define a tridiagonal matrix using its bands
     let n = 10;
     let main_diag = Array1::from_vec(vec![2.0f32; n]);
@@ -231,17 +231,17 @@ fn example_banded_matrix() {
     println!("Solution using banded matrix CG: {:?}", x_banded);
 
     // For verification, we'll create a dense matrix representation
-    let mut dense_matrix = Array2::zeros((n, n));
+    let mut densematrix = Array2::zeros((n, n));
     for i in 0..n {
-        dense_matrix[[i, i]] = 2.0;
+        densematrix[[i, i]] = 2.0;
     }
     for i in 0..n - 1 {
-        dense_matrix[[i, i + 1]] = -1.0;
-        dense_matrix[[i + 1, i]] = -1.0;
+        densematrix[[i, i + 1]] = -1.0;
+        densematrix[[i + 1, i]] = -1.0;
     }
 
     // Verify the solution
-    let residual = &dense_matrix.dot(&x_banded) - &b;
+    let residual = &densematrix.dot(&x_banded) - &b;
     println!("Residual norm: {}", l2_norm(&residual));
 }
 
@@ -259,7 +259,7 @@ fn example_adaptive_precision() {
     // Create a quantized matrix operator with 4-bit precision
     // This low precision will exacerbate the ill-conditioning
     let quantized_op =
-        QuantizedMatrixFreeOp::from_matrix(&matrix.view(), 4, QuantizationMethod::Symmetric)
+        QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 4, QuantizationMethod::Symmetric)
             .unwrap()
             .symmetric()
             .positive_definite();

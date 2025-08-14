@@ -3,7 +3,7 @@
 //! This example shows how to work with temporal graphs where edges
 //! and nodes have time-dependent properties.
 
-use scirs2__graph::{
+use scirs2_graph::{
     temporal_betweenness_centrality, temporal_reachability, TemporalGraph, TimeInstant,
     TimeInterval,
 };

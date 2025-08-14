@@ -28,7 +28,7 @@ const CACHE_DIR_ENV: &str = "SCIRS2_CACHE_DIR";
 pub fn sha256_hash_file(path: &Path) -> std::result::Result<String, String> {
     use sha2::{Digest, Sha256};
 
-    let mut file = File::open(_path).map_err(|e| format!("Failed to open file: {e}"))?;
+    let mut file = File::open(path).map_err(|e| format!("Failed to open file: {e}"))?;
     let mut hasher = Sha256::new();
     let mut buffer = [0; 8192];
 
@@ -63,39 +63,39 @@ pub struct RegistryEntry {
 ///    - Linux/Unix: `~/.cache/scirs2-datasets` (respects XDG_CACHE_HOME)
 /// 3. Fallback to `~/.scirs2-datasets` if platform-specific directory fails
 #[allow(dead_code)]
-pub fn get_cache_dir() -> Result<PathBuf> {
+pub fn get_cachedir() -> Result<PathBuf> {
     // Check environment variable first
-    if let Ok(cache_dir) = std::env::var(CACHE_DIR_ENV) {
-        let cache_path = PathBuf::from(cache_dir);
-        ensure_directory_exists(&cache_path)?;
-        return Ok(cache_path);
+    if let Ok(cachedir) = std::env::var(CACHE_DIR_ENV) {
+        let cachepath = PathBuf::from(cachedir);
+        ensuredirectory_exists(&cachepath)?;
+        return Ok(cachepath);
     }
 
     // Try platform-specific cache directory
-    if let Some(cache_dir) = get_platform_cache_dir() {
-        ensure_directory_exists(&cache_dir)?;
-        return Ok(cache_dir);
+    if let Some(cachedir) = get_platform_cachedir() {
+        ensuredirectory_exists(&cachedir)?;
+        return Ok(cachedir);
     }
 
     // Fallback to home directory
-    let home_dir = dirs::home_dir()
+    let homedir = dirs::homedir()
         .ok_or_else(|| DatasetsError::CacheError("Could not find home directory".to_string()))?;
-    let cache_dir = home_dir.join(format!(".{CACHE_DIR_NAME}"));
-    ensure_directory_exists(&cache_dir)?;
+    let cachedir = homedir.join(format!(".{CACHE_DIR_NAME}"));
+    ensuredirectory_exists(&cachedir)?;
 
-    Ok(cache_dir)
+    Ok(cachedir)
 }
 
 /// Get platform-specific cache directory
 #[allow(dead_code)]
-fn get_platform_cache_dir() -> Option<PathBuf> {
+fn get_platform_cachedir() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
     {
-        dirs::data_local_dir().map(|dir| dir.join(CACHE_DIR_NAME))
+        dirs::data_localdir().map(|dir| dir.join(CACHE_DIR_NAME))
     }
     #[cfg(target_os = "macos")]
     {
-        dirs::home_dir().map(|dir| dir.join("Library").join("Caches").join(CACHE_DIR_NAME))
+        dirs::homedir().map(|dir| dir.join("Library").join("Caches").join(CACHE_DIR_NAME))
     }
     #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     {
@@ -103,16 +103,16 @@ fn get_platform_cache_dir() -> Option<PathBuf> {
         if let Ok(xdg_cache) = std::env::var("XDG_CACHE_HOME") {
             Some(PathBuf::from(xdg_cache).join(CACHE_DIR_NAME))
         } else {
-            dirs::home_dir().map(|home| home.join(".cache").join(CACHE_DIR_NAME))
+            dirs::homedir().map(|home| home.join(".cache").join(CACHE_DIR_NAME))
         }
     }
 }
 
 /// Ensure a directory exists, creating it if necessary
 #[allow(dead_code)]
-fn ensure_directory_exists(dir: &Path) -> Result<()> {
-    if !_dir.exists() {
-        fs::create_dir_all(_dir).map_err(|e| {
+fn ensuredirectory_exists(dir: &Path) -> Result<()> {
+    if !dir.exists() {
+        fs::createdir_all(dir).map_err(|e| {
             DatasetsError::CacheError(format!("Failed to create cache directory: {e}"))
         })?;
     }
@@ -142,15 +142,15 @@ pub fn fetch_data(
     registry_entry: Option<&RegistryEntry>,
 ) -> std::result::Result<PathBuf, String> {
     // Get the cache directory
-    let cache_dir = match get_cache_dir() {
+    let cachedir = match get_cachedir() {
         Ok(dir) => dir,
         Err(e) => return Err(format!("Failed to get cache directory: {e}")),
     };
 
     // Check if file exists in cache
-    let cache_path = cache_dir.join(filename);
-    if cache_path.exists() {
-        return Ok(cache_path);
+    let cachepath = cachedir.join(filename);
+    if cachepath.exists() {
+        return Ok(cachepath);
     }
 
     // If not in cache, fetch from the URL
@@ -160,8 +160,8 @@ pub fn fetch_data(
     };
 
     // Create a temporary file to download to
-    let temp_dir = tempfile::tempdir().map_err(|e| format!("Failed to create temp dir: {e}"))?;
-    let temp_file = temp_dir.path().join(filename);
+    let tempdir = tempfile::tempdir().map_err(|e| format!("Failed to create temp dir: {e}"))?;
+    let temp_file = tempdir.path().join(filename);
 
     // Download the file
     let response = ureq::get(_entry.url)
@@ -186,14 +186,14 @@ pub fn fetch_data(
     }
 
     // Move the file to the cache
-    fs::create_dir_all(&cache_dir).map_err(|e| format!("Failed to create cache dir: {e}"))?;
-    if let Some(parent) = cache_path.parent() {
-        fs::create_dir_all(parent).map_err(|e| format!("Failed to create cache dir: {e}"))?;
+    fs::createdir_all(&cachedir).map_err(|e| format!("Failed to create cache dir: {e}"))?;
+    if let Some(parent) = cachepath.parent() {
+        fs::createdir_all(parent).map_err(|e| format!("Failed to create cache dir: {e}"))?;
     }
 
-    fs::copy(&temp_file, &cache_path).map_err(|e| format!("Failed to copy to cache: {e}"))?;
+    fs::copy(&temp_file, &cachepath).map_err(|e| format!("Failed to copy to cache: {e}"))?;
 
-    Ok(cache_path)
+    Ok(cachepath)
 }
 
 /// Cache key for dataset caching with configuration-aware hashing
@@ -217,7 +217,7 @@ impl CacheKey {
         config.random_state.hash(&mut hasher);
 
         Self {
-            _name: name.to_string(),
+            name: name.to_string(),
             config_hash: format!("{:x}", hasher.finish()),
         }
     }
@@ -244,7 +244,7 @@ impl Hash for FileCacheKey {
 /// while maintaining the file-based persistence for long-term storage.
 pub struct DatasetCache {
     /// Directory for file-based caching
-    cache_dir: PathBuf,
+    cachedir: PathBuf,
     /// In-memory cache for frequently accessed datasets
     mem_cache: RefCell<TTLSizedCache<FileCacheKey, Vec<u8>>>,
     /// Maximum cache size in bytes (0 means unlimited)
@@ -255,7 +255,7 @@ pub struct DatasetCache {
 
 impl Default for DatasetCache {
     fn default() -> Self {
-        let cache_dir = get_cache_dir().expect("Could not get cache directory");
+        let cachedir = get_cachedir().expect("Could not get cache directory");
 
         let mem_cache = RefCell::new(
             CacheBuilder::new()
@@ -270,7 +270,7 @@ impl Default for DatasetCache {
             .unwrap_or(false);
 
         DatasetCache {
-            cache_dir,
+            cachedir,
             mem_cache,
             max_cache_size: DEFAULT_MAX_CACHE_SIZE,
             offline_mode,
@@ -293,7 +293,7 @@ impl DatasetCache {
             .unwrap_or(false);
 
         DatasetCache {
-            cache_dir,
+            cachedir,
             mem_cache,
             max_cache_size: DEFAULT_MAX_CACHE_SIZE,
             offline_mode,
@@ -301,7 +301,7 @@ impl DatasetCache {
     }
 
     /// Create a new dataset cache with custom settings
-    pub fn with_config(_cache_dir: PathBuf, cache_size: usize, ttlseconds: u64) -> Self {
+    pub fn with_config(_cachedir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
         let mem_cache = RefCell::new(
             CacheBuilder::new()
                 .with_size(cache_size)
@@ -314,7 +314,7 @@ impl DatasetCache {
             .unwrap_or(false);
 
         DatasetCache {
-            cache_dir,
+            cachedir,
             mem_cache,
             max_cache_size: DEFAULT_MAX_CACHE_SIZE,
             offline_mode,
@@ -323,7 +323,7 @@ impl DatasetCache {
 
     /// Create a new dataset cache with comprehensive configuration
     pub fn with_full_config(
-        cache_dir: PathBuf,
+        cachedir: PathBuf,
         cache_size: usize,
         ttl_seconds: u64,
         max_cache_size: u64,
@@ -337,7 +337,7 @@ impl DatasetCache {
         );
 
         DatasetCache {
-            cache_dir,
+            cachedir,
             mem_cache,
             max_cache_size,
             offline_mode,
@@ -345,9 +345,9 @@ impl DatasetCache {
     }
 
     /// Create the cache directory if it doesn't exist
-    pub fn ensure_cache_dir(&self) -> Result<()> {
-        if !self.cache_dir.exists() {
-            fs::create_dir_all(&self.cache_dir).map_err(|e| {
+    pub fn ensure_cachedir(&self) -> Result<()> {
+        if !self.cachedir.exists() {
+            fs::createdir_all(&self.cachedir).map_err(|e| {
                 DatasetsError::CacheError(format!("Failed to create cache directory: {e}"))
             })?;
         }
@@ -355,8 +355,8 @@ impl DatasetCache {
     }
 
     /// Get the path to a cached file
-    pub fn get_cached_path(&self, name: &str) -> PathBuf {
-        self.cache_dir.join(name)
+    pub fn get_cachedpath(&self, name: &str) -> PathBuf {
+        self.cachedir.join(name)
     }
 
     /// Check if a file is already cached (either in memory or on disk)
@@ -368,7 +368,7 @@ impl DatasetCache {
         }
 
         // Then check file system
-        self.get_cached_path(name).exists()
+        self.get_cachedpath(name).exists()
     }
 
     /// Read a cached file as bytes
@@ -383,7 +383,7 @@ impl DatasetCache {
         }
 
         // Fall back to file system cache
-        let path = self.get_cached_path(name);
+        let path = self.get_cachedpath(name);
         if !path.exists() {
             return Err(DatasetsError::CacheError(format!(
                 "Cached file does not exist: {name}"
@@ -405,7 +405,7 @@ impl DatasetCache {
 
     /// Write data to both the file cache and memory cache
     pub fn write_cached(&self, name: &str, data: &[u8]) -> Result<()> {
-        self.ensure_cache_dir()?;
+        self.ensure_cachedir()?;
 
         // Check if writing this file would exceed cache size limit
         if self.max_cache_size > 0 {
@@ -418,7 +418,7 @@ impl DatasetCache {
         }
 
         // Write to file system cache
-        let path = self.get_cached_path(name);
+        let path = self.get_cachedpath(name);
         let mut file = File::create(path)
             .map_err(|e| DatasetsError::CacheError(format!("Failed to create cache file: {e}")))?;
 
@@ -436,8 +436,8 @@ impl DatasetCache {
     /// Clear the entire cache (both memory and file-based)
     pub fn clear_cache(&self) -> Result<()> {
         // Clear file system cache
-        if self.cache_dir.exists() {
-            fs::remove_dir_all(&self.cache_dir)
+        if self.cachedir.exists() {
+            fs::removedir_all(&self.cachedir)
                 .map_err(|e| DatasetsError::CacheError(format!("Failed to clear cache: {e}")))?;
         }
 
@@ -450,7 +450,7 @@ impl DatasetCache {
     /// Remove a specific cached file (from both memory and file system)
     pub fn remove_cached(&self, name: &str) -> Result<()> {
         // Remove from file system
-        let path = self.get_cached_path(name);
+        let path = self.get_cachedpath(name);
         if path.exists() {
             fs::remove_file(path).map_err(|e| {
                 DatasetsError::CacheError(format!("Failed to remove cached file: {e}"))
@@ -466,7 +466,7 @@ impl DatasetCache {
 
     /// Compute a hash for a filename or URL
     pub fn hash_filename(name: &str) -> String {
-        let hash = blake3::hash(_name.as_bytes());
+        let hash = blake3::hash(name.as_bytes());
         hash.to_hex().to_string()
     }
 
@@ -474,8 +474,8 @@ impl DatasetCache {
     pub fn get_cache_size_bytes(&self) -> Result<u64> {
         let mut total_size = 0u64;
 
-        if self.cache_dir.exists() {
-            let entries = fs::read_dir(&self.cache_dir).map_err(|e| {
+        if self.cachedir.exists() {
+            let entries = fs::readdir(&self.cachedir).map_err(|e| {
                 DatasetsError::CacheError(format!("Failed to read cache directory: {e}"))
             })?;
 
@@ -499,7 +499,7 @@ impl DatasetCache {
     ///
     /// This method removes the oldest files first until there's enough space
     /// for the new file plus some buffer space.
-    fn cleanup_cache_to_fit(&self, neededsize: u64) -> Result<()> {
+    fn cleanup_cache_to_fit(&self, needed_size: u64) -> Result<()> {
         if self.max_cache_size == 0 {
             return Ok(()); // No _size limit
         }
@@ -517,8 +517,8 @@ impl DatasetCache {
         // Get all files with their modification times
         let mut files_with_times = Vec::new();
 
-        if self.cache_dir.exists() {
-            let entries = fs::read_dir(&self.cache_dir).map_err(|e| {
+        if self.cachedir.exists() {
+            let entries = fs::readdir(&self.cachedir).map_err(|e| {
                 DatasetsError::CacheError(format!("Failed to read cache directory: {e}"))
             })?;
 
@@ -548,7 +548,7 @@ impl DatasetCache {
             }
 
             // Remove from memory cache first
-            if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+            if let Some(filename) = path.filename().and_then(|n| n.to_str()) {
                 let key = FileCacheKey(filename.to_string());
                 self.mem_cache.borrow_mut().remove(&key);
             }
@@ -595,8 +595,8 @@ impl DatasetCache {
         let mut file_count = 0usize;
         let mut files = Vec::new();
 
-        if self.cache_dir.exists() {
-            let entries = fs::read_dir(&self.cache_dir).map_err(|e| {
+        if self.cachedir.exists() {
+            let entries = fs::readdir(&self.cachedir).map_err(|e| {
                 DatasetsError::CacheError(format!("Failed to read cache directory: {e}"))
             })?;
 
@@ -611,7 +611,7 @@ impl DatasetCache {
                         total_size += size;
                         file_count += 1;
 
-                        if let Some(filename) = entry.file_name().to_str() {
+                        if let Some(filename) = entry.filename().to_str() {
                             files.push(CacheFileInfo {
                                 name: filename.to_string(),
                                 size_bytes: size,
@@ -629,7 +629,7 @@ impl DatasetCache {
         Ok(DetailedCacheStats {
             total_size_bytes: total_size,
             file_count,
-            cache_dir: self.cache_dir.clone(),
+            cachedir: self.cachedir.clone(),
             max_cache_size: self.max_cache_size,
             offline_mode: self.offline_mode,
             files,
@@ -703,16 +703,16 @@ pub struct CacheManager {
 impl CacheManager {
     /// Create a new cache manager with default settings
     pub fn new() -> Result<Self> {
-        let cache_dir = get_cache_dir()?;
+        let cachedir = get_cachedir()?;
         Ok(Self {
-            cache: DatasetCache::with_config(cache_dir, DEFAULT_CACHE_SIZE, DEFAULT_CACHE_TTL),
+            cache: DatasetCache::with_config(cachedir, DEFAULT_CACHE_SIZE, DEFAULT_CACHE_TTL),
         })
     }
 
     /// Create a new cache manager with custom settings
-    pub fn with_config(_cache_dir: PathBuf, cache_size: usize, ttlseconds: u64) -> Self {
+    pub fn with_config(_cachedir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
         Self {
-            cache: DatasetCache::with_config(_cache_dir, cache_size, ttl_seconds),
+            cache: DatasetCache::with_config(_cachedir, cache_size, ttl_seconds),
         }
     }
 
@@ -761,7 +761,7 @@ impl CacheManager {
 
     /// Create a cache manager with comprehensive configuration
     pub fn with_full_config(
-        cache_dir: PathBuf,
+        cachedir: PathBuf,
         cache_size: usize,
         ttl_seconds: u64,
         max_cache_size: u64,
@@ -769,7 +769,7 @@ impl CacheManager {
     ) -> Self {
         Self {
             cache: DatasetCache::with_full_config(
-                cache_dir,
+                cachedir,
                 cache_size,
                 ttl_seconds,
                 max_cache_size,
@@ -780,12 +780,12 @@ impl CacheManager {
 
     /// Get basic cache statistics
     pub fn get_stats(&self) -> CacheStats {
-        let cache_dir = &self.cache.cache_dir;
+        let cachedir = &self.cache.cachedir;
         let mut total_size = 0u64;
         let mut file_count = 0usize;
 
-        if cache_dir.exists() {
-            if let Ok(entries) = fs::read_dir(cache_dir) {
+        if cachedir.exists() {
+            if let Ok(entries) = fs::readdir(cachedir) {
                 for entry in entries.flatten() {
                     if let Ok(metadata) = entry.metadata() {
                         if metadata.is_file() {
@@ -800,7 +800,7 @@ impl CacheManager {
         CacheStats {
             total_size_bytes: total_size,
             file_count,
-            cache_dir: cache_dir.clone(),
+            cachedir: cachedir.clone(),
         }
     }
 
@@ -846,11 +846,11 @@ impl CacheManager {
 
     /// List all cached files
     pub fn list_cached_files(&self) -> Result<Vec<String>> {
-        let cache_dir = &self.cache.cache_dir;
+        let cachedir = &self.cache.cachedir;
         let mut files = Vec::new();
 
-        if cache_dir.exists() {
-            let entries = fs::read_dir(cache_dir).map_err(|e| {
+        if cachedir.exists() {
+            let entries = fs::readdir(cachedir).map_err(|e| {
                 DatasetsError::CacheError(format!("Failed to read cache directory: {e}"))
             })?;
 
@@ -859,7 +859,7 @@ impl CacheManager {
                     DatasetsError::CacheError(format!("Failed to read directory entry: {e}"))
                 })?;
 
-                if let Some(filename) = entry.file_name().to_str() {
+                if let Some(filename) = entry.filename().to_str() {
                     files.push(filename.to_string());
                 }
             }
@@ -870,8 +870,8 @@ impl CacheManager {
     }
 
     /// Get cache directory path
-    pub fn cache_dir(&self) -> &PathBuf {
-        &self.cache.cache_dir
+    pub fn cachedir(&self) -> &PathBuf {
+        &self.cache.cachedir
     }
 
     /// Check if a file is cached
@@ -884,7 +884,7 @@ impl CacheManager {
         let stats = self.get_detailed_stats()?;
 
         println!("=== Cache Report ===");
-        println!("Cache Directory: {}", stats.cache_dir.display());
+        println!("Cache Directory: {}", stats.cachedir.display());
         println!(
             "Total Size: {} ({} files)",
             stats.formatted_size(),
@@ -928,7 +928,7 @@ pub struct CacheStats {
     /// Number of cached files
     pub file_count: usize,
     /// Cache directory path
-    pub cache_dir: PathBuf,
+    pub cachedir: PathBuf,
 }
 
 /// Detailed cache statistics with file-level information
@@ -938,7 +938,7 @@ pub struct DetailedCacheStats {
     /// Number of cached files
     pub file_count: usize,
     /// Cache directory path
-    pub cache_dir: PathBuf,
+    pub cachedir: PathBuf,
     /// Maximum cache size (0 = unlimited)
     pub max_cache_size: u64,
     /// Whether cache is in offline mode
@@ -1148,9 +1148,9 @@ impl BatchOperations {
         let mut result = BatchResult::new();
 
         if self.parallel {
-            self.batch_download_parallel(urls_and_names, &mut result)
+            self.batch_download_parallel(urls_andnames, &mut result)
         } else {
-            self.batch_download_sequential(urls_and_names, &mut result)
+            self.batch_download_sequential(urls_andnames, &mut result)
         }
 
         result.elapsed_time = start_time.elapsed();
@@ -1165,9 +1165,9 @@ impl BatchOperations {
         use std::thread;
 
         // Ensure cache directory exists before spawning threads
-        if let Err(e) = self.cache.cache.ensure_cache_dir() {
-            result.failure_count += urls_and_names.len();
-            for &(_, name) in urls_and_names {
+        if let Err(e) = self.cache.cache.ensure_cachedir() {
+            result.failure_count += urls_andnames.len();
+            for &(_, name) in urls_andnames {
                 result
                     .failures
                     .push((name.to_string(), format!("Cache setup failed: {e}")));
@@ -1176,17 +1176,17 @@ impl BatchOperations {
         }
 
         let result_arc = Arc::new(Mutex::new(BatchResult::new()));
-        let cache_dir = self.cache.cache.cache_dir.clone();
+        let cachedir = self.cache.cache.cachedir.clone();
         let max_retries = self.max_retries;
         let retry_delay = self.retry_delay;
 
-        let handles: Vec<_> = urls_and_names
+        let handles: Vec<_> = urls_andnames
             .iter()
             .map(|&(url, name)| {
                 let result_clone = Arc::clone(&result_arc);
                 let url = url.to_string();
                 let name = name.to_string();
-                let cache_dir = cache_dir.clone();
+                let cachedir = cachedir.clone();
 
                 thread::spawn(move || {
                     let mut success = false;
@@ -1197,7 +1197,7 @@ impl BatchOperations {
                         match download_data(&url, false) {
                             Ok(data) => {
                                 // Write directly to filesystem (bypassing RefCell memory cache)
-                                let path = cache_dir.join(&name);
+                                let path = cachedir.join(&name);
                                 match File::create(&path) {
                                     Ok(mut file) => match file.write_all(&data) {
                                         Ok(_) => {
@@ -1263,7 +1263,7 @@ impl BatchOperations {
 
     #[cfg(feature = "download")]
     fn batch_download_sequential(&self, urls_andnames: &[(&str, &str)], result: &mut BatchResult) {
-        for &(url, name) in urls_and_names {
+        for &(url, name) in urls_andnames {
             let mut success = false;
             let mut last_error = String::new();
 
@@ -1302,13 +1302,13 @@ impl BatchOperations {
         let mut result = BatchResult::new();
 
         for &(filename, expected_hash) in files_and_hashes {
-            match self.cache.cache.get_cached_path(filename).exists() {
-                true => match sha256_hash_file(&self.cache.cache.get_cached_path(filename)) {
+            match self.cache.cache.get_cachedpath(filename).exists() {
+                true => match sha256_hash_file(&self.cache.cache.get_cachedpath(filename)) {
                     Ok(actual_hash) => {
                         if actual_hash == expected_hash {
                             result.success_count += 1;
                             if let Ok(metadata) =
-                                std::fs::metadata(self.cache.cache.get_cached_path(filename))
+                                std::fs::metadata(self.cache.cache.get_cachedpath(filename))
                             {
                                 result.total_bytes += metadata.len();
                             }
@@ -1361,11 +1361,11 @@ impl BatchOperations {
             });
 
             if should_remove {
-                let file_path = self.cache.cache.get_cached_path(&filename);
+                let filepath = self.cache.cache.get_cachedpath(&filename);
 
                 // Check age if max_age_days is specified
                 let remove_due_to_age = if let Some(max_age) = max_age_days {
-                    if let Ok(metadata) = std::fs::metadata(&file_path) {
+                    if let Ok(metadata) = std::fs::metadata(&filepath) {
                         if let Ok(modified) = metadata.modified() {
                             if let Ok(age) = now.duration_since(modified) {
                                 age.as_secs() > (max_age as u64 * 24 * 3600)
@@ -1386,7 +1386,7 @@ impl BatchOperations {
                     match self.cache.remove(&filename) {
                         Ok(_) => {
                             result.success_count += 1;
-                            if let Ok(metadata) = std::fs::metadata(&file_path) {
+                            if let Ok(metadata) = std::fs::metadata(&filepath) {
                                 result.total_bytes += metadata.len();
                             }
                         }
@@ -1560,8 +1560,8 @@ impl BatchOperations {
         let cached_files = self.cache.list_cached_files()?;
 
         for filename in cached_files {
-            let file_path = self.cache.cache.get_cached_path(&filename);
-            match std::fs::metadata(&file_path) {
+            let filepath = self.cache.cache.get_cachedpath(&filename);
+            match std::fs::metadata(&filepath) {
                 Ok(metadata) => {
                     result.success_count += 1;
                     result.total_bytes += metadata.len();
@@ -1624,8 +1624,8 @@ mod tests {
 
     #[test]
     fn test_batch_operations_creation() {
-        let temp_dir = TempDir::new().unwrap();
-        let cache_manager = CacheManager::with_config(temp_dir.path().to_path_buf(), 10, 3600);
+        let tempdir = TempDir::new().unwrap();
+        let cache_manager = CacheManager::with_config(tempdir.path().topath_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager)
             .with_parallel(false)
             .with_retry_config(2, std::time::Duration::from_millis(500));
@@ -1636,8 +1636,8 @@ mod tests {
 
     #[test]
     fn test_selective_cleanup() {
-        let temp_dir = TempDir::new().unwrap();
-        let cache_manager = CacheManager::with_config(temp_dir.path().to_path_buf(), 10, 3600);
+        let tempdir = TempDir::new().unwrap();
+        let cache_manager = CacheManager::with_config(tempdir.path().topath_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager);
 
         // Create some test files
@@ -1669,8 +1669,8 @@ mod tests {
 
     #[test]
     fn test_batch_process() {
-        let temp_dir = TempDir::new().unwrap();
-        let cache_manager = CacheManager::with_config(temp_dir.path().to_path_buf(), 10, 3600);
+        let tempdir = TempDir::new().unwrap();
+        let cache_manager = CacheManager::with_config(tempdir.path().topath_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager).with_parallel(false);
 
         // Create test files
@@ -1690,7 +1690,7 @@ mod tests {
         let files = vec!["file1.dat".to_string(), "file2.dat".to_string()];
 
         // Process files (verify they're non-empty)
-        let result = batch_ops.batch_process(&files, |_name, data| {
+        let result = batch_ops.batch_process(&files, |name, data| {
             if data.is_empty() {
                 Err("Empty file")
             } else {
@@ -1705,8 +1705,8 @@ mod tests {
 
     #[test]
     fn test_get_cache_statistics() {
-        let temp_dir = TempDir::new().unwrap();
-        let cache_manager = CacheManager::with_config(temp_dir.path().to_path_buf(), 10, 3600);
+        let tempdir = TempDir::new().unwrap();
+        let cache_manager = CacheManager::with_config(tempdir.path().topath_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager);
 
         // Start with empty cache
@@ -1744,19 +1744,19 @@ mod tests {
 
     #[test]
     fn test_cache_manager_creation() {
-        let temp_dir = TempDir::new().unwrap();
-        let manager = CacheManager::with_config(temp_dir.path().to_path_buf(), 10, 3600);
+        let tempdir = TempDir::new().unwrap();
+        let manager = CacheManager::with_config(tempdir.path().topath_buf(), 10, 3600);
         let stats = manager.get_stats();
         assert_eq!(stats.file_count, 0);
     }
 
     #[test]
     fn test_cache_stats_formatting() {
-        let temp_dir = TempDir::new().unwrap();
+        let tempdir = TempDir::new().unwrap();
         let stats = CacheStats {
             total_size_bytes: 1024,
             file_count: 1,
-            cache_dir: temp_dir.path().to_path_buf(),
+            cachedir: tempdir.path().topath_buf(),
         };
 
         assert_eq!(stats.formatted_size(), "1.0 KB");
@@ -1764,7 +1764,7 @@ mod tests {
         let stats_large = CacheStats {
             total_size_bytes: 1024 * 1024 * 1024,
             file_count: 1,
-            cache_dir: temp_dir.path().to_path_buf(),
+            cachedir: tempdir.path().topath_buf(),
         };
 
         assert_eq!(stats_large.formatted_size(), "1.0 GB");
@@ -1782,21 +1782,21 @@ mod tests {
     }
 
     #[test]
-    fn test_platform_cache_dir() {
-        let cache_dir = get_platform_cache_dir();
+    fn test_platform_cachedir() {
+        let cachedir = get_platform_cachedir();
         // Should work on any platform
-        assert!(cache_dir.is_some() || cfg!(target_os = "unknown"));
+        assert!(cachedir.is_some() || cfg!(target_os = "unknown"));
 
-        if let Some(dir) = cache_dir {
+        if let Some(dir) = cachedir {
             assert!(dir.to_string_lossy().contains("scirs2-datasets"));
         }
     }
 
     #[test]
     fn test_cache_size_management() {
-        let temp_dir = TempDir::new().unwrap();
+        let tempdir = TempDir::new().unwrap();
         let cache = DatasetCache::with_full_config(
-            temp_dir.path().to_path_buf(),
+            tempdir.path().topath_buf(),
             10,
             3600,
             2048, // 2KB limit
@@ -1827,8 +1827,8 @@ mod tests {
 
     #[test]
     fn test_offline_mode() {
-        let temp_dir = TempDir::new().unwrap();
-        let mut cache = DatasetCache::new(temp_dir.path().to_path_buf());
+        let tempdir = TempDir::new().unwrap();
+        let mut cache = DatasetCache::new(tempdir.path().topath_buf());
 
         assert!(!cache.is_offline());
         cache.set_offline_mode(true);
@@ -1837,8 +1837,8 @@ mod tests {
 
     #[test]
     fn test_detailed_stats() {
-        let temp_dir = TempDir::new().unwrap();
-        let cache = DatasetCache::new(temp_dir.path().to_path_buf());
+        let tempdir = TempDir::new().unwrap();
+        let cache = DatasetCache::new(tempdir.path().topath_buf());
 
         let test_data = vec![1, 2, 3, 4, 5];
         cache.write_cached("test.dat", &test_data).unwrap();
@@ -1853,14 +1853,14 @@ mod tests {
 
     #[test]
     fn test_cache_manager() {
-        let temp_dir = TempDir::new().unwrap();
-        let manager = CacheManager::with_config(temp_dir.path().to_path_buf(), 10, 3600);
+        let tempdir = TempDir::new().unwrap();
+        let manager = CacheManager::with_config(tempdir.path().topath_buf(), 10, 3600);
 
         let stats = manager.get_stats();
         assert_eq!(stats.file_count, 0);
         assert_eq!(stats.total_size_bytes, 0);
 
-        assert_eq!(manager.cache_dir(), &temp_dir.path().to_path_buf());
+        assert_eq!(manager.cachedir(), &tempdir.path().topath_buf());
     }
 
     #[test]

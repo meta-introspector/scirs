@@ -166,9 +166,7 @@ impl ClusterManager {
                 NodeDiscoveryMethod::Multicast { group, port } => {
                     Self::multicast_discovery(group, *port)?
                 }
-                NodeDiscoveryMethod::DnsService {
-                    service_name,
-                } => {
+                NodeDiscoveryMethod::DnsService { service_name } => {
                     // Placeholder implementation
                     vec![]
                 }

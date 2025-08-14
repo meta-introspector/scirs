@@ -352,8 +352,7 @@ fn demonstrate_performance_comparison() -> Result<()> {
 
     // Performance comparison
     println!("\n📊 Comparison Summary:");
-    let neural_throughput =
-        (testdata.len() as f64) / (neural_time.as_secs_f64() * 1024.0 * 1024.0);
+    let neural_throughput = (testdata.len() as f64) / (neural_time.as_secs_f64() * 1024.0 * 1024.0);
     let quantum_throughput =
         (testdata.len() as f64) / (quantum_time.as_secs_f64() * 1024.0 * 1024.0);
 

@@ -20,8 +20,8 @@ fn main() {
 
     // Generate random matrices for testing
     println!("Generating random matrices...");
-    let a = generate_random_matrix(m, k);
-    let b = generate_random_matrix(k, n);
+    let a = generate_randommatrix(m, k);
+    let b = generate_randommatrix(k, n);
     let v = generate_random_vector(k);
 
     println!("\nPerforming matrix-matrix multiplication tests...");
@@ -87,10 +87,10 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn generate_random_matrix(rows: usize, cols: usize) -> Array2<f32> {
-    let mut matrix = Array2::zeros((_rows, cols));
+fn generate_randommatrix(rows: usize, cols: usize) -> Array2<f32> {
+    let mut matrix = Array2::zeros((rows, cols));
 
-    for i in 0.._rows {
+    for i in 0..rows {
         for j in 0..cols {
             matrix[[i, j]] = rand::random::<f32>() * 2.0 - 1.0; // Values between -1 and 1
         }
@@ -101,9 +101,9 @@ fn generate_random_matrix(rows: usize, cols: usize) -> Array2<f32> {
 
 #[allow(dead_code)]
 fn generate_random_vector(length: usize) -> Array1<f32> {
-    let mut vector = Array1::zeros(_length);
+    let mut vector = Array1::zeros(length);
 
-    for i in 0.._length {
+    for i in 0..length {
         vector[i] = rand::random::<f32>() * 2.0 - 1.0; // Values between -1 and 1
     }
 

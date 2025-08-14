@@ -55,8 +55,8 @@ where
 /// assert_eq!(unimodal_result.counts, vec![3]);
 ///
 /// // Multimodal data
-/// let multi_data = array![1, 2, 2, 3, 3, 4];
-/// let multimodal_result = mode(&multi_data.view(), ModeMethod::MultiModal).unwrap();
+/// let multidata = array![1, 2, 2, 3, 3, 4];
+/// let multimodal_result = mode(&multidata.view(), ModeMethod::MultiModal).unwrap();
 /// assert_eq!(multimodal_result.values, vec![2, 3]);
 /// assert_eq!(multimodal_result.counts, vec![2, 2]);
 /// ```

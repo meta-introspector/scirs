@@ -223,7 +223,7 @@ impl SchrodingerSolver {
     ) -> Result<Vec<QuantumState>> {
         let mut states = vec![initial_state.clone()];
         let mut current_state = initial_state.clone();
-        
+
         // Ensure x and psi have consistent lengths
         if current_state.x.len() != current_state.psi.len() {
             // Resize x to match psi if they differ (e.g., due to FFT padding requirements)
@@ -233,7 +233,7 @@ impl SchrodingerSolver {
             current_state.x = Array1::linspace(x_min, x_max, n);
             current_state.dx = (x_max - x_min) / (n - 1) as f64;
         }
-        
+
         let n_steps = (t_final / self.dt).ceil() as usize;
 
         match self.method {
@@ -290,7 +290,7 @@ impl SchrodingerSolver {
 
         // Potential energy evolution (half step)
         let v = self.potential.evaluate_array(&state.x.view());
-        
+
         for i in 0..n {
             let phase = -v[i] * self.dt / (2.0 * REDUCED_PLANCK);
             state.psi[i] *= Complex64::new(phase.cos(), phase.sin());
@@ -652,24 +652,24 @@ impl SchrodingerSolver {
         mass: f64,
     ) -> QuantumState {
         let norm = 1.0 / (2.0 * PI * sigma.powi(2)).powf(0.25);
-        
+
         // For FFT efficiency, ensure we use a power of 2 size
         let original_n = x.len();
         let fft_n = original_n.next_power_of_two();
-        
+
         // Create arrays with appropriate size
         let (x_final, psi_final) = if fft_n != original_n {
             // Need to pad to power of 2
             let x_min = x[0];
             let x_max = x[original_n - 1];
             let x_padded = Array1::linspace(x_min, x_max, fft_n);
-            
+
             let psi_padded = x_padded.mapv(|xi| {
                 let gaussian = norm * (-(xi - x0).powi(2) / (4.0 * sigma.powi(2))).exp();
                 let phase = k0 * xi;
                 Complex64::new(gaussian * phase.cos(), gaussian * phase.sin())
             });
-            
+
             (x_padded, psi_padded)
         } else {
             // Already a power of 2

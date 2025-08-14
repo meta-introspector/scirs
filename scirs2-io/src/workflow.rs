@@ -378,7 +378,7 @@ impl WorkflowExecutor {
     /// Create a new workflow executor
     pub fn new(config: ExecutorConfig) -> Self {
         Self {
-            config: config,
+            config,
             state: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -657,9 +657,7 @@ impl WorkflowExecutor {
             state.end_time = Some(Utc::now());
             Ok(())
         } else {
-            Err(IoError::Other(format!(
-                "Execution {executionid} not found"
-            )))
+            Err(IoError::Other(format!("Execution {executionid} not found")))
         }
     }
 }
@@ -914,7 +912,7 @@ pub mod scheduling {
         pub fn new(executor: Arc<WorkflowExecutor>) -> Self {
             Self {
                 schedules: HashMap::new(),
-                executor: executor,
+                executor,
                 running: Arc::new(Mutex::new(false)),
             }
         }
@@ -1534,7 +1532,7 @@ pub mod events {
                 event_rx: rx,
                 event_tx: tx,
                 rules: Vec::new(),
-                executor: executor,
+                executor,
             }
         }
 

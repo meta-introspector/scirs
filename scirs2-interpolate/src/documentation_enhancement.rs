@@ -548,7 +548,7 @@ impl DocumentationEnhancer {
     }
 
     /// Validate a specific example
-    fn validate_example(&self, exampleid: &str) -> InterpolateResult<ExampleValidation> {
+    fn validate_example(&self, example_id: &str) -> InterpolateResult<ExampleValidation> {
         // Simulate example validation
         let (compiles, executes, issues, suggestions) = match example_id {
             "basic_linear_interpolation" => (
@@ -1189,11 +1189,11 @@ let result = spline.evaluate_batch(&x_new.view())?;"#
     fn create_rbf_example(&self) -> CodeExample {
         CodeExample {
             title: "RBF Interpolation for Scattered Data".to_string(),
-            code: r#"let points = Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])?;
+            code: r#"let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])?;
 let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
 
 let rbf = make_rbf_interpolator(&points.view(), &values.view(), RBFKernel::Gaussian, Some(1.0))?;
-let query = Array2::fromshape_vec((1, 2), vec![0.5, 0.5])?;
+let query = Array2::from_shape_vec((1, 2), vec![0.5, 0.5])?;
 let result = rbf.predict(&query.view())?;"#.to_string(),
             expected_output: None,
             explanation: "RBF interpolation works well for scattered data in multiple dimensions".to_string(),

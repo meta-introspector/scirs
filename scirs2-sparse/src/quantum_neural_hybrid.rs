@@ -723,7 +723,7 @@ mod tests {
 
         assert_eq!(processor.hybrid_state.quantum_coherence, 1.0);
         assert_eq!(processor.hybrid_state.neural_confidence, 1.0);
-        assert_eq!(processor.performance_fusion.fusionweights.len(), 2);
+        assert_eq!(processor.performance_fusion.fusion_weights.len(), 2);
     }
 
     #[test]

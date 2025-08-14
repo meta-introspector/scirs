@@ -1,4 +1,4 @@
-use scirs2__special::{hurwitz_zeta, zeta, zetac};
+use scirs2_special::{hurwitz_zeta, zeta, zetac};
 use std::f64::consts::PI;
 
 #[allow(unused_variables)]

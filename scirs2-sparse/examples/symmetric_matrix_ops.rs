@@ -4,7 +4,7 @@
 // and the optimized operations that take advantage of symmetry.
 
 use ndarray::Array1;
-use scirs2__sparse::{
+use scirs2_sparse::{
     sparray::SparseArray,
     sym_coo::SymCooArray,
     sym_coo::SymCooMatrix,

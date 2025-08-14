@@ -118,12 +118,12 @@ fn demonstrate_classification_datasets() -> Result<(), Box<dyn std::error::Error
     println!("  Samples: {}", titanic.n_samples());
     println!("  Features: {}", titanic.n_features());
 
-    if let Some(feature_names) = titanic.feature_names() {
-        println!("  Features: {feature_names:?}");
+    if let Some(featurenames) = titanic.featurenames() {
+        println!("  Features: {featurenames:?}");
     }
 
-    if let Some(target_names) = titanic.target_names() {
-        println!("  Classes: {target_names:?}");
+    if let Some(targetnames) = titanic.targetnames() {
+        println!("  Classes: {targetnames:?}");
     }
 
     // Analyze class distribution
@@ -197,8 +197,8 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Samples: {}", housing.n_samples());
     println!("  Features: {}", housing.n_features());
 
-    if let Some(feature_names) = housing.feature_names() {
-        println!("  Features: {feature_names:?}");
+    if let Some(featurenames) = housing.featurenames() {
+        println!("  Features: {featurenames:?}");
     }
 
     // Analyze target distribution
@@ -265,9 +265,9 @@ fn demonstrate_healthcare_datasets() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Samples: {}", heart.n_samples());
     println!("  Features: {}", heart.n_features());
 
-    if let Some(feature_names) = heart.feature_names() {
-        println!("  Clinical features: {:?}", &feature_names[..5]); // Show first 5
-        println!("  ... and {} more features", feature_names.len() - 5);
+    if let Some(featurenames) = heart.featurenames() {
+        println!("  Clinical features: {:?}", &featurenames[..5]); // Show first 5
+        println!("  ... and {} more features", featurenames.len() - 5);
     }
 
     // Analyze risk factors
@@ -458,7 +458,7 @@ fn format_number(n: usize) -> String {
 /// Demonstrate dataset information display
 #[allow(dead_code)]
 fn show_dataset_info(name: &str, dataset: &scirs2_datasets::utils::Dataset) {
-    println!("{_name}:");
+    println!("{name}:");
     println!("  Samples: {}", format_number(dataset.n_samples()));
     println!("  Features: {}", dataset.n_features());
     println!(

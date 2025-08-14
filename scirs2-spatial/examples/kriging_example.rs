@@ -403,7 +403,7 @@ fn uncertainty_example() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Helper function to create synthetic spatial data
 #[allow(dead_code)]
-fn create_synthetic_data(_n_points: usize, noiselevel: f64) -> (Array2<f64>, Array1<f64>) {
+fn create_synthetic_data(_n_points: usize, noise_level: f64) -> (Array2<f64>, Array1<f64>) {
     use rand::Rng;
     let mut rng = rand::rng();
 
@@ -424,7 +424,7 @@ fn create_synthetic_data(_n_points: usize, noiselevel: f64) -> (Array2<f64>, Arr
         values[i] = true_value + noise;
     }
 
-    (_points..values)
+    (points, values)
 }
 
 /// Display variogram characteristics

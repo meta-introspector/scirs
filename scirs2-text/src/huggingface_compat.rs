@@ -1510,7 +1510,11 @@ impl HfHub {
     }
 
     /// Get trending models
-    pub fn trending_models(&self, selfperiod: &str, limit: Option<usize>) -> Result<Vec<HfModelInfo>> {
+    pub fn trending_models(
+        &self,
+        selfperiod: &str,
+        limit: Option<usize>,
+    ) -> Result<Vec<HfModelInfo>> {
         let mut models = self.list_models(None, None)?;
 
         // Sort by downloads (as a proxy for trending)

@@ -643,21 +643,21 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
         let gradient_norm = gradient.mapv(|x| x * x).sum().sqrt();
 
         // Curvature-based adaptation
-        let curvature_factor =
-            if let Some(hessian) = T::hessian(&self.parameters.view(), datapoint) {
-                let eigenvalues = self.approximate_eigenvalues(&hessian);
-                let condition_number = eigenvalues
+        let curvature_factor = if let Some(hessian) = T::hessian(&self.parameters.view(), datapoint)
+        {
+            let eigenvalues = self.approximate_eigenvalues(&hessian);
+            let condition_number = eigenvalues
+                .iter()
+                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .unwrap_or(&1.0)
+                / eigenvalues
                     .iter()
-                    .max_by(|a, b| a.partial_cmp(b).unwrap())
-                    .unwrap_or(&1.0)
-                    / eigenvalues
-                        .iter()
-                        .min_by(|a, b| a.partial_cmp(b).unwrap())
-                        .unwrap_or(&1.0);
-                1.0 / condition_number.sqrt()
-            } else {
-                1.0
-            };
+                    .min_by(|a, b| a.partial_cmp(b).unwrap())
+                    .unwrap_or(&1.0);
+            1.0 / condition_number.sqrt()
+        } else {
+            1.0
+        };
 
         // Performance-based adaptation
         let performance_factor = if self.performance_tracker.is_improving() {

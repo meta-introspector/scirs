@@ -21,7 +21,7 @@ pub struct AdvancedParallelConfig {
     /// Maximum number of threads to use
     pub max_threads: usize,
     /// Minimum data size per thread
-    pub min_chunk_size: usize,
+    pub min_chunksize: usize,
     /// Enable work-stealing algorithms
     pub enable_work_stealing: bool,
     /// Enable NUMA-aware scheduling
@@ -38,7 +38,7 @@ impl Default for AdvancedParallelConfig {
     fn default() -> Self {
         Self {
             max_threads: num_threads(),
-            min_chunk_size: 1000,
+            min_chunksize: 1000,
             enable_work_stealing: true,
             enable_numa_aware: false,
             load_balancing: LoadBalancingStrategy::Dynamic,
@@ -76,14 +76,14 @@ pub struct ParallelExecutionMetrics {
 pub struct AdvancedParallelProcessor {
     config: AdvancedParallelConfig,
     performance_history: Arc<Mutex<Vec<ParallelExecutionMetrics>>>,
-    adaptive_chunk_size: AtomicUsize,
+    adaptive_chunksize: AtomicUsize,
 }
 
 impl AdvancedParallelProcessor {
     /// Create a new advanced-parallel processor
     pub fn new(config: AdvancedParallelConfig) -> Self {
         Self {
-            adaptive_chunk_size: AtomicUsize::new(_config.min_chunk_size),
+            adaptive_chunksize: AtomicUsize::new(_config.min_chunksize),
             config,
             performance_history: Arc::new(Mutex::new(Vec::new())),
         }
@@ -112,15 +112,15 @@ impl AdvancedParallelProcessor {
             .build();
 
         // Adaptive thread and chunk size determination
-        let (num_threads, chunk_size) = self.determine_optimal_parallelization(n, &context)?;
+        let (num_threads, chunksize) = self.determine_optimal_parallelization(n, &context)?;
 
         let result = match self.config.load_balancing {
             LoadBalancingStrategy::Static => {
-                self.process_batch_static(data, num_threads, chunk_size)
+                self.process_batch_static(data, num_threads, chunksize)
             }
             LoadBalancingStrategy::Dynamic => self.process_batch_dynamic(data, num_threads),
             LoadBalancingStrategy::Guided => {
-                self.process_batch_guided(data, num_threads, chunk_size)
+                self.process_batch_guided(data, num_threads, chunksize)
             }
             LoadBalancingStrategy::Adaptive => {
                 self.process_batch_adaptive(data, num_threads, &context)
@@ -149,7 +149,7 @@ impl AdvancedParallelProcessor {
 
         // Adaptive chunk size update
         if self.config.adaptive_scaling {
-            self.update_adaptive_chunk_size(&metrics, n);
+            self.update_adaptive_chunksize(&metrics, n);
         }
 
         result.map(|mut r| {
@@ -198,7 +198,7 @@ impl AdvancedParallelProcessor {
     pub fn process_time_series<F, D>(
         &self,
         data: &ArrayBase<D, Ix1>,
-        window_size: usize,
+        windowsize: usize,
         operations: &[TimeSeriesOperation],
     ) -> StatsResult<AdvancedParallelTimeSeriesResult<F>>
     where
@@ -212,25 +212,25 @@ impl AdvancedParallelProcessor {
             return Err(ErrorMessages::empty_array("data"));
         }
 
-        if window_size == 0 {
+        if windowsize == 0 {
             return Err(ErrorMessages::non_positive_value(
-                "window_size",
-                window_size as f64,
+                "windowsize",
+                windowsize as f64,
             ));
         }
 
-        if window_size > n {
-            return Err(ErrorMessages::insufficient_data(
+        if windowsize > n {
+            return Err(ErrorMessages::insufficientdata(
                 "time series analysis",
-                window_size,
+                windowsize,
                 n,
             ));
         }
 
-        let num_windows = n - window_size + 1;
-        let optimal_threads = self.determine_time_series_threads(num_windows, window_size);
+        let num_windows = n - windowsize + 1;
+        let optimal_threads = self.determine_time_series_threads(num_windows, windowsize);
 
-        self.parallel_time_series_computation(data, window_size, operations, optimal_threads)
+        self.parallel_time_series_computation(data, windowsize, operations, optimal_threads)
     }
 
     /// Parallel mean computation with optimized chunking
@@ -246,10 +246,10 @@ impl AdvancedParallelProcessor {
             return Err(ErrorMessages::empty_array("data"));
         }
 
-        let chunk_size = (n / self.config.max_threads).max(self.config.min_chunk_size);
+        let chunksize = (n / self.config.max_threads).max(self.config.min_chunksize);
 
         // Parallel sum computation
-        let chunk_sums: Vec<F> = par_chunks(data.as_slice().unwrap(), chunk_size)
+        let chunk_sums: Vec<F> = par_chunks(data.as_slice().unwrap(), chunksize)
             .map(|chunk| chunk.iter().fold(F::zero(), |acc, &val| acc + val))
             .collect();
 
@@ -286,33 +286,33 @@ impl AdvancedParallelProcessor {
 
     fn determine_optimal_parallelization(
         &self,
-        data_size: usize, _context: &crate::advanced_error_enhancements_v2::AdvancedErrorContext,
+        datasize: usize, _context: &crate::advanced_error_enhancements_v2::AdvancedErrorContext,
     ) -> StatsResult<(usize, usize)> {
         let max_threads = self.config.max_threads.min(num_threads());
-        let min_chunk = self.config.min_chunk_size;
+        let min_chunk = self.config.min_chunksize;
 
-        // Adaptive logic based on data _size and historical performance
-        let optimal_threads = if data_size < min_chunk * 2 {
+        // Adaptive logic based on data size and historical performance
+        let optimal_threads = if datasize < min_chunk * 2 {
             1
-        } else if data_size < min_chunk * max_threads {
-            (data_size / min_chunk).max(2).min(max_threads)
+        } else if datasize < min_chunk * max_threads {
+            (datasize / min_chunk).max(2).min(max_threads)
         } else {
             max_threads
         };
 
-        let chunk_size = if self.config.adaptive_scaling {
-            self.adaptive_chunk_size.load(Ordering::Relaxed)
+        let chunksize = if self.config.adaptive_scaling {
+            self.adaptive_chunksize.load(Ordering::Relaxed)
         } else {
-            (data_size / optimal_threads).max(min_chunk)
+            (datasize / optimal_threads).max(min_chunk)
         };
 
-        Ok((optimal_threads, chunk_size))
+        Ok((optimal_threads, chunksize))
     }
 
     fn process_batch_static<F, D>(
         &self,
         data: &ArrayBase<D, Ix1>, _num_threads: usize,
-        chunk_size: usize,
+        chunksize: usize,
     ) -> StatsResult<AdvancedParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
@@ -323,7 +323,7 @@ impl AdvancedParallelProcessor {
 
         // Parallel reduction for basic statistics
         let chunk_results: Vec<ChunkStatistics<F>> =
-            par_chunks(data.as_slice().unwrap(), chunk_size)
+            par_chunks(data.as_slice().unwrap(), chunksize)
                 .map(|chunk| self.compute_chunk_statistics(chunk))
                 .collect();
 
@@ -340,13 +340,13 @@ impl AdvancedParallelProcessor {
         + std::fmt::Display,
     {
         // Work-stealing implementation would go here
-        self.process_batch_static(data_num_threads, self.config.min_chunk_size)
+        self.process_batch_static(data_num_threads, self.config.min_chunksize)
     }
 
     fn process_batch_guided<F, D>(
         &self,
         data: &ArrayBase<D, Ix1>, _num_threads: usize,
-        initial_chunk_size: usize,
+        initial_chunksize: usize,
     ) -> StatsResult<AdvancedParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
@@ -354,7 +354,7 @@ impl AdvancedParallelProcessor {
         + std::fmt::Display,
     {
         // Guided scheduling with decreasing chunk sizes
-        self.process_batch_static(data_num_threads, initial_chunk_size)
+        self.process_batch_static(data_num_threads, initial_chunksize)
     }
 
     fn process_batch_adaptive<F, D>(
@@ -368,8 +368,8 @@ impl AdvancedParallelProcessor {
         + std::fmt::Display,
     {
         // Adaptive strategy based on data characteristics and historical performance
-        let chunk_size = self.adaptive_chunk_size.load(Ordering::Relaxed);
-        self.process_batch_static(data, num_threads, chunk_size)
+        let chunksize = self.adaptive_chunksize.load(Ordering::Relaxed);
+        self.process_batch_static(data, num_threads, chunksize)
     }
 
     fn compute_chunk_statistics<F>(&self, chunk: &[F]) -> ChunkStatistics<F>
@@ -459,8 +459,8 @@ impl AdvancedParallelProcessor {
         n_cols: usize,
         operation: &MatrixOperationType,
     ) -> f64 {
-        let base_size = (n_rows * n_cols * std::mem::size_of::<F>()) as f64;
-        let result_size = match operation {
+        let basesize = (n_rows * n_cols * std::mem::size_of::<F>()) as f64;
+        let resultsize = match operation {
             MatrixOperationType::RowStatistics | MatrixOperationType::ColumnStatistics => {
                 std::cmp::max(n_rows, n_cols) * std::mem::size_of::<F>()
             }
@@ -469,37 +469,37 @@ impl AdvancedParallelProcessor {
             }
             MatrixOperationType::DistanceMatrix => n_rows * n_rows * std::mem::size_of::<F>(),
         } as f64;
-        (base_size + result_size) / (1024.0 * 1024.0)
+        (basesize + resultsize) / (1024.0 * 1024.0)
     }
 
     fn calculate_parallel_efficiency(
         &self,
         duration: std::time::Duration,
-        data_size: usize,
+        datasize: usize,
         threads_used: usize,
     ) -> f64 {
         // Simplified efficiency calculation
-        let sequential_estimate = (data_size as f64 / 1_000_000.0) * 10.0; // 10ms per million elements
+        let sequential_estimate = (datasize as f64 / 1_000_000.0) * 10.0; // 10ms per million elements
         let parallel_time = duration.as_millis() as f64;
         let ideal_parallel_time = sequential_estimate / threads_used as f64;
         (ideal_parallel_time / parallel_time).min(1.0)
     }
 
-    fn update_adaptive_chunk_size(&self, metrics: &ParallelExecutionMetrics, datasize: usize) {
-        let current_chunk_size = self.adaptive_chunk_size.load(Ordering::Relaxed);
+    fn update_adaptive_chunksize(&self, metrics: &ParallelExecutionMetrics, datasize: usize) {
+        let current_chunksize = self.adaptive_chunksize.load(Ordering::Relaxed);
 
-        let new_chunk_size = if metrics.parallel_efficiency < 0.7 {
-            // Increase chunk _size if efficiency is low
-            (current_chunk_size * 11 / 10).min(data_size / 2)
+        let new_chunksize = if metrics.parallel_efficiency < 0.7 {
+            // Increase chunk size if efficiency is low
+            (current_chunksize * 11 / 10).min(datasize / 2)
         } else if metrics.parallel_efficiency > 0.9 && metrics.load_balance_factor > 0.8 {
-            // Decrease chunk _size if efficiency is very high and load is balanced
-            (current_chunk_size * 9 / 10).max(self.config.min_chunk_size)
+            // Decrease chunk size if efficiency is very high and load is balanced
+            (current_chunksize * 9 / 10).max(self.config.min_chunksize)
         } else {
-            current_chunk_size
+            current_chunksize
         };
 
-        self.adaptive_chunk_size
-            .store(new_chunk_size, Ordering::Relaxed);
+        self.adaptive_chunksize
+            .store(new_chunksize, Ordering::Relaxed);
     }
 
     fn generate_performance_recommendations(
@@ -674,7 +674,7 @@ impl AdvancedParallelProcessor {
         }
 
         if n_rows < 2 {
-            return Err(ErrorMessages::insufficient_data(
+            return Err(ErrorMessages::insufficientdata(
                 "covariance matrix",
                 2,
                 n_rows,
@@ -746,7 +746,7 @@ impl AdvancedParallelProcessor {
         }
 
         if n_rows < 2 {
-            return Err(ErrorMessages::insufficient_data(
+            return Err(ErrorMessages::insufficientdata(
                 "correlation matrix",
                 2,
                 n_rows,
@@ -881,15 +881,15 @@ impl AdvancedParallelProcessor {
     }
 
     fn determine_time_series_threads(&self, num_windows: usize, windowsize: usize) -> usize {
-        let workload = num_windows * window_size;
-        let optimal_threads = (workload / self.config.min_chunk_size).min(self.config.max_threads);
+        let workload = num_windows * windowsize;
+        let optimal_threads = (workload / self.config.min_chunksize).min(self.config.max_threads);
         optimal_threads.max(1)
     }
 
     fn parallel_time_series_computation<F, D>(
         &self,
         data: &ArrayBase<D, Ix1>,
-        window_size: usize,
+        windowsize: usize,
         operations: &[TimeSeriesOperation], _threads: usize,
     ) -> StatsResult<AdvancedParallelTimeSeriesResult<F>>
     where
@@ -903,22 +903,22 @@ impl AdvancedParallelProcessor {
             return Err(ErrorMessages::empty_array("data"));
         }
 
-        if window_size == 0 {
+        if windowsize == 0 {
             return Err(ErrorMessages::non_positive_value(
-                "window_size",
-                window_size as f64,
+                "windowsize",
+                windowsize as f64,
             ));
         }
 
-        if window_size > n {
-            return Err(ErrorMessages::insufficient_data(
+        if windowsize > n {
+            return Err(ErrorMessages::insufficientdata(
                 "time series analysis",
-                window_size,
+                windowsize,
                 n,
             ));
         }
 
-        let num_windows = n - window_size + 1;
+        let num_windows = n - windowsize + 1;
         let mut results = Vec::new();
 
         // Process each operation type
@@ -926,19 +926,19 @@ impl AdvancedParallelProcessor {
             let window_results: Vec<F> = match operation {
                 TimeSeriesOperation::MovingAverage => {
                     parallel_map((0..num_windows).collect(), |&start_idx| {
-                        let window = data.slice(ndarray::s![start_idx..start_idx + window_size]);
+                        let window = data.slice(ndarray::s![start_idx..start_idx + windowsize]);
                         window.iter().fold(F::zero(), |acc, &val| acc + val)
-                            / F::from(window_size).unwrap()
+                            / F::from(windowsize).unwrap()
                     })
                     .collect()
                 }
                 TimeSeriesOperation::MovingVariance => {
                     parallel_map((0..num_windows).collect(), |&start_idx| {
-                        let window = data.slice(ndarray::s![start_idx..start_idx + window_size]);
+                        let window = data.slice(ndarray::s![start_idx..start_idx + windowsize]);
 
                         // Compute mean
                         let mean = window.iter().fold(F::zero(), |acc, &val| acc + val)
-                            / F::from(window_size).unwrap();
+                            / F::from(windowsize).unwrap();
 
                         // Compute variance
                         let variance = window
@@ -948,7 +948,7 @@ impl AdvancedParallelProcessor {
                                 diff * diff
                             })
                             .fold(F::zero(), |acc, sq_diff| acc + sq_diff)
-                            / F::from(window_size - 1).unwrap();
+                            / F::from(windowsize - 1).unwrap();
 
                         variance
                     })
@@ -956,14 +956,14 @@ impl AdvancedParallelProcessor {
                 }
                 TimeSeriesOperation::MovingMin => {
                     parallel_map((0..num_windows).collect(), |&start_idx| {
-                        let window = data.slice(ndarray::s![start_idx..start_idx + window_size]);
+                        let window = data.slice(ndarray::s![start_idx..start_idx + windowsize]);
                         window.iter().fold(F::infinity(), |acc, &val| acc.min(val))
                     })
                     .collect()
                 }
                 TimeSeriesOperation::MovingMax => {
                     parallel_map((0..num_windows).collect(), |&start_idx| {
-                        let window = data.slice(ndarray::s![start_idx..start_idx + window_size]);
+                        let window = data.slice(ndarray::s![start_idx..start_idx + windowsize]);
                         window
                             .iter()
                             .fold(F::neg_infinity(), |acc, &val| acc.max(val))
@@ -972,17 +972,17 @@ impl AdvancedParallelProcessor {
                 }
                 TimeSeriesOperation::MovingMedian => {
                     parallel_map((0..num_windows).collect(), |&start_idx| {
-                        let window = data.slice(ndarray::s![start_idx..start_idx + window_size]);
+                        let window = data.slice(ndarray::s![start_idx..start_idx + windowsize]);
 
                         // Simple median computation (not optimal for sliding windows)
                         let mut sorted_window: Vec<F> = window.iter().cloned().collect();
                         sorted_window.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-                        if window_size % 2 == 1 {
-                            sorted_window[window_size / 2]
+                        if windowsize % 2 == 1 {
+                            sorted_window[windowsize / 2]
                         } else {
-                            let mid1 = sorted_window[window_size / 2 - 1];
-                            let mid2 = sorted_window[window_size / 2];
+                            let mid1 = sorted_window[windowsize / 2 - 1];
+                            let mid2 = sorted_window[windowsize / 2];
                             (mid1 + mid2) / F::from(2.0).unwrap()
                         }
                     })
@@ -996,7 +996,7 @@ impl AdvancedParallelProcessor {
         Ok(AdvancedParallelTimeSeriesResult {
             results,
             operations: operations.to_vec(),
-            window_size,
+            windowsize,
             execution_metrics: None,
         })
     }
@@ -1048,7 +1048,7 @@ pub struct AdvancedParallelMatrixResult<F> {
 pub struct AdvancedParallelTimeSeriesResult<F> {
     pub results: Vec<Array1<F>>,
     pub operations: Vec<TimeSeriesOperation>,
-    pub window_size: usize,
+    pub windowsize: usize,
     pub execution_metrics: Option<ParallelExecutionMetrics>,
 }
 
@@ -1102,7 +1102,7 @@ mod tests {
     fn test_advanced_parallel_processor_creation() {
         let processor = create_advanced_parallel_processor();
         assert!(processor.config.max_threads > 0);
-        assert!(processor.config.min_chunk_size > 0);
+        assert!(processor.config.min_chunksize > 0);
     }
 
     #[test]

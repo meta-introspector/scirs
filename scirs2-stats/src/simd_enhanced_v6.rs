@@ -20,7 +20,7 @@ pub struct AdvancedSimdConfig {
     /// Platform capabilities detected at runtime
     pub capabilities: PlatformCapabilities,
     /// Chunk size for SIMD operations (auto-determined based on platform)
-    pub chunk_size: usize,
+    pub chunksize: usize,
     /// Whether to use parallel SIMD processing
     pub parallel_enabled: bool,
     /// Minimum data size for SIMD processing
@@ -30,7 +30,7 @@ pub struct AdvancedSimdConfig {
 impl Default for AdvancedSimdConfig {
     fn default() -> Self {
         let capabilities = PlatformCapabilities::detect();
-        let chunk_size = if capabilities.avx512_available {
+        let chunksize = if capabilities.avx512_available {
             16 // 512-bit / 32-bit = 16 elements for f32
         } else if capabilities.avx2_available {
             8 // 256-bit / 32-bit = 8 elements for f32
@@ -42,7 +42,7 @@ impl Default for AdvancedSimdConfig {
 
         Self {
             capabilities,
-            chunk_size,
+            chunksize,
             parallel_enabled: true,
             simd_threshold: 64,
         }
@@ -80,7 +80,7 @@ where
     /// Create with custom configuration
     pub fn with_config(config: AdvancedSimdConfig) -> Self {
         Self {
-            config: config,
+            config,
             _phantom: PhantomData,
         }
     }
@@ -101,7 +101,7 @@ where
         let n = data.len();
 
         // Use SIMD if data is large enough and SIMD is available
-        if n >= self.config.simd_threshold && self.config.chunk_size > 1 {
+        if n >= self.config.simd_threshold && self.config.chunksize > 1 {
             self.compute_simd_comprehensive(data)
         } else {
             self.compute_scalar_comprehensive(data)
@@ -114,9 +114,9 @@ where
         data: &ArrayView1<F>,
     ) -> StatsResult<ComprehensiveStats<F>> {
         let n = data.len();
-        let chunk_size = self.config.chunk_size;
-        let n_chunks = n / chunk_size;
-        let remainder = n % chunk_size;
+        let chunksize = self.config.chunksize;
+        let n_chunks = n / chunksize;
+        let remainder = n % chunksize;
 
         // Initialize accumulators
         let mut sum_acc = F::zero();
@@ -128,8 +128,8 @@ where
 
         // Process chunks with SIMD
         for i in 0..n_chunks {
-            let start = i * chunk_size;
-            let end = start + chunk_size;
+            let start = i * chunksize;
+            let end = start + chunksize;
             let chunk = data.slice(ndarray::s![start..end]);
 
             // Use SIMD operations from scirs2-core
@@ -161,7 +161,7 @@ where
 
         // Handle remainder with scalar operations
         if remainder > 0 {
-            let start = n_chunks * chunk_size;
+            let start = n_chunks * chunksize;
             for i in start..n {
                 let val = data[i];
                 sum_acc = sum_acc + val;

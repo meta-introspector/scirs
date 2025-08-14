@@ -16,7 +16,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use scirs2text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
+//! use scirs2_text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
 //!
 //! // Basic Word2Vec training
 //! let documents = vec![
@@ -36,11 +36,11 @@
 //!     ..Default::default()
 //! };
 //!
-//! let mut model = Word2Vec::new(config);
+//! let mut model = Word2Vec::with_config(config);
 //! model.train(&documents).expect("Training failed");
 //!
 //! // Get word vector
-//! if let Some(vector) = model.get_vector("fox") {
+//! if let Ok(vector) = model.get_word_vector("fox") {
 //!     println!("Vector for 'fox': {:?}", vector);
 //! }
 //!
@@ -56,7 +56,7 @@
 //! ### Custom Configuration
 //!
 //! ```rust
-//! use scirs2text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
+//! use scirs2_text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
 //!
 //! let config = Word2VecConfig {
 //!     algorithm: Word2VecAlgorithm::CBOW,
@@ -66,35 +66,38 @@
 //!     learning_rate: 0.01,    // Lower learning rate for stability
 //!     epochs: 15,             // More training iterations
 //!     negative_samples: 10,   // More negative samples
-//!     subsample_threshold: 1e-4, // Subsample frequent words
-//!     use_hierarchical_softmax: false,
+//!     subsample: 1e-4, // Subsample frequent words
+//!     batch_size: 128,
+//!     hierarchical_softmax: false,
 //! };
 //! ```
 //!
 //! ### Incremental Training
 //!
 //! ```rust
-//! # use scirs2text::embeddings::{Word2Vec, Word2VecConfig};
-//! # let mut model = Word2Vec::new(Word2VecConfig::default());
+//! # use scirs2_text::embeddings::{Word2Vec, Word2VecConfig};
+//! # let mut model = Word2Vec::new().with_min_count(1);
 //! // Initial training
-//! let batch1 = vec!["first batch of documents"];
+//! let batch1 = vec!["the quick brown fox jumps over the lazy dog"];
 //! model.train(&batch1).expect("Training failed");
 //!
 //! // Continue training with new data
-//! let batch2 = vec!["second batch of documents"];
+//! let batch2 = vec!["the dog was lazy but the fox was quick"];
 //! model.train(&batch2).expect("Training failed");
 //! ```
 //!
 //! ### Saving and Loading Models
 //!
 //! ```rust
-//! # use scirs2text::embeddings::{Word2Vec, Word2VecConfig};
-//! # let mut model = Word2Vec::new(Word2VecConfig::default());
+//! # use scirs2_text::embeddings::{Word2Vec, Word2VecConfig};
+//! # let mut model = Word2Vec::new().with_min_count(1);
+//! # let texts = vec!["the quick brown fox jumps over the lazy dog"];
+//! # model.train(&texts).expect("Training failed");
 //! // Save trained model
-//! model.save_to_file("my_model.w2v").expect("Failed to save model");
+//! model.save("my_model.w2v").expect("Failed to save model");
 //!
 //! // Load model
-//! let loaded_model = Word2Vec::load_from_file("my_model.w2v")
+//! let loaded_model = Word2Vec::load("my_model.w2v")
 //!     .expect("Failed to load model");
 //! ```
 //!

@@ -120,7 +120,7 @@ where
         return Err(StatsError::invalid_argument("Need at least 2 samples"));
     }
 
-    // Center the _data
+    // Center the data
     let means = data.mean_axis(Axis(0)).unwrap();
     let mut centered = data.to_owned();
     for i in 0..n_samples_ {
@@ -197,14 +197,14 @@ where
     }
 
     let n = data.len();
-    let mut sorted_data = data.to_vec();
-    sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let mut sorteddata = data.to_vec();
+    sorteddata.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     // Compute median
     let median = if n % 2 == 0 {
-        (sorted_data[n / 2 - 1] + sorted_data[n / 2]) / F::from(2).unwrap()
+        (sorteddata[n / 2 - 1] + sorteddata[n / 2]) / F::from(2).unwrap()
     } else {
-        sorted_data[n / 2]
+        sorteddata[n / 2]
     };
 
     // Compute MAD (Median Absolute Deviation)
@@ -238,8 +238,8 @@ where
     // Compute IQR (Interquartile Range)
     let q1_idx = n / 4;
     let q3_idx = 3 * n / 4;
-    let q1 = sorted_data[q1_idx];
-    let q3 = sorted_data[q3_idx];
+    let q1 = sorteddata[q1_idx];
+    let q3 = sorteddata[q3_idx];
     let iqr = q3 - q1;
 
     Ok((median, mad, iqr))

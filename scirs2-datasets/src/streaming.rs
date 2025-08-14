@@ -77,8 +77,8 @@ impl DataChunk {
         Dataset {
             data: self.data.clone(),
             target: self.target.clone(),
-            target_names: None,
-            feature_names: None,
+            targetnames: None,
+            featurenames: None,
             feature_descriptions: None,
             description: None,
             metadata: Default::default(),
@@ -99,14 +99,14 @@ pub struct StreamingIterator {
 impl StreamingIterator {
     /// Create a new streaming iterator from a CSV file
     pub fn from_csv<P: AsRef<Path>>(path: P, config: StreamConfig) -> Result<Self> {
-        let _path = path.as_ref().to_path_buf();
+        let path = path.as_ref().topath_buf();
         let chunk_buffer = Arc::new(Mutex::new(VecDeque::new()));
         let buffer_clone = Arc::clone(&chunk_buffer);
         let config_clone = config.clone();
 
         // Start producer thread
         let producer_handle =
-            thread::spawn(move || Self::csv_producer(_path, config_clone, buffer_clone));
+            thread::spawn(move || Self::csv_producer(path, config_clone, buffer_clone));
 
         Ok(Self {
             config,
@@ -124,7 +124,7 @@ impl StreamingIterator {
         n_features: usize,
         config: StreamConfig,
     ) -> Result<Self> {
-        let path = path.as_ref().to_path_buf();
+        let path = path.as_ref().topath_buf();
         let chunk_buffer = Arc::new(Mutex::new(VecDeque::new()));
         let buffer_clone = Arc::clone(&chunk_buffer);
         let config_clone = config.clone();
@@ -357,7 +357,7 @@ impl StreamingIterator {
                 .collect();
 
             // Create data matrix
-            let data = Array2::fromshape_vec((samples_read, n_features), float_data)
+            let data = Array2::from_shape_vec((samples_read, n_features), float_data)
                 .map_err(|e| DatasetsError::Other(format!("Shape error: {e}")))?;
             let sample_indices: Vec<usize> =
                 (global_sample_index..global_sample_index + samples_read).collect();
@@ -743,7 +743,7 @@ impl Default for StreamTransformer {
 /// Stream a large CSV file
 #[allow(dead_code)]
 pub fn stream_csv<P: AsRef<Path>>(path: P, config: StreamConfig) -> Result<StreamingIterator> {
-    StreamingIterator::from_csv(_path, config)
+    StreamingIterator::from_csv(path, config)
 }
 
 /// Stream synthetic classification data

@@ -913,7 +913,7 @@ impl<T: Float + Default> ExperienceBuffer<T> {
             rewards: VecDeque::new(),
             next_states: VecDeque::new(),
             dones: VecDeque::new(),
-            capacity: capacity,
+            capacity,
         }
     }
 
@@ -949,7 +949,7 @@ impl<T: Float + Default> ExperienceBuffer<T> {
 impl<T: Float + Default> PolicyOptimizer<T> {
     fn new(_learningrate: T) -> Self {
         Self {
-            _learningrate: _learningrate,
+            _learningrate,
             momentum: T::from(0.9).unwrap(),
             velocity: HashMap::new(),
             gradient_clip_norm: T::from(1.0).unwrap(),
@@ -970,7 +970,7 @@ impl<T: Float + Default> BaselinePredictor<T> {
 impl<T: Float + Default> BaselineOptimizer<T> {
     fn new(_learningrate: T) -> Self {
         Self {
-            _learningrate: _learningrate,
+            _learningrate,
             momentum: T::from(0.9).unwrap(),
             velocity: Vec::new(),
         }
@@ -1378,7 +1378,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
 impl<T: Float + Default> WeightOptimizer<T> {
     fn new(_learningrate: T) -> Self {
         Self {
-            _learningrate: _learningrate,
+            _learningrate,
             momentum: T::from(0.9).unwrap(),
             weight_decay: T::from(1e-4).unwrap(),
             velocity: Array3::zeros((0, 0, 0)),
@@ -1411,7 +1411,7 @@ impl<T: Float + Default> GaussianProcess<T> {
 impl<T: Float + Default> AcquisitionFunction<T> {
     fn new(function_type: AcquisitionType, explorationweight: T) -> Self {
         Self {
-            function_type: function_type,
+            function_type,
             explorationweight,
             current_best: T::zero(),
         }
@@ -1460,7 +1460,7 @@ impl<T: Float + Default> AcquisitionFunction<T> {
 impl<T: Float + Default> GPKernel<T> {
     fn new(_kerneltype: KernelType) -> Self {
         Self {
-            _kerneltype: _kerneltype,
+            _kerneltype,
             hyperparameters: Array1::ones(2), // length_scale and signal_variance
         }
     }
@@ -1678,7 +1678,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum> PredictorNetwork<T> 
         Self {
             layers,
             dropout_rates: vec![T::from(0.1).unwrap(); architecture.len() - 1],
-            architecture: architecture,
+            architecture,
         }
     }
 
@@ -1781,7 +1781,7 @@ impl<T: Float + Default + Clone> ArchitectureEncoder<T> {
     fn new(_embeddingdim: usize) -> Self {
         Self {
             encoding_weights: Array2::zeros((_embeddingdim, 64)), // Assume max 64 components
-            _embeddingdim: _embeddingdim,
+            _embeddingdim,
             max_components: 64,
         }
     }
@@ -1813,7 +1813,7 @@ impl<T: Float + Default + Clone> ArchitectureEncoder<T> {
 impl<T: Float + Default + Clone> SearchOptimizer<T> {
     fn new(optimizer_type: SearchOptimizerType, learningrate: T) -> Self {
         Self {
-            optimizer_type: optimizer_type,
+            optimizer_type,
             _learningrate: learningrate,
             momentum: T::from(0.9).unwrap(),
             parameters: HashMap::new(),

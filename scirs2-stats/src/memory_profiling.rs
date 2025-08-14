@@ -29,7 +29,7 @@ pub struct MemoryAdaptiveAlgorithm {
     /// Available memory in bytes
     available_memory: usize,
     /// Preferred chunk size for streaming operations
-    preferred_chunk_size: usize,
+    preferred_chunksize: usize,
     /// Whether to use in-place algorithms when possible
     #[allow(dead_code)]
     prefer_inplace: bool,
@@ -40,11 +40,11 @@ impl MemoryAdaptiveAlgorithm {
     pub fn new() -> Self {
         // Estimate available memory (simplified - in production would use system calls)
         let available_memory = Self::estimate_available_memory();
-        let preferred_chunk_size = Self::calculate_optimal_chunk_size(available_memory);
+        let preferred_chunksize = Self::calculate_optimal_chunksize(available_memory);
 
         Self {
             available_memory,
-            preferred_chunk_size,
+            preferred_chunksize,
             prefer_inplace: available_memory < 1_000_000_000, // Prefer in-place if < 1GB
         }
     }
@@ -139,7 +139,7 @@ impl MemoryAdaptiveAlgorithm {
         // Use vm_stat command to get memory information
         if let Ok(output) = Command::new("vm_stat").output() {
             if let Ok(stdout) = String::from_utf8(output.stdout) {
-                let mut page_size = 4096; // Default page size
+                let mut pagesize = 4096; // Default page size
                 let mut free_pages = 0;
                 let mut inactive_pages = 0;
 
@@ -150,7 +150,7 @@ impl MemoryAdaptiveAlgorithm {
                             if let Some(size_str) = line.split("page size of ").nth(1) {
                                 if let Some(size_str) = size_str.split(" bytes").next() {
                                     if let Ok(size) = size_str.parse::<usize>() {
-                                        page_size = size;
+                                        pagesize = size;
                                     }
                                 }
                             }
@@ -175,7 +175,7 @@ impl MemoryAdaptiveAlgorithm {
                 }
 
                 // Available memory is approximately free + inactive pages
-                return (free_pages + inactive_pages) * page_size;
+                return (free_pages + inactive_pages) * pagesize;
             }
         }
 
@@ -191,7 +191,7 @@ impl MemoryAdaptiveAlgorithm {
     }
 
     /// Calculate optimal chunk size based on available memory
-    fn calculate_optimal_chunk_size(_availablememory: usize) -> usize {
+    fn calculate_optimal_chunksize(_availablememory: usize) -> usize {
         // Aim for chunks that fit comfortably in L3 cache (typically 8-32MB)
         let l3_cache_estimate = 8_000_000; // 8MB
         let max_chunk = _availablememory / 10; // Use at most 10% of available _memory
@@ -206,8 +206,8 @@ impl MemoryAdaptiveAlgorithm {
 
     /// Get recommended algorithm based on data size
     pub fn recommend_algorithm<F: Float>(&self, datasize: usize) -> AlgorithmChoice {
-        let element_size = std::mem::size_of::<F>();
-        let total_bytes = datasize * element_size;
+        let elementsize = std::mem::size_of::<F>();
+        let total_bytes = datasize * elementsize;
 
         if total_bytes < 1_000_000 {
             // < 1MB
@@ -215,7 +215,7 @@ impl MemoryAdaptiveAlgorithm {
         } else if self.can_allocate(total_bytes) {
             AlgorithmChoice::Optimized
         } else {
-            AlgorithmChoice::Streaming(self.preferred_chunk_size / element_size)
+            AlgorithmChoice::Streaming(self.preferred_chunksize / elementsize)
         }
     }
 }
@@ -239,7 +239,7 @@ pub mod zero_copy {
     /// Compute statistics on overlapping windows without copying
     pub fn rolling_stats_zerocopy<F, D, S>(
         data: &ArrayBase<D, Ix1>,
-        window_size: usize,
+        windowsize: usize,
         stat_fn: S,
     ) -> StatsResult<Array1<F>>
     where
@@ -248,16 +248,16 @@ pub mod zero_copy {
         S: Fn(ArrayView1<F>) -> StatsResult<F>,
     {
         let n = data.len();
-        if window_size == 0 || window_size > n {
-            return Err(StatsError::invalid_argument("Invalid window _size"));
+        if windowsize == 0 || windowsize > n {
+            return Err(StatsError::invalid_argument("Invalid window size"));
         }
 
-        let output_len = n - window_size + 1;
+        let output_len = n - windowsize + 1;
         let mut results = Array1::zeros(output_len);
 
         // Use views to avoid copying
         for i in 0..output_len {
-            let window = data.slice(s![i..i + window_size]);
+            let window = data.slice(s![i..i + windowsize]);
             results[i] = stat_fn(window)?;
         }
 
@@ -474,7 +474,7 @@ impl<F: Float + NumCast + std::iter::Sum + std::fmt::Display> LazyStatComputatio
             None
         };
 
-        let sorted_data = if need_sorted {
+        let sorteddata = if need_sorted {
             let mut sorted = data.clone();
             sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
             Some(sorted)
@@ -501,7 +501,7 @@ impl<F: Float + NumCast + std::iter::Sum + std::fmt::Display> LazyStatComputatio
                     results.push(var);
                 }
                 StatOperation::Quantile(q) => {
-                    let sorted = sorted_data.as_ref().unwrap();
+                    let sorted = sorteddata.as_ref().unwrap();
                     let pos = *q * (sorted.len() - 1) as f64;
                     let idx = pos.floor() as usize;
                     let frac = pos - pos.floor();
@@ -585,7 +585,7 @@ pub mod cache_friendly {
     pub fn tiled_matrix_operation<F, D1, D2, Op>(
         a: &ArrayBase<D1, Ix2>,
         b: &ArrayBase<D2, Ix2>,
-        tile_size: usize,
+        tilesize: usize,
         operation: Op,
     ) -> StatsResult<Array2<F>>
     where
@@ -606,12 +606,12 @@ pub mod cache_friendly {
         let mut result = Array2::zeros((m, n));
 
         // Process in tiles for better cache locality
-        for i in (0..m).step_by(tile_size) {
-            for j in (0..n).step_by(tile_size) {
-                for k in (0..k1).step_by(tile_size) {
-                    let i_end = (i + tile_size).min(m);
-                    let j_end = (j + tile_size).min(n);
-                    let k_end = (k + tile_size).min(k1);
+        for i in (0..m).step_by(tilesize) {
+            for j in (0..n).step_by(tilesize) {
+                for k in (0..k1).step_by(tilesize) {
+                    let i_end = (i + tilesize).min(m);
+                    let j_end = (j + tilesize).min(n);
+                    let k_end = (k + tilesize).min(k1);
 
                     let a_tile = a.slice(s![i..i_end, k..k_end]);
                     let b_tile = b.slice(s![k..k_end, j..j_end]);
@@ -647,10 +647,13 @@ mod tests {
 
         // Use a much larger data size that will definitely exceed available memory
         // Force streaming by using a size that requires more than available memory
-        let huge_data_size = adapter.available_memory / 4; // This will definitely trigger streaming
-        match adapter.recommend_algorithm::<f64>(huge_data_size) {
+        let hugedatasize = adapter.available_memory / 4; // This will definitely trigger streaming
+        match adapter.recommend_algorithm::<f64>(hugedatasize) {
             AlgorithmChoice::Streaming(_) => (), // Large data
-            other => panic!("Expected Streaming algorithm for large data, got {:?}", other),
+            other => panic!(
+                "Expected Streaming algorithm for large data, got {:?}",
+                other
+            ),
         }
     }
 

@@ -118,7 +118,7 @@ impl LinearDiscriminantAnalysis {
                 .create_validation_error(
                     ErrorCode::E2001,
                     "LDA fit",
-                    "sample_size_mismatch",
+                    "samplesize_mismatch",
                     format!("x: {}, y: {}", n_samples, n_targets),
                     "Number of samples in X and y must be equal",
                 )
@@ -665,7 +665,7 @@ impl QuadraticDiscriminantAnalysis {
                 .create_validation_error(
                     ErrorCode::E2001,
                     "QDA fit",
-                    "sample_size_mismatch",
+                    "samplesize_mismatch",
                     format!("x: {}, y: {}", n_samples, y.len()),
                     "Number of samples in X and y must be equal",
                 )
@@ -704,37 +704,37 @@ impl QuadraticDiscriminantAnalysis {
                 .map(|(idx, _)| idx)
                 .collect();
 
-            let class_size = class_indices.len();
-            if class_size < 2 {
+            let classsize = class_indices.len();
+            if classsize < 2 {
                 return Err(handler
                     .create_validation_error(
                         ErrorCode::E2003,
                         "QDA fit",
-                        "class_size",
-                        class_size,
+                        "classsize",
+                        classsize,
                         "Each class must have at least 2 samples for covariance estimation",
                     )
                     .error);
             }
 
-            class_counts[class_idx] = class_size;
+            class_counts[class_idx] = classsize;
 
             // Compute class mean
-            let mut class_data = Array2::zeros((class_size, n_features));
+            let mut classdata = Array2::zeros((classsize, n_features));
             for (i, &sample_idx) in class_indices.iter().enumerate() {
-                class_data.row_mut(i).assign(&x.row(sample_idx));
+                classdata.row_mut(i).assign(&x.row(sample_idx));
             }
 
-            let class_mean = class_data.mean_axis(Axis(0)).unwrap();
+            let class_mean = classdata.mean_axis(Axis(0)).unwrap();
             class_means.row_mut(class_idx).assign(&class_mean);
 
             // Compute class covariance
-            let mut centered = class_data;
+            let mut centered = classdata;
             for mut row in centered.rows_mut() {
                 row -= &class_mean;
             }
 
-            let mut cov = centered.t().dot(&centered) / (class_size - 1) as f64;
+            let mut cov = centered.t().dot(&centered) / (classsize - 1) as f64;
 
             // Apply regularization
             if self.reg_param > 0.0 {

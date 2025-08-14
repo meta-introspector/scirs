@@ -58,7 +58,7 @@ pub trait ProcessingStage: Send + 'static {
 /// Stream processing pipeline
 pub struct StreamPipeline {
     stages: Vec<Box<dyn ProcessingStage>>,
-    _buffersize: usize,
+    buffer_size: usize,
     num_threads: usize,
     metrics: Arc<Mutex<PipelineMetrics>>,
 }
@@ -89,7 +89,7 @@ impl StreamPipeline {
     pub fn new() -> Self {
         Self {
             stages: Vec::new(),
-            _buffersize: 10,
+            buffer_size: 10,
             num_threads: num_cpus::get(),
             metrics: Arc::new(Mutex::new(PipelineMetrics::default())),
         }
@@ -97,7 +97,7 @@ impl StreamPipeline {
 
     /// Set buffer size for inter-stage communication
     pub fn with_buffer_size(mut self, size: usize) -> Self {
-        self._buffersize = size;
+        self.buffer_size = size;
         self
     }
 
@@ -118,14 +118,14 @@ impl StreamPipeline {
     where
         I: Iterator<Item = Frame> + Send + 'static,
     {
-        let (tx, rx) = bounded(self._buffersize);
+        let (tx, rx) = bounded(self.buffer_size);
         let metrics = Arc::clone(&self.metrics);
 
         // Create pipeline stages with channels
         let mut channels = vec![rx];
 
         for stage in self.stages.drain(..) {
-            let (stage_tx, stage_rx) = bounded(self._buffersize);
+            let (stage_tx, stage_rx) = bounded(self.buffer_size);
             channels.push(stage_rx);
 
             let stage_metrics = Arc::clone(&metrics);
@@ -306,7 +306,7 @@ impl EdgeDetectionStage {
 impl ProcessingStage for EdgeDetectionStage {
     fn process(&mut self, mut frame: Frame) -> Result<Frame> {
         // Apply SIMD-accelerated Sobel edge detection
-        let (__, magnitude) = crate::simd_ops::simd_sobel_gradients(&frame.data.view())?;
+        let (_, _, magnitude) = crate::simd_ops::simd_sobel_gradients(&frame.data.view())?;
         frame.data = magnitude;
         Ok(frame)
     }
@@ -467,8 +467,8 @@ pub struct SimdHistogramEqualizationStage {
 
 impl SimdHistogramEqualizationStage {
     /// Create a new SIMD histogram equalization stage
-    pub fn new(_numbins: usize) -> Self {
-        Self { _numbins }
+    pub fn new(num_bins: usize) -> Self {
+        Self { num_bins }
     }
 }
 
@@ -511,7 +511,7 @@ pub enum FeatureDetectorType {
 
 impl FeatureDetectionStage {
     /// Create a new feature detection stage
-    pub fn new(_detector_type: FeatureDetectorType, maxfeatures: usize) -> Self {
+    pub fn new(detector_type: FeatureDetectorType, maxfeatures: usize) -> Self {
         Self {
             detector_type,
             maxfeatures,
@@ -532,7 +532,7 @@ impl ProcessingStage for FeatureDetectionStage {
             }
             FeatureDetectorType::Sobel => {
                 // Apply SIMD-accelerated Sobel edge detection
-                let (__, magnitude) = crate::simd_ops::simd_sobel_gradients(&frame.data.view())?;
+                let (_, _, magnitude) = crate::simd_ops::simd_sobel_gradients(&frame.data.view())?;
                 frame.data = magnitude;
             }
         }
@@ -571,7 +571,7 @@ impl FeatureDetectionStage {
         use scirs2_core::simd_ops::SimdUnifiedOps;
 
         // Compute SIMD gradients using optimized Sobel operators
-        let (grad_x, grad_y_) = crate::simd_ops::simd_sobel_gradients(image)?;
+        let (grad_x, grad_y_, _) = crate::simd_ops::simd_sobel_gradients(image)?;
 
         let (height, width) = grad_x.dim();
 
@@ -711,7 +711,7 @@ impl FeatureDetectionStage {
 
                 for &(dx, dy) in &circle_offsets {
                     let mut circle_pixels = Vec::with_capacity(center_array.len());
-                    for (i_) in center_array.iter().enumerate() {
+                    for (i_, _) in center_array.iter().enumerate() {
                         let pixel_x = x + i_;
                         let pixel_y = y;
                         let circle_x = pixel_x as i32 + dx;
@@ -877,7 +877,7 @@ impl FeatureDetectionStage {
 /// Frame buffer stage for temporal operations
 pub struct FrameBufferStage {
     buffer: std::collections::VecDeque<Array2<f32>>,
-    _buffersize: usize,
+    buffer_size: usize,
     operation: BufferOperation,
 }
 
@@ -896,7 +896,7 @@ impl FrameBufferStage {
     pub fn new(_buffersize: usize, operation: BufferOperation) -> Self {
         Self {
             buffer: std::collections::VecDeque::with_capacity(_buffersize),
-            _buffersize,
+            buffer_size: _buffersize,
             operation,
         }
     }
@@ -906,7 +906,7 @@ impl ProcessingStage for FrameBufferStage {
     fn process(&mut self, mut frame: Frame) -> Result<Frame> {
         // Add current frame to buffer
         self.buffer.push_back(frame.data.clone());
-        if self.buffer.len() > self._buffersize {
+        if self.buffer.len() > self.buffer_size {
             self.buffer.pop_front();
         }
 
@@ -922,7 +922,7 @@ impl ProcessingStage for FrameBufferStage {
                 }
             }
             BufferOperation::BackgroundSubtraction => {
-                if self.buffer.len() >= self._buffersize {
+                if self.buffer.len() >= self.buffer_size {
                     // Use median of buffer as background
                     let mut background = Array2::<f32>::zeros(frame.data.dim());
                     for buffered_frame in &self.buffer {
@@ -1052,11 +1052,7 @@ impl VideoStreamReader {
     /// Create a dummy video reader for testing
     pub fn dummy(width: u32, height: u32, fps: f32) -> Self {
         Self {
-            source: VideoSource::Dummy {
-                width,
-                height,
-                fps,
-            },
+            source: VideoSource::Dummy { width, height, fps },
             frame_count: 0,
             fps,
             width,
@@ -1074,7 +1070,7 @@ impl VideoStreamReader {
                         if self.frame_count < files.len() {
                             // In a real implementation, we would load the image here
                             // For now, generate a frame with noise to simulate image data
-                            let frame_data = Array2::fromshape_fn(
+                            let frame_data = Array2::from_shape_fn(
                                 (self.height as usize, self.width as usize),
                                 |_| rand::random::<f32>(),
                             );
@@ -1104,7 +1100,7 @@ impl VideoStreamReader {
                     // Generate synthetic frame
                     if self.frame_count < 100 {
                         let frame = Frame {
-                            data: Array2::fromshape_fn(
+                            data: Array2::from_shape_fn(
                                 (self.height as usize, self.width as usize),
                                 |(y, x)| {
                                     // Create a moving pattern
@@ -1150,7 +1146,9 @@ pub struct BatchProcessor {
 impl BatchProcessor {
     /// Create a new batch processor with specified batch size
     pub fn new(_batchsize: usize) -> Self {
-        Self { _batchsize }
+        Self {
+            batchsize: _batchsize,
+        }
     }
 
     /// Process frames in batches
@@ -1393,7 +1391,7 @@ impl AutoScalingThreadPoolManager {
     /// # Returns
     ///
     /// * New thread pool manager
-    pub fn new(_min_threads: usize, maxthreads: usize) -> Self {
+    pub fn new(min_threads: usize, maxthreads: usize) -> Self {
         Self {
             thread_pools: std::collections::HashMap::new(),
             min_threads,
@@ -1939,10 +1937,7 @@ impl AdaptivePerformanceMonitor {
         for (stagename, metrics) in &self.stage_metrics {
             report.push_str(&format!(
                 "{}: {:.1} FPS, {:.1}% utilization, bottleneck score: {:.2}\n",
-                stagename,
-                metrics.throughput,
-                metrics.thread_utilization,
-                metrics.bottleneck_score
+                stagename, metrics.throughput, metrics.thread_utilization, metrics.bottleneck_score
             ));
         }
 
@@ -1966,7 +1961,7 @@ impl AdaptivePerformanceMonitor {
 /// for maximum throughput in real-time video processing.
 pub struct AdvancedStreamPipeline {
     stages: Vec<Box<dyn ProcessingStage>>,
-    _buffersize: usize,
+    buffer_size: usize,
     #[allow(dead_code)]
     num_threads: usize,
     metrics: Arc<Mutex<PipelineMetrics>>,
@@ -2102,7 +2097,7 @@ impl AdvancedStreamPipeline {
     pub fn new() -> Self {
         Self {
             stages: Vec::new(),
-            _buffersize: 10,
+            buffer_size: 10,
             num_threads: num_cpus::get(),
             metrics: Arc::new(Mutex::new(PipelineMetrics::default())),
             frame_pool: Arc::new(Mutex::new(FramePool::new())),
@@ -2151,7 +2146,7 @@ impl AdvancedStreamPipeline {
     where
         I: Iterator<Item = Frame> + Send + 'static,
     {
-        let (tx, rx) = bounded::<Frame>(self._buffersize);
+        let (tx, rx) = bounded::<Frame>(self.buffer_size);
         let metrics = Arc::clone(&self.metrics);
         let frame_pool = Arc::clone(&self.frame_pool);
         let memory_profiler = Arc::clone(&self.memory_profiler);
@@ -2161,7 +2156,7 @@ impl AdvancedStreamPipeline {
         let mut worker_handles = Vec::new();
 
         for stage in self.stages.drain(..) {
-            let (stage_tx, stage_rx) = bounded(self._buffersize);
+            let (stage_tx, stage_rx) = bounded(self.buffer_size);
             channels.push(stage_rx);
 
             let stage_metrics = Arc::clone(&metrics);
@@ -2514,7 +2509,7 @@ mod tests {
         );
 
         let frame = Frame {
-            data: Array2::fromshape_fn((50, 50), |(y, x)| (x + y) as f32 / 100.0),
+            data: Array2::from_shape_fn((50, 50), |(y, x)| (x + y) as f32 / 100.0),
             timestamp: Instant::now(),
             index: 0,
             metadata: Some(FrameMetadata {
@@ -2535,7 +2530,7 @@ mod tests {
     #[test]
     fn test_simd_stages() {
         let frame = Frame {
-            data: Array2::fromshape_fn((100, 100), |(y, x)| (x + y) as f32 / 200.0),
+            data: Array2::from_shape_fn((100, 100), |(y, x)| (x + y) as f32 / 200.0),
             timestamp: Instant::now(),
             index: 0,
             metadata: None,

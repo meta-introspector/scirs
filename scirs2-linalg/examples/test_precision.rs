@@ -3,17 +3,17 @@ use scirs2_linalg::eigh;
 
 #[allow(dead_code)]
 fn main() {
-    let symmetric_matrix = array![[4.0, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]];
+    let symmetricmatrix = array![[4.0, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]];
 
     println!("Testing 3x3 matrix eigenvalue precision:");
-    println!("Matrix: {:?}", symmetric_matrix);
+    println!("Matrix: {:?}", symmetricmatrix);
 
-    match eigh(&symmetric_matrix.view(), None) {
+    match eigh(&symmetricmatrix.view(), None) {
         Ok((eigenvals, eigenvecs)) => {
             println!("Eigenvalues: {:?}", eigenvals);
 
             // Check A * V = V * Λ with high precision
-            let av = symmetric_matrix.dot(&eigenvecs);
+            let av = symmetricmatrix.dot(&eigenvecs);
             let vl = eigenvecs.dot(&ndarray::Array2::from_diag(&eigenvals));
 
             let mut max_error = 0.0f64;

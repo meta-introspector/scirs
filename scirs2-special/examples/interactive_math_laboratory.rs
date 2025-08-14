@@ -12,8 +12,8 @@
 //! Run with: cargo run --example interactive_math_laboratory
 
 use ndarray::Array1;
-use num__complex::Complex64;
-use scirs2__special::*;
+use num_complex::Complex64;
+use scirs2_special::*;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 use std::io::{self, Write};
@@ -131,7 +131,7 @@ enum PlotType {
 struct PlotStyle {
     color: String,
     line_width: f64,
-    point_size: f64,
+    pointsize: f64,
     transparency: f64,
 }
 
@@ -521,7 +521,7 @@ impl MathLaboratory {
             style: PlotStyle {
                 color: "blue".to_string(),
                 line_width: 1.0,
-                point_size: 1.0,
+                pointsize: 1.0,
                 transparency: 1.0,
             },
         };
@@ -548,8 +548,8 @@ impl MathLaboratory {
         // Calculate y values
         let x_step = (plot.domain.1 - plot.domain.0) / width as f64;
         let mut y_values = Vec::new();
-        let mut y_min = f64::INFINITY;
-        let mut y_max = f64::NEG_INFINITY;
+        let mut ymin = f64::INFINITY;
+        let mut ymax = f64::NEG_INFINITY;
 
         for i in 0..width {
             let x = plot.domain.0 + i as f64 * x_step;
@@ -573,8 +573,8 @@ impl MathLaboratory {
 
             if y.is_finite() {
                 y_values.push(y);
-                y_min = y_min.min(y);
-                y_max = y_max.max(y);
+                ymin = ymin.min(y);
+                ymax = ymax.max(y);
             } else {
                 y_values.push(0.0);
             }
@@ -585,16 +585,16 @@ impl MathLaboratory {
             "Plot: {} over [{:.2}, {:.2}]\n",
             plot.function_expr, plot.domain.0, plot.domain.1
         ));
-        output.push_str(&format!("Y range: [{:.3}, {:.3}]\n\n", y_min, y_max));
+        output.push_str(&format!("Y range: [{:.3}, {:.3}]\n\n", ymin, ymax));
 
-        let y_range = if (y_max - y_min).abs() < 1e-10 {
+        let y_range = if (ymax - ymin).abs() < 1e-10 {
             1.0
         } else {
-            y_max - y_min
+            ymax - ymin
         };
 
         for row in 0..height {
-            let y_level = y_max - (row as f64) * y_range / (height - 1) as f64;
+            let y_level = ymax - (row as f64) * y_range / (height - 1) as f64;
 
             output.push_str(&format!("{:8.2} │", y_level));
 
@@ -1297,9 +1297,9 @@ fn work_with_examples(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::erro
 
     // Allow user to create custom examples
     println!("\n🎯 Try your own values:");
-    let custom_input = get_user_input("Enter test values (or 'done'): ")?;
+    let custominput = get_user_input("Enter test values (or 'done'): ")?;
 
-    if custom_input != "done" {
+    if custominput != "done" {
         // Parse and test custom values
         println!("🧮 Testing custom values...");
         // Implementation would depend on specific _theorem
@@ -1357,12 +1357,12 @@ fn interactive_verification(theorem: &TheoremExplorer) -> Result<(), Box<dyn std
 
     match theorem.theorem_name.as_str() {
         "Gamma Function Reflection Formula" => loop {
-            let z_input = get_user_input("Enter z value (0 < z < 1, or 'done'): ")?;
-            if z_input == "done" {
+            let zinput = get_user_input("Enter z value (0 < z < 1, or 'done'): ")?;
+            if zinput == "done" {
                 break;
             }
 
-            if let Ok(z) = z_input.parse::<f64>() {
+            if let Ok(z) = zinput.parse::<f64>() {
                 if z > 0.0 && z < 1.0 {
                     let left_side = gamma(z) * gamma(1.0 - z);
                     let right_side = PI / (PI * z).sin();
@@ -1428,10 +1428,10 @@ fn create_function_plots(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::er
     println!("===================\n");
 
     let function = get_user_input("Enter function to plot (e.g., 'gamma', 'j0', 'erf'): ")?;
-    let x_min = get_user_input("X minimum: ")?.parse::<f64>().unwrap_or(0.1);
-    let x_max = get_user_input("X maximum: ")?.parse::<f64>().unwrap_or(5.0);
+    let xmin = get_user_input("X minimum: ")?.parse::<f64>().unwrap_or(0.1);
+    let xmax = get_user_input("X maximum: ")?.parse::<f64>().unwrap_or(5.0);
 
-    let plot_id = lab.create_plot(&function, (x_min, x_max))?;
+    let plot_id = lab.create_plot(&function, (xmin, xmax))?;
     let ascii_plot = lab.render_ascii_plot(&plot_id, 60, 20)?;
 
     println!("\n{}", ascii_plot);
@@ -1441,7 +1441,7 @@ fn create_function_plots(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::er
     let analyze = get_user_input("")?;
 
     if analyze.to_lowercase() == "y" {
-        let analysis = lab.analyze_function_behavior(&function, (x_min, x_max));
+        let analysis = lab.analyze_function_behavior(&function, (xmin, xmax));
         display_function_analysis(&analysis);
     }
 
@@ -1710,12 +1710,12 @@ fn explore_bessel_parameters() -> Result<(), Box<dyn std::error::Error>> {
     println!("========================================\n");
 
     loop {
-        let order_input = get_user_input("Enter Bessel order ν (or 'done'): ")?;
-        if order_input == "done" {
+        let orderinput = get_user_input("Enter Bessel order ν (or 'done'): ")?;
+        if orderinput == "done" {
             break;
         }
 
-        if let Ok(order) = order_input.parse::<i32>() {
+        if let Ok(order) = orderinput.parse::<i32>() {
             println!("\nJ_{}(x) values:", order);
             println!("x      J_{}(x)", order);
             println!("─────────────");
@@ -1754,12 +1754,12 @@ fn explore_gamma_parameters() -> Result<(), Box<dyn std::error::Error>> {
     println!("=======================================\n");
 
     loop {
-        let z_input = get_user_input("Enter z value (z > 0, or 'done'): ")?;
-        if z_input == "done" {
+        let zinput = get_user_input("Enter z value (z > 0, or 'done'): ")?;
+        if zinput == "done" {
             break;
         }
 
-        if let Ok(z) = z_input.parse::<f64>() {
+        if let Ok(z) = zinput.parse::<f64>() {
             if z > 0.0 {
                 let gamma_val = gamma(z);
                 let ln_gamma_val = gammaln(z);
@@ -1968,13 +1968,13 @@ fn analyze_symmetry() -> Result<(), Box<dyn std::error::Error>> {
     for &x in &test_values {
         // Test erf (odd function)
         let erf_x = erf(x);
-        let erf_minus_x = erf(-x);
-        let erf_sum = erf_x + erf_minus_x;
-        let erf_diff = erf_x - erf_minus_x;
+        let erfminus_x = erf(-x);
+        let erf_sum = erf_x + erfminus_x;
+        let erf_diff = erf_x - erfminus_x;
 
         println!(
             "erf({:3.1})  {:9.5}  {:9.5}  {:9.5}   {:9.5}",
-            x, erf_x, erf_minus_x, erf_sum, erf_diff
+            x, erf_x, erfminus_x, erf_sum, erf_diff
         );
     }
 
@@ -2427,9 +2427,9 @@ fn analyze_precision_requirements() -> Result<(), Box<dyn std::error::Error>> {
     println!("Function    Input     64-bit Result     32-bit Result     Rel. Error");
     println!("────────────────────────────────────────────────────────────────────");
 
-    let test_inputs = vec![0.5, 1.0, 2.0, 5.0, 10.0];
+    let testinputs = vec![0.5, 1.0, 2.0, 5.0, 10.0];
 
-    for &x in &test_inputs {
+    for &x in &testinputs {
         // Simulate 32-bit precision (roughly 7 decimal digits)
         let gamma_64 = gamma(x);
         let gamma_32 = (gamma_64 * 1e7_f64).round() / 1e7_f64; // Truncate to ~7 digits

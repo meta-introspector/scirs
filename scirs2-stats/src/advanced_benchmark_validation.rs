@@ -27,7 +27,7 @@ pub struct ValidationConfig {
     /// Enable detailed logging
     pub verbose_logging: bool,
     /// Test data sizes to validate
-    pub test_sizes: Vec<usize>,
+    pub testsizes: Vec<usize>,
 }
 
 impl Default for ValidationConfig {
@@ -37,7 +37,7 @@ impl Default for ValidationConfig {
             benchmark_iterations: 100,
             min_performance_improvement: 1.1, // 10% minimum improvement
             verbose_logging: false,
-            test_sizes: vec![100, 1000, 10000, 100000],
+            testsizes: vec![100, 1000, 10000, 100000],
         }
     }
 }
@@ -46,7 +46,7 @@ impl Default for ValidationConfig {
 #[derive(Debug, Clone)]
 pub struct ValidationResult {
     pub operation_name: String,
-    pub data_size: usize,
+    pub datasize: usize,
     pub reference_duration: Duration,
     pub optimized_duration: Duration,
     pub speedup_ratio: f64,
@@ -207,8 +207,8 @@ impl AdvancedBenchmarkValidator {
 
         // Test scalar operations
         for operation in ["mean", "variance"].iter() {
-            let test_sizes = self.config.test_sizes.clone();
-            for &size in &test_sizes {
+            let testsizes = self.config.testsizes.clone();
+            for &size in &testsizes {
                 let result = self.validate_scalar_operation(operation, size)?;
                 all_results.push(result);
             }
@@ -216,8 +216,8 @@ impl AdvancedBenchmarkValidator {
 
         // Test matrix operations
         for operation in ["correlation"].iter() {
-            let test_sizes = self.config.test_sizes.clone();
-            for &size in &test_sizes {
+            let testsizes = self.config.testsizes.clone();
+            for &size in &testsizes {
                 let result = self.validate_matrix_operation(operation, size)?;
                 all_results.push(result);
             }
@@ -230,10 +230,10 @@ impl AdvancedBenchmarkValidator {
     fn validate_scalar_operation(
         &mut self,
         operation: &str,
-        data_size: usize,
+        datasize: usize,
     ) -> StatsResult<ValidationResult> {
         // Generate test data
-        let test_data = self.generate_test_data(data_size);
+        let testdata = self.generate_testdata(datasize);
 
         // Get reference implementation
         let reference_impl = self
@@ -250,7 +250,7 @@ impl AdvancedBenchmarkValidator {
         let reference_start = Instant::now();
         let mut reference_result = 0.0;
         for _ in 0..self.config.benchmark_iterations {
-            reference_result = reference_impl.compute_f64(test_data.view())?;
+            reference_result = reference_impl.compute_f64(testdata.view())?;
         }
         let reference_duration =
             reference_start.elapsed() / self.config.benchmark_iterations as u32;
@@ -261,11 +261,11 @@ impl AdvancedBenchmarkValidator {
         for _ in 0..self.config.benchmark_iterations {
             match operation {
                 "mean" => {
-                    let result = self.processor.compute_statistics(test_data.view())?;
+                    let result = self.processor.compute_statistics(testdata.view())?;
                     optimized_result = Some(result.statistics.mean);
                 }
                 "variance" => {
-                    let result = self.processor.compute_statistics(test_data.view())?;
+                    let result = self.processor.compute_statistics(testdata.view())?;
                     optimized_result = Some(result.statistics.variance);
                 }
                 _ => {
@@ -305,7 +305,7 @@ impl AdvancedBenchmarkValidator {
 
         Ok(ValidationResult {
             operation_name: operation.to_string(),
-            data_size,
+            datasize,
             reference_duration,
             optimized_duration,
             speedup_ratio,
@@ -321,11 +321,11 @@ impl AdvancedBenchmarkValidator {
     fn validate_matrix_operation(
         &mut self,
         operation: &str,
-        data_size: usize,
+        datasize: usize,
     ) -> StatsResult<ValidationResult> {
         // Generate test matrix data (square matrix for simplicity)
-        let matrix_size = (data_size as f64).sqrt() as usize;
-        let test_data = self.generate_test_matrix(matrix_size, matrix_size);
+        let matrixsize = (datasize as f64).sqrt() as usize;
+        let testdata = self.generate_test_matrix(matrixsize, matrixsize);
 
         // Get reference implementation
         let reference_impl = self
@@ -343,7 +343,7 @@ impl AdvancedBenchmarkValidator {
         let mut reference_result = None;
         for _ in 0..self.config.benchmark_iterations.min(10) {
             // Fewer iterations for matrix ops
-            reference_result = Some(reference_impl.compute_matrix_f64(test_data.view())?);
+            reference_result = Some(reference_impl.compute_matrix_f64(testdata.view())?);
         }
         let reference_duration =
             reference_start.elapsed() / self.config.benchmark_iterations.min(10) as u32;
@@ -400,7 +400,7 @@ impl AdvancedBenchmarkValidator {
 
         Ok(ValidationResult {
             operation_name: operation.to_string(),
-            data_size: matrix_size * matrix_size,
+            datasize: matrixsize * matrixsize,
             reference_duration,
             optimized_duration,
             speedup_ratio,
@@ -413,7 +413,7 @@ impl AdvancedBenchmarkValidator {
     }
 
     /// Generate test data for validation
-    fn generate_test_data(&self, size: usize) -> Array1<f64> {
+    fn generate_testdata(&self, size: usize) -> Array1<f64> {
         use rand::SeedableRng;
         use rand_distr::{Distribution, Normal};
 
@@ -507,7 +507,7 @@ mod tests {
         assert_eq!(config.benchmark_iterations, 100);
         assert_eq!(config.min_performance_improvement, 1.1);
         assert!(!config.verbose_logging);
-        assert_eq!(config.test_sizes, vec![100, 1000, 10000, 100000]);
+        assert_eq!(config.testsizes, vec![100, 1000, 10000, 100000]);
     }
 
     #[test]

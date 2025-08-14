@@ -295,7 +295,7 @@ impl EquilibriumCalculator {
                 let delta_g = self.calculate_delta_g(&concentrations)?;
 
                 return Ok(EquilibriumResult {
-                    concentrations: concentrations,
+                    concentrations,
                     activities,
                     activity_coefficients,
                     reaction_extents,

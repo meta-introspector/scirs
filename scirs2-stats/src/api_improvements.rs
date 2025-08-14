@@ -22,7 +22,7 @@ impl<F: Float + std::fmt::Display> CorrelationResult<F> {
     /// Create a new correlation result with just the coefficient
     pub fn new(coefficient: F) -> Self {
         Self {
-            coefficient: coefficient,
+            coefficient,
             p_value: None,
         }
     }
@@ -221,7 +221,7 @@ impl<F: Float + std::fmt::Display + std::iter::Sum + Send + Sync> StatsBuilder<F
     }
 
     /// Get a reference to the data
-    pub fn get_data(&self) -> Option<&Vec<F>> {
+    pub fn getdata(&self) -> Option<&Vec<F>> {
         self.data.as_ref()
     }
 
@@ -241,7 +241,7 @@ pub struct TestResult<F> {
     /// Degrees of freedom (if applicable)
     pub df: Option<F>,
     /// Effect size (if applicable)
-    pub effect_size: Option<F>,
+    pub effectsize: Option<F>,
     /// Confidence interval (if applicable)
     pub confidence_interval: Option<(F, F)>,
 }
@@ -253,7 +253,7 @@ impl<F: Float + std::fmt::Display> TestResult<F> {
             statistic: _statistic,
             p_value: pvalue,
             df: None,
-            effect_size: None,
+            effectsize: None,
             confidence_interval: None,
         }
     }
@@ -265,8 +265,8 @@ impl<F: Float + std::fmt::Display> TestResult<F> {
     }
 
     /// Add effect size
-    pub fn with_effect_size(mut self, effectsize: F) -> Self {
-        self.effect_size = Some(effectsize);
+    pub fn with_effectsize(mut self, effectsize: F) -> Self {
+        self.effectsize = Some(effectsize);
         self
     }
 

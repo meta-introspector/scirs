@@ -207,10 +207,7 @@ impl VisualizationEngine {
         }
 
         // Find data bounds
-        let x_min = data
-            .iter()
-            .map(|(x_, _)| *x_)
-            .fold(f64::INFINITY, f64::min);
+        let x_min = data.iter().map(|(x_, _)| *x_).fold(f64::INFINITY, f64::min);
         let x_max = data
             .iter()
             .map(|(x_, _)| *x_)

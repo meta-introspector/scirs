@@ -82,7 +82,7 @@ where
                         ))
                     }
                     LinalgError::SingularMatrixError(_) => {
-                        Err(LinalgError::singular_matrix_with_suggestions(
+                        Err(LinalgError::singularmatrix_with_suggestions(
                             "Cholesky decomposition",
                             a.dim(),
                             None,
@@ -179,7 +179,7 @@ where
             // Enhanced error handling for common LU failures
             match e {
                 LinalgError::SingularMatrixError(_) => {
-                    return Err(LinalgError::singular_matrix_with_suggestions(
+                    return Err(LinalgError::singularmatrix_with_suggestions(
                         "LU decomposition",
                         a.dim(),
                         None,
@@ -290,13 +290,9 @@ where
         Err(e) => {
             // Enhanced error handling for common QR failures
             match e {
-                LinalgError::SingularMatrixError(_) => {
-                    Err(LinalgError::singular_matrix_with_suggestions(
-                        "QR decomposition",
-                        a.dim(),
-                        None,
-                    ))
-                }
+                LinalgError::SingularMatrixError(_) => Err(
+                    LinalgError::singularmatrix_with_suggestions("QR decomposition", a.dim(), None),
+                ),
                 _ => Err(e),
             }
         }

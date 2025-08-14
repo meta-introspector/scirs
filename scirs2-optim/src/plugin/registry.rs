@@ -217,7 +217,7 @@ impl PluginRegistry {
         Self {
             factories: RwLock::new(HashMap::new()),
             search_paths: RwLock::new(Vec::new()),
-            config: config,
+            config,
             cache: Mutex::new(PluginCache::new()),
             event_listeners: RwLock::new(Vec::new()),
         }

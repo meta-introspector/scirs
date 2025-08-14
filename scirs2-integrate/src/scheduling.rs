@@ -485,7 +485,7 @@ where
     /// Create new adaptive integration task
     pub fn new(integrand: Func, interval: (F, F), tolerance: F, max_depth: usize) -> Self {
         Self {
-            integrand: integrand,
+            integrand,
             interval,
             tolerance,
             depth: 0,

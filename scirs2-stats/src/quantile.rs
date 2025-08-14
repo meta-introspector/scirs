@@ -119,32 +119,32 @@ where
     }
 
     // Make a sorted copy of the data
-    let mut sorted_data: Vec<F> = x.iter().cloned().collect();
-    sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let mut sorteddata: Vec<F> = x.iter().cloned().collect();
+    sorteddata.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     // Calculate index and interpolation value based on method
-    let n = F::from(sorted_data.len()).unwrap();
+    let n = F::from(sorteddata.len()).unwrap();
 
     match method {
         QuantileInterpolation::Lower => {
             let index = (q * (n - F::one())).floor().to_usize().unwrap();
-            Ok(sorted_data[index])
+            Ok(sorteddata[index])
         }
         QuantileInterpolation::Higher => {
             let index = (q * (n - F::one()))
                 .ceil()
                 .to_usize()
                 .unwrap()
-                .min(sorted_data.len() - 1);
-            Ok(sorted_data[index])
+                .min(sorteddata.len() - 1);
+            Ok(sorteddata[index])
         }
         QuantileInterpolation::Nearest => {
             let index = (q * (n - F::one()))
                 .round()
                 .to_usize()
                 .unwrap()
-                .min(sorted_data.len() - 1);
-            Ok(sorted_data[index])
+                .min(sorteddata.len() - 1);
+            Ok(sorteddata[index])
         }
         QuantileInterpolation::Midpoint => {
             let i_lower = (q * (n - F::one())).floor().to_usize().unwrap();
@@ -152,8 +152,8 @@ where
                 .ceil()
                 .to_usize()
                 .unwrap()
-                .min(sorted_data.len() - 1);
-            Ok((sorted_data[i_lower] + sorted_data[i_upper]) / F::from(2.0).unwrap())
+                .min(sorteddata.len() - 1);
+            Ok((sorteddata[i_lower] + sorteddata[i_upper]) / F::from(2.0).unwrap())
         }
         QuantileInterpolation::InvertedCdf => {
             let jg = q * n;
@@ -164,13 +164,13 @@ where
                 F::zero()
             };
 
-            let j = j.min(sorted_data.len() - 1);
-            let jp1 = (j + 1).min(sorted_data.len() - 1);
+            let j = j.min(sorteddata.len() - 1);
+            let jp1 = (j + 1).min(sorteddata.len() - 1);
 
             if g <= F::epsilon() {
-                Ok(sorted_data[j])
+                Ok(sorteddata[j])
             } else {
-                Ok(sorted_data[jp1])
+                Ok(sorteddata[jp1])
             }
         }
         QuantileInterpolation::AveragedInvertedCdf => {
@@ -182,13 +182,13 @@ where
                 F::zero()
             };
 
-            let j = j.min(sorted_data.len() - 1);
-            let jp1 = (j + 1).min(sorted_data.len() - 1);
+            let j = j.min(sorteddata.len() - 1);
+            let jp1 = (j + 1).min(sorteddata.len() - 1);
 
             if g <= F::epsilon() {
-                Ok(sorted_data[j])
+                Ok(sorteddata[j])
             } else {
-                Ok(sorted_data[j] * (F::one() - g) + sorted_data[jp1] * g)
+                Ok(sorteddata[j] * (F::one() - g) + sorteddata[jp1] * g)
             }
         }
         QuantileInterpolation::ClosestObservation => {
@@ -202,13 +202,13 @@ where
                 F::one()
             };
 
-            let j = j.min(sorted_data.len() - 1);
-            let jp1 = (j + 1).min(sorted_data.len() - 1);
+            let j = j.min(sorteddata.len() - 1);
+            let jp1 = (j + 1).min(sorteddata.len() - 1);
 
             if g <= F::epsilon() {
-                Ok(sorted_data[j])
+                Ok(sorteddata[j])
             } else {
-                Ok(sorted_data[jp1])
+                Ok(sorteddata[jp1])
             }
         }
         // Use linear interpolation with different m values
@@ -236,13 +236,13 @@ where
             let j = if jg < F::zero() {
                 0
             } else {
-                j.min(sorted_data.len() - 1)
+                j.min(sorteddata.len() - 1)
             };
-            let jp1 = (j + 1).min(sorted_data.len() - 1);
+            let jp1 = (j + 1).min(sorteddata.len() - 1);
             let g = if jg < F::zero() { F::zero() } else { g };
 
             // Linear interpolation
-            Ok((F::one() - g) * sorted_data[j] + g * sorted_data[jp1])
+            Ok((F::one() - g) * sorteddata[j] + g * sorteddata[jp1])
         }
     }
 }
@@ -540,23 +540,23 @@ where
     let whishi_limit = q3 + whis_factor * iqr;
 
     // Find actual whisker positions and outliers
-    let mut sorted_data: Vec<F> = x.iter().cloned().collect();
-    sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let mut sorteddata: Vec<F> = x.iter().cloned().collect();
+    sorteddata.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     // Find the lowest and highest values within the whisker limits
-    let whislo = *sorted_data
+    let whislo = *sorteddata
         .iter()
         .find(|&&val| val >= whislo_limit)
-        .unwrap_or(&sorted_data[0]);
+        .unwrap_or(&sorteddata[0]);
 
-    let whishi = *sorted_data
+    let whishi = *sorteddata
         .iter()
         .rev()
         .find(|&&val| val <= whishi_limit)
-        .unwrap_or(&sorted_data[sorted_data.len() - 1]);
+        .unwrap_or(&sorteddata[sorteddata.len() - 1]);
 
     // Collect outliers (values outside the whiskers)
-    let outliers: Vec<F> = sorted_data
+    let outliers: Vec<F> = sorteddata
         .iter()
         .filter(|&&val| val < whislo || val > whishi)
         .cloned()

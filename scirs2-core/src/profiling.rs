@@ -1937,7 +1937,9 @@ pub mod comprehensive {
         }
 
         /// Start comprehensive profiling
-        pub fn start(&mut self) -> Result<(), crate::profiling::system_monitor::SystemMonitorError> {
+        pub fn start(
+            &mut self,
+        ) -> Result<(), crate::profiling::system_monitor::SystemMonitorError> {
             // Start application profiler
             self.app_profiler.lock().unwrap().start();
 
@@ -2025,8 +2027,7 @@ pub mod comprehensive {
             // Export flame graph if available
             if let Some(ref flame_graph) = report.flame_graph {
                 let svg_generator = SvgFlameGraphGenerator::new(self.config.svgconfig.clone());
-                svg_generator
-                    .export_to_file(flame_graph, &format!("{basepath}_flamegraph.svg"))?;
+                svg_generator.export_to_file(flame_graph, &format!("{basepath}_flamegraph.svg"))?;
 
                 // Export enhanced flame graph with system metrics
                 let enhanced = EnhancedFlameGraph {

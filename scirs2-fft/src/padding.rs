@@ -61,7 +61,7 @@ impl AutoPadConfig {
     /// Create a new auto-padding configuration
     pub fn new(mode: PaddingMode) -> Self {
         Self {
-            mode: mode,
+            mode,
             ..Default::default()
         }
     }

@@ -23,9 +23,9 @@ pub struct AdvancedComprehensiveSimdConfig {
     pub f64_lanes: usize,
     pub f32_lanes: usize,
     /// Cache-optimized chunk sizes
-    pub l1_chunk_size: usize,
-    pub l2_chunk_size: usize,
-    pub l3_chunk_size: usize,
+    pub l1_chunksize: usize,
+    pub l2_chunksize: usize,
+    pub l3_chunksize: usize,
     /// Parallel processing thresholds
     pub parallel_threshold: usize,
     pub simd_threshold: usize,
@@ -58,9 +58,9 @@ impl Default for AdvancedComprehensiveSimdConfig {
             capabilities,
             f64_lanes,
             f32_lanes,
-            l1_chunk_size: 4096,    // 32KB / 8 bytes per f64
-            l2_chunk_size: 32768,   // 256KB / 8 bytes per f64
-            l3_chunk_size: 1048576, // 8MB / 8 bytes per f64
+            l1_chunksize: 4096,    // 32KB / 8 bytes per f64
+            l2_chunksize: 32768,   // 256KB / 8 bytes per f64
+            l3_chunksize: 1048576, // 8MB / 8 bytes per f64
             parallel_threshold: 10000,
             simd_threshold: 64,
             memory_alignment,
@@ -160,7 +160,7 @@ where
     /// Create with custom configuration
     pub fn with_config(config: AdvancedComprehensiveSimdConfig) -> Self {
         Self {
-            config: config,
+            config,
             _phantom: PhantomData,
         }
     }
@@ -206,8 +206,8 @@ where
         let excess_kurtosis = kurtosis - F::from(3.0).unwrap();
 
         // Compute quantiles using SIMD-optimized quickselect
-        let sorted_data = self.simd_sort_array(data)?;
-        let (q1, median, q3) = self.simd_compute_quartiles(&sorted_data)?;
+        let sorteddata = self.simd_sort_array(data)?;
+        let (q1, median, q3) = self.simd_compute_quartiles(&sorteddata)?;
         let iqr = q3 - q1;
         let range = max_val - min_val;
 
@@ -262,9 +262,9 @@ where
     /// Single-pass SIMD computation of first four moments and extremes
     fn simd_single_pass_moments(&self, data: &ArrayView1<F>) -> StatsResult<(F, F, F, F, F, F)> {
         let n = data.len();
-        let chunk_size = self.config.f64_lanes;
-        let n_chunks = n / chunk_size;
-        let remainder = n % chunk_size;
+        let chunksize = self.config.f64_lanes;
+        let n_chunks = n / chunksize;
+        let remainder = n % chunksize;
 
         // Initialize SIMD accumulators
         let mut sum = F::zero();
@@ -276,8 +276,8 @@ where
 
         // Process aligned chunks using SIMD
         for chunk_idx in 0..n_chunks {
-            let start = chunk_idx * chunk_size;
-            let end = start + chunk_size;
+            let start = chunk_idx * chunksize;
+            let end = start + chunksize;
             let chunk = data.slice(ndarray::s![start..end]);
 
             // Use scirs2-core's unified SIMD operations
@@ -305,7 +305,7 @@ where
 
         // Handle remainder with scalar operations
         if remainder > 0 {
-            let remainder_start = n_chunks * chunk_size;
+            let remainder_start = n_chunks * chunksize;
             for i in remainder_start..n {
                 let val = data[i];
                 sum = sum + val;
@@ -328,17 +328,17 @@ where
     /// SIMD-optimized sum of cubes
     fn simd_sum_cubes(&self, chunk: &ArrayView1<F>) -> StatsResult<F> {
         // Use vectorized operations for cubing
-        let chunk_size = self.config.f64_lanes;
+        let chunksize = self.config.f64_lanes;
         let n = chunk.len();
-        let n_chunks = n / chunk_size;
-        let remainder = n % chunk_size;
+        let n_chunks = n / chunksize;
+        let remainder = n % chunksize;
 
         let mut sum = F::zero();
 
         // Process aligned chunks with vectorization
         for chunk_idx in 0..n_chunks {
-            let start = chunk_idx * chunk_size;
-            let end = start + chunk_size;
+            let start = chunk_idx * chunksize;
+            let end = start + chunksize;
             let sub_chunk = chunk.slice(ndarray::s![start..end]);
 
             // Vectorized cube operation: val * val * val
@@ -349,7 +349,7 @@ where
 
         // Handle remainder with scalar operations
         if remainder > 0 {
-            let remainder_start = n_chunks * chunk_size;
+            let remainder_start = n_chunks * chunksize;
             for i in remainder_start..n {
                 let val = chunk[i];
                 sum = sum + val * val * val;
@@ -362,17 +362,17 @@ where
     /// SIMD-optimized sum of fourth powers
     fn simd_sum_quads(&self, chunk: &ArrayView1<F>) -> StatsResult<F> {
         // Use vectorized operations for fourth powers
-        let chunk_size = self.config.f64_lanes;
+        let chunksize = self.config.f64_lanes;
         let n = chunk.len();
-        let n_chunks = n / chunk_size;
-        let remainder = n % chunk_size;
+        let n_chunks = n / chunksize;
+        let remainder = n % chunksize;
 
         let mut sum = F::zero();
 
         // Process aligned chunks with vectorization
         for chunk_idx in 0..n_chunks {
-            let start = chunk_idx * chunk_size;
-            let end = start + chunk_size;
+            let start = chunk_idx * chunksize;
+            let end = start + chunksize;
             let sub_chunk = chunk.slice(ndarray::s![start..end]);
 
             // Vectorized fourth power: (val * val) * (val * val)
@@ -383,7 +383,7 @@ where
 
         // Handle remainder with scalar operations
         if remainder > 0 {
-            let remainder_start = n_chunks * chunk_size;
+            let remainder_start = n_chunks * chunksize;
             for i in remainder_start..n {
                 let val = chunk[i];
                 let sq = val * val;
@@ -476,8 +476,8 @@ where
         }
 
         // Compute log sum using SIMD
-        let log_data = data.mapv(|x| x.ln());
-        let log_sum = F::simd_sum(&log_data.view());
+        let logdata = data.mapv(|x| x.ln());
+        let log_sum = F::simd_sum(&logdata.view());
         let n = F::from(data.len()).unwrap();
         Ok((log_sum / n).exp())
     }
@@ -494,16 +494,16 @@ where
         }
 
         // Compute reciprocal sum using SIMD
-        let reciprocal_data = data.mapv(|x| F::one() / x);
-        let reciprocal_sum = F::simd_sum(&reciprocal_data.view());
+        let reciprocaldata = data.mapv(|x| F::one() / x);
+        let reciprocal_sum = F::simd_sum(&reciprocaldata.view());
         let n = F::from(data.len()).unwrap();
         Ok(n / reciprocal_sum)
     }
 
     /// SIMD-optimized trimmed mean
     fn simd_trimmed_mean(&self, data: &ArrayView1<F>, trimfraction: F) -> StatsResult<F> {
-        let sorted_data = self.simd_sort_array(data)?;
-        let n = sorted_data.len();
+        let sorteddata = self.simd_sort_array(data)?;
+        let n = sorteddata.len();
         let trim_count = ((F::from(n).unwrap() * trimfraction).to_usize().unwrap()).min(n / 2);
 
         if trim_count * 2 >= n {
@@ -512,26 +512,26 @@ where
             ));
         }
 
-        let trimmed = sorted_data.slice(ndarray::s![trim_count..n - trim_count]);
+        let trimmed = sorteddata.slice(ndarray::s![trim_count..n - trim_count]);
         Ok(F::simd_mean(&trimmed))
     }
 
     /// SIMD-optimized winsorized mean
     fn simd_winsorized_mean(&self, data: &ArrayView1<F>, winsorfraction: F) -> StatsResult<F> {
-        let sorted_data = self.simd_sort_array(data)?;
-        let n = sorted_data.len();
+        let sorteddata = self.simd_sort_array(data)?;
+        let n = sorteddata.len();
         let winsor_count = ((F::from(n).unwrap() * winsorfraction).to_usize().unwrap()).min(n / 2);
 
-        let mut winsorized = sorted_data.clone();
+        let mut winsorized = sorteddata.clone();
 
         // Winsorize lower tail
-        let lower_val = sorted_data[winsor_count];
+        let lower_val = sorteddata[winsor_count];
         for i in 0..winsor_count {
             winsorized[i] = lower_val;
         }
 
         // Winsorize upper tail
-        let upper_val = sorted_data[n - 1 - winsor_count];
+        let upper_val = sorteddata[n - 1 - winsor_count];
         for i in (n - winsor_count)..n {
             winsorized[i] = upper_val;
         }
@@ -542,21 +542,21 @@ where
     /// SIMD-optimized mode finding (simplified)
     fn simd_find_mode(&self, data: &ArrayView1<F>) -> StatsResult<Option<F>> {
         // Simplified implementation - would use histogram-based approach
-        let sorted_data = self.simd_sort_array(data)?;
+        let sorteddata = self.simd_sort_array(data)?;
         let mut max_count = 1;
         let mut current_count = 1;
-        let mut mode = sorted_data[0];
-        let mut current_val = sorted_data[0];
+        let mut mode = sorteddata[0];
+        let mut current_val = sorteddata[0];
 
-        for i in 1..sorted_data.len() {
-            if (sorted_data[i] - current_val).abs() < F::from(1e-10).unwrap() {
+        for i in 1..sorteddata.len() {
+            if (sorteddata[i] - current_val).abs() < F::from(1e-10).unwrap() {
                 current_count += 1;
             } else {
                 if current_count > max_count {
                     max_count = current_count;
                     mode = current_val;
                 }
-                current_val = sorted_data[i];
+                current_val = sorteddata[i];
                 current_count = 1;
             }
         }
@@ -581,17 +581,17 @@ where
         data: &ArrayView1<F>,
     ) -> StatsResult<ComprehensiveStatsResult<F>> {
         let num_threads = num_threads();
-        let chunk_size = data.len() / num_threads;
+        let chunksize = data.len() / num_threads;
 
         // Process chunks in parallel, then combine using SIMD
         let partial_results: Vec<_> = (0..num_threads)
             .into_par_iter()
             .map(|thread_id| {
-                let start = thread_id * chunk_size;
+                let start = thread_id * chunksize;
                 let end = if thread_id == num_threads - 1 {
                     data.len()
                 } else {
-                    (thread_id + 1) * chunk_size
+                    (thread_id + 1) * chunksize
                 };
 
                 let chunk = data.slice(ndarray::s![start..end]);

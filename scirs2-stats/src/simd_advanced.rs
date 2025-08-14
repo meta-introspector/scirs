@@ -27,11 +27,11 @@ pub struct AdvancedSimdConfig {
     /// Optimal vector register width (in elements)
     pub vector_width: usize,
     /// Cache line size for alignment optimization
-    pub cache_line_size: usize,
+    pub cache_linesize: usize,
     /// L1 cache size for blocking strategies
-    pub l1_cache_size: usize,
+    pub l1_cachesize: usize,
     /// L2 cache size for mid-level blocking
-    pub l2_cache_size: usize,
+    pub l2_cachesize: usize,
     /// Enable memory prefetching
     pub enable_prefetch: bool,
     /// Enable cache-aware processing
@@ -59,9 +59,9 @@ impl Default for AdvancedSimdConfig {
         Self {
             platform,
             vector_width,
-            cache_line_size: 64,   // Typical cache line size
-            l1_cache_size: 32768,  // 32KB L1 cache
-            l2_cache_size: 262144, // 256KB L2 cache
+            cache_linesize: 64,   // Typical cache line size
+            l1_cachesize: 32768,  // 32KB L1 cache
+            l2_cachesize: 262144, // 256KB L2 cache
             enable_prefetch: true,
             enable_cache_blocking: true,
             enable_pipelining: true,
@@ -80,7 +80,7 @@ pub enum VectorStrategy {
     /// Use unrolled loops with vector operations
     UnrolledVector { unroll_factor: usize },
     /// Use cache-blocked vectorization
-    CacheBlockedVector { block_size: usize },
+    CacheBlockedVector { blocksize: usize },
 }
 
 /// Memory access pattern optimization
@@ -91,9 +91,9 @@ pub enum MemoryPattern {
     /// Strided access with custom stride
     Strided { stride: usize },
     /// Tiled access for cache efficiency
-    Tiled { tile_size: usize },
+    Tiled { tilesize: usize },
     /// Blocked access for large data
-    Blocked { block_size: usize },
+    Blocked { blocksize: usize },
 }
 
 /// Advanced-optimized SIMD statistical operations
@@ -124,8 +124,8 @@ pub struct AdvancedStatsResult<F> {
 
 /// Cache-aware vector block processor
 pub struct CacheAwareVectorProcessor {
-    l1_block_size: usize,
-    l2_block_size: usize,
+    l1_blocksize: usize,
+    l2_blocksize: usize,
     vector_width: usize,
     prefetch_distance: usize,
 }
@@ -180,7 +180,7 @@ where
             VectorStrategy::UnrolledVector { unroll_factor: 4 }
         } else if config.enable_cache_blocking {
             VectorStrategy::CacheBlockedVector {
-                block_size: config.l1_cache_size / 4,
+                blocksize: config.l1_cachesize / 4,
             }
         } else {
             VectorStrategy::SingleVector
@@ -191,13 +191,13 @@ where
     fn select_optimal_memory_pattern(config: &AdvancedSimdConfig) -> MemoryPattern {
         if config.enable_cache_blocking {
             MemoryPattern::Blocked {
-                block_size: config.l1_cache_size / std::mem::size_of::<f64>(),
+                blocksize: config.l1_cachesize / std::mem::size_of::<f64>(),
             }
         } else if config.enable_prefetch {
             MemoryPattern::SequentialPrefetch
         } else {
             MemoryPattern::Tiled {
-                tile_size: config.cache_line_size / std::mem::size_of::<f64>(),
+                tilesize: config.cache_linesize / std::mem::size_of::<f64>(),
             }
         }
     }
@@ -228,8 +228,8 @@ where
             VectorStrategy::UnrolledVector { unroll_factor } => {
                 self.compute_unrolled_vector_stats(data, unroll_factor)
             }
-            VectorStrategy::CacheBlockedVector { block_size } => {
-                self.compute_cache_blocked_stats(data, block_size)
+            VectorStrategy::CacheBlockedVector { blocksize } => {
+                self.compute_cache_blocked_stats(data, blocksize)
             }
             VectorStrategy::SingleVector => self.compute_single_vector_stats(data),
         }
@@ -243,9 +243,9 @@ where
     ) -> StatsResult<AdvancedStatsResult<F>> {
         let n = data.len();
         let vector_width = self.config.vector_width;
-        let chunk_size = vector_width * num_registers;
-        let n_chunks = n / chunk_size;
-        let remainder = n % chunk_size;
+        let chunksize = vector_width * num_registers;
+        let n_chunks = n / chunksize;
+        let remainder = n % chunksize;
 
         // Initialize multiple accumulators for parallel computation
         let mut sum_accumulators = vec![F::zero(); num_registers];
@@ -260,14 +260,14 @@ where
 
         // Process chunks with multiple vector _registers
         for chunk_idx in 0..n_chunks {
-            let base_offset = chunk_idx * chunk_size;
+            let base_offset = chunk_idx * chunksize;
 
             // Prefetch future data if enabled
             if self.config.enable_prefetch && chunk_idx + 2 < n_chunks {
-                let prefetch_offset = (chunk_idx + 2) * chunk_size;
+                let prefetch_offset = (chunk_idx + 2) * chunksize;
                 if prefetch_offset < n {
                     unsafe {
-                        self.prefetch_data(data, prefetch_offset);
+                        self.prefetchdata(data, prefetch_offset);
                     }
                     prefetch_hits += 1;
                 }
@@ -325,7 +325,7 @@ where
         let mut remainder_max = global_max;
 
         if remainder > 0 {
-            let start = n_chunks * chunk_size;
+            let start = n_chunks * chunksize;
             for i in start..n {
                 let val = data[i];
                 remainder_sum = remainder_sum + val;
@@ -417,9 +417,9 @@ where
     ) -> StatsResult<AdvancedStatsResult<F>> {
         let n = data.len();
         let vector_width = self.config.vector_width;
-        let unrolled_size = vector_width * unroll_factor;
-        let n_unrolled = n / unrolled_size;
-        let remainder = n % unrolled_size;
+        let unrolledsize = vector_width * unroll_factor;
+        let n_unrolled = n / unrolledsize;
+        let remainder = n % unrolledsize;
 
         let mut sum_acc = F::zero();
         let mut sum_sq_acc = F::zero();
@@ -432,7 +432,7 @@ where
 
         // Unrolled processing for better instruction-level parallelism
         for i in 0..n_unrolled {
-            let base_idx = i * unrolled_size;
+            let base_idx = i * unrolledsize;
 
             // Process unroll_factor vectors in sequence for better pipelining
             for j in 0..unroll_factor {
@@ -462,7 +462,7 @@ where
 
         // Handle remainder
         if remainder > 0 {
-            let start = n_unrolled * unrolled_size;
+            let start = n_unrolled * unrolledsize;
             for i in start..n {
                 let val = data[i];
                 sum_acc = sum_acc + val;
@@ -520,11 +520,11 @@ where
     fn compute_cache_blocked_stats(
         &self,
         data: &ArrayView1<F>,
-        block_size: usize,
+        blocksize: usize,
     ) -> StatsResult<AdvancedStatsResult<F>> {
         let n = data.len();
-        let n_blocks = n / block_size;
-        let remainder = n % block_size;
+        let n_blocks = n / blocksize;
+        let remainder = n % blocksize;
 
         let mut sum_acc = F::zero();
         let mut sum_sq_acc = F::zero();
@@ -537,8 +537,8 @@ where
 
         // Process each cache block
         for block_idx in 0..n_blocks {
-            let start = block_idx * block_size;
-            let end = start + block_size;
+            let start = block_idx * blocksize;
+            let end = start + blocksize;
             let block = data.slice(ndarray::s![start..end]);
 
             // Process block with SIMD, ensuring it stays in cache
@@ -560,7 +560,7 @@ where
 
         // Handle remainder
         if remainder > 0 {
-            let start = n_blocks * block_size;
+            let start = n_blocks * blocksize;
             let remainder_block = data.slice(ndarray::s![start..]);
             let remainder_result = self.process_cache_block(&remainder_block)?;
 
@@ -774,7 +774,7 @@ where
     /// - The ArrayView1 is valid and properly aligned
     /// - The offset is within bounds (checked at runtime)
     /// - The data pointer remains valid for the duration of the prefetch operation
-    unsafe fn prefetch_data(&self, data: &ArrayView1<F>, offset: usize) {
+    unsafe fn prefetchdata(&self, data: &ArrayView1<F>, offset: usize) {
         if offset < data.len() {
             let ptr = data.as_ptr().add(offset);
             // Prefetch into L1 cache
@@ -836,8 +836,8 @@ impl CacheAwareVectorProcessor {
     /// Create new cache-aware processor
     pub fn new(config: &AdvancedSimdConfig) -> Self {
         Self {
-            l1_block_size: config.l1_cache_size / std::mem::size_of::<f64>(),
-            l2_block_size: config.l2_cache_size / std::mem::size_of::<f64>(),
+            l1_blocksize: config.l1_cachesize / std::mem::size_of::<f64>(),
+            l2_blocksize: config.l2_cachesize / std::mem::size_of::<f64>(),
             vector_width: config.vector_width,
             prefetch_distance: config.vector_width * 4, // Prefetch 4 vectors ahead
         }
@@ -903,7 +903,7 @@ mod tests {
     }
 
     #[test]
-    fn test_large_dataset_performance() {
+    fn test_largedataset_performance() {
         let data: Array1<f64> = Array1::from_shape_fn(10000, |i| i as f64);
         let processor = AdvancedSimdProcessor::<f64>::new();
         let result = processor.compute_advanced_statistics(&data.view()).unwrap();
@@ -930,7 +930,7 @@ mod tests {
         // Test cache-blocked strategy
         let config_blocked = AdvancedSimdConfig {
             enable_cache_blocking: true,
-            l1_cache_size: 4096,
+            l1_cachesize: 4096,
             ..Default::default()
         };
         let processor_blocked = AdvancedSimdProcessor::with_config(config_blocked);

@@ -1192,7 +1192,7 @@ impl SchemaDefinition {
     /// Create a new schema definition
     pub fn new(data_type: SchemaDataType) -> Self {
         Self {
-            data_type: data_type,
+            data_type,
             constraints: Vec::new(),
             description: None,
             default: None,
@@ -1270,7 +1270,7 @@ impl SchemaValidationResult {
         Self {
             valid: true,
             errors: Vec::new(),
-            fields_validated: fields_validated,
+            fields_validated,
             validation_time_ms,
         }
     }

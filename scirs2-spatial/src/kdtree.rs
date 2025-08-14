@@ -116,7 +116,7 @@ impl<T: Float> Rectangle<T> {
             );
         }
 
-        Rectangle { mins: mins, maxes }
+        Rectangle { mins, maxes }
     }
 
     /// Get the minimum coordinates of the rectangle

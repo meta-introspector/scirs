@@ -7,7 +7,7 @@ fn fix_file(path: &Path) -> io::Result<bool> {
     
     if content.contains("scirs2__") {
         let fixed_content = content
-            .replace("scirs2__special", "scirs2_special")
+            .replace("scirs2_special", "scirs2_special")
             .replace("scirs2__spatial", "scirs2_spatial")
             .replace("scirs2__core", "scirs2_core");
         

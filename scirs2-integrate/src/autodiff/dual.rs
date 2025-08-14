@@ -20,23 +20,20 @@ pub struct Dual<F: IntegrateFloat> {
 impl<F: IntegrateFloat> Dual<F> {
     /// Create a new dual number
     pub fn new(val: F, der: F) -> Self {
-        Dual { val: val, der }
+        Dual { val, der }
     }
 
     /// Create a constant dual number (zero derivative)
     pub fn constant(val: F) -> Self {
         Dual {
-            val: val,
+            val,
             der: F::zero(),
         }
     }
 
     /// Create a variable dual number (unit derivative)
     pub fn variable(val: F) -> Self {
-        Dual {
-            val: val,
-            der: F::one(),
-        }
+        Dual { val, der: F::one() }
     }
 
     /// Extract the value
@@ -336,10 +333,7 @@ pub struct DualVector<F: IntegrateFloat> {
 impl<F: IntegrateFloat> DualVector<F> {
     /// Create a new dual vector
     pub fn new(values: Array1<F>, jacobian: Array1<Array1<F>>) -> Self {
-        DualVector {
-            values: values,
-            jacobian,
-        }
+        DualVector { values, jacobian }
     }
 
     /// Create from a regular vector with specified active variable
@@ -360,10 +354,7 @@ impl<F: IntegrateFloat> DualVector<F> {
     pub fn constant(values: Array1<F>) -> Self {
         let n = values.len();
         let jacobian = Array1::from_elem(n, Array1::zeros(n));
-        DualVector {
-            values: values,
-            jacobian,
-        }
+        DualVector { values, jacobian }
     }
 
     /// Get the dimension

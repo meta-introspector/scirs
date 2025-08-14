@@ -27,9 +27,9 @@ pub struct PropertyTestConfig {
     /// Tolerance for floating-point comparisons
     pub tolerance: f64,
     /// Maximum data size for generated test cases
-    pub max_data_size: usize,
+    pub maxdatasize: usize,
     /// Minimum data size for generated test cases
-    pub min_data_size: usize,
+    pub mindatasize: usize,
     /// Enable parallel test execution
     pub parallel_execution: bool,
     /// Test timeout in milliseconds
@@ -44,8 +44,8 @@ impl Default for PropertyTestConfig {
             num_test_cases: 1000,
             seed: Some(42),
             tolerance: 1e-10,
-            max_data_size: 10000,
-            min_data_size: 5,
+            maxdatasize: 10000,
+            mindatasize: 5,
             parallel_execution: true,
             timeout_ms: 30000,
             detailed_failures: true,
@@ -311,9 +311,9 @@ where
 
             // Test mean invariant: mean of constants should equal the constant
             let constant_value = 5.0;
-            let constant_data = Array1::from_elem(data.len(), constant_value);
+            let constantdata = Array1::from_elem(data.len(), constant_value);
             
-            let result = match crate::descriptive::mean(&constant_data.view()) {
+            let result = match crate::descriptive::mean(&constantdata.view()) {
                 Ok(computed_mean) => {
                     let diff = (computed_mean - constant_value).abs();
                     if diff < self.config.tolerance {
@@ -356,9 +356,9 @@ where
                 let a = self.rng.gen_range(0.1..10.0);
                 let b = self.rng.gen_range(-5.0..5.0);
                 
-                let transformed_data = data.mapv(|x| a * x + b);
+                let transformeddata = data.mapv(|x| a * x + b);
                 
-                if let Ok(transformed_mean) = crate::descriptive::mean(&transformed_data.view()) {
+                if let Ok(transformed_mean) = crate::descriptive::mean(&transformeddata.view()) {
                     let expected_mean = a * original_mean + b;
                     let diff = (transformed_mean - expected_mean).abs();
                     
@@ -379,7 +379,7 @@ where
                                 expected_mean, transformed_mean, diff
                             )),
                             failing_input: Some(TestInput {
-                                arrays: vec![data.clone(), transformed_data],
+                                arrays: vec![data.clone(), transformeddata],
                                 matrices: vec![],
                                 scalars: vec![a, b, original_mean],
                                 flags: vec![],
@@ -408,9 +408,9 @@ where
             
             // Test variance of constants should be zero
             let constant_value = 3.0;
-            let constant_data = Array1::from_elem(data.len(), constant_value);
+            let constantdata = Array1::from_elem(data.len(), constant_value);
             
-            let result = match crate::descriptive::var(&constant_data.view(), 1, None) {
+            let result = match crate::descriptive::var(&constantdata.view(), 1, None) {
                 Ok(computed_variance) => {
                     if computed_variance.abs() < self.config.tolerance {
                         PropertyTestResult {
@@ -430,7 +430,7 @@ where
                                 computed_variance
                             )),
                             failing_input: Some(TestInput {
-                                arrays: vec![constant_data],
+                                arrays: vec![constantdata],
                                 matrices: vec![],
                                 scalars: vec![constant_value],
                                 flags: vec![],
@@ -456,9 +456,9 @@ where
             // Test variance scaling: var(a*X) = a²*var(X)
             if let Ok(original_var) = crate::descriptive::var(&data.view(), 1, None) {
                 let a = self.rng.gen_range(0.1..5.0);
-                let scaled_data = data.mapv(|x| a * x);
+                let scaleddata = data.mapv(|x| a * x);
                 
-                if let Ok(scaled_var) = crate::descriptive::var(&scaled_data.view()..1, None) {
+                if let Ok(scaled_var) = crate::descriptive::var(&scaleddata.view()..1, None) {
                     let expected_var = a * a * original_var;
                     let diff = (scaled_var - expected_var).abs();
                     
@@ -480,7 +480,7 @@ where
                                 expected_var, scaled_var, diff
                             )),
                             failing_input: Some(TestInput {
-                                arrays: vec![data.clone(), scaled_data],
+                                arrays: vec![data.clone(), scaleddata],
                                 matrices: vec![],
                                 scalars: vec![a, original_var],
                                 flags: vec![],
@@ -568,7 +568,7 @@ where
             let start_time = std::time::Instant::now();
             
             // Generate symmetric data around zero
-            let n = self.rng.gen_range(self.config.min_data_size..=self.config.max_data_size);
+            let n = self.rng.gen_range(self.config.mindatasize..=self.config.maxdatasize);
             let mut data = Vec::new();
             
             for _ in 0..n/2 {
@@ -588,7 +588,7 @@ where
                 Ok(skewness) => {
                     if skewness.abs() < self.config.tolerance * 10.0 { // Allow some tolerance for finite samples
                         PropertyTestResult {
-                            property_name: "symmetric_data_skewness".to_string(),
+                            property_name: "symmetricdata_skewness".to_string(),
                             test_case_id,
                             status: TestStatus::Pass,
                             failing_input: None,
@@ -597,7 +597,7 @@ where
                         }
                     } else {
                         PropertyTestResult {
-                            property_name: "symmetric_data_skewness".to_string(),
+                            property_name: "symmetricdata_skewness".to_string(),
                             test_case_id,
                             status: TestStatus::Fail(format!(
                                 "Symmetric data should have near-zero skewness, got: {}",
@@ -616,7 +616,7 @@ where
                     }
                 }
                 Err(e) => PropertyTestResult {
-                    property_name: "symmetric_data_skewness".to_string(),
+                    property_name: "symmetricdata_skewness".to_string(),
                     test_case_id,
                     status: TestStatus::Error(format!("Error computing skewness: {}", e)),
                     failing_input: None,
@@ -638,7 +638,7 @@ where
             let start_time = std::time::Instant::now();
             
             // Generate normal-like data (should have kurtosis ≈ 0 for Fisher definition)
-            let n = self.rng.gen_range(self.config.min_data_size..=self.config.max_data_size);
+            let n = self.rng.gen_range(self.config.mindatasize..=self.config.maxdatasize);
             let data: Vec<f64> = (0..n)
                 .map(|_| {
                     // Box-Muller transform for normal distribution
@@ -656,7 +656,7 @@ where
                     // Allow larger tolerance for finite samples of normal distribution
                     if kurtosis_val.abs() < 2.0 { 
                         PropertyTestResult {
-                            property_name: "normal_data_kurtosis".to_string(),
+                            property_name: "normaldata_kurtosis".to_string(),
                             test_case_id,
                             status: TestStatus::Pass,
                             failing_input: None,
@@ -665,7 +665,7 @@ where
                         }
                     } else {
                         PropertyTestResult {
-                            property_name: "normal_data_kurtosis".to_string(),
+                            property_name: "normaldata_kurtosis".to_string(),
                             test_case_id,
                             status: TestStatus::Fail(format!(
                                 "Normal data should have kurtosis ≈ 0, got: {}",
@@ -684,7 +684,7 @@ where
                     }
                 }
                 Err(e) => PropertyTestResult {
-                    property_name: "normal_data_kurtosis".to_string(),
+                    property_name: "normaldata_kurtosis".to_string(),
                     test_case_id,
                     status: TestStatus::Error(format!("Error computing kurtosis: {}", e)),
                     failing_input: None,
@@ -908,7 +908,7 @@ where
     // Helper methods
 
     fn generate_random_array(&mut self) -> StatsResult<Array1<f64>> {
-        let size = self.rng.gen_range(self.config.min_data_size..=self.config.max_data_size);
+        let size = self.rng.gen_range(self.config.mindatasize..=self.config.maxdatasize);
         let data: Vec<f64> = (0..size)
             .map(|_| self.rng.gen_range(-100.0..100.0))
             .collect();
@@ -1065,8 +1065,8 @@ mod tests {
     fn test_config_validation() {
         let config = PropertyTestConfig {
             num_test_cases: 0,
-            min_data_size: 10,
-            max_data_size: 5, // Invalid: max < min
+            mindatasize: 10,
+            maxdatasize: 5, // Invalid: max < min
             ..Default::default()
         };
         

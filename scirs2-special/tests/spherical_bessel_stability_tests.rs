@@ -4,7 +4,7 @@
 //! implementations across various ranges of arguments and orders.
 
 use approx::assert_relative_eq;
-use scirs2__special::bessel::spherical::{spherical_jn, spherical_jn_scaled, spherical_yn};
+use scirs2_special::bessel::spherical::{spherical_jn, spherical_jn_scaled, spherical_yn};
 
 // Reference values calculated using SciPy
 // from scipy.special import spherical_jn, spherical_yn

@@ -602,9 +602,9 @@ where
     let n = a.nrows();
 
     // Check if number of levels is appropriate
-    let min_size: usize = 2; // Minimum size for the coarsest grid
-    let max_levels = if n > min_size {
-        (n as f64).log2().floor() as usize - (min_size as f64).log2().floor() as usize
+    let minsize: usize = 2; // Minimum size for the coarsest grid
+    let max_levels = if n > minsize {
+        (n as f64).log2().floor() as usize - (minsize as f64).log2().floor() as usize
     } else {
         0
     };
@@ -617,38 +617,38 @@ where
     }
 
     // Calculate minimum size needed for the given levels
-    let min_size_needed = min_size << levels; // 2^levels
+    let minsize_needed = minsize << levels; // 2^levels
 
-    if n < min_size_needed {
+    if n < minsize_needed {
         return Err(LinalgError::InvalidInputError(format!(
-            "Matrix size too small for {levels} levels. Need at least size {min_size_needed}"
+            "Matrix size too small for {levels} levels. Need at least size {minsize_needed}"
         )));
     }
 
     // Initialize grid hierarchy
-    let mut grid_sizes = Vec::with_capacity(levels + 1);
+    let mut gridsizes = Vec::with_capacity(levels + 1);
     let mut grid_matrices = Vec::with_capacity(levels + 1);
     let mut restriction_operators = Vec::with_capacity(levels);
     let mut prolongation_operators = Vec::with_capacity(levels);
 
     // Set up grid hierarchy
-    grid_sizes.push(n);
+    gridsizes.push(n);
     grid_matrices.push(a.to_owned());
 
     // Build grid hierarchy
     for l in 1..=levels {
         let n_coarse = if l == levels {
             // Coarsest level
-            min_size
+            minsize
         } else {
             // Intermediate level - divide by 2^l
             n >> l // equivalent to n / 2^l
         };
 
-        grid_sizes.push(n_coarse);
+        gridsizes.push(n_coarse);
 
         // Build restriction operator (half-weighting)
-        let mut r = Array2::zeros((n_coarse, grid_sizes[l - 1]));
+        let mut r = Array2::zeros((n_coarse, gridsizes[l - 1]));
         for i in 0..n_coarse {
             let i_fine = 2 * i;
 
@@ -662,14 +662,14 @@ where
 
             r[[i, i_fine]] = half;
 
-            if i_fine + 1 < grid_sizes[l - 1] {
+            if i_fine + 1 < gridsizes[l - 1] {
                 r[[i, i_fine + 1]] = quarter;
             }
         }
         restriction_operators.push(r);
 
         // Build prolongation operator (linear interpolation)
-        let mut p = Array2::zeros((grid_sizes[l - 1], n_coarse));
+        let mut p = Array2::zeros((gridsizes[l - 1], n_coarse));
         for i in 0..n_coarse {
             let i_fine = 2 * i;
 
@@ -677,10 +677,10 @@ where
             p[[i_fine, i]] = F::one();
 
             // Set interpolated points
-            if i_fine + 1 < grid_sizes[l - 1] && i + 1 < n_coarse {
+            if i_fine + 1 < gridsizes[l - 1] && i + 1 < n_coarse {
                 p[[i_fine + 1, i]] = F::from(0.5).unwrap();
                 p[[i_fine + 1, i + 1]] = F::from(0.5).unwrap();
-            } else if i_fine + 1 < grid_sizes[l - 1] {
+            } else if i_fine + 1 < gridsizes[l - 1] {
                 p[[i_fine + 1, i]] = F::one();
             }
         }

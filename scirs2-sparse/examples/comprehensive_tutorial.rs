@@ -5,7 +5,7 @@
 //! and advanced solver methods.
 
 use ndarray::Array1;
-use scirs2__sparse::{
+use scirs2_sparse::{
     csr_array::CsrArray,
     error::SparseResult,
     linalg::{

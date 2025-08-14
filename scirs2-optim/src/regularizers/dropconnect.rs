@@ -54,7 +54,9 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
             ));
         }
 
-        Ok(Self { drop_prob: dropprob })
+        Ok(Self {
+            drop_prob: dropprob,
+        })
     }
 
     /// Apply DropConnect to weights
