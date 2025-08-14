@@ -367,7 +367,7 @@ fn rotate_pattern(pattern: u32, n: usize, points: usize) -> u32 {
 ///
 /// * Result containing histogram
 #[allow(dead_code)]
-pub fn lbp_histogram(_lbp_img: &GrayImage, nbins: usize, normalize: bool) -> Result<Array1<f32>> {
+pub fn lbp_histogram(lbp_img: &GrayImage, nbins: usize, normalize: bool) -> Result<Array1<f32>> {
     let mut histogram = Array1::zeros(nbins);
     let scale = 256.0 / nbins as f32;
 

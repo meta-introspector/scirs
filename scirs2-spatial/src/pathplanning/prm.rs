@@ -111,7 +111,7 @@ impl PRMConfig {
 
     /// Set the number of random samples
     pub fn with_num_samples(mut self, numsamples: usize) -> Self {
-        self.num_samples = num_samples;
+        self.num_samples = numsamples;
         self
     }
 
@@ -123,7 +123,7 @@ impl PRMConfig {
 
     /// Set the maximum number of connections per node
     pub fn with_max_connections(mut self, maxconnections: usize) -> Self {
-        self.max_connections = max_connections;
+        self.max_connections = maxconnections;
         self
     }
 
@@ -153,7 +153,7 @@ impl PRMConfig {
 
     /// Enable lazy evaluation for collision checking
     pub fn with_lazy_evaluation(mut self, lazyevaluation: bool) -> Self {
-        self.lazy_evaluation = lazy_evaluation;
+        self.lazy_evaluation = lazyevaluation;
         self
     }
 }
@@ -559,18 +559,18 @@ impl PRMPlanner {
     }
 
     /// Find a path from start to goal using A* search
-    fn astar_search(&self, _start_id: usize, goalid: usize) -> Option<(Vec<usize>, f64)> {
+    fn astar_search(&self, start_id: usize, goalid: usize) -> Option<(Vec<usize>, f64)> {
         let mut open_set = BinaryHeap::new();
         let mut closed_set = HashSet::new();
         let mut came_from = HashMap::new();
         let mut g_scores = HashMap::new();
 
         // Initialize A* search
-        g_scores.insert(_start_id, 0.0);
+        g_scores.insert(start_id, 0.0);
 
         // Use Euclidean distance as the heuristic
         let h_score = euclidean_distance(
-            &self.nodes[_start_id].config.view(),
+            &self.nodes[start_id].config.view(),
             &self.nodes[goalid].config.view(),
         )
         .unwrap_or(f64::MAX);

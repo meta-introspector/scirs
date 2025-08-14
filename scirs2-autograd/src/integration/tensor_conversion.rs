@@ -158,7 +158,7 @@ impl TensorConverter {
             .map(|i| F::from(i + 1).unwrap())
             .collect();
 
-        Array::fromshape_vec(IxDyn(&shape), data).map_err(|e| {
+        Array::from_shape_vec(IxDyn(&shape), data).map_err(|e| {
             IntegrationError::TensorConversion(format!("Failed to create ndarray: {e}"))
         })
     }
@@ -221,10 +221,10 @@ impl TensorConverter {
         &self,
         tensor: &Tensor<F>,
     ) -> Result<TensorMetadata, IntegrationError> {
-        let finalshape = tensor.shape();
+        let shape = tensor.shape();
 
         Ok(TensorMetadata {
-            shape: finalshape,
+            shape,
             dtype: std::any::type_name::<F>().to_string(),
             memory_layout: MemoryLayout::RowMajor, // Simplified
             requires_grad: tensor.requires_grad(),
@@ -387,7 +387,7 @@ pub fn convert_tensor_from<F: Float>(
     _source_format: &str,
 ) -> Result<(), IntegrationError> {
     let _converter = init_tensor_converter();
-    let _converter_guard = converter.lock().map_err(|_| {
+    let _converter_guard = _converter.lock().map_err(|_| {
         IntegrationError::TensorConversion("Failed to acquire converter lock".to_string())
     })?;
     // Simplified implementation - direct tensor creation requires graph context
@@ -400,7 +400,7 @@ pub fn convert_tensor_precision<F1: Float, F2: Float>(
     _tensor: &Tensor<F1>,
 ) -> Result<(), IntegrationError> {
     let _converter = init_tensor_converter();
-    let _converter_guard = converter.lock().map_err(|_| {
+    let _converter_guard = _converter.lock().map_err(|_| {
         IntegrationError::TensorConversion("Failed to acquire converter lock".to_string())
     })?;
     Err(IntegrationError::TensorConversion(
@@ -412,7 +412,7 @@ pub fn convert_tensor_precision<F1: Float, F2: Float>(
 #[allow(dead_code)]
 pub fn from_ndarray<F: Float>(array: ArrayD<F>) -> Result<(), IntegrationError> {
     let _converter = init_tensor_converter();
-    let _converter_guard = converter.lock().map_err(|_| {
+    let _converter_guard = _converter.lock().map_err(|_| {
         IntegrationError::TensorConversion("Failed to acquire converter lock".to_string())
     })?;
     Err(IntegrationError::TensorConversion(
@@ -448,7 +448,7 @@ mod tests {
             let converter = TensorConverter::new();
             // Use constant tensor which properly preserves shape
             let tensor = convert_to_tensor(
-                ndarray::Array::fromshape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
+                ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
                 g,
             );
 
@@ -470,7 +470,7 @@ mod tests {
         crate::run(|g| {
             let converter = TensorConverter::new();
             let tensor_f32 = convert_to_tensor(
-                ndarray::Array::fromshape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
+                ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
                 g,
             );
 
@@ -485,7 +485,7 @@ mod tests {
     fn test_tensor_view() {
         crate::run(|g| {
             let tensor = convert_to_tensor(
-                ndarray::Array::fromshape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
+                ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
                 g,
             );
             let converter = TensorConverter::new();
@@ -503,7 +503,7 @@ mod tests {
             let data = vec![1.0f32, 2.0, 3.0, 4.0];
             let shape = [2, 2];
             let tensor = convert_to_tensor(
-                ndarray::Array::fromshape_vec((2, 2), data.clone()).unwrap(),
+                ndarray::Array::from_shape_vec((2, 2), data.clone()).unwrap(),
                 g,
             );
 

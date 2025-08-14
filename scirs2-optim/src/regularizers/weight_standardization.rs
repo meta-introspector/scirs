@@ -47,7 +47,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> WeightStandardization<A> 
     /// * `eps` - Small constant for numerical stability (typically 1e-5)
     pub fn new(eps: f64) -> Self {
         Self {
-            eps: A::from_f64(_eps).unwrap(),
+            eps: A::from_f64(eps).unwrap(),
         }
     }
 

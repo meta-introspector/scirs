@@ -147,13 +147,13 @@ pub fn shi_tomasi_corners(
     for y in radius..(height - radius) {
         for x in radius..(width - radius) {
             if response[[y, x]] > threshold {
-                corners.push((x, y, response[[y, x]]));
+                _corners.push((x, y, response[[y, x]]));
             }
         }
     }
 
     // Sort by response strength
-    corners.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
+    _corners.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
 
     // Filter by minimum _distance
     let mut selected_corners = Vec::new();
@@ -201,7 +201,7 @@ pub fn shi_tomasi_corners(
 /// * Result containing corner points
 #[allow(dead_code)]
 pub fn shi_tomasi_corners_simple(_img: &DynamicImage, maxcorners: usize) -> Result<GrayImage> {
-    shi_tomasi_corners(_img, 3, 0.01, max_corners, 10)
+    shi_tomasi_corners(_img, 3, 0.01, maxcorners, 10)
 }
 
 /// Extract good features to track with sub-pixel accuracy
@@ -338,14 +338,14 @@ pub fn good_features_to_track(
                         sub_y -= dy / dyy;
                     }
 
-                    corners.push((sub_x, sub_y, r));
+                    _corners.push((sub_x, sub_y, r));
                 }
             }
         }
     }
 
     // Sort by response strength
-    corners.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
+    _corners.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
 
     // Filter by minimum _distance
     let mut selected_corners = Vec::new();

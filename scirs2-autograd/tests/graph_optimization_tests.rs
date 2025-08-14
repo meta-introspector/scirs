@@ -4,12 +4,12 @@
 //! capabilities added to the scirs2-autograd system.
 
 use ndarray::{Array, IxDyn};
-use scirs2__autograd::optimization::{
+use scirs2_autograd::optimization::{
     memory_optimization::{MemoryOptimizationConfig, MemoryOptimizer},
     ConstantFolder, ExpressionSimplifier, GraphOptimizer, OptimizationConfig, OptimizationLevel,
 };
-use scirs2__autograd::tensor_ops as T;
-use scirs2__autograd::visualization::{
+use scirs2_autograd::tensor_ops as T;
+use scirs2_autograd::visualization::{
     GraphDebugger, GraphExplorer, GraphVisualizer, OutputFormat, VisualizationConfig,
 };
 use scirs2_autograd as ag;
@@ -190,7 +190,7 @@ mod optimization_tests {
 
     #[test]
     fn test_optimization_report() {
-        use scirs2__autograd::optimization::OptimizationReport;
+        use scirs2_autograd::optimization::OptimizationReport;
 
         let mut report = OptimizationReport::new();
         assert_eq!(report.total_optimizations(), 0);
@@ -209,7 +209,7 @@ mod optimization_tests {
 
     #[test]
     fn test_memory_optimization_report() {
-        use scirs2__autograd::optimization::memory_optimization::MemoryOptimizationReport;
+        use scirs2_autograd::optimization::memory_optimization::MemoryOptimizationReport;
 
         let mut report = MemoryOptimizationReport::new();
         assert_eq!(report.total_optimizations(), 0);
@@ -226,7 +226,7 @@ mod optimization_tests {
 
     #[test]
     fn test_public_optimization_api() {
-        // use scirs2__autograd::optimization; // Would be used with a proper graph
+        // use scirs2_autograd::optimization; // Would be used with a proper graph
 
         // Note: These functions exist and can be called, but we skip actual testing
         // since creating a valid graph requires more setup
@@ -296,7 +296,7 @@ mod integration_tests {
 
     #[test]
     fn test_pattern_matching_and_simplification() {
-        use scirs2__autograd::optimization::SimplificationPattern;
+        use scirs2_autograd::optimization::SimplificationPattern;
 
         // Test simplification patterns
         let pattern = SimplificationPattern::AddZero;
@@ -311,7 +311,7 @@ mod integration_tests {
 
     #[test]
     fn test_memory_analysis_and_lifetime() {
-        use scirs2__autograd::optimization::memory_optimization::{
+        use scirs2_autograd::optimization::memory_optimization::{
             MemoryAnalysis, MemoryPoolManager, TensorLifetime, TensorLifetimeAnalyzer,
         };
 
@@ -414,7 +414,7 @@ mod advanced_feature_integration_tests {
         // Test that custom activations work with the optimization system
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 1.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 1.0]).unwrap(),
                 ctx,
             );
 
@@ -433,11 +433,11 @@ mod advanced_feature_integration_tests {
         ag::run(|ctx: &mut ag::Context<f32>| {
             // Test SIMD operations
             let a = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
                 ctx,
             );
             let b = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[4]), vec![2.0, 3.0, 4.0, 5.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4]), vec![2.0, 3.0, 4.0, 5.0]).unwrap(),
                 ctx,
             );
 
@@ -459,7 +459,7 @@ mod advanced_feature_integration_tests {
     fn test_graph_enhancements_with_visualization() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
                 ctx,
             );
 
@@ -469,13 +469,13 @@ mod advanced_feature_integration_tests {
 
             // Test conditional operations
             let condition =
-                T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
+                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
             let true_branch = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[2]), vec![10.0, 20.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0]).unwrap(),
                 ctx,
             );
             let false_branch = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[2]), vec![30.0, 40.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![30.0, 40.0]).unwrap(),
                 ctx,
             );
 

@@ -374,7 +374,7 @@ impl VisibilityGraphPlanner {
     /// When enabled, the planner first checks if there's a direct path
     /// from start to goal before building the full visibility graph.
     pub fn with_fast_path(mut self, use_fastpath: bool) -> Self {
-        self.use_fast_path = use_fast_path;
+        self.use_fast_path = use_fastpath;
         self
     }
 

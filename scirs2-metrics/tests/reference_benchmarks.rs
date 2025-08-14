@@ -6,7 +6,7 @@
 
 use approx::assert_abs_diff_eq;
 use ndarray::{array, Array1, Array2};
-use scirs2__metrics::{
+use scirs2_metrics::{
     classification::{accuracy_score, f1_score, precision_score, recall_score},
     clustering::{davies_bouldin_score, silhouette_score},
     regression::{mean_absolute_error, mean_squared_error, r2_score},
@@ -79,7 +79,7 @@ fn test_regression_reference_values() {
 #[allow(dead_code)]
 fn test_clustering_reference_values() {
     // Two well-separated 2D clusters
-    let data = Array2::fromshape_vec(
+    let data = Array2::from_shape_vec(
         (6, 2),
         vec![
             // Cluster 0: centered around (0, 0)

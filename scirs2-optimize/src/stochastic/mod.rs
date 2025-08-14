@@ -115,7 +115,7 @@ pub struct InMemoryDataProvider {
 
 impl InMemoryDataProvider {
     pub fn new(data: Vec<f64>) -> Self {
-        Self { _data }
+        Self { data }
     }
 }
 
@@ -205,10 +205,10 @@ pub fn update_learning_rate(
 
 /// Clip gradients to prevent exploding gradients
 #[allow(dead_code)]
-pub fn clip_gradients(_gradient: &mut Array1<f64>, maxnorm: f64) {
+pub fn clip_gradients(gradient: &mut Array1<f64>, maxnorm: f64) {
     let grad_norm = gradient.mapv(|x| x * x).sum().sqrt();
-    if grad_norm > max_norm {
-        let scale = max_norm / grad_norm;
+    if grad_norm > maxnorm {
+        let scale = maxnorm / grad_norm;
         gradient.mapv_inplace(|x| x * scale);
     }
 }
@@ -224,7 +224,7 @@ pub fn generate_batch_indices(_num_samples: usize, batchsize: usize, shuffle: bo
         indices.shuffle(&mut rng());
     }
 
-    indices.into_iter().take(batch_size).collect()
+    indices.into_iter().take(batchsize).collect()
 }
 
 /// Main stochastic optimization function
@@ -326,8 +326,7 @@ pub fn create_stochastic_options_for_problem(
             max_iter: 1000,
             batch_size: Some(32.min(dataset_size / 10)),
             lr_schedule: LearningRateSchedule::ExponentialDecay {
-                decay: 0.99,
-                rate: 0.95,
+                decay_rate: 0.99,
             },
             gradient_clip: Some(1.0),
             early_stopping_patience: Some(50),
@@ -364,8 +363,7 @@ pub fn create_stochastic_options_for_problem(
             max_iter: 1000,
             batch_size: Some(64.min(dataset_size / 5)),
             lr_schedule: LearningRateSchedule::InverseTimeDecay {
-                decay: 1.0,
-                rate: 0.001,
+                decay_rate: 1.0,
             },
             gradient_clip: Some(2.0),
             early_stopping_patience: Some(100),

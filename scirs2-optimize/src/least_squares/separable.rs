@@ -439,17 +439,13 @@ fn solve_symmetric_system(a: &Array2<f64>, b: &Array1<f64>) -> OptimizeResult<Ar
 
 /// QR solve (simplified)
 #[allow(dead_code)]
-fn qr_solve<S>(
-    _phi: &Array2<f64>,
-    y: &ArrayBase<S, Ix1>,
-    lambda: f64,
-) -> OptimizeResult<Array1<f64>>
+fn qr_solve<S>(phi: &Array2<f64>, y: &ArrayBase<S, Ix1>, lambda: f64) -> OptimizeResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
 {
     // For simplicity, use normal equations with regularization
     // A proper implementation would use actual QR decomposition
-    let phi_t_phi = phi.t().dot(_phi);
+    let phi_t_phi = phi.t().dot(phi);
     let phi_t_y = phi.t().dot(y);
 
     let mut regularized = phi_t_phi.clone();

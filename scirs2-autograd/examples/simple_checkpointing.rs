@@ -16,7 +16,7 @@ fn main() {
     );
 
     // Create a computation graph with a chain of operations
-    ag::run::<f32_>(|ctx| {
+    ag::run(|ctx| {
         // Start tracking memory with the checkpoint profiler
         CheckpointProfiler::start_tracking();
 

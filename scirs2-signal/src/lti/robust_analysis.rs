@@ -851,7 +851,7 @@ fn estimate_condition_number_2_norm(matrix: &Array2<f64>) -> f64 {
     let max_sv = max_sv_sq.sqrt();
 
     // Simplified estimate for smallest singular value
-    let min_sv = estimate_smallest_singular_value(_matrix);
+    let min_sv = estimate_smallest_singular_value(matrix);
 
     if min_sv > 1e-15 {
         max_sv / min_sv
@@ -1086,7 +1086,7 @@ fn compute_sensitivity_analysis(
 /// Compute simplified controllability measure
 #[allow(dead_code)]
 fn compute_controllability_measure(ss: &StateSpace) -> SignalResult<f64> {
-    let controllability_matrix = build_controllability_matrix_robust(_ss)?;
+    let controllability_matrix = build_controllability_matrix_robust(ss)?;
 
     // Compute Frobenius norm as controllability measure
     let mut norm_sq = 0.0;

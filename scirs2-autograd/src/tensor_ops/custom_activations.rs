@@ -113,7 +113,7 @@ pub struct CustomActivationBuilder<F: Float> {
 impl<F: Float> CustomActivationBuilder<F> {
     pub fn new(name: &str) -> Self {
         Self {
-            _name: name.to_string(),
+            name: name.to_string(),
             forward_fn: Box::new(|x| x),
             derivative_fn: None,
             properties: ActivationProperties::default(),
@@ -247,7 +247,7 @@ pub fn list_activation_functions() -> Vec<String> {
 #[allow(dead_code)]
 pub fn is_activation_registered(name: &str) -> bool {
     let registry = ACTIVATION_REGISTRY.lock().unwrap();
-    registry.contains_key(_name)
+    registry.contains_key(name)
 }
 
 #[cfg(test)]

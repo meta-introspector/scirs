@@ -24,8 +24,8 @@
 //! ## Using StableMetrics for numerical stability
 //!
 //! ```
-//! use scirs2__metrics::optimization::numeric::StableMetrics;
-//! use scirs2__metrics::error::Result;
+//! use scirs2_metrics::optimization::numeric::StableMetrics;
+//! use scirs2_metrics::error::Result;
 //!
 //! fn compute_kl_divergence(p: &[f64], q: &[f64]) -> Result<f64> {
 //!     let stable = StableMetrics::<f64>::new()
@@ -38,8 +38,8 @@
 //! ## Using parallel computation for batch metrics
 //!
 //! ```
-//! use scirs2__metrics::optimization::parallel::{ParallelConfig, compute_metrics_batch};
-//! use scirs2__metrics::error::Result;
+//! use scirs2_metrics::optimization::parallel::{ParallelConfig, compute_metrics_batch};
+//! use scirs2_metrics::error::Result;
 //! use ndarray::Array1;
 //!
 //! fn compute_multiple_metrics(_y_true: &Array1<f64>, ypred: &Array1<f64>) -> Result<Vec<f64>> {
@@ -60,8 +60,8 @@
 //! ## Using memory-efficient metrics for large datasets
 //!
 //! ```
-//! use scirs2__metrics::optimization::memory::{StreamingMetric, ChunkedMetrics};
-//! use scirs2__metrics::error::Result;
+//! use scirs2_metrics::optimization::memory::{StreamingMetric, ChunkedMetrics};
+//! use scirs2_metrics::error::Result;
 //!
 //! struct StreamingMeanAbsoluteError;
 //!
@@ -94,8 +94,8 @@
 //! ## Using quantum-inspired acceleration for large-scale computations
 //!
 //! ```
-//! use scirs2__metrics::optimization::quantum_acceleration::{QuantumMetricsComputer, QuantumConfig};
-//! use scirs2__metrics::error::Result;
+//! use scirs2_metrics::optimization::quantum_acceleration::{QuantumMetricsComputer, QuantumConfig};
+//! use scirs2_metrics::error::Result;
 //! use ndarray::Array1;
 //!
 //! fn compute_quantum_correlation(x: &Array1<f64>, y: &Array1<f64>) -> Result<f64> {

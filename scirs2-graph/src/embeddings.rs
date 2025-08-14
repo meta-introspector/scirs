@@ -360,13 +360,13 @@ impl Embedding {
     /// Create a new embedding with given dimensions
     pub fn new(dimensions: usize) -> Self {
         Embedding {
-            vector: vec![0.0; _dimensions],
+            vector: vec![0.0; dimensions],
         }
     }
 
     /// Create a random embedding
     pub fn random(dimensions: usize, rng: &mut impl Rng) -> Self {
-        let vector: Vec<f64> = (0.._dimensions).map(|_| rng.gen_range(-0.5..0.5)).collect();
+        let vector: Vec<f64> = (0..dimensions).map(|_| rng.gen_range(-0.5..0.5)).collect();
         Embedding { vector }
     }
 
@@ -461,7 +461,7 @@ impl Embedding {
     /// Update embedding using gradient (SIMD optimized)
     pub fn update_gradient(&mut self, gradient: &[f64], learningrate: f64) {
         for (emb, &grad) in self.vector.iter_mut().zip(gradient.iter()) {
-            *emb -= learning_rate * grad;
+            *emb -= learningrate * grad;
         }
     }
 }
@@ -667,7 +667,7 @@ impl<N: Node> EmbeddingModel<N> {
             .par_chunks(1000) // Process in chunks for better cache locality
             .map(|chunk| -> Result<Vec<(N, Vec<f64>, Vec<f64>)>> {
                 let mut local_updates = Vec::new();
-                let mut local_rng = rand::_rng();
+                let mut local_rng = rand::rng();
 
                 for pair in chunk {
                     // Get embeddings (read-only access)
@@ -777,7 +777,7 @@ impl<N: Node> EmbeddingModel<N> {
         let gradient_updates: Vec<(N, Vec<f64>)> = target_nodes
             .par_iter()
             .map(|target_node| -> Result<(N, Vec<f64>)> {
-                let mut local_rng = rand::_rng();
+                let mut local_rng = rand::rng();
                 let mut accumulated_gradient = vec![0.0; self.dimensions];
 
                 let target_emb = self
@@ -877,6 +877,7 @@ impl<N: Node> EmbeddingModel<N> {
     /// Returns AUC score for predicting missing edges
     #[allow(dead_code)]
     pub fn evaluate_link_prediction<E, Ix>(
+        &self,
         self_graph: &Graph<N, E, Ix>,
         test_edges: &[(N, N)],
         negative_edges: &[(N, N)],
@@ -991,10 +992,10 @@ impl<N: Node> EmbeddingModel<N> {
                 }
 
                 // Find most frequent label
-                if let Some((&predicted_label_)) =
+                if let Some((&predicted_label_, _)) =
                     label_counts.iter().max_by_key(|(_, &count)| count)
                 {
-                    predictions.insert(test_node.clone(), predicted_label);
+                    predictions.insert(test_node.clone(), predicted_label_);
                 }
             }
         }
@@ -1082,7 +1083,7 @@ impl<N: Node> EmbeddingModel<N> {
     where
         N: for<'de> Deserialize<'de>,
     {
-        let file = File::open(_path)
+        let file = File::open(path)
             .map_err(|e| GraphError::ComputationError(format!("Failed to open file: {e}")))?;
         let reader = BufReader::new(file);
 
@@ -1126,7 +1127,7 @@ impl<N: Node> EmbeddingModel<N> {
     where
         N: for<'de> Deserialize<'de>,
     {
-        let file = File::open(_path).map_err(|e| {
+        let file = File::open(path).map_err(|e| {
             GraphError::ComputationError(format!("Failed to open binary file: {e}"))
         })?;
         let reader = BufReader::new(file);
@@ -1175,7 +1176,7 @@ impl<N: Node> EmbeddingModel<N> {
 
     /// Import embeddings from CSV format
     pub fn import_csv<P: AsRef<Path>>(path: P) -> Result<EmbeddingModel<String>> {
-        let content = std::fs::read_to_string(_path)
+        let content = std::fs::read_to_string(path)
             .map_err(|e| GraphError::ComputationError(format!("Failed to read CSV file: {e}")))?;
 
         let lines: Vec<&str> = content.lines().collect();
@@ -1197,7 +1198,7 @@ impl<N: Node> EmbeddingModel<N> {
             }
 
             let node = parts[0].to_string();
-            let vector: std::result::Result<Vec<f64> + std::num::ParseFloatError> =
+            let vector: std::result::Result<Vec<f64>, _> =
                 parts[1..].iter().map(|s| s.parse::<f64>()).collect();
 
             match vector {
@@ -1380,12 +1381,12 @@ impl<N: Node> RandomWalkGenerator<N> {
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
-        let mut _walks = Vec::new();
+        let mut walks = Vec::new();
         for _ in 0..num_walks {
             let walk = self.simple_random_walk(graph, start, walk_length)?;
             walks.push(walk);
         }
-        Ok(_walks)
+        Ok(walks)
     }
 }
 
@@ -1400,7 +1401,7 @@ impl<N: Node> Node2Vec<N> {
     /// Create a new Node2Vec instance
     pub fn new(config: Node2VecConfig) -> Self {
         Node2Vec {
-            model: EmbeddingModel::new(_config.dimensions),
+            model: EmbeddingModel::new(config.dimensions),
             config,
             walk_generator: RandomWalkGenerator::new(),
         }
@@ -1506,7 +1507,7 @@ impl<N: Node> DeepWalk<N> {
     /// Create a new DeepWalk instance
     pub fn new(config: DeepWalkConfig) -> Self {
         DeepWalk {
-            model: EmbeddingModel::new(_config.dimensions),
+            model: EmbeddingModel::new(config.dimensions),
             config,
             walk_generator: RandomWalkGenerator::new(),
         }
@@ -1640,7 +1641,7 @@ impl<N: Node + Clone + Hash + Eq> AdvancedEmbeddingTrainer<N> {
 
     /// Compute adaptive learning rate based on schedule
     pub fn compute_learning_rate(&self, epoch: usize, totalepochs: usize) -> f64 {
-        let progress = epoch as f64 / total_epochs as f64;
+        let progress = epoch as f64 / totalepochs as f64;
 
         match self.config.lr_schedule {
             LearningRateSchedule::Constant => self.config.initial_lr,
@@ -1872,26 +1873,27 @@ pub struct FastGraphEmbedding<N: Node> {
 }
 
 impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FastGraphEmbedding<N> {
-    pub fn new(_dimensions: usize, qualityfactor: usize) -> Self {
+    pub fn new(dimensions: usize, qualityfactor: usize) -> Self {
         let pool_size = 1000; // Preallocate 1000 vectors
         let mut memory_pool = Vec::with_capacity(pool_size);
         for _ in 0..pool_size {
-            memory_pool.push(vec![0.0f32; _dimensions]);
+            memory_pool.push(vec![0.0f32; dimensions]);
         }
 
         // Initialize random projection matrix
-        let mut rng = rand::rng();
-        let projection_size = _dimensions * quality_factor;
+        let mut rng = rand::thread_rng();
+        let projection_size = dimensions * qualityfactor;
         let mut projection_matrix = Vec::new();
         for _ in 0..projection_size {
-            let row: Vec<f32> = (0.._dimensions).map(|_| rng.gen_range(-1.0..1.0)).collect();
+            let row: Vec<f32> = (0..dimensions).map(|_| rng.gen_range(-1.0..1.0)).collect();
             projection_matrix.push(row);
         }
 
         FastGraphEmbedding {
-            embeddings: HashMap::new().._dimensions,
+            embeddings: HashMap::new(),
+            dimensions,
             projection_matrix,
-            quality_factor,
+            quality_factor: qualityfactor,
             memory_pool,
             pool_index: AtomicUsize::new(0),
         }
@@ -1911,7 +1913,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FastGraphEmbedding<N> {
     {
         // Use frequency sketching for fast approximation
         let mut sketch = vec![0.0f32; self.dimensions];
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         // Sample random walks and update sketch
         for _ in 0..num_samples {
@@ -2039,13 +2041,14 @@ pub struct Graph2Vec<N: Node> {
 }
 
 impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
-    pub fn new(_dimensions: usize, wl_iterations: usize, min_patternfreq: usize) -> Self {
+    pub fn new(dimensions: usize, wl_iterations: usize, min_patternfreq: usize) -> Self {
         Graph2Vec {
             vocabulary: HashMap::new(),
             graph_embeddings: HashMap::new(),
             dimensions,
             wl_iterations,
-            min_pattern_freq_phantom: std::marker::PhantomData,
+            _phantom: std::marker::PhantomData,
+            min_pattern_freq: min_patternfreq,
         }
     }
 
@@ -2126,26 +2129,26 @@ impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
         }
 
         // Initialize graph embeddings
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         for graph_id in graph_patterns.keys() {
             let embedding: Vec<f64> = (0..self.dimensions)
                 .map(|_| rng.gen_range(-0.1..0.1))
                 .collect();
-            self.graph_embeddings.insert(graph_id.clone()..embedding);
+            self.graph_embeddings.insert(graph_id.clone(), embedding);
         }
 
         // Train using skip-gram-like objective on graph "documents"
         for epoch in 0..epochs {
-            for (graph_id_patterns) in graph_patterns {
-                // Convert _patterns to vocabulary indices
-                let pattern_indices: Vec<usize> = _patterns
+            for (graph_id, patterns) in graph_patterns {
+                // Convert patterns to vocabulary indices
+                let pattern_indices: Vec<usize> = patterns
                     .iter()
                     .filter_map(|p| self.vocabulary.get(p))
                     .cloned()
                     .collect();
 
                 if pattern_indices.len() >= 2 {
-                    // Use _patterns as context for each other
+                    // Use patterns as context for each other
                     for (i, &target_idx) in pattern_indices.iter().enumerate() {
                         for (j, &context_idx) in pattern_indices.iter().enumerate() {
                             if i != j {
@@ -2191,14 +2194,14 @@ impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
 
     /// Get embedding for a graph
     pub fn get_graph_embedding(&self, graphid: &str) -> Option<&Vec<f64>> {
-        self.graph_embeddings.get(graph_id)
+        self.graph_embeddings.get(graphid)
     }
 
     /// Compute similarity between two graphs
     pub fn graph_similarity(&self, graph_id1: &str, graphid2: &str) -> f64 {
         if let (Some(emb1), Some(emb2)) = (
             self.graph_embeddings.get(graph_id1),
-            self.graph_embeddings.get(graph_id2),
+            self.graph_embeddings.get(graphid2),
         ) {
             // Cosine similarity
             let dot_product: f64 = emb1.iter().zip(emb2.iter()).map(|(&a, &b)| a * b).sum();

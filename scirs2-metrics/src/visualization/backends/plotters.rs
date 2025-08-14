@@ -32,7 +32,7 @@ impl PlottersBackend {
     /// Map the scirs2-metrics color map to a plotters color map name
     #[allow(dead_code)]
     fn map_color_scheme(&self, colormap: &ColorMap) -> &'static str {
-        match color_map {
+        match colormap {
             ColorMap::BlueRed => "BrBG",
             ColorMap::GreenRed => "PRGn",
             ColorMap::Grayscale => "Greys",

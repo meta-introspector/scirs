@@ -590,7 +590,7 @@ where
 
         let error = (*yt - *yp).abs();
         abs_errors.push(error);
-        validweights.push(w);
+        valid_weights.push(w);
         weight_sum = weight_sum + w;
     }
 

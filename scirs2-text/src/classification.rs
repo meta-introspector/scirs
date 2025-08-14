@@ -45,34 +45,34 @@ impl TextFeatureSelector {
 
     /// Set minimum document frequency
     pub fn set_min_df(mut self, mindf: f64) -> Result<Self> {
-        if min_df < 0.0 {
+        if mindf < 0.0 {
             return Err(TextError::InvalidInput(
                 "min_df must be non-negative".to_string(),
             ));
         }
-        self.min_df = min_df;
+        self.min_df = mindf;
         Ok(self)
     }
 
     /// Set maximum document frequency
     pub fn set_max_df(mut self, maxdf: f64) -> Result<Self> {
-        if !(0.0..=1.0).contains(&max_df) {
+        if !(0.0..=1.0).contains(&maxdf) {
             return Err(TextError::InvalidInput(
                 "max_df must be between 0 and 1 for fractions".to_string(),
             ));
         }
-        self.max_df = max_df;
+        self.max_df = maxdf;
         Ok(self)
     }
 
     /// Set maximum document frequency (alias for set_max_df)
     pub fn set_max_features(self, maxfeatures: f64) -> Result<Self> {
-        self.set_max_df(max_features)
+        self.set_max_df(maxfeatures)
     }
 
     /// Set to use absolute counts instead of fractions
     pub fn use_counts(mut self, usecounts: bool) -> Self {
-        self.use_counts = use_counts;
+        self.use_counts = usecounts;
         self
     }
 
@@ -272,7 +272,7 @@ impl TextClassificationMetrics {
     where
         T: PartialEq,
     {
-        if predictions.len() != true_labels.len() {
+        if predictions.len() != truelabels.len() {
             return Err(TextError::InvalidInput(
                 "Predictions and _labels must have the same length".to_string(),
             ));
@@ -286,7 +286,7 @@ impl TextClassificationMetrics {
 
         let correct = predictions
             .iter()
-            .zip(true_labels.iter())
+            .zip(truelabels.iter())
             .filter(|(pred, true_label)| pred == true_label)
             .count();
 
@@ -298,7 +298,7 @@ impl TextClassificationMetrics {
     where
         T: PartialEq + Copy + Default + PartialEq<usize>,
     {
-        if predictions.len() != true_labels.len() {
+        if predictions.len() != truelabels.len() {
             return Err(TextError::InvalidInput(
                 "Predictions and _labels must have the same length".to_string(),
             ));
@@ -309,7 +309,7 @@ impl TextClassificationMetrics {
         let mut fp = 0;
         let mut fn_ = 0;
 
-        for (pred, true_label) in predictions.iter().zip(true_labels.iter()) {
+        for (pred, true_label) in predictions.iter().zip(truelabels.iter()) {
             if *pred == 1 && *true_label == 1 {
                 tp += 1;
             } else if *pred == 1 && *true_label == 0 {

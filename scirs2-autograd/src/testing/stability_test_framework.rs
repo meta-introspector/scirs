@@ -487,7 +487,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             .map(|i| F::from(i).unwrap() * F::from(0.1).unwrap())
             .collect();
 
-        T::convert_to_tensor(Array::fromshape_vec(IxDyn(&shape), data).unwrap(), graph)
+        T::convert_to_tensor(Array::from_shape_vec(IxDyn(&shape), data).unwrap(), graph)
     }
 
     #[allow(dead_code)]
@@ -510,7 +510,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             })
             .collect();
 
-        T::convert_to_tensor(Array::fromshape_vec(IxDyn(&shape), data).unwrap(), graph)
+        T::convert_to_tensor(Array::from_shape_vec(IxDyn(&shape), data).unwrap(), graph)
     }
 
     #[allow(dead_code)]
@@ -525,7 +525,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
         let shape = vec![values.len()];
         let data: Vec<F> = values.into_iter().map(|v| F::from(v).unwrap()).collect();
 
-        T::convert_to_tensor(Array::fromshape_vec(IxDyn(&shape), data).unwrap(), graph)
+        T::convert_to_tensor(Array::from_shape_vec(IxDyn(&shape), data).unwrap(), graph)
     }
 
     fn evaluate_test_pass(
@@ -535,25 +535,29 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
     ) -> bool {
         // Test passes if actual stability grade is at least as good as expected
         match (metrics.stability_grade, test_case.expected_stability) {
-            (StabilityGrade::Excellent) => true,
+            (StabilityGrade::Excellent, _) => true,
             (StabilityGrade::Good, StabilityGrade::Excellent) => false,
-            (StabilityGrade::Good) => true,
+            (StabilityGrade::Good, StabilityGrade::Good) => true,
+            (StabilityGrade::Good, StabilityGrade::Fair | StabilityGrade::Poor | StabilityGrade::Unstable | StabilityGrade::Critical) => true,
             (StabilityGrade::Fair, StabilityGrade::Excellent | StabilityGrade::Good) => false,
-            (StabilityGrade::Fair) => true,
-            (StabilityGrade::Poor, StabilityGrade::Unstable) => true,
-            (StabilityGrade::Poor) => false,
-            (StabilityGrade::Unstable) => false,
+            (StabilityGrade::Fair, StabilityGrade::Fair) => true,
+            (StabilityGrade::Fair, StabilityGrade::Poor | StabilityGrade::Unstable | StabilityGrade::Critical) => true,
+            (StabilityGrade::Poor, StabilityGrade::Unstable | StabilityGrade::Critical) => true,
+            (StabilityGrade::Poor, _) => false,
+            (StabilityGrade::Unstable, StabilityGrade::Critical) => true,
+            (StabilityGrade::Unstable, _) => false,
+            (StabilityGrade::Critical, _) => false,
         }
     }
 
     #[allow(dead_code)]
     fn run_edge_case_test(
         self_name: &str,
-        _edge_case: EdgeCaseTest<F>,
+        edge_case: EdgeCaseTest<F>,
     ) -> Result<EdgeCaseTestResult, StabilityError> {
         // Simplified implementation
         Ok(EdgeCaseTestResult {
-            _case_name: name.to_string(),
+            case_name: self_name.to_string(),
             behavior_observed: EdgeCaseBehavior::Stable,
             behavior_expected: edge_case.expected_behavior,
             passed: true,
@@ -621,7 +625,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             total_tests,
             passed_tests,
             failed_tests: total_tests - passed_tests,
-            total_duration,
+            total_duration: totalduration,
             stability_distribution: self.calculate_stability_distribution(),
             performance_summary: self.calculate_performance_summary(),
             recommendations: self.generate_recommendations(),

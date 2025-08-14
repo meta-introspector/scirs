@@ -134,16 +134,16 @@ impl<F: Float> ExpressionSimplifier<F> {
 
     /// Apply a specific rule to simplify a tensor
     pub fn apply_rule(
-        self_rule: &SimplificationRule<F>, _tensor_internal: &TensorInternal<F>, _graph: &mut Graph<F>,
+        self_rule: &SimplificationRule<F>, _tensor_internal: &TensorInternal<F>, graph: &mut Graph<F>,
     ) -> Result<TensorID, OptimizationError> {
         // Apply the _rule's transformation to create a new simplified tensor
         Err(OptimizationError::InvalidOperation("Rule application not implemented".to_string()))
     }
 
     /// Create helper replacement tensors
-    fn create_identity_replacement(&selfinput: TensorID) -> Result<TensorID, OptimizationError> {
-        // Return the _input tensor as the replacement (identity)
-        Ok(_input)
+    fn create_identity_replacement(&self, input: TensorID) -> Result<TensorID, OptimizationError> {
+        // Return the input tensor as the replacement (identity)
+        Ok(input)
     }
 
     fn create_zero_replacement(&self) -> Result<TensorID, OptimizationError> {
@@ -156,7 +156,7 @@ impl<F: Float> ExpressionSimplifier<F> {
         Err(OptimizationError::InvalidOperation("One replacement not implemented".to_string()))
     }
 
-    fn create_inner_replacement(selfinputs: &[TensorID]) -> Result<TensorID, OptimizationError> {
+    fn create_inner_replacement(&self, inputs: &[TensorID]) -> Result<TensorID, OptimizationError> {
         // For patterns like log(exp(x)), return the inner argument x
         Err(OptimizationError::InvalidOperation("Inner replacement not implemented".to_string()))
     }
@@ -211,7 +211,7 @@ impl<F: Float> SimplificationRule<F> {
     }
 
     /// Check if this rule matches a node
-    pub fn matches(selfnode: &Node<F>) -> bool {
+    pub fn matches(&self, node: &Node<F>) -> bool {
         // Check if the _node's operation and structure matches this rule's pattern
         match self.pattern {
             SimplificationPattern::AddZero => self.matches_add_zero(_node),
@@ -235,62 +235,62 @@ impl<F: Float> SimplificationRule<F> {
     }
 
     // Pattern matching methods
-    fn matches_add_zero(selfnode: &Node<F>) -> bool {
+    fn matches_add_zero(&self, node: &Node<F>) -> bool {
         // Check if this is an Add operation with one operand being zero
         false
     }
 
-    fn matches_sub_zero(selfnode: &Node<F>) -> bool {
+    fn matches_sub_zero(&self, node: &Node<F>) -> bool {
         // Check if this is a Sub operation with the second operand being zero
         false
     }
 
-    fn matches_mul_one(selfnode: &Node<F>) -> bool {
+    fn matches_mul_one(&self, node: &Node<F>) -> bool {
         // Check if this is a Mul operation with one operand being one
         false
     }
 
-    fn matches_div_one(selfnode: &Node<F>) -> bool {
+    fn matches_div_one(&self, node: &Node<F>) -> bool {
         // Check if this is a Div operation with the second operand being one
         false
     }
 
-    fn matches_mul_zero(selfnode: &Node<F>) -> bool {
+    fn matches_mul_zero(&self, node: &Node<F>) -> bool {
         // Check if this is a Mul operation with one operand being zero
         false
     }
 
-    fn matches_sub_self(selfnode: &Node<F>) -> bool {
+    fn matches_sub_self(&self, node: &Node<F>) -> bool {
         // Check if this is a Sub operation with both operands being the same
         false
     }
 
-    fn matches_div_self(selfnode: &Node<F>) -> bool {
+    fn matches_div_self(&self, node: &Node<F>) -> bool {
         // Check if this is a Div operation with both operands being the same
         false
     }
 
-    fn matches_log_exp(selfnode: &Node<F>) -> bool {
+    fn matches_log_exp(&self, node: &Node<F>) -> bool {
         // Check if this is a Log operation applied to an Exp operation
         false
     }
 
-    fn matches_exp_log(selfnode: &Node<F>) -> bool {
+    fn matches_exp_log(&self, node: &Node<F>) -> bool {
         // Check if this is an Exp operation applied to a Log operation
         false
     }
 
-    fn matches_sqrt_square(selfnode: &Node<F>) -> bool {
+    fn matches_sqrt_square(&self, node: &Node<F>) -> bool {
         // Check if this is a Sqrt operation applied to a Square operation
         false
     }
 
-    fn matches_pow_one(selfnode: &Node<F>) -> bool {
+    fn matches_pow_one(&self, node: &Node<F>) -> bool {
         // Check if this is a Pow operation with exponent one
         false
     }
 
-    fn matches_pow_zero(selfnode: &Node<F>) -> bool {
+    fn matches_pow_zero(&self, node: &Node<F>) -> bool {
         // Check if this is a Pow operation with exponent zero
         false
     }
@@ -310,7 +310,7 @@ impl<F: Float> AlgebraicAnalyzer<F> {
     }
 
     /// Analyze an expression for simplification opportunities
-    pub fn analyze(selfnode: &Node<F>) -> Vec<SimplificationOpportunity> {
+    pub fn analyze(&self, node: &Node<F>) -> Vec<SimplificationOpportunity> {
         let mut opportunities = Vec::new();
         
         // Analyze the _node and its subgraph for various patterns:
@@ -323,21 +323,21 @@ impl<F: Float> AlgebraicAnalyzer<F> {
     }
 
     /// Check for associative rearrangement opportunities
-    pub fn find_associative_opportunities(selfnode: &Node<F>) -> Vec<AssociativityPattern> {
+    pub fn find_associative_opportunities(&self, node: &Node<F>) -> Vec<AssociativityPattern> {
         // Look for patterns like (a + b) + c that can be rearranged
         // for better constant folding or other optimizations
         Vec::new()
     }
 
     /// Check for commutative rearrangement opportunities
-    pub fn find_commutative_opportunities(selfnode: &Node<F>) -> Vec<CommutativityPattern> {
+    pub fn find_commutative_opportunities(&self, node: &Node<F>) -> Vec<CommutativityPattern> {
         // Look for patterns where operands can be reordered
         // to enable other optimizations
         Vec::new()
     }
 
     /// Check for distributive law opportunities
-    pub fn find_distributive_opportunities(selfnode: &Node<F>) -> Vec<DistributivityPattern> {
+    pub fn find_distributive_opportunities(&self, node: &Node<F>) -> Vec<DistributivityPattern> {
         // Look for patterns like a * (b + c) that can be expanded
         // or patterns like a*b + a*c that can be factored
         Vec::new()
@@ -411,7 +411,7 @@ impl<F: Float> CanonicalFormConverter<F> {
     }
 
     /// Convert an expression to canonical form
-    pub fn canonicalize(selfnode: &Node<F>) -> Result<*mut Node<F>, OptimizationError> {
+    pub fn canonicalize(&self, node: &Node<F>) -> Result<*mut Node<F>, OptimizationError> {
         // Convert expressions to a standard canonical form:
         // - Sort operands in a consistent order
         // - Normalize associative operations

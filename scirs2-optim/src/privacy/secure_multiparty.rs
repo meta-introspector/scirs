@@ -193,7 +193,7 @@ impl<T: Float + Send + Sync> ShamirSecretSharing<T> {
 
         Self {
             threshold,
-            num_shares,
+            num_shares: numshares,
             prime_field,
             coefficients: Vec::new(),
         }

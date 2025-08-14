@@ -178,9 +178,9 @@ where
     ///
     /// * `params` - The parameters in this group
     /// * `optimizerindex` - The index of the optimizer to use for this group
-    pub fn new(_params: Array<A, D>, optimizerindex: usize) -> Self {
+    pub fn new(params: Array<A, D>, optimizerindex: usize) -> Self {
         Self {
-            params: params,
+            params,
             optimizerindex,
         }
     }

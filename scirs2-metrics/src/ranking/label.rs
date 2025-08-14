@@ -37,7 +37,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::ranking::label::coverage_error;
+/// use scirs2_metrics::ranking::label::coverage_error;
 ///
 /// // 1 indicates a relevant label
 /// let y_true = array![1.0, 1.0, 0.0, 0.0, 0.0];
@@ -138,19 +138,19 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__metrics::ranking::label::coverage_error_multiple;
+/// use scirs2_metrics::ranking::label::coverage_error_multiple;
 ///
 /// // Example: 3 samples, 5 possible labels
 /// // Each row is a sample, each column is a label
 /// // 1 indicates a relevant label for that sample
-/// let y_true = Array2::fromshape_vec((3, 5), vec![
+/// let y_true = Array2::from_shape_vec((3, 5), vec![
 ///     1.0, 0.0, 1.0, 0.0, 0.0,  // Sample 1: labels 0 and 2 are relevant
 ///     0.0, 0.0, 1.0, 1.0, 0.0,  // Sample 2: labels 2 and 3 are relevant
 ///     0.0, 1.0, 1.0, 0.0, 1.0,  // Sample 3: labels 1, 2, and 4 are relevant
 /// ]).unwrap();
 ///
 /// // Predicted scores for each label
-/// let y_score = Array2::fromshape_vec((3, 5), vec![
+/// let y_score = Array2::from_shape_vec((3, 5), vec![
 ///     0.9, 0.2, 0.8, 0.3, 0.1,  // Scores for sample 1
 ///     0.2, 0.3, 0.9, 0.7, 0.1,  // Scores for sample 2
 ///     0.1, 0.9, 0.8, 0.2, 0.7,  // Scores for sample 3
@@ -255,19 +255,19 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__metrics::ranking::label::label_ranking_loss;
+/// use scirs2_metrics::ranking::label::label_ranking_loss;
 ///
 /// // Example: 3 samples, 5 possible labels
 /// // Each row is a sample, each column is a label
 /// // 1 indicates a relevant label for that sample
-/// let y_true = Array2::fromshape_vec((3, 5), vec![
+/// let y_true = Array2::from_shape_vec((3, 5), vec![
 ///     1.0, 0.0, 1.0, 0.0, 0.0,  // Sample 1: labels 0 and 2 are relevant
 ///     0.0, 0.0, 1.0, 1.0, 0.0,  // Sample 2: labels 2 and 3 are relevant
 ///     0.0, 1.0, 1.0, 0.0, 1.0,  // Sample 3: labels 1, 2, and 4 are relevant
 /// ]).unwrap();
 ///
 /// // Predicted scores for each label
-/// let y_score = Array2::fromshape_vec((3, 5), vec![
+/// let y_score = Array2::from_shape_vec((3, 5), vec![
 ///     0.9, 0.2, 0.8, 0.3, 0.1,  // Scores for sample 1
 ///     0.2, 0.3, 0.9, 0.7, 0.1,  // Scores for sample 2
 ///     0.1, 0.9, 0.8, 0.2, 0.7,  // Scores for sample 3
@@ -377,19 +377,19 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__metrics::ranking::label::label_ranking_average_precision_score;
+/// use scirs2_metrics::ranking::label::label_ranking_average_precision_score;
 ///
 /// // Example: 3 samples, 5 possible labels
 /// // Each row is a sample, each column is a label
 /// // 1 indicates a relevant label for that sample
-/// let y_true = Array2::fromshape_vec((3, 5), vec![
+/// let y_true = Array2::from_shape_vec((3, 5), vec![
 ///     1.0, 0.0, 1.0, 0.0, 0.0,  // Sample 1: labels 0 and 2 are relevant
 ///     0.0, 0.0, 1.0, 1.0, 0.0,  // Sample 2: labels 2 and 3 are relevant
 ///     0.0, 1.0, 1.0, 0.0, 1.0,  // Sample 3: labels 1, 2, and 4 are relevant
 /// ]).unwrap();
 ///
 /// // Predicted scores for each label
-/// let y_score = Array2::fromshape_vec((3, 5), vec![
+/// let y_score = Array2::from_shape_vec((3, 5), vec![
 ///     0.9, 0.2, 0.8, 0.3, 0.1,  // Scores for sample 1
 ///     0.2, 0.3, 0.9, 0.7, 0.1,  // Scores for sample 2
 ///     0.1, 0.9, 0.8, 0.2, 0.7,  // Scores for sample 3

@@ -472,7 +472,7 @@ fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
     let n = matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (_matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
+            if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
                 return false;
             }
         }
@@ -489,7 +489,7 @@ fn is_positive_semidefinite<F: Float + ndarray::ScalarOperand + FromPrimitive>(
     }
 
     // Check eigenvalues
-    let (eigenvalues_) = compute_symmetric_eigen(matrix)?;
+    let (eigenvalues, _eigenvectors) = compute_symmetric_eigen(matrix)?;
     for &lambda in eigenvalues.iter() {
         if lambda < -F::epsilon() * F::from(10.0).unwrap() {
             return Ok(false);
@@ -569,7 +569,7 @@ fn compute_symmetric_eigen<F: Float + ndarray::ScalarOperand + FromPrimitive>(
 
 #[allow(dead_code)]
 fn compute_matrix_inverse<F: Float>(
-    _matrix: &ndarray::ArrayView2<F>,
+    matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array2<F>, OpError> {
     let n = matrix.shape()[0];
     let mut a = matrix.to_owned();

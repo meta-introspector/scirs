@@ -62,7 +62,7 @@ impl<A: Float + FromPrimitive + Debug> EntropyRegularization<A> {
         Self {
             lambda,
             epsilon,
-            reg_type,
+            reg_type: regtype,
         }
     }
 
@@ -81,7 +81,7 @@ impl<A: Float + FromPrimitive + Debug> EntropyRegularization<A> {
         Self {
             lambda,
             epsilon,
-            reg_type,
+            reg_type: regtype,
         }
     }
 

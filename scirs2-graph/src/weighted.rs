@@ -152,18 +152,18 @@ where
             return Err(GraphError::InvalidGraph("No edges in graph".to_string()));
         }
 
-        let mut min_weight = edges[0]._weight.clone();
-        let mut max_weight = edges[0]._weight.clone();
+        let mut min_weight = edges[0].weight.clone();
+        let mut max_weight = edges[0].weight.clone();
         let mut total_weight = E::zero();
 
         for edge in &edges {
-            if edge._weight < min_weight {
-                min_weight = edge._weight.clone();
+            if edge.weight < min_weight {
+                min_weight = edge.weight.clone();
             }
-            if edge._weight > max_weight {
-                max_weight = edge._weight.clone();
+            if edge.weight > max_weight {
+                max_weight = edge.weight.clone();
             }
-            total_weight = total_weight + edge._weight.clone();
+            total_weight = total_weight + edge.weight.clone();
         }
 
         Ok(WeightStatistics {
@@ -187,13 +187,13 @@ where
             let mut include = true;
 
             if let Some(ref min) = min_weight {
-                if edge._weight < *min {
+                if edge.weight < *min {
                     include = false;
                 }
             }
 
-            if let Some(ref max) = max_weight {
-                if edge._weight > *max {
+            if let Some(ref max) = maxweight {
+                if edge.weight > *max {
                     include = false;
                 }
             }
@@ -202,7 +202,7 @@ where
                 filtered_graph.add_edge(
                     edge.source.clone(),
                     edge.target.clone(),
-                    edge._weight.clone(),
+                    edge.weight.clone(),
                 )?;
             }
         }
@@ -214,7 +214,7 @@ where
         let mut edges: Vec<_> = self
             .edges()
             .into_iter()
-            .map(|edge| (edge.source, edge.target, edge._weight))
+            .map(|edge| (edge.source, edge.target, edge.weight))
             .collect();
 
         edges.sort_by(|a, b| {
@@ -229,7 +229,7 @@ where
     }
 
     fn subgraph_by_weight_range(&self, min_weight: E, maxweight: E) -> Result<Self> {
-        self.filter_by_weight(Some(min_weight), Some(max_weight))
+        self.filter_by_weight(Some(min_weight), Some(maxweight))
     }
 
     fn normalize_weights(&self, method: NormalizationMethod) -> Result<Self> {
@@ -238,7 +238,7 @@ where
             return Ok(Graph::new());
         }
 
-        let weights: Vec<f64> = edges.iter().map(|e| e._weight.clone().into()).collect();
+        let weights: Vec<f64> = edges.iter().map(|e| e.weight.clone().into()).collect();
 
         let normalized_weights = match method {
             NormalizationMethod::MinMax => {
@@ -283,15 +283,15 @@ where
             }
             NormalizationMethod::Robust => {
                 let mut sorted_weights = weights.clone();
-                sortedweights.sort_by(|a, b| a.partial_cmp(b).unwrap());
-                let median = if sortedweights.len() % 2 == 0 {
-                    (sorted_weights[sortedweights.len() / 2 - 1]
-                        + sorted_weights[sortedweights.len() / 2])
+                sorted_weights.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                let median = if sorted_weights.len() % 2 == 0 {
+                    (sorted_weights[sorted_weights.len() / 2 - 1]
+                        + sorted_weights[sorted_weights.len() / 2])
                         / 2.0
                 } else {
-                    sorted_weights[sortedweights.len() / 2]
+                    sorted_weights[sorted_weights.len() / 2]
                 };
-                let mad: Vec<f64> = sortedweights.iter().map(|w| (w - median).abs()).collect();
+                let mad: Vec<f64> = sorted_weights.iter().map(|w| (w - median).abs()).collect();
                 let mut sorted_mad = mad.clone();
                 sorted_mad.sort_by(|a, b| a.partial_cmp(b).unwrap());
                 let mad_median = if sorted_mad.len() % 2 == 0 {
@@ -315,7 +315,7 @@ where
         }
 
         // Add edges with normalized weights
-        for (edge, &norm_weight) in edges.iter().zip(normalizedweights.iter()) {
+        for (edge, &norm_weight) in edges.iter().zip(normalized_weights.iter()) {
             normalized_graph.add_edge(
                 edge.source.clone(),
                 edge.target.clone(),
@@ -336,7 +336,7 @@ where
 
         // Transform and add edges
         for edge in self.edges() {
-            let _weight_f64: f64 = edge._weight.clone().into();
+            let weight_f64: f64 = edge.weight.clone().into();
             let transformed_weight = match transform {
                 WeightTransform::Linear { a, b } => a * weight_f64 + b,
                 WeightTransform::Logarithmic { offset } => (weight_f64 + offset).ln(),
@@ -376,7 +376,7 @@ where
             return Ok(vec![]);
         }
 
-        let weights: Vec<f64> = edges.iter().map(|e| e._weight.clone().into()).collect();
+        let weights: Vec<f64> = edges.iter().map(|e| e.weight.clone().into()).collect();
         let min_weight = weights.iter().cloned().fold(f64::INFINITY, f64::min);
         let max_weight = weights.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 
@@ -392,8 +392,8 @@ where
             bin_centers.push(E::from(min_weight + (i as f64 + 0.5) * bin_width));
         }
 
-        for _weight in weights {
-            let bin_index = ((_weight - min_weight) / bin_width) as usize;
+        for weight in weights {
+            let bin_index = ((weight - min_weight) / bin_width) as usize;
             let bin_index = bin_index.min(bins - 1);
             histogram[bin_index] += 1;
         }
@@ -409,7 +409,7 @@ where
 
             if let Ok(neighbors) = self.neighbors(node) {
                 for neighbor in neighbors {
-                    if let Ok(_weight) = self.edge_weight(node, &neighbor) {
+                    if let Ok(weight) = self.edge_weight(node, &neighbor) {
                         weighted_degree += weight.into();
                     }
                 }
@@ -424,7 +424,7 @@ where
     fn total_weight(&self) -> Result<E> {
         let mut total = E::zero();
         for edge in self.edges() {
-            total = total + edge._weight.clone();
+            total = total + edge.weight.clone();
         }
         Ok(total)
     }
@@ -435,7 +435,7 @@ where
             return Err(GraphError::InvalidGraph("No edges in graph".to_string()));
         }
 
-        let total: f64 = edges.iter().map(|e| e._weight.clone().into()).sum();
+        let total: f64 = edges.iter().map(|e| e.weight.clone().into()).sum();
         Ok(total / edges.len() as f64)
     }
 }
@@ -494,13 +494,13 @@ where
             let mut include = true;
 
             if let Some(ref min) = min_weight {
-                if edge._weight < *min {
+                if edge.weight < *min {
                     include = false;
                 }
             }
 
-            if let Some(ref max) = max_weight {
-                if edge._weight > *max {
+            if let Some(ref max) = maxweight {
+                if edge.weight > *max {
                     include = false;
                 }
             }
@@ -509,7 +509,7 @@ where
                 filtered_graph.add_edge(
                     edge.source.clone(),
                     edge.target.clone(),
-                    edge._weight.clone(),
+                    edge.weight.clone(),
                 )?;
             }
         }
@@ -536,7 +536,7 @@ where
     }
 
     fn subgraph_by_weight_range(&self, min_weight: E, maxweight: E) -> Result<Self> {
-        self.filter_by_weight(Some(min_weight), Some(max_weight))
+        self.filter_by_weight(Some(min_weight), Some(maxweight))
     }
 
     fn normalize_weights(&self, method: NormalizationMethod) -> Result<Self> {
@@ -590,15 +590,15 @@ where
             }
             NormalizationMethod::Robust => {
                 let mut sorted_weights = weights.clone();
-                sortedweights.sort_by(|a, b| a.partial_cmp(b).unwrap());
-                let median = if sortedweights.len() % 2 == 0 {
-                    (sorted_weights[sortedweights.len() / 2 - 1]
-                        + sorted_weights[sortedweights.len() / 2])
+                sorted_weights.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                let median = if sorted_weights.len() % 2 == 0 {
+                    (sorted_weights[sorted_weights.len() / 2 - 1]
+                        + sorted_weights[sorted_weights.len() / 2])
                         / 2.0
                 } else {
-                    sorted_weights[sortedweights.len() / 2]
+                    sorted_weights[sorted_weights.len() / 2]
                 };
-                let mad: Vec<f64> = sortedweights.iter().map(|w| (w - median).abs()).collect();
+                let mad: Vec<f64> = sorted_weights.iter().map(|w| (w - median).abs()).collect();
                 let mut sorted_mad = mad.clone();
                 sorted_mad.sort_by(|a, b| a.partial_cmp(b).unwrap());
                 let mad_median = if sorted_mad.len() % 2 == 0 {
@@ -622,7 +622,7 @@ where
         }
 
         // Add edges with normalized weights
-        for (edge, &norm_weight) in edges.iter().zip(normalizedweights.iter()) {
+        for (edge, &norm_weight) in edges.iter().zip(normalized_weights.iter()) {
             normalized_graph.add_edge(
                 edge.source.clone(),
                 edge.target.clone(),

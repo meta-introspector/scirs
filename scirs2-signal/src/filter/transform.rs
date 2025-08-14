@@ -649,7 +649,7 @@ fn evaluate_polynomial_and_derivative(coeffs: &[f64], z: Complex64) -> (Complex6
     }
 
     let n = coeffs.len() - 1;
-    let mut p_val = Complex64::new(_coeffs[0], 0.0);
+    let mut p_val = Complex64::new(coeffs[0], 0.0);
     let mut p_prime = Complex64::zero();
 
     for (i, &coeff) in coeffs.iter().enumerate().skip(1) {

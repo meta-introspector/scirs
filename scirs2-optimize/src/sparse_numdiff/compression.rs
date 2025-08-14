@@ -63,11 +63,11 @@ fn color_jacobian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimi
         let mut used_colors = HashSet::new();
 
         // Find all rows where this column has a nonzero
-        let col_rows = get_column_nonzero_rows(_sparsity, col);
+        let col_rows = get_column_nonzero_rows(sparsity, col);
 
         // Check previously colored columns that share rows with this column
         for prev_col in 0..col {
-            let prev_col_rows = get_column_nonzero_rows(_sparsity, prev_col);
+            let prev_col_rows = get_column_nonzero_rows(sparsity, prev_col);
 
             // If columns share any row, they can't have the same color
             if col_rows.iter().any(|&row| prev_col_rows.contains(&row)) {
@@ -144,7 +144,7 @@ fn color_hessian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimiz
     let mut coloring = vec![0; n];
 
     // Build adjacency information for efficient neighbor lookup
-    let adjacency = build_adjacency_list(_sparsity);
+    let adjacency = build_adjacency_list(sparsity);
 
     // For each column, find the lowest color that doesn't conflict
     for col in 0..n {

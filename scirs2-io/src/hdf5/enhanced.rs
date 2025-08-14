@@ -867,9 +867,9 @@ impl ScientificMetadata {
     }
 
     /// Add scale factor and offset
-    pub fn with_scaling(mut self, scale_factor: f64, addoffset: f64) -> Self {
+    pub fn with_scaling(mut self, scale_factor: f64, add_offset: f64) -> Self {
         self.scale_factor = Some(scale_factor);
-        self.add_offset = Some(addoffset);
+        self.add_offset = Some(add_offset);
         self
     }
 

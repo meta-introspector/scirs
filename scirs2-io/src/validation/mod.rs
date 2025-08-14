@@ -87,17 +87,17 @@ pub fn calculate_checksum(data: &[u8], algorithm: ChecksumAlgorithm) -> String {
     match algorithm {
         ChecksumAlgorithm::CRC32 => {
             let mut hasher = CrcHasher::new();
-            hasher.update(_data);
+            hasher.update(data);
             format!("{:08x}", hasher.finalize())
         }
         ChecksumAlgorithm::SHA256 => {
             let mut hasher = Sha256::new();
-            hasher.update(_data);
+            hasher.update(data);
             hex::encode(hasher.finalize())
         }
         ChecksumAlgorithm::BLAKE3 => {
             let mut hasher = Blake3Hasher::new();
-            hasher.update(_data);
+            hasher.update(data);
             hex::encode(hasher.finalize().as_bytes())
         }
     }
@@ -297,7 +297,7 @@ pub fn save_integrity_metadata<P: AsRef<Path>>(
 /// The loaded integrity metadata
 #[allow(dead_code)]
 pub fn load_integrity_metadata<P: AsRef<Path>>(path: P) -> Result<IntegrityMetadata> {
-    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
     let metadata: IntegrityMetadata = serde_json::from_reader(reader)
         .map_err(|e| IoError::DeserializationError(e.to_string()))?;
@@ -322,7 +322,7 @@ pub fn validate_file_integrity<P: AsRef<Path>>(
     file_path: P,
     metadata: &IntegrityMetadata,
 ) -> Result<bool> {
-    let file_path = filepath.as_ref();
+    let file_path = file_path.as_ref();
 
     // Check if file exists
     if !file_path.exists() {
@@ -369,7 +369,7 @@ pub fn generate_validation_report<P: AsRef<Path>>(
     file_path: P,
     metadata: &IntegrityMetadata,
 ) -> Result<ValidationReport> {
-    let file_path = filepath.as_ref();
+    let file_path = file_path.as_ref();
 
     // Check if file exists
     if !file_path.exists() {
@@ -553,7 +553,7 @@ impl FormatValidatorRegistry {
         F: Fn(&[u8]) -> bool + Send + Sync + 'static,
     {
         self.validators
-            .push(FormatValidator::new(format_name, validator));
+            .push(FormatValidator::new(formatname, validator));
     }
 
     /// Check if data matches any registered format
@@ -649,7 +649,7 @@ pub fn validate_file_exists_with_size<P: AsRef<Path>>(
         return Ok(false);
     }
 
-    if let Some(_size) = expected_size {
+    if let Some(size) = expected_size {
         let file_size = std::fs::metadata(path)
             .map_err(|e| IoError::FileError(e.to_string()))?
             .len();
@@ -681,21 +681,21 @@ where
     P: AsRef<Path>,
     Q: AsRef<Path>,
 {
-    let data_path = datapath.as_ref();
+    let data_path = data_path.as_ref();
 
     // Calculate checksum
     let checksum = calculate_file_checksum(data_path, algorithm)?;
 
     // Determine output _path
     let output_path = match output_path {
-        Some(_path) => path.as_ref().to_path_buf(),
+        Some(path) => path.as_ref().to_path_buf(),
         None => {
-            let mut _path = data_path.to_path_buf();
+            let mut path = data_path.to_path_buf();
             path.set_extension(format!(
                 "{}.checksum",
                 path.extension().unwrap_or_default().to_string_lossy()
             ));
-            _path
+            path
         }
     };
 
@@ -767,7 +767,7 @@ where
     };
 
     // Calculate actual checksum
-    let actual_checksum = calculate_file_checksum(_data_path, algorithm)?;
+    let actual_checksum = calculate_file_checksum(data_path, algorithm)?;
 
     // Compare checksums
     Ok(actual_checksum.eq_ignore_ascii_case(expected_checksum))
@@ -861,7 +861,7 @@ where
     P: AsRef<Path>,
     Q: AsRef<Path>,
 {
-    let dir_path = dirpath.as_ref();
+    let dir_path = dir_path.as_ref();
 
     // Check if directory exists
     if !dir_path.is_dir() {
@@ -918,7 +918,7 @@ where
 /// Helper function to collect files in a directory
 #[allow(dead_code)]
 fn collect_files(dir: &Path, files: &mut Vec<std::path::PathBuf>, recursive: bool) -> Result<()> {
-    for entry in std::fs::read_dir(_dir)
+    for entry in std::fs::read_dir(dir)
         .map_err(|e| IoError::FileError(format!("Failed to read directory: {e}")))?
     {
         let entry = entry.map_err(|e| IoError::FileError(e.to_string()))?;
@@ -964,7 +964,7 @@ impl DirectoryManifest {
         &self,
         dir_path: P,
     ) -> Result<ManifestVerificationReport> {
-        let dir_path = dirpath.as_ref();
+        let dir_path = dir_path.as_ref();
 
         // Check if directory exists
         if !dir_path.is_dir() {
@@ -1111,13 +1111,13 @@ impl ManifestVerificationReport {
 /// Convenience function to calculate CRC32 checksum for a file
 #[allow(dead_code)]
 pub fn calculate_crc32<P: AsRef<Path>>(path: P) -> Result<String> {
-    calculate_file_checksum(_path, ChecksumAlgorithm::CRC32)
+    calculate_file_checksum(path, ChecksumAlgorithm::CRC32)
 }
 
 /// Convenience function to calculate SHA256 checksum for a file
 #[allow(dead_code)]
 pub fn calculate_sha256<P: AsRef<Path>>(path: P) -> Result<String> {
-    calculate_file_checksum(_path, ChecksumAlgorithm::SHA256)
+    calculate_file_checksum(path, ChecksumAlgorithm::SHA256)
 }
 
 //
@@ -1507,7 +1507,7 @@ impl SchemaValidator {
     /// Validate data type
     #[allow(clippy::only_used_in_recursion)]
     fn validate_type(&self, data: &serde_json::Value, schematype: &SchemaDataType) -> bool {
-        match schema_type {
+        match schematype {
             SchemaDataType::String => data.is_string(),
             SchemaDataType::Integer => data.is_i64() || data.is_u64(),
             SchemaDataType::Number => data.is_number(),
@@ -1775,7 +1775,7 @@ pub mod schema_helpers {
 
     /// Create a union schema
     pub fn union(types: Vec<SchemaDataType>) -> SchemaDefinition {
-        SchemaDefinition::new(SchemaDataType::Union(_types))
+        SchemaDefinition::new(SchemaDataType::Union(types))
     }
 
     /// Create an email string schema
@@ -1851,30 +1851,30 @@ pub fn schema_from_json_schema(json_schema: &serde_json::Value) -> Result<Schema
         }
     };
 
-    let mut _schema = SchemaDefinition::new(data_type);
+    let mut schema = SchemaDefinition::new(data_type);
 
     // Add constraints from JSON Schema
     if let Some(min) = object.get("minimum").and_then(|v| v.as_f64()) {
-        _schema = schema.with_constraint(SchemaConstraint::MinValue(min));
+        schema = schema.with_constraint(SchemaConstraint::MinValue(min));
     }
     if let Some(max) = object.get("maximum").and_then(|v| v.as_f64()) {
-        _schema = schema.with_constraint(SchemaConstraint::MaxValue(max));
+        schema = schema.with_constraint(SchemaConstraint::MaxValue(max));
     }
     if let Some(min_len) = object.get("minLength").and_then(|v| v.as_u64()) {
-        _schema = schema.with_constraint(SchemaConstraint::MinLength(min_len as usize));
+        schema = schema.with_constraint(SchemaConstraint::MinLength(min_len as usize));
     }
     if let Some(max_len) = object.get("maxLength").and_then(|v| v.as_u64()) {
-        _schema = schema.with_constraint(SchemaConstraint::MaxLength(max_len as usize));
+        schema = schema.with_constraint(SchemaConstraint::MaxLength(max_len as usize));
     }
     if let Some(pattern) = object.get("pattern").and_then(|v| v.as_str()) {
-        _schema = schema.with_constraint(SchemaConstraint::Pattern(pattern.to_string()));
+        schema = schema.with_constraint(SchemaConstraint::Pattern(pattern.to_string()));
     }
     if let Some(format) = object.get("format").and_then(|v| v.as_str()) {
-        _schema = schema.with_constraint(SchemaConstraint::Format(format.to_string()));
+        schema = schema.with_constraint(SchemaConstraint::Format(format.to_string()));
     }
     if let Some(description) = object.get("description").and_then(|v| v.as_str()) {
-        _schema = schema.with_description(description);
+        schema = schema.with_description(description);
     }
 
-    Ok(_schema)
+    Ok(schema)
 }

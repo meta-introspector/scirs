@@ -347,7 +347,7 @@ pub struct StreamingCsvReader {
 impl StreamingCsvReader {
     /// Create a new streaming CSV reader
     pub fn new<P: AsRef<Path>>(path: P, config: StreamingConfig) -> Result<Self> {
-        let line_reader = LineChunkedReader::new(_path, config)?;
+        let line_reader = LineChunkedReader::new(path, config)?;
 
         Ok(Self {
             line_reader,
@@ -365,7 +365,7 @@ impl StreamingCsvReader {
 
     /// Enable header row processing
     pub fn with_header(mut self, hasheader: bool) -> Self {
-        self.has_header = has_header;
+        self.has_header = hasheader;
         self
     }
 
@@ -449,7 +449,7 @@ impl StreamingStats {
     }
 
     /// Update statistics with chunk information
-    pub fn update_chunk(&mut self, bytes: u64, processing_timems: f64) {
+    pub fn update_chunk(&mut self, bytes: u64, processing_time_ms: f64) {
         self.bytes_processed += bytes;
         self.chunks_processed += 1;
         self.processing_time_ms += processing_time_ms;
@@ -539,7 +539,7 @@ where
 
         match chunk_result {
             Ok(rows) => {
-                let _header = reader.header();
+                let header = reader.header();
                 result = processor(&rows, chunk_id, header)?;
 
                 let chunk_time = chunk_start.elapsed().as_secs_f64() * 1000.0;

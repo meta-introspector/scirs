@@ -1096,7 +1096,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> ConceptDriftDete
 impl<F: Float + std::fmt::Debug + Send + Sync> DdmDetector<F> {
     fn new(_warning_level: f64, driftlevel: f64) -> Self {
         Self {
-            warning_level,
+            warning_level: _warning_level,
             driftlevel,
             min_instances: 30,
             num_errors: 0,
@@ -2679,6 +2679,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> Adaptive
 
         impl<F: Float> RewardFunction<F> for SimpleRewardFunction<F> {
             fn compute_reward(
+                &self,
                 _state: &Array1<F>,
                 _action: &Array1<F>,
                 _next_state: &Array1<F>,
@@ -3841,8 +3842,8 @@ impl<F: Float + std::fmt::Debug> AdaptiveLearningScheduler<F> {
     /// Create a new adaptive learning scheduler
     pub fn new(_initial_lr: F, config: OptimizationConfig) -> Result<Self> {
         Ok(Self {
-            current_lr: initial_lr,
-            initial_lr,
+            current_lr: _initial_lr,
+            initial_lr: _initial_lr,
             scheduler_type: SchedulerType::ExponentialDecay {
                 decay_rate: F::from(0.9).unwrap(),
             },
@@ -4353,15 +4354,15 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand>
             .optimizer_hidden_layers
             .first()
             .unwrap_or(&64);
-        let output_size = network_configoptimizer_hidden_layers.last().unwrap_or(&32);
+        let output_size = network_config.optimizer_hidden_layers.last().unwrap_or(&32);
 
         let mut hidden_layers = Vec::new();
-        for &layer_size in &network_configoptimizer_hidden_layers {
+        for &layer_size in &network_config.optimizer_hidden_layers {
             hidden_layers.push(NeuralLayer {
                 weights: Array2::zeros((layer_size, *input_size)),
                 biases: Array1::zeros(layer_size),
-                activation: network_configactivation.clone(),
-                dropout_rate: network_configdropout_rate,
+                activation: network_config.activation.clone(),
+                dropout_rate: network_config.dropout_rate,
                 batch_norm: None,
             });
         }
@@ -4373,19 +4374,19 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand>
             output_layer: NeuralLayer {
                 weights: Array2::zeros((*output_size, *input_size)),
                 biases: Array1::zeros(*output_size),
-                activation: network_configactivation.clone(),
-                dropout_rate: network_configdropout_rate,
+                activation: network_config.activation.clone(),
+                dropout_rate: network_config.dropout_rate,
                 batch_norm: None,
             },
             optimizer: Box::new(AdamOptimizer::new(
-                F::from(network_configlearning_rate).unwrap(),
+                F::from(network_config._learningrate).unwrap(),
             )?),
             training_history: Vec::new(),
-            _learningrate: F::from(network_configlearning_rate).unwrap(),
+            _learningrate: F::from(network_config._learningrate).unwrap(),
             regularization: RegularizationConfig {
                 l1_strength: F::from(0.0001).unwrap(),
                 l2_strength: F::from(0.0001).unwrap(),
-                dropout_rate: network_configdropout_rate,
+                dropout_rate: network_config.dropout_rate,
                 early_stopping: true,
                 patience: 10,
             },

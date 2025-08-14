@@ -1305,7 +1305,7 @@ impl<T: Float + Send + Sync> StatisticalAnalysis<T> {
     /// Create new statistical analysis engine
     pub fn new(_windowsize: usize) -> Self {
         Self {
-            window_size: window_size,
+            window_size: _windowsize,
             measures: StatisticalMeasures::new(),
         }
     }

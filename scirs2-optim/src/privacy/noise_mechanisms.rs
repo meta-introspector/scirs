@@ -441,7 +441,7 @@ where
     /// Create a new truncated noise mechanism
     pub fn new(_base_mechanism: Box<dyn NoiseMechanism<T> + Send>, truncationbound: T) -> Self {
         Self {
-            basemechanism: basemechanism,
+            basemechanism: _base_mechanism,
             truncationbound,
             _phantom: PhantomData,
         }
@@ -525,7 +525,7 @@ where
     /// Create a new tree aggregation mechanism
     pub fn new(_tree_height: usize, basemechanism: Box<dyn NoiseMechanism<T> + Send>) -> Self {
         Self {
-            tree_height: tree_height,
+            tree_height: _tree_height,
             basemechanism,
             _phantom: PhantomData,
         }

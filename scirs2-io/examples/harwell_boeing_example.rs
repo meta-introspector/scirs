@@ -70,7 +70,7 @@ fn create_and_write_matrix(tempdir: &tempfile::TempDir) -> Result<(), Box<dyn st
     println!("     Non-zeros: {}", hb_matrix.header.nnzero);
 
     // Write to file
-    let hb_file = temp_dir.path().join("example_matrix.hb");
+    let hb_file = tempdir.path().join("example_matrix.hb");
     harwell_boeing::write_harwell_boeing(&hb_file, &hb_matrix)?;
 
     println!(
@@ -85,7 +85,7 @@ fn create_and_write_matrix(tempdir: &tempfile::TempDir) -> Result<(), Box<dyn st
 fn read_and_analyze_matrix(tempdir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Reading and Analyzing Harwell-Boeing Matrix...");
 
-    let hb_file = temp_dir.path().join("example_matrix.hb");
+    let hb_file = tempdir.path().join("example_matrix.hb");
 
     // Read the matrix back
     let matrix = harwell_boeing::read_harwell_boeing(&hb_file)?;
@@ -122,7 +122,7 @@ fn read_and_analyze_matrix(tempdir: &tempfile::TempDir) -> Result<(), Box<dyn st
     }
 
     // Verify matrix structure
-    verify_matrix_structure(&matrix)?;
+    verifymatrix_structure(&matrix)?;
 
     Ok(())
 }
@@ -178,7 +178,7 @@ fn demonstrate_format_conversion(
     println!("  ✅ Round-trip conversion successful - data integrity preserved");
 
     // Save reconverted matrix
-    let reconverted_file = temp_dir.path().join("reconverted_matrix.hb");
+    let reconverted_file = temp_dir.path().join("reconvertedmatrix.hb");
     harwell_boeing::write_harwell_boeing(&reconverted_file, &reconverted)?;
 
     println!(
@@ -202,7 +202,7 @@ fn demonstrate_different_matrix_types(
     let sym_rowind = Array1::from(vec![0, 1, 1, 2]);
     let sym_values = Array1::from(vec![1.0, 2.0, 3.0, 4.0]);
 
-    let symmetric_matrix = ccs_to_hb(
+    let symmetricmatrix = ccs_to_hb(
         &sym_colptr,
         &sym_rowind,
         &sym_values,
@@ -212,15 +212,15 @@ fn demonstrate_different_matrix_types(
         HBMatrixType::RealSymmetric,
     );
 
-    let sym_file = temp_dir.path().join("symmetric_matrix.hb");
-    harwell_boeing::write_harwell_boeing(&sym_file, &symmetric_matrix)?;
+    let sym_file = temp_dir.path().join("symmetricmatrix.hb");
+    harwell_boeing::write_harwell_boeing(&sym_file, &symmetricmatrix)?;
     println!(
         "  ✅ Symmetric matrix saved: {:?}",
         sym_file.file_name().unwrap()
     );
 
     // 2. Pattern matrix (no values, structure only)
-    let pattern_matrix = ccs_to_hb(
+    let patternmatrix = ccs_to_hb(
         &sym_colptr,
         &sym_rowind,
         &sym_values, // Values will be ignored for pattern matrix
@@ -230,8 +230,8 @@ fn demonstrate_different_matrix_types(
         HBMatrixType::Pattern,
     );
 
-    let pattern_file = temp_dir.path().join("pattern_matrix.hb");
-    harwell_boeing::write_harwell_boeing(&pattern_file, &pattern_matrix)?;
+    let pattern_file = temp_dir.path().join("patternmatrix.hb");
+    harwell_boeing::write_harwell_boeing(&pattern_file, &patternmatrix)?;
     println!(
         "  ✅ Pattern matrix saved: {:?}",
         pattern_file.file_name().unwrap()
@@ -264,8 +264,8 @@ fn demonstrate_different_matrix_types(
 }
 
 #[allow(dead_code)]
-fn verify_matrix_structure(
-    _matrix: &HBSparseMatrix<f64>,
+fn verifymatrix_structure(
+    matrix: &HBSparseMatrix<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Basic structural checks
     assert_eq!(
@@ -288,7 +288,7 @@ fn verify_matrix_structure(
     }
 
     // Check column pointer monotonicity
-    for i in 1.._matrix.colptr.len() {
+    for i in 1..matrix.colptr.len() {
         assert!(
             matrix.colptr[i] >= matrix.colptr[i - 1],
             "Column pointers are not monotonic at position {}",
@@ -297,7 +297,7 @@ fn verify_matrix_structure(
     }
 
     // Check row indices are within bounds
-    for &row_idx in &_matrix.rowind {
+    for &row_idx in &matrix.rowind {
         assert!(
             row_idx < matrix.header.nrow,
             "Row index {} out of bounds (nrow={})",
@@ -307,9 +307,9 @@ fn verify_matrix_structure(
     }
 
     // Check first and last column pointers
-    assert_eq!(_matrix.colptr[0], 0, "First column pointer should be 0");
+    assert_eq!(matrix.colptr[0], 0, "First column pointer should be 0");
     assert_eq!(
-        matrix.colptr[_matrix.header.ncol], matrix.header.nnzero,
+        matrix.colptr[matrix.header.ncol], matrix.header.nnzero,
         "Last column pointer should equal nnzero"
     );
 

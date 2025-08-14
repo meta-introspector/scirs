@@ -206,7 +206,7 @@ impl HybridSpatialOptimizer {
 
     /// Configure quantum-classical balance
     pub fn with_quantum_classical_coupling(mut self, quantumweight: f64) -> Self {
-        self.quantum_weight = quantum_weight.clamp(0.0, 1.0);
+        self.quantum_weight = quantumweight.clamp(0.0, 1.0);
         self.classical_weight = 1.0 - self.quantum_weight;
         self
     }
@@ -665,7 +665,7 @@ impl HybridSpatialOptimizer {
     where
         F: Fn(&Array1<f64>) -> f64,
     {
-        let value = objective_function(_solution);
+        let value = objectivefunction(_solution);
         // Convert to quality score (higher is better)
         1.0 / (1.0 + value.abs())
     }
@@ -836,7 +836,7 @@ impl HybridClusterer {
         initial_centroids: &Array2<f64>,
     ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
         let (n_points, ndims) = points.dim();
-        let mut _centroids = initial_centroids.clone();
+        let mut centroids = initial_centroids.clone();
         let mut assignments = Array1::zeros(n_points);
 
         // Lloyd's algorithm iterations
@@ -887,15 +887,15 @@ impl HybridClusterer {
             }
 
             // Check convergence
-            let centroid_change = self.calculate_centroid_change(&_centroids, &new_centroids);
-            _centroids = new_centroids;
+            let centroid_change = self.calculate_centroid_change(&centroids, &new_centroids);
+            centroids = new_centroids;
 
             if centroid_change < 1e-6 {
                 break;
             }
         }
 
-        Ok((_centroids, assignments))
+        Ok((centroids, assignments))
     }
 
     /// Calculate change in centroids

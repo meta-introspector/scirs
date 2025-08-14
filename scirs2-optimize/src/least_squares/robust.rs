@@ -109,8 +109,8 @@ impl HuberLoss {
     /// The delta parameter determines the transition from quadratic to linear behavior.
     /// Smaller delta provides more robustness but less efficiency.
     pub fn new(delta: f64) -> Self {
-        assert!(_delta > 0.0, "Delta must be positive");
-        HuberLoss { delta: _delta }
+        assert!(delta > 0.0, "Delta must be positive");
+        HuberLoss { delta }
     }
 }
 

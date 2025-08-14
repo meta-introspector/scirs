@@ -474,7 +474,7 @@ pub fn distance_weights_matrix<T: Float>(
                         }
                         "exponential" => (-_distance / bandwidth).exp(),
                         "gaussian" => {
-                            let exponent = -(_distance * distance) / (bandwidth * bandwidth);
+                            let exponent = -(_distance * _distance) / (bandwidth * bandwidth);
                             exponent.exp()
                         }
                         _ => {
@@ -526,7 +526,7 @@ pub fn distance_weights_matrix<T: Float>(
 /// ```
 #[allow(dead_code)]
 pub fn clark_evans_index<T: Float>(
-    _coordinates: &ArrayView2<T>,
+    coordinates: &ArrayView2<T>,
     study_area: T,
 ) -> SpatialResult<T> {
     let n = coordinates.shape()[0];

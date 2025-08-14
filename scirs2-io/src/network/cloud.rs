@@ -45,7 +45,7 @@ pub struct S3Config {
 
 impl S3Config {
     /// Create a new S3 configuration
-    pub fn new(_bucket: &str, region: &str, access_key: &str, secretkey: &str) -> Self {
+    pub fn new(bucket: &str, region: &str, access_key: &str, secret_key: &str) -> Self {
         Self {
             bucket: bucket.to_string(),
             region: region.to_string(),
@@ -64,7 +64,7 @@ impl S3Config {
 
     /// Enable path-style requests
     pub fn with_path_style(mut self, pathstyle: bool) -> Self {
-        self.path_style = path_style;
+        self.path_style = pathstyle;
         self
     }
 }
@@ -84,7 +84,7 @@ pub struct GcsConfig {
 
 impl GcsConfig {
     /// Create a new GCS configuration
-    pub fn new(_bucket: &str, projectid: &str) -> Self {
+    pub fn new(bucket: &str, project_id: &str) -> Self {
         Self {
             bucket: bucket.to_string(),
             project_id: project_id.to_string(),
@@ -121,7 +121,7 @@ pub struct AzureConfig {
 
 impl AzureConfig {
     /// Create a new Azure configuration
-    pub fn new(_account: &str, container: &str, accesskey: &str) -> Self {
+    pub fn new(account: &str, container: &str, access_key: &str) -> Self {
         Self {
             account: account.to_string(),
             container: container.to_string(),
@@ -504,7 +504,7 @@ pub fn create_mock_metadata(name: &str, size: u64) -> FileMetadata {
 /// Validate cloud provider configuration
 #[allow(dead_code)]
 pub fn validate_config(provider: &CloudProvider) -> Result<()> {
-    match _provider {
+    match provider {
         CloudProvider::S3(config) => {
             if config.bucket.is_empty() {
                 return Err(IoError::ConfigError(

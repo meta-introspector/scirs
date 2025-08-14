@@ -265,7 +265,7 @@ pub fn fit_rectangle(points: &[(f64, f64)]) -> [(f64, f64); 4] {
     let mut max_x = f64::MIN;
     let mut max_y = f64::MIN;
 
-    for &(x, y) in _points {
+    for &(x, y) in points {
         min_x = min_x.min(x);
         min_y = min_y.min(y);
         max_x = max_x.max(x);

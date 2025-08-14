@@ -3,15 +3,15 @@
 //! This module tests the integration of all stability testing components including
 //! numerical analysis, stability metrics, and the comprehensive test framework.
 
-use scirs2__autograd::tensor::Tensor;
-use scirs2__autograd::testing::numerical_analysis::NumericalAnalyzer;
-use scirs2__autograd::testing::stability_metrics::{StabilityGrade, StabilityMetrics};
-use scirs2__autograd::testing::stability_test_framework::{
+use scirs2_autograd::tensor::Tensor;
+use scirs2_autograd::testing::numerical_analysis::NumericalAnalyzer;
+use scirs2_autograd::testing::stability_metrics::{StabilityGrade, StabilityMetrics};
+use scirs2_autograd::testing::stability_test_framework::{
     create_test_scenario, run_basic_stability_tests, run_comprehensive_stability_tests,
     run_stability_tests_with_config, test_function_stability, StabilityTestSuite, TestConfig,
 };
-use scirs2__autograd::testing::StabilityError;
-// use scirs2__autograd::testing::StabilityError; // Not used in this test file
+use scirs2_autograd::testing::StabilityError;
+// use scirs2_autograd::testing::StabilityError; // Not used in this test file
 
 /// Test the basic stability framework functionality
 #[test]
@@ -441,7 +441,7 @@ fn create_uncertainty_tensor(shape: Vec<usize>, magnitude: f64) -> Tensor<'stati
 
 #[allow(dead_code)]
 fn create_test_scenarios(
-) -> Vec<scirs2__autograd::testing::stability_test_framework::TestScenario<'static, f32>> {
+) -> Vec<scirs2_autograd::testing::stability_test_framework::TestScenario<'static, f32>> {
     let mut scenarios = Vec::new();
 
     // Scenario 1: Linear transformation

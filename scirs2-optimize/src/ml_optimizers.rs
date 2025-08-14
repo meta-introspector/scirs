@@ -28,7 +28,7 @@ pub struct LassoOptimizer<F: Float> {
 
 impl<F: Float + ScalarOperand> LassoOptimizer<F> {
     /// Create a new Lasso optimizer
-    pub fn new(lambda: F, learningrate: F) -> Self {
+    pub fn new(lambda: F, learning_rate: F) -> Self {
         Self {
             lambda,
             learning_rate,
@@ -39,7 +39,7 @@ impl<F: Float + ScalarOperand> LassoOptimizer<F> {
     }
 
     /// Create a new accelerated Lasso optimizer (FISTA)
-    pub fn fista(lambda: F, learningrate: F) -> Self {
+    pub fn fista(lambda: F, learning_rate: F) -> Self {
         Self {
             lambda,
             learning_rate,
@@ -61,7 +61,7 @@ impl<F: Float + ScalarOperand> LassoOptimizer<F> {
     }
 
     /// Proximal operator for L1 regularization
-    fn prox_l1(&self, x: &Array1<F>, stepsize: F) -> Array1<F> {
+    fn prox_l1(&self, x: &Array1<F>, step_size: F) -> Array1<F> {
         let threshold = self.lambda * step_size;
         x.mapv(|xi| self.soft_threshold(xi, threshold))
     }
@@ -151,7 +151,7 @@ pub struct GroupLassoOptimizer<F: Float> {
 
 impl<F: Float + ScalarOperand> GroupLassoOptimizer<F> {
     /// Create a new Group Lasso optimizer
-    pub fn new(lambda: F, learningrate: F, groups: Vec<usize>) -> Self {
+    pub fn new(lambda: F, learning_rate: F, groups: Vec<usize>) -> Self {
         Self {
             lambda,
             learning_rate,
@@ -162,7 +162,7 @@ impl<F: Float + ScalarOperand> GroupLassoOptimizer<F> {
     }
 
     /// Proximal operator for group L1 regularization
-    fn prox_group_l1(&self, x: &Array1<F>, stepsize: F) -> Array1<F> {
+    fn prox_group_l1(&self, x: &Array1<F>, step_size: F) -> Array1<F> {
         let mut result = x.clone();
         let threshold = self.lambda * step_size;
 
@@ -261,7 +261,7 @@ pub struct ElasticNetOptimizer<F: Float> {
 
 impl<F: Float + ScalarOperand> ElasticNetOptimizer<F> {
     /// Create a new Elastic Net optimizer
-    pub fn new(lambda1: F, lambda2: F, learningrate: F) -> Self {
+    pub fn new(lambda1: F, lambda2: F, learning_rate: F) -> Self {
         Self {
             lambda1,
             lambda2,
@@ -272,7 +272,7 @@ impl<F: Float + ScalarOperand> ElasticNetOptimizer<F> {
     }
 
     /// Proximal operator for elastic net regularization
-    fn prox_elastic_net(&self, x: &Array1<F>, stepsize: F) -> Array1<F> {
+    fn prox_elastic_net(&self, x: &Array1<F>, step_size: F) -> Array1<F> {
         let l1_threshold = self.lambda1 * step_size;
         let l2_factor = F::one() / (F::one() + self.lambda2 * step_size);
 

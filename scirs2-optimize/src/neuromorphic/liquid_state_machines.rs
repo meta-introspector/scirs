@@ -27,7 +27,7 @@ pub struct LiquidStateMachine {
 
 impl LiquidStateMachine {
     /// Create new LSM
-    pub fn new(_input_size: usize, reservoir_size: usize, outputsize: usize) -> Self {
+    pub fn new(input_size: usize, reservoir_size: usize, output_size: usize) -> Self {
         // Initialize random weights
         let mut reservoir_weights = Array2::zeros((reservoir_size, reservoir_size));
         let mut input_weights = Array2::zeros((reservoir_size, input_size));
@@ -44,7 +44,7 @@ impl LiquidStateMachine {
 
         // Random input weights
         for i in 0..reservoir_size {
-            for j in 0.._input_size {
+            for j in 0..input_size {
                 input_weights[[i, j]] = (rand::rng().gen::<f64>() - 0.5) * 0.5;
             }
         }
@@ -55,14 +55,14 @@ impl LiquidStateMachine {
             output_weights,
             reservoir_state: Array1::zeros(reservoir_size),
             reservoir_size,
-            input_size: input_size,
+            input_size,
             output_size,
         }
     }
 
     /// Update reservoir state
     pub fn update_reservoir(&mut self, input: &ArrayView1<f64>) {
-        let mut new_state = Array1::zeros(self.reservoir_size);
+        let mut new_state: Array1<f64> = Array1::zeros(self.reservoir_size);
 
         // Input contribution
         for i in 0..self.reservoir_size {
@@ -129,27 +129,27 @@ where
     let output_size = input_size;
 
     let mut lsm = LiquidStateMachine::new(input_size, reservoir_size, output_size);
-    let mut _params = initial_params.to_owned();
+    let mut params = initial_params.to_owned();
 
     for _iter in 0..num_nit {
         // Use current parameters as input
-        lsm.update_reservoir(&_params.view());
+        lsm.update_reservoir(&params.view());
 
         // Get output (parameter updates)
         let updates = lsm.compute_output();
 
         // Apply updates
-        for i in 0.._params.len() {
+        for i in 0..params.len() {
             if i < updates.len() {
                 params[i] += 0.01 * updates[i];
             }
         }
 
         // Evaluate objective for potential training signal
-        let _obj_val = objective(&_params.view());
+        let _obj_val = objective(&params.view());
     }
 
-    Ok(_params)
+    Ok(params)
 }
 
 #[allow(dead_code)]

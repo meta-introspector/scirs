@@ -59,14 +59,15 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     pub fn new() -> Self {
         Self {
             config: FiniteDifferenceConfig::default(),
-            _phantom: std::marker::PhantomData,
+            phantom: std::marker::PhantomData,
         }
     }
 
     /// Create with custom configuration
     pub fn with_config(config: FiniteDifferenceConfig) -> Self {
         Self {
-            _config_phantom: std::marker::PhantomData,
+            config,
+            phantom: std::marker::PhantomData,
         }
     }
 
@@ -488,7 +489,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     }
 
     #[allow(dead_code)]
-    fn extract_scalar(selftensor: &Tensor<'_, F>) -> Result<F, StabilityError> {
+    fn extract_scalar(&self, tensor: &Tensor<'_, F>) -> Result<F, StabilityError> {
         // Extract a scalar value from the _tensor (assumes output is scalar)
         // Simplified implementation
         Ok(F::from(1.0).unwrap())
@@ -514,7 +515,7 @@ impl<'a, F: Float> PerturbedInputIterator<'a, F> {
     fn new(input: &Tensor<'a, F>, step: F) -> Self {
         let max_index = input.shape().iter().product();
         Self {
-            _input: *_input,
+            input: *input,
             step,
             current_index: 0,
             max_index,
@@ -552,7 +553,7 @@ impl<'a, F: Float> CentralPerturbedInputIterator<'a, F> {
     fn new(input: &Tensor<'a, F>, step: F) -> Self {
         let max_index = input.shape().iter().product();
         Self {
-            _input: *_input,
+            input: *input,
             step,
             current_index: 0,
             max_index,

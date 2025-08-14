@@ -143,7 +143,7 @@ fn array_compression_example() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Create ndarray from the data
-    let array = Array::fromshape_vec(IxDyn(&shape), data)?;
+    let array = Array::from_shape_vec(IxDyn(&shape), data)?;
 
     println!("Created array with shape: {:?}", array.shape());
 
@@ -218,7 +218,7 @@ fn chunked_array_compression_example() -> Result<(), Box<dyn std::error::Error>>
     }
 
     // Create ndarray from the data
-    let array = Array::fromshape_vec(IxDyn(&shape), data)?;
+    let array = Array::from_shape_vec(IxDyn(&shape), data)?;
 
     println!("Created large array with shape: {:?}", array.shape());
     println!("Number of elements: {}", array.len());
@@ -344,7 +344,7 @@ fn create_sine_wave_array(shape: &[usize]) -> Array<f64, IxDyn> {
         }
     }
 
-    Array::fromshape_vec(IxDyn(shape), data).unwrap()
+    Array::from_shape_vec(IxDyn(shape), data).unwrap()
 }
 
 #[allow(dead_code)]
@@ -361,7 +361,7 @@ fn create_random_array(shape: &[usize]) -> Array<f64, IxDyn> {
         }
     }
 
-    Array::fromshape_vec(IxDyn(shape), data).unwrap()
+    Array::from_shape_vec(IxDyn(shape), data).unwrap()
 }
 
 #[allow(dead_code)]
@@ -381,5 +381,5 @@ fn create_mixed_array(shape: &[usize]) -> Array<f64, IxDyn> {
         }
     }
 
-    Array::fromshape_vec(IxDyn(shape), data).unwrap()
+    Array::from_shape_vec(IxDyn(shape), data).unwrap()
 }

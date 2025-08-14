@@ -44,7 +44,7 @@ impl<T: Clone> RTree<T> {
             self.decrement_size();
 
             // If the root has only one child and it's not a leaf, make the child the new root
-            if !self.root.is_leaf && self.root.size() == 1 {
+            if !self.root._isleaf && self.root.size() == 1 {
                 if let Entry::NonLeaf { child, .. } = &self.root.entries[0] {
                     let new_root = (**child).clone();
                     self.root = new_root;
@@ -68,7 +68,7 @@ impl<T: Clone> RTree<T> {
         F: Fn(&T) -> bool + Copy,
     {
         // If this is a leaf node, look for the entry to delete
-        if node.is_leaf {
+        if node._isleaf {
             let mut found_index = None;
 
             for (i, entry) in node.entries.iter().enumerate() {

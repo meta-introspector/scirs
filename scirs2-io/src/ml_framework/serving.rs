@@ -392,7 +392,7 @@ impl ModelServer {
     }
 
     /// Update server metrics
-    async fn update_metrics(&self, starttime: Instant, success: bool) {
+    async fn update_metrics(&self, start_time: Instant, success: bool) {
         let mut metrics = self.metrics.lock().await;
         metrics.total_requests += 1;
 
@@ -409,7 +409,7 @@ impl ModelServer {
     }
 
     /// Update batch metrics
-    async fn update_batch_metrics(&self, batch_size: usize, starttime: Instant) {
+    async fn update_batch_metrics(&self, batch_size: usize, start_time: Instant) {
         let mut metrics = self.metrics.lock().await;
         metrics.batch_stats.total_batches += 1;
 
@@ -619,10 +619,10 @@ pub mod grpc {
 
     /// Convert gRPC format to MLTensor
     pub fn grpc_to_tensor(grpctensor: &GrpcTensor) -> Result<MLTensor> {
-        let shape: Vec<usize> = grpc_tensor.shape.iter().map(|&s| s as usize).collect();
+        let shape: Vec<usize> = grpctensor.shape.iter().map(|&s| s as usize).collect();
 
         // Convert bytes back to f32
-        let float_data: Vec<f32> = grpc_tensor
+        let float_data: Vec<f32> = grpctensor
             .data
             .chunks_exact(4)
             .map(|chunk| {
@@ -634,7 +634,7 @@ pub mod grpc {
         let array = ArrayD::from_shape_vec(IxDyn(&shape), float_data)
             .map_err(|e| IoError::Other(e.to_string()))?;
 
-        Ok(MLTensor::new(array, Some(grpc_tensor.name.clone())))
+        Ok(MLTensor::new(array, Some(grpctensor.name.clone())))
     }
 }
 

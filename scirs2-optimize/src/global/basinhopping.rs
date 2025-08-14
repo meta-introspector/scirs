@@ -7,9 +7,8 @@
 use crate::error::OptimizeError;
 use crate::unconstrained::{minimize, Bounds, Method, OptimizeResult, Options};
 use ndarray::{Array1, ArrayView1};
-use rand::distr::Uniform;
 use rand::rngs::StdRng;
-use rand::Rng;
+use rand::{Rng, SeedableRng};
 
 /// Enforce bounds using reflection method for better exploration
 #[allow(dead_code)]
@@ -167,8 +166,7 @@ where
 
         // Default accept _test is Metropolis criterion
         let accept_test = accept_test.unwrap_or_else(|| {
-            let temp = options.temperature;
-            Box::new(move |f_new: f64, fold: f64| {
+            Box::new(move |f_new: f64, f_old: f64, temp: f64| {
                 if f_new < f_old {
                     true
                 } else {
@@ -189,8 +187,7 @@ where
                 let mut local_rng = StdRng::seed_from_u64(seed + x.len() as u64);
                 let mut x_new = x.clone();
                 for i in 0..x.len() {
-                    let uniform = Uniform::new(-stepsize..stepsize).unwrap();
-                    x_new[i] += local_rng.sample(uniform);
+                    x_new[i] += local_rng.gen_range(-stepsize..stepsize);
 
                     // Apply bounds if specified using reflection method
                     if let Some(ref bounds) = bounds {

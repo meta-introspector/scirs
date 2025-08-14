@@ -515,8 +515,8 @@ impl<T: Clone> RTree<T> {
     /// # Returns
     ///
     /// A `SpatialResult` containing the new R-tree, or an error if the parameters are invalid
-    pub fn new(_ndim: usize, min_entries: usize, maxentries: usize) -> SpatialResult<Self> {
-        if _ndim == 0 {
+    pub fn new(ndim: usize, min_entries: usize, maxentries: usize) -> SpatialResult<Self> {
+        if ndim == 0 {
             return Err(SpatialError::ValueError(
                 "Number of dimensions must be positive".into(),
             ));

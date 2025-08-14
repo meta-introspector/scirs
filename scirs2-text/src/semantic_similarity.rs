@@ -17,8 +17,8 @@ pub struct WordMoversDistance {
 
 impl WordMoversDistance {
     /// Create a new WMD calculator from pre-computed embeddings
-    pub fn from_embeddings(embeddings: HashMap<String, Array1<f64>>) -> Self {
-        Self { _embeddings }
+    pub fn fromembeddings(embeddings: HashMap<String, Array1<f64>>) -> Self {
+        Self { embeddings: embeddings }
     }
 
     /// Create from a trained Word2Vec model
@@ -92,7 +92,7 @@ impl WordMoversDistance {
     /// Calculate word frequencies (normalized)
     fn calculate_frequencies(tokens: &[&str]) -> HashMap<String, f64> {
         let mut counts: HashMap<String, usize> = HashMap::new();
-        for &token in _tokens {
+        for &token in tokens {
             *counts.entry(token.to_string()).or_insert(0) += 1;
         }
 
@@ -160,18 +160,18 @@ pub struct SoftCosineSimilarity {
 impl SoftCosineSimilarity {
     /// Create from pre-computed word similarities
     pub fn new(_similaritymatrix: HashMap<(String, String), f64>) -> Self {
-        Self { _similarity_matrix }
+        Self { similarity_matrix: _similaritymatrix }
     }
 
     /// Create from word embeddings by computing cosine similarities
-    pub fn from_embeddings(embeddings: &HashMap<String, Array1<f64>>) -> Self {
+    pub fn fromembeddings(embeddings: &HashMap<String, Array1<f64>>) -> Self {
         let mut similarity_matrix = HashMap::new();
 
         let words: Vec<&String> = embeddings.keys().collect();
         for (i, word1) in words.iter().enumerate() {
             for word2 in words.iter().skip(i) {
                 let sim =
-                    Self::cosine_similarity(_embeddings[*word1].view(), embeddings[*word2].view());
+                    Self::cosine_similarity(embeddings[*word1].view(), embeddings[*word2].view());
                 similarity_matrix.insert(((*word1).clone(), (*word2).clone()), sim);
                 if word1 != word2 {
                     similarity_matrix.insert(((*word2).clone(), (*word1).clone()), sim);
@@ -253,7 +253,7 @@ impl SoftCosineSimilarity {
     /// Calculate term frequencies
     fn calculate_tf(tokens: &[String]) -> HashMap<String, f64> {
         let mut counts: HashMap<String, usize> = HashMap::new();
-        for token in _tokens {
+        for token in tokens {
             *counts.entry(token.clone()).or_insert(0) += 1;
         }
 
@@ -374,15 +374,15 @@ impl LcsSimilarity {
 /// Semantic edit distance for measuring text similarity with semantic operations
 pub struct SemanticEditDistance {
     embeddings: HashMap<String, Array1<f64>>,
-    synonym_threshold: f64,
+    synonymthreshold: f64,
 }
 
 impl SemanticEditDistance {
     /// Create new semantic edit distance calculator
-    pub fn new(_embeddings: HashMap<String, Array1<f64>>, synonymthreshold: f64) -> Self {
+    pub fn new(embeddings: HashMap<String, Array1<f64>>, synonymthreshold: f64) -> Self {
         Self {
             embeddings,
-            synonym_threshold,
+            synonymthreshold,
         }
     }
 
@@ -427,7 +427,7 @@ impl SemanticEditDistance {
             (self.embeddings.get(word1), self.embeddings.get(word2))
         {
             let similarity = Self::cosine_similarity(embed1.view(), embed2.view());
-            if similarity >= self.synonym_threshold {
+            if similarity >= self.synonymthreshold {
                 0.5 // Reduced cost for similar words
             } else {
                 1.0 - similarity // Cost inversely related to similarity
@@ -507,30 +507,30 @@ impl SentenceEmbeddingSimilarity {
         let tokens = tokenizer.tokenize(text)?;
 
         // Filter tokens that have embeddings
-        let valid_embeddings: Vec<&Array1<f64>> = tokens
+        let validembeddings: Vec<&Array1<f64>> = tokens
             .iter()
             .filter_map(|token| self.embeddings.get(token))
             .collect();
 
-        if valid_embeddings.is_empty() {
+        if validembeddings.is_empty() {
             return Err(TextError::InvalidInput(
                 "No valid embeddings found for tokens".into(),
             ));
         }
 
-        let embed_dim = valid_embeddings[0].len();
+        let embed_dim = validembeddings[0].len();
 
         match &self.pooling_strategy {
             PoolingStrategy::Mean => {
                 let mut result = Array1::zeros(embed_dim);
-                for embedding in &valid_embeddings {
+                for embedding in &validembeddings {
                     result += *embedding;
                 }
-                Ok(result / valid_embeddings.len() as f64)
+                Ok(result / validembeddings.len() as f64)
             }
             PoolingStrategy::Max => {
                 let mut result = Array1::from_elem(embed_dim, f64::NEG_INFINITY);
-                for embedding in &valid_embeddings {
+                for embedding in &validembeddings {
                     for (i, &val) in embedding.iter().enumerate() {
                         if val > result[i] {
                             result[i] = val;
@@ -543,7 +543,7 @@ impl SentenceEmbeddingSimilarity {
                 let mut result = Array1::zeros(embed_dim);
                 let mut total_weight = 0.0;
 
-                for (token, embedding) in tokens.iter().zip(&valid_embeddings) {
+                for (token, embedding) in tokens.iter().zip(&validembeddings) {
                     let weight = weights.get(token).copied().unwrap_or(1.0);
                     result = result + *embedding * weight;
                     total_weight += weight;
@@ -552,7 +552,7 @@ impl SentenceEmbeddingSimilarity {
                 if total_weight > 0.0 {
                     Ok(result / total_weight)
                 } else {
-                    Ok(result / valid_embeddings.len() as f64)
+                    Ok(result / validembeddings.len() as f64)
                 }
             }
         }
@@ -575,7 +575,7 @@ impl SentenceEmbeddingSimilarity {
 /// N-gram based semantic similarity with skip-grams and weighted matching
 pub struct NGramSemanticSimilarity {
     n: usize,
-    skip_distance: usize,
+    skipdistance: usize,
     embeddings: HashMap<String, Array1<f64>>,
     ngramweights: HashMap<usize, f64>,
 }
@@ -591,9 +591,9 @@ impl NGramSemanticSimilarity {
 
         Self {
             n,
-            skip_distance,
+            skipdistance,
             embeddings,
-            ngram_weights,
+            ngramweights: ngram_weights,
         }
     }
 
@@ -637,10 +637,10 @@ impl NGramSemanticSimilarity {
             ngrams.push(tokens[i..i + n].to_vec());
         }
 
-        // Skip-grams (if skip_distance > 0)
-        if self.skip_distance > 0 && n > 1 {
+        // Skip-grams (if skipdistance > 0)
+        if self.skipdistance > 0 && n > 1 {
             for i in 0..tokens.len() {
-                for skip in 1..=self.skip_distance {
+                for skip in 1..=self.skipdistance {
                     if i + skip + n - 1 < tokens.len() {
                         let mut skipgram = vec![tokens[i].clone()];
                         for j in 1..n {
@@ -759,19 +759,19 @@ impl SemanticSimilarityEnsemble {
 
     /// Set Soft Cosine Similarity component
     pub fn with_soft_cosine(mut self, softcosine: SoftCosineSimilarity) -> Self {
-        self.soft_cosine = Some(soft_cosine);
+        self.soft_cosine = Some(softcosine);
         self
     }
 
     /// Set Weighted Jaccard component
     pub fn with_weighted_jaccard(mut self, weightedjaccard: WeightedJaccard) -> Self {
-        self.weighted_jaccard = Some(weighted_jaccard);
+        self.weighted_jaccard = Some(weightedjaccard);
         self
     }
 
     /// Set Semantic Edit Distance component
     pub fn with_semantic_edit(mut self, semanticedit: SemanticEditDistance) -> Self {
-        self.semantic_edit = Some(semantic_edit);
+        self.semantic_edit = Some(semanticedit);
         self
     }
 
@@ -786,7 +786,7 @@ impl SemanticSimilarityEnsemble {
 
     /// Set N-gram Semantic Similarity component
     pub fn with_ngram_semantic(mut self, ngramsemantic: NGramSemanticSimilarity) -> Self {
-        self.ngram_semantic = Some(ngram_semantic);
+        self.ngram_semantic = Some(ngramsemantic);
         self
     }
 
@@ -881,7 +881,7 @@ impl SemanticSimilarityEnsemble {
 pub struct ConceptualSimilarity {
     concept_hierarchy: HashMap<String, ConceptNode>,
     #[allow(dead_code)]
-    max_depth: usize,
+    _maxdepth: usize,
 }
 
 /// Node in a concept hierarchy for semantic similarity
@@ -904,7 +904,7 @@ impl ConceptualSimilarity {
     pub fn new(_maxdepth: usize) -> Self {
         Self {
             concept_hierarchy: HashMap::new(),
-            max_depth,
+            _maxdepth,
         }
     }
 
@@ -920,7 +920,7 @@ impl ConceptualSimilarity {
         let mut concept_map = HashMap::new();
 
         // Build nodes from _relations
-        for (child, parent) in _word_relations {
+        for (child, parent) in _wordrelations {
             let child_node = concept_map
                 .entry(child.clone())
                 .or_insert_with(|| ConceptNode {
@@ -1132,13 +1132,13 @@ impl DistributionalSimilarity {
     pub fn from_corpus(
         corpus: &[String],
         tokenizer: &dyn Tokenizer,
-        window_size: usize,
+        windowsize: usize,
     ) -> Result<Self> {
         let mut similarity = Self::new();
 
         for document in corpus {
             let tokens = tokenizer.tokenize(document)?;
-            similarity.update_counts(&tokens, window_size);
+            similarity.update_counts(&tokens, windowsize);
         }
 
         similarity.calculate_pmis();
@@ -1153,8 +1153,8 @@ impl DistributionalSimilarity {
             self.total_words += 1.0;
 
             // Update co-occurrence counts within window
-            let start = i.saturating_sub(window_size);
-            let end = (i + window_size + 1).min(tokens.len());
+            let start = i.saturating_sub(windowsize);
+            let end = (i + windowsize + 1).min(tokens.len());
 
             #[allow(clippy::needless_range_loop)]
             for j in start..end {
@@ -1254,7 +1254,7 @@ impl DistributionalSimilarity {
             .collect();
 
         similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        similarities.truncate(top_k);
+        similarities.truncate(topk);
         similarities
     }
 }
@@ -1267,8 +1267,8 @@ impl Default for DistributionalSimilarity {
 
 /// Topic-based similarity using document topic distributions
 pub struct TopicBasedSimilarity {
-    topic_distributions: HashMap<String, Array1<f64>>,
-    similarity_metric: TopicSimilarityMetric,
+    topicdistributions: HashMap<String, Array1<f64>>,
+    _similaritymetric: TopicSimilarityMetric,
 }
 
 /// Metrics for comparing topic distributions
@@ -1286,28 +1286,28 @@ impl TopicBasedSimilarity {
     /// Create new topic-based similarity calculator
     pub fn new(_similaritymetric: TopicSimilarityMetric) -> Self {
         Self {
-            topic_distributions: HashMap::new(),
-            similarity_metric,
+            topicdistributions: HashMap::new(),
+            _similaritymetric,
         }
     }
 
     /// Add topic distribution for a document
     pub fn add_document_topics(&mut self, doc_id: String, topicdistribution: Array1<f64>) {
-        self.topic_distributions.insert(doc_id, topic_distribution);
+        self.topicdistributions.insert(doc_id, topicdistribution);
     }
 
     /// Calculate topic-based similarity between two documents
     pub fn similarity(&self, doc_id1: &str, docid2: &str) -> Result<f64> {
         let topics1 = self
-            .topic_distributions
+            .topicdistributions
             .get(doc_id1)
             .ok_or_else(|| TextError::InvalidInput(format!("Document {doc_id1} not found")))?;
         let topics2 = self
-            .topic_distributions
-            .get(doc_id2)
-            .ok_or_else(|| TextError::InvalidInput(format!("Document {doc_id2} not found")))?;
+            .topicdistributions
+            .get(docid2)
+            .ok_or_else(|| TextError::InvalidInput(format!("Document {docid2} not found")))?;
 
-        match self.similarity_metric {
+        match self._similaritymetric {
             TopicSimilarityMetric::Cosine => {
                 Ok(self.cosine_similarity(topics1.view(), topics2.view()))
             }
@@ -1365,25 +1365,25 @@ impl TopicBasedSimilarity {
 
     /// Find most similar documents to a given document
     pub fn most_similar_documents(&self, doc_id: &str, topk: usize) -> Result<Vec<(String, f64)>> {
-        if !self.topic_distributions.contains_key(doc_id) {
+        if !self.topicdistributions.contains_key(doc_id) {
             return Err(TextError::InvalidInput(format!(
                 "Document {doc_id} not found"
             )));
         }
 
         let mut similarities: Vec<(String, f64)> = self
-            .topic_distributions
+            .topicdistributions
             .keys()
             .filter(|&_id| _id != doc_id)
             .filter_map(|_id| {
-                self.similarity(doc_id)
+                self.similarity(doc_id, _id)
                     .ok()
                     .map(|sim| (_id.clone(), sim))
             })
             .collect();
 
         similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        similarities.truncate(top_k);
+        similarities.truncate(topk);
         Ok(similarities)
     }
 }
@@ -1431,7 +1431,7 @@ mod tests {
         embeddings.insert("dog".to_string(), arr1(&[0.9, 0.1]));
         embeddings.insert("car".to_string(), arr1(&[0.0, 1.0]));
 
-        let soft_cosine = SoftCosineSimilarity::from_embeddings(&embeddings);
+        let soft_cosine = SoftCosineSimilarity::fromembeddings(&embeddings);
         let tokenizer = WordTokenizer::default();
 
         let sim = soft_cosine
@@ -1443,7 +1443,7 @@ mod tests {
     }
 
     fn arr1(data: &[f64]) -> Array1<f64> {
-        Array1::from_vec(_data.to_vec())
+        Array1::from_vec(data.to_vec())
     }
 
     #[test]
@@ -1690,7 +1690,7 @@ mod tests {
     }
 
     #[test]
-    fn test_topic_similarity_metrics() {
+    fn test_topic__similaritymetrics() {
         // Test different similarity metrics
         let mut cosine_sim = TopicBasedSimilarity::new(TopicSimilarityMetric::Cosine);
         let mut js_sim = TopicBasedSimilarity::new(TopicSimilarityMetric::JensenShannon);

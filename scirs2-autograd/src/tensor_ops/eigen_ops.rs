@@ -101,18 +101,18 @@ impl<F: Float + ScalarOperand + FromPrimitive> Op<F> for EigenOp {
         let eigen_vals = y_array.slice(ndarray::s![0..values_size]);
         let eigen_vecs = y_array.slice(ndarray::s![vectors_start..]);
 
-        let eigen_vals_1d = eigen_vals.toshape(n).unwrap().to_owned();
-        let eigen_vecs_2d = eigen_vecs.toshape((n, n)).unwrap().to_owned();
+        let eigen_vals_1d = eigen_vals.to_shape(n).unwrap().to_owned();
+        let eigen_vecs_2d = eigen_vecs.to_shape((n, n)).unwrap().to_owned();
 
         // Get gradients
         let grad_vals = gy_array
             .slice(ndarray::s![0..values_size])
-            .toshape(n)
+            .to_shape(n)
             .unwrap()
             .to_owned();
         let grad_vecs = gy_array
             .slice(ndarray::s![vectors_start..])
-            .toshape((n, n))
+            .to_shape((n, n))
             .unwrap()
             .to_owned();
 
@@ -208,7 +208,7 @@ impl<F: Float + ScalarOperand + FromPrimitive> Op<F> for EigenvaluesOp {
         };
 
         // Convert to the right shape
-        let grad_vals_1d = match grad_vals_array.toshape(n) {
+        let grad_vals_1d = match grad_vals_array.to_shape(n) {
             Ok(arr) => arr.to_owned(),
             Err(_) => {
                 ctx.append_input_grad(0, None);
@@ -236,7 +236,7 @@ fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
     let n = matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (_matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() {
+            if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() {
                 return false;
             }
         }
@@ -468,7 +468,7 @@ fn is_nearly_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>, tol: F)
     let n = matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (_matrix[[i, j]] - matrix[[j, i]]).abs() > tol {
+            if (matrix[[i, j]] - matrix[[j, i]]).abs() > tol {
                 return false;
             }
         }
@@ -572,13 +572,13 @@ fn compute_eigenvalues_only<F: Float + ScalarOperand + FromPrimitive>(
     matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array1<F>, OpError> {
     // Simplified implementation - use full eigen decomposition but return only values
-    let (values_) = if is_symmetric_matrix(matrix) {
+    let (values_, _vectors) = if is_symmetric_matrix(matrix) {
         compute_symmetric_eigen(matrix)?
     } else {
         compute_general_eigen(matrix)?
     };
 
-    Ok(values)
+    Ok(values_)
 }
 
 #[allow(dead_code)]

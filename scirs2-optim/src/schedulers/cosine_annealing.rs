@@ -66,7 +66,7 @@ impl<A: Float + Debug> CosineAnnealing<A> {
     /// * `min_lr` - Minimum learning rate
     /// * `t_max` - Maximum number of iterations in a cycle
     /// * `warm_restart` - Whether to use warm restarts
-    pub fn new(initial_lr: A, min_lr: A, t_max: usize, warmrestart: bool) -> Self {
+    pub fn new(initial_lr: A, min_lr: A, t_max: usize, warm_restart: bool) -> Self {
         Self {
             initial_lr,
             min_lr,

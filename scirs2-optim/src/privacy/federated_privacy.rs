@@ -3149,13 +3149,13 @@ impl<
         let mut selected = Vec::new();
         let mut rng = scirs2_core::random::rng();
 
-        for (_clients) in device_groups {
+        for (clients) in device_groups {
             if clients.1.is_empty() {
                 continue;
             }
 
             let group_target = (target_count * clients.1.len() / availableclients.len()).max(1);
-            let group_target = group_target.min(_clients.1.len());
+            let group_target = group_target.min(clients.1.len());
 
             // Random selection from group
             let mut group_clients = clients;
@@ -5345,7 +5345,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> StatisticalAnaly
     /// Create new statistical analyzer
     pub fn new(_window_size: usize, significancelevel: f64) -> Self {
         Self {
-            window_size: window_size,
+            window_size: _window_size,
             significancelevel,
             test_statistics: VecDeque::with_capacity(_window_size),
         }

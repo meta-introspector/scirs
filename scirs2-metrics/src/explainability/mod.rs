@@ -988,13 +988,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
         // Get baseline prediction (no features)
         let baseline_input =
-            Array2::fromshape_vec((1, n_features), background.to_vec()).map_err(|_| {
+            Array2::from_shape_vec((1, n_features), background.to_vec()).map_err(|_| {
                 MetricsError::InvalidInput("Failed to create baseline array".to_string())
             })?;
         let baseline_pred = model(&baseline_input.view())[0];
 
         // Get full prediction (all features)
-        let full_input = Array2::fromshape_vec((1, n_features), instance.to_vec())
+        let full_input = Array2::from_shape_vec((1, n_features), instance.to_vec())
             .map_err(|_| MetricsError::InvalidInput("Failed to create full array".to_string()))?;
         let full_pred = model(&full_input.view())[0];
 
@@ -1093,7 +1093,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         }
 
         // Convert to 2D array for model input
-        Array2::fromshape_vec((1, n_features), coalition_input.to_vec()).map_err(|_| {
+        Array2::from_shape_vec((1, n_features), coalition_input.to_vec()).map_err(|_| {
             MetricsError::InvalidInput("Failed to create coalition input array".to_string())
         })
     }
@@ -1190,7 +1190,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
         // Get baseline prediction
         let baseline_input =
-            Array2::fromshape_vec((1, n_features), instance.to_vec()).map_err(|_| {
+            Array2::from_shape_vec((1, n_features), instance.to_vec()).map_err(|_| {
                 MetricsError::InvalidInput("Failed to create baseline array".to_string())
             })?;
         let _baseline_pred = model(&baseline_input.view())[0];
@@ -1203,7 +1203,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             // Forward step
             let mut forward_instance = instance.to_owned();
             forward_instance[i] = forward_instance[i] + epsilon;
-            let forward_input = Array2::fromshape_vec((1, n_features), forward_instance.to_vec())
+            let forward_input = Array2::from_shape_vec((1, n_features), forward_instance.to_vec())
                 .map_err(|_| {
                 MetricsError::InvalidInput("Failed to create forward array".to_string())
             })?;
@@ -1212,7 +1212,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             // Backward step
             let mut backward_instance = instance.to_owned();
             backward_instance[i] = backward_instance[i] - epsilon;
-            let backward_input = Array2::fromshape_vec((1, n_features), backward_instance.to_vec())
+            let backward_input = Array2::from_shape_vec((1, n_features), backward_instance.to_vec())
                 .map_err(|_| {
                     MetricsError::InvalidInput("Failed to create backward array".to_string())
                 })?;

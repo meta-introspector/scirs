@@ -134,7 +134,7 @@ impl JitCompiler {
         };
 
         Self {
-            options: options,
+            options,
             cache: Arc::new(Mutex::new(HashMap::new())),
             pattern_detector: PatternDetector::new(),
             profiler,
@@ -212,7 +212,7 @@ impl JitCompiler {
     }
 
     /// Generate a signature for function caching
-    fn generate_signature<F>(self_fun: &F, nvars: usize) -> u64
+    fn generate_signature<F>(&self, fun: &F, n_vars: usize) -> u64
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -224,7 +224,7 @@ impl JitCompiler {
         let mut hasher = DefaultHasher::new();
         n_vars.hash(&mut hasher);
         // Function pointer address (not reliable across runs, but works for caching within a session)
-        (std::ptr::addr_of!(*self_fun) as usize).hash(&mut hasher);
+        (std::ptr::addr_of!(*fun) as usize).hash(&mut hasher);
         hasher.finish()
     }
 
@@ -267,7 +267,7 @@ impl JitCompiler {
     }
 
     /// Create optimized implementation for quadratic functions
-    fn create_quadratic_implementation<F>(&self, fun: F, nvars: usize) -> JitCompilationResult
+    fn create_quadratic_implementation<F>(&self, fun: F, n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -281,7 +281,7 @@ impl JitCompiler {
     }
 
     /// Create optimized implementation for sum of squares
-    fn create_sum_of_squares_implementation<F>(&self, fun: F, nvars: usize) -> JitCompilationResult
+    fn create_sum_of_squares_implementation<F>(&self, fun: F, n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -293,7 +293,7 @@ impl JitCompiler {
     }
 
     /// Create optimized implementation for separable functions
-    fn create_separable_implementation<F>(&self, fun: F, nvars: usize) -> JitCompilationResult
+    fn create_separable_implementation<F>(&self, fun: F, n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -328,7 +328,7 @@ impl JitCompiler {
     }
 
     /// Create optimized implementation for polynomial functions
-    fn create_polynomial_implementation<F>(&self, fun: F, nvars: usize) -> JitCompilationResult
+    fn create_polynomial_implementation<F>(&self, fun: F, n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -337,7 +337,7 @@ impl JitCompiler {
     }
 
     /// Create vectorized implementation using SIMD
-    fn create_vectorized_implementation<F>(&self, fun: F, nvars: usize) -> JitCompilationResult
+    fn create_vectorized_implementation<F>(&self, fun: F, n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -471,7 +471,7 @@ impl PatternDetector {
         }
     }
 
-    fn generate_sample_points(&mut self, nvars: usize) -> Result<(), OptimizeError> {
+    fn generate_sample_points(&mut self, n_vars: usize) -> Result<(), OptimizeError> {
         use rand::{prelude::*, rng};
         let mut rng = rand::rng();
 
@@ -499,13 +499,13 @@ impl PatternDetector {
         false // Conservative default
     }
 
-    fn is_sum_of_squares(selfvalues: &[f64]) -> bool {
+    fn is_sum_of_squares(&self, values: &[f64]) -> bool {
         // Check if function is non-negative (necessary for sum of squares)
         // A real implementation would do more sophisticated analysis
         false
     }
 
-    fn is_separable<F>(self_fun: &F, vars: usize) -> Result<bool, OptimizeError>
+    fn is_separable<F>(&self, fun: &F, n_vars: usize) -> Result<bool, OptimizeError>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -515,7 +515,7 @@ impl PatternDetector {
         Ok(false)
     }
 
-    fn detect_polynomial_degree(selfvalues: &[f64]) -> Option<usize> {
+    fn detect_polynomial_degree(&self, values: &[f64]) -> Option<usize> {
         // Fit polynomials of increasing degree and check goodness of fit
         // Return the minimum degree that fits well
         None
@@ -561,7 +561,7 @@ impl FunctionProfiler {
         }
     }
 
-    pub fn record_call(&mut self, signature: u64, execution_timens: u64) {
+    pub fn record_call(&mut self, signature: u64, execution_time_ns: u64) {
         let profile = self.profiles.entry(signature).or_insert(ProfileData {
             call_count: 0,
             total_time_ns: 0,
@@ -620,10 +620,10 @@ where
 
 /// Estimate memory usage for optimization algorithm
 #[allow(dead_code)]
-fn estimate_memory_usage(_n_vars: usize, maxhistory: usize) -> usize {
+fn estimate_memory_usage(n_vars: usize, max_history: usize) -> usize {
     // Estimate memory for L-BFGS-style algorithms
-    let vector_size = _n_vars * std::mem::size_of::<f64>();
-    let matrix_size = _n_vars * _n_vars * std::mem::size_of::<f64>();
+    let vector_size = n_vars * std::mem::size_of::<f64>();
+    let matrix_size = n_vars * n_vars * std::mem::size_of::<f64>();
 
     // Current point, gradient, direction
     let basic_vectors = 3 * vector_size;

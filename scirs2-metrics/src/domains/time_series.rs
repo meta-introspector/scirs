@@ -650,7 +650,7 @@ impl TrendAnalysisMetrics {
         // Calculate correlation with linear trend
         let x: Array1<f64> = Array1::linspace(0.0, (n - 1) as f64, n);
 
-        let x_mean = x.mean().unwrap_or(0.0);
+        let x_mean = x.clone().mean();
         let y_mean = timeseries.mean().unwrap_or(0.0);
 
         let mut numerator = 0.0;

@@ -70,9 +70,9 @@ impl<F: Float> CosineAnnealingLR<F> {
     ///
     /// # Panics
     /// Panics if `t_max` is 0 or if `eta_min` >= `eta_max`
-    pub fn new(_eta_max: F, eta_min: F, tmax: usize) -> Self {
+    pub fn new(eta_max: F, eta_min: F, t_max: usize) -> Self {
         assert!(t_max > 0, "t_max must be greater than 0");
-        assert!(eta_min < eta_max, "eta_min must be less than _eta_max");
+        assert!(eta_min < eta_max, "eta_min must be less than eta_max");
 
         Self {
             eta_max,
@@ -99,10 +99,10 @@ impl<F: Float> CosineAnnealingLR<F> {
     ///
     /// # Panics
     /// Panics if `t0` is 0, `t_mult` is 0, or if `eta_min` >= `eta_max`
-    pub fn with_warm_restarts(_eta_max: F, eta_min: F, t0: usize, tmult: usize) -> Self {
+    pub fn with_warm_restarts(eta_max: F, eta_min: F, t0: usize, t_mult: usize) -> Self {
         assert!(t0 > 0, "t0 must be greater than 0");
         assert!(t_mult > 0, "t_mult must be greater than 0");
-        assert!(eta_min < eta_max, "eta_min must be less than _eta_max");
+        assert!(eta_min < eta_max, "eta_min must be less than eta_max");
 
         Self {
             eta_max,
@@ -122,9 +122,9 @@ impl<F: Float> CosineAnnealingLR<F> {
     /// # Arguments
     /// * `eta_max` - Maximum learning rate
     /// * `t_max` - Maximum number of steps in one cycle
-    pub fn standard(_eta_max: F, tmax: usize) -> Self {
-        let eta_min = _eta_max / F::from(100.0).unwrap();
-        Self::new(_eta_max, eta_min, t_max)
+    pub fn standard(eta_max: F, t_max: usize) -> Self {
+        let eta_min = eta_max / F::from(100.0).unwrap();
+        Self::new(eta_max, eta_min, t_max)
     }
 
     /// Create a cosine annealing scheduler for fine-tuning
@@ -134,9 +134,9 @@ impl<F: Float> CosineAnnealingLR<F> {
     /// # Arguments
     /// * `eta_max` - Maximum learning rate
     /// * `t_max` - Maximum number of steps in one cycle
-    pub fn for_fine_tuning(_eta_max: F, tmax: usize) -> Self {
-        let eta_min = _eta_max / F::from(10.0).unwrap();
-        Self::new(_eta_max, eta_min, t_max)
+    pub fn for_fine_tuning(eta_max: F, t_max: usize) -> Self {
+        let eta_min = eta_max / F::from(10.0).unwrap();
+        Self::new(eta_max, eta_min, t_max)
     }
 
     /// Calculate the current position within the cycle and which cycle we're in
@@ -179,7 +179,7 @@ impl<F: Float> CosineAnnealingLR<F> {
     ///
     /// # Returns
     /// Learning rate for the current position in the cycle
-    fn cosine_annealing(&self, step_in_cycle: usize, cyclelength: usize) -> F {
+    fn cosine_annealing(&self, step_in_cycle: usize, cycle_length: usize) -> F {
         if cycle_length == 0 {
             return self.eta_max;
         }
@@ -212,7 +212,7 @@ impl<F: Float> CosineAnnealingLR<F> {
             return false;
         }
 
-        let (cycle, step_in_cycle_) = self.get_cycle_info(step);
+        let (cycle, step_in_cycle_, _cycle_length) = self.get_cycle_info(step);
         step_in_cycle_ == 0 && cycle > 0
     }
 
@@ -223,7 +223,7 @@ impl<F: Float> CosineAnnealingLR<F> {
     ///
     /// # Returns
     /// Step number when the next restart will occur, or None if no restarts
-    pub fn next_restart_step(&self, currentstep: usize) -> Option<usize> {
+    pub fn next_restart_step(&self, current_step: usize) -> Option<usize> {
         if !self.restart {
             return None;
         }

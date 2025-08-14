@@ -4,9 +4,9 @@
 //! external optimizers and schedulers without circular dependencies.
 
 use ndarray::array;
-use scirs2__metrics::classification::{accuracy_score, f1_score, precision_score, recall_score};
-use scirs2__metrics::integration::optim::{MetricOptimizer, SchedulerConfig};
-use scirs2__metrics::regression::{mean_squared_error, r2_score};
+use scirs2_metrics::classification::{accuracy_score, f1_score, precision_score, recall_score};
+use scirs2_metrics::integration::optim::{MetricOptimizer, SchedulerConfig};
+use scirs2_metrics::regression::{mean_squared_error, r2_score};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -87,10 +87,10 @@ fn classification_optimization_example() -> Result<(), Box<dyn std::error::Error
 
     println!(
         "  Scheduler config: LR={}, Factor={}, Patience={}, Mode={}",
-        scheduler_configinitial_lr,
-        scheduler_configfactor,
-        scheduler_configpatience,
-        scheduler_configmode
+        scheduler_config.initial_lr,
+        scheduler_config.factor,
+        scheduler_config.patience,
+        scheduler_config.mode
     );
 
     println!();
@@ -194,11 +194,11 @@ fn multi_metric_tracking_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nScheduler strategies:");
     println!(
         "  Aggressive: LR={}, Factor={}, Patience={}",
-        aggressive_configinitial_lr, aggressive_configfactor, aggressive_configpatience
+        aggressive_config.initial_lr, aggressive_config.factor, aggressive_config.patience
     );
     println!(
         "  Conservative: LR={}, Factor={}, Patience={}",
-        conservative_configinitial_lr, conservative_configfactor, conservative_configpatience
+        conservative_config.initial_lr, conservative_config.factor, conservative_config.patience
     );
 
     println!();
@@ -258,10 +258,10 @@ fn external_scheduler_pattern_example() -> Result<(), Box<dyn std::error::Error>
     let final_config = metric_optimizer.create_scheduler_config(lr, lr_factor, patience, 1e-6);
 
     println!("\nFinal scheduler configuration:");
-    println!("  Current LR: {:.4}", final_configinitial_lr);
-    println!("  Reduction factor: {}", final_configfactor);
-    println!("  Patience: {}", final_configpatience);
-    println!("  Mode: {} (lower loss is better)", final_configmode);
+    println!("  Current LR: {:.4}", final_config.initial_lr);
+    println!("  Reduction factor: {}", final_config.factor);
+    println!("  Patience: {}", final_config.patience);
+    println!("  Mode: {} (lower loss is better)", final_config.mode);
     println!(
         "  Best loss achieved: {:.3}",
         metric_optimizer.best_value().unwrap()
@@ -282,7 +282,7 @@ fn external_scheduler_pattern_example() -> Result<(), Box<dyn std::error::Error>
 /// This shows what scirs2-optim would do to integrate with scirs2-metrics
 mod external_integration_example {
     use super::*;
-    use scirs2__metrics::integration::optim::{MetricSchedulerTrait, OptimizationMode};
+    use scirs2_metrics::integration::optim::{MetricSchedulerTrait, OptimizationMode};
 
     /// Mock external scheduler that implements the MetricSchedulerTrait
     pub struct ExternalReduceOnPlateau {
@@ -299,11 +299,11 @@ mod external_integration_example {
     impl ExternalReduceOnPlateau {
         pub fn from_config(config: &SchedulerConfig<f64>) -> Self {
             Self {
-                current_lr: configinitial_lr,
-                factor: configfactor,
-                patience: configpatience,
-                min_lr: configmin_lr,
-                mode: configmode,
+                current_lr: config.initial_lr,
+                factor: config.factor,
+                patience: config.patience,
+                min_lr: config.min_lr,
+                mode: config.mode,
                 best_metric: None,
                 patience_counter: 0,
                 threshold: 1e-4,

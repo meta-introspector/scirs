@@ -265,7 +265,7 @@ pub fn tree_graph<R: Rng>(n: usize, rng: &mut R) -> Result<Graph<usize, f64>> {
         let new_node = candidates[rng.gen_range(0..candidates.len())];
 
         // Add edge and mark node as in tree
-        graph.add_edge(tree_node..new_node, 1.0)?;
+        graph.add_edge(tree_node, new_node, 1.0)?;
         in_tree[new_node] = true;
         tree_nodes.push(new_node);
     }
@@ -324,7 +324,7 @@ where
 
     fn find<N: crate::base::Node>(parent: &mut std::collections::HashMap<N, N>, node: &N) -> N {
         if parent[node] != *node {
-            let root = find(_parent, &_parent[node].clone());
+            let root = find(parent, &parent[node].clone());
             parent.insert(node.clone(), root.clone());
         }
         parent[node].clone()
@@ -470,7 +470,7 @@ pub fn cycle_graph(n: usize) -> Result<Graph<usize, f64>> {
 /// * `Result<Graph<usize, f64>>` - A grid graph where node ID = row * cols + col
 #[allow(dead_code)]
 pub fn grid_2d_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
-    if _rows == 0 || cols == 0 {
+    if rows == 0 || cols == 0 {
         return Err(GraphError::InvalidGraph(
             "Grid dimensions must be positive".to_string(),
         ));
@@ -479,12 +479,12 @@ pub fn grid_2d_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
     let mut graph = Graph::new();
 
     // Add all nodes
-    for i in 0..(_rows * cols) {
+    for i in 0..(rows * cols) {
         graph.add_node(i);
     }
 
     // Add edges to adjacent nodes (4-connectivity)
-    for row in 0.._rows {
+    for row in 0..rows {
         for col in 0..cols {
             let node_id = row * cols + col;
 
@@ -495,7 +495,7 @@ pub fn grid_2d_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
             }
 
             // Connect to bottom neighbor
-            if row + 1 < _rows {
+            if row + 1 < rows {
                 let bottom_neighbor = (row + 1) * cols + col;
                 graph.add_edge(node_id, bottom_neighbor, 1.0)?;
             }
@@ -515,8 +515,8 @@ pub fn grid_2d_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A 3D grid graph where node ID = z*x_dim*y_dim + y*x_dim + x
 #[allow(dead_code)]
-pub fn grid_3d_graph(_x_dim: usize, y_dim: usize, zdim: usize) -> Result<Graph<usize, f64>> {
-    if _x_dim == 0 || y_dim == 0 || z_dim == 0 {
+pub fn grid_3d_graph(x_dim: usize, y_dim: usize, z_dim: usize) -> Result<Graph<usize, f64>> {
+    if x_dim == 0 || y_dim == 0 || z_dim == 0 {
         return Err(GraphError::InvalidGraph(
             "Grid dimensions must be positive".to_string(),
         ));
@@ -569,7 +569,7 @@ pub fn grid_3d_graph(_x_dim: usize, y_dim: usize, zdim: usize) -> Result<Graph<u
 /// * `Result<Graph<usize, f64>>` - A triangular lattice where each node has up to 6 neighbors
 #[allow(dead_code)]
 pub fn triangular_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
-    if _rows == 0 || cols == 0 {
+    if rows == 0 || cols == 0 {
         return Err(GraphError::InvalidGraph(
             "Lattice dimensions must be positive".to_string(),
         ));
@@ -578,11 +578,11 @@ pub fn triangular_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize,
     let mut graph = Graph::new();
 
     // Add all nodes
-    for i in 0..(_rows * cols) {
+    for i in 0..(rows * cols) {
         graph.add_node(i);
     }
 
-    for row in 0.._rows {
+    for row in 0..rows {
         for col in 0..cols {
             let node_id = row * cols + col;
 
@@ -594,20 +594,20 @@ pub fn triangular_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize,
             }
 
             // Bottom neighbor
-            if row + 1 < _rows {
+            if row + 1 < rows {
                 let bottom_neighbor = (row + 1) * cols + col;
                 graph.add_edge(node_id, bottom_neighbor, 1.0)?;
             }
 
             // Diagonal connections for triangular lattice
             // Bottom-right diagonal
-            if row + 1 < _rows && col + 1 < cols {
+            if row + 1 < rows && col + 1 < cols {
                 let diag_neighbor = (row + 1) * cols + (col + 1);
                 graph.add_edge(node_id, diag_neighbor, 1.0)?;
             }
 
             // Bottom-left diagonal (for even rows)
-            if row + 1 < _rows && col > 0 && row % 2 == 0 {
+            if row + 1 < rows && col > 0 && row % 2 == 0 {
                 let diag_neighbor = (row + 1) * cols + (col - 1);
                 graph.add_edge(node_id, diag_neighbor, 1.0)?;
             }
@@ -627,7 +627,7 @@ pub fn triangular_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize,
 /// * `Result<Graph<usize, f64>>` - A hexagonal lattice where each node has exactly 3 neighbors
 #[allow(dead_code)]
 pub fn hexagonal_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
-    if _rows == 0 || cols == 0 {
+    if rows == 0 || cols == 0 {
         return Err(GraphError::InvalidGraph(
             "Lattice dimensions must be positive".to_string(),
         ));
@@ -636,11 +636,11 @@ pub fn hexagonal_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, 
     let mut graph = Graph::new();
 
     // Add all nodes
-    for i in 0..(_rows * cols) {
+    for i in 0..(rows * cols) {
         graph.add_node(i);
     }
 
-    for row in 0.._rows {
+    for row in 0..rows {
         for col in 0..cols {
             let node_id = row * cols + col;
 
@@ -656,7 +656,7 @@ pub fn hexagonal_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, 
             // Connect in honeycomb pattern
             if row % 2 == 0 {
                 // Even _rows: connect down-left and down-right
-                if row + 1 < _rows {
+                if row + 1 < rows {
                     if col > 0 {
                         let down_left = (row + 1) * cols + (col - 1);
                         graph.add_edge(node_id, down_left, 1.0)?;
@@ -668,7 +668,7 @@ pub fn hexagonal_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, 
                 }
             } else {
                 // Odd _rows: connect down-left and down-right with offset
-                if row + 1 < _rows {
+                if row + 1 < rows {
                     let down_left = (row + 1) * cols + col;
                     graph.add_edge(node_id, down_left, 1.0)?;
 
@@ -759,7 +759,7 @@ pub fn watts_strogatz_graph<R: Rng>(
                 new_target = rng.gen_range(0..n);
             }
 
-            new_graph.add_edge(edge.source..new_target, 1.0)?;
+            new_graph.add_edge(edge.source, new_target, 1.0)?;
             graph = new_graph;
         }
     }
@@ -978,7 +978,7 @@ pub fn configuration_model<R: Rng>(
         let stub2 = stubs.remove(idx2);
 
         // Connect the nodes (allow self-loops and multiple edges)
-        graph.add_edge(stub1..stub2, 1.0)?;
+        graph.add_edge(stub1, stub2, 1.0)?;
     }
 
     Ok(graph)
@@ -1391,7 +1391,7 @@ mod tests {
 
         // Create forest with trees of sizes [3, 2, 4]
         let tree_sizes = vec![3, 2, 4];
-        let forest = forest_graph(&tree_sizes, &mut rng).unwrap();
+        let forest = forest_graph(&tree_sizes, &tree_sizes, &mut rng).unwrap();
 
         assert_eq!(forest.node_count(), 9); // 3 + 2 + 4 = 9 nodes
         assert_eq!(forest.edge_count(), 6); // (3-1) + (2-1) + (4-1) = 6 edges
@@ -1402,12 +1402,12 @@ mod tests {
         }
 
         // Test empty forest
-        let empty_forest = forest_graph(&[], &mut rng).unwrap();
+        let empty_forest = forest_graph(&[], &[], &mut rng).unwrap();
         assert_eq!(empty_forest.node_count(), 0);
         assert_eq!(empty_forest.edge_count(), 0);
 
         // Test forest with empty trees
-        let forest_with_zeros = forest_graph(&[0, 3, 0, 2], &mut rng).unwrap();
+        let forest_with_zeros = forest_graph(&[0, 3, 0, 2], &[0, 3, 0, 2], &mut rng).unwrap();
         assert_eq!(forest_with_zeros.node_count(), 5); // 3 + 2 = 5 nodes
         assert_eq!(forest_with_zeros.edge_count(), 3); // (3-1) + (2-1) = 3 edges
     }

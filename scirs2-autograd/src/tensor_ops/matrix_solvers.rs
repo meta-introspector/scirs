@@ -687,7 +687,7 @@ fn compute_cholesky<F: Float>(matrix: &ArrayView2<F>) -> Result<Array2<F>, OpErr
                 for k in 0..j {
                     sum += l[[i, k]] * l[[j, k]];
                 }
-                l[[i, j]] = (_matrix[[i, j]] - sum) / l[[j, j]];
+                l[[i, j]] = (matrix[[i, j]] - sum) / l[[j, j]];
             }
         }
     }

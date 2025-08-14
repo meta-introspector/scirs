@@ -70,7 +70,7 @@ where
         average_precision: Option<f64>,
     ) -> Self {
         PrecisionRecallVisualizer {
-            precision: Some(_precision),
+            precision: Some(precision),
             recall: Some(recall),
             thresholds,
             average_precision,
@@ -137,7 +137,7 @@ where
     ///
     /// * Self for method chaining
     pub fn with_show_ap(mut self, showap: bool) -> Self {
-        self.show_ap = show_ap;
+        self.show_ap = showap;
         self
     }
 
@@ -151,7 +151,7 @@ where
     ///
     /// * Self for method chaining
     pub fn with_show_baseline(mut self, showbaseline: bool) -> Self {
-        self.show_baseline = show_baseline;
+        self.show_baseline = showbaseline;
         self
     }
 
@@ -165,7 +165,7 @@ where
     ///
     /// * Self for method chaining
     pub fn with_average_precision(mut self, averageprecision: f64) -> Self {
-        self.average_precision = Some(average_precision);
+        self.average_precision = Some(averageprecision);
         self
     }
 
@@ -229,7 +229,7 @@ where
             .map_err(|e| Box::new(e) as Box<dyn Error>)?;
 
         // Prepare data for visualization
-        let mut x = recall;
+        let mut x = recall_;
         let mut y = precision;
 
         // Prepare series names
@@ -315,7 +315,7 @@ pub fn precision_recall_visualization(
     thresholds: Option<Vec<f64>>,
     average_precision: Option<f64>,
 ) -> PrecisionRecallVisualizer<'static, f64, ndarray::OwnedRepr<f64>> {
-    PrecisionRecallVisualizer::new(_precision, recall, thresholds, average_precision)
+    PrecisionRecallVisualizer::new(precision, recall, thresholds, average_precision)
 }
 
 /// Create a Precision-Recall curve visualization from true labels and scores

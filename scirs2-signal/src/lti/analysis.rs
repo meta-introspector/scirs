@@ -219,8 +219,8 @@ pub fn analyze_controllability(ss: &StateSpace) -> SignalResult<ControllabilityA
 
     // Build controllability matrix: [B AB A²B ... A^(n-1)B]
     // Convert flattened matrices to 2D format for easier manipulation
-    let a_matrix = flatten_to_2d(&_ss.a, n, n)?;
-    let b_matrix = flatten_to_2d(&_ss.b, n, m)?;
+    let a_matrix = flatten_to_2d(&ss.a, n, n)?;
+    let b_matrix = flatten_to_2d(&ss.b, n, m)?;
 
     // Initialize controllability matrix with the right dimensions: n x (n*m)
     let mut controllability_matrix = vec![vec![0.0; n * m]; n];
@@ -297,8 +297,8 @@ pub fn analyze_observability(ss: &StateSpace) -> SignalResult<ObservabilityAnaly
 
     // Build observability matrix: [C; CA; CA²; ...; CA^(n-1)]
     // Convert flattened matrices to 2D format for easier manipulation
-    let a_matrix = flatten_to_2d(&_ss.a, n, n)?;
-    let c_matrix = flatten_to_2d(&_ss.c, p, n)?;
+    let a_matrix = flatten_to_2d(&ss.a, n, n)?;
+    let c_matrix = flatten_to_2d(&ss.c, p, n)?;
 
     // Initialize observability matrix with the right dimensions: (n*p) x n
     let mut observability_matrix = vec![vec![0.0; n]; n * p];
@@ -452,7 +452,7 @@ pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
     let mut bb_t = vec![vec![0.0; n]; n];
     for i in 0..n {
         for j in 0..n {
-            for k in 0.._ss.n_inputs {
+            for k in 0..ss.n_inputs {
                 bb_t[i][j] += ss.b[i * ss.n_inputs + k] * ss.b[j * ss.n_inputs + k];
             }
         }
@@ -462,7 +462,7 @@ pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
     let mut ct_c = vec![vec![0.0; n]; n];
     for i in 0..n {
         for j in 0..n {
-            for k in 0.._ss.n_outputs {
+            for k in 0..ss.n_outputs {
                 ct_c[i][j] += ss.c[k * n + i] * ss.c[k * n + j];
             }
         }
@@ -556,8 +556,8 @@ pub fn complete_kalman_decomposition(ss: &StateSpace) -> SignalResult<KalmanDeco
     }
 
     // Get controllability and observability analyses
-    let controllability = analyze_controllability(_ss)?;
-    let observability = analyze_observability(_ss)?;
+    let controllability = analyze_controllability(ss)?;
+    let observability = analyze_observability(ss)?;
 
     // Compute orthogonal bases for controllable and observable subspaces
     let controllable_basis = compute_orthogonal_basis(&controllability.controllability_matrix)?;
@@ -758,7 +758,7 @@ pub fn matrix_condition_number(matrix: &[Vec<f64>]) -> SignalResult<f64> {
 
     // Compute Frobenius norm
     let mut norm_sum = 0.0;
-    for row in _matrix {
+    for row in matrix {
         for &val in row {
             norm_sum += val * val;
         }
@@ -1178,5 +1178,5 @@ mod tests {
 
 #[allow(dead_code)]
 fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(_num, den, None).unwrap()
+    TransferFunction::new(num, den, None).unwrap()
 }

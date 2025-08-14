@@ -4,8 +4,8 @@
 //! acceleration features for improved metrics computation performance.
 
 use ndarray::{Array1, Array2};
-use scirs2__metrics::error::Result;
-use scirs2__metrics::optimization::hardware::*;
+use scirs2_metrics::error::Result;
+use scirs2_metrics::optimization::hardware::*;
 use statrs::statistics::Statistics;
 use std::time::Instant;
 
@@ -141,7 +141,7 @@ fn test_distance_accuracy(_simdmetrics: &SimdDistanceMetrics) -> Result<()> {
     let small_a = Array1::from_vec(vec![1.0, 2.0, 3.0]);
     let small_b = Array1::from_vec(vec![4.0, 5.0, 6.0]);
 
-    let small_euclidean = simd_metrics.euclidean_distance_simd(&small_a, &small_b)?;
+    let small_euclidean = _simdmetrics.euclidean_distance_simd(&small_a, &small_b)?;
     let expected_small = ((3.0_f64).powi(2) + (3.0_f64).powi(2) + (3.0_f64).powi(2)).sqrt();
     println!("  Small vector Euclidean: {small_euclidean:.6} (expected: {expected_small:.6})");
 
@@ -150,7 +150,7 @@ fn test_distance_accuracy(_simdmetrics: &SimdDistanceMetrics) -> Result<()> {
     let large_a = Array1::from_vec((0..large_size).map(|i| (i % 100) as f64).collect());
     let large_b = Array1::from_vec((0..large_size).map(|i| ((i + 50) % 100) as f64).collect());
 
-    let large_euclidean = simd_metrics.euclidean_distance_simd(&large_a, &large_b)?;
+    let large_euclidean = _simdmetrics.euclidean_distance_simd(&large_a, &large_b)?;
     println!("  Large vector Euclidean distance: {large_euclidean:.6}");
 
     // Verify accuracy by comparing with standard ndarray operations
@@ -203,7 +203,7 @@ fn simd_statistics_example() -> Result<()> {
 
     // Verify accuracy against standard implementations
     println!("\nAccuracy verification:");
-    let std_mean = data.mean().unwrap_or(0.0);
+    let std_mean = data.clone().mean();
     let std_sum = data.sum();
 
     println!("  Mean difference: {:.2e}", (mean - std_mean).abs());
@@ -229,15 +229,15 @@ fn test_statistical_distributions(_simdstats: &SimdStatistics) -> Result<()> {
             .collect(),
     );
 
-    let normal_mean = simd_stats.mean_simd(&normal_data)?;
-    let normal_std = simd_stats.std_simd(&normal_data)?;
+    let normal_mean = _simdstats.mean_simd(&normal_data)?;
+    let normal_std = _simdstats.std_simd(&normal_data)?;
     println!("  Normal-like distribution - Mean: {normal_mean:.4}, Std: {normal_std:.4}");
 
     // Uniform distribution
     let uniform_data = Array1::from_vec((0..5000).map(|i| (i % 100) as f64).collect());
 
-    let uniform_mean = simd_stats.mean_simd(&uniform_data)?;
-    let uniform_std = simd_stats.std_simd(&uniform_data)?;
+    let uniform_mean = _simdstats.mean_simd(&uniform_data)?;
+    let uniform_std = _simdstats.std_simd(&uniform_data)?;
     println!("  Uniform distribution - Mean: {uniform_mean:.4}, Std: {uniform_std:.4}");
 
     // Exponential-like distribution
@@ -250,8 +250,8 @@ fn test_statistical_distributions(_simdstats: &SimdStatistics) -> Result<()> {
             .collect(),
     );
 
-    let exp_mean = simd_stats.mean_simd(&exp_data)?;
-    let exp_std = simd_stats.std_simd(&exp_data)?;
+    let exp_mean = _simdstats.mean_simd(&exp_data)?;
+    let exp_std = _simdstats.std_simd(&exp_data)?;
     println!("  Exponential-like distribution - Mean: {exp_mean:.4}, Std: {exp_std:.4}");
 
     Ok(())
@@ -339,8 +339,8 @@ fn benchmark_distance_performance(size: usize) -> Result<()> {
     let simd_metrics = SimdDistanceMetrics::new();
 
     // Create test data
-    let vector_a = Array1::from_vec((0.._size).map(|i| (i as f64).sin()).collect());
-    let vector_b = Array1::from_vec((0.._size).map(|i| (i as f64).cos()).collect());
+    let vector_a = Array1::from_vec((0..size).map(|i| (i as f64).sin()).collect());
+    let vector_b = Array1::from_vec((0..size).map(|i| (i as f64).cos()).collect());
 
     // Benchmark SIMD implementation
     let start_simd = Instant::now();
@@ -374,7 +374,7 @@ fn benchmark_statistics_performance(size: usize) -> Result<()> {
 
     // Create test data
     let data = Array1::from_vec(
-        (0.._size)
+        (0..size)
             .map(|i| (i as f64 * 0.001).sin() * 100.0)
             .collect(),
     );
@@ -386,7 +386,7 @@ fn benchmark_statistics_performance(size: usize) -> Result<()> {
 
     // Benchmark standard mean computation
     let start_std = Instant::now();
-    let _std_mean = data.mean().unwrap_or(0.0);
+    let _std_mean = data.clone().mean();
     let std_duration = start_std.elapsed();
 
     println!("  Statistical computation (mean):");

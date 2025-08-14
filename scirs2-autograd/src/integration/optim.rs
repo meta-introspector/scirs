@@ -70,12 +70,12 @@ impl<'a, F: Float> OptimizerState<'a, F> {
     }
 
     /// Get parameter state
-    pub fn get_param_state(&self, paramid: &str) -> Option<&ParameterState<'a, F>> {
+    pub fn get_param_state(&self, param_id: &str) -> Option<&ParameterState<'a, F>> {
         self.param_state.get(param_id)
     }
 
     /// Set parameter state
-    pub fn set_param_state(&mut self, paramid: String, state: ParameterState<'a, F>) {
+    pub fn set_param_state(&mut self, param_id: String, state: ParameterState<'a, F>) {
         self.param_state.insert(param_id, state);
     }
 
@@ -180,18 +180,19 @@ pub struct ParameterGroup<F: Float> {
 
 impl<F: Float> ParameterGroup<F> {
     /// Create new parameter group
-    pub fn new(_name: String, learningrate: f64) -> Self {
+    pub fn new(_name: String, learning_rate: f64) -> Self {
         Self {
             parameters: Vec::new(),
             learning_rate,
             weight_decay: 0.0,
             config: HashMap::new(),
-            _name_phantom: std::marker::PhantomData,
+            name: _name,
+            _phantom: std::marker::PhantomData,
         }
     }
 
     /// Add parameter to group
-    pub fn add_parameter(mut self, paramid: String) -> Self {
+    pub fn add_parameter(mut self, param_id: String) -> Self {
         self.parameters.push(param_id);
         self
     }
@@ -257,7 +258,7 @@ pub struct SGDOptimizer<'a, F: Float> {
 
 impl<F: Float> SGDOptimizer<'_, F> {
     /// Create new SGD optimizer
-    pub fn new(_learningrate: f64, momentum: f64) -> Self {
+    pub fn new(learning_rate: f64, momentum: f64) -> Self {
         let config = OptimizerConfig {
             learning_rate,
             momentum,
@@ -265,15 +266,15 @@ impl<F: Float> SGDOptimizer<'_, F> {
         };
 
         Self {
-            config,
+            _config: config,
             state: OptimizerState::new(),
             parameter_groups: Vec::new(),
         }
     }
 
     /// Create with weight decay
-    pub fn with_weight_decay(mut self, weightdecay: f64) -> Self {
-        self.config.weight_decay = weight_decay;
+    pub fn with_weight_decay(mut self, weight_decay: f64) -> Self {
+        self._config.weight_decay = weight_decay;
         self
     }
 }
@@ -314,7 +315,7 @@ impl<F: Float> AutogradOptimizer<F> for SGDOptimizer<'_, F> {
         // Now update parameters
         for (param, grad, param_id) in param_updates {
             if let Some(param_state) = self.state.param_state.get_mut(&param_id) {
-                Self::update_parameter(&self.config, param, grad, param_state)?;
+                Self::update_parameter(&self._config, param, grad, param_state)?;
             }
         }
 
@@ -327,11 +328,11 @@ impl<F: Float> AutogradOptimizer<F> for SGDOptimizer<'_, F> {
     }
 
     fn learning_rate(&self) -> f64 {
-        self.config.learning_rate
+        self._config.learning_rate
     }
 
     fn set_learning_rate(&mut self, lr: f64) {
-        self.config.learning_rate = lr;
+        self._config.learning_rate = lr;
     }
 
     fn state(&self) -> OptimizerState<'_, F> {
@@ -363,7 +364,7 @@ impl<'a, F: Float> SGDOptimizer<'a, F> {
         config: &OptimizerConfig,
         _param: &mut Tensor<F>,
         _grad: &Tensor<F>,
-        _param_state: &mut ParameterState<'a, F>,
+        param_state: &mut ParameterState<'a, F>,
     ) -> Result<(), IntegrationError> {
         // Simplified SGD update: _param = _param - lr * _grad
         // In practice, would implement proper momentum and weight decay
@@ -404,7 +405,7 @@ pub struct AdamOptimizer<'a, F: Float> {
 
 impl<F: Float> AdamOptimizer<'_, F> {
     /// Create new Adam optimizer
-    pub fn new(_learningrate: f64, beta1: f64, beta2: f64, eps: f64) -> Self {
+    pub fn new(learning_rate: f64, beta1: f64, beta2: f64, eps: f64) -> Self {
         let config = OptimizerConfig {
             learning_rate,
             beta1,
@@ -421,8 +422,8 @@ impl<F: Float> AdamOptimizer<'_, F> {
     }
 
     /// Create with default Adam parameters
-    pub fn default_adam(_learningrate: f64) -> Self {
-        Self::new(_learning_rate, 0.9, 0.999, 1e-8)
+    pub fn default_adam(learning_rate: f64) -> Self {
+        Self::new(learning_rate, 0.9, 0.999, 1e-8)
     }
 }
 
@@ -544,7 +545,7 @@ pub struct StepLRScheduler {
 
 impl StepLRScheduler {
     /// Create new step scheduler
-    pub fn new(_initial_lr: f64, stepsize: usize, gamma: f64) -> Self {
+    pub fn new(initial_lr: f64, step_size: usize, gamma: f64) -> Self {
         Self {
             initial_lr,
             step_size,
@@ -581,7 +582,7 @@ pub struct CosineAnnealingLRScheduler {
 
 impl CosineAnnealingLRScheduler {
     /// Create new cosine annealing scheduler
-    pub fn new(_initial_lr: f64, t_max: usize, minlr: f64) -> Self {
+    pub fn new(initial_lr: f64, t_max: usize, min_lr: f64) -> Self {
         Self {
             initial_lr,
             min_lr,
@@ -623,7 +624,7 @@ impl OptimizerFactory {
 
     /// Create Adam optimizer
     pub fn adam<'a, F: Float>(learningrate: f64) -> Box<dyn AutogradOptimizer<F> + 'a> {
-        Box::new(AdamOptimizer::default_adam(learning_rate))
+        Box::new(AdamOptimizer::default_adam(learningrate))
     }
 
     /// Create custom Adam optimizer

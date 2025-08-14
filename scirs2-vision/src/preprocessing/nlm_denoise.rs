@@ -294,7 +294,7 @@ pub fn nlm_denoise_parallel(
 
 /// Pad an array with reflected boundary conditions
 #[allow(dead_code)]
-fn pad_reflect(_array: &Array2<f32>, padsize: usize) -> Array2<f32> {
+fn pad_reflect(array: &Array2<f32>, padsize: usize) -> Array2<f32> {
     let (height, width) = array.dim();
     let new_height = height + 2 * padsize;
     let new_width = width + 2 * padsize;
@@ -304,7 +304,7 @@ fn pad_reflect(_array: &Array2<f32>, padsize: usize) -> Array2<f32> {
     // Copy original data
     padded
         .slice_mut(s![padsize..padsize + height, padsize..padsize + width])
-        .assign(_array);
+        .assign(array);
 
     // Pad top and bottom
     for i in 0..padsize {

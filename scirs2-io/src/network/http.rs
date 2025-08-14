@@ -95,7 +95,7 @@ impl HttpClient {
         let mut headers = reqwest::header::HeaderMap::new();
         for (key, value) in &self.config.headers {
             if let (Ok(header_name), Ok(header_value)) = (
-                reqwest::header::HeaderName::from_bytes(key.as_bytes()),
+                reqwest::header::HeaderName::frombytes(key.asbytes()),
                 reqwest::header::HeaderValue::from_str(value),
             ) {
                 headers.insert(header_name, header_value);
@@ -439,7 +439,7 @@ pub async fn download_concurrent(
 #[allow(dead_code)]
 pub fn calculate_speed(bytes: u64, duration: Duration) -> f64 {
     if duration.as_secs_f64() > 0.0 {
-        _bytes as f64 / duration.as_secs_f64()
+        bytes as f64 / duration.as_secs_f64()
     } else {
         0.0
     }
@@ -449,7 +449,7 @@ pub fn calculate_speed(bytes: u64, duration: Duration) -> f64 {
 #[allow(dead_code)]
 pub fn format_file_size(bytes: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB"];
-    let mut size = _bytes as f64;
+    let mut size = bytes as f64;
     let mut unit_index = 0;
 
     while size >= 1024.0 && unit_index < UNITS.len() - 1 {

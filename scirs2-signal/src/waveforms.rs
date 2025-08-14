@@ -626,7 +626,7 @@ pub fn prbs_sequence(
 /// * Vector containing pink noise samples
 #[allow(dead_code)]
 pub fn pink_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
-    if _length == 0 {
+    if length == 0 {
         return Err(SignalError::ValueError(
             "Length must be positive".to_string(),
         ));
@@ -648,9 +648,9 @@ pub fn pink_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
     let mut b5 = 0.0;
     let mut b6 = 0.0;
 
-    let mut pink = Vec::with_capacity(_length);
+    let mut pink = Vec::with_capacity(length);
 
-    for _ in 0.._length {
+    for _ in 0..length {
         let white = rng.random::<f64>() * 2.0 - 1.0; // Random in [-1, 1]
 
         b0 = 0.99886 * b0 + white * 0.0555179;
@@ -683,7 +683,7 @@ pub fn pink_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
 /// * Vector containing brown noise samples
 #[allow(dead_code)]
 pub fn brown_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
-    if _length == 0 {
+    if length == 0 {
         return Err(SignalError::ValueError(
             "Length must be positive".to_string(),
         ));
@@ -695,10 +695,10 @@ pub fn brown_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
         _create_default_rng()
     };
 
-    let mut brown = Vec::with_capacity(_length);
+    let mut brown = Vec::with_capacity(length);
     let mut accumulator = 0.0;
 
-    for _ in 0.._length {
+    for _ in 0..length {
         let white = rng.random::<f64>() * 2.0 - 1.0;
         accumulator += white * 0.02; // Scale factor to prevent overflow
 
@@ -844,7 +844,7 @@ pub fn synchronized_sweep(
 /// * Vector containing the mark positions
 #[allow(dead_code)]
 pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
-    if _order < 2 {
+    if order < 2 {
         return Err(SignalError::ValueError(
             "Order must be at least 2".to_string(),
         ));
@@ -861,11 +861,11 @@ pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
         vec![0, 1, 4, 9, 15, 22, 32, 34], // _order 8
     ];
 
-    if _order <= optimal_rulers.len() + 1 {
-        return Ok(optimal_rulers[_order - 2].clone());
+    if order <= optimal_rulers.len() + 1 {
+        return Ok(optimal_rulers[order - 2].clone());
     }
 
-    if perfect && _order > 8 {
+    if perfect && order > 8 {
         return Err(SignalError::ValueError(
             "Perfect Golomb rulers for _order > 8 are computationally intensive".to_string(),
         ));
@@ -875,7 +875,7 @@ pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
     let mut ruler = vec![0];
     let mut max_position = 0;
 
-    for _ in 1.._order {
+    for _ in 1..order {
         let mut position = max_position + 1;
         let mut found = false;
 
@@ -914,7 +914,7 @@ pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
             }
 
             // Prevent infinite loops
-            if position > _order * _order {
+            if position > order * order {
                 return Err(SignalError::ValueError(
                     "Could not generate Golomb ruler of requested _order".to_string(),
                 ));
@@ -939,27 +939,27 @@ pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
 /// * Vector containing the perfect binary sequence (+1/-1 values)
 #[allow(dead_code)]
 pub fn perfect_binary_sequence(length: usize) -> SignalResult<Vec<f64>> {
-    if _length < 3 {
+    if length < 3 {
         return Err(SignalError::ValueError(
             "Length must be at least 3".to_string(),
         ));
     }
 
     // Check if _length is suitable (odd prime is best)
-    if _length % 2 == 0 {
+    if length % 2 == 0 {
         return Err(SignalError::ValueError(
             "Length should be odd for optimal properties".to_string(),
         ));
     }
 
     // Generate using quadratic residues method for prime lengths
-    let mut sequence = Vec::with_capacity(_length);
+    let mut sequence = Vec::with_capacity(length);
 
-    for i in 0.._length {
+    for i in 0..length {
         // Check if i is a quadratic residue modulo _length
         let mut is_residue = false;
-        for j in 0.._length {
-            if (j * j) % _length == i {
+        for j in 0..length {
+            if (j * j) % length == i {
                 is_residue = true;
                 break;
             }
@@ -974,7 +974,7 @@ pub fn perfect_binary_sequence(length: usize) -> SignalResult<Vec<f64>> {
 // Helper functions for random number generation
 #[allow(dead_code)]
 fn _create_rng_from_seed(seed: u64) -> StdRng {
-    StdRng::seed_from_u64(_seed)
+    StdRng::seed_from_u64(seed)
 }
 
 #[allow(dead_code)]

@@ -56,7 +56,7 @@ impl<F: Float> GradientChecker<F> {
     /// Create a new gradient checker
     pub fn new() -> Self {
         Self {
-            config: GradientCheckConfig::default(),
+            _config: GradientCheckConfig::default(),
             finite_diff_computer: FiniteDifferenceComputer::new(),
         }
     }
@@ -64,9 +64,9 @@ impl<F: Float> GradientChecker<F> {
     /// Create with custom configuration
     pub fn with_config(config: GradientCheckConfig) -> Self {
         let finite_diff_computer =
-            FiniteDifferenceComputer::with_config(_config.finite_diff_config.clone());
+            FiniteDifferenceComputer::with_config(config.finite_diff_config.clone());
         Self {
-            config,
+            _config: config,
             finite_diff_computer,
         }
     }
@@ -83,9 +83,9 @@ impl<F: Float> GradientChecker<F> {
     {
         let mut result = GradientCheckResult::new();
 
-        if self.config.check_multiple_points {
+        if self._config.check_multiple_points {
             // Test at multiple random points around the input
-            for _i in 0..self.config.num_test_points {
+            for _i in 0..self._config.num_test_points {
                 // Create a simplified point result to avoid lifetime issues
                 let point_result = SinglePointResult {
                     analytical_gradient: *analytical_gradient,
@@ -133,7 +133,7 @@ impl<F: Float> GradientChecker<F> {
         };
 
         // Optionally check second-order gradients (Hessian)
-        if self.config.check_second_order {
+        if self._config.check_second_order {
             result.second_order_check = Some(self.check_second_order_gradients(input)?);
         }
 
@@ -199,10 +199,10 @@ impl<F: Float> GradientChecker<F> {
         comparison.mean_relative_error = total_rel_error / num_elements as f64;
 
         // Determine if the check passed
-        comparison.passed = comparison.max_absolute_error < self.config.absolute_tolerance
-            && comparison.max_relative_error < self.config.relative_tolerance;
+        comparison.passed = comparison.max_absolute_error < self._config.absolute_tolerance
+            && comparison.max_relative_error < self._config.relative_tolerance;
 
-        if self.config.verbose {
+        if self._config.verbose {
             self.print_comparison_details(&comparison);
         }
 
@@ -211,7 +211,8 @@ impl<F: Float> GradientChecker<F> {
 
     /// Check second-order gradients (Hessian)
     fn check_second_order_gradients(
-        self_input: &Tensor<F>,
+        &self,
+        input: &Tensor<F>,
     ) -> Result<SecondOrderCheck, StabilityError> {
         // Simplified implementation - would compute and compare Hessians
         Ok(SecondOrderCheck {
@@ -283,8 +284,8 @@ impl<F: Float> GradientChecker<F> {
         if !comparison.passed {
             println!("  Failed Elements:");
             for error in &comparison.element_wise_errors {
-                if error.absolute_error > self.config.absolute_tolerance
-                    || error.relative_error > self.config.relative_tolerance
+                if error.absolute_error > self._config.absolute_tolerance
+                    || error.relative_error > self._config.relative_tolerance
                 {
                     println!("    Index {}: analytical={:.6e}, numerical={:.6e}, abs_err={:.2e}, rel_err={:.2e}",
                             error.index, error.analytical_value, error.numerical_value,

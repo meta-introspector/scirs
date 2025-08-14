@@ -150,7 +150,7 @@ impl<F: Float> Op<F> for ParallelReductionOp {
         Ok(())
     }
 
-    fn grad(selfctx: &mut GradientContext<F>) {
+    fn grad<'a>(&self, _ctx: &mut GradientContext<'a, 'a, F>) {
         // Simplified gradient implementation
         // In practice, would implement proper gradient broadcasting
     }
@@ -161,7 +161,7 @@ impl<F: Float> Op<F> for ParallelReductionOp {
 /// Enable or disable SIMD optimizations
 #[allow(dead_code)]
 pub fn set_simd_enabled(enabled: bool) {
-    SIMD_ENABLED.store(_enabled, Ordering::Relaxed);
+    SIMD_ENABLED.store(enabled, Ordering::Relaxed);
 }
 
 /// Check if SIMD optimizations are enabled
@@ -173,7 +173,7 @@ pub fn is_simd_enabled() -> bool {
 /// Enable or disable parallel processing
 #[allow(dead_code)]
 pub fn set_parallel_enabled(enabled: bool) {
-    PARALLEL_ENABLED.store(_enabled, Ordering::Relaxed);
+    PARALLEL_ENABLED.store(enabled, Ordering::Relaxed);
 }
 
 /// Check if parallel processing is enabled
@@ -187,7 +187,7 @@ pub fn is_parallel_enabled() -> bool {
 pub fn simd_add<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = left.graph();
     Tensor::builder(g)
-        .append_input(_left, false)
+        .append_input(left, false)
         .append_input(right, false)
         .build(SimdBinaryOp {
             operation: SimdBinaryOperation::Add,
@@ -199,7 +199,7 @@ pub fn simd_add<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Te
 pub fn simd_mul<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = left.graph();
     Tensor::builder(g)
-        .append_input(_left, false)
+        .append_input(left, false)
         .append_input(right, false)
         .build(SimdBinaryOp {
             operation: SimdBinaryOperation::Mul,
@@ -211,7 +211,7 @@ pub fn simd_mul<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Te
 pub fn simd_relu<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
-        .append_input(_tensor, false)
+        .append_input(tensor, false)
         .build(SimdUnaryOp {
             operation: SimdUnaryOperation::ReLU,
         })
@@ -222,7 +222,7 @@ pub fn simd_relu<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 pub fn simd_sigmoid<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
-        .append_input(_tensor, false)
+        .append_input(tensor, false)
         .build(SimdUnaryOp {
             operation: SimdUnaryOperation::Sigmoid,
         })

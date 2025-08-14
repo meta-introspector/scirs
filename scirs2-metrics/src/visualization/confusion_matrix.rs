@@ -132,7 +132,7 @@ where
     ///
     /// * Self for method chaining
     pub fn with_color_map(mut self, colormap: ColorMap) -> Self {
-        self.color_map = color_map;
+        self.color_map = colormap;
         self
     }
 

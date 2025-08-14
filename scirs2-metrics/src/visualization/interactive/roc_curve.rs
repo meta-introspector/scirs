@@ -185,7 +185,7 @@ where
     ///
     /// * Self for method chaining
     pub fn with_show_auc(mut self, showauc: bool) -> Self {
-        self.show_auc = show_auc;
+        self.show_auc = showauc;
         self
     }
 
@@ -199,7 +199,7 @@ where
     ///
     /// * Self for method chaining
     pub fn with_show_baseline(mut self, showbaseline: bool) -> Self {
-        self.show_baseline = show_baseline;
+        self.show_baseline = showbaseline;
         self
     }
 
@@ -227,7 +227,7 @@ where
     ///
     /// * Self for method chaining
     pub fn with_show_metrics(mut self, showmetrics: bool) -> Self {
-        self.show_metrics = show_metrics;
+        self.show_metrics = showmetrics;
         self
     }
 
@@ -418,7 +418,7 @@ where
     ///
     /// * Result containing a HashMap with metric names and values
     pub fn calculate_metrics(&self, thresholdidx: usize) -> Result<HashMap<String, f64>> {
-        let (tp, fp, tn, fn_) = self.calculate_confusion_matrix(threshold_idx)?;
+        let (tp, fp, tn, fn_) = self.calculate_confusion_matrix(thresholdidx)?;
 
         let mut metrics = HashMap::new();
 
@@ -460,7 +460,7 @@ where
 
         // Add threshold value
         let (_, _, thresholds_, _) = self.compute_roc()?;
-        metrics.insert("threshold".to_string(), thresholds_[threshold_idx]);
+        metrics.insert("threshold".to_string(), thresholds_[thresholdidx]);
 
         Ok(metrics)
     }

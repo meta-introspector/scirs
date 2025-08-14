@@ -31,7 +31,7 @@ where
     fn get_learning_rate(&self) -> A;
 
     /// Sets a new learning rate
-    fn set_learning_rate(&mut self, learningrate: A);
+    fn set_learning_rate(&mut self, learning_rate: A);
 
     /// Updates multiple parameter arrays at once
     ///

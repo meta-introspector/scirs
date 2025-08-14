@@ -135,7 +135,7 @@ impl<T: Float> op::Op<T> for InferBinOpShape {
                 .zip(bshape)
                 .map(|(a, b)| T::from((*a).max(b)).unwrap())
                 .collect::<Vec<T>>();
-            ctx.append_output(NdArray::fromshape_vec(ndarray::IxDyn(&[a_rank]), max).unwrap())
+            ctx.append_output(NdArray::from_shape_vec(ndarray::IxDyn(&[a_rank]), max).unwrap())
         } else if !a_is_scalar {
             ctx.append_output(ashape_float.to_owned());
         } else {
@@ -155,7 +155,7 @@ impl<T: Float> op::Op<T> for Shape {
         let x = &ctx.input(0);
         let shape_vec = ndarray_ext::shape_of_view(x);
         let shape_t: Vec<T> = shape_vec.iter().map(|&s| T::from(s).unwrap()).collect();
-        let ret = NdArray::fromshape_vec(ndarray::IxDyn(&[shape_vec.len()]), shape_t).unwrap();
+        let ret = NdArray::from_shape_vec(ndarray::IxDyn(&[shape_vec.len()]), shape_t).unwrap();
         ctx.append_output(ret);
         Ok(())
     }
@@ -211,12 +211,12 @@ impl<T: Float> op::Op<T> for Reshape {
         if x.is_standard_layout() {
             if let Ok(a) = x
                 .clone()
-                .intoshape_with_order(ndarray::IxDyn(target.as_slice()))
+                .into_shape_with_order(ndarray::IxDyn(target.as_slice()))
             {
                 ctx.append_output(a.to_owned());
             } else {
                 let copy = ndarray_ext::deep_copy(x);
-                if let Ok(a) = copy.intoshape_with_order(ndarray::IxDyn(target.as_slice())) {
+                if let Ok(a) = copy.into_shape_with_order(ndarray::IxDyn(target.as_slice())) {
                     ctx.append_output(a);
                 } else {
                     return Err(op::OpError::IncompatibleShape(format!(
@@ -227,7 +227,7 @@ impl<T: Float> op::Op<T> for Reshape {
                 }
             }
         } else if let Ok(a) =
-            ndarray_ext::deep_copy(x).intoshape_with_order(ndarray::IxDyn(target.as_slice()))
+            ndarray_ext::deep_copy(x).into_shape_with_order(ndarray::IxDyn(target.as_slice()))
         {
             ctx.append_output(a)
         } else {
@@ -281,7 +281,7 @@ impl<T: Float> op::Op<T> for SetDiff1D {
             .collect::<Vec<T>>();
         let len = vec.len();
         // safe unwrap
-        let ret = NdArray::fromshape_vec(ndarray::IxDyn(&[len]), vec).unwrap();
+        let ret = NdArray::from_shape_vec(ndarray::IxDyn(&[len]), vec).unwrap();
         ctx.append_output(ret);
         Ok(())
     }
@@ -301,7 +301,7 @@ impl<T: Float> op::Op<T> for IndexOp {
             self.index as usize
         };
         // unwrap is safe
-        let flat_x = x.view().intoshape_with_order(x.len()).unwrap();
+        let flat_x = x.view().into_shape_with_order(x.len()).unwrap();
         if let Some(ret) = flat_x.get(i) {
             ctx.append_output(ndarray::arr0(*ret).into_dyn());
             Ok(())
@@ -342,7 +342,7 @@ impl<T: Float> op::Op<T> for IndexOpGrad {
         let len = result.len();
         if let Some(a) = result
             .view_mut()
-            .intoshape_with_order(len)
+            .into_shape_with_order(len)
             .unwrap() // safe unwrap
             .get_mut(i)
         {
@@ -395,7 +395,7 @@ impl<T: Float> op::Op<T> for Gather {
         };
         let selected = ndarray_ext::select(param, ndarray::Axis(axis), flat_indices.as_slice());
         let ret = selected
-            .intoshape_with_order(outputshape.as_slice())
+            .into_shape_with_order(outputshape.as_slice())
             .unwrap();
         ctx.append_output(ret);
         Ok(())
@@ -438,7 +438,7 @@ impl<T: Float> op::Op<T> for GatherGrad {
                 .chain(latter)
                 .cloned()
                 .collect();
-            gy.view().intoshape_with_order(shape).unwrap()
+            gy.view().into_shape_with_order(shape).unwrap()
         };
 
         let mut gx = NdArray::zeros(param.shape());
@@ -891,7 +891,7 @@ impl<T: Float> op::Op<T> for ExpandDims {
             };
             outputshape.insert(axis, 1);
         }
-        ctx.append_output(ret.intoshape_with_order(outputshape).unwrap().to_owned());
+        ctx.append_output(ret.into_shape_with_order(outputshape).unwrap().to_owned());
         Ok(())
     }
 

@@ -199,7 +199,7 @@ impl<T: Float> op::Op<T> for ReduceSum {
             .append_input(ctx.output_grad(), false)
             .append_input(shape(ctx.input(0)), false)
             .append_input(ctx.input(1), false)
-            .build(gradop);
+            .build(grad_op);
         ctx.append_input_grad(0, Some(gx));
         ctx.append_input_grad(1, None);
     }
@@ -276,7 +276,7 @@ impl<T: Float> op::Op<T> for ReduceProd {
             .append_input(gy * output, false)
             .append_input(shape(x0), false)
             .append_input(x1, false)
-            .build(gradop);
+            .build(grad_op);
         let gx = tmp / x0;
         ctx.append_input_grad(0, Some(gx));
         ctx.append_input_grad(1, None);
@@ -400,12 +400,12 @@ fn argx_helper<T: Float>(
         ndarray_ext::roll_axis(&mut mask, ndarray::Axis(0), ndarray::Axis(axis));
         let shape2d = (reduction_len, mask.len() / reduction_len);
         let mut mask = if mask.is_standard_layout() {
-            mask.intoshape_with_order(shape2d).unwrap()
+            mask.into_shape_with_order(shape2d).unwrap()
         } else {
             // Convert to standard layout first if needed
             mask.as_standard_layout()
                 .to_owned()
-                .intoshape_with_order(shape2d)
+                .into_shape_with_order(shape2d)
                 .unwrap()
         };
         mask.swap_axes(0, 1);
@@ -416,7 +416,7 @@ fn argx_helper<T: Float>(
     let indices = {
         let cols = mask.shape()[1];
         ndarray::Array::range(T::zero(), T::from(cols).unwrap(), T::one())
-            .intoshape_with_order((cols, 1))
+            .into_shape_with_order((cols, 1))
             .unwrap()
     };
 
@@ -432,7 +432,7 @@ fn argx_helper<T: Float>(
     }
     // unwrap is safe (95% confidence...)
     mat.into_dyn()
-        .intoshape_with_order(ndarray::IxDyn(finalshape.as_slice()))
+        .into_shape_with_order(ndarray::IxDyn(finalshape.as_slice()))
         .unwrap()
 }
 
@@ -494,7 +494,7 @@ impl<T: Float> op::Op<T> for ReduceGradCommon {
                 gyshape.insert(axis, 1);
             }
             // do broadcast
-            let a = gy.intoshape_with_order(gyshape).unwrap();
+            let a = gy.into_shape_with_order(gyshape).unwrap();
             ctx.append_output(a.broadcast(targetshape).unwrap().to_owned())
         } else {
             // do broadcast
@@ -553,7 +553,7 @@ impl<T: Float> op::Op<T> for ReduceVariance {
             .append_input(ctx.output_grad(), false)
             .append_input(shape(ctx.input(0)), false)
             .append_input(ctx.input(1), false)
-            .build(gradop);
+            .build(grad_op);
         ctx.append_input_grad(0, Some(gx));
         ctx.append_input_grad(1, None);
     }

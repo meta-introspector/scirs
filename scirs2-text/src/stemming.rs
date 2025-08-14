@@ -135,7 +135,7 @@ pub fn create_pos_aware_lemmatizer_with_config(
     posconfig: crate::pos_tagging::PosTaggerConfig,
     lemmaconfig: LemmatizerConfig,
 ) -> crate::pos_tagging::PosAwareLemmatizer {
-    crate::pos_tagging::PosAwareLemmatizer::with_configs(pos_config, lemma_config)
+    crate::pos_tagging::PosAwareLemmatizer::with_configs(posconfig, lemmaconfig)
 }
 
 lazy_static! {
@@ -404,10 +404,10 @@ impl SnowballStemmer {
     pub fn new(language: &str) -> Result<Self> {
         match language.to_lowercase().as_str() {
             "english" | "en" => Ok(Self {
-                _language: "english".to_string(),
+                language: "english".to_string(),
             }),
             _ => Err(TextError::InvalidInput(format!(
-                "Unsupported _language: {_language}"
+                "Unsupported language: {language}"
             ))),
         }
     }

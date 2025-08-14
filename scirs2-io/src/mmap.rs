@@ -457,7 +457,7 @@ where
     /// Read metadata from the memory-mapped file
     fn read_metadata(mmap: &memmap2::MmapMut) -> Result<(usize, usize)> {
         // Similar to read-only version
-        MmapArray::<T>::read_metadata(&_mmap[..])
+        MmapArray::<T>::read_metadata(&mmap[..])
     }
 
     /// Get the shape of the array from the file metadata
@@ -557,7 +557,7 @@ where
     D: Dimension,
     T: Clone + bytemuck::Pod,
 {
-    MmapArrayBuilder::new(&_path).create_from_array(array)
+    MmapArrayBuilder::new(&path).create_from_array(array)
 }
 
 /// Convenience function to read a memory-mapped array as an ndarray
@@ -567,7 +567,7 @@ where
     P: AsRef<Path>,
     T: bytemuck::Pod + Clone,
 {
-    let mmap_array = MmapArray::open(_path)?;
+    let mmap_array = MmapArray::open(path)?;
     let shape = mmap_array.shape()?;
     let array_view = mmap_array.as_array_view(&shape)?;
     Ok(array_view.to_owned())

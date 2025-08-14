@@ -661,9 +661,9 @@ where
 
 /// Normalize feature matrix
 #[allow(dead_code)]
-fn normalize_features(_features: &mut Array2<f64>, coorddim: usize) {
-    let n_ = features.nrows();
-    if n_ == 0 {
+fn normalize_features(features: &mut Array2<f64>, coord_dim: usize) {
+    let n = features.nrows();
+    if n == 0 {
         return;
     }
 
@@ -674,8 +674,8 @@ fn normalize_features(_features: &mut Array2<f64>, coorddim: usize) {
         let max_val = col.iter().fold(f64::NEG_INFINITY, |a, &b| f64::max(a, b));
 
         if (max_val - min_val).abs() > 1e-10 {
-            for i in 0..n_ {
-                features[[i, j]] = (_features[[i, j]] - min_val) / (max_val - min_val);
+            for i in 0..n {
+                features[[i, j]] = (features[[i, j]] - min_val) / (max_val - min_val);
             }
         }
     }
@@ -693,7 +693,7 @@ fn initialize_centroids_plus_plus(features: &Array2<f64>, k: usize) -> Array2<f6
 
     // Choose first centroid randomly
     let first_idx = 0; // In practice, should be random
-    centroids.row_mut(0).assign(&_features.row(first_idx));
+    centroids.row_mut(0).assign(&features.row(first_idx));
 
     // Choose remaining centroids
     for c in 1..k {
@@ -717,7 +717,7 @@ fn initialize_centroids_plus_plus(features: &Array2<f64>, k: usize) -> Array2<f6
             .map(|(i, _)| i)
             .unwrap_or(0);
 
-        centroids.row_mut(c).assign(&_features.row(next_idx));
+        centroids.row_mut(c).assign(&features.row(next_idx));
     }
 
     centroids
@@ -800,7 +800,7 @@ where
 {
     let mut wcss = 0.0;
 
-    for minimum in _minima {
+    for minimum in minima {
         if let Some(cluster_id) = minimum.cluster_id {
             if cluster_id < centroids.len() {
                 let centroid = &centroids[cluster_id];
@@ -909,7 +909,7 @@ pub enum StartPointStrategy {
 #[allow(dead_code)]
 fn generate_random_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
     let dim = bounds.len();
-    let mut _points = Vec::new();
+    let mut points = Vec::new();
 
     for _ in 0..num_points {
         let mut point = Array1::zeros(dim);
@@ -922,14 +922,14 @@ fn generate_random_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array
         points.push(point);
     }
 
-    _points
+    points
 }
 
 /// Generate Latin Hypercube sampling points
 #[allow(dead_code)]
 fn generate_latin_hypercube_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
     let dim = bounds.len();
-    let mut _points = Vec::new();
+    let mut points = Vec::new();
 
     // Simple Latin Hypercube implementation
     for i in 0..num_points {
@@ -941,7 +941,7 @@ fn generate_latin_hypercube_points(bounds: &[(f64, f64)], num_points: usize) -> 
         points.push(point);
     }
 
-    _points
+    points
 }
 
 /// Generate grid points
@@ -957,11 +957,11 @@ fn generate_grid_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<
 
     // Generate grid coordinates recursively
     fn generate_grid_recursive(
-        _bounds: &[(f64, f64)],
+        bounds: &[(f64, f64)],
         points_per_dim: usize,
         current_point: &mut Array1<f64>,
         dim_idx: usize,
-        _points: &mut Vec<Array1<f64>>,
+        points: &mut Vec<Array1<f64>>,
     ) {
         if dim_idx >= bounds.len() {
             points.push(current_point.clone());
@@ -976,15 +976,15 @@ fn generate_grid_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<
                 i as f64 / (points_per_dim - 1) as f64
             };
             current_point[dim_idx] = low + t * (high - low);
-            generate_grid_recursive(_bounds, points_per_dim, current_point, dim_idx + 1, points);
+            generate_grid_recursive(bounds, points_per_dim, current_point, dim_idx + 1, points);
         }
     }
 
     let mut current_point = Array1::zeros(dim);
-    generate_grid_recursive(_bounds, points_per_dim, &mut current_point, 0, &mut points);
+    generate_grid_recursive(bounds, points_per_dim, &mut current_point, 0, &mut _points);
 
     // Truncate to requested number of _points
-    points.truncate(num_points);
+    _points.truncate(num_points);
     _points
 }
 
@@ -993,7 +993,7 @@ fn generate_grid_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<
 fn generate_sobol_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
     // Simplified Sobol sequence (in practice, use proper implementation)
     let dim = bounds.len();
-    let mut _points = Vec::new();
+    let mut points = Vec::new();
 
     for i in 0..num_points {
         let mut point = Array1::zeros(dim);
@@ -1015,7 +1015,7 @@ fn generate_sobol_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1
         points.push(point);
     }
 
-    _points
+    points
 }
 
 #[cfg(test)]

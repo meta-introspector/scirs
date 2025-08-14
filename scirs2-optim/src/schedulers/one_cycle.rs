@@ -70,7 +70,7 @@ impl<A: Float + ScalarOperand + std::fmt::Debug> OneCycle<A> {
     /// * `max_lr` - Maximum learning rate reached after warm-up
     /// * `total_steps` - Total number of training steps
     /// * `warmup_frac` - Fraction of total steps used for warm-up (typically 0.2-0.3)
-    pub fn new(initial_lr: A, max_lr: A, total_steps: usize, warmupfrac: f64) -> Self {
+    pub fn new(initial_lr: A, max_lr: A, total_steps: usize, warmup_frac: f64) -> Self {
         let warmup_steps = (total_steps as f64 * warmup_frac) as usize;
         let div_factor = max_lr / initial_lr;
         let final_div_factor = A::from(10000.0).unwrap(); // Very small final LR
@@ -92,14 +92,14 @@ impl<A: Float + ScalarOperand + std::fmt::Debug> OneCycle<A> {
     }
 
     /// Create with specific final learning rate
-    pub fn with_final_lr(mut self, finallr: A) -> Self {
+    pub fn with_final_lr(mut self, final_lr: A) -> Self {
         self.final_lr = Some(final_lr);
         self.final_div_factor = self.initial_lr / final_lr;
         self
     }
 
     /// Set momentum cycling parameters
-    pub fn with_momentum(mut self, min_momentum: A, max_momentum: A, basemomentum: A) -> Self {
+    pub fn with_momentum(mut self, min_momentum: A, max_momentum: A, base_momentum: A) -> Self {
         self.min_momentum = Some(min_momentum);
         self.max_momentum = Some(max_momentum);
         self.base_momentum = Some(base_momentum);

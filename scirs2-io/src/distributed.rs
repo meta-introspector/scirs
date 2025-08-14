@@ -397,7 +397,7 @@ impl std::fmt::Debug for MergeStrategy {
 
 impl DistributedWriter {
     /// Create a new distributed writer
-    pub fn new<P: AsRef<Path>>(output_dir: P, dir: P) -> Self {
+    pub fn new<P: AsRef<Path>>(output_dir: P) -> Self {
         Self {
             output_dir: output_dir.as_ref().to_path_buf(),
             num_partitions: num_cpus::get(),

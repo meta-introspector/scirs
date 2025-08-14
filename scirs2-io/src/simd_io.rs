@@ -23,19 +23,19 @@ pub struct SimdIoProcessor;
 impl SimdIoProcessor {
     /// Convert f64 array to f32 using SIMD operations
     pub fn convert_f64_to_f32(input: &ArrayView1<f64>) -> Array1<f32> {
-        let mut output = Array1::<f32>::zeros(_input.len());
+        let mut output = Array1::<f32>::zeros(input.len());
 
         // Use parallel processing for large arrays
         if input.len() > 1000 {
             output
                 .iter_mut()
-                .zip(_input.iter())
+                .zip(input.iter())
                 .for_each(|(out, &inp)| {
                     *out = inp as f32;
                 });
         } else {
             // Use sequential processing for small arrays
-            for (out, &inp) in output.iter_mut().zip(_input.iter()) {
+            for (out, &inp) in output.iter_mut().zip(input.iter()) {
                 *out = inp as f32;
             }
         }
@@ -77,20 +77,20 @@ impl SimdIoProcessor {
 
     /// Convert integer samples to float with SIMD optimization
     pub fn int16_to_float_simd(input: &[i16]) -> Array1<f32> {
-        let mut output = Array1::<f32>::zeros(_input.len());
+        let mut output = Array1::<f32>::zeros(input.len());
         let scale = 1.0 / 32768.0; // i16 max value
 
         // Use parallel processing for large arrays
         if input.len() > 1000 {
             output
                 .iter_mut()
-                .zip(_input.iter())
+                .zip(input.iter())
                 .for_each(|(out, &sample)| {
                     *out = sample as f32 * scale;
                 });
         } else {
             // Use sequential processing for small arrays
-            for (out, &sample) in output.iter_mut().zip(_input.iter()) {
+            for (out, &sample) in output.iter_mut().zip(input.iter()) {
                 *out = sample as f32 * scale;
             }
         }
@@ -104,7 +104,7 @@ impl SimdIoProcessor {
 
         // Use parallel processing for large arrays
         if input.len() > 1000 {
-            _input
+            input
                 .iter()
                 .map(|&sample| {
                     let scaled = sample * scale;
@@ -114,7 +114,7 @@ impl SimdIoProcessor {
                 .collect()
         } else {
             // Use sequential processing for small arrays
-            _input
+            input
                 .iter()
                 .map(|&sample| {
                     let scaled = sample * scale;
@@ -215,10 +215,10 @@ pub mod csv_simd {
 
     /// Parse floating-point numbers from CSV using SIMD
     pub fn parse_floats_simd(fields: &[&str]) -> Result<Vec<f64>> {
-        let mut results = Vec::with_capacity(_fields.len());
+        let mut results = Vec::with_capacity(fields.len());
 
         // Process multiple _fields in parallel conceptually
-        for field in _fields {
+        for field in fields {
             match field.parse::<f64>() {
                 Ok(val) => results.push(val),
                 Err(_) => return Err(IoError::ParseError(format!("Invalid float: {}", field))),
@@ -239,11 +239,11 @@ pub mod compression_simd {
             return Array1::zeros(0);
         }
 
-        let mut result = Array1::zeros(_data.len());
+        let mut result = Array1::zeros(data.len());
         result[0] = data[0];
 
         // Process differences
-        for i in 1.._data.len() {
+        for i in 1..data.len() {
             result[i] = data[i] - data[i - 1];
         }
 
@@ -256,11 +256,11 @@ pub mod compression_simd {
             return Array1::zeros(0);
         }
 
-        let mut result = Array1::zeros(_data.len());
+        let mut result = Array1::zeros(data.len());
         result[0] = data[0];
 
         // Cumulative sum
-        for i in 1.._data.len() {
+        for i in 1..data.len() {
             result[i] = result[i - 1] + data[i];
         }
 
@@ -277,7 +277,7 @@ pub mod compression_simd {
         let mut current_val = data[0];
         let mut count = 1;
 
-        for &val in &_data[1..] {
+        for &val in &data[1..] {
             if val == current_val {
                 count += 1;
             } else {
@@ -382,8 +382,8 @@ pub mod matrix_simd {
                 // Recursively divide into smaller blocks
                 let half_block = block_size / 2;
 
-                for _i in (start_i..end_i).step_by(half_block) {
-                    for _j in (start_j..end_j).step_by(half_block) {
+                for i in (start_i..end_i).step_by(half_block) {
+                    for j in (start_j..end_j).step_by(half_block) {
                         self.transpose_block(input, output, i, j, half_block, rows, cols);
                     }
                 }
@@ -405,17 +405,17 @@ pub mod matrix_simd {
             T: Copy + Default,
         {
             // Use safe array indexing instead of unsafe pointer arithmetic
-            for _i in start_i..end_i {
-                for _j in start_j..end_j {
+            for i in start_i..end_i {
+                for j in start_j..end_j {
                     // Bounds checking
-                    if _i < input.nrows()
-                        && _j < input.ncols()
-                        && _j < output.nrows()
-                        && _i < output.ncols()
+                    if i < input.nrows()
+                        && j < input.ncols()
+                        && j < output.nrows()
+                        && i < output.ncols()
                     {
                         unsafe {
-                            let src_ptr = input.as_ptr().add(_i * cols + j);
-                            let dst_ptr = output.as_ptr().add(_j * rows + i) as *mut T;
+                            let src_ptr = input.as_ptr().add(i * cols + j);
+                            let dst_ptr = output.as_ptr().add(j * rows + i) as *mut T;
                             *dst_ptr = *src_ptr;
                         }
                     }
@@ -499,15 +499,15 @@ pub mod matrix_simd {
         /// Calculate optimal block sizes for GEMM based on cache hierarchy
         fn calculate_gemm_block_sizes(&self, elementsize: usize) -> (usize, usize, usize) {
             // MC: Panel height should fit in L2 cache
-            let mc_elements = self.l2_cache_size / (2 * element_size);
+            let mc_elements = self.l2_cache_size / (2 * elementsize);
             let mc = (mc_elements as f64).sqrt() as usize;
 
             // KC: Panel width should allow A and B panels to fit in L3 cache
-            let kc_elements = self.l3_cache_size / (3 * element_size);
+            let kc_elements = self.l3_cache_size / (3 * elementsize);
             let kc = (kc_elements / mc).min(384); // Cap at 384 for practical reasons
 
             // NC: Should allow B panel to fit in L1 cache
-            let nc_elements = self.l1_cache_size / element_size;
+            let nc_elements = self.l1_cache_size / elementsize;
             let nc = (nc_elements / kc).min(64); // Cap at 64
 
             (mc.max(8), kc.max(8), nc.max(8))
@@ -558,11 +558,11 @@ pub mod matrix_simd {
         fn calculate_optimal_block_size(&self, elementsize: usize) -> usize {
             // Target L2 cache with some headroom for working set
             let target_working_set = self.l2_cache_size / 2;
-            let elements_per_block = target_working_set / element_size;
+            let elements_per_block = target_working_set / elementsize;
             let block_size = (elements_per_block as f64).sqrt() as usize;
 
             // Ensure alignment to cache line boundaries
-            let elements_per_line = self.cache_line_size / element_size;
+            let elements_per_line = self.cache_line_size / elementsize;
             ((block_size / elements_per_line) * elements_per_line).max(8)
         }
 
@@ -615,7 +615,7 @@ pub mod matrix_simd {
     /// Legacy transpose function with SIMD operations
     pub fn transpose_simd<T: Copy + Default + Send + Sync>(input: &ArrayView2<T>) -> Array2<T> {
         let processor = CacheOptimizedMatrixProcessor::new();
-        processor.transpose_advanced_fast(_input)
+        processor.transpose_advanced_fast(input)
     }
 
     /// Matrix multiplication using SIMD and blocking
@@ -709,13 +709,13 @@ pub mod stats_simd {
             return 0.0;
         }
 
-        let mean = mean_simd(_data);
+        let mean = mean_simd(data);
         let slice = data.as_slice().unwrap();
 
         // Use parallel processing for variance calculation
         let sum_sq_diff: f64 = slice.iter().map(|&x| (x - mean).powi(2)).sum();
 
-        sum_sq_diff / (_data.len() - 1) as f64
+        sum_sq_diff / (data.len() - 1) as f64
     }
 
     /// Find min/max using SIMD operations
@@ -1087,8 +1087,8 @@ impl AdvancedSimdProcessor {
     fn calculate_transpose_block_size(&self, elementsize: usize) -> usize {
         // Target L2 cache _size (256KB typical) with some headroom
         let target_cache_size = 128 * 1024;
-        let elements_per_cache_line = 64 / element_size; // Assume 64-byte cache lines
-        let block_elements = target_cache_size / element_size;
+        let elements_per_cache_line = 64 / elementsize; // Assume 64-byte cache lines
+        let block_elements = target_cache_size / elementsize;
         let block_size = (block_elements as f64).sqrt() as usize;
 
         // Align to cache line boundaries

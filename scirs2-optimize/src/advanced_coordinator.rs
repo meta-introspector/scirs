@@ -164,9 +164,9 @@ pub struct AdvancedState {
 }
 
 impl AdvancedState {
-    fn new(_num_params: usize, numstrategies: usize) -> Self {
+    fn new(num_params: usize, num_strategies: usize) -> Self {
         Self {
-            global_best_solution: Array1::zeros(_num_params),
+            global_best_solution: Array1::zeros(num_params),
             global_best_objective: f64::INFINITY,
             total_evaluations: 0,
             current_iteration: 0,
@@ -204,7 +204,7 @@ pub struct AdvancedCoordinator {
 
 impl AdvancedCoordinator {
     /// Create new Advanced Coordinator
-    pub fn new(_config: AdvancedConfig, initialparams: &ArrayView1<f64>) -> Self {
+    pub fn new(config: AdvancedConfig, initial_params: &ArrayView1<f64>) -> Self {
         let num_params = initial_params.len();
         let num_strategies = 3; // quantum, neuromorphic, meta-learning
         let state = AdvancedState::new(num_params, num_strategies);
@@ -244,7 +244,7 @@ impl AdvancedCoordinator {
         };
 
         Self {
-            config: config,
+            config,
             state,
             quantum_optimizer,
             neuromorphic_optimizer,
@@ -301,7 +301,7 @@ impl AdvancedCoordinator {
                 self.state.global_best_objective = iteration_result.fun;
                 self.state.global_best_solution = iteration_result.x.clone();
                 consecutive_no_improvement = 0;
-                best_result = Some(iteration_result);
+                best_result = Some(iteration_result.clone());
             } else {
                 consecutive_no_improvement += 1;
             }
@@ -361,7 +361,7 @@ impl AdvancedCoordinator {
 
             // Neural adaptation phase
             neuro_opt
-                .network()
+                .network_mut()
                 .encode_parameters(&quantum_candidate.view());
             let neural_result = neuro_opt.optimize(objective, &quantum_candidate.view())?;
             self.state.total_evaluations += neural_result.nit;
@@ -647,7 +647,7 @@ impl AdvancedCoordinator {
     }
 
     /// Update performance tracking for strategy adaptation
-    fn update_performance_tracking(&mut self, currentobjective: f64) -> Result<()> {
+    fn update_performance_tracking(&mut self, current_objective: f64) -> Result<()> {
         self.state.performance_history.push_back(current_objective);
         if self.state.performance_history.len() > self.config.performance_memory_size {
             self.state.performance_history.pop_front();
@@ -813,10 +813,8 @@ struct CrossModalFusionEngine {
 }
 
 impl CrossModalFusionEngine {
-    fn new(_numparams: usize) -> Self {
-        Self {
-            num_params: num_params,
-        }
+    fn new(num_params: usize) -> Self {
+        Self { num_params }
     }
 
     fn fuse_solutions(

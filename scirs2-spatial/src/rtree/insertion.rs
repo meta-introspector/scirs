@@ -98,11 +98,11 @@ impl<T: Clone> RTree<T> {
     ) -> SpatialResult<Option<Node<T>>> {
         // For leaf entries, we should insert at level 0
         // If the root is a leaf node (level 0), insert directly
-        if self.root.is_leaf && level == 0 {
+        if self.root._isleaf && level == 0 {
             self.root.entries.push(entry.clone());
 
             // If the node overflows, split it
-            if self.root.size() > self.max_entries {
+            if self.root.size() > self.maxentries {
                 // Take ownership of the root temporarily
                 let mut root = std::mem::replace(&mut self.root, Node::new(true, 0));
                 let (node1, node2) = self.split_node(&mut root)?;
@@ -133,7 +133,7 @@ impl<T: Clone> RTree<T> {
         }
 
         // If root is not a leaf, we need to insert recursively
-        if !self.root.is_leaf {
+        if !self.root._isleaf {
             // Choose the best subtree to insert into
             let subtree_index = self.choose_subtree(&self.root, entry.mbr(), level)?;
 
@@ -164,7 +164,7 @@ impl<T: Clone> RTree<T> {
                     });
 
                     // If the node overflows, split it
-                    if self.root.size() > self.max_entries {
+                    if self.root.size() > self.maxentries {
                         // Take ownership of the root temporarily
                         let mut root = std::mem::replace(&mut self.root, Node::new(false, 1));
                         let root_level = root.level;
@@ -217,7 +217,7 @@ impl<T: Clone> RTree<T> {
             node.entries.push(entry.clone());
 
             // If the node overflows, split it
-            if node.size() > self.max_entries {
+            if node.size() > self.maxentries {
                 let (new_node, split_node) = self.split_node(node)?;
                 *node = new_node;
                 return Ok(Some(split_node));
@@ -255,7 +255,7 @@ impl<T: Clone> RTree<T> {
                 });
 
                 // If the node overflows, split it
-                if node.size() > self.max_entries {
+                if node.size() > self.maxentries {
                     let (new_node, split_node) = self.split_node(node)?;
                     *node = new_node;
                     return Ok(Some(split_node));
@@ -285,7 +285,7 @@ impl<T: Clone> RTree<T> {
         let mut chosen_index = 0;
 
         // If this is a leaf node, we shouldn't be choosing a subtree
-        if node.is_leaf {
+        if node._isleaf {
             return Err(crate::error::SpatialError::ComputationError(
                 "Cannot choose subtree in a leaf node".into(),
             ));
@@ -313,8 +313,8 @@ impl<T: Clone> RTree<T> {
     /// Split a node that has more than max_entries
     pub(crate) fn split_node(&self, node: &mut Node<T>) -> SpatialResult<(Node<T>, Node<T>)> {
         // Create two new nodes: the original (which will be replaced) and the split node
-        let mut node1 = Node::new(node.is_leaf, node.level);
-        let mut node2 = Node::new(node.is_leaf, node.level);
+        let mut node1 = Node::new(node._isleaf, node.level);
+        let mut node2 = Node::new(node._isleaf, node.level);
 
         // Choose two seed entries to initialize the split
         let (seed1, seed2) = self.choose_split_seeds(node)?;

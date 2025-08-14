@@ -78,19 +78,19 @@ where
 
     // Try to convert to f64 first for real-valued input
     let mut is_complex = false;
-    let data_real: Result<Vec<f64>, ()> = _data
+    let data_real: Result<Vec<f64>, ()> = data
         .iter()
         .map(|&val| num_traits::cast::cast::<T, f64>(val).ok_or(()))
         .collect();
 
-    // Process _data based on type
-    let data_complex: Vec<Complex64> = if let Ok(real_data) = data_real {
-        // Real _data
-        real_data.iter().map(|&r| Complex64::new(r, 0.0)).collect()
+    // Process data based on type
+    let data_complex: Vec<Complex64> = if let Ok(realdata) = data_real {
+        // Real data
+        realdata.iter().map(|&r| Complex64::new(r, 0.0)).collect()
     } else {
-        // Complex _data
+        // Complex data
         is_complex = true;
-        _data
+        data
             .iter()
             .map(|&val| {
                 num_traits::cast::cast::<T, Complex64>(val).ok_or_else(|| {
@@ -117,15 +117,15 @@ where
         // Determine wavelet size - use at least data.len() points, but limit to reasonable size
         let n = std::cmp::min(
             data.len() * 10,
-            std::cmp::max(_data.len(), 10 * scale as usize),
+            std::cmp::max(data.len(), 10 * scale as usize),
         );
 
         // Generate wavelet coefficients
-        let wavelet_data = wavelet(n, scale)?;
+        let waveletdata = wavelet(n, scale)?;
 
         // Convert to complex and take conjugate (for convolution)
         let mut wavelet_complex = Vec::with_capacity(n);
-        for &w in &wavelet_data {
+        for &w in &waveletdata {
             let complex_val: Complex64 = w.into();
             wavelet_complex.push(complex_val.conj());
         }

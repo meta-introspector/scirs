@@ -440,25 +440,25 @@ impl TensorCoreDistanceMatrix {
         &mut self,
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, ndims) = points.dim();
+        let (npoints, ndims) = points.dim();
 
-        if n_points == 0 || ndims == 0 {
+        if npoints == 0 || ndims == 0 {
             return Err(SpatialError::InvalidInput("Empty input data".to_string()));
         }
 
         // Optimize tensor layout
-        let optimized_points = if self.layout_optimization {
+        let optimizedpoints = if self.layout_optimization {
             self.optimize_tensor_layout(points)?
         } else {
             points.to_owned()
         };
 
         // Choose computation strategy based on data size
-        if self.hierarchical_tiling && n_points > 1024 {
-            self.compute_hierarchical_tiled(&optimized_points.view())
+        if self.hierarchical_tiling && npoints > 1024 {
+            self.compute_hierarchical_tiled(&optimizedpoints.view())
                 .await
         } else {
-            self.compute_direct_tensor_cores(&optimized_points.view())
+            self.compute_direct_tensor_cores(&optimizedpoints.view())
                 .await
         }
     }
@@ -466,40 +466,40 @@ impl TensorCoreDistanceMatrix {
     /// Optimize tensor layout for hardware
     fn optimize_tensor_layout(
         &mut self,
-        _points: &ArrayView2<'_, f64>,
+        points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, ndims) = points.dim();
+        let (npoints, ndims) = points.dim();
 
         match self.tensor_layout {
-            TensorLayout::RowMajor => Ok(_points.to_owned()),
+            TensorLayout::RowMajor => Ok(points.to_owned()),
             TensorLayout::ColMajor => {
-                let mut transposed = Array2::zeros((ndims, n_points));
+                let mut transposed = Array2::zeros((ndims, npoints));
                 for (i, point) in points.outer_iter().enumerate() {
                     transposed.column_mut(i).assign(&point);
                 }
                 Ok(transposed.t().to_owned())
             }
-            TensorLayout::Blocked => TensorCoreDistanceMatrix::create_blocked_layout(_points),
-            TensorLayout::ZOrder => self.create_zorder_layout(_points),
-            TensorLayout::HardwareOptimized => self.create_hardware_optimized_layout(_points),
+            TensorLayout::Blocked => TensorCoreDistanceMatrix::create_blocked_layout(points),
+            TensorLayout::ZOrder => self.create_zorder_layout(points),
+            TensorLayout::HardwareOptimized => self.create_hardware_optimized_layout(points),
         }
     }
 
     /// Create blocked tensor layout
     fn create_blocked_layout(points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-        let (n_points, ndims) = points.dim();
+        let (npoints, ndims) = points.dim();
         let block_size = 64; // Optimize for cache lines
 
-        let blocked_rows = n_points.div_ceil(block_size) * block_size;
+        let blocked_rows = npoints.div_ceil(block_size) * block_size;
         let blocked_cols = ndims.div_ceil(block_size) * block_size;
 
         let mut blocked_data = Array2::zeros((blocked_rows, blocked_cols));
 
-        for block_i in 0..(n_points / block_size + 1) {
+        for block_i in 0..(npoints / block_size + 1) {
             for block_j in 0..(ndims / block_size + 1) {
                 let start_i = block_i * block_size;
                 let start_j = block_j * block_size;
-                let end_i = (start_i + block_size).min(n_points);
+                let end_i = (start_i + block_size).min(npoints);
                 let end_j = (start_j + block_size).min(ndims);
 
                 for i in start_i..end_i {
@@ -510,18 +510,18 @@ impl TensorCoreDistanceMatrix {
             }
         }
 
-        Ok(blocked_data.slice(s![..n_points, ..ndims]).to_owned())
+        Ok(blocked_data.slice(s![..npoints, ..ndims]).to_owned())
     }
 
     /// Create Z-order (Morton order) layout
     fn create_zorder_layout(
         &mut self,
-        _points: &ArrayView2<'_, f64>,
+        points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, ndims) = points.dim();
+        let (npoints, ndims) = points.dim();
 
         // Create Z-order mapping
-        let mut z_indices: Vec<(usize, usize)> = (0..n_points)
+        let mut z_indices: Vec<(usize, usize)> = (0..npoints)
             .map(|i| {
                 (
                     i,
@@ -532,18 +532,18 @@ impl TensorCoreDistanceMatrix {
 
         z_indices.sort_by_key(|(_, z_idx)| *z_idx);
 
-        let mut reordered_data = Array2::zeros((n_points, ndims));
+        let mut reordered_data = Array2::zeros((npoints, ndims));
         for (new_idx, (old_idx, z_idx)) in z_indices.iter().enumerate() {
             reordered_data
                 .row_mut(new_idx)
-                .assign(&_points.row(*old_idx));
+                .assign(&points.row(*old_idx));
         }
 
         Ok(reordered_data)
     }
 
     /// Calculate Z-order (Morton) index
-    fn calculate_z_order_index(_point_idx: usize, ndims: usize) -> usize {
+    fn calculate_z_order_index(point_idx: usize, ndims: usize) -> usize {
         // Simplified Z-order calculation
         let mut z_index = 0;
         let temp_idx = point_idx;
@@ -595,23 +595,23 @@ impl TensorCoreDistanceMatrix {
         &self,
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, ndims) = points.dim();
+        let (npoints, ndims) = points.dim();
 
         // Pad dimensions to multiples of 8 for tensor core efficiency
-        let padded_points = n_points.div_ceil(8) * 8;
+        let paddedpoints = npoints.div_ceil(8) * 8;
         let padded_dims = ndims.div_ceil(8) * 8;
 
-        let mut padded_data = Array2::zeros((padded_points, padded_dims));
+        let mut padded_data = Array2::zeros((paddedpoints, padded_dims));
 
         // Copy original data
-        for i in 0..n_points {
+        for i in 0..npoints {
             for j in 0..ndims {
                 padded_data[[i, j]] = points[[i, j]];
             }
         }
 
         // Return view of original size
-        Ok(padded_data.slice(s![..n_points, ..ndims]).to_owned())
+        Ok(padded_data.slice(s![..npoints, ..ndims]).to_owned())
     }
 
     /// Create AMD-optimized tensor layout
@@ -619,21 +619,21 @@ impl TensorCoreDistanceMatrix {
         &self,
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, ndims) = points.dim();
+        let (npoints, ndims) = points.dim();
 
         // AMD matrix cores prefer multiples of 16
-        let padded_points = n_points.div_ceil(16) * 16;
+        let paddedpoints = npoints.div_ceil(16) * 16;
         let padded_dims = ndims.div_ceil(16) * 16;
 
-        let mut padded_data = Array2::zeros((padded_points, padded_dims));
+        let mut padded_data = Array2::zeros((paddedpoints, padded_dims));
 
-        for i in 0..n_points {
+        for i in 0..npoints {
             for j in 0..ndims {
                 padded_data[[i, j]] = points[[i, j]];
             }
         }
 
-        Ok(padded_data.slice(s![..n_points, ..ndims]).to_owned())
+        Ok(padded_data.slice(s![..npoints, ..ndims]).to_owned())
     }
 
     /// Create Intel-optimized tensor layout  
@@ -641,21 +641,21 @@ impl TensorCoreDistanceMatrix {
         &self,
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, ndims) = points.dim();
+        let (npoints, ndims) = points.dim();
 
         // Intel XMX units prefer multiples of 32
-        let padded_points = n_points.div_ceil(32) * 32;
+        let paddedpoints = npoints.div_ceil(32) * 32;
         let padded_dims = ndims.div_ceil(32) * 32;
 
-        let mut padded_data = Array2::zeros((padded_points, padded_dims));
+        let mut padded_data = Array2::zeros((paddedpoints, padded_dims));
 
-        for i in 0..n_points {
+        for i in 0..npoints {
             for j in 0..ndims {
                 padded_data[[i, j]] = points[[i, j]];
             }
         }
 
-        Ok(padded_data.slice(s![..n_points, ..ndims]).to_owned())
+        Ok(padded_data.slice(s![..npoints, ..ndims]).to_owned())
     }
 
     /// Compute using hierarchical tiling strategy
@@ -663,8 +663,8 @@ impl TensorCoreDistanceMatrix {
         &mut self,
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, ndims) = points.dim();
-        let mut distance_matrix = Array2::zeros((n_points, n_points));
+        let (npoints, ndims) = points.dim();
+        let mut distance_matrix = Array2::zeros((npoints, npoints));
 
         let (tile_rows, tile_cols) = self.tile_size;
         let precision_mode = self.precision_mode; // Extract before loop
@@ -672,25 +672,25 @@ impl TensorCoreDistanceMatrix {
         // Create async tasks for tile computation
         let mut tile_futures = Vec::new();
 
-        for i in (0..n_points).step_by(tile_rows) {
-            for j in (0..n_points).step_by(tile_cols) {
-                let end_i = (i + tile_rows).min(n_points);
-                let end_j = (j + tile_cols).min(n_points);
+        for i in (0..npoints).step_by(tile_rows) {
+            for j in (0..npoints).step_by(tile_cols) {
+                let end_i = (i + tile_rows).min(npoints);
+                let end_j = (j + tile_cols).min(npoints);
 
-                let tile_points_i = points.slice(s![i..end_i, ..]).to_owned();
-                let tile_points_j = points.slice(s![j..end_j, ..]).to_owned();
+                let tilepoints_i = points.slice(s![i..end_i, ..]).to_owned();
+                let tilepoints_j = points.slice(s![j..end_j, ..]).to_owned();
 
                 // Use extracted precision_mode instead of accessing self
                 let future = async move {
                     // Basic distance computation for tile
-                    let (rows_i, _) = tile_points_i.dim();
-                    let (rows_j, _) = tile_points_j.dim();
+                    let (rows_i, _) = tilepoints_i.dim();
+                    let (rows_j, _) = tilepoints_j.dim();
                     let mut tile_distances = Array2::zeros((rows_i, rows_j));
 
                     for r in 0..rows_i {
                         for c in 0..rows_j {
-                            let p1 = tile_points_i.row(r);
-                            let p2 = tile_points_j.row(c);
+                            let p1 = tilepoints_i.row(r);
+                            let p2 = tilepoints_j.row(c);
                             let diff = &p1 - &p2;
                             let dist = diff.iter().map(|x| x.powi(2)).sum::<f64>().sqrt();
                             tile_distances[[r, c]] = dist;
@@ -1301,9 +1301,9 @@ impl TensorCoreClustering {
         &mut self,
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
-        let (n_points, ndims) = points.dim();
+        let (npoints, ndims) = points.dim();
 
-        if n_points < self._numclusters {
+        if npoints < self._numclusters {
             return Err(SpatialError::InvalidInput(
                 "Number of points must be >= number of clusters".to_string(),
             ));
@@ -1311,7 +1311,7 @@ impl TensorCoreClustering {
 
         // Initialize centroids
         let mut centroids = self.initialize_centroids(points)?;
-        let mut assignments = Array1::zeros(n_points);
+        let mut assignments = Array1::zeros(npoints);
 
         // Tensor core k-means iterations
         for _iteration in 0..100 {
@@ -1353,23 +1353,23 @@ impl TensorCoreClustering {
     /// Initialize centroids using k-means++
     fn initialize_centroids(
         &mut self,
-        _points: &ArrayView2<'_, f64>,
+        points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, ndims) = points.dim();
+        let (npoints, ndims) = points.dim();
         let mut centroids = Array2::zeros((self._numclusters, ndims));
 
         // k-means++ initialization
         let mut rng = rand::rng();
 
         // Choose first centroid randomly
-        let first_idx = rng.gen_range(0..n_points);
-        centroids.row_mut(0).assign(&_points.row(first_idx));
+        let first_idx = rng.gen_range(0..npoints);
+        centroids.row_mut(0).assign(&points.row(first_idx));
 
         // Choose remaining centroids with probability proportional to distance
         for k in 1..self._numclusters {
-            let mut distances = Array1::zeros(n_points);
+            let mut distances = Array1::zeros(npoints);
 
-            for i in 0..n_points {
+            for i in 0..npoints {
                 let point = points.row(i);
                 let mut min_dist = f64::INFINITY;
 
@@ -1391,10 +1391,10 @@ impl TensorCoreClustering {
             let mut cumulative = 0.0;
             let random_val = rand::random::<f64>() * total_dist;
 
-            for i in 0..n_points {
+            for i in 0..npoints {
                 cumulative += distances[i];
                 if cumulative >= random_val {
-                    centroids.row_mut(k).assign(&_points.row(i));
+                    centroids.row_mut(k).assign(&points.row(i));
                     break;
                 }
             }
@@ -1406,12 +1406,12 @@ impl TensorCoreClustering {
     /// Update assignments based on distance matrix
     fn update_assignments(
         &mut self,
-        _distance_matrix: &Array2<f64>,
+        distance_matrix: &Array2<f64>,
     ) -> SpatialResult<Array1<usize>> {
-        let n_points = distance_matrix.nrows();
-        let mut assignments = Array1::zeros(n_points);
+        let npoints = distance_matrix.nrows();
+        let mut assignments = Array1::zeros(npoints);
 
-        for i in 0..n_points {
+        for i in 0..npoints {
             let mut min_dist = f64::INFINITY;
             let mut best_cluster = 0;
 
@@ -1434,7 +1434,7 @@ impl TensorCoreClustering {
         points: &ArrayView2<'_, f64>,
         assignments: &Array1<usize>,
     ) -> SpatialResult<Array2<f64>> {
-        let (_n_points, ndims) = points.dim();
+        let (_npoints, ndims) = points.dim();
         let mut new_centroids = Array2::zeros((self._numclusters, ndims));
         let mut cluster_counts = vec![0; self._numclusters];
 
@@ -1450,7 +1450,7 @@ impl TensorCoreClustering {
             }
 
             // Create mask for points in this cluster
-            let cluster_points: Vec<usize> = assignments
+            let clusterpoints: Vec<usize> = assignments
                 .iter()
                 .enumerate()
                 .filter(|(_, &c)| c == cluster)
@@ -1458,13 +1458,13 @@ impl TensorCoreClustering {
                 .collect();
 
             // Extract cluster points
-            let cluster_data = Array2::from_shape_fn((cluster_points.len(), ndims), |(i, j)| {
-                points[[cluster_points[i], j]]
+            let cluster_data = Array2::from_shape_fn((clusterpoints.len(), ndims), |(i, j)| {
+                points[[clusterpoints[i], j]]
             });
 
             // Compute mean using tensor operations (sum + scale)
             let sum_vector = self.tensor_sum_reduction(&cluster_data.view()).await?;
-            let count = cluster_points.len() as f64;
+            let count = clusterpoints.len() as f64;
 
             for j in 0..ndims {
                 new_centroids[[cluster, j]] = sum_vector[j] / count;
@@ -1479,7 +1479,7 @@ impl TensorCoreClustering {
         &self,
         data: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array1<f64>> {
-        let (_n_points, ndims) = data.dim();
+        let (_npoints, ndims) = data.dim();
         let mut sum_vector = Array1::zeros(ndims);
 
         // Simulate tensor reduction operation
@@ -1497,11 +1497,11 @@ impl TensorCoreClustering {
         points: &ArrayView2<'_, f64>,
         centroids: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, ndims) = points.dim();
+        let (npoints, ndims) = points.dim();
         let (n_clusters_, _) = centroids.dim();
-        let mut distances = Array2::zeros((n_points, n_clusters_));
+        let mut distances = Array2::zeros((npoints, n_clusters_));
 
-        for i in 0..n_points {
+        for i in 0..npoints {
             for j in 0..n_clusters_ {
                 let distance: f64 = points
                     .row(i)
@@ -1523,12 +1523,12 @@ impl TensorCoreClustering {
         points: &ArrayView2<'_, f64>,
         assignments: &Array1<usize>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, ndims) = points.dim();
+        let (npoints, ndims) = points.dim();
         let mut new_centroids = Array2::zeros((self._numclusters, ndims));
         let mut cluster_counts = vec![0; self._numclusters];
 
         // Sum points for each cluster
-        for i in 0..n_points {
+        for i in 0..npoints {
             let cluster = assignments[i];
             cluster_counts[cluster] += 1;
 
@@ -2323,12 +2323,12 @@ impl TensorCoreDistanceMatrix {
         points: &ArrayView2<'_, f64>,
         centroids: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, ndims) = points.dim();
+        let (npoints, ndims) = points.dim();
         let (n_clusters_, n_dims_c) = centroids.dim();
-        let mut distances = Array2::zeros((n_points, n_clusters_));
+        let mut distances = Array2::zeros((npoints, n_clusters_));
 
         // Compute distances using optimized tensor operations
-        for i in 0..n_points {
+        for i in 0..npoints {
             for j in 0..n_clusters_ {
                 let distance: f64 = points
                     .row(i)

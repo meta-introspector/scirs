@@ -540,7 +540,7 @@ impl MomentsAccountant {
         let mut best_epsilon = f64::INFINITY;
         let mut best_order = 2;
 
-        for (&order, &log_moment) in log_moments {
+        for (&order, &log_moment) in logmoments {
             // Convert log moment to epsilon using the formula:
             // ε = (log_moment - log(δ)) / (α - 1)
             let alpha = order as f64;
@@ -732,7 +732,7 @@ impl MomentCoefficients {
 
         // Precompute log factorials
         log_factorials.push(0.0); // log(0!) = log(1) = 0
-        for i in 1..=_max_order * 2 {
+        for i in 1..=_maxorder * 2 {
             log_factorials.push(log_factorials[i - 1] + (i as f64).ln());
         }
 

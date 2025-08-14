@@ -216,7 +216,7 @@ fn compute_matrix_1_norm<F: Float>(matrix: &ArrayView2<F>) -> F {
 
 /// Compute gradient for matrix 1-norm
 #[allow(dead_code)]
-fn compute_matrix_1_norm_gradient<F: Float>(_matrix: &ArrayView2<F>, gradscalar: F) -> Array2<F> {
+fn compute_matrix_1_norm_gradient<F: Float>(matrix: &ArrayView2<F>, gradscalar: F) -> Array2<F> {
     let (m, n) = matrix.dim();
     let mut grad_matrix = Array2::zeros((m, n));
 
@@ -239,9 +239,9 @@ fn compute_matrix_1_norm_gradient<F: Float>(_matrix: &ArrayView2<F>, gradscalar:
     for i in 0..m {
         let elem = matrix[[i, max_col]];
         grad_matrix[[i, max_col]] = if elem > F::zero() {
-            grad_scalar
+            gradscalar
         } else if elem < F::zero() {
-            -grad_scalar
+            -gradscalar
         } else {
             F::zero()
         };
@@ -272,7 +272,7 @@ fn compute_matrix_inf_norm<F: Float>(matrix: &ArrayView2<F>) -> F {
 /// Compute gradient for matrix infinity-norm
 #[allow(dead_code)]
 fn compute_matrix_inf_norm_gradient<F: Float>(
-    _matrix: &ArrayView2<F>,
+    matrix: &ArrayView2<F>,
     grad_scalar: F,
 ) -> Array2<F> {
     let (m, n) = matrix.dim();
@@ -312,7 +312,7 @@ fn compute_matrix_inf_norm_gradient<F: Float>(
 #[allow(dead_code)]
 fn compute_matrix_2_norm<F: Float + ndarray::ScalarOperand>(matrix: &ArrayView2<F>) -> F {
     // Use power iteration to find the largest singular value
-    let (_, sigma_max) = power_iteration_2norm(_matrix, 50, F::from(1e-8).unwrap());
+    let (_, sigma_max) = power_iteration_2norm(matrix, 50, F::from(1e-8).unwrap());
     sigma_max
 }
 
@@ -323,7 +323,7 @@ fn power_iteration_2norm<F: Float + ndarray::ScalarOperand>(
     max_iter: usize,
     tol: F,
 ) -> (ndarray::Array1<F>, F) {
-    let (m_n) = matrix.dim();
+    let (m, n) = matrix.dim();
 
     // Initialize with normalized vector
     let mut u = ndarray::Array1::<F>::zeros(m);
@@ -335,7 +335,7 @@ fn power_iteration_2norm<F: Float + ndarray::ScalarOperand>(
     }
 
     // Normalize
-    let norm = u._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+    let norm = u.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
     if norm > F::epsilon() {
         u.mapv_inplace(|x| x / norm);
     }
@@ -350,14 +350,14 @@ fn power_iteration_2norm<F: Float + ndarray::ScalarOperand>(
         let atau = matrix.t().dot(&au);
 
         // Compute norm (approximate eigenvalue of A^T * A)
-        let sigma = atau._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+        let sigma = atau.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
 
         // Check convergence
         if (sigma - prev_sigma).abs() < tol {
             // Final computation of actual singular value
             let au_final = matrix.dot(&u);
             let sigma_final = au_final
-                ._iter()
+                .iter()
                 .fold(F::zero(), |acc, &x| acc + x * x)
                 .sqrt();
             return (u, sigma_final);
@@ -366,7 +366,7 @@ fn power_iteration_2norm<F: Float + ndarray::ScalarOperand>(
         prev_sigma = sigma;
 
         // Normalize for next iteration
-        let norm = atau._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+        let norm = atau.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
         if norm > F::epsilon() {
             u = atau.mapv(|x| x / norm);
         }
@@ -374,7 +374,7 @@ fn power_iteration_2norm<F: Float + ndarray::ScalarOperand>(
 
     // Final estimate
     let au = matrix.dot(&u);
-    let sigma = au._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+    let sigma = au.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
     (u, sigma)
 }
 
@@ -414,7 +414,7 @@ fn compute_matrix_2_norm_gradient<F: Float + ndarray::ScalarOperand>(
 pub fn norm1<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(Matrix1NormOp)
 }
 
@@ -423,7 +423,7 @@ pub fn norm1<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
 pub fn norm2<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(Matrix2NormOp)
 }
 
@@ -432,7 +432,7 @@ pub fn norm2<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> T
 pub fn norminf<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(MatrixInfNormOp)
 }
 
@@ -440,5 +440,5 @@ pub fn norminf<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
 /// This is an alias for the Frobenius norm in norm_ops.rs
 #[allow(dead_code)]
 pub fn normfro<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    crate::tensor_ops::norm_ops::frobenius_norm(_matrix)
+    crate::tensor_ops::norm_ops::frobenius_norm(matrix)
 }

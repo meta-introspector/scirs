@@ -1157,7 +1157,7 @@ pub mod gpu_memory {
     }
 
     impl PooledBuffer {
-        fn new(_buffer: GpuBuffer<u8>, id: usize, allocationsource: String) -> Self {
+        fn new(buffer: GpuBuffer<u8>, id: usize, allocation_source: String) -> Self {
             let now = Instant::now();
             let size = buffer.size();
 
@@ -1733,7 +1733,7 @@ pub mod gpu_streaming {
 
     impl GpuStreamProcessor {
         /// Create a new GPU stream processor
-        pub fn new(_chunk_size: usize, overlapfactor: f32) -> Result<Self> {
+        pub fn new(chunk_size: usize, overlap_factor: f32) -> Result<Self> {
             Ok(Self {
                 gpu_processor: GpuIoProcessor::new()?,
                 chunk_size,

@@ -437,7 +437,8 @@ impl<F: Float> StabilityMetrics<F> {
     }
 
     fn compute_eigenvalues(
-        self_matrix: &Array<F, IxDyn>,
+        &self,
+        matrix: &Array<F, IxDyn>,
     ) -> Result<Vec<Complex64>, StabilityError> {
         // Simplified - would compute actual eigenvalues
         Ok(vec![
@@ -710,6 +711,7 @@ pub enum StabilityGrade {
     Fair,
     Poor,
     Unstable,
+    Critical,
 }
 
 /// Stability classifications

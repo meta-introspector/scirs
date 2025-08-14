@@ -253,7 +253,7 @@ impl<T: Float + std::iter::Sum + ScalarOperand, P: PolicyNetwork<T>> TrustRegion
     /// Check if step satisfies trust region constraint
     fn check_trust_region_constraint(&self, direction: &Array1<T>, stepsize: T) -> Result<bool> {
         // Compute expected KL divergence after update
-        let expected_kl = self.estimate_kl_divergence(direction, step_size)?;
+        let expected_kl = self.estimate_kl_divergence(direction, stepsize)?;
         Ok(expected_kl <= self.config.max_kl)
     }
 
@@ -261,7 +261,7 @@ impl<T: Float + std::iter::Sum + ScalarOperand, P: PolicyNetwork<T>> TrustRegion
     fn estimate_kl_divergence(&self, direction: &Array1<T>, stepsize: T) -> Result<T> {
         // Quadratic approximation: KL ≈ 0.5 * d^T * F * d * step_size^2
         let fvp = self.fisher_vector_product(direction)?;
-        let kl_estimate = T::from(0.5).unwrap() * self.dot(direction, &fvp) * step_size * step_size;
+        let kl_estimate = T::from(0.5).unwrap() * self.dot(direction, &fvp) * stepsize * stepsize;
         Ok(kl_estimate)
     }
 

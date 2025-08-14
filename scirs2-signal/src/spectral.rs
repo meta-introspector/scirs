@@ -31,7 +31,7 @@ pub type SpectrogramResult = SignalResult<(Vec<f64>, Vec<f64>, Vec<Vec<f64>>)>;
 /// * Window function as a vector of length `nperseg`
 #[allow(dead_code)]
 fn get_window(_windowtype: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
-    match window_type.to_lowercase().as_str() {
+    match _windowtype.to_lowercase().as_str() {
         "hann" => {
             let mut window = Vec::with_capacity(nperseg);
             for i in 0..nperseg {
@@ -59,8 +59,8 @@ fn get_window(_windowtype: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
         }
         "boxcar" | "rectangular" => Ok(vec![1.0; nperseg]),
         _ => Err(SignalError::ValueError(format!(
-            "Unknown window _type: {}",
-            _window_type
+            "Unknown window type: {}",
+            _windowtype
         ))),
     }
 }
@@ -77,7 +77,7 @@ fn get_window(_windowtype: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
 /// * Detrended signal
 #[allow(dead_code)]
 fn apply_detrend(x: &[f64], detrendtype: &str) -> SignalResult<Vec<f64>> {
-    match detrend_type {
+    match detrendtype {
         "constant" => {
             // Remove mean
             let mean = x.iter().sum::<f64>() / x.len() as f64;
@@ -110,7 +110,7 @@ fn apply_detrend(x: &[f64], detrendtype: &str) -> SignalResult<Vec<f64>> {
         "none" => Ok(x.to_vec()),
         _ => Err(SignalError::ValueError(format!(
             "Unknown detrend option: {}",
-            detrend_type
+            detrendtype
         ))),
     }
 }

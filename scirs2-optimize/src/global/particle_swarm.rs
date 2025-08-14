@@ -9,7 +9,7 @@ use crate::error::OptimizeError;
 use crate::unconstrained::OptimizeResult;
 use ndarray::{Array1, ArrayView1};
 use rand::rngs::StdRng;
-use rand::{rng, Rng};
+use rand::{rng, Rng, SeedableRng};
 
 /// Options for Particle Swarm Optimization
 #[derive(Debug, Clone)]
@@ -115,7 +115,7 @@ where
             }
 
             // Evaluate initial position
-            let value = _func(&position.view());
+            let value = func(&position.view());
             nfev += 1;
 
             // Update global best if necessary
@@ -125,7 +125,8 @@ where
             }
 
             particles.push(Particle {
-                position: position.clone()..velocity,
+                position: position.clone(),
+                velocity,
                 best_position: position,
                 best_value: value,
             });

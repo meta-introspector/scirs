@@ -414,7 +414,7 @@ impl Octree {
         }
 
         let size = points.nrows();
-        let bounds = BoundingBox::from_points(_points)?;
+        let bounds = BoundingBox::from_points(points)?;
         let points_owned = points.to_owned();
 
         // Create initial indices (0 to size-1)
@@ -796,7 +796,7 @@ impl Octree {
     /// Helper method to compute the maximum depth
     #[allow(clippy::only_used_in_recursion)]
     fn compute_max_depth(node: Option<&OctreeNode>) -> usize {
-        match _node {
+        match node {
             None => 0,
             Some(OctreeNode::Leaf { .. }) => 1,
             Some(OctreeNode::Internal { children, .. }) => {
@@ -824,7 +824,7 @@ impl Octree {
 #[allow(dead_code)]
 fn squared_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
     let mut sum_sq = 0.0;
-    for i in 0.._p1.len().min(p2.len()) {
+    for i in 0..p1.len().min(p2.len()) {
         let diff = p1[i] - p2[i];
         sum_sq += diff * diff;
     }

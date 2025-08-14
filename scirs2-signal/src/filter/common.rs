@@ -65,7 +65,7 @@ pub enum FilterTypeParam {
 
 impl From<FilterType> for FilterTypeParam {
     fn from(_filtertype: FilterType) -> Self {
-        FilterTypeParam::Type(_filter_type)
+        FilterTypeParam::Type(_filtertype)
     }
 }
 
@@ -148,9 +148,9 @@ pub mod validation {
 
     /// Validate filter order
     pub fn validate_order(order: usize) -> SignalResult<()> {
-        if _order == 0 {
+        if order == 0 {
             return Err(SignalError::ValueError(
-                "Filter _order must be greater than 0".to_string(),
+                "Filter order must be greater than 0".to_string(),
             ));
         }
         Ok(())
@@ -161,7 +161,7 @@ pub mod validation {
     where
         T: Float + NumCast + Debug,
     {
-        let wn = num_traits::cast::cast::<T, f64>(_cutoff).ok_or_else(|| {
+        let wn = num_traits::cast::cast::<T, f64>(cutoff).ok_or_else(|| {
             SignalError::ValueError(format!("Could not convert {:?} to f64", cutoff))
         })?;
 
@@ -176,9 +176,9 @@ pub mod validation {
 
     /// Validate bandpass/bandstop frequency pairs
     pub fn validate_band_frequencies(low: f64, high: f64) -> SignalResult<()> {
-        if _low <= 0.0 || high >= 1.0 || _low >= high {
+        if low <= 0.0 || high >= 1.0 || low >= high {
             return Err(SignalError::ValueError(
-                "Invalid band frequencies: _low must be positive, high must be less than 1, and _low < high".to_string(),
+                "Invalid band frequencies: low must be positive, high must be less than 1, and low < high".to_string(),
             ));
         }
         Ok(())
@@ -186,7 +186,7 @@ pub mod validation {
 
     /// Convert filter type parameter to FilterType enum
     pub fn convert_filter_type(_filter_typeparam: FilterTypeParam) -> SignalResult<FilterType> {
-        match _filter_type_param {
+        match _filter_typeparam {
             FilterTypeParam::Type(t) => Ok(t),
             FilterTypeParam::String(s) => s.parse(),
         }
@@ -204,21 +204,21 @@ pub mod math {
     /// Pre-warps the digital frequency to compensate for the frequency warping
     /// effect of the bilinear transform.
     pub fn prewarp_frequency(_digitalfreq: f64) -> f64 {
-        (PI * _digital_freq / 2.0).tan()
+        (PI * _digitalfreq / 2.0).tan()
     }
 
     /// Apply bilinear transform to convert analog pole to digital
     ///
     /// Transforms analog domain pole using bilinear transform: z = (2 + s) / (2 - s)
     pub fn bilinear_pole_transform(_analogpole: Complex64) -> Complex64 {
-        (2.0 + analog_pole) / (2.0 - analog_pole)
+        (2.0 + _analogpole) / (2.0 - _analogpole)
     }
 
     /// Apply bilinear transform to convert analog zero to digital
     ///
     /// Transforms analog domain zero using bilinear transform: z = (2 + s) / (2 - s)
     pub fn bilinear_zero_transform(_analogzero: Complex64) -> Complex64 {
-        (2.0 + analog_zero) / (2.0 - analog_zero)
+        (2.0 + _analogzero) / (2.0 - _analogzero)
     }
 
     /// Calculate poles for analog Butterworth prototype
@@ -226,9 +226,9 @@ pub mod math {
     /// Generates the poles for an analog Butterworth lowpass prototype filter
     /// of the specified order.
     pub fn butterworth_poles(order: usize) -> Vec<Complex64> {
-        let mut poles = Vec::with_capacity(_order);
-        for k in 0.._order {
-            let angle = PI * (2.0 * k as f64 + _order as f64 + 1.0) / (2.0 * _order as f64);
+        let mut poles = Vec::with_capacity(order);
+        for k in 0..order {
+            let angle = PI * (2.0 * k as f64 + order as f64 + 1.0) / (2.0 * order as f64);
             let real = angle.cos();
             let imag = angle.sin();
             poles.push(Complex64::new(real, imag));
@@ -243,7 +243,7 @@ pub mod math {
     pub fn add_digital_zeros(_filtertype: FilterType, order: usize) -> Vec<Complex64> {
         let mut digital_zeros = Vec::new();
 
-        match _filter_type {
+        match _filtertype {
             FilterType::Lowpass => {
                 // Lowpass: zeros at z = -1 (Nyquist frequency)
                 for _ in 0..order {

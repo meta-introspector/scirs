@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod clustering_validation_tests {
     use ndarray::{array, Array2};
-    use scirs2__metrics::clustering::validation::{
+    use scirs2_metrics::clustering::validation::{
         cluster_stability, consensus_score, fold_stability, jaccard_similarity,
     };
 
@@ -66,7 +66,7 @@ mod clustering_validation_tests {
     #[test]
     fn test_cluster_stability() {
         // Create a simple dataset with well-separated clusters
-        let x = Array2::fromshape_vec(
+        let x = Array2::from_shape_vec(
             (10, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 1.4, 1.9, 1.6, 2.1, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2,
@@ -97,7 +97,7 @@ mod clustering_validation_tests {
     #[test]
     fn test_fold_stability() {
         // Create a dataset with well-separated clusters
-        let x = Array2::fromshape_vec(
+        let x = Array2::from_shape_vec(
             (10, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 1.4, 1.9, 1.6, 2.1, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2,

@@ -57,10 +57,10 @@ struct SimdBfgsState {
 }
 
 impl SimdBfgsState {
-    fn new(_x0: &Array1<f64>, simdconfig: Option<SimdConfig>) -> Self {
+    fn new(x0: &Array1<f64>, simd_config: Option<SimdConfig>) -> Self {
         let n = x0.len();
-        let simd_ops = if let Some(_config) = simd_config {
-            SimdVectorOps::with_config(_config)
+        let simd_ops = if let Some(config) = simd_config {
+            SimdVectorOps::with_config(config)
         } else {
             SimdVectorOps::new()
         };

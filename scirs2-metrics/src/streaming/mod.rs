@@ -19,7 +19,7 @@
 //! ## Basic Streaming Classification Metrics
 //!
 //! ```
-//! use scirs2__metrics::streaming::StreamingClassificationMetrics;
+//! use scirs2_metrics::streaming::StreamingClassificationMetrics;
 //!
 //! let mut metrics = StreamingClassificationMetrics::new();
 //!
@@ -35,7 +35,7 @@
 //! ## Windowed Metrics
 //!
 //! ```
-//! use scirs2__metrics::streaming::WindowedClassificationMetrics;
+//! use scirs2_metrics::streaming::WindowedClassificationMetrics;
 //!
 //! let mut metrics = WindowedClassificationMetrics::new(100); // Window size of 100
 //!

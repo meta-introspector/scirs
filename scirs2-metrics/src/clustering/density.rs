@@ -30,10 +30,10 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__metrics::clustering::density::local_density_factor;
+/// use scirs2_metrics::clustering::density::local_density_factor;
 ///
 /// // Create a simple dataset with 2 clusters
-/// let x = Array2::fromshape_vec((6, 2), vec![
+/// let x = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,
 /// ]).unwrap();
@@ -186,10 +186,10 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__metrics::clustering::density::relative_density_index;
+/// use scirs2_metrics::clustering::density::relative_density_index;
 ///
 /// // Create a simple dataset with 2 clusters
-/// let x = Array2::fromshape_vec((6, 2), vec![
+/// let x = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,
 /// ]).unwrap();
@@ -337,10 +337,10 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__metrics::clustering::density::density_based_cluster_validity;
+/// use scirs2_metrics::clustering::density::density_based_cluster_validity;
 ///
 /// // Create a simple dataset with 2 clusters
-/// let x = Array2::fromshape_vec((6, 2), vec![
+/// let x = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,
 /// ]).unwrap();
@@ -568,7 +568,7 @@ mod tests {
     #[test]
     fn test_local_density_factor() {
         // Create a simple dataset with two well-separated clusters
-        let well_separated = Array2::fromshape_vec(
+        let well_separated = Array2::from_shape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 10.0, 12.0, 10.2, 11.8, 10.5, 12.2,
@@ -587,7 +587,7 @@ mod tests {
         assert!(factors.contains_key(&1));
 
         // Create a dataset with varying density
-        let varying_density = Array2::fromshape_vec(
+        let varying_density = Array2::from_shape_vec(
             (6, 2),
             vec![
                 1.0, 1.1, 1.05, 1.05, 1.1, 1.0, // Dense cluster
@@ -608,7 +608,7 @@ mod tests {
     #[test]
     fn test_relative_density_index() {
         // Create a simple dataset with two well-separated clusters
-        let well_separated = Array2::fromshape_vec(
+        let well_separated = Array2::from_shape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 10.0, 12.0, 10.2, 11.8, 10.5, 12.2,
@@ -625,7 +625,7 @@ mod tests {
         assert!(rdi > 1.0);
 
         // Create a dataset with overlapping clusters
-        let overlapping = Array2::fromshape_vec(
+        let overlapping = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 3.0, 3.0, 3.0, 3.0, 4.0, 4.5, 5.0, 5.5],
         )
@@ -643,7 +643,7 @@ mod tests {
     #[test]
     fn test_density_based_cluster_validity() {
         // Create a simple dataset with two well-separated clusters
-        let well_separated = Array2::fromshape_vec(
+        let well_separated = Array2::from_shape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 10.0, 12.0, 10.2, 11.8, 10.5, 12.2,
@@ -660,7 +660,7 @@ mod tests {
         assert!(dbcv > 0.0);
 
         // Create a dataset with poor clustering
-        let poor_clustering = Array2::fromshape_vec(
+        let poor_clustering = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 8.0, 9.0, 1.2, 2.2, 8.0, 9.0, 1.0, 2.0, 8.0, 9.0],
         )

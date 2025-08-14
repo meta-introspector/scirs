@@ -1,6 +1,6 @@
 use approx::assert_abs_diff_eq;
 use ndarray::array;
-use scirs2__metrics::anomaly::{
+use scirs2_metrics::anomaly::{
     anomaly_auc_score, anomaly_average_precision_score, detection_accuracy, false_alarm_rate,
     js_divergence, kl_divergence, maximum_mean_discrepancy, miss_detection_rate, nab_score,
     point_adjusted_precision_recall, precision_recall_with_tolerance, wasserstein_distance,

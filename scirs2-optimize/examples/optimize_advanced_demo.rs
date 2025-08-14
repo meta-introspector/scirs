@@ -54,8 +54,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Combining quantum superposition with neural adaptation...");
 
     let config1 = AdvancedConfig {
-        strategy: advancedStrategy::QuantumNeuralFusion,
-        max_iterations: 500,
+        strategy: AdvancedStrategy::QuantumNeuralFusion,
+        max_nit: 500,
         max_evaluations: 5000,
         tolerance: 1e-8,
         time_budget: Some(std::time::Duration::from_secs(30)),
@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   📊 Iterations: {}, Success: {}",
-        result1.iterations, result1.success
+        result1.nit, result1.success
     );
 
     // Strategy 2: Neuromorphic-Quantum Hybrid
@@ -83,8 +83,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Leveraging spiking networks with quantum tunneling...");
 
     let config2 = AdvancedConfig {
-        strategy: advancedStrategy::NeuromorphicQuantumHybrid,
-        max_iterations: 500,
+        strategy: AdvancedStrategy::NeuromorphicQuantumHybrid,
+        max_nit: 500,
         max_evaluations: 5000,
         tolerance: 1e-8,
         fusion_strength: 0.8,
@@ -104,7 +104,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   📊 Iterations: {}, Success: {}",
-        result2.iterations, result2.success
+        result2.nit, result2.success
     );
 
     // Strategy 3: Meta-Learning Quantum
@@ -112,8 +112,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Applying meta-learning with quantum enhancement...");
 
     let config3 = AdvancedConfig {
-        strategy: advancedStrategy::MetaLearningQuantum,
-        max_iterations: 500,
+        strategy: AdvancedStrategy::MetaLearningQuantum,
+        max_nit: 500,
         max_evaluations: 5000,
         tolerance: 1e-8,
         coordination_learning_rate: 0.02,
@@ -133,7 +133,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   📊 Iterations: {}, Success: {}",
-        result3.iterations, result3.success
+        result3.nit, result3.success
     );
 
     // Strategy 4: Adaptive Selection
@@ -141,8 +141,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Dynamic strategy switching based on performance...");
 
     let config4 = AdvancedConfig {
-        strategy: advancedStrategy::AdaptiveSelection,
-        max_iterations: 500,
+        strategy: AdvancedStrategy::AdaptiveSelection,
+        max_nit: 500,
         max_evaluations: 5000,
         tolerance: 1e-8,
         switching_threshold: 0.005,
@@ -162,7 +162,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   📊 Iterations: {}, Success: {}",
-        result4.iterations, result4.success
+        result4.nit, result4.success
     );
 
     // Strategy 5: Full Advanced
@@ -170,8 +170,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   All strategies working in parallel with intelligent coordination...");
 
     let config5 = AdvancedConfig {
-        strategy: advancedStrategy::Fulladvanced,
-        max_iterations: 1000,
+        strategy: AdvancedStrategy::FullAdvanced,
+        max_nit: 1000,
         max_evaluations: 10000,
         tolerance: 1e-10,
         parallel_threads: 4,
@@ -183,7 +183,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let result5 = advanced_optimize(
         complex_optimization_problem,
         &initial_params.view(),
-        Some(config5),
+        Some(config5.clone()),
     )?;
 
     println!(
@@ -193,7 +193,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   📊 Iterations: {}, Success: {}",
-        result5.iterations, result5.success
+        result5.nit, result5.success
     );
 
     // Performance Comparison
@@ -285,32 +285,38 @@ fn benchmark_advanced_strategies() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚡ Advanced Strategy Benchmarking");
     println!("==================================");
 
-    let test_functions = vec![
-        ("Rosenbrock", |x: &ArrayView1<f64>| {
-            let mut sum = 0.0;
-            for i in 0..x.len() - 1 {
-                sum += 100.0 * (x[i + 1] - x[i].powi(2)).powi(2) + (1.0 - x[i]).powi(2);
-            }
-            sum
-        }),
-        ("Rastrigin", |x: &ArrayView1<f64>| {
-            let a = 10.0;
-            let n = x.len() as f64;
-            a * n
-                + x.iter()
-                    .map(|&xi| xi.powi(2) - a * (2.0 * std::f64::consts::PI * xi).cos())
-                    .sum::<f64>()
-        }),
-        ("Ackley", |x: &ArrayView1<f64>| {
-            let n = x.len() as f64;
-            let sum1 = x.iter().map(|&xi| xi.powi(2)).sum::<f64>() / n;
-            let sum2 = x
-                .iter()
-                .map(|&xi| (2.0 * std::f64::consts::PI * xi).cos())
+    fn rosenbrock(x: &ArrayView1<f64>) -> f64 {
+        let mut sum = 0.0;
+        for i in 0..x.len() - 1 {
+            sum += 100.0 * (x[i + 1] - x[i].powi(2)).powi(2) + (1.0 - x[i]).powi(2);
+        }
+        sum
+    }
+
+    fn rastrigin(x: &ArrayView1<f64>) -> f64 {
+        let a = 10.0;
+        let n = x.len() as f64;
+        a * n
+            + x.iter()
+                .map(|&xi| xi.powi(2) - a * (2.0 * std::f64::consts::PI * xi).cos())
                 .sum::<f64>()
-                / n;
-            -20.0 * (-0.2 * sum1.sqrt()).exp() - sum2.exp() + 20.0 + std::f64::consts::E
-        }),
+    }
+
+    fn ackley(x: &ArrayView1<f64>) -> f64 {
+        let n = x.len() as f64;
+        let sum1 = x.iter().map(|&xi| xi.powi(2)).sum::<f64>() / n;
+        let sum2 = x
+            .iter()
+            .map(|&xi| (2.0 * std::f64::consts::PI * xi).cos())
+            .sum::<f64>()
+            / n;
+        -20.0 * (-0.2 * sum1.sqrt()).exp() - sum2.exp() + 20.0 + std::f64::consts::E
+    }
+
+    let test_functions = vec![
+        ("Rosenbrock", rosenbrock as fn(&ArrayView1<f64>) -> f64),
+        ("Rastrigin", rastrigin as fn(&ArrayView1<f64>) -> f64),
+        ("Ackley", ackley as fn(&ArrayView1<f64>) -> f64),
     ];
 
     for (func_name, objective) in test_functions {
@@ -318,8 +324,8 @@ fn benchmark_advanced_strategies() -> Result<(), Box<dyn std::error::Error>> {
 
         let initial_params = Array1::from_vec(vec![2.5; 3]);
         let config = AdvancedConfig {
-            strategy: advancedStrategy::Fulladvanced,
-            max_iterations: 200,
+            strategy: AdvancedStrategy::FullAdvanced,
+            max_nit: 200,
             max_evaluations: 2000,
             ..Default::default()
         };

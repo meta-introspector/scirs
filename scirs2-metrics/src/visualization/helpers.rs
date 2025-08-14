@@ -163,7 +163,7 @@ where
     let mut visualizer = crate::visualization::interactive::roc_curve::InteractiveROCVisualizer::<
         f64,
         ndarray::OwnedRepr<f64>,
-    >::new(fpr.to_vec(), tpr_thresholds.to_vec(), None, Some(auc));
+    >::new(fpr.to_vec(), tpr.to_vec(), None, Some(auc));
 
     if let Some(_options) = interactive_options {
         visualizer = visualizer.with_interactive_options(_options);
@@ -378,7 +378,7 @@ impl GenericMetricVisualizer {
 
     /// Add series names
     pub fn with_series_names(mut self, seriesnames: Vec<String>) -> Self {
-        self.series_names = Some(series_names);
+        self.series_names = Some(seriesnames);
         self
     }
 }
@@ -757,7 +757,7 @@ fn create_histogram_bins(values: &[f64], bins: usize) -> (Vec<f64>, Vec<f64>) {
 
     // Find min and max _values
     let min_val = values.iter().fold(f64::INFINITY, |min, &val| min.min(val));
-    let max_val = _values
+    let max_val = values
         .iter()
         .fold(f64::NEG_INFINITY, |max, &val| max.max(val));
 
@@ -770,7 +770,7 @@ fn create_histogram_bins(values: &[f64], bins: usize) -> (Vec<f64>, Vec<f64>) {
 
     // Count _values in each bin
     let mut bin_counts = vec![0.0; bins];
-    for &val in _values {
+    for &val in values {
         if val >= min_val && val <= max_val {
             let bin_idx = ((val - min_val) / bin_width).floor() as usize;
             // Handle the edge case where val is exactly max_val

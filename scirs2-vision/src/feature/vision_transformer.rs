@@ -331,7 +331,7 @@ impl VisionTransformer {
         let (num_patches, hiddendim) = patch_embeddings.dim();
         let seq_length = num_patches + 1;
 
-        let mut _embeddings = Array2::zeros((seq_length, hiddendim));
+        let mut embeddings = Array2::zeros((seq_length, hiddendim));
 
         // Add class token
         embeddings.slice_mut(s![0, ..]).assign(&self.cls_token);
@@ -339,10 +339,10 @@ impl VisionTransformer {
         // Add patch _embeddings
         embeddings.slice_mut(s![1.., ..]).assign(patch_embeddings);
 
-        // Add positional _embeddings
-        _embeddings = &_embeddings + &self.pos_embedding;
+        // Add positional embeddings
+        embeddings = &embeddings + &self.pos_embedding;
 
-        Ok(_embeddings)
+        Ok(embeddings)
     }
 }
 
@@ -525,7 +525,7 @@ impl MultiHeadAttention {
 
     /// Forward pass through multi-head attention
     fn forward(&self, input: &Array2<f32>) -> Result<Array2<f32>> {
-        let (seq_len_hidden_dim) = input.dim();
+        let (seq_len, hidden_dim) = input.dim();
 
         // Compute Q, K, V projections
         let q = input.dot(&self.q_proj);
@@ -533,9 +533,9 @@ impl MultiHeadAttention {
         let v = input.dot(&self.v_proj);
 
         // Reshape for multi-head attention
-        let q_heads = self.reshape_for_heads(&q, seqlen)?;
-        let k_heads = self.reshape_for_heads(&k, seqlen)?;
-        let v_heads = self.reshape_for_heads(&v, seqlen)?;
+        let q_heads = self.reshape_for_heads(&q, seq_len)?;
+        let k_heads = self.reshape_for_heads(&k, seq_len)?;
+        let v_heads = self.reshape_for_heads(&v, seq_len)?;
 
         // Compute scaled dot-product attention for each head
         let mut attention_outputs = Vec::new();
@@ -549,7 +549,7 @@ impl MultiHeadAttention {
         }
 
         // Concatenate heads
-        let concatenated = self.concatenate_heads(&attention_outputs, seqlen)?;
+        let concatenated = self.concatenate_heads(&attention_outputs, seq_len)?;
 
         // Apply output projection
         let output = concatenated.dot(&self.out_proj);
@@ -837,7 +837,7 @@ impl SwinStage {
         window_size: usize,
         use_patch_merging: bool,
     ) -> Result<Self> {
-        let mut _layers = Vec::new();
+        let mut layers = Vec::new();
 
         for layer_idx in 0..num_layers {
             let shift_size = if layer_idx % 2 == 0 {
@@ -945,7 +945,7 @@ impl WindowAttention {
 
 impl PatchMerging {
     /// Create new patch merging layer
-    fn new(_hiddendim: usize) -> Result<Self> {
+    fn new(hiddendim: usize) -> Result<Self> {
         let reduction = Array2::fromshape_fn((4 * hiddendim, 2 * hiddendim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });

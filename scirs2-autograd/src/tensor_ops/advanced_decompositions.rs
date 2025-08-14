@@ -32,7 +32,7 @@ impl<F: Float> Op<F> for SVDJacobiExtractOp {
         }
     }
 
-    fn compute(selfctx: &mut ComputeContext<F>) -> Result<(), OpError> {
+    fn compute(&self, ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         // This is a placeholder - the actual extraction happens in the parent op
         Err(OpError::Other(
             "SVD extraction should be handled by parent op".into(),
@@ -103,7 +103,7 @@ impl<F: Float> Op<F> for RandomizedSVDExtractOp {
         }
     }
 
-    fn compute(selfctx: &mut ComputeContext<F>) -> Result<(), OpError> {
+    fn compute(&self, ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         Err(OpError::Other(
             "Randomized SVD extraction should be handled by parent op".into(),
         ))
@@ -165,7 +165,7 @@ impl<F: Float> Op<F> for GeneralizedEigenExtractOp {
         }
     }
 
-    fn compute(selfctx: &mut ComputeContext<F>) -> Result<(), OpError> {
+    fn compute(&self, ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         Err(OpError::Other(
             "Generalized eigen extraction should be handled by parent op".into(),
         ))
@@ -238,7 +238,7 @@ impl<F: Float> Op<F> for QRPivotExtractOp {
         }
     }
 
-    fn compute(selfctx: &mut ComputeContext<F>) -> Result<(), OpError> {
+    fn compute(&self, ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         Err(OpError::Other(
             "QR pivot extraction should be handled by parent op".into(),
         ))
@@ -308,7 +308,7 @@ fn compute_svd_jacobi<F: Float + ndarray::ScalarOperand + FromPrimitive>(
         // Left Householder for column i
         if i < m - 1 {
             let col = b.slice(s![i.., i]).to_owned();
-            let (h_) = householder_vector(&col.view())?;
+            let (h, _beta) = householder_vector(&col.view())?;
             let h_mat = householder_matrix(&h, m - i);
 
             // Apply to B and U
@@ -324,7 +324,7 @@ fn compute_svd_jacobi<F: Float + ndarray::ScalarOperand + FromPrimitive>(
         // Right Householder for row i
         if i < n - 2 {
             let row = b.slice(s![i, i + 1..]).to_owned();
-            let (h_) = householder_vector(&row.view())?;
+            let (h, _beta) = householder_vector(&row.view())?;
             let h_mat = householder_matrix(&h, n - i - 1);
 
             // Apply to B and V
@@ -534,7 +534,7 @@ fn compute_qr_pivot<F: Float + ndarray::ScalarOperand>(
 
     for i in 0..k {
         // Find pivot column
-        let (pivot_idx_) = col_norms
+        let (pivot_idx, _) = col_norms
             .slice(s![i..])
             .indexed_iter()
             .max_by(|(_, &a), (_, &b)| a.abs().partial_cmp(&b.abs()).unwrap())
@@ -711,7 +711,7 @@ fn orthogonalize_qr<F: Float + ndarray::ScalarOperand>(
 
 #[allow(dead_code)]
 fn compute_matrix_inverse<F: Float>(
-    _matrix: &ndarray::ArrayView2<F>,
+    matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array2<F>, OpError> {
     let n = matrix.shape()[0];
     let mut a = matrix.to_owned();

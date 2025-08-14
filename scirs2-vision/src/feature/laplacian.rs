@@ -105,7 +105,7 @@ pub fn laplacian_of_gaussian(img: &DynamicImage, sigma: f32, threshold: f32) -> 
     use crate::preprocessing::gaussian_blur;
 
     // First apply Gaussian blur
-    let blurred = gaussian_blur(_img, sigma)?;
+    let blurred = gaussian_blur(img, sigma)?;
 
     // Then apply Laplacian
     laplacian_edges(&blurred, threshold, true)
@@ -134,7 +134,7 @@ pub fn laplacian_zero_crossing(_img: &DynamicImage, usediagonal: bool) -> Result
     // Apply Laplacian operator
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
-            laplacian[[y, x]] = if use_diagonal {
+            laplacian[[y, x]] = if usediagonal {
                 // 8-connected Laplacian
                 -array[[y - 1, x - 1]]
                     + -array[[y - 1, x]]
@@ -169,7 +169,7 @@ pub fn laplacian_zero_crossing(_img: &DynamicImage, usediagonal: bool) -> Result
                 || (center * laplacian[[y, x - 1]] < 0.0)
                 || (center * laplacian[[y, x + 1]] < 0.0);
 
-            if use_diagonal {
+            if usediagonal {
                 // Also check _diagonal directions
                 let has_diagonal_crossing = (center * laplacian[[y - 1, x - 1]] < 0.0)
                     || (center * laplacian[[y - 1, x + 1]] < 0.0)

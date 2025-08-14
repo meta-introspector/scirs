@@ -16,7 +16,7 @@
 //! ## Basic Model Selection
 //!
 //! ```
-//! use scirs2__metrics::selection::{ModelSelector, SelectionCriteria};
+//! use scirs2_metrics::selection::{ModelSelector, SelectionCriteria};
 //! use std::collections::HashMap;
 //!
 //! // Define models and their metric scores
@@ -38,7 +38,7 @@
 //! ## Pareto Optimal Selection
 //!
 //! ```
-//! use scirs2__metrics::selection::ModelSelector;
+//! use scirs2_metrics::selection::ModelSelector;
 //! use std::collections::HashMap;
 //!
 //! let mut modelscores = HashMap::new();

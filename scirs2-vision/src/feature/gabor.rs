@@ -207,7 +207,7 @@ pub fn gabor_filter_bank(img: &DynamicImage, bank: &GaborBank) -> Result<Array3<
                 sigma: wavelength / 2.0, // Adjust sigma based on wavelength
             };
 
-            let filtered = gabor_filter(_img, &params)?;
+            let filtered = gabor_filter(img, &params)?;
 
             // Copy to responses array
             for y in 0..height as usize {
@@ -286,12 +286,12 @@ pub fn extract_gabor_features(
 #[allow(dead_code)]
 pub fn gabor_energy(img: &DynamicImage, params: &GaborParams) -> Result<GrayImage> {
     // Real part (cosine)
-    let real_response = gabor_filter(_img, params)?;
+    let real_response = gabor_filter(img, params)?;
 
     // Imaginary part (sine)
     let mut sine_params = *params;
     sine_params.phase = params.phase + PI / 2.0;
-    let imag_response = gabor_filter(_img, &sine_params)?;
+    let imag_response = gabor_filter(img, &sine_params)?;
 
     let (width, height) = real_response.dimensions();
     let mut energy = ImageBuffer::new(width, height);

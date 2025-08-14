@@ -212,7 +212,7 @@ pub mod hessian_approximation {
     {
         // Gauss-Newton approximation: H ≈ J^T * J
         let j_transpose = jacobian.t();
-        let hessian_approx = j_transpose.dot(_jacobian);
+        let hessian_approx = j_transpose.dot(jacobian);
         Ok(hessian_approx)
     }
 }
@@ -226,7 +226,7 @@ pub struct Newton<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug + Send + Sync> Newton<A> {
     /// Create a new Newton optimizer
-    pub fn new(learningrate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
             learning_rate,
             regularization: A::from(1e-6).unwrap(),
@@ -308,7 +308,7 @@ pub struct LBFGS<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> LBFGS<A, D> {
     /// Create a new L-BFGS optimizer
-    pub fn new(learningrate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
             learning_rate,
             max_history: 10,
@@ -320,7 +320,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> LBFGS<A, D> {
     }
 
     /// Set maximum history size
-    pub fn with_max_history(mut self, maxhistory: usize) -> Self {
+    pub fn with_max_history(mut self, max_history: usize) -> Self {
         self.max_history = max_history;
         self
     }

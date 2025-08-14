@@ -97,7 +97,7 @@ fn find_matches_recursive<N1, N2, E, Ix>(
             }
 
             // Also try non-neighbors
-            for next_target in &target._nodes().into_iter().cloned().collect::<Vec<_>>() {
+            for next_target in &target.nodes().into_iter().cloned().collect::<Vec<_>>() {
                 if !current_mapping.values().any(|n| n == next_target) {
                     find_matches_recursive(
                         pattern_nodes,
@@ -492,7 +492,8 @@ where
 
     /// Update terminal sets after removing a mapping
     fn update_terminal_sets_after_removal<E, Ix>(
-        &mut self_n1: &N1,
+        &mut self,
+        _n1: &N1,
         _n2: &N2,
         graph1: &Graph<N1, E, Ix>,
         graph2: &Graph<N2, E, Ix>,

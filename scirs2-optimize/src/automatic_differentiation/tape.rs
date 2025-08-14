@@ -21,7 +21,7 @@ pub struct Variable {
 impl Variable {
     /// Create a new variable
     pub fn new(id: usize, value: f64) -> Self {
-        Self { id: id, value }
+        Self { id, value }
     }
 }
 
@@ -123,7 +123,7 @@ impl ComputationTape {
         self.var_positions.insert(var.id, self.nodes.len());
         self.max_var_id = self.max_var_id.max(var.id);
 
-        self.nodes.push(TapeNode::Input { varid: var.id });
+        self.nodes.push(TapeNode::Input { var_id: var.id });
         self.inputs.push(var);
     }
 
@@ -207,10 +207,10 @@ impl ComputationTape {
     }
 
     /// Forward pass to compute all variable values
-    pub fn forward(&self, inputvalues: &[f64]) -> Result<Vec<f64>, OptimizeError> {
-        let mut _values = vec![0.0; self.max_var_id + 1];
+    pub fn forward(&self, input_values: &[f64]) -> Result<Vec<f64>, OptimizeError> {
+        let mut values = vec![0.0; self.max_var_id + 1];
 
-        // Set input _values
+        // Set input values
         for (i, var) in self.inputs.iter().enumerate() {
             if i < input_values.len() {
                 values[var.id] = input_values[i];
@@ -275,7 +275,7 @@ impl ComputationTape {
             }
         }
 
-        Ok(_values)
+        Ok(values)
     }
 
     /// Add a constant to the tape
@@ -297,7 +297,7 @@ impl ComputationTape {
     ) -> usize {
         let result_id = self.max_var_id + 1;
 
-        // Compute partial derivative based on operation _type and current input value
+        // Compute partial derivative based on operation type and current input value
         let input_val = input_values[input];
         let partial = match op_type {
             UnaryOpType::Neg => -1.0,
@@ -331,7 +331,7 @@ impl ComputationTape {
     ) -> usize {
         let result_id = self.max_var_id + 1;
 
-        // Compute partial derivatives based on operation _type and current input _values
+        // Compute partial derivatives based on operation type and current input values
         let left_val = input_values[left];
         let right_val = input_values[right];
 
@@ -368,10 +368,10 @@ impl ComputationTape {
         input_values: &[f64],
         seed_derivatives: &[f64],
     ) -> Result<(Vec<f64>, Vec<f64>), OptimizeError> {
-        let mut _values = vec![0.0; self.max_var_id + 1];
-        let mut _derivatives = vec![0.0; self.max_var_id + 1];
+        let mut values = vec![0.0; self.max_var_id + 1];
+        let mut derivatives = vec![0.0; self.max_var_id + 1];
 
-        // Set input _values and seed _derivatives
+        // Set input values and seed derivatives
         for (i, var) in self.inputs.iter().enumerate() {
             if i < input_values.len() {
                 values[var.id] = input_values[i];
@@ -486,7 +486,7 @@ impl ComputationTape {
             }
         }
 
-        Ok((_values, derivatives))
+        Ok((values, derivatives))
     }
 
     /// Optimize the tape by removing unnecessary operations
@@ -629,7 +629,7 @@ impl TapeBuilder {
     }
 
     /// Add a unary operation
-    pub fn unary_op(&mut self, optype: UnaryOpType, input: usize, partial: f64) -> usize {
+    pub fn unary_op(&mut self, op_type: UnaryOpType, input: usize, partial: f64) -> usize {
         let result_id = self.next_var_id;
         self.next_var_id += 1;
 
@@ -693,10 +693,10 @@ pub struct StreamingTape {
 
 impl StreamingTape {
     /// Create a new streaming tape
-    pub fn new(_batchsize: usize) -> Self {
+    pub fn new(batch_size: usize) -> Self {
         Self {
-            current_batch: Vec::with_capacity(_batch_size),
-            batch_size: batch_size,
+            current_batch: Vec::with_capacity(batch_size),
+            batch_size,
             batch_processor: None,
         }
     }
@@ -819,10 +819,10 @@ mod tests {
 
         // Add nodes - should trigger batch processing
         streaming_tape
-            .add_node(TapeNode::Input { varid: 0 })
+            .add_node(TapeNode::Input { var_id: 0 })
             .unwrap();
         streaming_tape
-            .add_node(TapeNode::Input { varid: 1 })
+            .add_node(TapeNode::Input { var_id: 1 })
             .unwrap();
 
         // This should have triggered one batch
@@ -844,8 +844,8 @@ mod tests {
 
         let x = builder.input(1.0);
         let y = builder.input(2.0);
-        builder.binary_op(x, y, 1.0, 1.0);
-        builder.unary_op(x, 2.0);
+        builder.binary_op(BinaryOpType::Add, x, y, 1.0, 1.0);
+        builder.unary_op(UnaryOpType::Neg, x, 2.0);
 
         let tape = builder.build();
         let stats = tape.get_stats();

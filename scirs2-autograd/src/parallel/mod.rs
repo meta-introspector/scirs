@@ -93,12 +93,12 @@ impl ThreadPool {
 
         // Initialize stats with proper worker_stats vector
         let mut stats_data = ThreadPoolStats::new();
-        stats_data.worker_stats = (0.._config.num_threads).map(WorkerStats::new).collect();
+        stats_data.worker_stats = (0..config.num_threads).map(WorkerStats::new).collect();
         let stats = Arc::new(Mutex::new(stats_data));
 
-        let mut workers = Vec::with_capacity(_config.num_threads);
+        let mut workers = Vec::with_capacity(config.num_threads);
 
-        for id in 0.._config.num_threads {
+        for id in 0..config.num_threads {
             workers.push(Worker::new(
                 id,
                 Arc::clone(&receiver),
@@ -186,15 +186,15 @@ impl ThreadPool {
 
     /// Resize the thread pool
     pub fn resize(&mut self, newsize: usize) -> Result<(), ThreadPoolError> {
-        if new_size == 0 {
+        if newsize == 0 {
             return Err(ThreadPoolError::InvalidConfiguration(
-                "Thread pool _size cannot be zero".into(),
+                "Thread pool size cannot be zero".into(),
             ));
         }
 
-        // Implementation would recreate the thread pool with new _size
+        // Implementation would recreate the thread pool with new size
         // For now, just update the config
-        self.config.num_threads = new_size;
+        self.config.num_threads = newsize;
         Ok(())
     }
 
@@ -384,7 +384,7 @@ pub struct WorkerStats {
 impl WorkerStats {
     fn new(_workerid: usize) -> Self {
         Self {
-            worker_id,
+            worker_id: _workerid,
             tasks_completed: 0,
             total_time: Duration::ZERO,
             queue_size: 0,
@@ -412,7 +412,7 @@ impl ParallelScheduler {
     /// Create a scheduler with custom thread pool
     pub fn with_thread_pool(_threadpool: Arc<ThreadPool>) -> Self {
         Self {
-            thread_pool,
+            thread_pool: _threadpool,
             config: SchedulerConfig::default(),
         }
     }
@@ -423,7 +423,7 @@ impl ParallelScheduler {
         F: FnOnce() -> R + Send + 'static,
         R: Send + 'static,
     {
-        if self.should_parallelize(&operation) {
+        if ParallelScheduler::should_parallelize(&operation) {
             self.thread_pool.execute_and_wait(operation)
         } else {
             // Execute on current thread for small operations
@@ -448,7 +448,7 @@ impl ParallelScheduler {
     }
 
     /// Check if an operation should be parallelized
-    fn should_parallelize<F, R>(selfoperation: &F) -> bool
+    fn should_parallelize<F, R>(operation: &F) -> bool
     where
         F: FnOnce() -> R + Send + 'static,
         R: Send + 'static,
@@ -541,7 +541,7 @@ pub fn init_thread_pool() -> Result<(), ThreadPoolError> {
 #[allow(dead_code)]
 pub fn init_thread_pool_with_config(config: ThreadPoolConfig) -> Result<(), ThreadPoolError> {
     let mut pool = GLOBAL_THREAD_POOL.lock().unwrap();
-    *pool = Some(ThreadPool::with_config(_config));
+    *pool = Some(ThreadPool::with_config(config));
     Ok(())
 }
 

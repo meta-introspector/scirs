@@ -45,7 +45,7 @@ pub fn get_window(windowtype: &str, length: usize, periodic: bool) -> SignalResu
     }
 
     // Dispatch to specific window function
-    match window_type.to_lowercase().as_str() {
+    match windowtype.to_lowercase().as_str() {
         "hamming" => hamming(length, !periodic),
         "hanning" | "hann" => hann(length, !periodic),
         "blackman" => blackman(length, !periodic),
@@ -79,7 +79,7 @@ pub fn get_window(windowtype: &str, length: usize, periodic: bool) -> SignalResu
         }
         _ => Err(SignalError::ValueError(format!(
             "Unknown window type: {}",
-            window_type
+            windowtype
         ))),
     }
 }
@@ -824,7 +824,7 @@ pub fn dpss_windows(
     let mut sorted_indices: Vec<usize> = (0..eigenvals.len()).collect();
     sorted_indices.sort_by(|&a, &b| eigenvals[b].partial_cmp(&eigenvals[a]).unwrap());
 
-    let mut _windows = Vec::with_capacity(num_win);
+    let mut windows = Vec::with_capacity(num_win);
     for &idx in sorted_indices.iter().take(num_win) {
         let mut window = eigenvecs[idx].clone();
 
@@ -844,7 +844,7 @@ pub fn dpss_windows(
         windows.push(_truncate(window, needs_trunc));
     }
 
-    Ok(_windows)
+    Ok(windows)
 }
 
 /// Single DPSS window (first window from the set).
@@ -901,7 +901,7 @@ fn solve_tridiagonal_eigenproblem(
 
     // Simple power iteration for finding dominant eigenvalues
     // This is a simplified approach for demonstration
-    let mut _eigenvals: Vec<f64> = Vec::new();
+    let mut eigenvals: Vec<f64> = Vec::new();
     let mut eigenvecs: Vec<Vec<f64>> = Vec::new();
 
     // Start with the largest expected eigenvalue
@@ -990,7 +990,7 @@ fn solve_tridiagonal_eigenproblem(
         eigenvecs.push(v);
     }
 
-    Ok((_eigenvals, eigenvecs))
+    Ok((eigenvals, eigenvecs))
 }
 
 #[cfg(test)]
@@ -1206,8 +1206,8 @@ mod tests {
 /// ```
 #[allow(dead_code)]
 pub fn lanczos(length: usize, a: i32, sym: bool) -> SignalResult<Vec<f64>> {
-    if _len_guards(_length) {
-        return Ok(vec![1.0; _length]);
+    if _len_guards(length) {
+        return Ok(vec![1.0; length]);
     }
 
     if a <= 0 {
@@ -1216,7 +1216,7 @@ pub fn lanczos(length: usize, a: i32, sym: bool) -> SignalResult<Vec<f64>> {
         ));
     }
 
-    let (m, needs_trunc) = _extend(_length, sym);
+    let (m, needs_trunc) = _extend(length, sym);
     let mut window = Vec::with_capacity(m);
 
     for i in 0..m {
@@ -1375,7 +1375,7 @@ pub mod analysis {
     ///
     /// * Window analysis results
     pub fn analyze_window(
-        _window: &[f64],
+        window: &[f64],
         fft_size: Option<usize>,
     ) -> SignalResult<WindowAnalysis> {
         if window.is_empty() {
@@ -1964,7 +1964,7 @@ pub mod analysis {
             .take(_freq_response.len() / 2)
         {
             if val < threshold {
-                return i as f64 * freq_bin_width;
+                return i as f64 * freq_binwidth;
             }
         }
         0.5 // Nyquist frequency as fallback
@@ -1972,16 +1972,16 @@ pub mod analysis {
 
     fn interpolate_control_points(controlpoints: &[(f64, f64)], x: f64) -> f64 {
         // Simple linear interpolation between control _points
-        if x <= control_points[0].0 {
-            return control_points[0].1;
+        if x <= controlpoints[0].0 {
+            return controlpoints[0].1;
         }
 
-        for i in 1..control_points.len() {
-            if x <= control_points[i].0 {
-                let x1 = control_points[i - 1].0;
-                let y1 = control_points[i - 1].1;
-                let x2 = control_points[i].0;
-                let y2 = control_points[i].1;
+        for i in 1..controlpoints.len() {
+            if x <= controlpoints[i].0 {
+                let x1 = controlpoints[i - 1].0;
+                let y1 = controlpoints[i - 1].1;
+                let x2 = controlpoints[i].0;
+                let y2 = controlpoints[i].1;
 
                 // Linear interpolation
                 let t = (x - x1) / (x2 - x1);
@@ -1989,6 +1989,6 @@ pub mod analysis {
             }
         }
 
-        control_points.last().unwrap().1
+        controlpoints.last().unwrap().1
     }
 }

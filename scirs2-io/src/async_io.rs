@@ -445,7 +445,7 @@ impl AsyncStreamingStats {
     }
 
     /// Update statistics with chunk information
-    pub fn update_chunk(&mut self, bytes: u64, processing_timems: f64) {
+    pub fn update_chunk(&mut self, bytes: u64, processing_time_ms: f64) {
         self.bytes_processed += bytes;
         self.chunks_processed += 1;
         self.processing_time_ms += processing_time_ms;

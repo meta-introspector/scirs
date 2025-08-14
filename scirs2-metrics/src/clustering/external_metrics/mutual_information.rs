@@ -33,7 +33,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::clustering::normalized_mutual_info_score;
+/// use scirs2_metrics::clustering::normalized_mutual_info_score;
 ///
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![0, 0, 0, 1, 1, 1];
@@ -203,7 +203,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::clustering::adjusted_mutual_info_score;
+/// use scirs2_metrics::clustering::adjusted_mutual_info_score;
 ///
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![0, 0, 0, 1, 1, 1];

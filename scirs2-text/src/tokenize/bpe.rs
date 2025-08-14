@@ -89,7 +89,7 @@ impl BpeVocabulary {
 
     /// Load a vocabulary from a file
     pub fn load(path: impl AsRef<Path>) -> Result<Self> {
-        let file = File::open(_path).map_err(|e| TextError::IoError(e.to_string()))?;
+        let file = File::open(path).map_err(|e| TextError::IoError(e.to_string()))?;
         let mut reader = BufReader::new(file);
         let mut content = String::new();
         reader
@@ -343,7 +343,7 @@ impl BpeTokenizer {
             let best_pair = pair_counts
                 .iter()
                 .max_by_key(|&(_, count)| count)
-                .map(|(pair_)| pair.clone());
+                .map(|(pair_, _)| pair_.clone());
 
             if let Some(pair) = best_pair {
                 let merged = pair_to_merged[&pair].clone();

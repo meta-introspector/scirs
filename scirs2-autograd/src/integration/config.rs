@@ -103,12 +103,12 @@ impl ConfigManager {
     }
 
     /// Get module-specific configuration
-    pub fn module_config(&self, modulename: &str) -> Option<&ModuleConfig> {
+    pub fn module_config(&self, module_name: &str) -> Option<&ModuleConfig> {
         self.config.modules.get(module_name)
     }
 
     /// Set module-specific configuration
-    pub fn set_module_config(&mut self, modulename: String, config: ModuleConfig) {
+    pub fn set_module_config(&mut self, module_name: String, config: ModuleConfig) {
         self.config.modules.insert(module_name, config);
     }
 
@@ -176,15 +176,15 @@ impl ConfigManager {
     }
 
     // Helper methods
-    fn merge_file_config(&mut self, fileconfig: FileConfig) -> Result<(), IntegrationError> {
+    fn merge_file_config(&mut self, file_config: FileConfig) -> Result<(), IntegrationError> {
         // Merge integration settings
         if let Some(integration) = file_config.integration {
-            self._config.integration = self.merge_integration_config(integration)?;
+            self.config.integration = self.merge_integration_config(integration)?;
         }
 
         // Merge module configurations
         for (name, module_config) in file_config.modules.unwrap_or_default() {
-            self._config.modules.insert(name, module_config);
+            self.config.modules.insert(name, module_config);
         }
 
         Ok(())
@@ -202,7 +202,7 @@ impl ConfigManager {
                             "Invalid boolean value for {key}: {value}"
                         ))
                     })?;
-                    self._config.integration.auto_convert_tensors = val;
+                    self.config.integration.auto_convert_tensors = val;
                 }
                 "strict_compatibility" => {
                     let val = value.parse::<bool>().map_err(|_| {
@@ -210,10 +210,10 @@ impl ConfigManager {
                             "Invalid boolean value for {key}: {value}"
                         ))
                     })?;
-                    self._config.integration.strict_compatibility = val;
+                    self.config.integration.strict_compatibility = val;
                 }
                 "default_precision" => {
-                    self._config.integration.default_precision = match value.as_str() {
+                    self.config.integration.default_precision = match value.as_str() {
                         "float32" => PrecisionLevel::Float32,
                         "float64" => PrecisionLevel::Float64,
                         "mixed" => PrecisionLevel::Mixed,
@@ -225,7 +225,7 @@ impl ConfigManager {
                     };
                 }
                 "memory_strategy" => {
-                    self._config.integration.memory_strategy = match value.as_str() {
+                    self.config.integration.memory_strategy = match value.as_str() {
                         "shared" => MemoryStrategy::Shared,
                         "copy" => MemoryStrategy::Copy,
                         "memory_mapped" => MemoryStrategy::MemoryMapped,
@@ -250,7 +250,7 @@ impl ConfigManager {
         &self,
         file_integration: FileIntegrationConfig,
     ) -> Result<IntegrationConfig, IntegrationError> {
-        let mut config = self.config._integration.clone();
+        let mut config = self.config.integration.clone();
 
         if let Some(val) = file_integration.auto_convert_tensors {
             config.auto_convert_tensors = val;
@@ -557,31 +557,31 @@ pub enum ConfigValue {
 
 impl From<bool> for ConfigValue {
     fn from(value: bool) -> Self {
-        ConfigValue::Bool(_value)
+        ConfigValue::Bool(value)
     }
 }
 
 impl From<i64> for ConfigValue {
     fn from(value: i64) -> Self {
-        ConfigValue::Int(_value)
+        ConfigValue::Int(value)
     }
 }
 
 impl From<f64> for ConfigValue {
     fn from(value: f64) -> Self {
-        ConfigValue::Float(_value)
+        ConfigValue::Float(value)
     }
 }
 
 impl From<String> for ConfigValue {
     fn from(value: String) -> Self {
-        ConfigValue::String(_value)
+        ConfigValue::String(value)
     }
 }
 
 impl From<&str> for ConfigValue {
     fn from(value: &str) -> Self {
-        ConfigValue::String(_value.to_string())
+        ConfigValue::String(value.to_string())
     }
 }
 
@@ -657,7 +657,7 @@ pub fn get_config_value(key: &str) -> Result<Option<ConfigValue>, IntegrationErr
     let manager_guard = manager.lock().map_err(|_| {
         IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
     })?;
-    Ok(manager_guard.get(_key).cloned())
+    Ok(manager_guard.get(key).cloned())
 }
 
 /// Set global configuration value
@@ -678,7 +678,7 @@ pub fn get_module_config(modulename: &str) -> Result<Option<ModuleConfig>, Integ
     let manager_guard = manager.lock().map_err(|_| {
         IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
     })?;
-    Ok(manager_guard.module_config(module_name).cloned())
+    Ok(manager_guard.module_config(modulename).cloned())
 }
 
 /// Update global integration configuration
@@ -688,7 +688,7 @@ pub fn update_integration_config(config: IntegrationConfig) -> Result<(), Integr
     let mut manager_guard = manager.lock().map_err(|_| {
         IntegrationError::ConfigMismatch("Failed to acquire _config lock".to_string())
     })?;
-    manager_guard.update_integration_config(_config);
+    manager_guard.update_integration_config(config);
     Ok(())
 }
 

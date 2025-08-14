@@ -297,7 +297,7 @@ fn pyramidal_lucas_kanade(
 /// Build image pyramid
 #[allow(dead_code)]
 fn build_pyramid(img: &GrayImage, levels: usize) -> Vec<GrayImage> {
-    let mut pyramid = vec![_img.clone()];
+    let mut pyramid = vec![img.clone()];
 
     for _ in 1..levels {
         let prev = &pyramid[pyramid.len() - 1];
@@ -387,15 +387,15 @@ fn compute_gradients(img: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
 /// * RGB image with flow visualization
 #[allow(dead_code)]
 pub fn visualize_flow(_flow: &Array2<FlowVector>, maxflow: Option<f32>) -> RgbImage {
-    let (height, width) = flow.dim();
+    let (height, width) = _flow.dim();
     let mut result = RgbImage::new(width as u32, height as u32);
 
     // Find maximum _flow if not provided
-    let max_magnitude = if let Some(max) = max_flow {
+    let max_magnitude = if let Some(max) = maxflow {
         max
     } else {
         let mut max = 0.0f32;
-        for flow_vec in flow.iter() {
+        for flow_vec in _flow.iter() {
             let magnitude = (flow_vec.u.powi(2) + flow_vec.v.powi(2)).sqrt();
             if magnitude > max {
                 max = magnitude;

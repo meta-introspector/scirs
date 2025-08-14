@@ -68,7 +68,7 @@ impl<A: Float + Debug> ReduceOnPlateau<A> {
     /// * `factor` - Factor by which the learning rate will be reduced (e.g., 0.1 means 10x reduction)
     /// * `patience` - Number of epochs with no improvement after which learning rate will be reduced
     /// * `min_lr` - Minimum learning rate
-    pub fn new(initial_lr: A, factor: A, patience: usize, minlr: A) -> Self {
+    pub fn new(initial_lr: A, factor: A, patience: usize, min_lr: A) -> Self {
         Self {
             current_lr: initial_lr,
             factor,

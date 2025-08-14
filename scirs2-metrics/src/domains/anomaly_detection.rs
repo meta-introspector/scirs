@@ -838,11 +838,11 @@ impl TimeSeriesAnomalyMetrics {
                     if detection_position <= range_middle {
                         // Early detection bonus
                         score +=
-                            self.nabweights.true_positive + self.nabweights.early_detection_bonus;
+                            self.nab_weights.true_positive + self.nab_weights.early_detection_bonus;
                     } else {
                         // Late detection penalty
                         score +=
-                            self.nabweights.true_positive + self.nabweights.late_detection_penalty;
+                            self.nab_weights.true_positive + self.nab_weights.late_detection_penalty;
                     }
                     range_detected = true;
                     // Additional detections in same range don't add score
@@ -851,14 +851,14 @@ impl TimeSeriesAnomalyMetrics {
 
             if !range_detected {
                 // Missed anomaly
-                score += self.nabweights.false_negative;
+                score += self.nab_weights.false_negative;
             }
         }
 
         // Count false positives (detections outside _true anomaly ranges)
         for (i, &pred_val) in ypred.iter().enumerate() {
             if pred_val == 1 && y_true[i] == 0 {
-                score += self.nabweights.false_positive;
+                score += self.nab_weights.false_positive;
             }
         }
 

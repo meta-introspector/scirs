@@ -4,6 +4,7 @@
 //! across different algorithm categories.
 
 use ndarray::{Array1, ArrayView1};
+use rand::Rng;
 use scirs2_optimize::{
     stochastic::{
         minimize_adam, minimize_sgd, AdamOptions, DataProvider, InMemoryDataProvider, SGDOptions,
@@ -48,7 +49,7 @@ fn test_stochastic_optimization_integration() {
     assert!(result.fun < 1e-2);
     println!(
         "SGD converged to f = {:.2e} in {} iterations",
-        result.fun, result.iterations
+        result.fun, result.nit
     );
 }
 
@@ -75,7 +76,7 @@ fn test_adam_optimization_integration() {
     assert!(result.fun < 1e-3);
     println!(
         "Adam converged to f = {:.2e} in {} iterations",
-        result.fun, result.iterations
+        result.fun, result.nit
     );
 }
 
@@ -97,7 +98,7 @@ fn test_bfgs_optimization_integration() {
     assert!(result.fun < 1e-6);
     println!(
         "BFGS converged to f = {:.2e} in {} iterations",
-        result.fun, result.iterations
+        result.fun, result.nit
     );
 }
 
@@ -426,7 +427,7 @@ fn test_machine_learning_workflow() {
         fn compute_value(&mut self, params: &ArrayView1<f64>, batchindices: &[f64]) -> f64 {
             let mut loss = 0.0;
 
-            for &idx in batch_indices {
+            for &idx in batchindices {
                 let i = idx as usize % self.features.len();
                 let x = &self.features[i];
                 let y = self.labels[i];
@@ -438,7 +439,7 @@ fn test_machine_learning_workflow() {
                 loss += -y * pred.ln() - (1.0 - y) * (1.0 - pred).ln();
             }
 
-            loss / batch_indices.len() as f64
+            loss / batchindices.len() as f64
         }
     }
 
@@ -476,7 +477,7 @@ fn test_large_scale_optimization() {
 
     impl LargeQuadratic {
         fn new(dim: usize) -> Self {
-            Self { dimension: _dim }
+            Self { dimension: dim }
         }
     }
 

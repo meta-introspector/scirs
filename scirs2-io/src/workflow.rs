@@ -93,7 +93,7 @@ pub enum TaskType {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResourceRequirements {
     pub cpu_cores: Option<usize>,
-    pub memory_gb: Option<f64>,
+    pub memorygb: Option<f64>,
     pub gpu: Option<GpuRequirement>,
     pub disk_space_gb: Option<f64>,
 }
@@ -101,7 +101,7 @@ pub struct ResourceRequirements {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GpuRequirement {
     pub count: usize,
-    pub memory_gb: Option<f64>,
+    pub memorygb: Option<f64>,
     pub compute_capability: Option<String>,
 }
 
@@ -312,8 +312,8 @@ impl WorkflowBuilder {
 /// Workflow execution state
 #[derive(Debug, Clone)]
 pub struct WorkflowState {
-    pub workflow_id: String,
-    pub execution_id: String,
+    pub workflowid: String,
+    pub executionid: String,
     pub status: WorkflowStatus,
     pub task_states: HashMap<String, TaskState>,
     pub start_time: Option<DateTime<Utc>>,
@@ -359,7 +359,7 @@ pub struct WorkflowExecutor {
 
 #[derive(Debug, Clone)]
 pub struct ExecutorConfig {
-    pub max_concurrent_workflows: usize,
+    pub max_concurrentworkflows: usize,
     pub task_timeout: Duration,
     pub checkpoint_interval: Duration,
 }
@@ -367,7 +367,7 @@ pub struct ExecutorConfig {
 impl Default for ExecutorConfig {
     fn default() -> Self {
         Self {
-            max_concurrent_workflows: 10,
+            max_concurrentworkflows: 10,
             task_timeout: Duration::hours(1),
             checkpoint_interval: Duration::minutes(5),
         }
@@ -385,11 +385,11 @@ impl WorkflowExecutor {
 
     /// Execute a workflow
     pub fn execute(&self, workflow: &Workflow) -> Result<String> {
-        let execution_id = format!("{}-{}", workflow.id, Utc::now().timestamp());
+        let executionid = format!("{}-{}", workflow.id, Utc::now().timestamp());
 
         let mut state = WorkflowState {
-            workflow_id: workflow.id.clone(),
-            execution_id: execution_id.clone(),
+            workflowid: workflow.id.clone(),
+            executionid: executionid.clone(),
             status: WorkflowStatus::Pending,
             task_states: HashMap::new(),
             start_time: None,
@@ -416,32 +416,32 @@ impl WorkflowExecutor {
         self.state
             .lock()
             .unwrap()
-            .insert(execution_id.clone(), state);
+            .insert(executionid.clone(), state);
 
         // Start actual execution
-        self.execute_workflow_internal(workflow.clone(), execution_id.clone())?;
+        self.executeworkflow_internal(workflow.clone(), executionid.clone())?;
 
-        Ok(execution_id)
+        Ok(executionid)
     }
 
     /// Internal workflow execution logic
-    fn execute_workflow_internal(&self, workflow: Workflow, executionid: String) -> Result<()> {
+    fn executeworkflow_internal(&self, workflow: Workflow, executionid: String) -> Result<()> {
         // Update workflow status to running
         {
             let mut states = self.state.lock().unwrap();
-            if let Some(state) = states.get_mut(&execution_id) {
+            if let Some(state) = states.get_mut(&executionid) {
                 state.status = WorkflowStatus::Running;
                 state.start_time = Some(Utc::now());
             }
         }
 
         // Execute tasks in dependency order
-        let execution_result = self.execute_tasks_in_order(&workflow, &execution_id);
+        let execution_result = self.execute_tasks_in_order(&workflow, &executionid);
 
         // Update final status
         {
             let mut states = self.state.lock().unwrap();
-            if let Some(state) = states.get_mut(&execution_id) {
+            if let Some(state) = states.get_mut(&executionid) {
                 state.end_time = Some(Utc::now());
                 match execution_result {
                     Ok(_) => state.status = WorkflowStatus::Success,
@@ -496,7 +496,7 @@ impl WorkflowExecutor {
                         .find(|t| &t.id == task_id)
                         .ok_or_else(|| IoError::Other(format!("Task not found: {task_id}")))?;
 
-                    self.execute_single_task(task, execution_id)?;
+                    self.execute_single_task(task, executionid)?;
                     executed_tasks.insert(task_id.clone());
                     remaining_tasks.remove(task_id);
                 }
@@ -517,7 +517,7 @@ impl WorkflowExecutor {
             // Update task state to running
             {
                 let mut states = self.state.lock().unwrap();
-                if let Some(state) = states.get_mut(execution_id) {
+                if let Some(state) = states.get_mut(executionid) {
                     if let Some(task_state) = state.task_states.get_mut(&task.id) {
                         task_state.status = if attempt == 1 {
                             TaskStatus::Running
@@ -536,7 +536,7 @@ impl WorkflowExecutor {
             // Update task state based on result
             {
                 let mut states = self.state.lock().unwrap();
-                if let Some(state) = states.get_mut(execution_id) {
+                if let Some(state) = states.get_mut(executionid) {
                     if let Some(task_state) = state.task_states.get_mut(&task.id) {
                         task_state.end_time = Some(Utc::now());
 
@@ -614,7 +614,7 @@ impl WorkflowExecutor {
                 // Simulate sub-workflow execution
                 outputs.insert("status".to_string(), serde_json::json!("completed"));
                 outputs.insert(
-                    "sub_workflow_id".to_string(),
+                    "subworkflowid".to_string(),
                     serde_json::json!(format!("sub-{}", task.id)),
                 );
             }
@@ -646,19 +646,19 @@ impl WorkflowExecutor {
 
     /// Get workflow state
     pub fn get_state(&self, executionid: &str) -> Option<WorkflowState> {
-        self.state.lock().unwrap().get(execution_id).cloned()
+        self.state.lock().unwrap().get(executionid).cloned()
     }
 
     /// Cancel a workflow execution
     pub fn cancel(&self, executionid: &str) -> Result<()> {
         let mut states = self.state.lock().unwrap();
-        if let Some(state) = states.get_mut(execution_id) {
+        if let Some(state) = states.get_mut(executionid) {
             state.status = WorkflowStatus::Cancelled;
             state.end_time = Some(Utc::now());
             Ok(())
         } else {
             Err(IoError::Other(format!(
-                "Execution {execution_id} not found"
+                "Execution {executionid} not found"
             )))
         }
     }
@@ -670,22 +670,22 @@ pub mod tasks {
 
     /// Create a data ingestion task
     pub fn data_ingestion(id: impl Into<String>, name: impl Into<String>) -> TaskBuilder {
-        TaskBuilder::new(_id, name, TaskType::DataIngestion)
+        TaskBuilder::new(id, name, TaskType::DataIngestion)
     }
 
     /// Create a transformation task
     pub fn transform(id: impl Into<String>, name: impl Into<String>) -> TaskBuilder {
-        TaskBuilder::new(_id, name, TaskType::Transform)
+        TaskBuilder::new(id, name, TaskType::Transform)
     }
 
     /// Create a validation task
     pub fn validation(id: impl Into<String>, name: impl Into<String>) -> TaskBuilder {
-        TaskBuilder::new(_id, name, TaskType::Validation)
+        TaskBuilder::new(id, name, TaskType::Validation)
     }
 
     /// Create an export task
     pub fn export(id: impl Into<String>, name: impl Into<String>) -> TaskBuilder {
-        TaskBuilder::new(_id, name, TaskType::Export)
+        TaskBuilder::new(id, name, TaskType::Export)
     }
 
     /// Task builder
@@ -725,7 +725,7 @@ pub mod tasks {
 
         pub fn resources(mut self, cpu: usize, memorygb: f64) -> Self {
             self.task.resources.cpu_cores = Some(cpu);
-            self.task.resources.memory_gb = Some(memory_gb);
+            self.task.resources.memorygb = Some(memorygb);
             self
         }
 
@@ -740,7 +740,7 @@ pub mod templates {
     use super::*;
 
     /// Create an ETL (Extract-Transform-Load) workflow
-    pub fn etl_workflow(name: impl Into<String>) -> WorkflowBuilder {
+    pub fn etlworkflow(name: impl Into<String>) -> WorkflowBuilder {
         let _name = name.into();
         let id = format!("etl_{}", Utc::now().timestamp());
 
@@ -827,16 +827,16 @@ pub mod monitoring {
     /// Collect metrics for a workflow
     pub fn collect_metrics(states: &[WorkflowState]) -> WorkflowMetrics {
         let total = states.len();
-        let successful = _states
+        let successful = states
             .iter()
             .filter(|s| s.status == WorkflowStatus::Success)
             .count();
-        let failed = _states
+        let failed = states
             .iter()
             .filter(|s| s.status == WorkflowStatus::Failed)
             .count();
 
-        let durations: Vec<Duration> = _states
+        let durations: Vec<Duration> = states
             .iter()
             .filter_map(|s| match (s.start_time, s.end_time) {
                 (Some(start), Some(end)) => Some(end - start),
@@ -907,7 +907,7 @@ pub mod scheduling {
         FileArrival { path: String, pattern: String },
         DataAvailability { source: String, threshold: f64 },
         ExternalTrigger { webhook: String },
-        WorkflowCompletion { workflow_id: String },
+        WorkflowCompletion { workflowid: String },
     }
 
     impl WorkflowScheduler {
@@ -1019,10 +1019,10 @@ pub mod engines {
     /// Trait for external workflow engine adapters
     pub trait WorkflowEngineAdapter: Send + Sync {
         /// Convert internal workflow to engine-specific format
-        fn export_workflow(&self, workflow: &Workflow) -> Result<String>;
+        fn exportworkflow(&self, workflow: &Workflow) -> Result<String>;
 
         /// Import workflow from engine-specific format
-        fn import_workflow(&self, definition: &str) -> Result<Workflow>;
+        fn importworkflow(&self, definition: &str) -> Result<Workflow>;
 
         /// Submit workflow for execution
         fn submit(&self, workflow: &Workflow) -> Result<String>;
@@ -1055,7 +1055,7 @@ pub mod engines {
     }
 
     impl WorkflowEngineAdapter for AirflowAdapter {
-        fn export_workflow(&self, workflow: &Workflow) -> Result<String> {
+        fn exportworkflow(&self, workflow: &Workflow) -> Result<String> {
             // Convert to Airflow DAG Python code
             let mut dag_code = String::new();
             dag_code.push_str("from airflow import DAG\n");
@@ -1100,7 +1100,7 @@ pub mod engines {
             Ok(dag_code)
         }
 
-        fn import_workflow(&self, definition: &str) -> Result<Workflow> {
+        fn importworkflow(&self, definition: &str) -> Result<Workflow> {
             // Parse Airflow DAG _definition
             Err(IoError::UnsupportedFormat(
                 "Airflow import not yet implemented".to_string(),
@@ -1109,8 +1109,8 @@ pub mod engines {
 
         fn submit(&self, workflow: &Workflow) -> Result<String> {
             // Submit via Airflow REST API
-            let execution_id = format!("{}_run_{}", workflow.id, Utc::now().timestamp());
-            Ok(execution_id)
+            let executionid = format!("{}_run_{}", workflow.id, Utc::now().timestamp());
+            Ok(executionid)
         }
 
         fn get_status(&self, _executionid: &str) -> Result<WorkflowStatus> {
@@ -1140,7 +1140,7 @@ pub mod engines {
     }
 
     impl WorkflowEngineAdapter for PrefectAdapter {
-        fn export_workflow(&self, workflow: &Workflow) -> Result<String> {
+        fn exportworkflow(&self, workflow: &Workflow) -> Result<String> {
             // Convert to Prefect flow Python code
             let mut flow_code = String::new();
             flow_code.push_str("from prefect import flow, task\n");
@@ -1193,7 +1193,7 @@ pub mod engines {
             Ok(flow_code)
         }
 
-        fn import_workflow(&self, definition: &str) -> Result<Workflow> {
+        fn importworkflow(&self, definition: &str) -> Result<Workflow> {
             Err(IoError::UnsupportedFormat(
                 "Prefect import not yet implemented".to_string(),
             ))
@@ -1219,7 +1219,7 @@ pub mod engines {
     }
 
     impl WorkflowEngineAdapter for DagsterAdapter {
-        fn export_workflow(&self, workflow: &Workflow) -> Result<String> {
+        fn exportworkflow(&self, workflow: &Workflow) -> Result<String> {
             // Convert to Dagster job definition
             let mut job_code = String::new();
             job_code.push_str("from dagster import job, op, Config\n\n");
@@ -1252,7 +1252,7 @@ pub mod engines {
             Ok(job_code)
         }
 
-        fn import_workflow(&self, definition: &str) -> Result<Workflow> {
+        fn importworkflow(&self, definition: &str) -> Result<Workflow> {
             Err(IoError::UnsupportedFormat(
                 "Dagster import not yet implemented".to_string(),
             ))
@@ -1283,7 +1283,7 @@ pub mod dynamic {
 
     #[derive(Debug, Clone)]
     pub struct WorkflowTemplate {
-        pub base_workflow: Workflow,
+        pub baseworkflow: Workflow,
         pub parameters: Vec<ParameterDef>,
         pub generators: Vec<TaskGenerator>,
     }
@@ -1361,7 +1361,7 @@ pub mod dynamic {
                 }
             }
 
-            let mut workflow = template.base_workflow.clone();
+            let mut workflow = template.baseworkflow.clone();
             workflow.id = format!("{}_{}", workflow.id, Utc::now().timestamp());
 
             // Apply generators
@@ -1471,15 +1471,15 @@ pub mod events {
             timestamp: DateTime<Utc>,
         },
         ScheduledTime {
-            workflow_id: String,
+            workflowid: String,
         },
         ExternalTrigger {
             source: String,
             payload: serde_json::Value,
         },
         WorkflowCompleted {
-            workflow_id: String,
-            execution_id: String,
+            workflowid: String,
+            executionid: String,
         },
         Custom {
             event_type: String,
@@ -1499,7 +1499,7 @@ pub mod events {
     pub struct EventRule {
         pub id: String,
         pub event_pattern: EventPattern,
-        pub workflow_id: String,
+        pub workflowid: String,
         pub parameters: HashMap<String, serde_json::Value>,
     }
 
@@ -1553,7 +1553,7 @@ pub mod events {
             while let Ok(event) = self.event_rx.try_recv() {
                 for rule in &self.rules {
                     if self.matches_pattern(&event, &rule.event_pattern) {
-                        if let Some(workflow) = workflows.get(&rule.workflow_id) {
+                        if let Some(workflow) = workflows.get(&rule.workflowid) {
                             // Inject event data into workflow context
                             let mut workflow = workflow.clone();
                             workflow.metadata.set(
@@ -1651,8 +1651,8 @@ pub mod versioning {
             created_by: impl Into<String>,
             description: impl Into<String>,
         ) -> String {
-            let workflow_id = workflow.id.clone();
-            let versions = self.versions.entry(workflow_id.clone()).or_default();
+            let workflowid = workflow.id.clone();
+            let versions = self.versions.entry(workflowid.clone()).or_default();
 
             let version_number = versions.len() + 1;
             let version = format!("v{version_number}.0.0");
@@ -1674,20 +1674,20 @@ pub mod versioning {
         /// Get a specific version
         pub fn get_version(&self, workflowid: &str, version: &str) -> Option<&WorkflowVersion> {
             self.versions
-                .get(workflow_id)?
+                .get(workflowid)?
                 .iter()
                 .find(|v| v.version == version)
         }
 
         /// Get latest version
         pub fn get_latest(&self, workflowid: &str) -> Option<&WorkflowVersion> {
-            self.versions.get(workflow_id)?.last()
+            self.versions.get(workflowid)?.last()
         }
 
         /// Get version history
         pub fn get_history(&self, workflowid: &str) -> Vec<&WorkflowVersion> {
             self.versions
-                .get(workflow_id)
+                .get(workflowid)
                 .map(|v| v.iter().collect())
                 .unwrap_or_default()
         }
@@ -1695,12 +1695,12 @@ pub mod versioning {
         /// Diff two versions
         pub fn diff(
             &self,
-            workflow_id: &str,
+            workflowid: &str,
             version1: &str,
             version2: &str,
         ) -> Option<WorkflowDiff> {
-            let v1 = self.get_version(workflow_id, version1)?;
-            let v2 = self.get_version(workflow_id, version2)?;
+            let v1 = self.get_version(workflowid, version1)?;
+            let v2 = self.get_version(workflowid, version2)?;
 
             Some(WorkflowDiff {
                 version1: version1.to_string(),
@@ -1811,8 +1811,8 @@ pub mod distributed {
     #[derive(Debug, Clone)]
     pub struct DistributedTask {
         pub task: Task,
-        pub workflow_id: String,
-        pub execution_id: String,
+        pub workflowid: String,
+        pub executionid: String,
         pub assigned_worker: Option<String>,
         pub status: TaskStatus,
     }
@@ -1833,7 +1833,7 @@ pub mod distributed {
     #[derive(Debug, Clone)]
     pub struct WorkerCapabilities {
         pub cpu_cores: usize,
-        pub memory_gb: f64,
+        pub memorygb: f64,
         pub gpu_available: bool,
         pub supported_task_types: Vec<TaskType>,
     }
@@ -1907,8 +1907,8 @@ pub mod distributed {
                 }
             }
 
-            if let Some(memory) = requirements.memory_gb {
-                if worker.capabilities.memory_gb < memory {
+            if let Some(memory) = requirements.memorygb {
+                if worker.capabilities.memorygb < memory {
                     return false;
                 }
             }
@@ -1933,12 +1933,12 @@ pub mod visualization {
         /// Generate DOT graph representation
         pub fn to_dot(workflow: &Workflow) -> String {
             let mut dot = String::new();
-            dot.push_str("digraph _workflow {\n");
+            dot.push_str("digraph workflow {\n");
             dot.push_str("  rankdir=TB;\n");
             dot.push_str("  node [shape=box, style=rounded];\n\n");
 
             // Add nodes
-            for task in &_workflow.tasks {
+            for task in &workflow.tasks {
                 let color = match task.task_type {
                     TaskType::DataIngestion => "lightblue",
                     TaskType::Transform => "lightgreen",
@@ -1958,7 +1958,7 @@ pub mod visualization {
             dot.push('\n');
 
             // Add edges
-            for (task_id, deps) in &_workflow.dependencies {
+            for (task_id, deps) in &workflow.dependencies {
                 for dep in deps {
                     dot.push_str(&format!("  {dep} -> {task_id};\n"));
                 }
@@ -1974,7 +1974,7 @@ pub mod visualization {
             mermaid.push_str("graph TD\n");
 
             // Add nodes
-            for task in &_workflow.tasks {
+            for task in &workflow.tasks {
                 let shape = match task.task_type {
                     TaskType::DataIngestion => "[",
                     TaskType::Transform => "(",
@@ -1999,7 +1999,7 @@ pub mod visualization {
             }
 
             // Add edges
-            for (task_id, deps) in &_workflow.dependencies {
+            for (task_id, deps) in &workflow.dependencies {
                 for dep in deps {
                     mermaid.push_str(&format!("    {dep} --> {task_id}\n"));
                 }
@@ -2047,7 +2047,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_workflow_builder() {
+    fn testworkflow_builder() {
         let workflow = WorkflowBuilder::new("test_wf", "Test Workflow")
             .description("A test workflow")
             .add_task(
@@ -2088,7 +2088,7 @@ mod tests {
 
     #[test]
     fn test_etl_template() {
-        let workflow = templates::etl_workflow("My ETL Pipeline").build().unwrap();
+        let workflow = templates::etlworkflow("My ETL Pipeline").build().unwrap();
 
         assert_eq!(workflow.tasks.len(), 4);
         assert!(workflow.tasks.iter().any(|t| t.id == "extract"));

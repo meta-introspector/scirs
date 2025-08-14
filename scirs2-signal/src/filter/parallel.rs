@@ -1390,13 +1390,13 @@ pub enum MorphologicalOperation {
 /// Apply erosion operation at a specific index
 #[allow(dead_code)]
 fn apply_erosion(_signal: &[f64], idx: usize, se: &[f64], selen: usize) -> f64 {
-    let half_se = se_len / 2;
+    let half_se = selen / 2;
     let mut min_val = f64::INFINITY;
 
     for (k, &se_val) in se.iter().enumerate() {
         if se_val > 0.0 {
             let sig_idx = idx + k;
-            if sig_idx >= half_se && sig_idx - half_se < signal.len() {
+            if sig_idx >= half_se && sig_idx - half_se < _signal.len() {
                 min_val = min_val.min(_signal[sig_idx - half_se]);
             }
         }
@@ -1412,13 +1412,13 @@ fn apply_erosion(_signal: &[f64], idx: usize, se: &[f64], selen: usize) -> f64 {
 /// Apply dilation operation at a specific index
 #[allow(dead_code)]
 fn apply_dilation(_signal: &[f64], idx: usize, se: &[f64], selen: usize) -> f64 {
-    let half_se = se_len / 2;
+    let half_se = selen / 2;
     let mut max_val = f64::NEG_INFINITY;
 
     for (k, &se_val) in se.iter().enumerate() {
         if se_val > 0.0 {
             let sig_idx = idx + k;
-            if sig_idx >= half_se && sig_idx - half_se < signal.len() {
+            if sig_idx >= half_se && sig_idx - half_se < _signal.len() {
                 max_val = max_val.max(_signal[sig_idx - half_se]);
             }
         }
@@ -2064,7 +2064,7 @@ fn sequential_minimum_phase(b: &[f64], discretetime: bool) -> SignalResult<Vec<f
     let mut result = b.to_vec();
 
     // Simple minimum phase approximation
-    if discrete_time {
+    if discretetime {
         result.reverse();
     }
 

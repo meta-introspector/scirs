@@ -162,7 +162,7 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     pub fn builder(graph: &'graph impl AsGraph<F>) -> TensorBuilder<'graph, F> {
         // Starts with default values
         TensorBuilder {
-            _graph: graph.as_graph(),
+            graph: graph.as_graph(),
             shape: None,
             in_nodes: SmallVec::new(),
             differentiable: true,
@@ -444,7 +444,7 @@ impl<'graph, F: Float> Tensor<'graph, F> {
         shape: Vec<usize>,
         graph: &'graph Graph<F>,
     ) -> Tensor<'graph, F> {
-        let array = match NdArray::fromshape_vec(ndarray::IxDyn(&shape), data) {
+        let array = match NdArray::from_shape_vec(ndarray::IxDyn(&shape), _data) {
             Ok(arr) => arr,
             Err(_) => NdArray::zeros(ndarray::IxDyn(&shape)),
         };
@@ -639,7 +639,7 @@ impl<'graph> IncomingTensor {
         IncomingTensor {
             id: val.id(),
             allow_mut: false,
-            array_selector,
+            array_selector: arrayselector,
         }
     }
 
@@ -1022,7 +1022,7 @@ macro_rules! impl_as_tensor_for_array {
                     .collect::<Vec<F>>();
 
                 // unwrap is safe
-                let arr = NdArray::fromshape_vec(ndarray::IxDyn(&[self.len()]), vec).unwrap();
+                let arr = NdArray::from_shape_vec(ndarray::IxDyn(&[self.len()]), vec).unwrap();
                 T::convert_to_tensor(arr, graph.as_graph())
             }
         }

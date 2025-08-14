@@ -65,17 +65,17 @@ where
 }
 
 #[allow(dead_code)]
-fn normalize_minmax<T>(mut array: Array2<T>, new_min: T, newmax: T) -> Array2<T>
+fn normalize_minmax<T>(mut array: Array2<T>, new_min: T, new_max: T) -> Array2<T>
 where
     T: Float + FromPrimitive,
 {
     let _min = array.iter().fold(T::infinity(), |a, &b| a.min(b));
     let _max = array.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
-    let range = _max - min;
+    let range = _max - _min;
 
     if range > T::zero() {
         let scale = (new_max - new_min) / range;
-        array.mapv_inplace(|x| (x - min) * scale + new_min);
+        array.mapv_inplace(|x| (x - _min) * scale + new_min);
     }
 
     array
@@ -278,7 +278,7 @@ pub enum EncodingMethod {
 
 impl EncodingTransform {
     pub fn new(method: EncodingMethod) -> Self {
-        Self { method: _method }
+        Self { method: method }
     }
 }
 
@@ -512,7 +512,7 @@ pub struct PCATransform {
 impl PCATransform {
     pub fn new(_ncomponents: usize) -> Self {
         Self {
-            n_components: n_components,
+            n_components: _ncomponents,
             components: None,
             mean: None,
         }

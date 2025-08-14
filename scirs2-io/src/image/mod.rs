@@ -801,15 +801,15 @@ pub fn find_images<P: AsRef<Path>>(
     recursive: bool,
 ) -> Result<Vec<std::path::PathBuf>> {
     let search_pattern = if recursive {
-        format!("{}/**/{}", dirpath.as_ref().display(), pattern)
+        format!("{}/**/{}", dir_path.as_ref().display(), pattern)
     } else {
-        format!("{}/{}", dirpath.as_ref().display(), pattern)
+        format!("{}/{}", dir_path.as_ref().display(), pattern)
     };
 
     let paths = glob::glob(&search_pattern)
         .map_err(|e| IoError::FileError(e.to_string()))?
         .filter_map(|entry| entry.ok())
-        .filter(|_path| {
+        .filter(|path| {
             let ext = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
             matches!(
                 ext.to_lowercase().as_str(),
@@ -852,7 +852,7 @@ where
     // Create output directory if it doesn't exist
     fs::create_dir_all(output_dir).map_err(|e| IoError::FileError(e.to_string()))?;
 
-    let image_files = find_images(_input_dir, "*", false)?;
+    let image_files = find_images(input_dir, "*", false)?;
 
     for input_path in image_files {
         let file_name = input_path

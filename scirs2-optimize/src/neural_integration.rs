@@ -79,7 +79,7 @@ impl<F: Float + ScalarOperand> NeuralParameters<F> {
     }
 
     /// Update parameters from flattened vector
-    pub fn update_from_flat(&mut self, flatparams: &Array1<F>) {
+    pub fn update_from_flat(&mut self, flat_params: &Array1<F>) {
         let mut offset = 0;
 
         for param in &mut self.parameters {
@@ -90,7 +90,7 @@ impl<F: Float + ScalarOperand> NeuralParameters<F> {
     }
 
     /// Update gradients from flattened vector
-    pub fn update_gradients_from_flat(&mut self, flatgrads: &Array1<F>) {
+    pub fn update_gradients_from_flat(&mut self, flat_grads: &Array1<F>) {
         let mut offset = 0;
 
         for grad in &mut self.gradients {
@@ -131,7 +131,7 @@ where
     }
 
     /// Create SGD optimizer for neural networks
-    pub fn sgd(_learning_rate: F, maxiter: usize) -> Self {
+    pub fn sgd(learning_rate: F, max_iter: usize) -> Self {
         let options = StochasticOptions {
             learning_rate: learning_rate.to_f64().unwrap_or(0.01),
             max_iter,
@@ -148,7 +148,7 @@ where
     }
 
     /// Create Adam optimizer for neural networks
-    pub fn adam(_learning_rate: F, maxiter: usize) -> Self {
+    pub fn adam(learning_rate: F, max_iter: usize) -> Self {
         let options = StochasticOptions {
             learning_rate: learning_rate.to_f64().unwrap_or(0.001),
             max_iter,
@@ -165,7 +165,7 @@ where
     }
 
     /// Create AdamW optimizer for neural networks
-    pub fn adamw(_learning_rate: F, maxiter: usize) -> Self {
+    pub fn adamw(learning_rate: F, max_iter: usize) -> Self {
         let options = StochasticOptions {
             learning_rate: learning_rate.to_f64().unwrap_or(0.001),
             max_iter,
@@ -498,10 +498,10 @@ where
     }
 
     /// Clip gradients to prevent exploding gradients
-    fn clip_gradients(&self, params: &mut NeuralParameters<F>, maxnorm: f64) {
+    fn clip_gradients(&self, params: &mut NeuralParameters<F>, max_norm: f64) {
         let max_norm_f = F::from(max_norm).unwrap();
 
-        // Compute total gradient _norm
+        // Compute total gradient norm
         let mut total_norm_sq = F::zero();
         for grad in &params.gradients {
             total_norm_sq = total_norm_sq + grad.mapv(|x| x * x).sum();
@@ -522,27 +522,27 @@ pub mod optimizers {
     use super::*;
 
     /// Create SGD optimizer with default settings for neural networks
-    pub fn sgd<F>(_learningrate: F) -> NeuralOptimizer<F>
+    pub fn sgd<F>(learning_rate: F) -> NeuralOptimizer<F>
     where
         F: Float + ScalarOperand + 'static + Send + Sync,
     {
-        NeuralOptimizer::sgd(_learning_rate, 1000)
+        NeuralOptimizer::sgd(learning_rate, 1000)
     }
 
     /// Create Adam optimizer with default settings for neural networks
-    pub fn adam<F>(_learningrate: F) -> NeuralOptimizer<F>
+    pub fn adam<F>(learning_rate: F) -> NeuralOptimizer<F>
     where
         F: Float + ScalarOperand + 'static + Send + Sync,
     {
-        NeuralOptimizer::adam(_learning_rate, 1000)
+        NeuralOptimizer::adam(learning_rate, 1000)
     }
 
     /// Create AdamW optimizer with default settings for neural networks
-    pub fn adamw<F>(_learningrate: F) -> NeuralOptimizer<F>
+    pub fn adamw<F>(learning_rate: F) -> NeuralOptimizer<F>
     where
         F: Float + ScalarOperand + 'static + Send + Sync,
     {
-        NeuralOptimizer::adamw(_learning_rate, 1000)
+        NeuralOptimizer::adamw(learning_rate, 1000)
     }
 }
 

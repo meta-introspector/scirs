@@ -5,7 +5,7 @@
 
 use approx::{assert_abs_diff_eq, assert_relative_eq};
 use ndarray::{array, Array2};
-use scirs2__metrics::{
+use scirs2_metrics::{
     anomaly::wasserstein_distance,
     classification::{accuracy_score, f1_score, precision_score, recall_score},
     clustering::{davies_bouldin_score, silhouette_score},
@@ -200,7 +200,7 @@ fn test_wasserstein_distance_precision() {
 #[allow(dead_code)]
 fn test_clustering_metrics_precision() {
     // Create a simple 2D dataset with known clustering structure
-    let data = Array2::fromshape_vec(
+    let data = Array2::from_shape_vec(
         (6, 2),
         vec![
             1.0, 1.0, // Cluster 0

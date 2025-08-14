@@ -57,7 +57,7 @@ impl<A: Float + Debug> ExponentialDecay<A> {
     /// * `initial_lr` - Initial learning rate
     /// * `decay_rate` - Rate at which learning rate decays (e.g., 0.95)
     /// * `decay_steps` - Number of steps after which learning rate is decayed by decay_rate
-    pub fn new(initial_lr: A, decay_rate: A, decaysteps: usize) -> Self {
+    pub fn new(initial_lr: A, decay_rate: A, decay_steps: usize) -> Self {
         Self {
             initial_lr,
             decay_rate,

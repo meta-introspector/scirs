@@ -30,7 +30,7 @@ where
 
     let mut walk = vec![start.clone()];
     let mut current = start.clone();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     use rand::Rng;
 
@@ -76,7 +76,7 @@ where
     let n = nodes.len();
 
     if n == 0 {
-        return Err(GraphError::InvalidGraph("Empty _graph".to_string()));
+        return Err(GraphError::InvalidGraph("Empty graph".to_string()));
     }
 
     let mut matrix = Array2::<f64>::zeros((n, n));
@@ -87,7 +87,7 @@ where
                 .into_iter()
                 .filter_map(|neighbor| {
                     nodes.iter().position(|n| n == &neighbor).and_then(|j| {
-                        _graph
+                        graph
                             .edge_weight(node, &neighbor)
                             .ok()
                             .map(|w| (j, w.into()))
@@ -95,7 +95,7 @@ where
                 })
                 .collect();
 
-            let total_weight: f64 = neighborweights.iter().map(|(_, w)| w).sum();
+            let total_weight: f64 = neighbor_weights.iter().map(|(_, w)| w).sum();
 
             if total_weight > 0.0 {
                 for (j, weight) in neighbor_weights {
@@ -303,9 +303,9 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> BatchRandomWalker<N> {
                     .map(|w| w.into())
                     .collect();
 
-                if !neighborweights.is_empty() {
-                    let total: f64 = neighborweights.iter().sum();
-                    let probs: Vec<f64> = neighborweights.iter().map(|w| w / total).collect();
+                if !neighbor_weights.is_empty() {
+                    let total: f64 = neighbor_weights.iter().sum();
+                    let probs: Vec<f64> = neighbor_weights.iter().map(|w| w / total).collect();
 
                     // Build cumulative probabilities for SIMD sampling
                     let mut cumulative = vec![0.0; probs.len()];
@@ -356,7 +356,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> BatchRandomWalker<N> {
             .par_iter()
             .map(|start| {
                 let mut local_walks = Vec::with_capacity(num_walks_per_node);
-                let mut rng = rand::rng();
+                let mut rng = rand::thread_rng();
 
                 for _ in 0..num_walks_per_node {
                     if let Ok(walk) = self.single_walk(graph, start, walk_length, &mut rng) {
@@ -539,7 +539,7 @@ where
         .map(|i| {
             let start_idx = i % starts.len();
             let start = &starts[start_idx];
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             node2vec_walk(graph, start, walk_length, p, q, &mut rng)
         })
         .collect()

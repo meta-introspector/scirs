@@ -670,7 +670,7 @@ pub struct RatioTestMatcher {
 
 impl RatioTestMatcher {
     /// Create new ratio test matcher
-    pub fn new(_ratio_threshold: f32, distancemetric: DistanceMetric) -> Self {
+    pub fn new(ratio_threshold: f32, distancemetric: DistanceMetric) -> Self {
         Self {
             ratio_threshold,
             distancemetric,
@@ -720,7 +720,7 @@ pub struct CrossCheckMatcher {
 
 impl CrossCheckMatcher {
     /// Create new cross-check matcher
-    pub fn new(_distancemetric: DistanceMetric) -> Self {
+    pub fn new(distancemetric: DistanceMetric) -> Self {
         let config = BruteForceConfig {
             distancemetric,
             max_distance: f32::MAX,

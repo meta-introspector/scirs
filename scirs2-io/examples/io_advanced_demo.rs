@@ -155,8 +155,8 @@ fn create_sample_datasets() -> Vec<(String, Vec<u8>)> {
 /// Generate fractal-like pattern data
 #[allow(dead_code)]
 fn generate_fractal_pattern(size: usize) -> Vec<u8> {
-    let mut data = Vec::with_capacity(_size);
-    for i in 0.._size {
+    let mut data = Vec::with_capacity(size);
+    for i in 0..size {
         let value = ((i as f32).sin() * 127.0 + 128.0) as u8;
         data.push(value);
     }
@@ -166,10 +166,10 @@ fn generate_fractal_pattern(size: usize) -> Vec<u8> {
 /// Generate pseudo-random data
 #[allow(dead_code)]
 fn generate_pseudo_random_data(size: usize) -> Vec<u8> {
-    let mut data = Vec::with_capacity(_size);
+    let mut data = Vec::with_capacity(size);
     let mut state = 12345u32;
 
-    for _ in 0.._size {
+    for _ in 0..size {
         state = state.wrapping_mul(1103515245).wrapping_add(12345);
         data.push((state >> 16) as u8);
     }
@@ -179,9 +179,9 @@ fn generate_pseudo_random_data(size: usize) -> Vec<u8> {
 /// Generate mixed pattern data combining different characteristics
 #[allow(dead_code)]
 fn generate_mixed_pattern_data(size: usize) -> Vec<u8> {
-    let mut data = Vec::with_capacity(_size);
+    let mut data = Vec::with_capacity(size);
 
-    for i in 0.._size {
+    for i in 0..size {
         let value = match i % 4 {
             0 => (i % 256) as u8, // Sequential
             1 => {

@@ -190,7 +190,7 @@ where
     }
 
     /// Run optimization from multiple starting points
-    pub fn run<O>(&self, startingpoints: Vec<Array1<f64>>, optimizer: O) -> Vec<OptimizationResult>
+    pub fn run<O>(&self, starting_points: Vec<Array1<f64>>, optimizer: O) -> Vec<OptimizationResult>
     where
         O: Fn(&Array1<f64>, &F) -> OptimizationResult + Sync,
     {
@@ -221,7 +221,7 @@ where
 
     /// Find the best result among all runs
     pub fn best_result(results: &[OptimizationResult]) -> Option<&OptimizationResult> {
-        _results
+        results
             .iter()
             .min_by(|a, b| a.function_value.partial_cmp(&b.function_value).unwrap())
     }

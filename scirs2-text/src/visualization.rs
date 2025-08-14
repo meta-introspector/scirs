@@ -390,7 +390,7 @@ impl AttentionVisualizer {
         // Draw attention matrix
         for i in 0..n_target {
             for j in 0..n_source {
-                let attention = attention_weights[[i, j]];
+                let attention = attentionweights[[i, j]];
                 let normalized = if max_val > min_val {
                     (attention - min_val) / (max_val - min_val)
                 } else {
@@ -455,7 +455,7 @@ impl AttentionVisualizer {
         path: P,
     ) -> Result<()> {
         let svg_content =
-            self.attention_heatmap(attention_weights, source_tokens, target_tokens)?;
+            self.attention_heatmap(attentionweights, source_tokens, target_tokens)?;
         fs::write(path, svg_content)
             .map_err(|e| TextError::IoError(format!("Failed to save attention heatmap: {e}")))?;
         Ok(())
@@ -939,7 +939,7 @@ impl TopicVisualizer {
             // Get top words for this topic
             let mut topic_words: Vec<_> = topic.top_words.iter().collect();
             topic_words.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-            let top_words: Vec<_> = topic_words.into_iter().take(top_n).collect();
+            let top_words: Vec<_> = topic_words.into_iter().take(topn).collect();
 
             if !top_words.is_empty() {
                 let max_prob = top_words[0].1;
@@ -1014,10 +1014,10 @@ impl TopicVisualizer {
     pub fn save_topic_words<P: AsRef<Path>>(
         &self,
         topics: &[Topic],
-        top_n: usize,
+        topn: usize,
         path: P,
     ) -> Result<()> {
-        let svg_content = self.topic_words_chart(topics, top_n)?;
+        let svg_content = self.topic_words_chart(topics, topn)?;
         fs::write(path, svg_content)
             .map_err(|e| TextError::IoError(format!("Failed to save topic visualization: {e}")))?;
         Ok(())

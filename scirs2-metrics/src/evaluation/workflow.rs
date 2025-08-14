@@ -426,7 +426,7 @@ impl<X, Y> BatchEvaluator<X, Y> {
 /// ```
 /// # /*
 /// use ndarray::{Array1, Array2};
-/// use scirs2__metrics::evaluation::workflow::learning_curve;
+/// use scirs2_metrics::evaluation::workflow::learning_curve;
 ///
 /// // Define a function that trains and evaluates a model
 /// let model_evaluator = |x_train: &Array2<f64>, y_train: &Array1<f64>,
@@ -453,9 +453,9 @@ impl<X, Y> BatchEvaluator<X, Y> {
 pub fn learning_curve<X, Y, F>(
     _model_evaluator: F,
     _train: &X,
-    train: &Y,
+    _train_y: &Y,
     _test: &X,
-    test: &Y,
+    _test_y: &Y,
     train_sizes_ratio: &[f64],
     _metric: &str,
     n_splits: usize,
@@ -552,7 +552,7 @@ impl<X, Y> PipelineEvaluator<X, Y> {
         T: Fn(&X, &Y) -> Result<Box<dyn ModelEvaluator<X, Y>>> + 'static,
     {
         PipelineEvaluator {
-            _name: name.to_string(),
+            name: name.to_string(),
             preprocessor: Box::new(preprocessor),
             trainer: Box::new(trainer),
         }
@@ -613,7 +613,7 @@ mod tests {
 
     impl DummyModel {
         fn new(accuracy: f64) -> Self {
-            DummyModel { _accuracy }
+            DummyModel { accuracy }
         }
     }
 

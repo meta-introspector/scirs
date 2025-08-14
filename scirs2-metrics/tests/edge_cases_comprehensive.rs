@@ -5,7 +5,7 @@
 
 use approx::assert_abs_diff_eq;
 use ndarray::{array, Array1, Array2};
-use scirs2__metrics::{
+use scirs2_metrics::{
     anomaly::{js_divergence, kl_divergence},
     classification::{accuracy_score, f1_score, precision_score, recall_score},
     clustering::silhouette_score,
@@ -144,7 +144,7 @@ fn test_single_element_arrays() {
     assert_abs_diff_eq!(mae, 0.5, epsilon = 1e-10);
 
     // Single element clustering should fail (need at least 2 points)
-    let single_data = Array2::fromshape_vec((1, 2), vec![1.0, 2.0]).unwrap();
+    let single_data = Array2::from_shape_vec((1, 2), vec![1.0, 2.0]).unwrap();
     let single_labels = array![0usize];
     assert!(silhouette_score(&single_data, &single_labels, "euclidean").is_err());
 }
@@ -257,7 +257,7 @@ fn test_probability_edge_cases() {
 fn test_clustering_edge_cases() {
     // Single cluster (all same label)
     let data_single_cluster =
-        Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
     let labels_single = array![0usize, 0usize, 0usize, 0usize];
 
     // Silhouette score should be undefined for single cluster
@@ -277,7 +277,7 @@ fn test_clustering_edge_cases() {
     }
 
     // Two points, two clusters (minimum valid case) - might work or give error
-    let data_minimal = Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+    let data_minimal = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
     let labels_minimal = array![0usize, 1usize];
     let minimal_result = silhouette_score(&data_minimal, &labels_minimal, "euclidean");
     // This is acceptable to either work or fail

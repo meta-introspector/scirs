@@ -380,7 +380,7 @@ impl TextClassificationMetrics {
             );
 
             class_f1_scores.push(f1);
-            class_weightspush(support);
+            class_weights.push(support);
         }
 
         // Calculate macro F1 (unweighted average)
@@ -394,11 +394,11 @@ impl TextClassificationMetrics {
         let micro_f1 = accuracy; // For multi-class, micro F1 equals accuracy
 
         // Calculate weighted F1
-        let total_support: usize = class_weightsiter().sum();
+        let total_support: usize = class_weights.iter().sum();
         let weighted_f1 = if total_support > 0 {
             class_f1_scores
                 .iter()
-                .zip(class_weightsiter())
+                .zip(class_weights.iter())
                 .map(|(f1, weight)| f1 * (*weight as f64))
                 .sum::<f64>()
                 / total_support as f64
@@ -505,7 +505,7 @@ impl NERMetrics {
 
         // Per-entity-type metrics
         let mut entity_types = HashSet::new();
-        for (__, entity_type) in true_entities.iter().chain(pred_entities.iter()) {
+        for (_, _, entity_type) in true_entities.iter().chain(pred_entities.iter()) {
             entity_types.insert(entity_type.clone());
         }
 
@@ -513,11 +513,11 @@ impl NERMetrics {
         for entity_type in entity_types {
             let true_type_entities: Vec<_> = true_entities
                 .iter()
-                .filter(|(__, t)| t == &entity_type)
+                .filter(|(_, _, t)| t == &entity_type)
                 .collect();
             let pred_type_entities: Vec<_> = pred_entities
                 .iter()
-                .filter(|(__, t)| t == &entity_type)
+                .filter(|(_, _, t)| t == &entity_type)
                 .collect();
 
             let type_tp = true_type_entities

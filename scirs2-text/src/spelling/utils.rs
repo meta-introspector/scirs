@@ -13,7 +13,7 @@ use std::path::Path;
 #[inline]
 #[allow(dead_code)]
 pub fn normalize_string(text: &str, casesensitive: bool) -> String {
-    if !case_sensitive {
+    if !casesensitive {
         text.to_lowercase()
     } else {
         text.to_string()
@@ -45,8 +45,8 @@ pub fn split_sentences(text: &str) -> Vec<&str> {
 #[inline]
 #[allow(dead_code)]
 pub fn is_within_length_threshold(_word1: &str, word2: &str, max_editdistance: usize) -> bool {
-    word1.len() <= word2.len() + max_edit_distance
-        && word1.len() + max_edit_distance >= word2.len()
+    _word1.len() <= word2.len() + max_editdistance
+        && _word1.len() + max_editdistance >= word2.len()
 }
 
 /// Check if a word exists in a dictionary with optional case sensitivity
@@ -90,7 +90,7 @@ where
             continue;
         }
 
-        result = line_processor(&line)?;
+        result = lineprocessor(&line)?;
     }
 
     Ok(result)

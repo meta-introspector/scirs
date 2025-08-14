@@ -301,7 +301,7 @@ impl RBFInterpolator {
     ///
     /// A reasonable default value for epsilon
     fn default_epsilon(kernel: RBFKernel, points: &ArrayView2<'_, f64>) -> f64 {
-        match _kernel {
+        match kernel {
             RBFKernel::Gaussian => {
                 // For Gaussian, a typical choice is 1 / (2 * average distance^2)
                 let avg_dist = Self::average_distance(points);
@@ -607,7 +607,7 @@ impl RBFInterpolator {
     /// Euclidean distance between the points
     fn euclidean_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
         let mut sum_sq = 0.0;
-        for i in 0.._p1.len().min(p2.len()) {
+        for i in 0..p1.len().min(p2.len()) {
             let diff = p1[i] - p2[i];
             sum_sq += diff * diff;
         }

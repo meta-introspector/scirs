@@ -36,11 +36,11 @@
 //!
 //! // Configure LDA
 //! let config = LdaConfig {
-//!     n_topics: 2,
+//!     ntopics: 2,
 //!     doc_topic_prior: Some(0.1),    // Alpha parameter
 //!     topic_word_prior: Some(0.01),  // Beta parameter
 //!     learning_method: LdaLearningMethod::Batch,
-//!     max_iter: 100,
+//!     maxiter: 100,
 //!     tolerance: 1e-4,
 //!     random_state: Some(42),
 //!     ..Default::default()
@@ -69,12 +69,12 @@
 //! use scirs2_text::topic_modeling::{LdaConfig, LdaLearningMethod, LatentDirichletAllocation};
 //!
 //! let config = LdaConfig {
-//!     n_topics: 10,
+//!     ntopics: 10,
 //!     learning_method: LdaLearningMethod::Online,
 //!     batch_size: Some(64),           // Mini-batch size
 //!     learning_decay: Some(0.7),     // Learning rate decay
 //!     learning_offset: Some(10.0),   // Learning rate offset
-//!     max_iter: 500,
+//!     maxiter: 500,
 //!     ..Default::default()
 //! };
 //!
@@ -88,10 +88,10 @@
 //! use scirs2_text::topic_modeling::LdaConfig;
 //!
 //! let config = LdaConfig {
-//!     n_topics: 20,
+//!     ntopics: 20,
 //!     doc_topic_prior: Some(50.0 / 20.0),  // Symmetric Dirichlet
 //!     topic_word_prior: Some(0.1),         // Sparse topics
-//!     max_iter: 1000,                      // More iterations
+//!     maxiter: 1000,                      // More iterations
 //!     tolerance: 1e-6,                     // Stricter convergence
 //!     evaluate_every: Some(10),            // Monitor convergence
 //!     perp_tolerance: Some(0.1),           // Perplexity tolerance
@@ -123,7 +123,7 @@
 //! ### Alpha (doc_topic_prior)
 //! - **High values (e.g., 1.0)**: Documents contain many topics
 //! - **Low values (e.g., 0.1)**: Documents contain few topics
-//! - **Default**: 50/n_topics (symmetric)
+//! - **Default**: 50/ntopics (symmetric)
 //!
 //! ### Beta (topic_word_prior)
 //! - **High values (e.g., 1.0)**: Topics contain many words
@@ -172,7 +172,7 @@ pub enum LdaLearningMethod {
 #[derive(Debug, Clone)]
 pub struct LdaConfig {
     /// Number of topics
-    pub n_topics: usize,
+    pub ntopics: usize,
     /// Prior for document-topic distribution (alpha)
     pub doc_topic_prior: Option<f64>,
     /// Prior for topic-word distribution (eta)
@@ -184,7 +184,7 @@ pub struct LdaConfig {
     /// Learning offset for online learning
     pub learning_offset: f64,
     /// Maximum iterations
-    pub max_iter: usize,
+    pub maxiter: usize,
     /// Batch size for online learning
     pub batch_size: usize,
     /// Mean change tolerance for convergence
@@ -198,13 +198,13 @@ pub struct LdaConfig {
 impl Default for LdaConfig {
     fn default() -> Self {
         Self {
-            n_topics: 10,
-            doc_topic_prior: None,  // Will be set to 1/n_topics
-            topic_word_prior: None, // Will be set to 1/n_topics
+            ntopics: 10,
+            doc_topic_prior: None,  // Will be set to 1/ntopics
+            topic_word_prior: None, // Will be set to 1/ntopics
             learning_method: LdaLearningMethod::Batch,
             learning_decay: 0.7,
             learning_offset: 10.0,
-            max_iter: 10,
+            maxiter: 10,
             batch_size: 128,
             mean_change_tol: 1e-3,
             max_doc_update_iter: 100,
@@ -258,9 +258,9 @@ impl LatentDirichletAllocation {
     }
 
     /// Create a new LDA model with default configuration
-    pub fn with_n_topics(_ntopics: usize) -> Self {
+    pub fn with_ntopics(ntopics: usize) -> Self {
         let config = LdaConfig {
-            n_topics,
+            ntopics,
             ..Default::default()
         };
         Self::new(config)
@@ -268,24 +268,24 @@ impl LatentDirichletAllocation {
 
     /// Fit the LDA model on a document-term matrix
     pub fn fit(&mut self, doc_termmatrix: &Array2<f64>) -> Result<&mut Self> {
-        if doc_term_matrix.nrows() == 0 || doc_term_matrix.ncols() == 0 {
+        if doc_termmatrix.nrows() == 0 || doc_termmatrix.ncols() == 0 {
             return Err(TextError::InvalidInput(
                 "Document-term _matrix cannot be empty".to_string(),
             ));
         }
 
-        let n_samples = doc_term_matrix.nrows();
-        let n_features = doc_term_matrix.ncols();
+        let n_samples = doc_termmatrix.nrows();
+        let n_features = doc_termmatrix.ncols();
 
         // Set default priors if not provided
         let doc_topic_prior = self
             .config
             .doc_topic_prior
-            .unwrap_or(1.0 / self.config.n_topics as f64);
+            .unwrap_or(1.0 / self.config.ntopics as f64);
         let topic_word_prior = self
             .config
             .topic_word_prior
-            .unwrap_or(1.0 / self.config.n_topics as f64);
+            .unwrap_or(1.0 / self.config.ntopics as f64);
 
         // Initialize topic-word distribution randomly
         let mut rng = self.create_rng();
@@ -294,10 +294,10 @@ impl LatentDirichletAllocation {
         // Perform training based on learning method
         match self.config.learning_method {
             LdaLearningMethod::Batch => {
-                self.fit_batch(doc_term_matrix, doc_topic_prior, topic_word_prior)?;
+                self.fit_batch(doc_termmatrix, doc_topic_prior, topic_word_prior)?;
             }
             LdaLearningMethod::Online => {
-                self.fit_online(doc_term_matrix, doc_topic_prior, topic_word_prior)?;
+                self.fit_online(doc_termmatrix, doc_topic_prior, topic_word_prior)?;
             }
         }
 
@@ -313,21 +313,21 @@ impl LatentDirichletAllocation {
             ));
         }
 
-        let n_samples = doc_term_matrix.nrows();
-        let n_topics = self.config.n_topics;
+        let n_samples = doc_termmatrix.nrows();
+        let ntopics = self.config.ntopics;
 
         // Initialize document-topic distribution
-        let mut doc_topic_distr = Array2::zeros((n_samples, n_topics));
+        let mut doc_topic_distr = Array2::zeros((n_samples, ntopics));
 
         // Get exp(E[log(beta)])
         let exp_dirichlet_component = self.get_exp_dirichlet_component()?;
 
         // Set default prior
-        let doc_topic_prior = self.config.doc_topic_prior.unwrap_or(1.0 / n_topics as f64);
+        let doc_topic_prior = self.config.doc_topic_prior.unwrap_or(1.0 / ntopics as f64);
 
         // Update document-topic distribution for each document
-        for (doc_idx, doc) in doc_term_matrix.axis_iter(Axis(0)).enumerate() {
-            let mut gamma = Array1::from_elem(n_topics, doc_topic_prior);
+        for (doc_idx, doc) in doc_termmatrix.axis_iter(Axis(0)).enumerate() {
+            let mut gamma = Array1::from_elem(ntopics, doc_topic_prior);
             self.update_doc_distribution(
                 &doc.to_owned(),
                 &mut gamma,
@@ -349,8 +349,8 @@ impl LatentDirichletAllocation {
 
     /// Fit and transform in one step
     pub fn fit_transform(&mut self, doc_termmatrix: &Array2<f64>) -> Result<Array2<f64>> {
-        self.fit(doc_term_matrix)?;
-        self.transform(doc_term_matrix)
+        self.fit(doc_termmatrix)?;
+        self.transform(doc_termmatrix)
     }
 
     /// Get the topics with top words
@@ -420,7 +420,7 @@ impl LatentDirichletAllocation {
     ) -> Array2<f64> {
         // Use the RNG directly
 
-        let mut components = Array2::zeros((self.config.n_topics, n_features));
+        let mut components = Array2::zeros((self.config.ntopics, n_features));
         for mut row in components.axis_iter_mut(Axis(0)) {
             for val in row.iter_mut() {
                 *val = rng.gen_range(0.0..1.0);
@@ -438,7 +438,7 @@ impl LatentDirichletAllocation {
     fn get_exp_dirichlet_component(&self) -> Result<&Array2<f64>> {
         if self.exp_dirichlet_component.is_none() {
             return Err(TextError::ModelNotFitted(
-                "Components not initialized".to_string()..,
+                "Components not initialized".to_string(),
             ));
         }
         Ok(self.exp_dirichlet_component.as_ref().unwrap())
@@ -451,13 +451,13 @@ impl LatentDirichletAllocation {
         topic_word_prior: f64,
     ) -> Result<()> {
         let n_samples = doc_term_matrix.nrows();
-        let n_topics = self.config.n_topics;
+        let ntopics = self.config.ntopics;
 
         // Initialize document-topic distribution
-        let mut doc_topic_distr = Array2::from_elem((n_samples, n_topics), doc_topic_prior);
+        let mut doc_topic_distr = Array2::from_elem((n_samples, ntopics), doc_topic_prior);
 
         // Training loop
-        for iter in 0..self.config.max_iter {
+        for iter in 0..self.config.maxiter {
             // Update exp(E[log(beta)])
             self.update_exp_dirichlet_component()?;
 
@@ -476,7 +476,7 @@ impl LatentDirichletAllocation {
 
                 // Calculate mean change
                 let change: f64 = (&gamma - &old_gamma).iter().map(|&x| x.abs()).sum();
-                mean_change += change / n_topics as f64;
+                mean_change += change / ntopics as f64;
 
                 doc_topic_distr.row_mut(doc_idx).assign(&gamma);
             }
@@ -515,8 +515,8 @@ impl LatentDirichletAllocation {
                 StdRng::from_rng(&mut rand::rng())
             };
 
-            let mut components = Array2::<f64>::zeros((self.config.n_topics, n_features));
-            for i in 0..self.config.n_topics {
+            let mut components = Array2::<f64>::zeros((self.config.ntopics, n_features));
+            for i in 0..self.config.ntopics {
                 for j in 0..n_features {
                     components[[i, j]] = rng.random::<f64>() + topic_word_prior;
                 }
@@ -527,7 +527,7 @@ impl LatentDirichletAllocation {
         let batch_size = self.config.batch_size.min(n_samples);
         let n_batches = n_samples.div_ceil(batch_size);
 
-        for epoch in 0..self.config.max_iter {
+        for epoch in 0..self.config.maxiter {
             let mut total_bound = 0.0;
 
             // Shuffle document indices for each epoch
@@ -548,12 +548,12 @@ impl LatentDirichletAllocation {
 
                 // E-step: Update document-topic distributions for batch
                 let mut batch_gamma =
-                    Array2::<f64>::zeros((batch_docs.len(), self.config.n_topics));
+                    Array2::<f64>::zeros((batch_docs.len(), self.config.ntopics));
                 let mut batch_bound = 0.0;
 
                 for (local_idx, &doc_idx) in batch_docs.iter().enumerate() {
                     let doc = doc_term_matrix.row(doc_idx);
-                    let mut gamma = Array1::<f64>::from_elem(self.config.n_topics, doc_topic_prior);
+                    let mut gamma = Array1::<f64>::from_elem(self.config.ntopics, doc_topic_prior);
 
                     // Update document distribution
                     let components = self.components.as_ref().unwrap();
@@ -629,16 +629,16 @@ impl LatentDirichletAllocation {
 
         if let Some(ref mut components) = self.components {
             // Compute sufficient statistics for this batch
-            let mut batch_stats = Array2::<f64>::zeros((self.config.n_topics, n_features));
+            let mut batch_stats = Array2::<f64>::zeros((self.config.ntopics, n_features));
 
             for (local_idx, &doc_idx) in batch_docs.iter().enumerate() {
                 let doc = doc_term_matrix.row(doc_idx);
-                let _gamma = batch_gamma.row(local_idx);
+                let gamma = batch_gamma.row(local_idx);
                 let gamma_sum = gamma.sum();
 
                 for (word_idx, &count) in doc.iter().enumerate() {
                     if count > 0.0 {
-                        for topic_idx in 0..self.config.n_topics {
+                        for topic_idx in 0..self.config.ntopics {
                             let phi = gamma[topic_idx] / gamma_sum;
                             batch_stats[[topic_idx, word_idx]] += count * phi;
                         }
@@ -651,7 +651,7 @@ impl LatentDirichletAllocation {
             batch_stats.mapv_inplace(|x| x * scale_factor);
 
             // Update components using natural gradient with learning _rate
-            for topic_idx in 0..self.config.n_topics {
+            for topic_idx in 0..self.config.ntopics {
                 for word_idx in 0..n_features {
                     let old_val = components[[topic_idx, word_idx]];
                     let new_val = topic_word_prior + batch_stats[[topic_idx, word_idx]];
@@ -711,7 +711,7 @@ impl LatentDirichletAllocation {
 
                 for (word_idx, &count) in doc.iter().enumerate() {
                     if count > 0.0 {
-                        for topic_idx in 0..self.config.n_topics {
+                        for topic_idx in 0..self.config.ntopics {
                             components[[topic_idx, word_idx]] += count * doc_topics[topic_idx];
                         }
                     }
@@ -754,8 +754,8 @@ impl LdaBuilder {
     }
 
     /// Set the number of topics
-    pub fn n_topics(mut self, ntopics: usize) -> Self {
-        self.config.n_topics = n_topics;
+    pub fn ntopics(mut self, ntopics: usize) -> Self {
+        self.config.ntopics = ntopics;
         self
     }
 
@@ -778,8 +778,8 @@ impl LdaBuilder {
     }
 
     /// Set the maximum iterations
-    pub fn max_iter(mut self, maxiter: usize) -> Self {
-        self.config.max_iter = max_iter;
+    pub fn maxiter(mut self, maxiter: usize) -> Self {
+        self.config.maxiter = maxiter;
         self
     }
 
@@ -807,29 +807,29 @@ mod tests {
 
     #[test]
     fn test_lda_creation() {
-        let lda = LatentDirichletAllocation::with_n_topics(5);
-        assert_eq!(lda.config.n_topics, 5);
+        let lda = LatentDirichletAllocation::with_ntopics(5);
+        assert_eq!(lda.config.ntopics, 5);
     }
 
     #[test]
     fn test_lda_builder() {
         let lda = LdaBuilder::new()
-            .n_topics(10)
+            .ntopics(10)
             .doc_topic_prior(0.1)
-            .max_iter(20)
+            .maxiter(20)
             .random_seed(42)
             .build();
 
-        assert_eq!(lda.config.n_topics, 10);
+        assert_eq!(lda.config.ntopics, 10);
         assert_eq!(lda.config.doc_topic_prior, Some(0.1));
-        assert_eq!(lda.config.max_iter, 20);
+        assert_eq!(lda.config.maxiter, 20);
         assert_eq!(lda.config.random_seed, Some(42));
     }
 
     #[test]
     fn test_lda_fit_transform() {
         // Create a simple document-term matrix
-        let doc_term_matrix = Array2::fromshape_vec(
+        let doc_term_matrix = Array2::from_shape_vec(
             (4, 6),
             vec![
                 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, // Doc 1
@@ -840,7 +840,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut lda = LatentDirichletAllocation::with_n_topics(2);
+        let mut lda = LatentDirichletAllocation::with_ntopics(2);
         let doc_topics = lda.fit_transform(&doc_term_matrix).unwrap();
 
         assert_eq!(doc_topics.nrows(), 4);
@@ -855,7 +855,7 @@ mod tests {
 
     #[test]
     fn test_get_topics() {
-        let doc_term_matrix = Array2::fromshape_vec(
+        let doc_term_matrix = Array2::from_shape_vec(
             (4, 3),
             vec![2.0, 1.0, 0.0, 0.0, 2.0, 1.0, 1.0, 0.0, 2.0, 2.0, 1.0, 1.0],
         )
@@ -866,7 +866,7 @@ mod tests {
         vocabulary.insert(1, "word2".to_string());
         vocabulary.insert(2, "word3".to_string());
 
-        let mut lda = LatentDirichletAllocation::with_n_topics(2);
+        let mut lda = LatentDirichletAllocation::with_ntopics(2);
         lda.fit(&doc_term_matrix).unwrap();
 
         let topics = lda.get_topics(3, &vocabulary).unwrap();

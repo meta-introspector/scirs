@@ -133,7 +133,7 @@ where
     ///
     /// * Self for method chaining
     pub fn with_show_perfectly_calibrated(mut self, show_perfectlycalibrated: bool) -> Self {
-        self.show_perfectly_calibrated = show_perfectly_calibrated;
+        self.show_perfectly_calibrated = show_perfectlycalibrated;
         self
     }
 

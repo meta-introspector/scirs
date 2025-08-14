@@ -49,7 +49,7 @@ where
     // Initialize the simplex
     let mut simplex = Vec::with_capacity(n + 1);
     let x0_vec = x0.to_owned();
-    simplex.push((x0_vec.clone(), boundedfun(&x0_vec.view())));
+    simplex.push((x0_vec.clone(), bounded_fun(&x0_vec.view())));
 
     // Create the initial simplex, ensuring all points are within bounds
     for i in 0..n {
@@ -65,7 +65,7 @@ where
             bounds.project(xi.as_slice_mut().unwrap());
         }
 
-        simplex.push((xi.clone(), boundedfun(&xi.view())));
+        simplex.push((xi.clone(), bounded_fun(&xi.view())));
     }
 
     let mut nfev = n + 1;
@@ -98,7 +98,7 @@ where
             bounds.project(xr.as_slice_mut().unwrap());
         }
 
-        let fxr = boundedfun(&xr.view());
+        let fxr = bounded_fun(&xr.view());
         nfev += 1;
 
         if fxr < simplex[0].1 {
@@ -110,7 +110,7 @@ where
                 bounds.project(xe.as_slice_mut().unwrap());
             }
 
-            let fxe = boundedfun(&xe.view());
+            let fxe = bounded_fun(&xe.view());
             nfev += 1;
 
             if fxe < fxr {
@@ -140,7 +140,7 @@ where
                 bounds.project(xc_contract.as_slice_mut().unwrap());
             }
 
-            let fxc_contract = boundedfun(&xc_contract.view());
+            let fxc_contract = bounded_fun(&xc_contract.view());
             nfev += 1;
 
             if fxc_contract < simplex[n].1 {
@@ -158,7 +158,7 @@ where
                     }
 
                     simplex[i].0 = new_point;
-                    simplex[i].1 = boundedfun(&simplex[i].0.view());
+                    simplex[i].1 = bounded_fun(&simplex[i].0.view());
                     nfev += 1;
                 }
             }

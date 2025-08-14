@@ -696,7 +696,7 @@ where
         conv_ops::max_pool2d::MaxPool2D {
             pad,
             stride: stride,
-            pool_size,
+            size: pool_size,
         }
     )
 }

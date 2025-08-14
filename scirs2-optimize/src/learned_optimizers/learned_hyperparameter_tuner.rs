@@ -383,7 +383,7 @@ impl LearnedHyperparameterTuner {
         let hidden_size = config.hidden_size;
 
         Self {
-            config: config,
+            config,
             hyperparameter_space,
             performance_database,
             bayesian_optimizer,
@@ -515,7 +515,7 @@ impl LearnedHyperparameterTuner {
         features[2] = gradient_norm.ln();
 
         // Parameter statistics
-        features[3] = initial_params.mean().unwrap_or(0.0);
+        features[3] = initial_params.view().mean();
         features[4] = initial_params.variance().sqrt();
         features[5] = initial_params.fold(-f64::INFINITY, |a, &b| a.max(b));
         features[6] = initial_params.fold(f64::INFINITY, |a, &b| a.min(b));
@@ -765,6 +765,14 @@ impl LearnedHyperparameterTuner {
             success: true,
             nit: max_nit,
             message: "Hyperparameter evaluation completed".to_string(),
+            jac: None,
+            hess: None,
+            constr: None,
+            nfev: max_nit,
+            njev: 0,
+            nhev: 0,
+            maxcv: 0,
+            status: 0,
         })
     }
 
@@ -898,7 +906,10 @@ impl LearnedHyperparameterTuner {
 
     /// Normal CDF approximation
     fn normal_cdf(&self, x: f64) -> f64 {
-        0.5 * (1.0 + libm::erf(x / 2.0_f64.sqrt()))
+        // Approximation of error function for Gaussian CDF
+        // Using tanh approximation: erf(x) ≈ tanh(√(π/2) * x)
+        let sqrt_pi_over_2 = (std::f64::consts::PI / 2.0).sqrt();
+        0.5 * (1.0 + (sqrt_pi_over_2 * x / 2.0_f64.sqrt()).tanh())
     }
 
     /// Normal PDF
@@ -1032,11 +1043,11 @@ impl HyperparameterSpace {
 impl HyperparameterConfig {
     /// Create new hyperparameter configuration
     pub fn new(parameters: HashMap<String, ParameterValue>) -> Self {
-        let config_hash = Self::compute_hash(&_parameters);
-        let embedding = Self::compute_embedding(&_parameters);
+        let config_hash = Self::compute_hash(&parameters);
+        let embedding = Self::compute_embedding(&parameters);
 
         Self {
-            parameters: parameters,
+            parameters,
             config_hash,
             embedding,
         }
@@ -1046,7 +1057,7 @@ impl HyperparameterConfig {
     fn compute_hash(parameters: &HashMap<String, ParameterValue>) -> u64 {
         // Simplified hash computation
         let mut hash = 0u64;
-        for (key, value) in _parameters {
+        for (key, value) in parameters {
             hash ^= Self::hash_string(key);
             hash ^= Self::hash_parameter_value(value);
         }
@@ -1063,7 +1074,7 @@ impl HyperparameterConfig {
 
     /// Hash parameter value
     fn hash_parameter_value(value: &ParameterValue) -> u64 {
-        match _value {
+        match value {
             ParameterValue::Continuous(v) => v.to_bits(),
             ParameterValue::Discrete(v) => *v as u64,
             ParameterValue::Categorical(s) => Self::hash_string(s),
@@ -1075,7 +1086,7 @@ impl HyperparameterConfig {
         let mut embedding = Array1::zeros(32); // Fixed embedding size
 
         let mut idx = 0;
-        for (_, value) in _parameters {
+        for (_, value) in parameters {
             if idx >= embedding.len() {
                 break;
             }
@@ -1243,7 +1254,9 @@ impl CostModel {
     /// Create new cost model
     pub fn new() -> Self {
         Self {
-            cost_network: Array2::fromshape_fn((1, 10), |_| (rand::rng().gen::<f64>() - 0.5) * 0.1),
+            cost_network: Array2::from_shape_fn((1, 10), |_| {
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
+            }),
             base_cost: 1.0,
             scaling_factors: Array1::ones(5),
             cost_history: VecDeque::with_capacity(1000),
@@ -1276,7 +1289,7 @@ impl Default for HyperparameterTuningStats {
 }
 
 impl LearnedOptimizer for LearnedHyperparameterTuner {
-    fn meta_train(&mut self, trainingtasks: &[TrainingTask]) -> OptimizeResult<()> {
+    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
         for task in training_tasks {
             // Create simple objective for training
             let training_objective = |x: &ArrayView1<f64>| x.iter().map(|&xi| xi * xi).sum::<f64>();
@@ -1328,7 +1341,7 @@ impl LearnedOptimizer for LearnedHyperparameterTuner {
 
         // Tune hyperparameters
         let best_config =
-            self.tune_hyperparameters(objective, initial_params, &default_problem, 20.0)?;
+            self.tune_hyperparameters(&objective, initial_params, &default_problem, 20.0)?;
 
         // Use best configuration for final optimization
         self.create_optimizer_from_config(&best_config, &objective, initial_params, 1.0)
@@ -1424,7 +1437,7 @@ mod tests {
     fn test_gaussian_process() {
         let mut gp = GaussianProcess::new();
 
-        let inputs = Array2::fromshape_fn((3, 2), |_| rand::rng().gen::<f64>());
+        let inputs = Array2::from_shape_fn((3, 2), |_| rand::rng().gen::<f64>());
         let outputs = Array1::from(vec![1.0, 2.0, 3.0]);
 
         gp.update_training_data(inputs, outputs).unwrap();

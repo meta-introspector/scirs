@@ -41,7 +41,7 @@ impl MLDataset {
     /// Split into train/test sets
     pub fn train_test_split(&self, testratio: f32) -> (MLDataset, MLDataset) {
         let n = self.len();
-        let test_size = (n as f32 * test_ratio) as usize;
+        let test_size = (n as f32 * testratio) as usize;
         let train_size = n - test_size;
 
         let train_features = self.features[..train_size].to_vec();

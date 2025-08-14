@@ -148,7 +148,7 @@ impl EnhancedImageProcessor {
     }
 
     /// Set maximum cache size in MB
-    pub fn with_cache_size(mut self, sizemb: usize) -> Self {
+    pub fn with_cache_size(mut self, size_mb: usize) -> Self {
         self.max_cache_size = size_mb;
         self
     }
@@ -198,7 +198,7 @@ impl EnhancedImageProcessor {
         let raw_data = image.data.iter().cloned().collect::<Vec<u8>>();
 
         let img_buffer = if channels == 3 {
-            image::RgbImage::from_raw(_width as u32, _height as u32, raw_data)
+            image::RgbImage::from_raw(width as u32, _height as u32, raw_data)
                 .ok_or_else(|| IoError::FormatError("Invalid RGB image dimensions".to_string()))?
         } else {
             return Err(IoError::FormatError(
@@ -488,7 +488,7 @@ impl EnhancedImageProcessor {
 // Conversion from our ImageFormat to image crate's ImageFormat
 impl From<ImageFormat> for image::ImageFormat {
     fn from(format: ImageFormat) -> Self {
-        match _format {
+        match format {
             ImageFormat::PNG => image::ImageFormat::Png,
             ImageFormat::JPEG => image::ImageFormat::Jpeg,
             ImageFormat::BMP => image::ImageFormat::Bmp,
@@ -516,7 +516,7 @@ impl ImagePyramid {
     }
 
     /// Find the best level for a target size
-    pub fn find_best_level(&self, target_width: u32, targetheight: u32) -> usize {
+    pub fn find_best_level(&self, target_width: u32, target_height: u32) -> usize {
         let mut best_level = 0;
         let mut best_diff = u32::MAX;
 
@@ -537,7 +537,7 @@ impl ImagePyramid {
     }
 
     /// Get level that's closest to target size
-    pub fn get_level_for_size(&self, target_width: u32, targetheight: u32) -> Option<&ImageData> {
+    pub fn get_level_for_size(&self, target_width: u32, target_height: u32) -> Option<&ImageData> {
         let level = self.find_best_level(target_width, target_height);
         self.get_level(level)
     }
@@ -548,7 +548,7 @@ impl ImagePyramid {
 #[allow(dead_code)]
 pub fn create_image_pyramid(image: &ImageData) -> Result<ImagePyramid> {
     let processor = EnhancedImageProcessor::new();
-    processor.create_pyramid(_image, PyramidConfig::default())
+    processor.create_pyramid(image, PyramidConfig::default())
 }
 
 /// Save image with lossless compression

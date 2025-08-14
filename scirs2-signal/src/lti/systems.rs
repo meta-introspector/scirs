@@ -1054,5 +1054,5 @@ mod tests {
 
 #[allow(dead_code)]
 fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(_num, den, None).unwrap()
+    TransferFunction::new(num, den, None).unwrap()
 }

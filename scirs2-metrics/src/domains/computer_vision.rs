@@ -126,7 +126,7 @@ impl ObjectDetectionMetrics {
         });
 
         for (_, pred) in sorted_preds {
-            let (px1, py1, px2, py2, conf, pred_class) = *pred;
+            let (px1, py1, px2, py2, _conf, pred_class) = *pred;
             let mut best_iou = 0.0;
             let mut best_gt_idx = None;
 
@@ -164,7 +164,7 @@ impl ObjectDetectionMetrics {
         // Count false negatives (unmatched ground truth)
         for (gt_idx, gt) in ground_truth.iter().enumerate() {
             if !gt_matched[gt_idx] {
-                let (____, gt_class) = *gt;
+                let (_, _, _, _, gt_class) = *gt;
                 let stats = per_class_stats.entry(gt_class).or_insert((0, 0));
                 stats.1 += 1; // FN
             }
@@ -747,9 +747,9 @@ mod tests {
     fn test_segmentation_evaluation() {
         let metrics = SegmentationMetrics::new();
 
-        let y_true = Array2::fromshape_vec((3, 3), vec![0, 0, 1, 0, 1, 1, 1, 1, 1]).unwrap();
+        let y_true = Array2::from_shape_vec((3, 3), vec![0, 0, 1, 0, 1, 1, 1, 1, 1]).unwrap();
 
-        let y_pred = Array2::fromshape_vec((3, 3), vec![0, 0, 1, 0, 0, 1, 1, 1, 1]).unwrap();
+        let y_pred = Array2::from_shape_vec((3, 3), vec![0, 0, 1, 0, 0, 1, 1, 1, 1]).unwrap();
 
         let results = metrics.evaluate_segmentation(&y_true, &y_pred).unwrap();
 

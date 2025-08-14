@@ -29,8 +29,8 @@ mod tests {
     fn test_advanced_basic_optimization() {
         let initial_params = Array1::from_vec(vec![1.0, 2.0]);
         let config = AdvancedConfig {
-            strategy: advancedStrategy::AdaptiveSelection,
-            max_iterations: 10,
+            strategy: AdvancedStrategy::AdaptiveSelection,
+            max_nit: 10,
             max_evaluations: 100,
             tolerance: 1e-4,
             ..Default::default()

@@ -195,7 +195,7 @@ impl ExecutionTracer {
 
     /// Stop a recording
     pub fn stop_recording(&mut self, recordingid: &RecordingId) -> Option<Recording> {
-        if let Some(mut recording) = self.recordings.remove(&recording_id.0) {
+        if let Some(mut recording) = self.recordings.remove(&recordingid.0) {
             recording.status = RecordingStatus::Completed;
             Some(recording)
         } else {
@@ -781,7 +781,7 @@ pub fn configure_tracing(config: TracingConfig) -> Result<(), TracingError> {
     let mut tracer_guard = tracer
         .lock()
         .map_err(|_| TracingError::ConfigError("Failed to acquire tracer lock".to_string()))?;
-    tracer_guard.configure(_config);
+    tracer_guard.configure(config);
     Ok(())
 }
 
@@ -792,7 +792,7 @@ pub fn start_trace_session(name: &str) -> Result<TraceSessionId, TracingError> {
     let mut tracer_guard = tracer
         .lock()
         .map_err(|_| TracingError::ConfigError("Failed to acquire tracer lock".to_string()))?;
-    Ok(tracer_guard.start_session(_name))
+    Ok(tracer_guard.start_session(name))
 }
 
 /// End the current trace session
@@ -838,7 +838,7 @@ pub fn export_traces(format: ExportFormat) -> Result<String, TracingError> {
     let tracer_guard = tracer
         .lock()
         .map_err(|_| TracingError::ConfigError("Failed to acquire tracer lock".to_string()))?;
-    tracer_guard.export_traces(_format)
+    tracer_guard.export_traces(format)
 }
 
 /// Enable or disable tracing globally

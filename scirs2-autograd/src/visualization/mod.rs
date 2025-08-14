@@ -62,14 +62,15 @@ impl<F: Float> GraphVisualizer<F> {
     pub fn new() -> Self {
         Self {
             config: VisualizationConfig::default(),
-            _phantom: std::marker::PhantomData,
+            phantom: std::marker::PhantomData,
         }
     }
 
     /// Create a new graph visualizer with custom configuration
     pub fn with_config(config: VisualizationConfig) -> Self {
         Self {
-            _config_phantom: std::marker::PhantomData,
+            config,
+            phantom: std::marker::PhantomData,
         }
     }
 
@@ -103,7 +104,7 @@ impl<F: Float> GraphVisualizer<F> {
         }
 
         // Generate edges
-        for (i_node) in nodes.iter().enumerate() {
+        for (i, _node) in nodes.iter().enumerate() {
             let node_id = format!("node_{i}");
             // Simplified - in practice would get actual inputs from graph
             let inputs: Vec<TensorID> = Vec::new();
@@ -179,7 +180,7 @@ impl<F: Float> GraphVisualizer<F> {
         writeln!(output, "  \"edges\": [")?;
 
         let mut edge_count = 0;
-        for (i_node) in nodes.iter().enumerate() {
+        for (i, _node) in nodes.iter().enumerate() {
             // Simplified - in practice would get actual inputs from graph
             let inputs: Vec<TensorID> = Vec::new();
             for input in inputs {
@@ -215,7 +216,7 @@ impl<F: Float> GraphVisualizer<F> {
         }
 
         // Generate edges
-        for (i_node) in nodes.iter().enumerate() {
+        for (i, _node) in nodes.iter().enumerate() {
             let node_id = format!("N{i}");
             // Simplified - in practice would get actual inputs from graph
             let inputs: Vec<TensorID> = Vec::new();
@@ -280,7 +281,7 @@ impl<F: Float> GraphVisualizer<F> {
             analysis.operations.insert(i, "Operation".to_string());
 
             // Calculate depth (simplified)
-            let depth = self.calculate_tensor_depth(tensor_id, tensor_ids);
+            let depth = self.calculate_tensor_depth(&tensor_id, tensor_ids);
             analysis.depths.insert(i, depth);
         }
 
@@ -319,7 +320,7 @@ impl<F: Float> GraphVisualizer<F> {
 
     /// Get node style for rendering
     #[allow(dead_code)]
-    fn get_node_style(selfnode: &TensorID) -> String {
+    fn get_node_style(&self, node: &TensorID) -> String {
         "style=filled, fillcolor=lightblue".to_string()
     }
 
@@ -491,7 +492,7 @@ pub enum VisualizationError {
 #[allow(dead_code)]
 pub fn visualize_graph_dot<F: Float>(graph: &Graph<F>) -> Result<String, VisualizationError> {
     let visualizer = GraphVisualizer::new();
-    visualizer.visualize(_graph)
+    visualizer.visualize(graph)
 }
 
 /// Visualize a computation graph in text format
@@ -502,7 +503,7 @@ pub fn visualize_graphtext<F: Float>(graph: &Graph<F>) -> Result<String, Visuali
         ..Default::default()
     };
     let visualizer = GraphVisualizer::with_config(config);
-    visualizer.visualize(_graph)
+    visualizer.visualize(graph)
 }
 
 /// Visualize a computation graph in JSON format
@@ -513,7 +514,7 @@ pub fn visualize_graph_json<F: Float>(graph: &Graph<F>) -> Result<String, Visual
         ..Default::default()
     };
     let visualizer = GraphVisualizer::with_config(config);
-    visualizer.visualize(_graph)
+    visualizer.visualize(graph)
 }
 
 /// Visualize a computation graph in Mermaid format
@@ -524,21 +525,21 @@ pub fn visualize_graph_mermaid<F: Float>(graph: &Graph<F>) -> Result<String, Vis
         ..Default::default()
     };
     let visualizer = GraphVisualizer::with_config(config);
-    visualizer.visualize(_graph)
+    visualizer.visualize(graph)
 }
 
 /// Print graph statistics to console
 #[allow(dead_code)]
 pub fn print_graph_stats<F: Float>(graph: &Graph<F>) -> Result<(), VisualizationError> {
     let debugger = GraphDebugger::new();
-    debugger.print_stats(_graph)
+    debugger.print_stats(graph)
 }
 
 /// Validate graph structure and return any issues found
 #[allow(dead_code)]
 pub fn validate_graph<F: Float>(graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
     let debugger = GraphDebugger::new();
-    debugger.validate_graph(_graph)
+    debugger.validate_graph(graph)
 }
 
 /// Analyze graph for optimization opportunities

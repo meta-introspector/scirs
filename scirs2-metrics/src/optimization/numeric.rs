@@ -56,19 +56,19 @@ impl<T: Float + NumCast> StableMetrics<T> {
 
     /// Set the maximum value
     pub fn with_max_value(mut self, maxvalue: T) -> Self {
-        self.max_value = max_value;
+        self.max_value = maxvalue;
         self
     }
 
     /// Set whether to clip values
     pub fn with_clip_values(mut self, clipvalues: bool) -> Self {
-        self.clip_values = clip_values;
+        self.clip_values = clipvalues;
         self
     }
 
     /// Set whether to use log-sum-exp trick
     pub fn with_logsumexp(mut self, uselogsumexp: bool) -> Self {
-        self.use_logsumexp = use_logsumexp;
+        self.use_logsumexp = uselogsumexp;
         self
     }
 

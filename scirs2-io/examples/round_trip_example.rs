@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn test_csv_round_trip(_tempdir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
+fn test_csv_round_trip(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Testing CSV Round-trip...");
 
     let csv_file = temp_dir.path().join("test_data.csv");
@@ -67,7 +67,7 @@ fn test_csv_round_trip(_tempdir: &tempfile::TempDir) -> Result<(), Box<dyn std::
     let rows = original_data.len();
     let cols = if rows > 0 { original_data[0].len() } else { 0 };
     let flat_data: Vec<String> = original_data.clone().into_iter().flatten().collect();
-    let array_data = Array2::fromshape_vec((rows, cols), flat_data)?;
+    let array_data = Array2::from_shape_vec((rows, cols), flat_data)?;
 
     // Extract headers and data
     let headers = if array_data.nrows() > 0 {
@@ -78,7 +78,7 @@ fn test_csv_round_trip(_tempdir: &tempfile::TempDir) -> Result<(), Box<dyn std::
     let data_only = if array_data.nrows() > 1 {
         array_data.slice(ndarray::s![1.., ..]).to_owned()
     } else {
-        Array2::fromshape_vec((0, cols), Vec::new())?
+        Array2::from_shape_vec((0, cols), Vec::new())?
     };
 
     csv::write_csv(&csv_file, &data_only, headers.as_ref(), None)?;
@@ -223,7 +223,7 @@ fn test_matrix_market_round_trip(
 }
 
 #[allow(dead_code)]
-fn test_hdf5_round_trip(_tempdir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
+fn test_hdf5_round_trip(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🗄️  Testing HDF5 Round-trip...");
 
     let hdf5_file = temp_dir.path().join("test_data.h5");
@@ -413,7 +413,7 @@ fn test_validation_round_trip(
     let rows = test_data.len();
     let cols = if rows > 0 { test_data[0].len() } else { 0 };
     let flat_data: Vec<String> = test_data.clone().into_iter().flatten().collect();
-    let array_data = Array2::fromshape_vec((rows, cols), flat_data)?;
+    let array_data = Array2::from_shape_vec((rows, cols), flat_data)?;
 
     // Extract headers and data
     let headers = if array_data.nrows() > 0 {
@@ -424,7 +424,7 @@ fn test_validation_round_trip(
     let data_only = if array_data.nrows() > 1 {
         array_data.slice(ndarray::s![1.., ..]).to_owned()
     } else {
-        Array2::fromshape_vec((0, cols), Vec::new())?
+        Array2::from_shape_vec((0, cols), Vec::new())?
     };
 
     csv::write_csv(&data_file, &data_only, headers.as_ref(), None)?;

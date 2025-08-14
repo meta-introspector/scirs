@@ -8,7 +8,7 @@ const MATRIX_FUNC_EPSILON: f64 = 1e-2; // Larger tolerance for matrix function a
 #[test]
 #[allow(dead_code)]
 fn test_matrix_operations() {
-    ag::run::<f64_>(|g| {
+    ag::run(|g| {
         // Test matrix inverse
         let a = convert_to_tensor(array![[2.0, 1.0], [1.0, 3.0]], g);
         let inv = matrix_inverse(a);
@@ -30,7 +30,7 @@ fn test_matrix_operations() {
 #[test]
 #[allow(dead_code)]
 fn test_matrix_functions() {
-    ag::run::<f64_>(|g| {
+    ag::run(|g| {
         // Test matrix exponential and logarithm
         let a = convert_to_tensor(array![[0.5, 0.1], [0.1, 0.3]], g);
         let exp_a = matrix_exp(&a);
@@ -78,7 +78,7 @@ fn test_matrix_functions() {
 #[test]
 #[allow(dead_code)]
 fn test_special_matrices() {
-    ag::run::<f64_>(|g| {
+    ag::run(|g| {
         // Test Cholesky decomposition - SKIPPED until implementation
         // TODO: Re-enable when Cholesky is implemented in scirs2-core
         /*
@@ -125,7 +125,7 @@ fn test_special_matrices() {
 #[test]
 #[allow(dead_code)]
 fn test_eigenvalue_decomposition() {
-    ag::run::<f64_>(|g| {
+    ag::run(|g| {
         // Test with symmetric matrix
         let a = convert_to_tensor(array![[3.0, 1.0], [1.0, 3.0]], g);
         let (eigenvalues, eigenvectors) = eigen(a);
@@ -165,7 +165,7 @@ fn test_eigenvalue_decomposition() {
 #[test]
 #[allow(dead_code)]
 fn test_linear_solvers() {
-    ag::run::<f64_>(|g| {
+    ag::run(|g| {
         // Test linear system solver
         let a = convert_to_tensor(array![[3.0, 1.0], [1.0, 2.0]], g);
         let b = convert_to_tensor(array![[9.0], [8.0]], g);
@@ -194,7 +194,7 @@ fn test_linear_solvers() {
 #[test]
 #[allow(dead_code)]
 fn test_gradient_computation() {
-    ag::run::<f64_>(|g| {
+    ag::run(|g| {
         // Test gradient through matrix operations
         let a = variable(array![[2.0, 1.0], [1.0, 3.0]], g);
         let b = variable(array![[1.0], [2.0]], g);
@@ -221,7 +221,7 @@ fn test_gradient_computation() {
 #[test]
 #[allow(dead_code)]
 fn test_complex_linear_algebra_pipeline() {
-    ag::run::<f64_>(|g| {
+    ag::run(|g| {
         // Create a complex pipeline using multiple operations
         let a = variable(array![[4.0, 2.0], [2.0, 5.0]], g); // Positive definite
 

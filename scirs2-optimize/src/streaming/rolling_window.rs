@@ -97,7 +97,7 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
         if self.data_window.len() >= self.config.window_size {
             self.data_window.pop_front();
         }
-        self.data_window.push_back(data_point);
+        self.data_window.push_back(datapoint);
     }
 
     /// Optimize parameters based on current window contents
@@ -106,30 +106,51 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
             return Ok(());
         }
 
-        // Extract optimizer type first to avoid borrowing conflicts
-        match self.window_optimizer {
-            WindowOptimizerType::GradientDescent { learning_rate, .. } => {
-                if let WindowOptimizerType::GradientDescent { gradient_accumulator, .. } = &mut self.window_optimizer {
-                    self.optimize_gradient_descent(gradient_accumulator, learning_rate)
-                } else {
-                    unreachable!()
-                }
+        // Extract optimizer type and data temporarily to avoid borrowing conflicts
+        let mut temp_optimizer = std::mem::replace(
+            &mut self.window_optimizer,
+            WindowOptimizerType::GradientDescent {
+                gradient_accumulator: Array1::zeros(0),
+                learning_rate: 0.01,
+            },
+        );
+
+        let result = match &mut temp_optimizer {
+            WindowOptimizerType::GradientDescent {
+                gradient_accumulator,
+                learning_rate,
+            } => {
+                let learning_rate = *learning_rate;
+                self.optimize_gradient_descent(gradient_accumulator, learning_rate)
             }
-            WindowOptimizerType::LeastSquares { regularization, .. } => {
-                if let WindowOptimizerType::LeastSquares { xtx, xty, .. } = &mut self.window_optimizer {
-                    self.optimize_least_squares(xtx, xty, regularization)
-                } else {
-                    unreachable!()
-                }
+            WindowOptimizerType::LeastSquares {
+                xtx,
+                xty,
+                regularization,
+            } => {
+                let regularization = *regularization;
+                self.optimize_least_squares(xtx, xty, regularization)
             }
-            WindowOptimizerType::WeightedLeastSquares { regularization, decay_factor, .. } => {
-                if let WindowOptimizerType::WeightedLeastSquares { weighted_xtx, weighted_xty, .. } = &mut self.window_optimizer {
-                    self.optimize_weighted_least_squares(weighted_xtx, weighted_xty, regularization, decay_factor)
-                } else {
-                    unreachable!()
-                }
+            WindowOptimizerType::WeightedLeastSquares {
+                weighted_xtx,
+                weighted_xty,
+                regularization,
+                decay_factor,
+            } => {
+                let regularization = *regularization;
+                let decay_factor = *decay_factor;
+                self.optimize_weighted_least_squares(
+                    weighted_xtx,
+                    weighted_xty,
+                    regularization,
+                    decay_factor,
+                )
             }
-        }
+        };
+
+        // Restore the optimizer
+        self.window_optimizer = temp_optimizer;
+        result
     }
 
     /// Gradient descent optimization over the window
@@ -307,7 +328,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for RollingWindowOptimize
         let old_parameters = self.parameters.clone();
 
         // Add data _point to window
-        self.update_window(data_point.clone());
+        self.update_window(datapoint.clone());
         self.update_counter += 1;
 
         // Decide whether to reoptimize

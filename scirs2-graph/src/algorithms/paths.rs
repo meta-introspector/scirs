@@ -34,15 +34,15 @@ where
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    // First check if the _graph is connected (ignoring isolated vertices)
-    let non_isolated: Vec<_> = _graph
+    // First check if the graph is connected (ignoring isolated vertices)
+    let non_isolated: Vec<_> = graph
         .inner()
         .node_indices()
         .filter(|&idx| graph.inner().edges(idx).count() > 0)
         .collect();
 
     if non_isolated.is_empty() {
-        return EulerianType::Circuit; // Empty _graph technically has a circuit
+        return EulerianType::Circuit; // Empty graph technically has a circuit
     }
 
     // Check connectivity among non-isolated vertices
@@ -106,7 +106,7 @@ where
         let mut visited = vec![false; n];
         visited[start.index()] = true;
 
-        if hamiltonian_path_dfs(_graph, start, &mut visited, 1, n) {
+        if hamiltonian_path_dfs(graph, start, &mut visited, 1, n) {
             return true;
         }
     }
@@ -175,7 +175,7 @@ where
     let mut visited = vec![false; n];
     visited[start.index()] = true;
 
-    hamiltonian_circuit_dfs(_graph, start, start, &mut visited, 1, n)
+    hamiltonian_circuit_dfs(graph, start, start, &mut visited, 1, n)
 }
 
 /// DFS helper for Hamiltonian circuit

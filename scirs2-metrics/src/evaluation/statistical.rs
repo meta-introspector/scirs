@@ -40,7 +40,7 @@ use statrs::statistics::Statistics;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::evaluation::mcnemars_test;
+/// use scirs2_metrics::evaluation::mcnemars_test;
 ///
 /// // Create a contingency table
 /// let table = array![[50.0, 10.0], [5.0, 35.0]];
@@ -127,7 +127,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::evaluation::cochrans_q_test;
+/// use scirs2_metrics::evaluation::cochrans_q_test;
 ///
 /// // Create binary predictions for 3 models on 10 samples
 /// // (1 = correct prediction, 0 = incorrect prediction)
@@ -247,7 +247,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::evaluation::friedman_test;
+/// use scirs2_metrics::evaluation::friedman_test;
 ///
 /// // Create performance metrics for 3 models on 5 datasets
 /// let performance_metrics = array![
@@ -385,7 +385,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::evaluation::wilcoxon_signed_rank_test;
+/// use scirs2_metrics::evaluation::wilcoxon_signed_rank_test;
 ///
 /// // Performance metrics for two models across 8 different datasets
 /// let model1_performance = array![0.85, 0.72, 0.91, 0.78, 0.88, 0.83, 0.76, 0.90];
@@ -583,7 +583,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::evaluation::bootstrap_confidence_interval;
+/// use scirs2_metrics::evaluation::bootstrap_confidence_interval;
 ///
 /// // Sample data
 /// let data = array![23.5, 24.1, 25.2, 24.7, 24.9, 25.3, 24.8, 25.1, 23.9, 24.5];
@@ -653,7 +653,7 @@ where
         let mut resampled_indices = Vec::with_capacity(n);
 
         for _ in 0..n {
-            let idx = rng.gen_range(0..n);
+            let idx = rng.random_range(0..n);
             resampled_indices.push(idx);
         }
 
@@ -666,7 +666,7 @@ where
         // Create a new array from the resampled values
         // We have to cast it back to the appropriate type to use statistic_fn
         let resampled_data = ndarray::Array::from_vec(resampled_data_values)
-            .into__dimensionality::<ndarray::Ix1>()
+            .into_dimensionality::<ndarray::Ix1>()
             .unwrap_or_else(|_| {
                 // If _dimensionality conversion fails..create an empty array
                 ndarray::Array::zeros(0)

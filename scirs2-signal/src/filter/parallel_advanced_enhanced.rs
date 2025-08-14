@@ -220,13 +220,13 @@ impl ParallelMultiRateFilterBank {
     /// Validate perfect reconstruction property
     pub fn validate_perfect_reconstruction(&mut self, testsignal: &[f64]) -> SignalResult<f64> {
         let config = AdvancedParallelConfig::default();
-        let reconstructed = self.process(test_signal, &config)?;
+        let reconstructed = self.process(testsignal, &config)?;
 
         // Calculate reconstruction error
         let mut error = 0.0;
-        let len = test_signal.len().min(reconstructed.len());
+        let len = testsignal.len().min(reconstructed.len());
         for i in 0..len {
-            error += (test_signal[i] - reconstructed[i]).powi(2);
+            error += (testsignal[i] - reconstructed[i]).powi(2);
         }
         self.pr_error = (error / len as f64).sqrt();
 

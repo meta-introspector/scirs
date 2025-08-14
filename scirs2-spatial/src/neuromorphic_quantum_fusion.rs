@@ -433,7 +433,7 @@ impl QuantumSpikingClusterer {
 
                 // Map quantum measurement to spatial coordinates
                 for dim in 0..n_dims {
-                    let bit_position = dim % quantum_neuron.quantum_state.num_qubits;
+                    let bit_position = dim % quantum_neuron.quantum_state.numqubits;
                     let bit_value = (measurement >> bit_position) & 1;
 
                     // Use bit value to select from data range
@@ -668,7 +668,7 @@ impl QuantumSpikingClusterer {
 
             // Encode input as quantum rotation angles
             for (i, &coord) in point.iter().enumerate() {
-                if i < neuron.quantum_state.num_qubits {
+                if i < neuron.quantum_state.numqubits {
                     let normalized_coord = (coord + 10.0) / 20.0; // Normalize to [0, 1]
                     let rotation_angle = normalized_coord.clamp(0.0, 1.0) * PI;
 
@@ -1408,13 +1408,13 @@ impl NeuralQuantumOptimizer {
             // Apply quantum operations for exploration
             for _ in 0..self.quantum_exploration_depth {
                 // Apply Hadamard gates for superposition
-                for i in 0..quantum_state.num_qubits {
+                for i in 0..quantum_state.numqubits {
                     quantum_state.hadamard(i)?;
                 }
 
                 // Apply phase rotations based on current parameters
                 for (i, &param) in current_params.iter().enumerate() {
-                    if i < quantum_state.num_qubits {
+                    if i < quantum_state.numqubits {
                         let phase = param * PI / 4.0;
                         quantum_state.phase_rotation(i, phase)?;
                     }
@@ -1423,7 +1423,7 @@ impl NeuralQuantumOptimizer {
 
             // Extract exploration direction from quantum measurements
             for i in 0..exploration.len() {
-                let qubit_idx = i % quantum_state.num_qubits;
+                let qubit_idx = i % quantum_state.numqubits;
                 let measurement = quantum_state.measure();
                 let bit_value = (measurement >> qubit_idx) & 1;
 

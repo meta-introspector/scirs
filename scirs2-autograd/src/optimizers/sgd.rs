@@ -34,7 +34,7 @@ pub struct SGD<F> {
 
 impl<F: Float> SGD<F> {
     pub fn new(alpha: F) -> SGD<F> {
-        SGD { _alpha }
+        SGD { alpha }
     }
 }
 

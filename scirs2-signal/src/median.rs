@@ -721,12 +721,12 @@ fn find_vector_median(vectors: &[Vec<f64>]) -> Vec<f64> {
     let mut min_distance_sum = f64::INFINITY;
     let mut median_idx = 0;
 
-    for i in 0.._vectors.len() {
+    for i in 0..vectors.len() {
         let mut distance_sum = 0.0;
 
-        for j in 0.._vectors.len() {
+        for j in 0..vectors.len() {
             if i != j {
-                distance_sum += euclidean_distance(&_vectors[i], &_vectors[j]);
+                distance_sum += euclidean_distance(&vectors[i], &vectors[j]);
             }
         }
 
@@ -747,7 +747,7 @@ fn euclidean_distance(v1: &[f64], v2: &[f64]) -> f64 {
     }
 
     let mut sum_squared = 0.0;
-    for i in 0.._v1.len() {
+    for i in 0..v1.len() {
         let diff = v1[i] - v2[i];
         sum_squared += diff * diff;
     }
@@ -953,7 +953,7 @@ fn padsignal_1d(signal: &Array1<f64>, pad_size: usize, edgemode: EdgeMode) -> Ar
     }
 
     // Apply padding based on edge _mode
-    match edge_mode {
+    match edgemode {
         EdgeMode::Reflect => {
             // Reflect the signal at boundaries
             for i in 0..pad_size {
@@ -1007,7 +1007,7 @@ fn padimage_2d(image: &Array2<f64>, pad_size: usize, edgemode: EdgeMode) -> Arra
     }
 
     // Apply padding based on edge _mode
-    match edge_mode {
+    match edgemode {
         EdgeMode::Reflect => {
             // Reflect the image at boundaries
 

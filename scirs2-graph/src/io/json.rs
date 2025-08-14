@@ -164,7 +164,7 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(_path)?;
+    let file = File::open(path)?;
     let reader = BufReader::new(file);
     let json_graph: JsonGraph = serde_json::from_reader(reader)
         .map_err(|e| GraphError::Other(format!("Failed to parse JSON: {e}")))?;
@@ -239,7 +239,7 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(_path)?;
+    let file = File::open(path)?;
     let reader = BufReader::new(file);
     let json_graph: JsonGraph = serde_json::from_reader(reader)
         .map_err(|e| GraphError::Other(format!("Failed to parse JSON: {e}")))?;

@@ -323,7 +323,7 @@ impl DubinsPlanner {
     /// ```
     pub fn new(_turningradius: f64) -> Self {
         Self {
-            turning_radius: turning_radius,
+            turning_radius: _turningradius,
         }
     }
 
@@ -387,8 +387,8 @@ impl DubinsPlanner {
                 if path_length < best_length {
                     best_length = path_length;
                     best_path = Some(DubinsPath::new(
-                        start,
-                        goal,
+                        start.clone(),
+                        goal.clone(),
                         self.turning_radius,
                         path_type,
                         segments,
@@ -620,7 +620,7 @@ impl DubinsPlanner {
 
     /// Normalize angle to [-π, π]
     fn normalize_angle(angle: f64) -> f64 {
-        let mut normalized = _angle % (2.0 * PI);
+        let mut normalized = angle % (2.0 * PI);
         if normalized > PI {
             normalized -= 2.0 * PI;
         } else if normalized < -PI {

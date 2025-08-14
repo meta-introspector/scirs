@@ -70,7 +70,7 @@ where
     P: AsRef<Path>,
 {
     let file =
-        File::open(_path).map_err(|e| GraphError::Other(format!("Cannot open file: {e}")))?;
+        File::open(path).map_err(|e| GraphError::Other(format!("Cannot open file: {e}")))?;
     let reader = BufReader::new(file);
     let mut graph = Graph::new();
 
@@ -200,7 +200,7 @@ where
     P: AsRef<Path>,
 {
     let file =
-        File::open(_path).map_err(|e| GraphError::Other(format!("Cannot open file: {e}")))?;
+        File::open(path).map_err(|e| GraphError::Other(format!("Cannot open file: {e}")))?;
     let reader = BufReader::new(file);
     let mut graph = DiGraph::new();
 

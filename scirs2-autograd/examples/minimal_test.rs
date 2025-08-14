@@ -6,7 +6,7 @@ use ndarray::array;
 fn main() {
     println!("Running basic shape tests");
 
-    ag::run::<f64_>(|ctx| {
+    ag::run(|ctx| {
         // Test scalar
         let scalar = T::scalar(5.0, ctx);
         println!("Scalar shape: {:?}", scalar.eval(ctx).unwrap().shape());

@@ -112,7 +112,7 @@ where
     }
 
     // Convert input to f64
-    let signal_f64: Vec<f64> = _signal
+    let signal_f64: Vec<f64> = signal
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -156,7 +156,7 @@ where
 
         // Check energy ratio of residue to determine stopping
         let residue_energy = residue.iter().map(|&x| x * x).sum::<f64>() / n as f64;
-        let original_energy = signal_f64.iter().map(|&x| x * x).sum::<f64>() / n as f64;
+        let original_energy = signal_f64.iter().map(|&x| x * x).sum::<f64>() / (n as f64);
 
         if residue_energy < 1e-10 || residue_energy / original_energy < 1e-2 {
             break;
@@ -309,7 +309,7 @@ fn find_local_maxima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
 
     // Handle short signals
     if n <= 2 {
-        let max_idx = _signal
+        let max_idx = signal
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -317,28 +317,28 @@ fn find_local_maxima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
             .unwrap_or(0);
 
         indices.push(max_idx);
-        values.push(_signal[max_idx]);
+        values.push(signal[max_idx]);
         return (indices, values);
     }
 
     // First point
     if signal[0] > signal[1] {
         indices.push(0);
-        values.push(_signal[0]);
+        values.push(signal[0]);
     }
 
     // Internal points
     for i in 1..n - 1 {
         if signal[i] > signal[i - 1] && signal[i] > signal[i + 1] {
             indices.push(i);
-            values.push(_signal[i]);
+            values.push(signal[i]);
         }
     }
 
     // Last point
     if signal[n - 1] > signal[n - 2] {
         indices.push(n - 1);
-        values.push(_signal[n - 1]);
+        values.push(signal[n - 1]);
     }
 
     (indices, values)
@@ -361,7 +361,7 @@ fn find_local_minima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
 
     // Handle short signals
     if n <= 2 {
-        let min_idx = _signal
+        let min_idx = signal
             .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -369,28 +369,28 @@ fn find_local_minima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
             .unwrap_or(0);
 
         indices.push(min_idx);
-        values.push(_signal[min_idx]);
+        values.push(signal[min_idx]);
         return (indices, values);
     }
 
     // First point
     if signal[0] < signal[1] {
         indices.push(0);
-        values.push(_signal[0]);
+        values.push(signal[0]);
     }
 
     // Internal points
     for i in 1..n - 1 {
         if signal[i] < signal[i - 1] && signal[i] < signal[i + 1] {
             indices.push(i);
-            values.push(_signal[i]);
+            values.push(signal[i]);
         }
     }
 
     // Last point
     if signal[n - 1] < signal[n - 2] {
         indices.push(n - 1);
-        values.push(_signal[n - 1]);
+        values.push(signal[n - 1]);
     }
 
     (indices, values)
@@ -407,8 +407,8 @@ fn find_local_minima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
 /// * Tuple of (number of maxima, number of minima)
 #[allow(dead_code)]
 fn count_extrema(signal: &Array1<f64>) -> (usize, usize) {
-    let (maxima_idx, _) = find_local_maxima(_signal);
-    let (minima_idx, _) = find_local_minima(_signal);
+    let (maxima_idx, _) = find_local_maxima(signal);
+    let (minima_idx, _) = find_local_minima(signal);
 
     (maxima_idx.len(), minima_idx.len())
 }

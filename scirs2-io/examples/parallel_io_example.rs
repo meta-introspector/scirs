@@ -97,7 +97,7 @@ fn demonstrate_parallel_file_processing(
             let rows = data.len();
             let cols = if rows > 0 { data[0].len() } else { 0 };
             let flat_data: Vec<String> = data.into_iter().flatten().collect();
-            let array_data = Array2::fromshape_vec((rows, cols), flat_data)
+            let array_data = Array2::from_shape_vec((rows, cols), flat_data)
                 .map_err(|e| IoError::FormatError(e.to_string()))?;
 
             // Write CSV file (separate headers from data)
@@ -109,7 +109,7 @@ fn demonstrate_parallel_file_processing(
             let data_only = if array_data.nrows() > 1 {
                 array_data.slice(ndarray::s![1.., ..]).to_owned()
             } else {
-                Array2::fromshape_vec((0, cols), Vec::new())
+                Array2::from_shape_vec((0, cols), Vec::new())
                     .map_err(|e| IoError::FormatError(e.to_string()))?
             };
             csv::write_csv(&file_path, &data_only, headers.as_ref(), None)?;
@@ -216,7 +216,7 @@ fn demonstrate_concurrent_format_conversion(
             let rows = csv_data.len();
             let cols = if rows > 0 { csv_data[0].len() } else { 0 };
             let flat_data: Vec<String> = csv_data.into_iter().flatten().collect();
-            let array_data = Array2::fromshape_vec((rows, cols), flat_data)
+            let array_data = Array2::from_shape_vec((rows, cols), flat_data)
                 .map_err(|e| IoError::FormatError(e.to_string()))?;
 
             // Write CSV file (separate headers from data)
@@ -228,7 +228,7 @@ fn demonstrate_concurrent_format_conversion(
             let data_only = if array_data.nrows() > 1 {
                 array_data.slice(ndarray::s![1.., ..]).to_owned()
             } else {
-                Array2::fromshape_vec((0, cols), Vec::new())
+                Array2::from_shape_vec((0, cols), Vec::new())
                     .map_err(|e| IoError::FormatError(e.to_string()))?
             };
             csv::write_csv(&csv_file, &data_only, headers.as_ref(), None)?;
@@ -301,7 +301,7 @@ fn demonstrate_concurrent_format_conversion(
             let rows = csv_data.len();
             let cols = if rows > 0 { csv_data[0].len() } else { 0 };
             let flat_data: Vec<String> = csv_data.into_iter().flatten().collect();
-            let array_data = Array2::fromshape_vec((rows, cols), flat_data)
+            let array_data = Array2::from_shape_vec((rows, cols), flat_data)
                 .map_err(|e| IoError::FormatError(e.to_string()))?;
 
             // Write CSV file (separate headers from data)
@@ -313,7 +313,7 @@ fn demonstrate_concurrent_format_conversion(
             let data_only = if array_data.nrows() > 1 {
                 array_data.slice(ndarray::s![1.., ..]).to_owned()
             } else {
-                Array2::fromshape_vec((0, cols), Vec::new())
+                Array2::from_shape_vec((0, cols), Vec::new())
                     .map_err(|e| IoError::FormatError(e.to_string()))?
             };
             csv::write_csv(&csv_file, &data_only, headers.as_ref(), None)?;
@@ -501,7 +501,7 @@ fn demonstrate_pipeline_processing(
                 let rows = csv_data.len();
                 let cols = if rows > 0 { csv_data[0].len() } else { 0 };
                 let flat_data: Vec<String> = csv_data.into_iter().flatten().collect();
-                let array_data = Array2::fromshape_vec((rows, cols), flat_data)
+                let array_data = Array2::from_shape_vec((rows, cols), flat_data)
                     .map_err(|e| IoError::FormatError(e.to_string()))?;
 
                 // Write CSV file (separate headers from data)
@@ -513,7 +513,7 @@ fn demonstrate_pipeline_processing(
                 let data_only = if array_data.nrows() > 1 {
                     array_data.slice(ndarray::s![1.., ..]).to_owned()
                 } else {
-                    Array2::fromshape_vec((0, cols), Vec::new())
+                    Array2::from_shape_vec((0, cols), Vec::new())
                         .map_err(|e| IoError::FormatError(e.to_string()))?
                 };
                 csv::write_csv(&file_path, &data_only, headers.as_ref(), None)?;
@@ -612,7 +612,7 @@ fn generate_csv_data(rows: usize) -> Vec<Vec<String>> {
         "label".to_string(),
     ]];
 
-    for i in 0.._rows {
+    for i in 0..rows {
         data.push(vec![
             i.to_string(),
             (i as f64 * 0.1).to_string(),

@@ -63,7 +63,7 @@ where
     let max_size = max_size.unwrap_or(nodes.len());
 
     // Try all possible subsets up to max_size
-    for _size in 1..=max_size.min(nodes.len()) {
+    for size in 1..=max_size.min(nodes.len()) {
         let combinations = generate_combinations(&nodes, size);
 
         for candidate in combinations {
@@ -102,7 +102,7 @@ where
                         .retain(|t| !candidate_set.is_subset(&t.nodes) || t.nodes == candidate_set);
 
                     transversals.push(MinimalTransversal {
-                        _size: candidate_set.len(),
+                        size: candidate_set.len(),
                         nodes: candidate_set,
                         hit_hyperedges,
                     });
@@ -124,14 +124,14 @@ fn generate_combinations<T: Clone>(items: &[T], k: usize) -> Vec<Vec<T>> {
         return vec![];
     }
     if k == items.len() {
-        return vec![_items.to_vec()];
+        return vec![items.to_vec()];
     }
 
     let mut result = Vec::new();
 
     // Include first element
     let first = items[0].clone();
-    let rest = &_items[1..];
+    let rest = &items[1..];
     for mut combo in generate_combinations(rest, k - 1) {
         combo.insert(0, first.clone());
         result.push(combo);
@@ -271,17 +271,17 @@ where
     // Use a more sophisticated approach for indirect connections
     // Try removing each hyperedge individually and check connectivity
     for hyperedge in &hyperedges {
-        let mut temp_hypergraph: Hypergraph<N, E, Ix> = Hypergraph::new();
+        let mut temphypergraph: Hypergraph<N, E, Ix> = Hypergraph::new();
 
         // Add all nodes
         for node in hypergraph.nodes() {
-            temp_hypergraph.add_node(node.clone());
+            temphypergraph.add_node(node.clone());
         }
 
         // Add all hyperedges except the one we're testing
         for other_hyperedge in &hyperedges {
             if other_hyperedge.id != hyperedge.id {
-                temp_hypergraph.add_hyperedge(
+                temphypergraph.add_hyperedge(
                     other_hyperedge.nodes.clone(),
                     other_hyperedge.weight.clone(),
                 )?;
@@ -289,7 +289,7 @@ where
         }
 
         // Check if nodes are still connected
-        if !temp_hypergraph.are_connected(source, target) {
+        if !temphypergraph.are_connected(source, target) {
             return Ok(1);
         }
     }
@@ -325,7 +325,7 @@ where
 
     for i in 0..nodes.len() {
         for j in (i + 1)..nodes.len() {
-            if let Some(distance) = hypergraph_distance(_hypergraph, &nodes[i], &nodes[j]) {
+            if let Some(distance) = hypergraph_distance(hypergraph, &nodes[i], &nodes[j]) {
                 max_distance = max_distance.max(distance);
             } else {
                 // Graph is disconnected
@@ -462,13 +462,13 @@ where
 /// # Returns
 /// * True if connected, false otherwise
 #[allow(dead_code)]
-pub fn is_hypergraph_connected<N, E, Ix>(hypergraph: &Hypergraph<N, E, Ix>) -> bool
+pub fn ishypergraph_connected<N, E, Ix>(hypergraph: &Hypergraph<N, E, Ix>) -> bool
 where
     N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
-    let components = hypergraph_connected_components(_hypergraph);
+    let components = hypergraph_connected_components(hypergraph);
     components.len() <= 1
 }
 
@@ -498,7 +498,7 @@ mod tests {
     }
 
     #[test]
-    fn test_hypergraph_distance() {
+    fn testhypergraph_distance() {
         let mut hypergraph: Hypergraph<&str, f64> = Hypergraph::new();
 
         // Create a path-like structure: {A,B}, {B,C}, {C,D}
@@ -523,7 +523,7 @@ mod tests {
     }
 
     #[test]
-    fn test_hypergraph_diameter() {
+    fn testhypergraph_diameter() {
         let mut hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
 
         // Create a path: {1,2}, {2,3}, {3,4}
@@ -539,7 +539,7 @@ mod tests {
     }
 
     #[test]
-    fn test_hypergraph_connected_components() {
+    fn testhypergraph_connected_components() {
         let mut hypergraph: Hypergraph<&str, f64> = Hypergraph::new();
 
         // Create two disconnected components
@@ -564,22 +564,22 @@ mod tests {
     }
 
     #[test]
-    fn test_is_hypergraph_connected() {
+    fn test_ishypergraph_connected() {
         let mut hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
 
         // Single component
         hypergraph
             .add_hyperedge_from_vec(vec![1, 2, 3], 1.0)
             .unwrap();
-        assert!(is_hypergraph_connected(&hypergraph));
+        assert!(ishypergraph_connected(&hypergraph));
 
         // Add disconnected node
         hypergraph.add_node(4);
-        assert!(!is_hypergraph_connected(&hypergraph));
+        assert!(!ishypergraph_connected(&hypergraph));
 
         // Connect the disconnected node
         hypergraph.add_hyperedge_from_vec(vec![3, 4], 1.0).unwrap();
-        assert!(is_hypergraph_connected(&hypergraph));
+        assert!(ishypergraph_connected(&hypergraph));
     }
 
     #[test]
@@ -654,7 +654,7 @@ mod tests {
     }
 
     #[test]
-    fn test_empty_hypergraph() {
+    fn test_emptyhypergraph() {
         let hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
 
         let transversals = minimal_transversals(&hypergraph, None);
@@ -665,6 +665,6 @@ mod tests {
         let components = hypergraph_connected_components(&hypergraph);
         assert!(components.is_empty());
 
-        assert!(is_hypergraph_connected(&hypergraph));
+        assert!(ishypergraph_connected(&hypergraph));
     }
 }

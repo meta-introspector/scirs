@@ -58,7 +58,7 @@ impl<A: Float + Debug> ElasticNet<A> {
     ///   - l1_ratio = 0: only L2 penalty
     pub fn new(alpha: A, l1ratio: A) -> Self {
         // Ensure l1_ratio is between 0 and 1
-        let l1_ratio = l1_ratio.max(A::zero()).min(A::one());
+        let l1_ratio = l1ratio.max(A::zero()).min(A::one());
 
         // Compute individual strengths for L1 and L2
         let l1_alpha = alpha * l1_ratio;
@@ -90,7 +90,7 @@ impl<A: Float + Debug> ElasticNet<A> {
     /// * `l1_ratio` - Mixing parameter (0 <= l1_ratio <= 1)
     pub fn set_params(&mut self, alpha: A, l1ratio: A) -> &mut Self {
         // Ensure l1_ratio is between 0 and 1
-        let l1_ratio = l1_ratio.max(A::zero()).min(A::one());
+        let l1_ratio = l1ratio.max(A::zero()).min(A::one());
 
         self.alpha = alpha;
         self.l1_ratio = l1_ratio;

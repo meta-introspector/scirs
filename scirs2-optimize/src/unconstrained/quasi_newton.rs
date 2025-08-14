@@ -229,7 +229,7 @@ where
 
 /// SR1 update formula for Hessian approximation B
 #[allow(dead_code)]
-fn update_sr1(_bmat: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>) {
+fn update_sr1(b_mat: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>) {
     if let Some(b) = b_mat.as_mut() {
         let bs = b.dot(s);
         let v = y - &bs;
@@ -248,7 +248,7 @@ fn update_sr1(_bmat: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>)
 
 /// DFP update formula for inverse Hessian approximation H
 #[allow(dead_code)]
-fn update_dfp(_hinv: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>) {
+fn update_dfp(h_inv: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>) {
     if let Some(h) = h_inv.as_mut() {
         let s_dot_y = s.dot(y);
 
@@ -276,7 +276,7 @@ fn update_dfp(_hinv: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>)
 
 /// BFGS update formula for inverse Hessian approximation H
 #[allow(dead_code)]
-fn update_bfgs(_hinv: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>, n: usize) {
+fn update_bfgs(h_inv: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>, n: usize) {
     if let Some(h) = h_inv.as_mut() {
         let s_dot_y = s.dot(y);
 
@@ -426,7 +426,7 @@ mod tests {
     #[test]
     fn test_sr1_quadratic() {
         let quadratic = |x: &ArrayView1<f64>| -> f64 {
-            let a = Array2::fromshape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).unwrap();
+            let a = Array2::from_shape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).unwrap();
             let b = Array1::from_vec(vec![-4.0, -6.0]);
             0.5 * x.dot(&a.dot(x)) + b.dot(x)
         };
@@ -445,7 +445,7 @@ mod tests {
     #[test]
     fn test_dfp_quadratic() {
         let quadratic = |x: &ArrayView1<f64>| -> f64 {
-            let a = Array2::fromshape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).unwrap();
+            let a = Array2::from_shape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).unwrap();
             let b = Array1::from_vec(vec![-4.0, -6.0]);
             0.5 * x.dot(&a.dot(x)) + b.dot(x)
         };

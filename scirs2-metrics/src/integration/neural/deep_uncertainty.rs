@@ -65,20 +65,20 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Set Monte Carlo dropout parameters
-    pub fn with_mc_dropout(mut self, n_samples: usize, dropoutrate: F) -> Self {
+    pub fn with_mc_dropout(mut self, n_samples: usize, dropout_rate: F) -> Self {
         self.n_mc_dropout_samples = n_samples;
         self.dropout_rate = dropout_rate;
         self
     }
 
     /// Set ensemble parameters
-    pub fn with_ensemble(mut self, nmembers: usize) -> Self {
+    pub fn with_ensemble(mut self, n_members: usize) -> Self {
         self.n_ensemble_members = n_members;
         self
     }
 
     /// Set test-time augmentation parameters
-    pub fn with_tta(mut self, nsamples: usize) -> Self {
+    pub fn with_tta(mut self, n_samples: usize) -> Self {
         self.n_tta_samples = n_samples;
         self
     }
@@ -90,7 +90,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Set SWAG parameters
-    pub fn with_swag(mut self, enable: bool, nsamples: usize) -> Self {
+    pub fn with_swag(mut self, enable: bool, n_samples: usize) -> Self {
         self.enable_swag = enable;
         self.n_swag_samples = n_samples;
         self
@@ -132,7 +132,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         let entropy_decomposition =
             self.compute_entropy_decomposition(&mc_dropout_uncertainty.predictions)?;
 
-        // Temperature scaling (if enabled and _calibration data available)
+        // Temperature scaling (if enabled and calibration data available)
         let temperature_scaling = if self.enable_temperature_scaling
             && x_calibration.is_some()
             && y_calibration.is_some()
@@ -246,7 +246,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         // Compute prediction intervals
         let prediction_intervals = self.compute_ensemble_prediction_intervals(&predictions)?;
 
-        // Compute mutual information between _models
+        // Compute mutual information between models
         let mutual_information = self.compute_model_mutual_information(&predictions)?;
 
         Ok(EnsembleUncertainty {
@@ -406,7 +406,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         let calibrated_probabilities =
             calibrated_logits.mapv(|x| F::one() / (F::one() + (-x).exp()));
 
-        // Compute _calibration metrics
+        // Compute calibration metrics
         let pre_calibration_ece = self.compute_expected_calibration_error(
             &logits.mapv(|x| F::one() / (F::one() + (-x).exp())),
             y_calibration,
@@ -419,7 +419,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
             calibrated_probabilities,
             pre_calibration_ece,
             post_calibration_ece,
-            _calibration_improvement: pre_calibration_ece - post_calibration_ece,
+            calibration_improvement: pre_calibration_ece - post_calibration_ece,
         })
     }
 
@@ -493,7 +493,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
             // Sample from SWAG posterior: θ ~ N(θ_SWA, Σ_SWAG)
             // where Σ_SWAG = diag(σ²) + (1/(K-1)) * D * D^T
 
-            let mut weight_sample = swa_statistics.meanweights.clone();
+            let mut weight_sample = swa_statistics.mean_weights.clone();
 
             // Sample from diagonal component with proper variance scaling
             for (i, &var) in swa_statistics.diagonal_variance.iter().enumerate() {
@@ -550,7 +550,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
                 *weight = *weight - update; // Gradient descent step
             }
 
-            weight_trajectory.push(currentweights.clone());
+            weight_trajectory.push(current_weights.clone());
         }
 
         // Compute SWA statistics from trajectory
@@ -570,8 +570,8 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Build deviation matrix from weight trajectory
-    fn build_deviation_matrix(&self, swastats: &SWAStatistics<F>) -> Result<Array2<F>> {
-        let n_weights = swa_stats.meanweights.len();
+    fn build_deviation_matrix(&self, swa_stats: &SWAStatistics<F>) -> Result<Array2<F>> {
+        let n_weights = swa_stats.mean_weights.len();
         let n_deviations = swa_stats.weight_deviations.len();
         let max_rank = 20.min(n_deviations); // Limit rank for computational efficiency
 
@@ -596,7 +596,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     ) -> Result<(Vec<F>, Array2<F>)> {
         let (_n_weights, rank) = deviation_matrix.dim();
 
-        // Compute covariance _matrix: D^T * D
+        // Compute covariance matrix: D^T * D
         let covariance = deviation_matrix.t().dot(deviation_matrix);
 
         // Simplified eigendecomposition (in practice, use proper linear algebra library)
@@ -635,7 +635,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
 
         // Project back to weight space: component = D * V * z
         // Simplified projection (in practice, use proper matrix multiplication)
-        for i in 0..nweights.min(rank) {
+        for i in 0..n_weights.min(rank) {
             for j in 0..rank {
                 low_rank_component[i] = low_rank_component[i]
                     + eigenvectors[[j, j]] * latent_samples[j]
@@ -702,10 +702,10 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Enhance sample diversity through post-processing
-    fn enhance_sample_diversity(&self, weightsamples: &mut [SWAGWeightSample<F>]) -> Result<()> {
+    fn enhance_sample_diversity(&self, weight_samples: &mut [SWAGWeightSample<F>]) -> Result<()> {
         let n_samples = weight_samples.len();
 
-        // Compute pairwise distances between _samples
+        // Compute pairwise distances between samples
         let mut distances = Array2::zeros((n_samples, n_samples));
         for i in 0..n_samples {
             for j in (i + 1)..n_samples {
@@ -718,7 +718,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
             }
         }
 
-        // Apply diversity enhancement if _samples are too similar
+        // Apply diversity enhancement if samples are too similar
         let min_distance_threshold = F::from(0.01).unwrap();
         for i in 0..n_samples {
             let mut too_close_neighbors = 0;
@@ -728,7 +728,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
                 }
             }
 
-            // Add noise to _samples that are too close to others
+            // Add noise to samples that are too close to others
             if too_close_neighbors > n_samples / 4 {
                 let noise_scale = min_distance_threshold * F::from(0.5).unwrap();
                 for weight in &mut weight_samples[i].weights {
@@ -754,7 +754,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     where
         M: Fn(&ArrayView2<F>, bool) -> Array1<F>,
     {
-        // In practice, you would apply the _weights to the actual neural network
+        // In practice, you would apply the weights to the actual neural network
         // For simulation, we apply noise to the output
         let base_predictions = model(x, false);
         let mut weighted_predictions = base_predictions.clone();
@@ -850,7 +850,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         // Compute deviation matrix D
         let mut deviation_matrix = Array2::zeros((n_weights, rank));
 
-        // Use subset of weight _samples for low-rank approximation
+        // Use subset of weight samples for low-rank approximation
         let step = weight_samples.len() / rank.max(1);
         for (k, i) in (0..weight_samples.len())
             .step_by(step)
@@ -1322,8 +1322,8 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     // Additional helper methods for enhanced SWAG implementation
 
     /// Initialize realistic weights with proper scaling
-    fn initialize_realistic_weights(&self, nweights: usize) -> Result<Vec<F>> {
-        let mut _weights = Vec::with_capacity(n_weights);
+    fn initialize_realistic_weights(&self, n_weights: usize) -> Result<Vec<F>> {
+        let mut weights = Vec::with_capacity(n_weights);
 
         // Xavier initialization: _weights ~ N(0, 2/(n_in + n_out))
         let fan_in = 100; // Simulated input dimension
@@ -1335,14 +1335,14 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
             weights.push(weight);
         }
 
-        Ok(_weights)
+        Ok(weights)
     }
 
     /// Compute SWA mean from weight trajectory
-    fn compute_swa_mean(&self, weighttrajectory: &[Vec<F>]) -> Result<Vec<F>> {
+    fn compute_swa_mean(&self, weight_trajectory: &[Vec<F>]) -> Result<Vec<F>> {
         if weight_trajectory.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty weight _trajectory".to_string(),
+                "Empty weight trajectory".to_string(),
             ));
         }
 
@@ -1369,11 +1369,11 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         weight_trajectory: &[Vec<F>],
         mean_weights: &[F],
     ) -> Result<Vec<F>> {
-        let n_weights = meanweights.len();
+        let n_weights = mean_weights.len();
         let n_epochs = weight_trajectory.len();
         let mut diagonal_variance = vec![F::zero(); n_weights];
 
-        for _weights in weight_trajectory {
+        for weights in weight_trajectory {
             for (i, &weight) in weights.iter().enumerate() {
                 let deviation = weight - mean_weights[i];
                 diagonal_variance[i] = diagonal_variance[i] + deviation * deviation;
@@ -1395,7 +1395,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     ) -> Result<Vec<Vec<F>>> {
         let mut deviations = Vec::new();
 
-        for _weights in weight_trajectory {
+        for weights in weight_trajectory {
             let mut deviation = Vec::new();
             for (i, &weight) in weights.iter().enumerate() {
                 deviation.push(weight - mean_weights[i]);
@@ -1422,7 +1422,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Compute eigenvalue contribution for a sample
-    fn compute_eigen_contribution(&self, eigenvalues: &[F], sampleidx: usize) -> Result<F> {
+    fn compute_eigen_contribution(&self, eigenvalues: &[F], sample_idx: usize) -> Result<F> {
         if eigenvalues.is_empty() {
             return Ok(F::zero());
         }
@@ -1439,10 +1439,10 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Compute deviation penalty for log posterior
-    fn compute_deviation_penalty(&self, weights: &[F], meanweights: &[F]) -> Result<F> {
+    fn compute_deviation_penalty(&self, weights: &[F], mean_weights: &[F]) -> Result<F> {
         let mut penalty = F::zero();
 
-        for (&weight, &mean_weight) in weights.iter().zip(meanweights.iter()) {
+        for (&weight, &mean_weight) in weights.iter().zip(mean_weights.iter()) {
             let deviation = weight - mean_weight;
             penalty = penalty + deviation * deviation;
         }
@@ -1468,7 +1468,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Compute rank contribution for a weight sample
-    fn compute_rank_contribution(&self, weights: &[F], swastats: &SWAStatistics<F>) -> Result<F> {
+    fn compute_rank_contribution(&self, weights: &[F], swa_stats: &SWAStatistics<F>) -> Result<F> {
         // Simplified rank contribution based on weight alignment with principal directions
         let weight_norm = weights.iter().map(|&w| w * w).sum::<F>().sqrt();
         let mean_norm = swa_stats

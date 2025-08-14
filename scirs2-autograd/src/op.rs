@@ -115,8 +115,8 @@ pub struct ComputeContext<F: Float> {
 
 impl<F: Float> ComputeContext<F> {
     /// Creates new ComputeContext.
-    pub fn new(_inputs: &[NdArray<F>], outputs: &mut [NdArray<F>]) -> Self {
-        // Clone all _inputs to own the data
+    pub fn new(inputs: &[NdArray<F>], outputs: &mut [NdArray<F>]) -> Self {
+        // Clone all inputs to own the data
         let input_arrays = inputs.to_vec();
         Self {
             inputs: input_arrays,
@@ -125,7 +125,7 @@ impl<F: Float> ComputeContext<F> {
     }
 
     /// Creates a new ComputeContext with prepared inputs.
-    pub fn with_inputs(_inputarrays: Vec<NdArray<F>>) -> Self {
+    pub fn with_inputs(input_arrays: Vec<NdArray<F>>) -> Self {
         Self {
             inputs: input_arrays,
             outputs: Vec::new(),
@@ -299,6 +299,6 @@ pub struct OpOutput<F: Float> {
 impl<F: Float> OpOutput<F> {
     #[allow(dead_code)]
     pub(crate) fn new(output: NdArray<F>) -> Self {
-        Self { _output }
+        Self { output }
     }
 }

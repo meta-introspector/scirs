@@ -391,12 +391,12 @@ impl FewShotLearningOptimizer {
     pub fn new(config: LearnedOptimizationConfig) -> Self {
         let feature_dim = config.hidden_size;
         let meta_learner = MetaLearnerNetwork::new(feature_dim);
-        let fast_adapter = FastAdaptationMechanism::new(_config.inner_learning_rate);
+        let fast_adapter = FastAdaptationMechanism::new(config.inner_learning_rate);
         let similarity_matcher = ProblemSimilarityMatcher::new(feature_dim);
         let experience_memory = ExperienceMemory::new(1000);
 
         Self {
-            config: config,
+            config,
             meta_learner,
             fast_adapter,
             similarity_matcher,
@@ -512,6 +512,7 @@ impl FewShotLearningOptimizer {
                 encoding[5] = 1.0;
                 encoding[6] = 1.0;
             }
+            _ => {} // Default case for unknown problem classes
         }
 
         Ok(encoding)
@@ -568,12 +569,16 @@ impl FewShotLearningOptimizer {
         &mut self,
         support_examples: &[SupportExample],
     ) -> OptimizeResult<()> {
+        // First compute all meta-gradients
+        let all_gradients: Result<Vec<_>, _> = support_examples
+            .iter()
+            .map(|example| self.compute_meta_gradients(example))
+            .collect();
+        let all_gradients = all_gradients?;
+
+        // Now update the adapter with all computed gradients
         let adapter = &mut self.fast_adapter.gradient_adapter;
-
-        for example in support_examples {
-            // Compute meta-gradients from example
-            let meta_gradients = self.compute_meta_gradients(example)?;
-
+        for meta_gradients in all_gradients {
             // Update adaptation parameters
             for (i, &grad) in meta_gradients.iter().enumerate() {
                 if i < adapter.gradient_accumulator.len() {
@@ -608,7 +613,7 @@ impl FewShotLearningOptimizer {
     }
 
     /// MAML adaptation
-    fn maml_adaptation(&mut self, supportexamples: &[SupportExample]) -> OptimizeResult<()> {
+    fn maml_adaptation(&mut self, support_examples: &[SupportExample]) -> OptimizeResult<()> {
         let adapter = &mut self.fast_adapter.maml_adapter;
 
         for example in support_examples {
@@ -705,7 +710,7 @@ impl FewShotLearningOptimizer {
     }
 
     /// Update adaptation statistics
-    fn update_adaptation_stats(&mut self, num_supportexamples: usize) -> OptimizeResult<()> {
+    fn update_adaptation_stats(&mut self, num_support_examples: usize) -> OptimizeResult<()> {
         self.adaptation_stats.support_examples_used = num_support_examples;
         self.adaptation_stats.adaptation_speed = 1.0 / (num_support_examples as f64 + 1.0);
         self.adaptation_stats.transfer_efficiency = if num_support_examples > 0 {
@@ -837,33 +842,33 @@ pub struct ConvergenceCriteria {
 
 impl MetaLearnerNetwork {
     /// Create new meta-learner network
-    pub fn new(_featuredim: usize) -> Self {
+    pub fn new(feature_dim: usize) -> Self {
         Self {
-            feature_extractor: FeatureExtractor::new(_feature_dim),
-            context_encoder: ContextEncoder::new(_feature_dim),
-            parameter_generator: ParameterGenerator::new(_feature_dim),
-            update_network: UpdateNetwork::new(_feature_dim),
-            memory_networks: vec![MemoryNetwork::new(_feature_dim, 100)],
+            feature_extractor: FeatureExtractor::new(feature_dim),
+            context_encoder: ContextEncoder::new(feature_dim),
+            parameter_generator: ParameterGenerator::new(feature_dim),
+            update_network: UpdateNetwork::new(feature_dim),
+            memory_networks: vec![MemoryNetwork::new(feature_dim, 100)],
         }
     }
 }
 
 impl FeatureExtractor {
     /// Create new feature extractor
-    pub fn new(_featuredim: usize) -> Self {
+    pub fn new(feature_dim: usize) -> Self {
         Self {
             conv_layers: vec![],
             dense_layers: vec![
-                DenseLayer::new(_feature_dim, _feature_dim * 2, ActivationType::ReLU),
-                DenseLayer::new(_feature_dim * 2, feature_dim, ActivationType::ReLU),
+                DenseLayer::new(feature_dim, feature_dim * 2, ActivationType::ReLU),
+                DenseLayer::new(feature_dim * 2, feature_dim, ActivationType::ReLU),
             ],
-            attention_mechanism: FeatureAttention::new(_feature_dim),
-            feature_dim: feature_dim,
+            attention_mechanism: FeatureAttention::new(feature_dim),
+            feature_dim,
         }
     }
 
     /// Extract features from problem encoding
-    pub fn extract(&self, problemencoding: &Array1<f64>) -> OptimizeResult<Array1<f64>> {
+    pub fn extract(&self, problem_encoding: &Array1<f64>) -> OptimizeResult<Array1<f64>> {
         let mut features = problem_encoding.clone();
 
         // Pass through dense layers
@@ -880,9 +885,9 @@ impl FeatureExtractor {
 
 impl DenseLayer {
     /// Create new dense layer
-    pub fn new(_input_size: usize, outputsize: usize, activation: ActivationType) -> Self {
-        let weights = Array2::fromshape_fn((output_size, input_size), |_| {
-            (rand::rng().gen::<f64>() - 0.5) * (2.0 / _input_size as f64).sqrt()
+    pub fn new(input_size: usize, output_size: usize, activation: ActivationType) -> Self {
+        let weights = Array2::from_shape_fn((output_size, input_size), |_| {
+            (rand::rng().gen::<f64>() - 0.5) * (2.0 / input_size as f64).sqrt()
         });
         let bias = Array1::zeros(output_size);
 
@@ -911,18 +916,18 @@ impl DenseLayer {
 
 impl FeatureAttention {
     /// Create new feature attention
-    pub fn new(_featuredim: usize) -> Self {
+    pub fn new(feature_dim: usize) -> Self {
         Self {
-            query_weights: Array2::fromshape_fn((_feature_dim, feature_dim), |_| {
+            query_weights: Array2::from_shape_fn((feature_dim, feature_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            key_weights: Array2::fromshape_fn((_feature_dim, feature_dim), |_| {
+            key_weights: Array2::from_shape_fn((feature_dim, feature_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            value_weights: Array2::fromshape_fn((_feature_dim, feature_dim), |_| {
+            value_weights: Array2::from_shape_fn((feature_dim, feature_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            attention_scores: Array1::zeros(_feature_dim),
+            attention_scores: Array1::zeros(feature_dim),
         }
     }
 
@@ -948,62 +953,62 @@ impl FeatureAttention {
 
 impl ContextEncoder {
     /// Create new context encoder
-    pub fn new(_contextdim: usize) -> Self {
+    pub fn new(context_dim: usize) -> Self {
         Self {
-            lstm: LSTMCell::new(_context_dim),
-            embedding_layer: Array2::fromshape_fn((_context_dim, 100), |_| {
+            lstm: LSTMCell::new(context_dim),
+            embedding_layer: Array2::from_shape_fn((context_dim, 100), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            aggregation_network: Array2::fromshape_fn((_context_dim, context_dim), |_| {
+            aggregation_network: Array2::from_shape_fn((context_dim, context_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            context_dim: context_dim,
+            context_dim,
         }
     }
 }
 
 impl LSTMCell {
     /// Create new LSTM cell
-    pub fn new(_hiddensize: usize) -> Self {
+    pub fn new(hidden_size: usize) -> Self {
         Self {
-            w_i: Array2::fromshape_fn((_hidden_size, _hidden_size * 2), |_| {
+            w_i: Array2::from_shape_fn((hidden_size, hidden_size * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            w_f: Array2::fromshape_fn((_hidden_size, _hidden_size * 2), |_| {
+            w_f: Array2::from_shape_fn((hidden_size, hidden_size * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            w_c: Array2::fromshape_fn((_hidden_size, _hidden_size * 2), |_| {
+            w_c: Array2::from_shape_fn((hidden_size, hidden_size * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            w_o: Array2::fromshape_fn((_hidden_size, _hidden_size * 2), |_| {
+            w_o: Array2::from_shape_fn((hidden_size, hidden_size * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            hidden_state: Array1::zeros(_hidden_size),
-            cell_state: Array1::zeros(_hidden_size),
+            hidden_state: Array1::zeros(hidden_size),
+            cell_state: Array1::zeros(hidden_size),
         }
     }
 }
 
 impl ParameterGenerator {
     /// Create new parameter generator
-    pub fn new(_paramdim: usize) -> Self {
+    pub fn new(param_dim: usize) -> Self {
         Self {
-            generator_network: Array2::fromshape_fn((_param_dim, param_dim), |_| {
+            generator_network: Array2::from_shape_fn((param_dim, param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            conditioning_network: Array2::fromshape_fn((_param_dim, param_dim), |_| {
+            conditioning_network: Array2::from_shape_fn((param_dim, param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            output_projection: Array2::fromshape_fn((_param_dim, param_dim), |_| {
+            output_projection: Array2::from_shape_fn((param_dim, param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            param_dim: param_dim,
+            param_dim,
         }
     }
 
     /// Generate parameters from encoding
     pub fn generate(&self, encoding: &Array1<f64>) -> OptimizeResult<Array1<f64>> {
-        let mut params = Array1::zeros(self.param_dim);
+        let mut params: Array1<f64> = Array1::zeros(self.param_dim);
 
         // Simple generation (in practice would be more sophisticated)
         for i in 0..params.len() {
@@ -1019,15 +1024,15 @@ impl ParameterGenerator {
 
 impl UpdateNetwork {
     /// Create new update network
-    pub fn new(_paramdim: usize) -> Self {
+    pub fn new(param_dim: usize) -> Self {
         Self {
-            update_network: Array2::fromshape_fn((_param_dim, param_dim), |_| {
+            update_network: Array2::from_shape_fn((param_dim, param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            meta_gradient_network: Array2::fromshape_fn((_param_dim, param_dim), |_| {
+            meta_gradient_network: Array2::from_shape_fn((param_dim, param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            lr_network: Array2::fromshape_fn((1, param_dim), |_| {
+            lr_network: Array2::from_shape_fn((1, param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             update_history: VecDeque::with_capacity(100),
@@ -1037,7 +1042,7 @@ impl UpdateNetwork {
 
 impl MemoryNetwork {
     /// Create new memory network
-    pub fn new(_feature_dim: usize, memorysize: usize) -> Self {
+    pub fn new(feature_dim: usize, memory_size: usize) -> Self {
         Self {
             memory_bank: Array2::zeros((memory_size, feature_dim)),
             memory_keys: Array2::zeros((memory_size, feature_dim)),
@@ -1050,9 +1055,9 @@ impl MemoryNetwork {
 
 impl FastAdaptationMechanism {
     /// Create new fast adaptation mechanism
-    pub fn new(_innerlr: f64) -> Self {
+    pub fn new(inner_lr: f64) -> Self {
         Self {
-            gradient_adapter: GradientBasedAdapter::new(_inner_lr),
+            gradient_adapter: GradientBasedAdapter::new(inner_lr),
             prototype_adapter: PrototypeBasedAdapter::new(),
             maml_adapter: MAMLAdapter::new(),
             strategy_selector: AdaptationStrategySelector::new(),
@@ -1062,10 +1067,10 @@ impl FastAdaptationMechanism {
 
 impl GradientBasedAdapter {
     /// Create new gradient-based adapter
-    pub fn new(_innerlr: f64) -> Self {
+    pub fn new(inner_lr: f64) -> Self {
         Self {
             meta_lr: 0.001,
-            inner_lr: inner_lr,
+            inner_lr,
             adaptation_steps: 5,
             gradient_accumulator: Array1::zeros(100),
         }
@@ -1128,7 +1133,7 @@ impl AdaptationStrategySelector {
 
         Self {
             strategy_scores,
-            selection_network: Array2::fromshape_fn((4, 10), |_| {
+            selection_network: Array2::from_shape_fn((4, 10), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             current_strategy: AdaptationStrategy::Gradient,
@@ -1138,10 +1143,10 @@ impl AdaptationStrategySelector {
 
 impl ProblemSimilarityMatcher {
     /// Create new problem similarity matcher
-    pub fn new(_featuredim: usize) -> Self {
+    pub fn new(feature_dim: usize) -> Self {
         Self {
             problem_embeddings: HashMap::new(),
-            similarity_network: Array2::fromshape_fn((1, _feature_dim * 2), |_| {
+            similarity_network: Array2::from_shape_fn((1, feature_dim * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             similarity_threshold: 0.7,
@@ -1156,8 +1161,8 @@ impl ExperienceMemory {
         Self {
             support_set: Vec::new(),
             query_set: Vec::new(),
-            capacity: capacity,
-            episodic_memory: VecDeque::with_capacity(_capacity),
+            capacity,
+            episodic_memory: VecDeque::with_capacity(capacity),
         }
     }
 
@@ -1183,7 +1188,7 @@ impl Default for FewShotAdaptationStats {
 }
 
 impl LearnedOptimizer for FewShotLearningOptimizer {
-    fn meta_train(&mut self, trainingtasks: &[TrainingTask]) -> OptimizeResult<()> {
+    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
         for task in training_tasks {
             // Create support examples from task
             let support_examples = self.create_support_examples_from_task(task)?;
@@ -1330,7 +1335,7 @@ impl FewShotLearningOptimizer {
         }])
     }
 
-    fn update_meta_learner(&mut self, _supportexamples: &[SupportExample]) -> OptimizeResult<()> {
+    fn update_meta_learner(&mut self, _support_examples: &[SupportExample]) -> OptimizeResult<()> {
         // Simplified meta-learner update
         self.meta_state.episode += 1;
         Ok(())
@@ -1496,7 +1501,7 @@ mod tests {
         let config = LearnedOptimizationConfig::default();
         let optimizer = FewShotLearningOptimizer::new(config);
 
-        let support_features = Array2::fromshape_fn((2, 10), |_| rand::rng().gen::<f64>());
+        let support_features = Array2::from_shape_fn((2, 10), |_| rand::rng().gen::<f64>());
         let similar_problems = vec!["problem1".to_string(), "problem2".to_string()];
 
         let strategy = optimizer

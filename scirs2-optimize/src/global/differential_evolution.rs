@@ -29,10 +29,10 @@ impl SobolState {
 
         // Initialize direction numbers for first few dimensions
         // This is a simplified implementation - full Sobol needs proper generating matrices
-        for d in 0.._dimension {
+        for d in 0..dimension {
             let mut dirs = Vec::new();
             if d == 0 {
-                // First _dimension uses powers of 2
+                // First dimension uses powers of 2
                 for i in 0..32 {
                     dirs.push(1u32 << (31 - i));
                 }
@@ -434,16 +434,16 @@ where
     }
 
     /// Create mutant vector using differential evolution
-    fn create_mutant(&mut self, candidateidx: usize) -> Array1<f64> {
+    fn create_mutant(&mut self, candidate_idx: usize) -> Array1<f64> {
         let popsize = self.population.nrows();
         let mut mutant = Array1::zeros(self.ndim);
 
         // Select indices for mutation
         let mut indices: Vec<usize> = Vec::with_capacity(5);
         while indices.len() < 5 {
-            let _idx = self.rng.gen_range(0..popsize);
-            if _idx != candidate_idx && !indices.contains(&_idx) {
-                indices.push(_idx);
+            let idx = self.rng.gen_range(0..popsize);
+            if idx != candidate_idx && !indices.contains(&idx) {
+                indices.push(idx);
             }
         }
 
@@ -515,14 +515,14 @@ where
 
         // Apply bounds checking after all calculations are done
         for i in 0..self.ndim {
-            mutant[i] = self.ensure_bounds(i..mutant[i]);
+            mutant[i] = self.ensure_bounds(i, mutant[i]);
         }
 
         mutant
     }
 
     /// Create trial vector using crossover
-    fn create_trial(&mut self, candidateidx: usize, mutant: &Array1<f64>) -> Array1<f64> {
+    fn create_trial(&mut self, candidate_idx: usize, mutant: &Array1<f64>) -> Array1<f64> {
         let candidate = self.population.row(candidate_idx).to_owned();
         let mut trial = candidate.clone();
 
@@ -560,7 +560,7 @@ where
 
         // Ensure all trial elements are within bounds after crossover
         for i in 0..self.ndim {
-            trial[i] = self.ensure_bounds(i..trial[i]);
+            trial[i] = self.ensure_bounds(i, trial[i]);
         }
 
         trial

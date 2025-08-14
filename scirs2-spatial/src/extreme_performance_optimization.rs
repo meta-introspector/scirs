@@ -1107,19 +1107,19 @@ impl AdvancedfastDistanceMatrix {
     async fn optimize_matrix_layout(
         &self,
         matrix: &mut Array2<f64>,
-        start_row: usize,
+        startrow: usize,
         start_col: usize,
         height: usize,
         width: usize,
     ) -> SpatialResult<()> {
         // Use iterative implementation to avoid stack overflow
-        let mut stack = vec![(start_row, start_col, height, width)];
+        let mut stack = vec![(startrow, start_col, height, width)];
 
-        while let Some((_row, col, h, w)) = stack.pop() {
+        while let Some((row, col, h, w)) = stack.pop() {
             // Base case: small enough to fit in cache
             if h <= 32 || w <= 32 {
                 // Apply direct optimization for small blocks
-                for i in row..(_row + h) {
+                for i in row..(row + h) {
                     for j in col..(col + w) {
                         if i < matrix.nrows() && j < matrix.ncols() {
                             // Apply cache-friendly computation pattern
@@ -1131,14 +1131,14 @@ impl AdvancedfastDistanceMatrix {
             }
 
             // Divide into quadrants for optimal cache usage
-            let mid_row = h / 2;
+            let midrow = h / 2;
             let mid_col = w / 2;
 
             // Push quadrants in reverse Z-order (so they're processed in correct order)
-            stack.push((_row + mid_row, col + mid_col, h - mid_row, w - mid_col));
-            stack.push((_row + mid_row, col, h - mid_row, mid_col));
-            stack.push((_row, col + mid_col, mid_row, w - mid_col));
-            stack.push((_row, col, mid_row, mid_col));
+            stack.push((row + midrow, col + mid_col, h - midrow, w - mid_col));
+            stack.push((row + midrow, col, h - midrow, mid_col));
+            stack.push((row, col + mid_col, midrow, w - mid_col));
+            stack.push((row, col, midrow, mid_col));
         }
 
         Ok(())

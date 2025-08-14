@@ -9,7 +9,7 @@
 //! # Basic Usage
 //!
 //! ```
-//! use scirs2__metrics::visualization::{
+//! use scirs2_metrics::visualization::{
 //!     VisualizationData, VisualizationMetadata, PlotType, PlottingBackend, backends
 //! };
 //!
@@ -37,8 +37,8 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::classification::confusion_matrix;
-//! use scirs2__metrics::visualization::{
+//! use scirs2_metrics::classification::confusion_matrix;
+//! use scirs2_metrics::visualization::{
 //!     confusion_matrix::confusion_matrix_visualization,
 //!     PlottingBackend, backends
 //! };
@@ -361,7 +361,7 @@ impl VisualizationMetadata {
     ///
     /// * `plot_type` - The plot type
     pub fn set_plot_type(&mut self, plottype: PlotType) {
-        self.plot_type = plot_type;
+        self.plot_type = plottype;
     }
 
     /// Set the x-axis label
@@ -370,7 +370,7 @@ impl VisualizationMetadata {
     ///
     /// * `x_label` - The x-axis label
     pub fn set_x_label(&mut self, xlabel: impl Into<String>) {
-        self.x_label = x_label.into();
+        self.x_label = xlabel.into();
     }
 
     /// Set the y-axis label
@@ -379,7 +379,7 @@ impl VisualizationMetadata {
     ///
     /// * `y_label` - The y-axis label
     pub fn set_y_label(&mut self, ylabel: impl Into<String>) {
-        self.y_label = y_label.into();
+        self.y_label = ylabel.into();
     }
 
     /// Set the plot description
@@ -610,7 +610,7 @@ impl VisualizationOptions {
     ///
     /// * `color_map` - The color map
     pub fn with_color_map(mut self, colormap: ColorMap) -> Self {
-        self.color_map = Some(color_map);
+        self.color_map = Some(colormap);
         self
     }
 
@@ -620,7 +620,7 @@ impl VisualizationOptions {
     ///
     /// * `show_grid` - Whether to show grid
     pub fn with_grid(mut self, showgrid: bool) -> Self {
-        self.show_grid = show_grid;
+        self.show_grid = showgrid;
         self
     }
 
@@ -630,7 +630,7 @@ impl VisualizationOptions {
     ///
     /// * `show_legend` - Whether to show legend
     pub fn with_legend(mut self, showlegend: bool) -> Self {
-        self.show_legend = show_legend;
+        self.show_legend = showlegend;
         self
     }
 
@@ -659,7 +659,7 @@ impl VisualizationOptions {
     ///
     /// * `line_width` - The line width
     pub fn with_line_width(mut self, linewidth: f64) -> Self {
-        self.line_width = Some(line_width);
+        self.line_width = Some(linewidth);
         self
     }
 
@@ -669,7 +669,7 @@ impl VisualizationOptions {
     ///
     /// * `marker_size` - The marker size
     pub fn with_marker_size(mut self, markersize: f64) -> Self {
-        self.marker_size = Some(marker_size);
+        self.marker_size = Some(markersize);
         self
     }
 
@@ -679,7 +679,7 @@ impl VisualizationOptions {
     ///
     /// * `show_colorbar` - Whether to show colorbar
     pub fn with_colorbar(mut self, showcolorbar: bool) -> Self {
-        self.show_colorbar = show_colorbar;
+        self.show_colorbar = showcolorbar;
         self
     }
 
@@ -689,7 +689,7 @@ impl VisualizationOptions {
     ///
     /// * `color_palette` - The color palette name
     pub fn with_color_palette(mut self, colorpalette: impl Into<String>) -> Self {
-        self.color_palette = Some(color_palette.into());
+        self.color_palette = Some(colorpalette.into());
         self
     }
 }

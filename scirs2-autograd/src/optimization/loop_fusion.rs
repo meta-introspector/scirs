@@ -131,7 +131,7 @@ impl<F: Float> FusionChain<F> {
                 // Unary operations: save memory + computation overhead
                 elements * 0.3
             }
-            FusableOperation::ScalarOp(__) => {
+            FusableOperation::ScalarOp(_, _) => {
                 // Scalar operations: very efficient when fused
                 elements * 0.7
             }
@@ -186,7 +186,7 @@ impl<F: Float> LoopFusionOptimizer<F> {
         self.fusion_mapping.clear();
 
         // Find all element-wise operations
-        let element_wise_ops = self.find_element_wise_operations(graph);
+        let element_wise_ops = LoopFusionOptimizer::<F>::find_element_wise_operations(graph);
 
         // Group operations into fusion chains
         let chains = self.identify_fusion_chains(&element_wise_ops, graph);
@@ -251,14 +251,14 @@ impl<F: Float> LoopFusionOptimizer<F> {
             }
 
             // Check if current operation is fusable
-            if let Some(fusableop) = self.classify_operation(current_op, graph) {
+            if let Some(fusableop) = LoopFusionOptimizer::<F>::classify_operation(current_op, graph) {
                 visited.insert(current_op);
 
                 // For this example, assume shape is [100] - in practice would extract from graph
                 chain.add_operation(fusableop, vec![100]);
 
                 // Find next operation in chain
-                if let Some(nextop) = self.find_next_fusable_operation(current_op, graph) {
+                if let Some(nextop) = LoopFusionOptimizer::<F>::find_next_fusable_operation(current_op, graph) {
                     current_op = nextop;
                 } else {
                     break;
@@ -273,8 +273,8 @@ impl<F: Float> LoopFusionOptimizer<F> {
 
     /// Classify an operation as fusable or not
     fn classify_operation(
-        &self_op_idx: TensorID,
-        _graph: &Graph<F>,
+        op_idx: TensorID,
+        graph: &Graph<F>,
     ) -> Option<FusableOperation<F>> {
         // In practice, would inspect the actual operation type
         // For this example, return a sample operation
@@ -283,8 +283,8 @@ impl<F: Float> LoopFusionOptimizer<F> {
 
     /// Find the next operation that can be fused with the current one
     fn find_next_fusable_operation(
-        &self_current_op: TensorID,
-        _graph: &Graph<F>,
+        current_op: TensorID,
+        graph: &Graph<F>,
     ) -> Option<TensorID> {
         // In practice, would traverse _graph dependencies
         None
@@ -324,7 +324,7 @@ pub struct FusedKernel<F: Float> {
 impl<F: Float> FusedKernel<F> {
     /// Create a fused kernel from a fusion chain
     pub fn from_chain(chain: FusionChain<F>) -> Result<Self, OpError> {
-        let kernel_func = Self::compile_kernel(&_chain)?;
+        let kernel_func = Self::compile_kernel(&chain)?;
 
         Ok(Self {
             chain,
@@ -385,31 +385,31 @@ impl<F: Float> FusedKernel<F> {
     pub fn apply_unary_function(value: F, func: &UnaryFunction<F>) -> F {
         match func {
             UnaryFunction::ReLU => {
-                if _value > F::zero() {
-                    _value
+                if value > F::zero() {
+                    value
                 } else {
                     F::zero()
                 }
             }
             UnaryFunction::Sigmoid => {
                 let one = F::one();
-                one / (one + (-_value).exp())
+                one / (one + (-value).exp())
             }
             UnaryFunction::Tanh => value.tanh(),
-            UnaryFunction::Square => _value * value,
+            UnaryFunction::Square => value * value,
             UnaryFunction::Sqrt => value.sqrt(),
             UnaryFunction::Exp => value.exp(),
             UnaryFunction::Log => value.ln(),
             UnaryFunction::Abs => value.abs(),
-            UnaryFunction::Custom(f) => f(_value),
+            UnaryFunction::Custom(f) => f(value),
         }
     }
 
     /// Apply a scalar operation
     pub fn apply_scalar_operation(value: F, scalar: F, func: &BinaryFunction) -> F {
         match func {
-            BinaryFunction::AddScalar => _value + scalar,
-            BinaryFunction::MulScalar => _value * scalar,
+            BinaryFunction::AddScalar => value + scalar,
+            BinaryFunction::MulScalar => value * scalar,
             BinaryFunction::Pow => value.powf(scalar),
         }
     }
@@ -452,7 +452,7 @@ pub struct FusionStats<F: crate::Float> {
 
 impl<F: crate::Float> FusionStats<F> {
     /// Calculate memory bandwidth reduction
-    pub fn calculate_memory_reduction(&mut self, originalops: usize) {
+    pub fn calculate_memory_reduction(&mut self, original_ops: usize) {
         if original_ops > 0 {
             self.memory_bandwidth_reduction =
                 (original_ops - self.chains_identified) as f64 / original_ops as f64 * 100.0;
@@ -608,7 +608,7 @@ pub fn configure_fusion(config: FusionConfig) -> Result<(), OpError> {
     let mut manager_guard = manager
         .lock()
         .map_err(|_| OpError::RuntimeError("Lock error".to_string()))?;
-    *manager_guard = LoopFusionManager::with_config(_config);
+    *manager_guard = LoopFusionManager::with_config(config);
     Ok(())
 }
 
@@ -711,7 +711,7 @@ mod tests {
 
         let kernel = FusedKernel::from_chain(chain).unwrap();
 
-        let input = Array::fromshape_vec(IxDyn(&[5]), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
+        let input = Array::from_shape_vec(IxDyn(&[5]), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
         let result = kernel.execute(&[&input]).unwrap();
 
         // Should be (x^2) * 2 = [2, 8, 18, 32, 50]
@@ -772,7 +772,7 @@ mod tests {
 
         let kernel = FusedKernel::from_chain(chain).unwrap();
 
-        let input = Array::fromshape_vec(IxDyn(&[4]), vec![-2.0, -1.0, 1.0, 2.0]).unwrap();
+        let input = Array::from_shape_vec(IxDyn(&[4]), vec![-2.0, -1.0, 1.0, 2.0]).unwrap();
         let result = kernel.execute(&[&input]).unwrap();
 
         // Expected: x^2 -> ReLU -> *3 -> +1

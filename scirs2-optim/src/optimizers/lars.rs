@@ -59,7 +59,7 @@ pub struct LARS<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug> LARS<A> {
     /// Create a new LARS optimizer with the given learning rate
-    pub fn new(learningrate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
             learning_rate,
             momentum: A::from(0.9).unwrap(),
@@ -78,13 +78,13 @@ impl<A: Float + ScalarOperand + Debug> LARS<A> {
     }
 
     /// Set the weight decay factor
-    pub fn with_weight_decay(mut self, weightdecay: A) -> Self {
+    pub fn with_weight_decay(mut self, weight_decay: A) -> Self {
         self.weight_decay = weight_decay;
         self
     }
 
     /// Set the trust coefficient
-    pub fn with_trust_coefficient(mut self, trustcoefficient: A) -> Self {
+    pub fn with_trust_coefficient(mut self, trust_coefficient: A) -> Self {
         self.trust_coefficient = trust_coefficient;
         self
     }
@@ -96,7 +96,7 @@ impl<A: Float + ScalarOperand + Debug> LARS<A> {
     }
 
     /// Set whether to exclude bias and normalization layers from LARS adaptation
-    pub fn with_exclude_bias_and_norm(mut self, exclude_bias_andnorm: bool) -> Self {
+    pub fn with_exclude_bias_and_norm(mut self, exclude_bias_and_norm: bool) -> Self {
         self.exclude_bias_and_norm = exclude_bias_and_norm;
         self
     }
@@ -181,7 +181,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> Optimizer<A, 
         Ok(updated_params)
     }
 
-    fn set_learning_rate(&mut self, learningrate: A) {
+    fn set_learning_rate(&mut self, learning_rate: A) {
         self.learning_rate = learning_rate;
     }
 

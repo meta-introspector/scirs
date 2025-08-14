@@ -37,7 +37,7 @@ use crate::tensor_ops::{array_ops, math_ops, reduction_ops, shape};
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn reduce_sum<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
+pub fn reduce_sum<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -74,7 +74,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn reduce_mean<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
+pub fn reduce_mean<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -111,7 +111,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn reduce_prod<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
+pub fn reduce_prod<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -148,7 +148,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn reduce_min<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
+pub fn reduce_min<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -185,7 +185,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn reduce_max<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
+pub fn reduce_max<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -250,7 +250,7 @@ where
 /// * `axes` - Axes along which to compute the standard deviation
 /// * `keep_dims` - If true, keeps reduced dimensions as size 1
 #[allow(dead_code)]
-pub fn reduce_std<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
+pub fn reduce_std<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -334,7 +334,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn argmax<'graph, A, F: Float>(x: A, axis: isize, keepdims: bool) -> Tensor<'graph, F>
+pub fn argmax<'graph, A, F: Float>(x: A, axis: isize, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
@@ -369,7 +369,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn argmin<'graph, A, F: Float>(x: A, axis: isize, keepdims: bool) -> Tensor<'graph, F>
+pub fn argmin<'graph, A, F: Float>(x: A, axis: isize, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
@@ -403,7 +403,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn reduce_logsumexp<'graph, A, F: Float>(x: A, axis: isize, keepdim: bool) -> Tensor<'graph, F>
+pub fn reduce_logsumexp<'graph, A, F: Float>(x: A, axis: isize, keep_dim: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
@@ -445,14 +445,14 @@ where
     let len = xs.len();
     assert_ne!(len, 0);
     if len == 1 {
-        *_xs[0].as_ref()
+        *xs[0].as_ref()
     } else {
         let g = xs[0].as_ref().graph();
         let mut b = Tensor::builder(g);
-        for x in _xs {
+        for x in xs {
             b = b.append_input(x.as_ref(), false);
         }
-        b.setshape(&shape(_xs[0])).build(array_ops::AddN)
+        b.setshape(&shape(xs[0])).build(array_ops::AddN)
     }
 }
 
@@ -463,7 +463,7 @@ where
 /// * `axes` - Axes along which to compute the norm
 /// * `keep_dims` - If true, keeps reduced dimensions as size 1
 #[allow(dead_code)]
-pub fn l1_norm<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
+pub fn l1_norm<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -479,7 +479,7 @@ where
 /// * `axes` - Axes along which to compute the norm
 /// * `keep_dims` - If true, keeps reduced dimensions as size 1
 #[allow(dead_code)]
-pub fn l2_norm<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
+pub fn l2_norm<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -497,7 +497,7 @@ where
 /// * `axes` - Axes along which to compute the norm
 /// * `keep_dims` - If true, keeps reduced dimensions as size 1
 #[allow(dead_code)]
-pub fn lp_norm<'graph, A, AT, F: Float>(x: A, p: F, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
+pub fn lp_norm<'graph, A, AT, F: Float>(x: A, p: F, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -542,7 +542,7 @@ where
 /// * `axes` - Axes along which to test
 /// * `keep_dims` - If true, keeps reduced dimensions as size 1
 #[allow(dead_code)]
-pub fn reduce_all<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
+pub fn reduce_all<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -562,7 +562,7 @@ where
 /// * `axes` - Axes along which to test
 /// * `keep_dims` - If true, keeps reduced dimensions as size 1
 #[allow(dead_code)]
-pub fn reduce_any<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
+pub fn reduce_any<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,

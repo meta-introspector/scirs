@@ -175,7 +175,7 @@ where
                 let grad_norm = gradient.mapv(|g| g * g).sum().sqrt();
                 let param_norm = x.mapv(|p| p * p).sum().sqrt();
                 let m_norm = m_hat.mapv(|g: f64| g * g).sum().sqrt();
-                let v_mean = v_hat.mean().unwrap_or(0.0);
+                let v_mean = v_hat.mean();
                 println!("  Iteration {}: loss = {:.6e}, |grad| = {:.3e}, |param| = {:.3e}, |m| = {:.3e}, <v> = {:.3e}, lr = {:.3e}",
                     iteration, current_loss, grad_norm, param_norm, m_norm, v_mean, current_lr);
             }
@@ -262,7 +262,7 @@ where
     let mut global_best_f = f64::INFINITY;
 
     while cycle_start < total_max_iter {
-        let cycle_end = (cycle_start + current_cycle_length)._min(total_max_iter);
+        let cycle_end = (cycle_start + current_cycle_length).min(total_max_iter);
 
         println!(
             "Starting restart {} (cycle {}-{}, length {})",
@@ -308,7 +308,7 @@ where
         x: global_best_x,
         fun: global_best_f,
         nit: cycle_start,
-        _func_evals: 0, // Would need to track across cycles
+        func_evals: 0, // Would need to track across cycles
         nfev: 0,
         success: global_best_f < options.tol,
         message: format!(
@@ -340,8 +340,8 @@ where
     let mut best_f = f64::INFINITY;
 
     let num_samples = data_provider.num_samples();
-    let batch_size = options.batch_size.unwrap_or(32._min(num_samples / 10));
-    let actual_batch_size = batch_size._min(num_samples);
+    let batch_size = options.batch_size.unwrap_or(32.min(num_samples / 10));
+    let actual_batch_size = batch_size.min(num_samples);
 
     #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
@@ -401,7 +401,7 @@ where
         x: best_x,
         fun: best_f,
         nit: options.max_iter,
-        _func_evals: 0,
+        func_evals: 0,
         nfev: 0,
         success: false,
         message: "Cycle completed".to_string(),

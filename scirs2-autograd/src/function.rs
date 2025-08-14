@@ -358,7 +358,7 @@ pub fn reshape<F: Float + Debug + Send + Sync + 'static>(
     }
 
     // Perform the reshape
-    let result_data = match x.data.clone().intoshape_with_order(shape) {
+    let result_data = match x.data.clone().into_shape_with_order(shape) {
         Ok(reshaped) => reshaped.into_dyn(),
         Err(e) => {
             return Err(AutogradError::OperationError(format!(
@@ -375,7 +375,7 @@ pub fn reshape<F: Float + Debug + Send + Sync + 'static>(
         let originalshape = x.shape().to_vec();
         let backward = Box::new(move |grad: Array<F, IxDyn>| -> Result<Array<F, IxDyn>> {
             // Use toshape instead of intoshape to avoid FnOnce issues
-            match grad.clone().intoshape_with_order(originalshape.clone()) {
+            match grad.clone().into_shape_with_order(originalshape.clone()) {
                 Ok(reshaped_grad) => Ok(reshaped_grad),
                 Err(e) => Err(AutogradError::OperationError(format!(
                     "Gradient reshape error: {}",

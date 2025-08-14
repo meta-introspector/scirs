@@ -15,7 +15,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__metrics::domains::edge_ai::EdgeAISuite;
+//! use scirs2_metrics::domains::edge_ai::EdgeAISuite;
 //! use ndarray::array;
 //!
 //! let mut edge_suite = EdgeAISuite::new();

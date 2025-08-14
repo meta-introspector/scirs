@@ -135,10 +135,7 @@ where
 
 /// Brent's method for scalar minimization
 #[allow(dead_code)]
-fn minimize_scalar_brent<F>(
-    _fun: F,
-    options: Options,
-) -> Result<ScalarOptimizeResult, OptimizeError>
+fn minimize_scalar_brent<F>(fun: F, options: Options) -> Result<ScalarOptimizeResult, OptimizeError>
 where
     F: Fn(f64) -> f64,
 {
@@ -149,28 +146,30 @@ where
     const SQRT_EPS: f64 = 1.4901161193847656e-8;
 
     // Get initial bracket or use default
-    let (a_b, c) = if let Some(bracket) = options.bracket {
+    let (a, b, c) = if let Some(bracket) = options.bracket {
         bracket
     } else {
         // Use simple bracketing strategy
         let x0 = 0.0;
         let x1 = 1.0;
-        bracket_minimum(&_fun, x0, x1)?
+        bracket_minimum(&fun, x0, x1)?
     };
 
     let tol = 3.0 * SQRT_EPS;
-    let (mut a, mut b) = if a_b < c { (a_b, c) } else { (c, a_b) };
+    // a, b, c form the bracket, reorder if needed
+    let (mut bracket_a, mut bracket_b) = if b < c { (b, c) } else { (c, b) };
+    let (mut a, mut b) = if a < bracket_a { (a, bracket_a) } else { (bracket_a, a) };
 
     // Initialize
     let mut v = a + GOLDEN * (b - a);
     let mut w = v;
     let mut x = v;
-    let mut fx = _fun(x);
+    let mut fx = fun(x);
     let mut fv = fx;
     let mut fw = fx;
 
-    let mut d = 0.0;
-    let mut e = 0.0;
+    let mut d: f64 = 0.0;
+    let mut e: f64 = 0.0;
     let mut iter = 0;
     let mut feval = 1;
 
@@ -182,7 +181,8 @@ where
         // Check for convergence
         if (x - xm).abs() <= tol2 - 0.5 * (b - a) {
             return Ok(ScalarOptimizeResult {
-                x_fun: fx,
+                x,
+                fun: fx,
                 nit: iter,
                 function_evals: feval,
                 success: true,
@@ -237,7 +237,7 @@ where
             x + if d > 0.0 { tol1 } else { -tol1 }
         };
 
-        let fu = _fun(u);
+        let fu = fun(u);
         feval += 1;
 
         // Update bracket
@@ -314,8 +314,8 @@ where
     let mut fv = fx;
     let mut fw = fx;
 
-    let mut d = 0.0;
-    let mut e = 0.0;
+    let mut d: f64 = 0.0;
+    let mut e: f64 = 0.0;
     let mut iter = 0;
     let mut feval = 1;
 
@@ -438,7 +438,7 @@ where
     const GOLDEN: f64 = 0.6180339887498949; // (sqrt(5) - 1) / 2
 
     // Get initial bracket or use default
-    let (a_b, c) = if let Some(bracket) = options.bracket {
+    let (a, b, c) = if let Some(bracket) = options.bracket {
         bracket
     } else {
         let x0 = 0.0;
@@ -446,7 +446,9 @@ where
         bracket_minimum(&fun, x0, x1)?
     };
 
-    let (mut a, mut b) = if a_b < c { (a_b, c) } else { (c, a_b) };
+    // a, b, c form the bracket, reorder if needed
+    let (mut bracket_a, mut bracket_b) = if b < c { (b, c) } else { (c, b) };
+    let (mut a, mut b) = if a < bracket_a { (a, bracket_a) } else { (bracket_a, a) };
 
     // Initialize points
     let mut x1 = a + (1.0 - GOLDEN) * (b - a);
@@ -508,8 +510,8 @@ where
     const MAX_ITER: usize = 50;
 
     let (mut a, mut b) = (xa, xb);
-    let mut fa = _fun(a);
-    let mut fb = _fun(b);
+    let mut fa = fun(a);
+    let mut fb = fun(b);
 
     if fa < fb {
         std::mem::swap(&mut a, &mut b);
@@ -517,7 +519,7 @@ where
     }
 
     let mut c = b + GOLDEN_RATIO * (b - a);
-    let mut fc = _fun(c);
+    let mut fc = fun(c);
     let mut iter = 0;
 
     while fb >= fc {
@@ -527,32 +529,32 @@ where
         let ulim = b + 100.0 * (c - b);
 
         let fu = if (b - u) * (u - c) > 0.0 {
-            let fu = _fun(u);
+            let fu = fun(u);
             if fu < fc {
                 return Ok((b, u, c));
             } else if fu > fb {
                 return Ok((a, b, u));
             }
             let u = c + GOLDEN_RATIO * (c - b);
-            _fun(u)
+            fun(u)
         } else if (c - u) * (u - ulim) > 0.0 {
-            let fu = _fun(u);
+            let fu = fun(u);
             if fu < fc {
                 b = c;
                 fb = fc;
                 c = u;
                 fc = fu;
                 let u = c + GOLDEN_RATIO * (c - b);
-                _fun(u)
+                fun(u)
             } else {
                 fu
             }
         } else if (u - ulim) * (ulim - c) >= 0.0 {
             let u = ulim;
-            _fun(u)
+            fun(u)
         } else {
             let u = c + GOLDEN_RATIO * (c - b);
-            _fun(u)
+            fun(u)
         };
 
         a = b;
@@ -614,7 +616,7 @@ mod tests {
     }
 
     #[test]
-    fn test_complex_function() {
+    fn test_complexfunction() {
         // Test with a more complex function
         let f = |x: f64| (x - 2.0) * x * (x + 2.0).powi(2);
 

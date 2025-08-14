@@ -9,7 +9,7 @@
 
 use ndarray::{array, Array1, Array2};
 #[cfg(feature = "optim_integration")]
-use scirs2__metrics::integration::optim::{HyperParameter, HyperParameterTuner};
+use scirs2_metrics::integration::optim::{HyperParameter, HyperParameterTuner};
 use std::error::Error;
 
 #[cfg(feature = "optim_integration")]
@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("----------------------------");
 
         // Create a simple dataset (XOR problem)
-        let x = Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0])?;
+        let x = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0])?;
         let y = array![0.0, 1.0, 1.0, 0.0];
 
         // Define hyperparameters to tune

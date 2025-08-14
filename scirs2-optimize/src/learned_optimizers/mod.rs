@@ -170,7 +170,7 @@ impl Default for AdaptationStatistics {
 /// Trait for learned optimizers
 pub trait LearnedOptimizer {
     /// Meta-train the optimizer on a distribution of problems
-    fn meta_train(&mut self, trainingtasks: &[TrainingTask]) -> Result<()>;
+    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> Result<()>;
 
     /// Adapt to a new problem with few-shot learning
     fn adapt_to_problem(
@@ -304,7 +304,7 @@ impl OptimizationNetwork {
         // Create layers
         let mut prev_size = input_size;
         for &hidden_size in &hidden_sizes {
-            let weights = Array2::fromshape_fn((hidden_size, prev_size), |_| {
+            let weights = Array2::from_shape_fn((hidden_size, prev_size), |_| {
                 rand::rng().gen_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
             });
             hidden_layers.push(weights);
@@ -320,18 +320,18 @@ impl OptimizationNetwork {
         }
 
         // Input embedding
-        let input_embedding = Array2::fromshape_fn((hidden_sizes[0], input_size), |_| {
+        let input_embedding = Array2::from_shape_fn((hidden_sizes[0], input_size), |_| {
             rand::rng().gen_range(-0.5..0.5) * (2.0 / input_size as f64).sqrt()
         });
 
         // Output layer
-        let output_layer = Array2::fromshape_fn((output_size, prev_size), |_| {
+        let output_layer = Array2::from_shape_fn((output_size, prev_size), |_| {
             rand::rng().gen_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
         });
 
         // Attention weights (simplified)
         let attention_weights = if use_attention {
-            Some(vec![Array2::fromshape_fn((prev_size, prev_size), |_| {
+            Some(vec![Array2::from_shape_fn((prev_size, prev_size), |_| {
                 rand::rng().gen_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
             })])
         } else {
@@ -375,8 +375,8 @@ impl OptimizationNetwork {
             // Layer normalization
             if layer_idx < self.layer_norms.len() {
                 let layer_norm = &self.layer_norms[layer_idx];
-                let mean = next.mean().unwrap_or(0.0);
-                let var = next.variance();
+                let mean = next.view().mean();
+                let var = next.view().variance();
                 let std = (var + layer_norm.epsilon).sqrt();
 
                 for i in 0..next.len() {
@@ -390,7 +390,7 @@ impl OptimizationNetwork {
             if let Some(ref attention) = self.attention_weights {
                 if !attention.is_empty() {
                     let attn_weights = &attention[0];
-                    let mut attended = Array1::zeros(next.len());
+                    let mut attended: Array1<f64> = Array1::zeros(next.len());
 
                     for i in 0..attended.len() {
                         for j in 0..next.len().min(attn_weights.ncols()) {
@@ -435,20 +435,20 @@ pub struct ProblemEncoder {
 
 impl ProblemEncoder {
     /// Create new problem encoder
-    pub fn new(_embeddingsize: usize) -> Self {
+    pub fn new(embedding_size: usize) -> Self {
         let dim = 10; // Feature dimensions for different aspects
 
         Self {
-            dim_encoder: Array2::fromshape_fn((_embedding_size, dim), |_| {
+            dim_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
                 rand::rng().gen_range(-0.5..0.5) * 0.1
             }),
-            gradient_encoder: Array2::fromshape_fn((_embedding_size, dim), |_| {
+            gradient_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
                 rand::rng().gen_range(-0.5..0.5) * 0.1
             }),
-            hessian_encoder: Array2::fromshape_fn((_embedding_size, dim), |_| {
+            hessian_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
                 rand::rng().gen_range(-0.5..0.5) * 0.1
             }),
-            embedding_size: embedding_size,
+            embedding_size,
         }
     }
 
@@ -493,8 +493,8 @@ impl ProblemEncoder {
         let mut features = Array1::zeros(10);
 
         features[0] = (params.len() as f64).ln(); // Log dimensionality
-        features[1] = params.variance(); // Parameter variance
-        features[2] = params.mean().unwrap_or(0.0); // Parameter mean
+        features[1] = params.view().variance(); // Parameter variance
+        features[2] = params.view().mean(); // Parameter mean
         features[3] = params.iter().map(|&x| x.abs()).sum::<f64>() / params.len() as f64; // L1 norm
         features[4] = (params.iter().map(|&x| x * x).sum::<f64>()).sqrt(); // L2 norm
         features[5] = problem.dimension as f64 / 1000.0; // Normalized dimension
@@ -634,7 +634,7 @@ mod tests {
 
         assert_eq!(network.hidden_layers.len(), 2);
         assert_eq!(network.layer_norms.len(), 2);
-        assert!(network.attentionweights.is_some());
+        assert!(network.attention_weights.is_some());
     }
 
     #[test]

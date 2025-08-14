@@ -1,8 +1,8 @@
 //! Tests for the optim integration module
 
 use approx::assert_abs_diff_eq;
-use scirs2__metrics::error::Result;
-use scirs2__metrics::integration::optim::{
+use scirs2_metrics::error::Result;
+use scirs2_metrics::integration::optim::{
     HyperParameter, HyperParameterSearchResult, HyperParameterTuner, MetricLRScheduler,
     MetricOptimizer, OptimizationMode,
 };

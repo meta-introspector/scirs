@@ -245,11 +245,11 @@ impl NSGAII {
 
         for _ in 0..self.config.population_size {
             let variables = if let Some((ref lower, ref upper)) = self.config.bounds {
-                Array1::fromshape_fn(self.n_variables, |i| {
+                Array1::from_shape_fn(self.n_variables, |i| {
                     lower[i] + rng.gen::<f64>() * (upper[i] - lower[i])
                 })
             } else {
-                Array1::fromshape_fn(self.n_variables, |_| rng.gen::<f64>() * 2.0 - 1.0)
+                Array1::from_shape_fn(self.n_variables, |_| rng.gen::<f64>() * 2.0 - 1.0)
             };
 
             let objectives = objective_fn(&variables.view());
@@ -616,7 +616,7 @@ impl NSGAII {
     }
 
     /// Calculate hypervolume indicator
-    fn calculate_hypervolume(&self, referencepoint: &Array1<f64>) -> Result<f64, OptimizeError> {
+    fn calculate_hypervolume(&self, reference_point: &Array1<f64>) -> Result<f64, OptimizeError> {
         if reference_point.len() != self.n_objectives {
             return Err(OptimizeError::ValueError(
                 "Reference point dimension must match number of objectives".to_string(),
@@ -788,7 +788,7 @@ impl NSGAIII {
     }
 
     /// Generate structured reference points using Das and Dennis method
-    pub fn generate_reference_points(n_objectives: usize, ndivisions: usize) -> Array2<f64> {
+    pub fn generate_reference_points(n_objectives: usize, n_divisions: usize) -> Array2<f64> {
         let n_points = Self::binomial_coefficient(n_objectives + n_divisions - 1, n_divisions);
         let mut points = Array2::zeros((n_points, n_objectives));
         let mut point_idx = 0;
@@ -821,7 +821,7 @@ impl NSGAIII {
         points: &mut Array2<f64>,
         point_idx: &mut usize,
         n_objectives: usize,
-        _n_divisions: usize,
+        n_divisions: usize,
         current_objective: usize,
         mut current_point: Array1<f64>,
         remaining_sum: usize,
@@ -940,11 +940,11 @@ impl NSGAIII {
 
         for _ in 0..self.config.population_size {
             let variables = if let Some((ref lower, ref upper)) = self.config.bounds {
-                Array1::fromshape_fn(self.n_variables, |i| {
+                Array1::from_shape_fn(self.n_variables, |i| {
                     lower[i] + rng.gen::<f64>() * (upper[i] - lower[i])
                 })
             } else {
-                Array1::fromshape_fn(self.n_variables, |_| rng.gen::<f64>() * 2.0 - 1.0)
+                Array1::from_shape_fn(self.n_variables, |_| rng.gen::<f64>() * 2.0 - 1.0)
             };
 
             let objectives = objective_fn(&variables.view());
@@ -1554,7 +1554,7 @@ impl NSGAIII {
     }
 
     /// Calculate hypervolume (reuse basic version, could be enhanced for many objectives)
-    fn calculate_hypervolume(&self, referencepoint: &Array1<f64>) -> Result<f64, OptimizeError> {
+    fn calculate_hypervolume(&self, reference_point: &Array1<f64>) -> Result<f64, OptimizeError> {
         if reference_point.len() != self.n_objectives {
             return Err(OptimizeError::ValueError(
                 "Reference point dimension must match number of objectives".to_string(),
@@ -1636,7 +1636,7 @@ pub mod scalarization {
     use super::*;
 
     /// Weighted sum scalarization
-    pub fn weighted_sum<F>(objectivesfn: F, weights: &Array1<f64>, x: &ArrayView1<f64>) -> f64
+    pub fn weighted_sum<F>(objectives_fn: F, weights: &Array1<f64>, x: &ArrayView1<f64>) -> f64
     where
         F: Fn(&ArrayView1<f64>) -> Array1<f64>,
     {
@@ -1705,7 +1705,7 @@ pub mod scalarization {
     }
 
     impl EpsilonConstraint {
-        pub fn new(primary_objective: usize, epsilonconstraints: Array1<f64>) -> Self {
+        pub fn new(primary_objective: usize, epsilon_constraints: Array1<f64>) -> Self {
             Self {
                 primary_objective,
                 epsilon_constraints,

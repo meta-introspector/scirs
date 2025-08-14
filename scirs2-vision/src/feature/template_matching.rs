@@ -419,7 +419,7 @@ pub fn draw_match(
     template: &DynamicImage,
     match_result: &MatchResult,
 ) -> RgbImage {
-    let mut _result = img.to_rgb8();
+    let mut result = img.to_rgb8();
     let (tmpl_width, tmpl_height) = template.dimensions();
 
     // Draw rectangle around match
@@ -433,7 +433,7 @@ pub fn draw_match(
         color,
     );
 
-    _result
+    result
 }
 
 /// Draw rectangle on image

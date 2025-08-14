@@ -31,7 +31,7 @@ pub enum IntegrationError {
 
 impl From<IntegrationError> for AutogradError {
     fn from(err: IntegrationError) -> Self {
-        AutogradError::IntegrationError(_err.to_string())
+        AutogradError::IntegrationError(err.to_string())
     }
 }
 
@@ -235,7 +235,7 @@ impl ModuleInfo {
     }
 
     /// Set API version
-    pub fn with_api_version(mut self, apiversion: String) -> Self {
+    pub fn with_api_version(mut self, api_version: String) -> Self {
         self.api_version = api_version;
         self
     }
@@ -274,7 +274,7 @@ pub fn register_module(info: ModuleInfo) -> Result<(), IntegrationError> {
     let mut registry_guard = registry.lock().map_err(|_| {
         IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
     })?;
-    registry_guard.register_module(_info)
+    registry_guard.register_module(info)
 }
 
 /// Get module information from the global registry
@@ -284,7 +284,7 @@ pub fn get_module_info(name: &str) -> Result<Option<ModuleInfo>, IntegrationErro
     let registry_guard = registry.lock().map_err(|_| {
         IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
     })?;
-    Ok(registry_guard.get_module(_name).cloned())
+    Ok(registry_guard.get_module(name).cloned())
 }
 
 /// Check compatibility between two modules
@@ -294,7 +294,7 @@ pub fn check_compatibility(module1: &str, module2: &str) -> Result<bool, Integra
     let registry_guard = registry.lock().map_err(|_| {
         IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
     })?;
-    registry_guard.check_module_compatibility(_module1, module2)
+    registry_guard.check_module_compatibility(module1, module2)
 }
 
 /// Update global integration configuration
@@ -304,7 +304,7 @@ pub fn update_global_config(config: IntegrationConfig) -> Result<(), Integration
     let mut registry_guard = registry.lock().map_err(|_| {
         IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
     })?;
-    registry_guard.update_config(_config);
+    registry_guard.update_config(config);
     Ok(())
 }
 

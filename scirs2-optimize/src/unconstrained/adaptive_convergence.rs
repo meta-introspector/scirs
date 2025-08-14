@@ -83,19 +83,19 @@ pub struct AdaptiveToleranceState {
 
 impl AdaptiveToleranceState {
     /// Create new adaptive tolerance state
-    pub fn new(_options: AdaptiveToleranceOptions, problemdim: usize) -> Self {
+    pub fn new(options: AdaptiveToleranceOptions, problem_dim: usize) -> Self {
         Self {
             current_ftol: options.initial_ftol,
             current_gtol: options.initial_gtol,
             current_xtol: options.initial_xtol,
-            function_history: VecDeque::with_capacity(_options.history_length),
-            gradient_history: VecDeque::with_capacity(_options.history_length),
-            step_history: VecDeque::with_capacity(_options.history_length),
+            function_history: VecDeque::with_capacity(options.history_length),
+            gradient_history: VecDeque::with_capacity(options.history_length),
+            step_history: VecDeque::with_capacity(options.history_length),
             function_scale: 1.0,
             gradient_scale: 1.0,
             stagnant_nit: 0,
             problem_dim,
-            options: options,
+            options,
         }
     }
 
@@ -130,7 +130,7 @@ impl AdaptiveToleranceState {
     }
 
     /// Add new values to history
-    fn add_to_history(&mut self, function_value: f64, gradient_norm: f64, stepnorm: f64) {
+    fn add_to_history(&mut self, function_value: f64, gradient_norm: f64, step_norm: f64) {
         // Add to function history
         if self.function_history.len() >= self.options.history_length {
             self.function_history.pop_front();
@@ -309,12 +309,12 @@ impl AdaptiveToleranceState {
     }
 
     /// Get current Options struct with adapted tolerances
-    pub fn get_current_options(&self, baseoptions: &Options) -> Options {
-        let mut _options = base_options.clone();
+    pub fn get_current_options(&self, base_options: &Options) -> Options {
+        let mut options = base_options.clone();
         options.ftol = self.current_ftol;
         options.gtol = self.current_gtol;
         options.xtol = self.current_xtol;
-        _options
+        options
     }
 
     /// Check if convergence is achieved with current tolerances

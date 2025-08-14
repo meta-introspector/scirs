@@ -31,9 +31,9 @@ impl AdvancedThreadPool {
             config.num_threads,
         )));
 
-        let mut workers = Vec::with_capacity(_config.num_threads);
+        let mut workers = Vec::with_capacity(config.num_threads);
 
-        for id in 0.._config.num_threads {
+        for id in 0..config.num_threads {
             let worker = WorkStealingWorker::new(
                 id,
                 Arc::clone(&global_queue),
@@ -130,10 +130,10 @@ impl AdvancedThreadPool {
     }
 
     /// Resize the thread pool (dynamic scaling)
-    pub fn resize(&mut self, newsize: usize) -> Result<(), ThreadPoolError> {
+    pub fn resize(&mut self, new_size: usize) -> Result<(), ThreadPoolError> {
         if new_size == 0 {
             return Err(ThreadPoolError::InvalidConfiguration(
-                "Thread pool _size cannot be zero".into(),
+                "Thread pool size cannot be zero".into(),
             ));
         }
 
@@ -286,7 +286,7 @@ impl WorkStealingWorker {
         // Try local _queue first
         {
             let mut _queue = local_queue.lock().unwrap();
-            if let Some(task) = queue.pop_front() {
+            if let Some(task) = _queue.pop_front() {
                 return Some(task);
             }
         }
@@ -294,7 +294,7 @@ impl WorkStealingWorker {
         // Try global _queue
         {
             let mut _queue = global_queue.lock().unwrap();
-            if let Some(task) = queue.pop_front() {
+            if let Some(task) = _queue.pop_front() {
                 return Some(task);
             }
         }
@@ -358,8 +358,8 @@ impl Task {
         let (sender, receiver) = std::sync::mpsc::channel();
 
         let task = Task {
-            _func: Box::new(move || {
-                _func();
+            func: Box::new(move || {
+                func();
                 let _ = sender.send(());
             }),
             created_at: Instant::now(),
@@ -452,7 +452,7 @@ impl AdvancedThreadPoolStats {
             total_execution_time: Duration::ZERO,
             work_steals: 0,
             load_balance_efficiency: 1.0,
-            worker_stats: (0.._num_workers).map(WorkerStats::new).collect(),
+            worker_stats: (0.._numworkers).map(WorkerStats::new).collect(),
             queue_contention: 0.0,
         }
     }
@@ -547,7 +547,7 @@ impl NumaAwareThreadPool {
         for _ in 0..topology.num_nodes {
             let node_config = ThreadPoolConfig {
                 num_threads: pools_per_node,
-                .._config.clone()
+                ..config.clone()
             };
             pools.push(AdvancedThreadPool::new(node_config));
         }
@@ -581,7 +581,7 @@ impl NumaAwareThreadPool {
             .iter()
             .enumerate()
             .min_by_key(|(_, pool)| pool.get_stats().total_tasks_executed)
-            .map(|(id_)| id)
+            .map(|(id_, _)| id_)
             .unwrap_or(0)
     }
 }

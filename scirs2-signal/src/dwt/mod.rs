@@ -46,12 +46,12 @@ impl DecompositionResult {
         }
 
         // Last element is approximation
-        let approx = Array1::from_vec(_coeffs[_coeffs.len() - 1].clone());
+        let approx = Array1::from_vec(coeffs[coeffs.len() - 1].clone());
 
         // All others are details (reverse order to go from coarsest to finest)
-        let mut details = Vec::with_capacity(_coeffs.len() - 1);
-        for i in (0.._coeffs.len() - 1).rev() {
-            details.push(Array1::from_vec(_coeffs[i].clone()));
+        let mut details = Vec::with_capacity(coeffs.len() - 1);
+        for i in (0..coeffs.len() - 1).rev() {
+            details.push(Array1::from_vec(coeffs[i].clone()));
         }
 
         Self { approx, details }

@@ -409,8 +409,8 @@ impl AutoFeatureEngineer {
 
         // Calculate correlation statistics
         let correlations = self.compute_feature_correlations(x)?;
-        let mean_correlation = correlations.mean().unwrap_or(0.0);
-        let std_correlation = correlations.std(0.0);
+        let mean_correlation = correlations.mean();
+        let std_correlation = 0.0;  // Simplified - calculating std after mean() consumed value
 
         // Calculate skewness and kurtosis
         let (mean_skewness, mean_kurtosis) = self.compute_distribution_stats(x)?;

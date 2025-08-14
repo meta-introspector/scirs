@@ -17,7 +17,7 @@ pub struct TimeInstant {
 impl TimeInstant {
     /// Create a new time instant
     pub fn new(time: u64) -> Self {
-        TimeInstant { _time }
+        TimeInstant { time }
     }
 
     /// Get the time value
@@ -38,13 +38,13 @@ pub struct TimeInterval {
 impl TimeInterval {
     /// Create a new time interval
     pub fn new(start: u64, end: u64) -> Result<Self> {
-        if _start >= end {
+        if start >= end {
             return Err(GraphError::InvalidGraph(
                 "Start time must be before end time".to_string(),
             ));
         }
         Ok(TimeInterval {
-            _start: TimeInstant::new(_start),
+            start: TimeInstant::new(start),
             end: TimeInstant::new(end),
         })
     }
@@ -330,7 +330,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> TemporalGraph<N, E
         E: Clone,
     {
         let mut paths = Vec::new();
-        let end_time = TimeInstant::new(start_time._time + max_duration);
+        let end_time = TimeInstant::new(start_time.time + max_duration);
 
         // Use BFS to find temporal paths
         let mut queue = std::collections::VecDeque::new();
@@ -427,7 +427,7 @@ where
     visited.insert((source.clone(), start_time));
     reachable.insert(source.clone());
 
-    let end_time = TimeInstant::new(start_time._time + max_duration);
+    let end_time = TimeInstant::new(start_time.time + max_duration);
 
     while let Some((current_node, current_time)) = queue.pop_front() {
         if current_time >= end_time {

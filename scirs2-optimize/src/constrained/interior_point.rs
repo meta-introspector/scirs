@@ -109,7 +109,7 @@ pub struct InteriorPointSolver<'a> {
 
 impl<'a> InteriorPointSolver<'a> {
     /// Create new interior point solver
-    pub fn new(n: usize, m_eq: usize, mineq: usize, options: &'a InteriorPointOptions) -> Self {
+    pub fn new(n: usize, m_eq: usize, m_ineq: usize, options: &'a InteriorPointOptions) -> Self {
         Self {
             n,
             m_eq,
@@ -292,7 +292,7 @@ impl<'a> InteriorPointSolver<'a> {
         c_ineq: &Option<Array1<f64>>,
         j_eq: &Option<Array2<f64>>,
         j_ineq: &Option<Array2<f64>>,
-        _lambda_eq: &Array1<f64>,
+        lambda_eq: &Array1<f64>,
         lambda_ineq: &Array1<f64>,
         s: &Array1<f64>,
         barrier: f64,
@@ -301,7 +301,7 @@ impl<'a> InteriorPointSolver<'a> {
         let mut lag_grad = g.clone();
 
         if let (Some(j_eq), true) = (j_eq, self.m_eq > 0) {
-            lag_grad = &lag_grad + &j_eq.t().dot(_lambda_eq);
+            lag_grad = &lag_grad + &j_eq.t().dot(lambda_eq);
         }
 
         if let (Some(j_ineq), true) = (j_ineq, self.m_ineq > 0) {
@@ -780,7 +780,7 @@ impl<'a> InteriorPointSolver<'a> {
     }
 
     /// Compute maximum step length for dual variables
-    fn compute_max_step_dual(&self, lambda_ineq: &Array1<f64>, dlambdaineq: &Array1<f64>) -> f64 {
+    fn compute_max_step_dual(&self, lambda_ineq: &Array1<f64>, dlambda_ineq: &Array1<f64>) -> f64 {
         if self.m_ineq == 0 {
             return 1.0;
         }
@@ -929,13 +929,13 @@ where
 {
     let n = x.len();
     let mut grad = Array1::zeros(n);
-    let f0 = _fun(x);
+    let f0 = fun(x);
     let mut x_pert = x.to_owned();
 
     for i in 0..n {
         let h = eps * (1.0 + x[i].abs());
         x_pert[i] = x[i] + h;
-        let f_plus = _fun(&x_pert.view());
+        let f_plus = fun(&x_pert.view());
         grad[i] = (f_plus - f0) / h;
         x_pert[i] = x[i];
     }
@@ -1103,7 +1103,7 @@ mod tests {
             |x: &ArrayView1<f64>| -> Array1<f64> { Array1::from_vec(vec![1.0 - x[0] - x[1]]) };
 
         let ineq_jac = |_x: &ArrayView1<f64>| -> Array2<f64> {
-            Array2::fromshape_vec((1, 2), vec![-1.0, -1.0]).unwrap()
+            Array2::from_shape_vec((1, 2), vec![-1.0, -1.0]).unwrap()
         };
 
         // Use a feasible starting point closer to the solution
@@ -1141,7 +1141,7 @@ mod tests {
             |x: &ArrayView1<f64>| -> Array1<f64> { Array1::from_vec(vec![x[0] + x[1] - 2.0]) };
 
         let eq_jac = |_x: &ArrayView1<f64>| -> Array2<f64> {
-            Array2::fromshape_vec((1, 2), vec![1.0, 1.0]).unwrap()
+            Array2::from_shape_vec((1, 2), vec![1.0, 1.0]).unwrap()
         };
 
         // Use a feasible starting point that satisfies the constraint

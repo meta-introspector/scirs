@@ -131,7 +131,7 @@ pub struct ThinPlateSpline {
 
 impl ThinPlateSpline {
     /// Create a new TPS transformation from control points and targets
-    pub fn new(_source_points: &[Point2D], targetpoints: &[Point2D]) -> Result<Self> {
+    pub fn new(source_points: &[Point2D], target_points: &[Point2D]) -> Result<Self> {
         if source_points.len() != target_points.len() {
             return Err(VisionError::InvalidParameter(
                 "Source and target _points must have same length".to_string(),
@@ -305,7 +305,7 @@ pub fn register_non_rigid_points(
 pub fn register_non_rigid_regularized(
     source_points: &[(f64, f64)],
     target_points: &[(f64, f64)],
-    _regularization_weight: f64,
+    regularization_weight: f64,
     _params: &RegistrationParams,
 ) -> Result<RegistrationResult> {
     if source_points.len() != target_points.len() {

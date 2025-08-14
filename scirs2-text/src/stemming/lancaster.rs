@@ -207,8 +207,8 @@ lazy_static! {
     static ref RULES_BY_LETTER: HashMap<char, Vec<usize>> = {
         let mut map: HashMap<char, Vec<usize>> = HashMap::new();
 
-        for (i, (suffix___)) in LANCASTER_RULES.iter().enumerate() {
-            if let Some(first_char) = suffix___.chars().next() {
+        for (i, (suffix, _, _, _)) in LANCASTER_RULES.iter().enumerate() {
+            if let Some(first_char) = suffix.chars().next() {
                 map.entry(first_char).or_default().push(i);
             }
         }

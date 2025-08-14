@@ -123,9 +123,9 @@ impl ThreadPool {
 
         // Create I/O workers
         let io_receiver = Arc::new(Mutex::new(io_receiver));
-        let mut io_workers = Vec::with_capacity(_config.io_threads);
+        let mut io_workers = Vec::with_capacity(config.io_threads);
 
-        for id in 0.._config.io_threads {
+        for id in 0..config.io_threads {
             let receiver = Arc::clone(&io_receiver);
             let stats_clone = Arc::clone(&stats);
             let shutdown_clone = Arc::clone(&shutdown);
@@ -142,9 +142,9 @@ impl ThreadPool {
 
         // Create CPU workers
         let cpu_receiver = Arc::new(Mutex::new(cpu_receiver));
-        let mut cpu_workers = Vec::with_capacity(_config.cpu_threads);
+        let mut cpu_workers = Vec::with_capacity(config.cpu_threads);
 
-        for id in 0.._config.cpu_threads {
+        for id in 0..config.cpu_threads {
             let receiver = Arc::clone(&cpu_receiver);
             let stats_clone = Arc::clone(&stats);
             let shutdown_clone = Arc::clone(&shutdown);
@@ -176,7 +176,7 @@ impl ThreadPool {
         F: FnOnce() -> Result<()> + Send + 'static,
     {
         let work_item = WorkItem {
-            work_type,
+            work_type: worktype,
             task: Box::new(task),
             task_id: None,
         };
@@ -188,7 +188,7 @@ impl ThreadPool {
         }
 
         // Send to appropriate queue
-        match work_type {
+        match worktype {
             WorkType::IO => {
                 self.io_sender.send(work_item).map_err(|_| {
                     IoError::Other("Failed to submit I/O task: thread pool shut down".to_string())
@@ -210,7 +210,7 @@ impl ThreadPool {
         F: FnOnce() -> Result<()> + Send + 'static,
     {
         for task in tasks {
-            self.submit(work_type, task)?;
+            self.submit(worktype, task)?;
         }
         Ok(())
     }
@@ -407,7 +407,7 @@ static GLOBAL_THREAD_POOL: std::sync::OnceLock<ThreadPool> = std::sync::OnceLock
 /// Initialize the global thread pool
 #[allow(dead_code)]
 pub fn init_global_thread_pool(config: ThreadPoolConfig) {
-    let _ = GLOBAL_THREAD_POOL.set(ThreadPool::new(_config));
+    let _ = GLOBAL_THREAD_POOL.set(ThreadPool::new(config));
 }
 
 /// Get a reference to the global thread pool

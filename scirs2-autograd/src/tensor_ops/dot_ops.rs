@@ -165,7 +165,7 @@ fn batch_mat_mul_impl_slow<F: Float>(
 fn batch_mat_mul_requires_copy(stride: &[ndarray::Ixs]) -> bool {
     let rank = stride.len();
     // unwrap is ok since stride.len() > 2
-    let min_str = *_stride[0..rank - 2].iter().min().unwrap();
+    let min_str = *stride[0..rank - 2].iter().min().unwrap();
     let row_str = stride[rank - 2];
     let col_str = stride[rank - 1];
     min_str < row_str || min_str < col_str
@@ -306,7 +306,7 @@ impl<T: Float> op::Op<T> for MatMul {
         let mut c;
         unsafe {
             v.set_len(m * n);
-            c = ndarray::Array::fromshape_vec_unchecked((m, n).set_f(column_major), v);
+            c = ndarray::Array::from_shape_vec_unchecked((m, n).set_f(column_major), v);
         }
 
         // Perform matrix multiplication
@@ -389,7 +389,7 @@ impl<T: Float> op::Op<T> for BatchMatMul {
         unsafe {
             v.set_len(size);
             // BatchMatMul's ret val is a c-order array.
-            c = ndarray::Array::fromshape_vec_unchecked(retshape, v);
+            c = ndarray::Array::from_shape_vec_unchecked(retshape, v);
         }
         batch_mat_mul_impl_slow(T::one(), &x0, &x1, T::zero(), &mut c.view_mut());
 
@@ -481,11 +481,11 @@ impl<T: Float> op::Op<T> for TensordotPreprocess {
         let (perm1, newshape1, free_dims1) = tensordot_preprocess(x1.shape(), &axes1, true);
         free_dims0.extend(free_dims1);
 
-        let r0 = NdArray::fromshape_vec(ndarray::IxDyn(&[free_dims0.len()]), free_dims0).unwrap();
-        let r1 = NdArray::fromshape_vec(ndarray::IxDyn(&[perm0.len()]), perm0).unwrap();
-        let r2 = NdArray::fromshape_vec(ndarray::IxDyn(&[perm1.len()]), perm1).unwrap();
-        let r3 = NdArray::fromshape_vec(ndarray::IxDyn(&[newshape0.len()]), newshape0).unwrap();
-        let r4 = NdArray::fromshape_vec(ndarray::IxDyn(&[newshape1.len()]), newshape1).unwrap();
+        let r0 = NdArray::from_shape_vec(ndarray::IxDyn(&[free_dims0.len()]), free_dims0).unwrap();
+        let r1 = NdArray::from_shape_vec(ndarray::IxDyn(&[perm0.len()]), perm0).unwrap();
+        let r2 = NdArray::from_shape_vec(ndarray::IxDyn(&[perm1.len()]), perm1).unwrap();
+        let r3 = NdArray::from_shape_vec(ndarray::IxDyn(&[newshape0.len()]), newshape0).unwrap();
+        let r4 = NdArray::from_shape_vec(ndarray::IxDyn(&[newshape1.len()]), newshape1).unwrap();
 
         ctx.append_output(r0);
         ctx.append_output(r1);

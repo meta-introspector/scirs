@@ -12,7 +12,7 @@ fn main() {
     println!("of a computation graph.");
     println!();
 
-    ag::run::<f32_>(|ctx| {
+    ag::run(|ctx| {
         // Create some input tensors for our computation
         let a = T::convert_to_tensor(Array2::<f32>::eye(64).into_dyn(), ctx);
         let b = T::convert_to_tensor(Array2::<f32>::ones((64, 64)).into_dyn(), ctx);

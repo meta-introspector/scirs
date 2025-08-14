@@ -121,23 +121,23 @@ impl ActivationType {
 impl ActorNetwork {
     /// Create new actor network
     pub fn new(
-        _input_size: usize,
+        input_size: usize,
         hidden_size: usize,
         output_size: usize,
         activation: ActivationType,
     ) -> Self {
-        let xavier_scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
+        let xavier_scale = (2.0 / (input_size + hidden_size) as f64).sqrt();
 
         Self {
-            hidden_weights: Array2::fromshape_fn((hidden_size, input_size), |_| {
+            hidden_weights: Array2::from_shape_fn((hidden_size, input_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
-            output_weights: Array2::fromshape_fn((output_size, hidden_size), |_| {
+            output_weights: Array2::from_shape_fn((output_size, hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: Array1::zeros(output_size),
-            input_size,
+            _input_size: input_size,
             hidden_size,
             output_size,
             activation,
@@ -202,7 +202,7 @@ impl ActorNetwork {
         let output_raw_gradient = output_gradient.mapv(|g| g); // Assuming linear output
 
         // Hidden layer gradients
-        let mut hidden_gradient = Array1::zeros(self.hidden_size);
+        let mut hidden_gradient: Array1<f64> = Array1::zeros(self.hidden_size);
         for j in 0..self.hidden_size {
             for i in 0..self.output_size {
                 hidden_gradient[j] += output_raw_gradient[i] * self.output_weights[[i, j]];
@@ -231,19 +231,19 @@ impl ActorNetwork {
 
 impl CriticNetwork {
     /// Create new critic network
-    pub fn new(_input_size: usize, hiddensize: usize, activation: ActivationType) -> Self {
-        let xavier_scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
+    pub fn new(input_size: usize, hidden_size: usize, activation: ActivationType) -> Self {
+        let xavier_scale = (2.0 / (input_size + hidden_size) as f64).sqrt();
 
         Self {
-            hidden_weights: Array2::fromshape_fn((hidden_size, input_size), |_| {
+            hidden_weights: Array2::from_shape_fn((hidden_size, input_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
-            output_weights: Array1::fromshape_fn(hidden_size, |_| {
+            output_weights: Array1::from_shape_fn(hidden_size, |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: 0.0,
-            input_size,
+            _input_size: input_size,
             hidden_size,
             activation,
         }
@@ -285,7 +285,7 @@ impl CriticNetwork {
         let value_error = target_value - predicted_value;
 
         // Hidden layer gradients
-        let mut hidden_gradient = Array1::zeros(self.hidden_size);
+        let mut hidden_gradient: Array1<f64> = Array1::zeros(self.hidden_size);
         for j in 0..self.hidden_size {
             hidden_gradient[j] =
                 value_error * self.output_weights[j] * self.activation.derivative(hidden_raw[j]);
@@ -447,7 +447,7 @@ impl AdvantageActorCriticOptimizer {
         state: &OptimizationState,
     ) -> (OptimizationAction, Array1<f64>) {
         let state_features = self.extract_state_features(state);
-        let (_, policy_output) = self.actor.forward(&state_features.view());
+        let (_, _, policy_output) = self.actor.forward(&state_features.view());
 
         // Add exploration noise
         let exploration_noise = if self.training_stats.episodes_completed
@@ -541,7 +541,7 @@ impl AdvantageActorCriticOptimizer {
             // Forward pass through critic for current and next state
             let (hidden_raw, hidden_activated, current_value) =
                 self.critic.forward(&state_features.view());
-            let (_, next_value) = self.critic.forward(&next_state_features.view());
+            let (_, _, next_value) = self.critic.forward(&next_state_features.view());
 
             // Compute advantage
             let advantage = self.compute_advantage(

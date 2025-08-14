@@ -230,10 +230,10 @@ pub fn match_brief_descriptors(
 
             if _distance < best_distance {
                 second_best_distance = best_distance;
-                best_distance = distance;
+                best_distance = _distance;
                 best_index = j;
             } else if _distance < second_best_distance {
-                second_best_distance = distance;
+                second_best_distance = _distance;
             }
         }
 
@@ -252,7 +252,7 @@ pub fn match_brief_descriptors(
 /// Calculate Hamming distance between binary descriptors
 #[allow(dead_code)]
 pub fn hamming_distance(desc1: &[u32], desc2: &[u32]) -> u32 {
-    _desc1
+    desc1
         .iter()
         .zip(desc2.iter())
         .map(|(&d1, &d2)| (d1 ^ d2).count_ones())
@@ -262,7 +262,7 @@ pub fn hamming_distance(desc1: &[u32], desc2: &[u32]) -> u32 {
 /// Convert Hamming distance to normalized similarity score
 #[allow(dead_code)]
 pub fn hamming_to_similarity(_distance: u32, descriptorbits: usize) -> f32 {
-    1.0 - (_distance as f32) / (descriptor_bits as f32)
+    1.0 - (_distance as f32) / (descriptorbits as f32)
 }
 
 #[cfg(test)]

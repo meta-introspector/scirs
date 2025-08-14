@@ -136,7 +136,7 @@ impl CachedExecutor {
 
         let mut hasher = DefaultHasher::new();
         format!("{:?}", input).hash(&mut hasher);
-        format!("{}_{:x}", stage_name, hasher.finish())
+        format!("{}_{:x}", stagename, hasher.finish())
     }
 }
 

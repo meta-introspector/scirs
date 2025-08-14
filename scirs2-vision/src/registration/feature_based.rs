@@ -864,7 +864,7 @@ fn compute_hamming_simd_optimized(desc1: &[u8], descriptors: &[&Vec<u8>]) -> Vec
     let desc_len = desc1.len();
 
     // Convert desc1 to SIMD-friendly format
-    let _desc1_u32: Vec<u32> = desc1
+    let desc1_u32: Vec<u32> = desc1
         .chunks_exact(4)
         .map(|chunk| u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
         .collect();
@@ -1249,7 +1249,7 @@ pub fn template_register(
 
 /// Compute normalized cross-correlation
 #[allow(dead_code)]
-fn compute_ncc(_reference: &GrayImage, template: &GrayImage, offset_x: u32, offsety: u32) -> f64 {
+fn compute_ncc(reference: &GrayImage, template: &GrayImage, offset_x: u32, offsety: u32) -> f64 {
     let (template_width, template_height) = template.dimensions();
 
     let mut ref_sum = 0.0;
@@ -1260,10 +1260,10 @@ fn compute_ncc(_reference: &GrayImage, template: &GrayImage, offset_x: u32, offs
     let n = (template_width * template_height) as f64;
 
     // Compute statistics
-    for _y in 0..template_height {
-        for _x in 0..template_width {
+    for y in 0..template_height {
+        for x in 0..template_width {
             let ref_val = reference.get_pixel(offset_x + x, offset_x + y)[0] as f64;
-            let template_val = template.get_pixel(_x, y)[0] as f64;
+            let template_val = template.get_pixel(x, y)[0] as f64;
 
             ref_sum += ref_val;
             template_sum += template_val;

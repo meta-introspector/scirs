@@ -9,6 +9,7 @@ use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use rand::Rng;
 use scirs2_core::error::CoreResult as Result;
+use scirs2_core::simd_ops::SimdUnifiedOps;
 
 /// Advanced memristor models
 #[derive(Debug, Clone, Copy)]
@@ -88,7 +89,7 @@ impl Memristor {
     /// Create new memristor with advanced model
     pub fn new(params: MemristorParameters, model: MemristorModel) -> Self {
         let initial_resistance =
-            params.r_on + (_params.r_off - params.r_on) * (1.0 - params.initial_x);
+            params.r_on + (params.r_off - params.r_on) * (1.0 - params.initial_x);
         let variability_factor = if params.variability > 0.0 {
             1.0 + (rand::rng().gen::<f64>() - 0.5) * 2.0 * params.variability
         } else {
@@ -328,8 +329,8 @@ impl MemristiveCrossbar {
 
         // Wire resistance (increases with array size)
         let wire_r_per_cell = 1.0; // Ohms per cell
-        let row_resistance = Array1::fromshape_fn(rows, |i| wire_r_per_cell * (i + 1) as f64);
-        let col_resistance = Array1::fromshape_fn(cols, |j| wire_r_per_cell * (j + 1) as f64);
+        let row_resistance = Array1::from_shape_fn(rows, |i| wire_r_per_cell * (i + 1) as f64);
+        let col_resistance = Array1::from_shape_fn(cols, |j| wire_r_per_cell * (j + 1) as f64);
 
         let mut stats = CrossbarStats::default();
         stats.faulty_devices = faulty_count;
@@ -394,7 +395,7 @@ impl MemristiveCrossbar {
             if conductances.len() >= input.len() {
                 let g_slice = &conductances[..input.len()];
                 let g_array = Array1::from(g_slice.to_vec());
-                sum = f64::simd_dot_product(&g_array.view(), input);
+                sum = SimdUnifiedOps::simd_dot(&g_array.view(), input);
             }
 
             output[i] = sum;
@@ -506,7 +507,7 @@ impl MemristiveCrossbar {
     }
 
     /// Convert desired conductance change to programming voltage
-    fn conductance_change_to_voltage(&self, deltag: f64, row: usize, col: usize) -> f64 {
+    fn conductance_change_to_voltage(&self, delta_g: f64, row: usize, col: usize) -> f64 {
         // Simplified model: voltage proportional to desired conductance change
         let current_g = self.memristors[row][col].conductance();
         let relative_change = delta_g / (current_g + 1e-12);
@@ -663,7 +664,7 @@ impl MemristiveOptimizer {
                 break;
             }
 
-            self._nit += 1;
+            self.nit += 1;
 
             // Periodic crossbar refresh to combat drift
             if iter % 100 == 0 {
@@ -675,8 +676,16 @@ impl MemristiveOptimizer {
             x: self.best_parameters.clone(),
             fun: self.best_objective,
             success: self.best_objective < 1e-6,
-            nit: self._nit,
+            nit: self.nit,
             message: "Memristive optimization completed".to_string(),
+            jac: None,
+            hess: None,
+            constr: None,
+            nfev: self.nit,
+            njev: 0,
+            nhev: 0,
+            maxcv: 0,
+            status: 0,
         })
     }
 
@@ -706,7 +715,7 @@ impl MemristiveOptimizer {
         let mut encoded = Array1::zeros(crossbar_size);
 
         // Simple encoding: map gradient to crossbar input with normalization
-        let max_grad = gradient.mapv(|x| x.abs()).fold(0.0, f64::max);
+        let max_grad = gradient.mapv(|x| x.abs()).fold(0.0, |a, &b| f64::max(a, b));
         if max_grad > 0.0 {
             for i in 0..crossbar_size.min(gradient.len()) {
                 encoded[i] = gradient[i] / max_grad;
@@ -717,11 +726,11 @@ impl MemristiveOptimizer {
     }
 
     /// Decode crossbar output to parameter update
-    fn decode_update(&self, crossbaroutput: &Array1<f64>) -> Array1<f64> {
+    fn decode_update(&self, crossbar_output: &Array1<f64>) -> Array1<f64> {
         let n = self.parameters.len();
         let mut update = Array1::zeros(n);
 
-        // Simple decoding: map crossbar _output back to parameter space
+        // Simple decoding: map crossbar output back to parameter space
         for i in 0..n.min(crossbar_output.len()) {
             update[i] = crossbar_output[i] * self.learning_rate;
         }
@@ -786,7 +795,7 @@ pub fn memristive_gradient_descent<F>(
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
-    let _params = MemristorParameters::default();
+    let params = MemristorParameters::default();
     let model = MemristorModel::NonlinearIonicDrift;
 
     let mut optimizer = MemristiveOptimizer::new(
@@ -840,7 +849,7 @@ where
     let params = MemristorParameters::default();
     let mut crossbar = MemristiveCrossbar::new(rows, cols, params, MemristorModel::TeamModel);
 
-    // Initialize crossbar with _weights
+    // Initialize crossbar with weights
     for i in 0..rows {
         for j in 0..cols {
             let _target_conductance = initial_weights[[i, j]].abs() * 1e-3; // Scale to conductance
@@ -854,7 +863,7 @@ where
     }
 
     for _iter in 0..max_nit {
-        // Get current _weights from crossbar
+        // Get current weights from crossbar
         let current_weights = crossbar.get_conductance_matrix();
         let objective_value = objective(&current_weights.view());
 
@@ -934,8 +943,8 @@ mod tests {
         let mut crossbar = MemristiveCrossbar::new(10, 10, params, MemristorModel::TeamModel);
 
         // Should handle faults gracefully
-        let faulty_count = crossbar.fault_map.iter().filter(|&&x| x).count();
-        assert!(faulty_count >= 0); // Some devices may be faulty
+        let _faulty_count = crossbar.fault_map.iter().filter(|&&x| x).count();
+        // Some devices may be faulty - this is expected behavior
 
         let input = Array1::ones(10);
         let output = crossbar.multiply(&input.view());

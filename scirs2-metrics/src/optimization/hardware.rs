@@ -758,7 +758,7 @@ mod tests {
 
         // Test matrix-vector multiplication
         let matrix =
-            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
                 .unwrap();
         let vector = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
@@ -770,7 +770,7 @@ mod tests {
         }
 
         // Test pairwise distances
-        let data = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
 
         let distances = matrix_ops
             .pairwise_distances_accelerated(&data, "euclidean")

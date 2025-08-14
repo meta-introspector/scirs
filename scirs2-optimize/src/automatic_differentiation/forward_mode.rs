@@ -62,11 +62,11 @@ where
         let h = 1e-8;
         let mut x_plus = x.to_owned();
         x_plus[i] += h;
-        let f_plus = _func(&x_plus.view());
+        let f_plus = func(&x_plus.view());
 
         let mut x_minus = x.to_owned();
         x_minus[i] -= h;
-        let f_minus = _func(&x_minus.view());
+        let f_minus = func(&x_minus.view());
 
         gradient[i] = (f_plus - f_minus) / (2.0 * h);
     }
@@ -122,7 +122,7 @@ impl SecondOrderDual {
     /// Create a new second-order dual number
     pub fn new(value: f64, first: f64, second: f64) -> Self {
         Self {
-            value: value,
+            value,
             first,
             second,
         }
@@ -131,7 +131,7 @@ impl SecondOrderDual {
     /// Create a constant (derivatives = 0)
     pub fn constant(value: f64) -> Self {
         Self {
-            value: value,
+            value,
             first: 0.0,
             second: 0.0,
         }
@@ -140,7 +140,7 @@ impl SecondOrderDual {
     /// Create a variable (first = 1, second = 0)
     pub fn variable(value: f64) -> Self {
         Self {
-            value: value,
+            value,
             first: 1.0,
             second: 0.0,
         }
@@ -323,10 +323,7 @@ where
 
 /// Multi-variable forward-mode gradient computation using MultiDual
 #[allow(dead_code)]
-pub fn forward_gradient_multi<F>(
-    _func: F,
-    x: &ArrayView1<f64>,
-) -> Result<Array1<f64>, OptimizeError>
+pub fn forward_gradient_multi<F>(func: F, x: &ArrayView1<f64>) -> Result<Array1<f64>, OptimizeError>
 where
     F: Fn(&[MultiDual]) -> MultiDual,
 {
@@ -339,7 +336,7 @@ where
         .map(|(i, &xi)| MultiDual::variable(xi, i, n))
         .collect();
 
-    let result = _func(&x_multi);
+    let result = func(&x_multi);
     Ok(result.gradient().clone())
 }
 
@@ -377,10 +374,10 @@ where
 
 /// Check if forward mode is preferred for the given problem dimensions
 #[allow(dead_code)]
-pub fn is_forward_mode_efficient(_input_dim: usize, outputdim: usize) -> bool {
+pub fn is_forward_mode_efficient(input_dim: usize, output_dim: usize) -> bool {
     // Forward mode is efficient when input dimension is small
-    // Cost is O(_input_dim * cost_of_function)
-    _input_dim <= 10 || (_input_dim <= output_dim && _input_dim <= 50)
+    // Cost is O(input_dim * cost_of_function)
+    input_dim <= 10 || (input_dim <= output_dim && input_dim <= 50)
 }
 
 #[cfg(test)]

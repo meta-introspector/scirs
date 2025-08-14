@@ -229,7 +229,7 @@ fn merge_components(components: &mut [Component], parent: usize, child: usize) {
 
 #[allow(dead_code)]
 fn calculate_stability(components: &mut [Component], delta: u8) {
-    for i in 0.._components.len() {
+    for i in 0..components.len() {
         let level = components[i].level;
         let area = components[i].area;
 
@@ -264,7 +264,7 @@ fn is_maximally_stable(_components: &[Component], idx: usize, mindiversity: f32)
 
         // Check _diversity
         let _diversity = (parent.area as f32 - component.area as f32) / component.area as f32;
-        if _diversity < min_diversity {
+        if _diversity < mindiversity {
             return false;
         }
     }
@@ -278,7 +278,7 @@ fn is_maximally_stable(_components: &[Component], idx: usize, mindiversity: f32)
 
         // Check _diversity
         let _diversity = (component.area as f32 - child.area as f32) / child.area as f32;
-        if _diversity < min_diversity {
+        if _diversity < mindiversity {
             return false;
         }
     }

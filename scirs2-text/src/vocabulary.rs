@@ -28,18 +28,18 @@ impl Vocabulary {
     }
 
     /// Create a new vocabulary with a maximum size
-    pub fn with_max_size(_maxsize: usize) -> Self {
+    pub fn with_maxsize(_maxsize: usize) -> Self {
         Self {
             token_to_id: HashMap::new(),
             id_to_token: HashMap::new(),
-            max_size: Some(_max_size),
+            max_size: Some(_maxsize),
         }
     }
 
     /// Create a vocabulary from a list of tokens
-    pub fn from_tokens(tokens: &[String]) -> Self {
+    pub fn fromtokens(tokens: &[String]) -> Self {
         let mut vocab = Self::new();
-        for token in _tokens {
+        for token in tokens {
             vocab.add_token(token);
         }
         vocab
@@ -142,7 +142,7 @@ impl Vocabulary {
 
         let mut new_id = 0;
         for (token, count) in token_counts {
-            if *count >= min_count && self.contains(token) {
+            if *count >= mincount && self.contains(token) {
                 new_token_to_id.insert(token.clone(), new_id);
                 new_id_to_token.insert(new_id, token.clone());
                 new_id += 1;
@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn test_vocabulary_from_tokens() {
+    fn test_vocabulary_fromtokens() {
         let tokens = vec![
             "hello".to_string(),
             "world".to_string(),
@@ -203,7 +203,7 @@ mod tests {
             "test".to_string(),
         ];
 
-        let vocab = Vocabulary::from_tokens(&tokens);
+        let vocab = Vocabulary::fromtokens(&tokens);
 
         // Check size (duplicates are removed)
         assert_eq!(vocab.len(), 3);
@@ -215,8 +215,8 @@ mod tests {
     }
 
     #[test]
-    fn test_vocabulary_max_size() {
-        let mut vocab = Vocabulary::with_max_size(2);
+    fn test_vocabulary_maxsize() {
+        let mut vocab = Vocabulary::with_maxsize(2);
 
         // Add tokens
         vocab.add_token("hello");

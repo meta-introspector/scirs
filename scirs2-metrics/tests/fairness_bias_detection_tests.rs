@@ -1,7 +1,7 @@
 use approx::assert_abs_diff_eq;
 use ndarray::{array, Array2};
-use scirs2__metrics::classification::accuracy_score;
-use scirs2__metrics::fairness::bias_detection::{
+use scirs2_metrics::classification::accuracy_score;
+use scirs2_metrics::fairness::bias_detection::{
     intersectional_fairness, slice_analysis, subgroup_performance,
 };
 
@@ -9,7 +9,7 @@ use scirs2__metrics::fairness::bias_detection::{
 #[allow(dead_code)]
 fn test_slice_analysis() {
     // Create a sample dataset
-    let features = Array2::fromshape_vec(
+    let features = Array2::from_shape_vec(
         (8, 3),
         vec![
             // age, gender(0=male, 1=female), region(0,1,2)
@@ -80,7 +80,7 @@ fn test_subgroup_performance() {
     let y_pred = array![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0];
 
     // Demographic groups: gender (0=male, 1=female) and age_group (0=young, 1=old)
-    let groups = Array2::fromshape_vec(
+    let groups = Array2::from_shape_vec(
         (8, 2),
         vec![
             0.0, 0.0, // male, young
@@ -154,7 +154,7 @@ fn test_intersectional_fairness() {
     let y_pred = array![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0];
 
     // Protected attributes: gender (0=male, 1=female) and race (0=group A, 1=group B)
-    let protected_features = Array2::fromshape_vec(
+    let protected_features = Array2::from_shape_vec(
         (8, 2),
         vec![
             0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0,
@@ -209,7 +209,7 @@ fn test_edge_cases() {
     let y_true = array![0.0, 0.0, 1.0, 1.0];
     let y_pred = array![0.0, 0.0, 0.0, 1.0];
 
-    let all_same_group = Array2::fromshape_vec(
+    let all_same_group = Array2::from_shape_vec(
         (4, 1),
         vec![1.0, 1.0, 1.0, 1.0], // All samples in the same group
     )
@@ -226,7 +226,7 @@ fn test_edge_cases() {
     let y_true_small = array![0.0, 1.0];
     let y_pred_small = array![0.0, 0.0];
 
-    let small_groups = Array2::fromshape_vec(
+    let small_groups = Array2::from_shape_vec(
         (2, 1),
         vec![0.0, 1.0], // One sample in each group
     )

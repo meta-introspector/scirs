@@ -1679,7 +1679,7 @@ impl PosAwareLemmatizer {
 
     /// Lemmatize a batch of words with their POS tags
     pub fn lemmatize_batch_with_pos(&self, words: &[&str], postags: &[PosTag]) -> Vec<String> {
-        self.lemmatizer.lemmatize_with_pos(words, pos_tags)
+        self.lemmatizer.lemmatize_with_pos(words, postags)
     }
 
     /// Get the underlying POS tagger
@@ -1694,7 +1694,7 @@ impl PosAwareLemmatizer {
 
     /// Set whether to use POS tagging by default
     pub fn set_use_pos_by_default(&mut self, usepos: bool) {
-        self.use_pos_by_default = use_pos;
+        self.use_pos_by_default = usepos;
     }
 
     /// Add a custom word to the POS tagger lexicon
@@ -1987,20 +1987,20 @@ mod tests {
         // Test prefix analysis
         let predictions = analyzer.analyze("unhappy");
         assert!(!predictions.is_empty());
-        assert!(predictions.iter().any(|(tag_)| *tag == PosTag::Adjective)); // un- prefix
+        assert!(predictions.iter().any(|(tag, _)| *tag == PosTag::Adjective)); // un- prefix
 
         let predictions = analyzer.analyze("rebuild");
         assert!(!predictions.is_empty());
-        assert!(predictions.iter().any(|(tag_)| *tag == PosTag::Verb)); // re- prefix
+        assert!(predictions.iter().any(|(tag, _)| *tag == PosTag::Verb)); // re- prefix
 
         // Test word shape analysis
         let predictions = analyzer.analyze("JavaScript");
         assert!(!predictions.is_empty());
-        assert!(predictions.iter().any(|(tag_)| *tag == PosTag::Noun)); // CamelCase shape
+        assert!(predictions.iter().any(|(tag, _)| *tag == PosTag::Noun)); // CamelCase shape
 
         let predictions = analyzer.analyze("well-known");
         assert!(!predictions.is_empty());
-        assert!(predictions.iter().any(|(tag_)| *tag == PosTag::Adjective)); // hyphenated shape
+        assert!(predictions.iter().any(|(tag, _)| *tag == PosTag::Adjective)); // hyphenated shape
 
         // Test prediction method
         let prediction = analyzer.predict_pos("running");
@@ -2103,7 +2103,7 @@ mod tests {
         // Test capitalized technical terms
         let predictions = analyzer.analyze("PostgreSQL");
         assert!(!predictions.is_empty());
-        assert!(predictions.iter().any(|(tag_)| *tag == PosTag::Noun));
+        assert!(predictions.iter().any(|(tag, _)| *tag == PosTag::Noun));
     }
 
     #[test]

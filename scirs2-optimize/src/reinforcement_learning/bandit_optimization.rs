@@ -22,11 +22,11 @@ pub struct BanditOptimizer {
 
 impl BanditOptimizer {
     /// Create new bandit optimizer
-    pub fn new(_numarms: usize) -> Self {
+    pub fn new(num_arms: usize) -> Self {
         Self {
             num_arms,
-            arm_rewards: Array1::zeros(_num_arms),
-            arm_counts: Array1::zeros(_num_arms),
+            arm_rewards: Array1::zeros(num_arms),
+            arm_counts: Array1::zeros(num_arms),
         }
     }
 
@@ -79,7 +79,7 @@ where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
     let mut bandit = BanditOptimizer::new(3); // 3 strategies
-    let mut _params = initial_params.to_owned();
+    let mut params = initial_params.to_owned();
     let mut best_obj = objective(initial_params);
 
     for _iter in 0..num_nit {
@@ -93,11 +93,11 @@ where
         };
 
         // Simple gradient-like update
-        for i in 0.._params.len() {
+        for i in 0..params.len() {
             params[i] += (rand::rng().gen::<f64>() - 0.5) * step_size;
         }
 
-        let new_obj = objective(&_params.view());
+        let new_obj = objective(&params.view());
         let reward = if new_obj < best_obj { 1.0 } else { 0.0 };
 
         bandit.update_arm(arm, reward);

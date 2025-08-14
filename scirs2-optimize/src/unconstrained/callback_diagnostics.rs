@@ -59,7 +59,7 @@ pub struct DiagnosticOptimizer {
 
 impl DiagnosticOptimizer {
     /// Create new diagnostic optimizer
-    pub fn new(_diagnosticoptions: DiagnosticOptions) -> Self {
+    pub fn new(_diagnostic_options: DiagnosticOptions) -> Self {
         Self {
             collector: Rc::new(RefCell::new(DiagnosticCollector::new(_diagnostic_options))),
             callbacks: Vec::new(),
@@ -73,7 +73,7 @@ impl DiagnosticOptimizer {
     }
 
     /// Add a simple progress callback
-    pub fn add_progress_callback(&mut self, every_nnit: usize) {
+    pub fn add_progress_callback(&mut self, every_n_nit: usize) {
         let mut last_printed = 0;
         self.add_callback(Box::new(move |info| {
             if info.iteration >= last_printed + every_n_nit {
@@ -90,7 +90,7 @@ impl DiagnosticOptimizer {
     }
 
     /// Add a convergence monitoring callback
-    pub fn add_convergence_monitor(&mut self, patience: usize, minimprovement: f64) {
+    pub fn add_convergence_monitor(&mut self, patience: usize, min_improvement: f64) {
         let mut best_f = f64::INFINITY;
         let mut no_improvement_count = 0;
 
@@ -111,7 +111,7 @@ impl DiagnosticOptimizer {
     }
 
     /// Add a time limit callback
-    pub fn add_time_limit(&mut self, maxduration: std::time::Duration) {
+    pub fn add_time_limit(&mut self, max_duration: std::time::Duration) {
         self.add_callback(Box::new(move |info| {
             if info.elapsed_time > max_duration {
                 CallbackResult::StopWithMessage("Time limit exceeded")

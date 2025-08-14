@@ -1467,7 +1467,7 @@ impl VariationalQuantumEigensolver {
 
         // Apply variational layers
         for layer in &self.circuit_layers {
-            self.apply_variational_layer(&mut state, layer, parameters)?;
+            self.apply_variational_layer(&mut state, layer, _parameters)?;
         }
 
         Ok(state)
@@ -2613,7 +2613,7 @@ impl QuantumAdiabaticSpatialOptimizer {
     // Private implementation methods
 
     fn create_mixing_hamiltonian(_numqubits: usize) -> QuantumHamiltonian {
-        let dim = 1 << numqubits;
+        let dim = 1 << _numqubits;
         let mut matrix = Array2::zeros((dim, dim));
 
         // Create transverse field Hamiltonian: H_mix = -∑ᵢ σₓⁱ
@@ -3189,7 +3189,7 @@ pub struct QuantumTSPSolution {
 impl QuantumTSPSolver {
     /// Create a new quantum TSP solver
     pub fn new(_distancematrix: Array2<f64>) -> SpatialResult<Self> {
-        let n_cities_ = distancematrix.dim().0;
+        let n_cities_ = _distancematrix.dim().0;
 
         if n_cities_ < 3 {
             return Err(SpatialError::InvalidInput(
@@ -3211,7 +3211,7 @@ impl QuantumTSPSolver {
 
         Ok(Self {
             num_cities: n_cities_,
-            distancematrix: distancematrix,
+            distancematrix: _distancematrix,
             annealing_schedule,
             num_trotter_slices: 100,
             qaoa_depth: 8,
@@ -3224,7 +3224,7 @@ impl QuantumTSPSolver {
     /// Configure quantum annealing parameters
     pub fn with_annealing_config(mut self, num_trotter_slices: usize, qaoadepth: usize) -> Self {
         self.num_trotter_slices = num_trotter_slices;
-        self.qaoa_depth = qaoa_depth;
+        self.qaoa_depth = qaoadepth;
         self
     }
 
@@ -3691,7 +3691,7 @@ pub enum QuantumGateType {
 
 impl QuantumKernelMachine {
     /// Create new quantum kernel machine
-    pub fn new(_numqubits: usize, feature_mapdepth: usize) -> Self {
+    pub fn new(numqubits: usize, feature_mapdepth: usize) -> Self {
         let kernel_params = QuantumKernelParams {
             feature_map_type: QuantumFeatureMapType::ZZFeatureMap,
             entangling_gate: QuantumGateType::CZ,
@@ -4131,8 +4131,8 @@ pub struct QuantumParameterOptimizer {
 
 impl QuantumVariationalClassifier {
     /// Create new quantum variational classifier
-    pub fn new(_numqubits: usize, circuitdepth: usize) -> Self {
-        let num_params = _numqubits * circuitdepth * 3; // 3 rotation angles per qubit per layer
+    pub fn new(numqubits: usize, circuitdepth: usize) -> Self {
+        let num_params = numqubits * circuitdepth * 3; // 3 rotation angles per qubit per layer
         let parameters = Array1::zeros(num_params);
 
         let optimizer = QuantumParameterOptimizer {

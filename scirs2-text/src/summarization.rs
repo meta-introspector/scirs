@@ -26,7 +26,7 @@ impl TextRank {
     /// Create a new TextRank summarizer
     pub fn new(_numsentences: usize) -> Self {
         Self {
-            num_sentences,
+            num_sentences: _numsentences,
             damping_factor: 0.85,
             max_iterations: 100,
             threshold: 0.0001,
@@ -36,18 +36,18 @@ impl TextRank {
 
     /// Set the damping factor
     pub fn with_damping_factor(mut self, dampingfactor: f64) -> Result<Self> {
-        if !(0.0..=1.0).contains(&damping_factor) {
+        if !(0.0..=1.0).contains(&dampingfactor) {
             return Err(TextError::InvalidInput(
                 "Damping _factor must be between 0 and 1".to_string(),
             ));
         }
-        self.damping_factor = damping_factor;
+        self.damping_factor = dampingfactor;
         Ok(self)
     }
 
     /// Extract summary from text
     pub fn summarize(&self, text: &str) -> Result<String> {
-        let sentences: Vec<String> = self.sentence_tokenizer.tokenize(text)?;
+        let sentences: Vec<String> = self.sentencetokenizer.tokenize(text)?;
 
         if sentences.is_empty() {
             return Ok(String::new());
@@ -156,7 +156,7 @@ impl TextRank {
         indexed_scores
             .iter()
             .take(self.num_sentences)
-            .map(|&(idx_)| idx)
+            .map(|&(idx_, _)| idx_)
             .collect()
     }
 
@@ -189,7 +189,7 @@ impl CentroidSummarizer {
     /// Create a new centroid summarizer
     pub fn new(_numsentences: usize) -> Self {
         Self {
-            num_sentences,
+            num_sentences: _numsentences,
             topic_threshold: 0.1,
             redundancy_threshold: 0.95,
             sentencetokenizer: Box::new(crate::tokenize::SentenceTokenizer::new()),
@@ -198,7 +198,7 @@ impl CentroidSummarizer {
 
     /// Summarize text using centroid method
     pub fn summarize(&self, text: &str) -> Result<String> {
-        let sentences: Vec<String> = self.sentence_tokenizer.tokenize(text)?;
+        let sentences: Vec<String> = self.sentencetokenizer.tokenize(text)?;
 
         if sentences.is_empty() {
             return Ok(String::new());
@@ -253,7 +253,7 @@ impl CentroidSummarizer {
         similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
         // Select sentences avoiding redundancy
-        for (idx_) in similarities {
+        for (idx_, _similarity) in similarities {
             if selected.len() >= self.num_sentences {
                 break;
             }
@@ -262,7 +262,7 @@ impl CentroidSummarizer {
             let mut is_redundant = false;
             for &selected_idx in &selected {
                 let sim = self.cosine_similarity(
-                    vectors.row(idx).to_owned(),
+                    vectors.row(idx_).to_owned(),
                     vectors.row(selected_idx).to_owned(),
                 );
                 if sim > self.redundancy_threshold {
@@ -272,8 +272,8 @@ impl CentroidSummarizer {
             }
 
             if !is_redundant {
-                selected.push(idx);
-                used_sentences.insert(idx);
+                selected.push(idx_);
+                used_sentences.insert(idx_);
             }
         }
 
@@ -309,7 +309,7 @@ impl CentroidSummarizer {
 /// Keyword extraction using TF-IDF
 pub struct KeywordExtractor {
     /// Number of keywords to extract
-    num_keywords: usize,
+    _numkeywords: usize,
     /// Minimum document frequency
     #[allow(dead_code)]
     min_df: f64,
@@ -324,7 +324,7 @@ impl KeywordExtractor {
     /// Create a new keyword extractor
     pub fn new(_numkeywords: usize) -> Self {
         Self {
-            num_keywords,
+            _numkeywords,
             min_df: 0.01, // Unused but kept for API compatibility
             max_df: 0.95, // Unused but kept for API compatibility
             ngram_range: (1, 3),
@@ -333,10 +333,10 @@ impl KeywordExtractor {
 
     /// Configure n-gram range
     pub fn with_ngram_range(mut self, min_n: usize, maxn: usize) -> Result<Self> {
-        if min_n > max_n || min_n == 0 {
+        if min_n > maxn || min_n == 0 {
             return Err(TextError::InvalidInput("Invalid _n-gram range".to_string()));
         }
-        self.ngram_range = (min_n, max_n);
+        self.ngram_range = (min_n, maxn);
         Ok(self)
     }
 
@@ -370,7 +370,7 @@ impl KeywordExtractor {
         let mut keyword_scores: Vec<(String, f64)> = avg_tfidf
             .iter()
             .enumerate()
-            .take(self.num_keywords * 2) // Get more than needed to filter
+            .take(self._numkeywords * 2) // Get more than needed to filter
             .map(|(i, &score)| {
                 let term = if i < all_words.len() {
                     all_words[i].clone()
@@ -385,7 +385,7 @@ impl KeywordExtractor {
         keyword_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
         // Return top keywords
-        Ok(keyword_scores.into_iter().take(self.num_keywords).collect())
+        Ok(keyword_scores.into_iter().take(self._numkeywords).collect())
     }
 
     /// Extract keywords with position information
@@ -476,7 +476,7 @@ mod tests {
         let keywords_with_pos = extractor.extract_keywords_with_positions(text).unwrap();
 
         // Should find positions for repeated keywords
-        for (keyword_, positions) in keywords_with_pos {
+        for (keyword, _score, positions) in keywords_with_pos {
             if keyword.to_lowercase().contains("machine learning") {
                 assert!(positions.len() >= 2);
             }

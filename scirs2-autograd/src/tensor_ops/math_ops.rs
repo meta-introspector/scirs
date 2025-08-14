@@ -239,7 +239,7 @@ macro_rules! elem_wise_vm_or_std {
                     y.as_mut_ptr() as *mut f32,
                 );
                 y.set_len(x.len());
-                NdArray::fromshape_vec_unchecked(x.shape(), y)
+                NdArray::from_shape_vec_unchecked(x.shape(), y)
             } else if same_type::<T, f64>() {
                 let mut y = Vec::with_capacity(x.len());
                 $vmd_op(
@@ -248,7 +248,7 @@ macro_rules! elem_wise_vm_or_std {
                     y.as_mut_ptr() as *mut f64,
                 );
                 y.set_len(x.len());
-                NdArray::fromshape_vec_unchecked(x.shape(), y)
+                NdArray::from_shape_vec_unchecked(x.shape(), y)
             } else {
                 $ctx.input(0).mapv($closure)
             }
@@ -272,7 +272,7 @@ macro_rules! elem_wise_vm_with_param_or_std {
                     y.as_mut_ptr() as *mut f32,
                 );
                 y.set_len(x.len());
-                NdArray::fromshape_vec_unchecked(x.shape(), y)
+                NdArray::from_shape_vec_unchecked(x.shape(), y)
             } else if same_type::<T, f64>() {
                 let mut y = Vec::with_capacity(x.len());
                 let p = $param.to_f64().unwrap();
@@ -283,7 +283,7 @@ macro_rules! elem_wise_vm_with_param_or_std {
                     y.as_mut_ptr() as *mut f64,
                 );
                 y.set_len(x.len());
-                NdArray::fromshape_vec_unchecked(x.shape(), y)
+                NdArray::from_shape_vec_unchecked(x.shape(), y)
             } else {
                 $ctx.input(0).mapv(|a| a.$std_name($param))
             }
@@ -514,7 +514,7 @@ pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keepdims: bo
     };
 
     let mut a = x.shape().to_vec();
-    if keep_dims {
+    if keepdims {
         a[axis] = 1;
     } else {
         a.remove(axis);
@@ -525,7 +525,7 @@ pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keepdims: bo
     let min_val = T::min_value();
     let max = &x
         .fold_axis(ndarray::Axis(axis), min_val, move |&a, &b| max_fn(a, b))
-        .intoshape_with_order(ndarray::IxDyn(reducedshape))
+        .into_shape_with_order(ndarray::IxDyn(reducedshape))
         .unwrap();
 
     let exp = {
@@ -545,7 +545,7 @@ pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keepdims: bo
     // unwrap is safe
     let mut sum = exp
         .sum_axis(ndarray::Axis(axis))
-        .intoshape_with_order(ndarray::IxDyn(reducedshape))
+        .into_shape_with_order(ndarray::IxDyn(reducedshape))
         .unwrap();
 
     #[cfg(feature = "blas")]

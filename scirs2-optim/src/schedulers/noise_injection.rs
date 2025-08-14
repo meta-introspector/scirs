@@ -97,7 +97,7 @@ where
     /// let lr = scheduler.get_learning_rate();
     /// assert!(lr >= 0.001); // Learning rate should be at least min_lr
     /// ```
-    pub fn new(base_scheduler: S, noise_dist: NoiseDistribution<A>, minlr: A) -> Self {
+    pub fn new(base_scheduler: S, noise_dist: NoiseDistribution<A>, min_lr: A) -> Self {
         Self {
             base_scheduler,
             noise_dist,

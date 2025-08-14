@@ -219,7 +219,7 @@ impl NetCDFFile {
     ///
     /// * `Result<NetCDFFile>` - The created NetCDF file or an error
     pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
-        Self::create_with_format(_path, NetCDFFormat::Classic)
+        Self::create_with_format(path, NetCDFFormat::Classic)
     }
 
     /// Create a new NetCDF file with specified format
@@ -583,7 +583,7 @@ impl NetCDFFile {
         T: Clone + Default + 'static,
     {
         // Use type-specific conversion helpers to avoid unsafe transmute
-        let data: Vec<T> = array_f64
+        let data: Vec<T> = arrayf64
             .iter()
             .map(|&x| {
                 // Use any::Any for safe downcasting

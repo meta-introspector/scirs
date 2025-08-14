@@ -102,7 +102,7 @@ impl AdaptiveMemoryManager {
     pub fn new(_thresholdmb: usize) -> Self {
         Self {
             current_usage: 0,
-            threshold_bytes: _threshold_mb * 1024 * 1024,
+            threshold_bytes: _thresholdmb * 1024 * 1024,
             usage_history: VecDeque::with_capacity(1000),
             chunk_sizes: HashMap::new(),
             memory_pools: HashMap::new(),
@@ -111,17 +111,17 @@ impl AdaptiveMemoryManager {
 
     /// Record memory usage and adapt strategies
     pub fn record_usage(&mut self, usagebytes: usize) {
-        self.current_usage = usage_bytes;
-        self.usage_history.push_back(usage_bytes);
+        self.current_usage = usagebytes;
+        self.usage_history.push_back(usagebytes);
 
         if self.usage_history.len() > 1000 {
             self.usage_history.pop_front();
         }
 
         // Adapt chunk sizes based on memory pressure
-        if usage_bytes > self.threshold_bytes {
+        if usagebytes > self.threshold_bytes {
             self.reduce_chunk_sizes();
-        } else if usage_bytes < self.threshold_bytes / 2 {
+        } else if usagebytes < self.threshold_bytes / 2 {
             self.increase_chunk_sizes();
         }
     }
@@ -234,7 +234,7 @@ impl NeuralRLAgent {
     ) -> Self {
         // Initialize weights randomly (simplified neural network)
         let mut q_weights = Vec::new();
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         // Input to hidden layer
         let mut input_hidden = Vec::new();
@@ -245,7 +245,7 @@ impl NeuralRLAgent {
             }
             input_hidden.push(row);
         }
-        qweights.push(input_hidden);
+        q_weights.push(input_hidden);
 
         // Hidden to output layer
         let mut hidden_output = Vec::new();
@@ -256,10 +256,10 @@ impl NeuralRLAgent {
             }
             hidden_output.push(row);
         }
-        qweights.push(hidden_output);
+        q_weights.push(hidden_output);
 
         // Initialize target network with same weights
-        let target_weights = qweights.clone();
+        let target_weights = q_weights.clone();
 
         NeuralRLAgent {
             q_weights,
@@ -276,7 +276,7 @@ impl NeuralRLAgent {
 
     /// Update target network weights for stable learning
     pub fn update_target_network(&mut self, tau: f64) {
-        for (target_layer, q_layer) in self.targetweights.iter_mut().zip(&self.q_weights) {
+        for (target_layer, q_layer) in self.target_weights.iter_mut().zip(&self.q_weights) {
             for (target_row, q_row) in target_layer.iter_mut().zip(q_layer) {
                 for (target_weight, &q_weight) in target_row.iter_mut().zip(q_row) {
                     *target_weight = tau * q_weight + (1.0 - tau) * *target_weight;
@@ -303,14 +303,14 @@ impl NeuralRLAgent {
 
         match &self.exploration_strategy {
             ExplorationStrategy::EpsilonGreedy { epsilon } => {
-                let mut rng = rand::rng();
+                let mut rng = rand::thread_rng();
                 if rng.random::<f64>() < *epsilon {
                     rng.gen_range(0..q_values.len())
                 } else {
                     self.get_best_action(&q_values)
                 }
             }
-            ExplorationStrategy::UCB { c } => self.select_ucb_action(&q_values..*c),
+            ExplorationStrategy::UCB { c } => self.select_ucb_action(&q_values, *c),
             ExplorationStrategy::ThompsonSampling { alpha, beta } => {
                 self.select_thompson_sampling_action(&q_values, *alpha, *beta)
             }
@@ -324,14 +324,14 @@ impl NeuralRLAgent {
     fn select_ucb_action(&self, qvalues: &[f64], c: f64) -> usize {
         let total_visits: f64 = self
             .algorithm_performance
-            ._values()
+            .values()
             .map(|history| history.len() as f64)
             .sum();
 
         let mut best_action = 0;
         let mut best_value = f64::NEG_INFINITY;
 
-        for (action, &q_value) in q_values.iter().enumerate() {
+        for (action, &q_value) in qvalues.iter().enumerate() {
             let visits = self
                 .algorithm_performance
                 .get(&action)
@@ -351,11 +351,11 @@ impl NeuralRLAgent {
 
     /// Select action using Thompson Sampling
     fn select_thompson_sampling_action(&self, qvalues: &[f64], alpha: f64, beta: f64) -> usize {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut best_action = 0;
         let mut best_sample = f64::NEG_INFINITY;
 
-        for (action, &_q_value) in q_values.iter().enumerate() {
+        for (action, &_q_value) in qvalues.iter().enumerate() {
             // Sample from _beta distribution based on performance
             let performance_mean = self
                 .algorithm_performance
@@ -386,7 +386,7 @@ impl NeuralRLAgent {
         let mut best_action = 0;
         let mut best_score = f64::NEG_INFINITY;
 
-        for (action, &q_value) in q_values.iter().enumerate() {
+        for (action, &q_value) in qvalues.iter().enumerate() {
             let uncertainty = self.calculate_action_uncertainty(action);
             let score = if uncertainty > threshold {
                 q_value + uncertainty // Favor uncertain actions for exploration
@@ -422,7 +422,7 @@ impl NeuralRLAgent {
 
     /// Get best action from Q-values
     fn get_best_action(&self, qvalues: &[f64]) -> usize {
-        q_values
+        qvalues
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
@@ -509,7 +509,7 @@ impl NeuralRLAgent {
         Ix: petgraph::graph::IndexType,
     {
         let features = self.extract_features(graph);
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         if rng.random::<f64>() < self.epsilon {
             // Exploration: random algorithm
@@ -547,7 +547,7 @@ impl NeuralRLAgent {
         // Sample random batch from experience buffer
         let batch_size = 32.min(self.experience_buffer.len());
         let mut batch_indices = Vec::new();
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         for _ in 0..batch_size {
             batch_indices.push(rng.gen_range(0..self.experience_buffer.len()));
@@ -601,7 +601,7 @@ impl GPUAccelerationContext {
     /// Create new GPU acceleration context
     pub fn new(_memory_poolmb: usize) -> Self {
         GPUAccelerationContext {
-            memory_pool_mb,
+            memory_pool_mb: _memory_poolmb,
             utilization_history: Vec::new(),
             gpu_enabled: Self::detect_gpu_availability(),
         }
@@ -640,7 +640,7 @@ impl GPUAccelerationContext {
     /// Calculate GPU utilization based on execution time
     fn calculate_utilization(&self, executiontime: std::time::Duration) -> f64 {
         // Simplified utilization calculation
-        let time_ratio = execution_time.as_secs_f64() / 0.001; // Assume 1ms baseline
+        let time_ratio = executiontime.as_secs_f64() / 0.001; // Assume 1ms baseline
         time_ratio.clamp(0.0, 1.0)
     }
 
@@ -673,7 +673,7 @@ impl NeuromorphicProcessor {
         let neuron_potentials = vec![0.0; _num_neurons];
         let mut synaptic_weights = Vec::new();
         let spike_history = vec![Vec::new(); _num_neurons];
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         // Initialize synaptic weights
         for _ in 0.._num_neurons {
@@ -681,14 +681,14 @@ impl NeuromorphicProcessor {
             for _ in 0.._num_neurons {
                 row.push(rng.random::<f64>() * 0.01 - 0.005);
             }
-            synapticweights.push(row);
+            synaptic_weights.push(row);
         }
 
         NeuromorphicProcessor {
             neuron_potentials,
             synaptic_weights,
             spike_history,
-            stdp_rate,
+            stdp_rate: stdprate,
         }
     }
 
@@ -735,7 +735,7 @@ impl NeuromorphicProcessor {
                 node_mapping.get(&edge.source),
                 node_mapping.get(&edge.target),
             ) {
-                if src_idx < self.synapticweights.len()
+                if src_idx < self.synaptic_weights.len()
                     && tgt_idx < self.synaptic_weights[src_idx].len()
                 {
                     // Strengthen synaptic connection
@@ -780,7 +780,7 @@ impl NeuromorphicProcessor {
 
     /// Check if neuron spiked at given time
     fn did_neuron_spike(&self, neuronidx: usize, time: u64) -> bool {
-        self.spike_history[neuron_idx].contains(&time)
+        self.spike_history[neuronidx].contains(&time)
     }
 
     /// Apply spike-timing dependent plasticity learning
@@ -789,7 +789,7 @@ impl NeuromorphicProcessor {
             if i != spiked_neuron {
                 // Find recent spikes in pre-synaptic _neuron
                 for &pre_spike_time in &self.spike_history[i] {
-                    let time_diff = spike_time as i64 - pre_spike_time as i64;
+                    let time_diff = spiketime as i64 - pre_spike_time as i64;
                     if time_diff.abs() <= 20 {
                         // STDP window
                         let weight_change = if time_diff > 0 {
@@ -840,12 +840,12 @@ impl NeuromorphicProcessor {
             .iter()
             .flat_map(|row| row.iter().copied())
             .collect();
-        let weight_mean = allweights.iter().sum::<f64>() / allweights.len() as f64;
+        let weight_mean = all_weights.iter().sum::<f64>() / all_weights.len() as f64;
         let weight_variance = all_weights
             .iter()
             .map(|w| (w - weight_mean).powi(2))
             .sum::<f64>()
-            / allweights.len() as f64;
+            / all_weights.len() as f64;
         features.push(weight_variance);
 
         features
@@ -880,9 +880,9 @@ impl AdvancedProcessor {
     pub fn new(config: AdvancedConfig) -> Self {
         let mut neural_agent =
             NeuralRLAgent::new(4, config.neural_hidden_size, 4, config.learning_rate);
-        let gpu_context = GPUAccelerationContext::new(_config.gpu_memory_pool_mb);
+        let gpu_context = GPUAccelerationContext::new(config.gpu_memory_pool_mb);
         let neuromorphic = NeuromorphicProcessor::new(256, 0.01);
-        let memory_manager = AdaptiveMemoryManager::new(_config.memory_threshold_mb);
+        let memory_manager = AdaptiveMemoryManager::new(config.memory_threshold_mb);
 
         // Set advanced exploration strategy
         neural_agent.set_exploration_strategy(ExplorationStrategy::AdaptiveUncertainty {
@@ -1038,7 +1038,7 @@ impl AdvancedProcessor {
     /// Check if cached optimization should be used
     fn should_use_cached_optimization(&self, cachedmetrics: &AlgorithmMetrics) -> bool {
         // Use cache if recent performance was good
-        cached_metrics.accuracy_score > 0.95 && cached_metrics.execution_time_us < 1_000_000
+        cachedmetrics.accuracy_score > 0.95 && cachedmetrics.execution_time_us < 1_000_000
         // Less than 1 second
     }
 
@@ -1081,10 +1081,10 @@ impl AdvancedProcessor {
 
         // Algorithm-specific memory multipliers
         let multiplier = match algorithm_name {
-            _name if name.contains("dijkstra") => 2.0,
-            _name if name.contains("pagerank") => 1.5,
-            _name if name.contains("community") => 3.0,
-            _name if name.contains("centrality") => 4.0,
+            name if name.contains("dijkstra") => 2.0,
+            name if name.contains("pagerank") => 1.5,
+            name if name.contains("community") => 3.0,
+            name if name.contains("centrality") => 4.0,
             _ => 1.0,
         };
 
@@ -1111,7 +1111,7 @@ impl AdvancedProcessor {
     /// Calculate accuracy score based on neuromorphic features
     fn calculate_accuracy_score(&self, neuromorphicfeatures: &[f64]) -> f64 {
         // Use neuromorphic _features to estimate solution quality
-        let feature_sum = neuromorphic_features.iter().sum::<f64>();
+        let feature_sum = neuromorphicfeatures.iter().sum::<f64>();
         (1.0 / (1.0 + (-feature_sum / 10.0).exp())).clamp(0.7, 1.0)
     }
 
@@ -1808,7 +1808,7 @@ mod tests {
         let mut agent = NeuralRLAgent::new(4, 64, 4, 0.01);
 
         // Get initial target weights
-        let initial_target_weights = agent.targetweights.clone();
+        let initial_target_weights = agent.target_weights.clone();
 
         // Modify main Q-network weights
         agent.q_weights[0][0][0] = 1.0;

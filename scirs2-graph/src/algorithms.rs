@@ -168,7 +168,7 @@ where
 
     fn find<N: Node>(parent: &mut HashMap<N, N>, node: &N) -> N {
         if parent[node] != *node {
-            let root = find(_parent, &_parent[node].clone());
+            let root = find(parent, &parent[node].clone());
             parent.insert(node.clone(), root.clone());
         }
         parent[node].clone()
@@ -230,7 +230,7 @@ where
     Ix: IndexType,
 {
     // Use petgraph's topological sort
-    match petgraph_toposort(_graph.inner(), None) {
+    match petgraph_toposort(graph.inner(), None) {
         Ok(indices) => {
             let sorted_nodes = indices
                 .into_iter()
@@ -272,7 +272,7 @@ where
     let mut new_pr = vec![0.0; n];
 
     // Create node index mapping
-    let node_to_idx: HashMap<__> = nodes.iter().enumerate().map(|(i, &n)| (n, i)).collect();
+    let node_to_idx: HashMap<_, _> = nodes.iter().enumerate().map(|(i, &n)| (n, i)).collect();
 
     // Iterate until convergence
     for _ in 0..max_iterations {
@@ -444,7 +444,7 @@ where
         // Calculate shortest paths to all other nodes
         for other in &nodes {
             if node != other {
-                if let Ok(Some(path)) = dijkstra_path(_graph, node, other) {
+                if let Ok(Some(path)) = dijkstra_path(graph, node, other) {
                     let distance: f64 = path.total_weight.into();
                     total_distance += distance;
                     reachable_count += 1;
@@ -484,7 +484,7 @@ where
 {
     let node_indices: Vec<_> = graph.inner().node_indices().collect();
     let nodes: Vec<N> = node_indices
-        ._iter()
+        .iter()
         .map(|&idx| graph.inner()[idx].clone())
         .collect();
     let n = nodes.len();
@@ -495,8 +495,8 @@ where
 
     // Create adjacency matrix
     let mut adj_matrix = Array2::<f64>::zeros((n, n));
-    for (i, node_i) in nodes._iter().enumerate() {
-        for (j, node_j) in nodes._iter().enumerate() {
+    for (i, node_i) in nodes.iter().enumerate() {
+        for (j, node_j) in nodes.iter().enumerate() {
             if let Ok(weight) = graph.edge_weight(node_i, node_j) {
                 adj_matrix[[i, j]] = weight.into();
             }

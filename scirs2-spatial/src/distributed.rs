@@ -31,13 +31,13 @@
 //! use ndarray::array;
 //!
 //! // Create distributed spatial cluster
-//! let cluster_config = NodeConfig::new()
+//! let clusterconfig = NodeConfig::new()
 //!     .with_node_count(4)
 //!     .with_fault_tolerance(true)
 //!     .with_load_balancing(true)
 //!     .with_compression(true);
 //!
-//! let mut cluster = DistributedSpatialCluster::new(cluster_config)?;
+//! let mut cluster = DistributedSpatialCluster::new(clusterconfig)?;
 //!
 //! // Distribute large spatial dataset
 //! let large_dataset = array![[0.0, 0.0], [1.0, 0.0], /* ... millions of points ... */];
@@ -585,7 +585,7 @@ impl DistributedSpatialCluster {
         let mut channels = HashMap::new();
 
         // Create node instances
-        for node_id in 0.._config.node_count {
+        for node_id in 0..config.node_count {
             let (sender, receiver) = mpsc::channel(1000);
             channels.insert(node_id, sender);
 
@@ -635,7 +635,7 @@ impl DistributedSpatialCluster {
         };
 
         let cluster_state = ClusterState {
-            active_nodes: (0.._config.node_count).collect(),
+            active_nodes: (0..config.node_count).collect(),
             total_data_points: 0,
             total_partitions: 0,
             health_score: 1.0,
@@ -675,7 +675,7 @@ impl DistributedSpatialCluster {
         let (n_points, n_dims) = data.dim();
 
         // Create spatial partitions
-        let partitions = self.create_spatial_partitions(_data).await?;
+        let partitions = self.create_spatial_partitions(data).await?;
 
         // Distribute partitions to nodes
         self.assign_partitions_to_nodes(&partitions).await?;
@@ -1065,7 +1065,7 @@ impl DistributedSpatialCluster {
         &self,
         _distances: &[f64],
     ) -> SpatialResult<Array1<f64>> {
-        let total_distance: f64 = distances.iter().sum();
+        let total_distance: f64 = _distances.iter().sum();
         let target = rand::random::<f64>() * total_distance;
 
         let mut cumulative = 0.0;
@@ -1335,7 +1335,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_node_config() {
+    fn test_nodeconfig() {
         let config = NodeConfig::new()
             .with_node_count(4)
             .with_fault_tolerance(true)

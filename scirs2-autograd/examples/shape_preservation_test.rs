@@ -6,7 +6,7 @@ fn main() {
     println!("Testing shape preservation in tensor operations");
 
     // Test with scalar (0D) tensor
-    ag::run::<f64_>(|ctx| {
+    ag::run(|ctx| {
         let scalar = T::scalar(5.0, ctx);
 
         println!("Scalar tensor:");

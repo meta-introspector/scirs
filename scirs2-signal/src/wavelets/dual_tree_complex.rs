@@ -118,10 +118,10 @@ pub struct DtcwtProcessor {
 impl DtcwtProcessor {
     /// Create a new DTCWT processor
     pub fn new(config: DtcwtConfig) -> SignalResult<Self> {
-        let filters = create_dtcwt_filters(_config.filter_set)?;
+        let filters = create_dtcwt_filters(config.filter_set)?;
 
         Ok(Self {
-            config: config,
+            config,
             filters,
         })
     }
@@ -194,25 +194,25 @@ impl DtcwtProcessor {
     ///
     /// # Arguments
     ///
-    /// * `dtcwt_result` - DTCWT coefficients from forward transform
+    /// * `dtcwtresult` - DTCWT coefficients from forward transform
     ///
     /// # Returns
     ///
     /// * Reconstructed signal
     pub fn dtcwt_1d_inverse(&self, dtcwtresult: &Dtcwt1dResult) -> SignalResult<Array1<f64>> {
-        if dtcwt_result.coefficients.is_empty() {
+        if dtcwtresult.coefficients.is_empty() {
             return Err(SignalError::ValueError(
                 "No coefficients provided for reconstruction".to_string(),
             ));
         }
 
         // Start with lowpass coefficients
-        let mut ya: Array1<f64> = dtcwt_result.lowpass.iter().map(|c| c.re).collect();
-        let mut yb: Array1<f64> = dtcwt_result.lowpass.iter().map(|c| c.im).collect();
+        let mut ya: Array1<f64> = dtcwtresult.lowpass.iter().map(|c| c.re).collect();
+        let mut yb: Array1<f64> = dtcwtresult.lowpass.iter().map(|c| c.im).collect();
 
         // Reconstruct level by level (in reverse order)
-        for level in (0..dtcwt_result.levels).rev() {
-            let complex_coeffs = &dtcwt_result.coefficients[level];
+        for level in (0..dtcwtresult.levels).rev() {
+            let complex_coeffs = &dtcwtresult.coefficients[level];
 
             // Extract real and imaginary parts
             let ya_high: Array1<f64> = complex_coeffs.iter().map(|c| c.re).collect();
@@ -297,25 +297,25 @@ impl DtcwtProcessor {
     ///
     /// # Arguments
     ///
-    /// * `dtcwt_result` - DTCWT coefficients from forward transform
+    /// * `dtcwtresult` - DTCWT coefficients from forward transform
     ///
     /// # Returns
     ///
     /// * Reconstructed 2D signal/image
     pub fn dtcwt_2d_inverse(&self, dtcwtresult: &Dtcwt2dResult) -> SignalResult<Array2<f64>> {
-        if dtcwt_result.coefficients.is_empty() {
+        if dtcwtresult.coefficients.is_empty() {
             return Err(SignalError::ValueError(
                 "No coefficients provided for reconstruction".to_string(),
             ));
         }
 
         // Start with lowpass coefficients
-        let mut ya: Array2<f64> = dtcwt_result.lowpass.mapv(|c| c.re);
-        let mut yb: Array2<f64> = dtcwt_result.lowpass.mapv(|c| c.im);
+        let mut ya: Array2<f64> = dtcwtresult.lowpass.mapv(|c| c.re);
+        let mut yb: Array2<f64> = dtcwtresult.lowpass.mapv(|c| c.im);
 
         // Reconstruct level by level (in reverse order)
-        for level in (0..dtcwt_result.levels).rev() {
-            let complex_subbands = &dtcwt_result.coefficients[level];
+        for level in (0..dtcwtresult.levels).rev() {
+            let complex_subbands = &dtcwtresult.coefficients[level];
 
             // Decompose complex subbands back to tree A and B subbands
             let (ya_subbands, yb_subbands) =
@@ -641,7 +641,7 @@ impl DtcwtProcessor {
 
     fn extend_signal(&self, signal: &Array1<f64>, filterlen: usize) -> SignalResult<Array1<f64>> {
         let n = signal.len();
-        let ext_len = filter_len - 1;
+        let ext_len = filterlen - 1;
 
         match self.config.boundary_mode {
             BoundaryMode::Symmetric => {
@@ -699,7 +699,7 @@ impl DtcwtProcessor {
 /// Create DTCWT filter banks
 #[allow(dead_code)]
 fn create_dtcwt_filters(_filterset: FilterSet) -> SignalResult<DtcwtFilters> {
-    match _filter_set {
+    match _filterset {
         FilterSet::Kingsbury => {
             // Kingsbury Q-shift filters (length 10/18)
             // These provide excellent shift-invariance properties
@@ -939,12 +939,12 @@ mod tests {
             .collect();
 
         // Forward transform
-        let dtcwt_result = processor.dtcwt_1d_forward(&signal).unwrap();
-        assert_eq!(dtcwt_result.levels, 3);
-        assert_eq!(dtcwt_result.coefficients.len(), 3);
+        let dtcwtresult = processor.dtcwt_1d_forward(&signal).unwrap();
+        assert_eq!(dtcwtresult.levels, 3);
+        assert_eq!(dtcwtresult.coefficients.len(), 3);
 
         // Inverse transform
-        let reconstructed = processor.dtcwt_1d_inverse(&dtcwt_result).unwrap();
+        let reconstructed = processor.dtcwt_1d_inverse(&dtcwtresult).unwrap();
 
         // Check reconstruction quality
         let mse: f64 = signal
@@ -971,13 +971,13 @@ mod tests {
             Array2::from_shape_fn((rows, cols), |(i, j)| ((i as f64 + j as f64) / 8.0).sin());
 
         // Forward transform
-        let dtcwt_result = processor.dtcwt_2d_forward(&image).unwrap();
-        assert_eq!(dtcwt_result.levels, 2);
-        assert_eq!(dtcwt_result.orientations, 6);
-        assert_eq!(dtcwt_result.coefficients.len(), 2);
+        let dtcwtresult = processor.dtcwt_2d_forward(&image).unwrap();
+        assert_eq!(dtcwtresult.levels, 2);
+        assert_eq!(dtcwtresult.orientations, 6);
+        assert_eq!(dtcwtresult.coefficients.len(), 2);
 
         // Check coefficient dimensions
-        for level_coeffs in &dtcwt_result.coefficients {
+        for level_coeffs in &dtcwtresult.coefficients {
             assert_eq!(level_coeffs.shape()[2], 6); // 6 orientations
         }
     }

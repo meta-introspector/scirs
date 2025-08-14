@@ -124,7 +124,7 @@ impl<F: Float + Debug + Display + FromPrimitive> NeuralMetricAdapter<F> {
 ///
 /// Example usage:
 /// ```rust
-/// # use scirs2__metrics::integration::neural::NeuralMetricAdapter;
+/// # use scirs2_metrics::integration::neural::NeuralMetricAdapter;
 /// # use ndarray::Array;
 /// # use scirs2__neural::evaluation::Metric;
 ///

@@ -6,7 +6,7 @@ use scirs2_autograd as ag;
 fn main() {
     println!("Testing basic SVD computation...");
 
-    ag::run::<f64_>(|g| {
+    ag::run(|g| {
         // Create a simple 2x2 matrix
         let matrix_data = array![[1.0, 2.0], [3.0, 4.0]];
         let matrix = variable(matrix_data.clone(), g);

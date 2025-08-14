@@ -59,7 +59,7 @@ pub struct MemoryMappedCorpus {
 impl MemoryMappedCorpus {
     /// Create a new memory-mapped corpus from a file
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(_path)
+        let file = File::open(path)
             .map_err(|e| TextError::IoError(format!("Failed to open file: {e}")))?;
 
         let mmap = unsafe {
@@ -133,13 +133,13 @@ impl MemoryMappedCorpus {
         use scirs2_core::parallel_ops::*;
 
         let num_docs = self.num_documents();
-        let num_chunks = num_docs.div_ceil(chunk_size);
+        let num_chunks = num_docs.div_ceil(chunksize);
 
         (0..num_chunks)
             .into_par_iter()
             .map(|chunk_idx| {
-                let start = chunk_idx * chunk_size;
-                let end = ((chunk_idx + 1) * chunk_size).min(num_docs);
+                let start = chunk_idx * chunksize;
+                let end = ((chunk_idx + 1) * chunksize).min(num_docs);
 
                 let mut docs = Vec::with_capacity(end - start);
                 for i in start..end {
@@ -238,7 +238,7 @@ impl<T: Tokenizer> StreamingTextProcessor<T> {
         let mut token_counts = HashMap::<String, usize>::new();
 
         // First pass: _count tokens
-        self.process_lines(&path, |line_| {
+        self.process_lines(&path, |line, _line_num| {
             let tokens = self.tokenizer.tokenize(line)?;
             for token in tokens {
                 *token_counts.entry(token).or_insert(0) += 1;
@@ -248,8 +248,8 @@ impl<T: Tokenizer> StreamingTextProcessor<T> {
 
         // Build vocabulary with high-frequency tokens
         let mut vocab = Vocabulary::new();
-        for (token_count) in &token_counts {
-            if *_count >= min_count {
+        for (token, count) in &token_counts {
+            if *count >= min_count {
                 vocab.add_token(token);
             }
         }
@@ -268,7 +268,7 @@ impl StreamingTextProcessor<WordTokenizer> {
 /// Streaming vectorizer for creating sparse matrices from large corpora
 pub struct StreamingVectorizer {
     vocabulary: Vocabulary,
-    chunk_size: usize,
+    chunksize: usize,
 }
 
 impl StreamingVectorizer {
@@ -276,13 +276,13 @@ impl StreamingVectorizer {
     pub fn new(vocabulary: Vocabulary) -> Self {
         Self {
             vocabulary,
-            chunk_size: 1000, // Process 1000 documents at a time
+            chunksize: 1000, // Process 1000 documents at a time
         }
     }
 
     /// Set chunk size for processing
-    pub fn with_chunk_size(mut self, size: usize) -> Self {
-        self.chunk_size = size;
+    pub fn with_chunksize(mut self, size: usize) -> Self {
+        self.chunksize = size;
         self
     }
 
@@ -323,7 +323,7 @@ impl StreamingVectorizer {
 
         let values: Vec<f64> = indices.iter().map(|&idx| counts[&idx]).collect();
 
-        let sparse_vec = SparseVector::from_indices_values(indices, values, self.vocabulary.len());
+        let sparse_vec = SparseVector::fromindices_values(indices, values, self.vocabulary.len());
 
         Ok(sparse_vec)
     }
@@ -332,7 +332,7 @@ impl StreamingVectorizer {
 /// Chunked corpus reader for processing files in manageable chunks
 pub struct ChunkedCorpusReader {
     file: File,
-    chunk_size: usize,
+    chunksize: usize,
     position: u64,
     file_size: u64,
 }
@@ -340,7 +340,7 @@ pub struct ChunkedCorpusReader {
 impl ChunkedCorpusReader {
     /// Create a new chunked reader
     pub fn new<P: AsRef<Path>>(path: P, chunksize: usize) -> Result<Self> {
-        let file = File::open(_path)
+        let file = File::open(path)
             .map_err(|e| TextError::IoError(format!("Failed to open file: {e}")))?;
 
         let file_size = file
@@ -350,7 +350,7 @@ impl ChunkedCorpusReader {
 
         Ok(Self {
             file,
-            chunk_size,
+            chunksize,
             position: 0,
             file_size,
         })
@@ -366,7 +366,7 @@ impl ChunkedCorpusReader {
             .seek(SeekFrom::Start(self.position))
             .map_err(|e| TextError::IoError(format!("Failed to seek: {e}")))?;
 
-        let mut buffer = vec![0u8; self.chunk_size];
+        let mut buffer = vec![0u8; self.chunksize];
         let bytes_read = self
             .file
             .read(&mut buffer)
@@ -426,7 +426,7 @@ impl MultiFileCorpus {
         let mut file_boundaries = vec![0];
         let mut total_documents = 0;
 
-        for path in _paths {
+        for path in paths {
             let corpus = MemoryMappedCorpus::from_file(path)?;
             let doc_count = corpus.num_documents();
             total_documents += doc_count;
@@ -449,14 +449,14 @@ impl MultiFileCorpus {
 
     /// Get document by global index
     pub fn get_document(&self, globalindex: usize) -> Result<&str> {
-        if global_index >= self.total_documents {
+        if globalindex >= self.total_documents {
             return Err(TextError::InvalidInput(format!(
-                "Document _index {global_index} out of range"
+                "Document _index {globalindex} out of range"
             )));
         }
 
         // Find which file contains this document
-        let file_idx = match self.file_boundaries.binary_search(&(global_index + 1)) {
+        let file_idx = match self.file_boundaries.binary_search(&(globalindex + 1)) {
             Ok(idx) => {
                 // Found exact match, means we're at a boundary
                 // The document belongs to the previous file
@@ -476,7 +476,7 @@ impl MultiFileCorpus {
             }
         };
 
-        let local_index = global_index.saturating_sub(self.file_boundaries[file_idx]);
+        let local_index = globalindex.saturating_sub(self.file_boundaries[file_idx]);
         self.files[file_idx].get_document(local_index)
     }
 
@@ -492,7 +492,7 @@ impl MultiFileCorpus {
     pub fn random_sample(&self, samplesize: usize, seed: u64) -> Result<Vec<&str>> {
         use std::collections::HashSet;
 
-        if sample_size > self.total_documents {
+        if samplesize > self.total_documents {
             return Err(TextError::InvalidInput(
                 "Sample _size larger than corpus _size".into(),
             ));
@@ -502,7 +502,7 @@ impl MultiFileCorpus {
         let mut selected = HashSet::new();
         let mut samples = Vec::new();
 
-        while samples.len() < sample_size {
+        while samples.len() < samplesize {
             // Simple LCG for deterministic random numbers
             rng = rng.wrapping_mul(1664525).wrapping_add(1013904223);
             let index = (rng % self.total_documents as u64) as usize;
@@ -548,10 +548,10 @@ impl CachedCorpus {
     /// Create cached corpus with specified cache size
     pub fn new(_corpus: MemoryMappedCorpus, cachesize: usize) -> Self {
         Self {
-            corpus,
+            corpus: _corpus,
             cache: std::collections::HashMap::new(),
             access_order: std::collections::VecDeque::new(),
-            cache_size,
+            cache_size: cachesize,
         }
     }
 
@@ -608,7 +608,7 @@ impl CorpusIndex {
         let mut word_to_docs = std::collections::HashMap::new();
         let mut doc_to_words = Vec::new();
 
-        for doc_idx in 0.._corpus.num_documents() {
+        for doc_idx in 0..corpus.num_documents() {
             let doc = corpus.get_document(doc_idx)?;
             let tokens = tokenizer.tokenize(doc)?;
             let unique_tokens: std::collections::HashSet<String> = tokens.into_iter().collect();
@@ -751,8 +751,7 @@ impl<T: Tokenizer + Send + Sync> AdvancedStreamingProcessor<T> {
         Self {
             tokenizer,
             buffer_size: 1024 * 1024, // 1MB
-            parallel_chunks: num,
-            _cpus: get(),
+            parallel_chunks: num_cpus::get(),
             memory_monitor: MemoryMonitor::new(),
         }
     }
@@ -760,7 +759,7 @@ impl<T: Tokenizer + Send + Sync> AdvancedStreamingProcessor<T> {
     /// Set parallel processing parameters
     pub fn with_parallelism(mut self, chunks: usize, buffersize: usize) -> Self {
         self.parallel_chunks = chunks;
-        self.buffer_size = buffer_size;
+        self.buffer_size = buffersize;
         self
     }
 
@@ -777,7 +776,7 @@ impl<T: Tokenizer + Send + Sync> AdvancedStreamingProcessor<T> {
         use scirs2_core::parallel_ops::*;
 
         let num_docs = corpus.num_documents();
-        let chunk_size = num_docs.div_ceil(self.parallel_chunks);
+        let chunksize = num_docs.div_ceil(self.parallel_chunks);
 
         // Track memory usage
         let estimated_memory = num_docs * 100; // Rough estimate
@@ -786,8 +785,8 @@ impl<T: Tokenizer + Send + Sync> AdvancedStreamingProcessor<T> {
         let results: Vec<R> = (0..self.parallel_chunks)
             .into_par_iter()
             .map(|chunk_idx| {
-                let start = chunk_idx * chunk_size;
-                let end = ((chunk_idx + 1) * chunk_size).min(num_docs);
+                let start = chunk_idx * chunksize;
+                let end = ((chunk_idx + 1) * chunksize).min(num_docs);
 
                 let mut chunk_results = Vec::new();
                 for doc_idx in start..end {
@@ -816,7 +815,7 @@ impl<T: Tokenizer + Send + Sync> AdvancedStreamingProcessor<T> {
         // Clone tokenizer to avoid borrow conflict
         let tokenizer = self.tokenizer.clone_box();
 
-        self.process_corpus_parallel(corpus, move |doc_idx| {
+        self.process_corpus_parallel(corpus, move |doc, _doc_idx| {
             let tokens = tokenizer.tokenize(doc)?;
             let char_count = doc.chars().count();
             let word_count = tokens.len();
@@ -883,10 +882,10 @@ impl CorpusStatistics {
     /// Add document statistics
     pub fn add_document(&mut self, docstats: DocumentStats) {
         self.total_documents += 1;
-        self.total_words += doc_stats.word_count;
-        self.total_chars += doc_stats.char_count;
-        self.total_lines += doc_stats.line_count;
-        self.vocabulary_size += doc_stats.unique_words;
+        self.total_words += docstats.word_count;
+        self.total_chars += docstats.char_count;
+        self.total_lines += docstats.line_count;
+        self.vocabulary_size += docstats.unique_words;
 
         // Recalculate averages
         self.avg_doc_length = self.total_words as f64 / self.total_documents as f64;
@@ -930,7 +929,7 @@ impl ProgressTracker {
         Self {
             total,
             current: 0,
-            report_interval: _total / 100, // Report every 1%
+            report_interval: total / 100, // Report every 1%
         }
     }
 
@@ -987,7 +986,7 @@ mod tests {
         let mut line_count = 0;
 
         processor
-            .process_lines(file.path(), |_line_num| {
+            .process_lines(file.path(), |_line, _line_num| {
                 line_count += 1;
                 Ok(None::<()>)
             })
@@ -1188,7 +1187,7 @@ mod tests {
         assert!(results[2].contains("Processed doc 2"));
 
         // Test memory stats
-        let (current_peak) = processor.memory_stats();
+        let (current, _peak) = processor.memory_stats();
         assert_eq!(current, 0); // Should be deallocated after processing
     }
 

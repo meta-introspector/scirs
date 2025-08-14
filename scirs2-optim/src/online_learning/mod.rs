@@ -292,10 +292,10 @@ pub struct OnlinePerformanceMetrics<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOptimizer<A, D> {
     /// Create a new online optimizer
-    pub fn new(_strategy: OnlineLearningStrategy, initialparameters: Array<A, D>) -> Self {
+    pub fn new(strategy: OnlineLearningStrategy, initial_parameters: Array<A, D>) -> Self {
         let paramshape = initial_parameters.raw_dim();
         let gradient_accumulator = Array::zeros(paramshape.clone());
-        let second_moment_accumulator = match &_strategy {
+        let second_moment_accumulator = match &strategy {
             OnlineLearningStrategy::AdaptiveSGD {
                 adaptation_method: LearningRateAdaptation::Adam { .. },
                 ..
@@ -303,7 +303,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
             _ => None,
         };
 
-        let current_lr = match &_strategy {
+        let current_lr = match &strategy {
             OnlineLearningStrategy::AdaptiveSGD { initial_lr, .. } => A::from(*initial_lr).unwrap(),
             OnlineLearningStrategy::OnlineNewton { .. } => A::from(0.01).unwrap(),
             OnlineLearningStrategy::FTRL { .. } => A::from(0.1).unwrap(),
@@ -312,7 +312,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
         };
 
         Self {
-            strategy: strategy,
+            strategy,
             parameters: initial_parameters,
             gradient_accumulator,
             second_moment_accumulator,
@@ -625,7 +625,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
     }
 
     /// Start learning a new task
-    pub fn start_task(&mut self, task_id: String, initialparameters: Array<A, D>) -> Result<()> {
+    pub fn start_task(&mut self, task_id: String, initial_parameters: Array<A, D>) -> Result<()> {
         self.current_task = Some(task_id.clone());
 
         // Create task-specific optimizer

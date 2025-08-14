@@ -128,14 +128,14 @@ impl LanguageDetector {
 
     /// Create a language detector with custom n-gram size
     pub fn with_ngram_size(n_gramsize: usize) -> Result<Self> {
-        if !(1..=5).contains(&n_gram_size) {
+        if !(1..=5).contains(&n_gramsize) {
             return Err(TextError::InvalidInput(
                 "N-gram size must be between 1 and 5".to_string(),
             ));
         }
         let mut detector = Self {
             profiles: HashMap::new(),
-            n_gram_size,
+            n_gram_size: n_gramsize,
         };
         detector.initialize_default_profiles();
         Ok(detector)

@@ -56,7 +56,7 @@ pub trait LRScheduler<F: Float> {
     ///
     /// # Returns
     /// Vector of learning rates for each step in the range
-    fn get_lr_sequence(&self, start_step: usize, endstep: usize) -> Vec<F> {
+    fn get_lr_sequence(&self, start_step: usize, end_step: usize) -> Vec<F> {
         (start_step..end_step)
             .map(|_step| self.get_lr(_step))
             .collect()
@@ -104,7 +104,7 @@ impl<F: Float> LinearLR<F> {
     /// * `start_lr` - Initial learning rate
     /// * `end_lr` - Final learning rate
     /// * `total_steps` - Total number of steps over which to interpolate
-    pub fn new(start_lr: F, end_lr: F, totalsteps: usize) -> Self {
+    pub fn new(start_lr: F, end_lr: F, total_steps: usize) -> Self {
         Self {
             start_lr,
             end_lr,

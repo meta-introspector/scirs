@@ -574,15 +574,15 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiGraph<N, E, I
         N: Clone,
         E: Clone,
     {
-        if let Some(edge) = self.edges.remove(&edge_id) {
+        if let Some(edge) = self.edges.remove(&edgeid) {
             // Remove from adjacency lists
             if let Some(neighbors) = self.adjacency.get_mut(&edge.source) {
-                neighbors.retain(|(__, id)| *_id != edge_id);
+                neighbors.retain(|(_, _, id)| *id != edgeid);
             }
 
             if edge.source != edge.target {
                 if let Some(neighbors) = self.adjacency.get_mut(&edge.target) {
-                    neighbors.retain(|(__, id)| *_id != edge_id);
+                    neighbors.retain(|(_, _, id)| *id != edgeid);
                 }
             }
 
@@ -620,7 +620,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiGraph<N, E, I
     /// Get simple neighbors (without edge information)
     pub fn neighbors(&self, node: &N) -> Vec<&N> {
         if let Some(neighbors) = self.adjacency.get(node) {
-            neighbors.iter().map(|(neighbor__)| neighbor).collect()
+            neighbors.iter().map(|(neighbor, _, _)| neighbor).collect()
         } else {
             Vec::new()
         }
@@ -728,15 +728,15 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiDiGraph<N, E,
         N: Clone,
         E: Clone,
     {
-        if let Some(edge) = self.edges.remove(&edge_id) {
+        if let Some(edge) = self.edges.remove(&edgeid) {
             // Remove from outgoing adjacency list
             if let Some(neighbors) = self.out_adjacency.get_mut(&edge.source) {
-                neighbors.retain(|(__, id)| *_id != edge_id);
+                neighbors.retain(|(_, _, id)| *id != edgeid);
             }
 
             // Remove from incoming adjacency list
             if let Some(neighbors) = self.in_adjacency.get_mut(&edge.target) {
-                neighbors.retain(|(__, id)| *_id != edge_id);
+                neighbors.retain(|(_, _, id)| *id != edgeid);
             }
 
             Ok(edge)
@@ -778,7 +778,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiDiGraph<N, E,
     /// Get simple successors (without edge information)
     pub fn successors(&self, node: &N) -> Vec<&N> {
         if let Some(neighbors) = self.out_adjacency.get(node) {
-            neighbors.iter().map(|(neighbor__)| neighbor).collect()
+            neighbors.iter().map(|(neighbor, _, _)| neighbor).collect()
         } else {
             Vec::new()
         }
@@ -787,7 +787,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiDiGraph<N, E,
     /// Get simple predecessors (without edge information)
     pub fn predecessors(&self, node: &N) -> Vec<&N> {
         if let Some(neighbors) = self.in_adjacency.get(node) {
-            neighbors.iter().map(|(neighbor__)| neighbor).collect()
+            neighbors.iter().map(|(neighbor, _, _)| neighbor).collect()
         } else {
             Vec::new()
         }
@@ -860,12 +860,12 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> BipartiteGraph<N, 
         N: Clone,
         E: Clone,
     {
-        // Check if the _graph is bipartite using the existing algorithm
-        let bipartite_result = crate::algorithms::connectivity::is_bipartite(&_graph);
+        // Check if the graph is bipartite using the existing algorithm
+        let bipartite_result = crate::algorithms::connectivity::is_bipartite(&graph);
 
         if !bipartite_result.is_bipartite {
             return Err(GraphError::InvalidGraph(
-                "Input _graph is not bipartite".to_string(),
+                "Input graph is not bipartite".to_string(),
             ));
         }
 
@@ -1241,16 +1241,16 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
         N: Clone,
         E: Clone,
     {
-        if let Some((nodes, weight)) = self.hyperedges.remove(&hyperedge_id) {
+        if let Some((nodes, weight)) = self.hyperedges.remove(&hyperedgeid) {
             // Remove from node-to-hyperedges mapping
             for node in &nodes {
                 if let Some(hyperedge_set) = self.node_to_hyperedges.get_mut(node) {
-                    hyperedge_set.remove(&hyperedge_id);
+                    hyperedge_set.remove(&hyperedgeid);
                 }
             }
 
             Ok(Hyperedge {
-                _id: hyperedge_id,
+                id: hyperedgeid,
                 nodes,
                 weight,
             })
@@ -1287,9 +1287,9 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
         E: Clone,
     {
         self.hyperedges
-            .get(&hyperedge_id)
+            .get(&hyperedgeid)
             .map(|(nodes, weight)| Hyperedge {
-                _id: hyperedge_id,
+                id: hyperedgeid,
                 nodes: nodes.clone(),
                 weight: weight.clone(),
             })
@@ -1325,7 +1325,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
 
         if let Some(hyperedge_ids) = self.node_to_hyperedges.get(node) {
             for &hyperedge_id in hyperedge_ids {
-                if let Some((nodes_)) = self.hyperedges.get(&hyperedge_id) {
+                if let Some((nodes, _)) = self.hyperedges.get(&hyperedge_id) {
                     for neighbor in nodes {
                         if neighbor != node {
                             neighbors.insert(neighbor.clone());
@@ -1355,7 +1355,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
 
     /// Check if the hypergraph contains a specific hyperedge
     pub fn has_hyperedge(&self, hyperedgeid: usize) -> bool {
-        self.hyperedges.contains_key(&hyperedge_id)
+        self.hyperedges.contains_key(&hyperedgeid)
     }
 
     /// Get the degree of a node (number of hyperedges it participates in)
@@ -1368,15 +1368,15 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
     /// Get the size of a hyperedge (number of nodes it connects)
     pub fn hyperedge_size(&self, hyperedgeid: usize) -> Option<usize> {
         self.hyperedges
-            .get(&hyperedge_id)
-            .map(|(nodes_)| nodes.len())
+            .get(&hyperedgeid)
+            .map(|(nodes, _)| nodes.len())
     }
 
     /// Check if two nodes are connected (share at least one hyperedge)
     pub fn are_connected(&self, node1: &N, node2: &N) -> bool {
         if let Some(hyperedge_ids) = self.node_to_hyperedges.get(node1) {
             for &hyperedge_id in hyperedge_ids {
-                if let Some((nodes_)) = self.hyperedges.get(&hyperedge_id) {
+                if let Some((nodes, _)) = self.hyperedges.get(&hyperedge_id) {
                     if nodes.contains(node2) {
                         return true;
                     }
@@ -1392,7 +1392,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
 
         if let Some(hyperedge_ids) = self.node_to_hyperedges.get(node1) {
             for &hyperedge_id in hyperedge_ids {
-                if let Some((nodes_)) = self.hyperedges.get(&hyperedge_id) {
+                if let Some((nodes, _)) = self.hyperedges.get(&hyperedge_id) {
                     if nodes.contains(node2) {
                         connecting.push(hyperedge_id);
                     }
@@ -1493,7 +1493,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
             .map(|(j, &he_id)| (he_id, j))
             .collect();
 
-        for (&hyperedge_id, (nodes_)) in &self.hyperedges {
+        for (&hyperedge_id, (nodes, _)) in &self.hyperedges {
             let j = hyperedge_to_idx[&hyperedge_id];
             for node in nodes {
                 if let Some(&i) = node_to_idx.get(node) {
@@ -1514,7 +1514,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
         let first_size = self.hyperedges.values().next().unwrap().0.len();
         self.hyperedges
             .values()
-            .all(|(nodes_)| nodes.len() == first_size)
+            .all(|(nodes, _)| nodes.len() == first_size)
     }
 
     /// Get the uniformity of the hypergraph (the common size if uniform, None otherwise)
@@ -1535,7 +1535,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
         let sizes: Vec<usize> = self
             .hyperedges
             .values()
-            .map(|(nodes_)| nodes.len())
+            .map(|(nodes, _)| nodes.len())
             .collect();
 
         let min_size = *sizes.iter().min().unwrap();
@@ -1558,7 +1558,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
         let mut cliques = Vec::new();
 
         // For each hyperedge, the nodes form a clique
-        for (nodes_) in self.hyperedges.values() {
+        for (nodes, _) in self.hyperedges.values() {
             let mut is_maximal = true;
 
             // Check if this clique is contained in any existing clique

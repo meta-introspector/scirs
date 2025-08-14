@@ -45,7 +45,7 @@ impl<F: Float> StepLR<F> {
     ///
     /// # Panics
     /// Panics if `step_size` is 0
-    pub fn new(_initial_lr: F, stepsize: usize, gamma: F) -> Self {
+    pub fn new(initial_lr: F, step_size: usize, gamma: F) -> Self {
         assert!(step_size > 0, "step_size must be greater than 0");
 
         Self {
@@ -61,7 +61,7 @@ impl<F: Float> StepLR<F> {
     ///
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
-    pub fn default_decay(_initiallr: F) -> Self {
+    pub fn default_decay(initial_lr: F) -> Self {
         Self::new(
             initial_lr,
             30,                    // step_size = 30 epochs
@@ -76,7 +76,7 @@ impl<F: Float> StepLR<F> {
     ///
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
-    pub fn for_fine_tuning(_initiallr: F) -> Self {
+    pub fn for_fine_tuning(initial_lr: F) -> Self {
         Self::new(
             initial_lr,
             10,                    // step_size = 10 epochs (more frequent)
@@ -91,7 +91,7 @@ impl<F: Float> StepLR<F> {
     ///
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
-    pub fn aggressive_decay(_initiallr: F) -> Self {
+    pub fn aggressive_decay(initial_lr: F) -> Self {
         Self::new(
             initial_lr,
             20,                     // step_size = 20 epochs

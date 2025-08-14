@@ -26,7 +26,7 @@ pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     // Use SIMD-accelerated version when available
     #[cfg(feature = "simd")]
     {
-        crate::simd_ops::SimdEditDistance::levenshtein(_s1, s2)
+        crate::simd_ops::SimdEditDistance::levenshtein(s1, s2)
     }
 
     #[cfg(not(feature = "simd"))]
@@ -94,8 +94,8 @@ pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
 /// * The normalized Levenshtein distance between the two strings
 #[allow(dead_code)]
 pub fn normalized_levenshtein_distance(s1: &str, s2: &str) -> f64 {
-    let distance = levenshtein_distance(_s1, s2) as f64;
-    let max_length = std::cmp::max(_s1.chars().count(), s2.chars().count()) as f64;
+    let distance = levenshtein_distance(s1, s2) as f64;
+    let max_length = std::cmp::max(s1.chars().count(), s2.chars().count()) as f64;
 
     if max_length == 0.0 {
         return 0.0;
@@ -127,7 +127,7 @@ pub fn jaccard_similarity(s1: &str, s2: &str, tokenizer: Option<&dyn Tokenizer>)
     };
 
     // Tokenize both strings
-    let tokens1 = tokenizer.tokenize(_s1)?;
+    let tokens1 = tokenizer.tokenize(s1)?;
     let tokens2 = tokenizer.tokenize(s2)?;
 
     // Convert to sets
@@ -282,7 +282,7 @@ pub fn text_cosine_similarity(
 #[allow(dead_code)]
 pub fn jaro_winkler_similarity(s1: &str, s2: &str) -> f64 {
     // Compute Jaro similarity first
-    let jaro_sim = jaro_similarity(_s1, s2);
+    let jaro_sim = jaro_similarity(s1, s2);
 
     // Calculate the common prefix length (up to 4 characters)
     let s1_chars: Vec<char> = s1.chars().collect();

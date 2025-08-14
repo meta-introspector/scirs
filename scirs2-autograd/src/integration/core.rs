@@ -189,7 +189,7 @@ pub struct PipelineInfo {
 
 impl PipelineInfo {
     /// Create new pipeline info
-    pub fn new(_pipeline_id: String, total_stages: usize, initiatingmodule: String) -> Self {
+    pub fn new(pipeline_id: String, total_stages: usize, initiating_module: String) -> Self {
         Self {
             pipeline_id,
             current_stage: 0,
@@ -201,7 +201,7 @@ impl PipelineInfo {
     }
 
     /// Advance to next stage
-    pub fn advance_stage(&mut self, modulename: String) -> Result<(), IntegrationError> {
+    pub fn advance_stage(&mut self, module_name: String) -> Result<(), IntegrationError> {
         if self.current_stage >= self.total_stages {
             return Err(IntegrationError::ModuleCompatibility(
                 "Pipeline already completed".to_string(),
@@ -233,7 +233,7 @@ pub struct ModuleAdapter<F: Float> {
 
 impl<F: Float> ModuleAdapter<F> {
     /// Create new module adapter
-    pub fn new(_moduleinfo: ModuleInfo, config: IntegrationConfig) -> Self {
+    pub fn new(module_info: ModuleInfo, config: IntegrationConfig) -> Self {
         Self {
             module_info,
             config,

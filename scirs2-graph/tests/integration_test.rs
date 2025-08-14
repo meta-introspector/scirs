@@ -2,8 +2,8 @@
 //!
 //! These tests verify that the refactored module works correctly
 
-use scirs2__graph::algorithms::*;
-use scirs2__graph::generators::create_graph;
+use scirs2_graph::algorithms::*;
+use scirs2_graph::generators::create_graph;
 
 #[test]
 #[allow(dead_code)]
@@ -76,7 +76,7 @@ fn test_minimum_spanning_tree() {
 #[allow(dead_code)]
 fn test_pagerank() {
     // Create a simple directed graph for PageRank
-    use scirs2__graph::generators::create_digraph;
+    use scirs2_graph::generators::create_digraph;
     let mut digraph = create_digraph::<i32, f64>();
 
     digraph.add_edge(1, 2, 1.0).unwrap();

@@ -100,7 +100,7 @@ fn main() {
                 // Create update operation: param = param - learning_rate * grad
                 let scaled_grad = ag::tensor_ops::scalar_mul(grad, learning_rate);
                 let update_op = ag::tensor_ops::sub(param, scaled_grad);
-                update_ops.push(updateop);
+                update_ops.push(update_op);
             }
 
             // Create evaluator and add all operations

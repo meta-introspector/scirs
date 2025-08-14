@@ -57,7 +57,7 @@ impl<A: Float + ScalarOperand + Debug> Lion<A> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learningrate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
             learning_rate,
             beta1: A::from(0.9).unwrap(),
@@ -75,7 +75,7 @@ impl<A: Float + ScalarOperand + Debug> Lion<A> {
     /// * `beta1` - Exponential decay rate for computing the interpolated update (default: 0.9)
     /// * `beta2` - Exponential decay rate for updating the momentum (default: 0.99)
     /// * `weight_decay` - Weight decay factor for L2 regularization (default: 0.0)
-    pub fn new_with_config(_learning_rate: A, beta1: A, beta2: A, weightdecay: A) -> Self {
+    pub fn new_with_config(learning_rate: A, beta1: A, beta2: A, weight_decay: A) -> Self {
         Self {
             learning_rate: learning_rate,
             beta1,
@@ -108,7 +108,7 @@ impl<A: Float + ScalarOperand + Debug> Lion<A> {
     }
 
     /// Sets the weight decay parameter
-    pub fn set_weight_decay(&mut self, weightdecay: A) -> &mut Self {
+    pub fn set_weight_decay(&mut self, weight_decay: A) -> &mut Self {
         self.weight_decay = weight_decay;
         self
     }
@@ -195,7 +195,7 @@ where
         self.learning_rate
     }
 
-    fn set_learning_rate(&mut self, learningrate: A) {
+    fn set_learning_rate(&mut self, learning_rate: A) {
         self.learning_rate = learning_rate;
     }
 }

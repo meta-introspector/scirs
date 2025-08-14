@@ -45,7 +45,7 @@ pub struct MetaPolicyNetwork {
 
 impl MetaPolicyNetwork {
     /// Create new meta-policy network with hierarchical structure
-    pub fn new(_input_size: usize, output_size: usize, hiddensizes: Vec<usize>) -> Self {
+    pub fn new(_input_size: usize, output_size: usize, hidden_sizes: Vec<usize>) -> Self {
         let mut layer_sizes = vec![_input_size];
         layer_sizes.extend(hidden_sizes);
         layer_sizes.push(output_size);
@@ -66,7 +66,7 @@ impl MetaPolicyNetwork {
                 for j in 0..fan_in {
                     policy_weights[[layer, i, j]] =
                         rand::rng().gen_range(-0.5..0.5) * 2.0 * xavier_std;
-                    meta_weights[[layer..i, j]] =
+                    meta_weights[[layer, i, j]] =
                         rand::rng().gen_range(-0.5..0.5) * 2.0 * xavier_std * 0.1;
                 }
             }
@@ -148,7 +148,7 @@ impl MetaPolicyNetwork {
     fn forward_meta(&self, input: &ArrayView1<f64>, metacontext: &Array1<f64>) -> Array1<f64> {
         // Combine input with meta-_context
         let mut meta_input = input.to_owned();
-        for (i, &ctx) in meta_context.iter().enumerate() {
+        for (i, &ctx) in metacontext.iter().enumerate() {
             if i < meta_input.len() {
                 meta_input[i] += ctx * 0.05;
             }
@@ -187,9 +187,9 @@ impl MetaPolicyNetwork {
             embedding.clone()
         } else {
             let embedding =
-                Array1::fromshape_fn(input_size, |_| rand::rng().gen_range(-0.05..0.05));
+                Array1::from_shape_fn(input_size, |_| rand::rng().gen_range(-0.05..0.05));
             self.problem_embeddings
-                .insert(problem_class.to_string()..embedding.clone());
+                .insert(problem_class.to_string(), embedding.clone());
             embedding
         }
     }
@@ -234,7 +234,7 @@ impl MetaPolicyNetwork {
     }
 
     fn update_curriculum_difficulty(&mut self, metagradients: &MetaGradients) {
-        let gradient_norm = meta_gradients
+        let gradient_norm = metagradients
             .policy_gradients
             .iter()
             .map(|&g| g * g)
@@ -397,8 +397,8 @@ pub struct MetaExperienceBuffer {
 impl MetaExperienceBuffer {
     pub fn new(_maxsize: usize) -> Self {
         Self {
-            trajectories: VecDeque::with_capacity(_max_size),
-            max_size,
+            trajectories: VecDeque::with_capacity(_maxsize),
+            max_size: _maxsize,
             class_weights: HashMap::new(),
         }
     }
@@ -422,7 +422,7 @@ impl MetaExperienceBuffer {
     pub fn sample_meta_batch(&self, batchsize: usize) -> Vec<MetaTrajectory> {
         let mut batch = Vec::new();
 
-        for _ in 0..batch_size.min(self.trajectories.len()) {
+        for _ in 0..batchsize.min(self.trajectories.len()) {
             // Weighted sampling based on problem class performance
             let idx = rand::rng().gen_range(0..self.trajectories.len());
             if let Some(trajectory) = self.trajectories.get(idx) {
@@ -438,7 +438,7 @@ impl AdvancedAdvancedPolicyGradientOptimizer {
     /// Create new advanced policy gradient optimizer
     pub fn new(config: RLOptimizationConfig, state_size: usize, actionsize: usize) -> Self {
         let hidden_sizes = vec![state_size * 2, state_size * 3, state_size * 2];
-        let meta_policy = MetaPolicyNetwork::new(state_size, action_size, hidden_sizes);
+        let meta_policy = MetaPolicyNetwork::new(state_size, actionsize, hidden_sizes);
 
         Self {
             config,
@@ -593,7 +593,7 @@ impl AdvancedAdvancedPolicyGradientOptimizer {
             second_order_terms: Array3::zeros((num_layers, max_size, max_size)),
         };
 
-        for trajectory in meta_batch {
+        for trajectory in metabatch {
             // Compute trajectory-specific gradients
             let trajectory_return: f64 = trajectory.experiences.iter().map(|e| e.reward).sum();
 
@@ -651,8 +651,8 @@ impl AdvancedAdvancedPolicyGradientOptimizer {
         }
 
         // Normalize by _batch size
-        if !meta_batch.is_empty() {
-            let batch_size = meta_batch.len() as f64;
+        if !metabatch.is_empty() {
+            let batch_size = metabatch.len() as f64;
             meta_gradients.policy_gradients /= batch_size;
             meta_gradients.meta_weight_gradients /= batch_size;
             meta_gradients.meta_lr_gradients /= batch_size;

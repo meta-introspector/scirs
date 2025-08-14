@@ -71,7 +71,7 @@ impl<A: Float + ScalarOperand + Debug> LBFGS<A> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learningrate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self::new_with_config(
             learning_rate,
             100,                    // history_size
@@ -264,7 +264,7 @@ where
         self.learning_rate
     }
 
-    fn set_learning_rate(&mut self, learningrate: A) {
+    fn set_learning_rate(&mut self, learning_rate: A) {
         self.learning_rate = learning_rate;
     }
 }

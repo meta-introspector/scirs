@@ -57,8 +57,8 @@ impl BasicNormalizer {
     /// Create a new basic normalizer
     pub fn new(_lowercase: bool, unicodenormalization: bool) -> Self {
         Self {
-            lowercase,
-            unicode_normalization,
+            lowercase: _lowercase,
+            unicode_normalization: unicodenormalization,
         }
     }
 }
@@ -106,7 +106,8 @@ impl BasicTextCleaner {
         Self {
             remove_special_chars,
             remove_stopwords,
-            normalize_whitespace_stopwords: DEFAULT_STOPWORDS.clone(),
+            normalize_whitespace: true,
+            stopwords: DEFAULT_STOPWORDS.clone(),
         }
     }
 

@@ -205,9 +205,9 @@ impl TfidfVectorizer {
     /// Create a new TF-IDF vectorizer
     pub fn new(binary: bool, smoothidf: bool, norm: Option<String>) -> Self {
         Self {
-            count_vectorizer: CountVectorizer::new(_binary),
+            count_vectorizer: CountVectorizer::new(binary),
             idf: None,
-            smooth_idf,
+            smoothidf,
             norm,
         }
     }
@@ -222,7 +222,7 @@ impl TfidfVectorizer {
         Self {
             count_vectorizer: CountVectorizer::with_tokenizer(tokenizer, binary),
             idf: None,
-            smooth_idf,
+            smoothidf,
             norm,
         }
     }
@@ -264,15 +264,15 @@ impl TfidfVectorizer {
 
         for (i, &df_i) in df.iter().enumerate() {
             if df_i > 0.0 {
-                if self.smooth_idf {
-                    // log((n_documents + 1) / (df + 1)) + 1
-                    idf[i] = ((n_documents + 1.0) / (df_i + 1.0)).ln() + 1.0;
+                if self.smoothidf {
+                    // log((ndocuments + 1) / (df + 1)) + 1
+                    idf[i] = ((ndocuments + 1.0) / (df_i + 1.0)).ln() + 1.0;
                 } else {
-                    // log(n_documents / df)
-                    idf[i] = (n_documents / df_i).ln();
+                    // log(ndocuments / df)
+                    idf[i] = (ndocuments / df_i).ln();
                 }
-            } else if self.smooth_idf {
-                idf[i] = ((n_documents + 1.0) / 1.0).ln() + 1.0;
+            } else if self.smoothidf {
+                idf[i] = ((ndocuments + 1.0) / 1.0).ln() + 1.0;
             } else {
                 // For features that aren't present in the corpus, set IDF to a high value
                 idf[i] = 0.0;
@@ -329,7 +329,7 @@ impl Vectorizer for TfidfVectorizer {
         // First, fit the count vectorizer to build the vocabulary
         self.count_vectorizer.fit(texts)?;
 
-        let n_documents = texts.len() as f64;
+        let ndocuments = texts.len() as f64;
         let n_features = self.count_vectorizer.vocabulary_size();
 
         // Get document frequency for each term
@@ -353,7 +353,7 @@ impl Vectorizer for TfidfVectorizer {
         }
 
         // Compute IDF
-        self.compute_idf(&df, n_documents)?;
+        self.compute_idf(&df, ndocuments)?;
 
         Ok(())
     }

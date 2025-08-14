@@ -87,8 +87,8 @@ impl ChunkedMetrics {
     ///
     /// ```
     /// use ndarray::Array1;
-    /// use scirs2__metrics::optimization::memory::{ChunkedMetrics, StreamingMetric};
-    /// use scirs2__metrics::error::Result;
+    /// use scirs2_metrics::optimization::memory::{ChunkedMetrics, StreamingMetric};
+    /// use scirs2_metrics::error::Result;
     ///
     /// // Example streaming implementation of mean absolute error
     /// struct StreamingMAE;
@@ -245,7 +245,7 @@ where
         IncrementalMetrics {
             state: S::default(),
             count: 0,
-            marker: PhantomData,
+            _marker: PhantomData,
         }
     }
 
@@ -254,7 +254,7 @@ where
         IncrementalMetrics {
             state,
             count: 0,
-            marker: PhantomData,
+            _marker: PhantomData,
         }
     }
 
@@ -283,7 +283,7 @@ where
     where
         F: FnOnce(&mut S, T, T) -> Result<()>,
     {
-        update_fn(&mut self.state, y_true, y_pred)?;
+        updatefn(&mut self.state, y_true, y_pred)?;
         self.count += 1;
         Ok(())
     }
@@ -309,7 +309,7 @@ where
             ));
         }
 
-        update_fn(&mut self.state, y_true, y_pred)?;
+        updatefn(&mut self.state, y_true, y_pred)?;
         self.count += y_true.len();
         Ok(())
     }
@@ -327,7 +327,7 @@ where
     where
         F: FnOnce(&S, usize) -> Result<R>,
     {
-        finalize_fn(&self.state, self.count)
+        finalizefn(&self.state, self.count)
     }
 }
 
@@ -819,7 +819,8 @@ impl ZeroCopyMemoryManager {
 
         Ok(ZeroCopyArrayView {
             data: mapping.memory_region.cast::<T>(),
-            len_lifetime: std::marker::PhantomData,
+            len,
+            _lifetime: std::marker::PhantomData,
             memory_manager: self,
         })
     }
@@ -870,10 +871,10 @@ impl MemoryPool {
     /// Create a new memory pool
     pub fn new(_blocksize: usize, alignment: usize, initialcapacity: usize) -> Self {
         Self {
-            block_size,
+            block_size: _blocksize,
             alignment,
             free_blocks: Arc::new(Mutex::new(Vec::with_capacity(initialcapacity))),
-            _capacity: AtomicUsize::new(0),
+            capacity: AtomicUsize::new(0),
             allocated_count: AtomicUsize::new(0),
             pool_stats: PoolStatistics::new(),
         }
@@ -1195,7 +1196,7 @@ pub struct PoolAllocator {
 
 impl PoolAllocator {
     pub fn new(_blocksize: usize) -> Self {
-        Self { _blocksize }
+        Self { block_size: _blocksize }
     }
 }
 
@@ -1589,7 +1590,8 @@ impl<'a, T> ZeroCopyArrayView<'a, T> {
 
         Ok(ZeroCopyArrayView {
             data: unsafe { NonNull::new_unchecked(self.data.as_ptr().add(start)) },
-            len_lifetime: std::marker::PhantomData,
+            len,
+            _lifetime: std::marker::PhantomData,
             memory_manager: self.memory_manager,
         })
     }

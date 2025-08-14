@@ -136,7 +136,7 @@ where
     ///
     /// * Self for method chaining
     pub fn with_show_auc(mut self, showauc: bool) -> Self {
-        self.show_auc = show_auc;
+        self.show_auc = showauc;
         self
     }
 
@@ -150,7 +150,7 @@ where
     ///
     /// * Self for method chaining
     pub fn with_show_baseline(mut self, showbaseline: bool) -> Self {
-        self.show_baseline = show_baseline;
+        self.show_baseline = showbaseline;
         self
     }
 
@@ -230,7 +230,7 @@ where
 
         // Prepare data for visualization
         let mut x = fpr;
-        let mut y = tpr;
+        let mut y = tpr_;
 
         // Add baseline if requested
         if self.show_baseline {

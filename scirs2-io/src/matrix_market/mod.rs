@@ -225,7 +225,7 @@ pub struct IOStats {
 impl MMHeader {
     /// Parse Matrix Market header line
     pub fn parse_header(line: &str) -> Result<Self> {
-        if !_line.starts_with("%%MatrixMarket") {
+        if !line.starts_with("%%MatrixMarket") {
             return Err(IoError::FormatError(
                 "Invalid Matrix Market header".to_string(),
             ));
@@ -288,7 +288,7 @@ impl MMHeader {
 /// ```
 #[allow(dead_code)]
 pub fn read_sparse_matrix<P: AsRef<Path>>(path: P) -> Result<MMSparseMatrix<f64>> {
-    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
     let mut lines = reader.lines();
@@ -429,7 +429,7 @@ pub fn read_sparse_matrix<P: AsRef<Path>>(path: P) -> Result<MMSparseMatrix<f64>
 /// ```
 #[allow(dead_code)]
 pub fn write_sparse_matrix<P: AsRef<Path>>(path: P, matrix: &MMSparseMatrix<f64>) -> Result<()> {
-    let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
     // Write header
@@ -482,7 +482,7 @@ pub fn write_sparse_matrix<P: AsRef<Path>>(path: P, matrix: &MMSparseMatrix<f64>
 /// * `Result<MMDenseMatrix<f64>>` - The dense matrix or an error
 #[allow(dead_code)]
 pub fn read_dense_matrix<P: AsRef<Path>>(path: P) -> Result<MMDenseMatrix<f64>> {
-    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
     let mut lines = reader.lines();
@@ -578,7 +578,7 @@ pub fn read_dense_matrix<P: AsRef<Path>>(path: P) -> Result<MMDenseMatrix<f64>> 
 /// * `Result<()>` - Success or an error
 #[allow(dead_code)]
 pub fn write_dense_matrix<P: AsRef<Path>>(path: P, matrix: &MMDenseMatrix<f64>) -> Result<()> {
-    let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
     // Write header

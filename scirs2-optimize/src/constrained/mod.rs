@@ -175,7 +175,7 @@ impl Constraint<fn(&[f64]) -> f64> {
     /// Create a new constraint
     pub fn new(fun: fn(&[f64]) -> f64, kind: ConstraintKind) -> Self {
         Constraint {
-            fun: fun,
+            fun,
             kind,
             lb: None,
             ub: None,
@@ -187,7 +187,7 @@ impl Constraint<fn(&[f64]) -> f64> {
         Constraint {
             fun: |_| 0.0, // Dummy function for box constraints
             kind: ConstraintKind::Inequality,
-            lb: lb,
+            lb,
             ub,
         }
     }

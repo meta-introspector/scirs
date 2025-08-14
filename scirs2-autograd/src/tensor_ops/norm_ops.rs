@@ -276,7 +276,7 @@ fn compute_nuclear_norm_approximation<F: Float + ndarray::ScalarOperand>(
         nuclear_norm += sigma;
 
         // Simple deflation: subtract a rank-1 approximation
-        let (u_) = power_iteration_spectral(&working_matrix.view(), 5, F::from(1e-6).unwrap());
+        let (u, _) = power_iteration_spectral(&working_matrix.view(), 5, F::from(1e-6).unwrap());
         let at = working_matrix.t();
         let v = at.dot(&u) / sigma;
 
@@ -298,7 +298,7 @@ fn power_iteration_spectral<F: Float + ndarray::ScalarOperand>(
     max_iter: usize,
     tol: F,
 ) -> (Array1<F>, F) {
-    let (m_n) = matrix.dim();
+    let (m, n) = matrix.dim();
 
     // Initialize with normalized vector
     let mut u = Array1::<F>::zeros(m);
@@ -310,7 +310,7 @@ fn power_iteration_spectral<F: Float + ndarray::ScalarOperand>(
     }
 
     // Normalize
-    let norm = u._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+    let norm = u.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
     if norm > F::epsilon() {
         u.mapv_inplace(|x| x / norm);
     }
@@ -325,14 +325,14 @@ fn power_iteration_spectral<F: Float + ndarray::ScalarOperand>(
         let atau = matrix.t().dot(&au);
 
         // Compute norm (approximate eigenvalue of A^T * A)
-        let sigma = atau._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+        let sigma = atau.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
 
         // Check convergence
         if (sigma - prev_sigma).abs() < tol {
             // Final computation of actual singular value
             let au_final = matrix.dot(&u);
             let sigma_final = au_final
-                ._iter()
+                .iter()
                 .fold(F::zero(), |acc, &x| acc + x * x)
                 .sqrt();
             return (u, sigma_final);
@@ -341,7 +341,7 @@ fn power_iteration_spectral<F: Float + ndarray::ScalarOperand>(
         prev_sigma = sigma;
 
         // Normalize for next iteration
-        let norm = atau._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+        let norm = atau.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
         if norm > F::epsilon() {
             u = atau.mapv(|x| x / norm);
         }
@@ -349,7 +349,7 @@ fn power_iteration_spectral<F: Float + ndarray::ScalarOperand>(
 
     // Final estimate
     let au = matrix.dot(&u);
-    let sigma = au._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+    let sigma = au.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
     (u, sigma)
 }
 
@@ -563,7 +563,7 @@ fn compute_nuclear_norm_gradient_improved<F: Float + ndarray::ScalarOperand>(
 pub fn frobenius_norm<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(FrobeniusNormOp)
 }
 

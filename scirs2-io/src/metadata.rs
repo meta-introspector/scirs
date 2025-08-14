@@ -200,7 +200,7 @@ impl Metadata {
         let _path = path.as_ref();
         let content = std::fs::read_to_string(_path).map_err(IoError::Io)?;
 
-        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
+        let extension = _path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
 
         match extension {
             "json" => serde_json::from_str(&content)
@@ -363,7 +363,7 @@ impl MetadataSchema {
     }
 
     pub fn field_type(mut self, field: impl Into<String>, fieldtype: MetadataFieldType) -> Self {
-        self.field_types.insert(field.into(), field_type);
+        self.field_types.insert(field.into(), fieldtype);
         self
     }
 
@@ -595,7 +595,7 @@ impl From<bool> for MetadataValue {
 
 impl From<DateTime<Utc>> for MetadataValue {
     fn from(dt: DateTime<Utc>) -> Self {
-        MetadataValue::DateTime(_dt)
+        MetadataValue::DateTime(dt)
     }
 }
 
@@ -793,11 +793,11 @@ impl MetadataVersionControl {
             parent_id: None,
             message: "Initial version".to_string(),
             author: std::env::var("USER").ok(),
-            hash: Self::compute_hash(&_initial),
+            hash: Self::compute_hash(&initial),
         };
 
         Self {
-            current: Arc::new(RwLock::new(_initial)),
+            current: Arc::new(RwLock::new(initial)),
             history: Arc::new(RwLock::new(vec![version])),
             max_versions: 100,
         }
@@ -818,7 +818,7 @@ impl MetadataVersionControl {
             hash: Self::compute_hash(&metadata),
         };
 
-        let version_id = version.id.clone();
+        let versionid = version.id.clone();
         history.push(version);
 
         // Prune old versions if necessary
@@ -830,7 +830,7 @@ impl MetadataVersionControl {
 
         *self.current.write().unwrap() = metadata;
 
-        Ok(version_id)
+        Ok(versionid)
     }
 
     /// Get a specific version
@@ -839,7 +839,7 @@ impl MetadataVersionControl {
             .read()
             .unwrap()
             .iter()
-            .find(|v| v.id == version_id)
+            .find(|v| v.id == versionid)
             .cloned()
     }
 
@@ -860,18 +860,18 @@ impl MetadataVersionControl {
     /// Rollback to a specific version
     pub fn rollback(&self, versionid: &str) -> Result<()> {
         let version = self
-            .get_version(version_id)
-            .ok_or_else(|| IoError::NotFound(format!("Version {version_id} not found")))?;
+            .get_version(versionid)
+            .ok_or_else(|| IoError::NotFound(format!("Version {versionid} not found")))?;
 
         self.commit(
             version.metadata.clone(),
-            format!("Rollback to {version_id}"),
+            format!("Rollback to {versionid}"),
         )?;
         Ok(())
     }
 
     fn compute_hash(metadata: &Metadata) -> String {
-        let json = serde_json::to_string(_metadata).unwrap_or_default();
+        let json = serde_json::to_string(metadata).unwrap_or_default();
         let mut hasher = Sha256::new();
         hasher.update(json.as_bytes());
         format!("{:x}", hasher.finalize())
@@ -893,7 +893,7 @@ impl MetadataDiff {
         let mut modified = IndexMap::new();
 
         // Find removed and modified fields
-        for (key, old_value) in &_old.data {
+        for (key, old_value) in &old.data {
             match new.data.get(key) {
                 None => {
                     removed.insert(key.clone(), old_value.clone());
@@ -907,7 +907,7 @@ impl MetadataDiff {
 
         // Find added fields
         for (key, new_value) in &new.data {
-            if !_old.data.contains_key(key) {
+            if !old.data.contains_key(key) {
                 added.insert(key.clone(), new_value.clone());
             }
         }

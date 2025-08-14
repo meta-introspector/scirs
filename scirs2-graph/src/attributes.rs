@@ -36,17 +36,17 @@ impl AttributeValue {
 
     /// Create an integer attribute
     pub fn integer(value: i64) -> Self {
-        AttributeValue::Integer(_value)
+        AttributeValue::Integer(value)
     }
 
     /// Create a float attribute
     pub fn float(value: f64) -> Self {
-        AttributeValue::Float(_value)
+        AttributeValue::Float(value)
     }
 
     /// Create a boolean attribute
     pub fn boolean(value: bool) -> Self {
-        AttributeValue::Boolean(_value)
+        AttributeValue::Boolean(value)
     }
 
     /// Create a JSON attribute from any serializable type
@@ -667,7 +667,7 @@ pub struct AttributeSummary {
 /// Helper function to compare attribute values with flexible type matching
 #[allow(dead_code)]
 fn matches_attribute_value(_attr_value: &AttributeValue, targetvalue: &AttributeValue) -> bool {
-    match (_attr_value, target_value) {
+    match (_attr_value, targetvalue) {
         (AttributeValue::String(a), AttributeValue::String(b)) => a == b,
         (AttributeValue::Integer(a), AttributeValue::Integer(b)) => a == b,
         (AttributeValue::Float(a), AttributeValue::Float(b)) => (a - b).abs() < f64::EPSILON,
@@ -692,9 +692,7 @@ pub struct AttributeView<'a, N: Node> {
 impl<'a, N: Node> AttributeView<'a, N> {
     /// Create a new attribute view
     pub fn new(attributes: &'a HashMap<N, Attributes>) -> Self {
-        AttributeView {
-            attributes: attributes,
-        }
+        AttributeView { attributes }
     }
 
     /// Find nodes with numeric attributes in a range

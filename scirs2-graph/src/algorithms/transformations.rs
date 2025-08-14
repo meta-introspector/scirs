@@ -340,10 +340,10 @@ where
         comp.add_node(node.clone());
     }
 
-    // Add edges that are NOT in the original _graph
+    // Add edges that are NOT in the original graph
     for (i, u) in nodes.iter().enumerate() {
         for v in nodes.iter().skip(i + 1) {
-            if !_graph.has_edge(u, v) {
+            if !graph.has_edge(u, v) {
                 let _ = comp.add_edge(u.clone(), v.clone(), ());
             }
         }
@@ -377,9 +377,9 @@ where
         filtered.add_node(node.clone());
     }
 
-    // Add edges with valid _weights
+    // Add edges with valid weights
     for edge in graph.edges() {
-        if validweights.contains(&edge.weight) {
+        if valid_weights.contains(&edge.weight) {
             let _ = filtered.add_edge(
                 edge.source.clone(),
                 edge.target.clone(),
@@ -525,7 +525,7 @@ mod tests {
         graph.add_edge(3, 4, 10).unwrap();
 
         let mut valid_weights = HashSet::new();
-        validweights.insert(10);
+        valid_weights.insert(10);
 
         let filtered = weight_filtered_subgraph(&graph, &valid_weights);
 

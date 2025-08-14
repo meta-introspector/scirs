@@ -25,7 +25,7 @@ pub struct Complex {
 
 impl Complex {
     pub fn new(real: f64, imag: f64) -> Self {
-        Self { real: real, imag }
+        Self { real, imag }
     }
 
     pub fn magnitude(&self) -> f64 {
@@ -97,13 +97,13 @@ pub struct QuantumState {
 
 impl QuantumState {
     /// Create new quantum state with random superposition
-    pub fn new(_num_params: usize, num_basisstates: usize) -> Self {
+    pub fn new(num_params: usize, num_basis_states: usize) -> Self {
         let num_qubits = (num_basis_states as f64).log2().ceil() as usize;
         let actual_states = 1 << num_qubits;
 
         // Initialize random amplitudes (normalized)
-        let mut amplitudes = Array1::fromshape_fn(actual_states, |_| {
-            Complex::new(rand::rng().gen_range(-1.0..1.0)..rand::rng().gen_range(-1.0..1.0))
+        let mut amplitudes = Array1::from_shape_fn(actual_states, |_| {
+            Complex::new(rand::rng().gen_range(-1.0..1.0), rand::rng().gen_range(-1.0..1.0))
         });
 
         // Normalize amplitudes
@@ -116,13 +116,13 @@ impl QuantumState {
             *amp = *amp * (1.0 / norm);
         }
 
-        // Initialize random basis _states
-        let basis_states = Array2::fromshape_fn((actual_states.._num_params), |_| {
+        // Initialize random basis states
+        let basis_states = Array2::from_shape_fn((actual_states, num_params), |_| {
             rand::rng().gen_range(-5.0..5.0)
         });
 
         // Initialize entanglement matrix
-        let entanglement_matrix = Array2::fromshape_fn((_num_params, num_params), |(i, j)| {
+        let entanglement_matrix = Array2::from_shape_fn((num_params, num_params), |(i, j)| {
             if i == j {
                 Complex::new(1.0, 0.0)
             } else {
@@ -173,7 +173,7 @@ impl QuantumState {
     }
 
     /// Apply quantum evolution based on objective function landscape
-    pub fn evolve(&mut self, objectivegradients: &Array1<f64>, dt: f64) -> OptimizeResult<()> {
+    pub fn evolve(&mut self, objective_gradients: &Array1<f64>, dt: f64) -> OptimizeResult<()> {
         self.evolution_time += dt;
 
         // Compute Hamiltonian from objective landscape
@@ -283,7 +283,7 @@ impl QuantumState {
         for amp in self.amplitudes.iter_mut() {
             let noise_real = rand::rng().gen_range(-0.5..0.5) * noise_strength * 0.01;
             let noise_imag = rand::rng().gen_range(-0.5..0.5) * noise_strength * 0.01;
-            *amp = *amp + Complex::new(noise_real..noise_imag);
+            *amp = *amp + Complex::new(noise_real, noise_imag);
         }
 
         // Renormalize after decoherence
@@ -300,7 +300,7 @@ impl QuantumState {
         Ok(())
     }
 
-    fn update_entanglement(&mut self, objectivegradients: &Array1<f64>) -> OptimizeResult<()> {
+    fn update_entanglement(&mut self, objective_gradients: &Array1<f64>) -> OptimizeResult<()> {
         let n_params = self.entanglement_matrix.nrows();
 
         // Update entanglement based on gradient correlations
@@ -325,7 +325,7 @@ impl QuantumState {
     }
 
     /// Apply quantum superposition principle to explore multiple states
-    pub fn create_superposition(&mut self, explorationradius: f64) -> OptimizeResult<()> {
+    pub fn create_superposition(&mut self, exploration_radius: f64) -> OptimizeResult<()> {
         let n_states = self.basis_states.nrows();
         let n_params = self.basis_states.ncols();
 
@@ -333,7 +333,7 @@ impl QuantumState {
         for i in 0..n_states {
             for j in 0..n_params {
                 let perturbation = rand::rng().gen_range(-exploration_radius..exploration_radius);
-                self.basis_states[[i..j]] += perturbation;
+                self.basis_states[[i, j]] += perturbation;
             }
         }
 
@@ -363,7 +363,7 @@ impl QuantumState {
             // Create tunneled state
             for j in 0..n_params {
                 let tunnel_distance = barrier_height * rand::rng().gen_range(-0.5..0.5);
-                self.basis_states[[source_state..j]] += tunnel_distance;
+                self.basis_states[[source_state, j]] += tunnel_distance;
             }
 
             // Redistribute amplitudes to account for tunneling
@@ -412,7 +412,7 @@ pub enum CoolingSchedule {
 }
 
 impl QuantumAnnealingSchedule {
-    pub fn new(_initial_temp: f64, finaltemp: f64, schedule: CoolingSchedule) -> Self {
+    pub fn new(initial_temp: f64, final_temp: f64, schedule: CoolingSchedule) -> Self {
         Self {
             initial_temperature: initial_temp,
             final_temperature: final_temp,
@@ -423,7 +423,7 @@ impl QuantumAnnealingSchedule {
         }
     }
 
-    pub fn update(&mut self, iteration: usize, max_nit: usize, energychange: f64) {
+    pub fn update(&mut self, iteration: usize, max_nit: usize, energy_change: f64) {
         self.progress = iteration as f64 / max_nit as f64;
 
         self.current_temperature = match self.schedule_type {
@@ -449,7 +449,7 @@ impl QuantumAnnealingSchedule {
             1.0 - self.progress + 0.1 * (2.0 * PI * self.progress * 10.0).sin();
     }
 
-    pub fn should_accept(&self, energydelta: f64) -> bool {
+    pub fn should_accept(&self, energy_delta: f64) -> bool {
         if energy_delta <= 0.0 {
             true // Always accept improvements
         } else {
@@ -544,7 +544,7 @@ impl QuantumInspiredOptimizer {
             // Compute energy change and gradients (finite difference)
             let energy_change = candidate_objective - prev_objective;
             let gradients =
-                self.compute_finite_difference_gradient(&objective, &candidate_params)?;
+                self.compute_finite_difference_gradient(&objective, &candidate_params.view())?;
 
             // Quantum evolution based on objective landscape
             self.quantum_state.evolve(&gradients, 0.1)?;
@@ -603,7 +603,7 @@ impl QuantumInspiredOptimizer {
             jac: None,
             hess: None,
             constr: None,
-            nfev: self.iteration * self.num_qubits, // Iteration count times qubits
+            nfev: self.iteration * self.quantum_state.num_qubits, // Iteration count times qubits
             njev: 0,
             nhev: 0,
             maxcv: 0,
@@ -729,16 +729,16 @@ where
 pub fn quantum_particle_swarm_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
-    num_particles: usize,
+    numparticles: usize,
     max_nit: usize,
 ) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
-    let mut _particles = Vec::new();
+    let mut particles = Vec::new();
 
-    // Create quantum-enhanced _particles
-    for _ in 0..num_particles {
+    // Create quantum-enhanced particles
+    for _ in 0..numparticles {
         let mut particle_optimizer = QuantumInspiredOptimizer::new(initial_params, max_nit, 8);
         particles.push(particle_optimizer);
     }
@@ -747,7 +747,7 @@ where
     let mut global_best_objective = f64::INFINITY;
 
     for iteration in 0..max_nit {
-        for particle in &mut _particles {
+        for particle in &mut particles {
             // Run a few quantum optimization steps per particle
             for _ in 0..5 {
                 let candidate = particle.quantum_state.measure();
@@ -765,16 +765,16 @@ where
 
                 // Quantum evolution with global best influence
                 let gradients =
-                    particle.compute_finite_difference_gradient(&objective, &candidate)?;
+                    particle.compute_finite_difference_gradient(&objective, &candidate.view())?;
                 particle.quantum_state.evolve(&gradients, 0.01)?;
 
-                // Entangle _particles with global best
+                // Entangle particles with global best
                 if rand::rng().gen_range(0.0..1.0) < 0.1 {
                     let n_params = initial_params.len();
                     for i in 0..n_params.min(particle.quantum_state.basis_states.ncols()) {
                         let entanglement_strength = 0.1;
                         for state_idx in 0..particle.quantum_state.basis_states.nrows() {
-                            particle.quantum_state.basis_states[[state_idx..i]] = (1.0
+                            particle.quantum_state.basis_states[[state_idx, i]] = (1.0
                                 - entanglement_strength)
                                 * particle.quantum_state.basis_states[[state_idx, i]]
                                 + entanglement_strength * global_best_solution[i];
@@ -786,7 +786,7 @@ where
 
         // Quantum tunneling for swarm diversity
         if iteration % 100 == 0 {
-            for particle in &mut _particles {
+            for particle in &mut particles {
                 particle.quantum_state.quantum_tunnel(1.0, 0.05)?;
             }
         }
@@ -798,13 +798,13 @@ where
         success: global_best_objective < f64::INFINITY,
         nit: max_nit,
         message: format!(
-            "Quantum particle swarm optimization completed with {} _particles",
-            num_particles
+            "Quantum particle swarm optimization completed with {} particles",
+            numparticles
         ),
         jac: None,
         hess: None,
         constr: None,
-        nfev: max_nit * num_particles, // Iterations times _particles
+        nfev: max_nit * numparticles, // Iterations times particles
         njev: 0,
         nhev: 0,
         maxcv: 0,

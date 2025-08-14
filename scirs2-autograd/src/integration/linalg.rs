@@ -96,7 +96,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             operation_info: OperationInfo {
                 operation: self.operation.clone(),
                 computational_cost: self.estimate_matmul_cost(a, b),
-                numerical_stability: self.assess_stability(&self.inputs),
+                numerical_stability: LinalgContext::<F>::assess_stability(&self.inputs),
                 memory_usage: self.estimate_memory_usage(&self.inputs),
             },
         })
@@ -123,7 +123,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             operation_info: OperationInfo {
                 operation: self.operation.clone(),
                 computational_cost: self.estimate_svd_cost(input),
-                numerical_stability: self.assess_stability(&self.inputs),
+                numerical_stability: LinalgContext::<F>::assess_stability(&self.inputs),
                 memory_usage: self.estimate_memory_usage(&self.inputs),
             },
         })
@@ -149,7 +149,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             operation_info: OperationInfo {
                 operation: self.operation.clone(),
                 computational_cost: self.estimate_qr_cost(input),
-                numerical_stability: self.assess_stability(&self.inputs),
+                numerical_stability: LinalgContext::<F>::assess_stability(&self.inputs),
                 memory_usage: self.estimate_memory_usage(&self.inputs),
             },
         })
@@ -176,7 +176,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             operation_info: OperationInfo {
                 operation: self.operation.clone(),
                 computational_cost: self.estimate_lu_cost(input),
-                numerical_stability: self.assess_stability(&self.inputs),
+                numerical_stability: LinalgContext::<F>::assess_stability(&self.inputs),
                 memory_usage: self.estimate_memory_usage(&self.inputs),
             },
         })
@@ -198,7 +198,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             operation_info: OperationInfo {
                 operation: self.operation.clone(),
                 computational_cost: self.estimate_cholesky_cost(input),
-                numerical_stability: self.assess_stability(&self.inputs),
+                numerical_stability: LinalgContext::<F>::assess_stability(&self.inputs),
                 memory_usage: self.estimate_memory_usage(&self.inputs),
             },
         })
@@ -223,7 +223,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             operation_info: OperationInfo {
                 operation: self.operation.clone(),
                 computational_cost: self.estimate_eigenvalue_cost(input),
-                numerical_stability: self.assess_stability(&self.inputs),
+                numerical_stability: LinalgContext::<F>::assess_stability(&self.inputs),
                 memory_usage: self.estimate_memory_usage(&self.inputs),
             },
         })
@@ -245,7 +245,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             operation_info: OperationInfo {
                 operation: self.operation.clone(),
                 computational_cost: self.estimate_inverse_cost(input),
-                numerical_stability: self.assess_stability(&self.inputs),
+                numerical_stability: LinalgContext::<F>::assess_stability(&self.inputs),
                 memory_usage: self.estimate_memory_usage(&self.inputs),
             },
         })
@@ -268,7 +268,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             operation_info: OperationInfo {
                 operation: self.operation.clone(),
                 computational_cost: self.estimate_solve_cost(a, b),
-                numerical_stability: self.assess_stability(&self.inputs),
+                numerical_stability: LinalgContext::<F>::assess_stability(&self.inputs),
                 memory_usage: self.estimate_memory_usage(&self.inputs),
             },
         })
@@ -296,7 +296,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             operation_info: OperationInfo {
                 operation: self.operation.clone(),
                 computational_cost: self.estimate_norm_cost(input),
-                numerical_stability: self.assess_stability(&self.inputs),
+                numerical_stability: LinalgContext::<F>::assess_stability(&self.inputs),
                 memory_usage: self.estimate_memory_usage(&self.inputs),
             },
         })
@@ -318,7 +318,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             operation_info: OperationInfo {
                 operation: self.operation.clone(),
                 computational_cost: self.estimate_det_cost(input),
-                numerical_stability: self.assess_stability(&self.inputs),
+                numerical_stability: LinalgContext::<F>::assess_stability(&self.inputs),
                 memory_usage: self.estimate_memory_usage(&self.inputs),
             },
         })
@@ -350,7 +350,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
                     },
                     memory_accesses: input.data().len() as u64,
                 },
-                numerical_stability: self.assess_stability(&self.inputs),
+                numerical_stability: LinalgContext::<F>::assess_stability(&self.inputs),
                 memory_usage: self.estimate_memory_usage(&self.inputs),
             },
         })
@@ -987,7 +987,7 @@ pub fn create_matmul_context<'a, F: Float>(
 
 /// Create an SVD context
 #[allow(dead_code)]
-pub fn create_svd_context<F: Float>(input: Tensor<F>, fullmatrices: bool) -> LinalgContext<F> {
+pub fn create_svd_context<F: Float>(input: Tensor<F>, full_matrices: bool) -> LinalgContext<F> {
     LinalgContext::new(LinalgOperation::SVD)
         .add_input(input)
         .add_parameter(

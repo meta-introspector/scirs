@@ -27,7 +27,7 @@ where
     let mut components: Vec<Component<N>> = Vec::new();
     let mut visited = HashSet::new();
 
-    // For each node in the _graph
+    // For each node in the graph
     for node_idx in graph.inner().node_indices() {
         // Skip if already visited
         if visited.contains(&node_idx) {
@@ -41,7 +41,7 @@ where
         visited.insert(node_idx);
 
         while let Some(current) = queue.pop_front() {
-            component.insert(_graph.inner()[current].clone());
+            component.insert(graph.inner()[current].clone());
 
             // Visit all unvisited neighbors
             for neighbor in graph.inner().neighbors(current) {
@@ -82,7 +82,7 @@ where
 
     fn strongconnect<N, E, Ix>(
         v: petgraph::graph::NodeIndex<Ix>,
-        _graph: &DiGraph<N, E, Ix>,
+        graph: &DiGraph<N, E, Ix>,
         state: &mut TarjanState<Ix>,
         components: &mut Vec<Component<N>>,
     ) where
@@ -118,7 +118,7 @@ where
             loop {
                 let w = state.stack.pop().unwrap();
                 state.on_stack.remove(&w);
-                component.insert(_graph.inner()[w].clone());
+                component.insert(graph.inner()[w].clone());
                 if w == v {
                     break;
                 }
@@ -168,7 +168,7 @@ where
     let mut components: Vec<Component<N>> = Vec::new();
     let mut visited = HashSet::new();
 
-    // For each node in the _graph
+    // For each node in the graph
     for node_idx in graph.inner().node_indices() {
         // Skip if already visited
         if visited.contains(&node_idx) {
@@ -182,7 +182,7 @@ where
         visited.insert(node_idx);
 
         while let Some(current) = queue.pop_front() {
-            component.insert(_graph.inner()[current].clone());
+            component.insert(graph.inner()[current].clone());
 
             // Visit all unvisited neighbors (both incoming and outgoing)
             for neighbor in graph.inner().neighbors_undirected(current) {
@@ -225,7 +225,7 @@ where
 
     fn dfs<N, E, Ix>(
         u: petgraph::graph::NodeIndex<Ix>,
-        _graph: &Graph<N, E, Ix>,
+        graph: &Graph<N, E, Ix>,
         state: &mut DfsState<Ix>,
         articulation_points: &mut HashSet<N>,
     ) where
@@ -258,7 +258,7 @@ where
                 if (state.parent.get(&u).unwrap().is_none() && children > 1)
                     || (state.parent.get(&u).unwrap().is_some() && v_low >= u_disc)
                 {
-                    articulation_points.insert(_graph.inner()[u].clone());
+                    articulation_points.insert(graph.inner()[u].clone());
                 }
             } else if state.parent.get(&u).unwrap() != &Some(v) {
                 // Update low[u] for back edge
@@ -352,7 +352,7 @@ where
     // Convert node indices to actual nodes
     let node_coloring: HashMap<N, u8> = coloring
         .into_iter()
-        .map(|(idx, color)| (_graph.inner()[idx].clone(), color))
+        .map(|(idx, color)| (graph.inner()[idx].clone(), color))
         .collect();
 
     BipartiteResult {
@@ -387,7 +387,7 @@ where
 
     fn dfs<N, E, Ix>(
         u: petgraph::graph::NodeIndex<Ix>,
-        _graph: &Graph<N, E, Ix>,
+        graph: &Graph<N, E, Ix>,
         state: &mut DfsState<Ix>,
         bridges: &mut Vec<(N, N)>,
     ) where
@@ -413,7 +413,7 @@ where
                 // If low[v] > disc[u], then (u, v) is a bridge
                 let u_disc = *state.disc.get(&u).unwrap();
                 if v_low > u_disc {
-                    bridges.push((_graph.inner()[u].clone(), graph.inner()[v].clone()));
+                    bridges.push((graph.inner()[u].clone(), graph.inner()[v].clone()));
                 }
             } else if state.parent.get(&u).unwrap() != &Some(v) {
                 // Update low[u] for back edge

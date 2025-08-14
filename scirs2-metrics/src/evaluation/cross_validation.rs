@@ -856,8 +856,8 @@ mod tests {
 
         // Check that all samples are used in the outer folds
         let mut all_test_indices = Vec::new();
-        for (_, outer_test_) in &nested_cv {
-            all_test_indices.extend_from_slice(outer_test);
+        for (_, outer_test_, _) in &nested_cv {
+            all_test_indices.extend_from_slice(outer_test_);
         }
         all_test_indices.sort_unstable();
 

@@ -6,7 +6,7 @@
 //! Run with: cargo run --example dashboard_server --features dashboard_server
 
 #[cfg(feature = "dashboard_server")]
-use scirs2__metrics::dashboard::{
+use scirs2_metrics::dashboard::{
     server::start_http_server, DashboardConfig, InteractiveDashboard,
 };
 #[cfg(feature = "dashboard_server")]

@@ -167,7 +167,7 @@ pub fn compute_tilted_integral_image(img: &DynamicImage) -> Result<Array2<u64>> 
 /// * Sum of pixel values in the rectangle
 #[allow(dead_code)]
 pub fn compute_rect_sum(
-    _integral: &Array2<u64>,
+    integral: &Array2<u64>,
     x1: usize,
     y1: usize,
     x2: usize,
@@ -306,7 +306,7 @@ pub fn integral_to_image(integral: &Array2<u64>) -> GrayImage {
 
     for y in 0..height {
         for x in 0..width {
-            let normalized = (_integral[[y, x]] as f64 / max_val * 255.0) as u8;
+            let normalized = (integral[[y, x]] as f64 / max_val * 255.0) as u8;
             img.put_pixel(x as u32, y as u32, image::Luma([normalized]));
         }
     }

@@ -13,7 +13,7 @@ pub struct CsrMatrix {
     /// Non-zero values
     values: Vec<f64>,
     /// Column indices for each value
-    col_indices: Vec<usize>,
+    colindices: Vec<usize>,
     /// Row pointers (cumulative sum of non-zeros per row)
     row_ptrs: Vec<usize>,
     /// Number of rows
@@ -27,14 +27,14 @@ impl CsrMatrix {
     pub fn from_dense(dense: &Array2<f64>) -> Self {
         let (n_rows, n_cols) = dense.dim();
         let mut values = Vec::new();
-        let mut col_indices = Vec::new();
+        let mut colindices = Vec::new();
         let mut row_ptrs = vec![0];
 
         for row in dense.rows() {
-            for (col_idx, &value) in row.iter().enumerate() {
+            for (colidx, &value) in row.iter().enumerate() {
                 if value != 0.0 {
                     values.push(value);
-                    col_indices.push(col_idx);
+                    colindices.push(colidx);
                 }
             }
             row_ptrs.push(values.len());
@@ -42,7 +42,7 @@ impl CsrMatrix {
 
         Self {
             values,
-            col_indices,
+            colindices,
             row_ptrs,
             n_rows,
             n_cols,
@@ -53,10 +53,10 @@ impl CsrMatrix {
     pub fn zeros(_n_rows: usize, ncols: usize) -> Self {
         Self {
             values: Vec::new(),
-            col_indices: Vec::new(),
+            colindices: Vec::new(),
             row_ptrs: vec![0; _n_rows + 1],
-            n_rows,
-            n_cols,
+            n_rows: _n_rows,
+            n_cols: ncols,
         }
     }
 
@@ -73,7 +73,7 @@ impl CsrMatrix {
     /// Get memory usage in bytes (approximate)
     pub fn memory_usage(&self) -> usize {
         self.values.len() * std::mem::size_of::<f64>()
-            + self.col_indices.len() * std::mem::size_of::<usize>()
+            + self.colindices.len() * std::mem::size_of::<usize>()
             + self.row_ptrs.len() * std::mem::size_of::<usize>()
     }
 
@@ -81,14 +81,14 @@ impl CsrMatrix {
     pub fn to_dense(&self) -> Array2<f64> {
         let mut dense = Array2::zeros((self.n_rows, self.n_cols));
 
-        for row_idx in 0..self.n_rows {
-            let start = self.row_ptrs[row_idx];
-            let end = self.row_ptrs[row_idx + 1];
+        for rowidx in 0..self.n_rows {
+            let start = self.row_ptrs[rowidx];
+            let end = self.row_ptrs[rowidx + 1];
 
             for i in start..end {
-                let col_idx = self.col_indices[i];
+                let colidx = self.colindices[i];
                 let value = self.values[i];
-                dense[[row_idx, col_idx]] = value;
+                dense[[rowidx, colidx]] = value;
             }
         }
 
@@ -97,17 +97,17 @@ impl CsrMatrix {
 
     /// Get a specific row as a sparse vector
     pub fn get_row(&self, rowidx: usize) -> Result<SparseVector> {
-        if row_idx >= self.n_rows {
+        if rowidx >= self.n_rows {
             return Err(TextError::InvalidInput(format!(
                 "Row index {} out of bounds for matrix with {} rows",
-                row_idx, self.n_rows
+                rowidx, self.n_rows
             )));
         }
 
-        let start = self.row_ptrs[row_idx];
-        let end = self.row_ptrs[row_idx + 1];
+        let start = self.row_ptrs[rowidx];
+        let end = self.row_ptrs[rowidx + 1];
 
-        let indices: Vec<usize> = self.col_indices[start..end].to_vec();
+        let indices: Vec<usize> = self.colindices[start..end].to_vec();
         let values: Vec<f64> = self.values[start..end].to_vec();
 
         Ok(SparseVector {
@@ -129,16 +129,16 @@ impl CsrMatrix {
 
         let mut result = Array1::zeros(self.n_rows);
 
-        for row_idx in 0..self.n_rows {
-            let start = self.row_ptrs[row_idx];
-            let end = self.row_ptrs[row_idx + 1];
+        for rowidx in 0..self.n_rows {
+            let start = self.row_ptrs[rowidx];
+            let end = self.row_ptrs[rowidx + 1];
 
             let mut sum = 0.0;
             for i in start..end {
-                let col_idx = self.col_indices[i];
-                sum += self.values[i] * vector[col_idx];
+                let colidx = self.colindices[i];
+                sum += self.values[i] * vector[colidx];
             }
-            result[row_idx] = sum;
+            result[rowidx] = sum;
         }
 
         Ok(result)
@@ -186,7 +186,7 @@ impl SparseVector {
     }
 
     /// Create from indices and values
-    pub fn from_indices_values(indices: Vec<usize>, values: Vec<f64>, size: usize) -> Self {
+    pub fn fromindices_values(indices: Vec<usize>, values: Vec<f64>, size: usize) -> Self {
         assert_eq!(
             indices.len(),
             values.len(),
@@ -221,7 +221,7 @@ impl SparseVector {
     }
 
     /// Compute dot product with another sparse vector
-    pub fn dot_sparse(&self, other: &SparseVector) -> Result<f64> {
+    pub fn dotsparse(&self, other: &SparseVector) -> Result<f64> {
         if self.size != other.size {
             return Err(TextError::InvalidInput(format!(
                 "Vector dimensions don't match: {} vs {}",
@@ -294,8 +294,8 @@ impl DokMatrix {
     pub fn new(_n_rows: usize, ncols: usize) -> Self {
         Self {
             data: HashMap::new(),
-            n_rows,
-            n_cols,
+            n_rows: _n_rows,
+            n_cols: ncols,
         }
     }
 
@@ -331,7 +331,7 @@ impl DokMatrix {
         entries.sort_by_key(|&((r, c), _)| (r, c));
 
         let mut values = Vec::with_capacity(entries.len());
-        let mut col_indices = Vec::with_capacity(entries.len());
+        let mut colindices = Vec::with_capacity(entries.len());
         let mut row_ptrs = vec![0];
 
         let mut current_row = 0;
@@ -343,7 +343,7 @@ impl DokMatrix {
             }
 
             values.push(value);
-            col_indices.push(col);
+            colindices.push(col);
         }
 
         while current_row < self.n_rows {
@@ -353,7 +353,7 @@ impl DokMatrix {
 
         CsrMatrix {
             values,
-            col_indices,
+            colindices,
             row_ptrs,
             n_rows: self.n_rows,
             n_cols: self.n_cols,
@@ -377,7 +377,7 @@ impl SparseMatrixBuilder {
     pub fn new(_ncols: usize) -> Self {
         Self {
             rows: Vec::new(),
-            n_cols,
+            n_cols: _ncols,
         }
     }
 
@@ -399,18 +399,18 @@ impl SparseMatrixBuilder {
     pub fn build(self) -> CsrMatrix {
         let n_rows = self.rows.len();
         let mut values = Vec::new();
-        let mut col_indices = Vec::new();
+        let mut colindices = Vec::new();
         let mut row_ptrs = vec![0];
 
         for row in self.rows {
             values.extend(row.values);
-            col_indices.extend(row.indices);
+            colindices.extend(row.indices);
             row_ptrs.push(values.len());
         }
 
         CsrMatrix {
             values,
-            col_indices,
+            colindices,
             row_ptrs,
             n_rows,
             n_cols: self.n_cols,
@@ -422,9 +422,9 @@ impl SparseMatrixBuilder {
 #[derive(Debug, Clone)]
 pub struct CooMatrix {
     /// Row indices
-    row_indices: Vec<usize>,
+    rowindices: Vec<usize>,
     /// Column indices
-    col_indices: Vec<usize>,
+    colindices: Vec<usize>,
     /// Values
     values: Vec<f64>,
     /// Number of rows
@@ -437,11 +437,11 @@ impl CooMatrix {
     /// Create a new COO matrix
     pub fn new(_n_rows: usize, ncols: usize) -> Self {
         Self {
-            row_indices: Vec::new(),
-            col_indices: Vec::new(),
+            rowindices: Vec::new(),
+            colindices: Vec::new(),
             values: Vec::new(),
-            n_rows,
-            n_cols,
+            n_rows: _n_rows,
+            n_cols: ncols,
         }
     }
 
@@ -455,8 +455,8 @@ impl CooMatrix {
         }
 
         if value != 0.0 {
-            self.row_indices.push(row);
-            self.col_indices.push(col);
+            self.rowindices.push(row);
+            self.colindices.push(col);
             self.values.push(value);
         }
 
@@ -467,15 +467,15 @@ impl CooMatrix {
     pub fn to_csr(&self) -> CsrMatrix {
         // Sort by row then column
         let mut indices: Vec<usize> = (0..self.values.len()).collect();
-        indices.sort_by_key(|&i| (self.row_indices[i], self.col_indices[i]));
+        indices.sort_by_key(|&i| (self.rowindices[i], self.colindices[i]));
 
         let mut values = Vec::with_capacity(self.values.len());
-        let mut col_indices = Vec::with_capacity(self.values.len());
+        let mut colindices = Vec::with_capacity(self.values.len());
         let mut row_ptrs = vec![0];
 
         let mut current_row = 0;
         for &idx in &indices {
-            let row = self.row_indices[idx];
+            let row = self.rowindices[idx];
 
             // Fill row pointers for empty rows
             while current_row < row {
@@ -484,7 +484,7 @@ impl CooMatrix {
             }
 
             values.push(self.values[idx]);
-            col_indices.push(self.col_indices[idx]);
+            colindices.push(self.colindices[idx]);
         }
 
         // Fill remaining row pointers
@@ -494,7 +494,7 @@ impl CooMatrix {
 
         CsrMatrix {
             values,
-            col_indices,
+            colindices,
             row_ptrs,
             n_rows: self.n_rows,
             n_cols: self.n_cols,
@@ -513,7 +513,7 @@ pub struct CscMatrix {
     /// Non-zero values
     values: Vec<f64>,
     /// Row indices for each value
-    row_indices: Vec<usize>,
+    rowindices: Vec<usize>,
     /// Column pointers (cumulative sum of non-zeros per column)
     col_ptrs: Vec<usize>,
     /// Number of rows
@@ -526,16 +526,16 @@ impl CscMatrix {
     /// Create from COO format
     pub fn from_coo(coo: &CooMatrix) -> Self {
         // Sort by column then row
-        let mut indices: Vec<usize> = (0.._coo.values.len()).collect();
-        indices.sort_by_key(|&i| (_coo.col_indices[i], coo.row_indices[i]));
+        let mut indices: Vec<usize> = (0..coo.values.len()).collect();
+        indices.sort_by_key(|&i| (coo.colindices[i], coo.rowindices[i]));
 
-        let mut values = Vec::with_capacity(_coo.values.len());
-        let mut row_indices = Vec::with_capacity(_coo.values.len());
+        let mut values = Vec::with_capacity(coo.values.len());
+        let mut rowindices = Vec::with_capacity(coo.values.len());
         let mut col_ptrs = vec![0];
 
         let mut current_col = 0;
         for &idx in &indices {
-            let col = coo.col_indices[idx];
+            let col = coo.colindices[idx];
 
             // Fill column pointers for empty columns
             while current_col < col {
@@ -543,8 +543,8 @@ impl CscMatrix {
                 current_col += 1;
             }
 
-            values.push(_coo.values[idx]);
-            row_indices.push(_coo.row_indices[idx]);
+            values.push(coo.values[idx]);
+            rowindices.push(coo.rowindices[idx]);
         }
 
         // Fill remaining column pointers
@@ -554,7 +554,7 @@ impl CscMatrix {
 
         Self {
             values,
-            row_indices,
+            rowindices,
             col_ptrs,
             n_rows: coo.n_rows,
             n_cols: coo.n_cols,
@@ -563,20 +563,20 @@ impl CscMatrix {
 
     /// Get a column as a sparse vector
     pub fn get_col(&self, colidx: usize) -> Result<SparseVector> {
-        if col_idx >= self.n_cols {
+        if colidx >= self.n_cols {
             return Err(TextError::InvalidInput(format!(
                 "Column index {} out of bounds for matrix with {} columns",
-                col_idx, self.n_cols
+                colidx, self.n_cols
             )));
         }
 
-        let start = self.col_ptrs[col_idx];
-        let end = self.col_ptrs[col_idx + 1];
+        let start = self.col_ptrs[colidx];
+        let end = self.col_ptrs[colidx + 1];
 
-        let indices: Vec<usize> = self.row_indices[start..end].to_vec();
+        let indices: Vec<usize> = self.rowindices[start..end].to_vec();
         let values: Vec<f64> = self.values[start..end].to_vec();
 
-        Ok(SparseVector::from_indices_values(
+        Ok(SparseVector::fromindices_values(
             indices,
             values,
             self.n_rows,
@@ -596,7 +596,7 @@ impl CscMatrix {
     /// Get memory usage in bytes
     pub fn memory_usage(&self) -> usize {
         self.values.len() * std::mem::size_of::<f64>()
-            + self.row_indices.len() * std::mem::size_of::<usize>()
+            + self.rowindices.len() * std::mem::size_of::<usize>()
             + self.col_ptrs.len() * std::mem::size_of::<usize>()
     }
 
@@ -612,16 +612,16 @@ impl CscMatrix {
 
         let mut result = Array1::zeros(self.n_cols);
 
-        for col_idx in 0..self.n_cols {
-            let start = self.col_ptrs[col_idx];
-            let end = self.col_ptrs[col_idx + 1];
+        for colidx in 0..self.n_cols {
+            let start = self.col_ptrs[colidx];
+            let end = self.col_ptrs[colidx + 1];
 
             let mut sum = 0.0;
             for i in start..end {
-                let row_idx = self.row_indices[i];
-                sum += self.values[i] * vector[row_idx];
+                let rowidx = self.rowindices[i];
+                sum += self.values[i] * vector[rowidx];
             }
-            result[col_idx] = sum;
+            result[colidx] = sum;
         }
 
         Ok(result)
@@ -632,7 +632,7 @@ impl CscMatrix {
 #[derive(Debug, Clone)]
 pub struct BlockSparseMatrix {
     /// Block size (square blocks)
-    block_size: usize,
+    _blocksize: usize,
     /// Non-empty blocks stored as dense matrices
     blocks: HashMap<(usize, usize), Array2<f64>>,
     /// Number of rows
@@ -643,11 +643,11 @@ pub struct BlockSparseMatrix {
 
 impl BlockSparseMatrix {
     /// Create a new block sparse matrix
-    pub fn new(_n_rows: usize, n_cols: usize, blocksize: usize) -> Self {
+    pub fn new(_n_rows: usize, n_cols: usize, _blocksize: usize) -> Self {
         Self {
-            block_size,
+            _blocksize,
             blocks: HashMap::new(),
-            n_rows,
+            n_rows: _n_rows,
             n_cols,
         }
     }
@@ -660,15 +660,15 @@ impl BlockSparseMatrix {
             )));
         }
 
-        let block_row = row / self.block_size;
-        let block_col = col / self.block_size;
-        let local_row = row % self.block_size;
-        let local_col = col % self.block_size;
+        let block_row = row / self._blocksize;
+        let block_col = col / self._blocksize;
+        let local_row = row % self._blocksize;
+        let local_col = col % self._blocksize;
 
         let block = self
             .blocks
             .entry((block_row, block_col))
-            .or_insert_with(|| Array2::zeros((self.block_size, self.block_size)));
+            .or_insert_with(|| Array2::zeros((self._blocksize, self._blocksize)));
 
         block[[local_row, local_col]] = value;
 
@@ -681,10 +681,10 @@ impl BlockSparseMatrix {
             return 0.0;
         }
 
-        let block_row = row / self.block_size;
-        let block_col = col / self.block_size;
-        let local_row = row % self.block_size;
-        let local_col = col % self.block_size;
+        let block_row = row / self._blocksize;
+        let block_col = col / self._blocksize;
+        let local_row = row % self._blocksize;
+        let local_col = col % self._blocksize;
 
         self.blocks
             .get(&(block_row, block_col))
@@ -694,7 +694,7 @@ impl BlockSparseMatrix {
 
     /// Get memory usage
     pub fn memory_usage(&self) -> usize {
-        self.blocks.len() * self.block_size * self.block_size * std::mem::size_of::<f64>()
+        self.blocks.len() * self._blocksize * self._blocksize * std::mem::size_of::<f64>()
     }
 }
 
@@ -704,10 +704,10 @@ pub struct HierarchicalSparseMatrix {
     /// Top-level blocks (coarse granularity)
     top_level_blocks: HashMap<(usize, usize), CompressedBlock>,
     /// Block size for top level
-    top_block_size: usize,
+    top__blocksize: usize,
     /// Sub-block size within each top-level block
     #[allow(dead_code)]
-    sub_block_size: usize,
+    sub__blocksize: usize,
     /// Matrix dimensions
     n_rows: usize,
     n_cols: usize,
@@ -730,14 +730,14 @@ impl HierarchicalSparseMatrix {
     pub fn new(
         _n_rows: usize,
         n_cols: usize,
-        top_block_size: usize,
-        sub_block_size: usize,
+        top__blocksize: usize,
+        sub__blocksize: usize,
     ) -> Self {
         Self {
             top_level_blocks: HashMap::new(),
-            top_block_size,
-            sub_block_size,
-            n_rows,
+            top__blocksize,
+            sub__blocksize,
+            n_rows: _n_rows,
             n_cols,
         }
     }
@@ -750,20 +750,20 @@ impl HierarchicalSparseMatrix {
             )));
         }
 
-        let top_row = row / self.top_block_size;
-        let top_col = col / self.top_block_size;
+        let top_row = row / self.top__blocksize;
+        let top_col = col / self.top__blocksize;
 
         // For simplicity, store as COO within each block for now
         // In a full implementation, this would use sub-blocks
         let block = self
             .top_level_blocks
             .entry((top_row, top_col))
-            .or_insert_with(|| CompressedBlock::new(self.top_block_size, self.top_block_size));
+            .or_insert_with(|| CompressedBlock::new(self.top__blocksize, self.top__blocksize));
 
         // Store the linearized position and value
-        let local_row = row % self.top_block_size;
-        let local_col = col % self.top_block_size;
-        let linear_pos = local_row * self.top_block_size + local_col;
+        let local_row = row % self.top__blocksize;
+        let local_col = col % self.top__blocksize;
+        let linear_pos = local_row * self.top__blocksize + local_col;
 
         block.set_value(linear_pos, value);
         Ok(())
@@ -775,13 +775,13 @@ impl HierarchicalSparseMatrix {
             return 0.0;
         }
 
-        let top_row = row / self.top_block_size;
-        let top_col = col / self.top_block_size;
+        let top_row = row / self.top__blocksize;
+        let top_col = col / self.top__blocksize;
 
         if let Some(block) = self.top_level_blocks.get(&(top_row, top_col)) {
-            let local_row = row % self.top_block_size;
-            let local_col = col % self.top_block_size;
-            let linear_pos = local_row * self.top_block_size + local_col;
+            let local_row = row % self.top__blocksize;
+            let local_col = col % self.top__blocksize;
+            let linear_pos = local_row * self.top__blocksize + local_col;
             block.get_value(linear_pos)
         } else {
             0.0
@@ -851,11 +851,11 @@ pub struct BitPackedSparseVector {
 
 impl BitPackedSparseVector {
     /// Create from a boolean sparse vector
-    pub fn from_bool_indices(indices: &[usize], size: usize) -> Self {
+    pub fn from_boolindices(indices: &[usize], size: usize) -> Self {
         let num_words = size.div_ceil(64); // Round up to nearest 64
         let mut bit_data = vec![0u64; num_words];
 
-        for &idx in _indices {
+        for &idx in indices {
             if idx < size {
                 let word_idx = idx / 64;
                 let bit_idx = idx % 64;
@@ -867,7 +867,7 @@ impl BitPackedSparseVector {
     }
 
     /// Get all set indices
-    pub fn get_indices(&self) -> Vec<usize> {
+    pub fn getindices(&self) -> Vec<usize> {
         let mut indices = Vec::new();
 
         for (word_idx, &word) in self.bit_data.iter().enumerate() {
@@ -963,16 +963,16 @@ pub struct SparseMemoryPool {
     /// Pre-allocated usize indices
     index_pool: Vec<Vec<usize>>,
     /// Block size for allocations
-    block_size: usize,
+    _blocksize: usize,
 }
 
 impl SparseMemoryPool {
     /// Create new memory pool
-    pub fn new(_blocksize: usize) -> Self {
+    pub fn new(__blocksize: usize) -> Self {
         Self {
             value_pool: Vec::new(),
             index_pool: Vec::new(),
-            block_size,
+            _blocksize: __blocksize,
         }
     }
 
@@ -983,32 +983,32 @@ impl SparseMemoryPool {
             vec.reserve(size);
             vec
         } else {
-            Vec::with_capacity(size.max(self.block_size))
+            Vec::with_capacity(size.max(self._blocksize))
         }
     }
 
     /// Allocate a vector of indices
-    pub fn allocate_indices(&mut self, size: usize) -> Vec<usize> {
+    pub fn allocateindices(&mut self, size: usize) -> Vec<usize> {
         if let Some(mut vec) = self.index_pool.pop() {
             vec.clear();
             vec.reserve(size);
             vec
         } else {
-            Vec::with_capacity(size.max(self.block_size))
+            Vec::with_capacity(size.max(self._blocksize))
         }
     }
 
     /// Return vectors to the pool
     pub fn deallocate_values(&mut self, mut vec: Vec<f64>) {
-        if vec.capacity() >= self.block_size {
+        if vec.capacity() >= self._blocksize {
             vec.clear();
             self.value_pool.push(vec);
         }
     }
 
     /// Return index vectors to the pool
-    pub fn deallocate_indices(&mut self, mut vec: Vec<usize>) {
-        if vec.capacity() >= self.block_size {
+    pub fn deallocateindices(&mut self, mut vec: Vec<usize>) {
+        if vec.capacity() >= self._blocksize {
             vec.clear();
             self.index_pool.push(vec);
         }
@@ -1034,7 +1034,7 @@ impl AdaptiveSparseMatrix {
     /// Create from COO and automatically select best format
     pub fn from_coo_adaptive(coo: CooMatrix) -> Self {
         let nnz = coo.nnz();
-        let (n_rows, n_cols) = (_coo.n_rows, coo.n_cols);
+        let (n_rows, n_cols) = (coo.n_rows, coo.n_cols);
         let total_elements = n_rows * n_cols;
         let sparsity = nnz as f64 / total_elements as f64;
 
@@ -1046,14 +1046,14 @@ impl AdaptiveSparseMatrix {
             Self::Hierarchical(hierarchical)
         } else if sparsity < 0.01 && nnz > 1000 {
             // Sparse with some structure - use block format
-            let block_size = ((nnz as f64).sqrt() as usize).clamp(8, 64);
-            Self::Block(BlockSparseMatrix::new(n_rows, n_cols, block_size))
+            let _blocksize = ((nnz as f64).sqrt() as usize).clamp(8, 64);
+            Self::Block(BlockSparseMatrix::new(n_rows, n_cols, _blocksize))
         } else if n_rows > n_cols * 2 {
             // Tall matrix - CSC might be better for column operations
-            Self::Csc(CscMatrix::from_coo(&_coo))
+            Self::Csc(CscMatrix::from_coo(&coo))
         } else {
             // Default to CSR for row operations
-            Self::Csr(_coo.to_csr())
+            Self::Csr(coo.to_csr())
         }
     }
 
@@ -1082,8 +1082,8 @@ impl StreamingSparseProcessor {
     /// Create new streaming processor
     pub fn new(_chunk_size: usize, memorylimit: usize) -> Self {
         Self {
-            chunk_size,
-            memory_limit,
+            chunk_size: _chunk_size,
+            memory_limit: memorylimit,
         }
     }
 
@@ -1117,20 +1117,20 @@ impl StreamingSparseProcessor {
     ) -> Result<CsrMatrix> {
         // Simplified implementation - would efficiently slice the CSR data
         let mut values = Vec::new();
-        let mut col_indices = Vec::new();
+        let mut colindices = Vec::new();
         let mut row_ptrs = vec![0];
 
         for _row in start_row..end_row {
             if let Ok(sparse_row) = matrix.get_row(_row) {
                 values.extend(sparse_row.values().iter());
-                col_indices.extend(sparse_row.indices().iter());
+                colindices.extend(sparse_row.indices().iter());
                 row_ptrs.push(values.len());
             }
         }
 
         Ok(CsrMatrix {
             values,
-            col_indices,
+            colindices,
             row_ptrs,
             n_rows: end_row - start_row,
             n_cols: matrix.shape().1,
@@ -1145,7 +1145,7 @@ pub struct ApproximateSparseMatrix {
     row_sketches: Vec<Vec<(u32, f32)>>, // (hash, value) pairs
     /// Sketch size
     #[allow(dead_code)]
-    sketch_size: usize,
+    sketchsize: usize,
     /// Original dimensions
     n_rows: usize,
     #[allow(dead_code)]
@@ -1154,13 +1154,13 @@ pub struct ApproximateSparseMatrix {
 
 impl ApproximateSparseMatrix {
     /// Create approximate representation of a sparse matrix
-    pub fn from_csr(_matrix: &CsrMatrix, sketchsize: usize) -> Self {
+    pub fn from_csr(matrix: &CsrMatrix, sketchsize: usize) -> Self {
         let (n_rows, n_cols) = matrix.shape();
         let mut row_sketches = Vec::with_capacity(n_rows);
 
-        for row_idx in 0..n_rows {
-            if let Ok(row) = matrix.get_row(row_idx) {
-                let sketch = Self::create_row_sketch(&row, sketch_size);
+        for rowidx in 0..n_rows {
+            if let Ok(row) = matrix.get_row(rowidx) {
+                let sketch = Self::create_row_sketch(&row, sketchsize);
                 row_sketches.push(sketch);
             } else {
                 row_sketches.push(Vec::new());
@@ -1169,19 +1169,19 @@ impl ApproximateSparseMatrix {
 
         Self {
             row_sketches,
-            sketch_size,
+            sketchsize,
             n_rows,
             n_cols,
         }
     }
 
     /// Create a hash-based sketch of a sparse row
-    fn create_row_sketch(_row: &SparseVector, sketchsize: usize) -> Vec<(u32, f32)> {
-        let mut sketch = vec![(0u32, 0.0f32); sketch_size];
+    fn create_row_sketch(row: &SparseVector, sketchsize: usize) -> Vec<(u32, f32)> {
+        let mut sketch = vec![(0u32, 0.0f32); sketchsize];
 
-        for (&idx, &val) in row.indices().iter().zip(_row.values().iter()) {
+        for (&idx, &val) in row.indices().iter().zip(row.values().iter()) {
             // Simple hash function for demonstration
-            let hash = ((idx as u64 * 2654435761u64) % (sketch_size as u64)) as usize;
+            let hash = ((idx as u64 * 2654435761u64) % (sketchsize as u64)) as usize;
             sketch[hash].0 = idx as u32;
             sketch[hash].1 += val as f32;
         }
@@ -1245,7 +1245,7 @@ pub struct QuantizedSparseVector {
 
 impl QuantizedSparseVector {
     /// Quantize a sparse vector to 8-bit representation
-    pub fn from_sparse(sparse: &SparseVector) -> Self {
+    pub fn fromsparse(sparse: &SparseVector) -> Self {
         if sparse.values.is_empty() {
             return Self {
                 indices: Vec::new(),
@@ -1258,7 +1258,7 @@ impl QuantizedSparseVector {
 
         // Find min and max values
         let min_val = sparse.values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        let max_val = _sparse
+        let max_val = sparse
             .values
             .iter()
             .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -1270,7 +1270,7 @@ impl QuantizedSparseVector {
 
         // Quantize values
         let indices: Vec<u32> = sparse.indices.iter().map(|&i| i as u32).collect();
-        let values: Vec<i8> = _sparse
+        let values: Vec<i8> = sparse
             .values
             .iter()
             .map(|&v| {
@@ -1289,7 +1289,7 @@ impl QuantizedSparseVector {
     }
 
     /// Dequantize back to a regular sparse vector
-    pub fn to_sparse(&self) -> SparseVector {
+    pub fn tosparse(&self) -> SparseVector {
         let indices: Vec<usize> = self.indices.iter().map(|&i| i as usize).collect();
         let values: Vec<f64> = self
             .values
@@ -1300,7 +1300,7 @@ impl QuantizedSparseVector {
             })
             .collect();
 
-        SparseVector::from_indices_values(indices, values, self.size)
+        SparseVector::fromindices_values(indices, values, self.size)
     }
 
     /// Get memory usage in bytes
@@ -1331,7 +1331,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sparse_vector() {
+    fn testsparse_vector() {
         let dense = arr1(&[0.0, 1.0, 0.0, 2.0, 0.0]);
         let sparse = SparseVector::from_dense(&dense);
 
@@ -1343,11 +1343,11 @@ mod tests {
     }
 
     #[test]
-    fn test_sparse_dot_product() {
+    fn testsparse_dot_product() {
         let v1 = SparseVector::from_dense(&arr1(&[1.0, 0.0, 2.0, 0.0]));
         let v2 = SparseVector::from_dense(&arr1(&[0.0, 3.0, 2.0, 0.0]));
 
-        let dot = v1.dot_sparse(&v2).unwrap();
+        let dot = v1.dotsparse(&v2).unwrap();
         assert_eq!(dot, 4.0); // 1*0 + 0*3 + 2*2 + 0*0 = 4
     }
 
@@ -1460,39 +1460,39 @@ mod tests {
     }
 
     #[test]
-    fn test_block_sparse_matrix() {
-        let mut block_sparse = BlockSparseMatrix::new(10, 10, 3);
+    fn test_blocksparse_matrix() {
+        let mut blocksparse = BlockSparseMatrix::new(10, 10, 3);
 
         // Set some values
-        block_sparse.set(0, 0, 1.0).unwrap();
-        block_sparse.set(5, 5, 2.0).unwrap();
-        block_sparse.set(9, 9, 3.0).unwrap();
+        blocksparse.set(0, 0, 1.0).unwrap();
+        blocksparse.set(5, 5, 2.0).unwrap();
+        blocksparse.set(9, 9, 3.0).unwrap();
 
         // Get values
-        assert_eq!(block_sparse.get(0, 0), 1.0);
-        assert_eq!(block_sparse.get(5, 5), 2.0);
-        assert_eq!(block_sparse.get(9, 9), 3.0);
-        assert_eq!(block_sparse.get(3, 3), 0.0);
+        assert_eq!(blocksparse.get(0, 0), 1.0);
+        assert_eq!(blocksparse.get(5, 5), 2.0);
+        assert_eq!(blocksparse.get(9, 9), 3.0);
+        assert_eq!(blocksparse.get(3, 3), 0.0);
 
         // Check memory usage
-        let memory = block_sparse.memory_usage();
+        let memory = blocksparse.memory_usage();
         assert!(memory > 0);
     }
 
     #[test]
-    fn test_quantized_sparse_vector() {
+    fn test_quantizedsparse_vector() {
         let mut sparse = SparseVector::new(10);
         sparse.indices = vec![1, 3, 7];
         // Use values that should quantize better - avoiding very small values
         sparse.values = vec![100.0, 50.0, 200.0];
 
         // Quantize
-        let quantized = QuantizedSparseVector::from_sparse(&sparse);
+        let quantized = QuantizedSparseVector::fromsparse(&sparse);
         assert_eq!(quantized.indices.len(), 3);
         assert_eq!(quantized.values.len(), 3);
 
         // Dequantize
-        let dequantized = quantized.to_sparse();
+        let dequantized = quantized.tosparse();
         assert_eq!(dequantized.nnz(), 3);
 
         // Check values are approximately preserved

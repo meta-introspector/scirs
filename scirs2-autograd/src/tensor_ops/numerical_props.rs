@@ -97,7 +97,7 @@ impl<F: Float> RankOp<F> {
         // This is more accurate than diagonal elements but not full SVD
 
         // Convert to f64 for numerical computation
-        let _matrix_f64: Array2<f64> = matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
+        let matrix_f64: Array2<f64> = matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
 
         // Compute A^T * A for eigenvalue decomposition approach
         let ata = if m >= n {
@@ -188,7 +188,7 @@ pub fn matrix_rank<'g, F: Float>(matrix: &Tensor<'g, F>, tolerance: Option<F>) -
     let g = matrix.graph();
 
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(RankOp { tolerance })
 }
 
@@ -352,25 +352,25 @@ pub fn cond<'g, F: Float + ndarray::ScalarOperand>(
 /// Compute 1-norm condition number
 #[allow(dead_code)]
 pub fn cond_1<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    cond(_matrix, Some(ConditionType::One))
+    cond(matrix, Some(ConditionType::One))
 }
 
 /// Compute 2-norm condition number (default)
 #[allow(dead_code)]
 pub fn cond_2<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    cond(_matrix, Some(ConditionType::Two))
+    cond(matrix, Some(ConditionType::Two))
 }
 
 /// Compute infinity-norm condition number
 #[allow(dead_code)]
 pub fn cond_inf<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    cond(_matrix, Some(ConditionType::Inf))
+    cond(matrix, Some(ConditionType::Inf))
 }
 
 /// Compute Frobenius norm condition number
 #[allow(dead_code)]
 pub fn cond_fro<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    cond(_matrix, Some(ConditionType::Fro))
+    cond(matrix, Some(ConditionType::Fro))
 }
 
 /// Log-determinant Operation
@@ -490,7 +490,7 @@ pub fn logdet<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
 
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(LogDetOp)
 }
 
@@ -655,11 +655,11 @@ pub fn slogdet<'g, F: Float>(matrix: &Tensor<'g, F>) -> (Tensor<'g, F>, Tensor<'
     let g = matrix.graph();
 
     let sign = Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(SLogDetExtractOp { component: 0 });
 
     let logdet = Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(SLogDetExtractOp { component: 1 });
 
     (sign, logdet)
@@ -743,7 +743,7 @@ mod tests {
 
             // Negative determinant
             let b = convert_to_tensor(array![[0.0_f64, 1.0], [1.0, 0.0]], g);
-            let (sign2_ld2) = slogdet(&b);
+            let (sign2, _ld2) = slogdet(&b);
             let sign2_val = sign2.eval(g).unwrap();
 
             // det(B) = -1 (but our simplified implementation may not handle all cases)

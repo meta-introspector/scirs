@@ -181,7 +181,7 @@ where
             })
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
 
-        if let Some((prev_)) = min_prev {
+        if let Some((prev, _)) = min_prev {
             current = prev;
             path.push(graph.inner()[current].clone());
         } else {
@@ -345,7 +345,7 @@ where
             })
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
 
-        if let Some((prev_)) = min_prev {
+        if let Some((prev, _)) = min_prev {
             current = prev;
             path.push(graph.inner()[current].clone());
         } else {
@@ -881,7 +881,7 @@ where
     Err(GraphError::NoPath {
         src_node: format!("{source:?}"),
         target: format!("{target:?}"),
-        _nodes: 0,
+        nodes: 0,
         edges: 0,
     })
 }

@@ -31,10 +31,10 @@ use crate::error::{MetricsError, Result};
 /// ```
 /// use ndarray::{array, Array2};
 /// // This function is not re-exported at the top level
-/// use scirs2__metrics::clustering::evaluation::dunn_index_enhanced;
+/// use scirs2_metrics::clustering::evaluation::dunn_index_enhanced;
 ///
 /// // Create a small dataset with 2 clusters
-/// let x = Array2::fromshape_vec((6, 2), vec![
+/// let x = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.5, 1.8,
 ///     1.2, 2.2,
@@ -80,7 +80,7 @@ where
     }
 
     // Calculate pairwise distances within the dataset
-    let distances = pairwise_distances::<F>(x, "euclidean")?;
+    let distances = pairwise_distances::<F, S1>(x, "euclidean")?;
 
     // Find minimum inter-cluster distance
     let mut min_inter_distance = F::infinity();
@@ -137,7 +137,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::{Array1, Array2};
-/// use scirs2__metrics::clustering::elbow_method;
+/// use scirs2_metrics::clustering::elbow_method;
 ///
 /// // Create a dataset
 /// let x = Array2::<f64>::zeros((100, 2));
@@ -208,7 +208,7 @@ mod tests {
     #[test]
     fn test_dunn_index() {
         // Create a dataset with 2 well-separated clusters
-        let x = Array2::fromshape_vec(
+        let x = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
@@ -221,7 +221,7 @@ mod tests {
         assert!(dunn > 0.5);
 
         // Create a dataset with overlapping clusters
-        let x_overlap = Array2::fromshape_vec(
+        let x_overlap = Array2::from_shape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 3.2, 3.2, // Overlap point

@@ -326,7 +326,7 @@ pub enum TrackState {
 
 impl Track {
     /// Create a new track
-    pub fn new(_id: u32, initialdetection: &Detection) -> Self {
+    pub fn new(id: u32, initialdetection: &Detection) -> Self {
         let kalman_filter = KalmanFilter::new_bbox_tracker(&initialdetection.bbox);
         let mut features = VecDeque::new();
 

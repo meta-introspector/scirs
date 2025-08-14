@@ -49,7 +49,7 @@ impl ReverseVariable {
     /// Create a new variable
     pub fn new(index: usize, value: f64) -> Self {
         Self {
-            index: index,
+            index,
             value,
             grad: 0.0,
         }
@@ -59,7 +59,7 @@ impl ReverseVariable {
     pub fn constant(value: f64) -> Self {
         Self {
             index: usize::MAX, // Special index for constants
-            value: value,
+            value,
             grad: 0.0,
         }
     }
@@ -96,7 +96,7 @@ impl ReverseVariable {
 
     /// Create a variable from a scalar (convenience method)
     pub fn from_scalar(value: f64) -> Self {
-        Self::constant(_value)
+        Self::constant(value)
     }
 
     /// Power operation (simple version without graph context)
@@ -305,7 +305,7 @@ impl ComputationGraph {
     }
 
     /// Perform backpropagation to compute gradients
-    pub fn backward(&mut self, outputvar: &ReverseVariable) -> Result<(), OptimizeError> {
+    pub fn backward(&mut self, output_var: &ReverseVariable) -> Result<(), OptimizeError> {
         // Initialize output gradient to 1
         if !output_var.is_constant() {
             self.gradients[output_var.index] = 1.0;
@@ -799,11 +799,11 @@ where
     for i in 0..n {
         let mut x_plus = x.to_owned();
         x_plus[i] += h;
-        let f_plus = _func(&x_plus.view());
+        let f_plus = func(&x_plus.view());
 
         let mut x_minus = x.to_owned();
         x_minus[i] -= h;
-        let f_minus = _func(&x_minus.view());
+        let f_minus = func(&x_minus.view());
 
         gradient[i] = (f_plus - f_minus) / (2.0 * h);
     }
@@ -823,7 +823,7 @@ where
     let input_vars: Vec<ReverseVariable> = x.iter().map(|&xi| graph.variable(xi)).collect();
 
     // Evaluate function with the computation graph
-    let output = _func(&mut graph, &input_vars);
+    let output = func(&mut graph, &input_vars);
 
     // Perform backpropagation
     graph.backward(&output)?;
@@ -855,13 +855,13 @@ where
                 // Diagonal element: f''(x) = (f(x+h) - 2f(x) + f(x-h)) / h²
                 let mut x_plus = x.to_owned();
                 x_plus[i] += h;
-                let f_plus = _func(&x_plus.view());
+                let f_plus = func(&x_plus.view());
 
-                let f_center = _func(x);
+                let f_center = func(x);
 
                 let mut x_minus = x.to_owned();
                 x_minus[i] -= h;
-                let f_minus = _func(&x_minus.view());
+                let f_minus = func(&x_minus.view());
 
                 hessian[[i, j]] = (f_plus - 2.0 * f_center + f_minus) / (h * h);
             } else {
@@ -873,26 +873,26 @@ where
                     x_pp[i] += h;
                     x_pp[j] += h;
                     #[allow(clippy::similar_names)]
-                    let f_pp = _func(&x_pp.view());
+                    let f_pp = func(&x_pp.view());
 
                     #[allow(clippy::similar_names)]
                     let mut x_pm = x.to_owned();
                     x_pm[i] += h;
                     x_pm[j] -= h;
                     #[allow(clippy::similar_names)]
-                    let f_pm = _func(&x_pm.view());
+                    let f_pm = func(&x_pm.view());
 
                     #[allow(clippy::similar_names)]
                     let mut x_mp = x.to_owned();
                     x_mp[i] -= h;
                     x_mp[j] += h;
                     #[allow(clippy::similar_names)]
-                    let f_mp = _func(&x_mp.view());
+                    let f_mp = func(&x_mp.view());
 
                     let mut x_mm = x.to_owned();
                     x_mm[i] -= h;
                     x_mm[j] -= h;
-                    let f_mm = _func(&x_mm.view());
+                    let f_mm = func(&x_mm.view());
 
                     hessian[[i, j]] = (f_pp - f_pm - f_mp + f_mm) / (4.0 * h * h);
                 }
@@ -917,7 +917,7 @@ where
     for i in 0..n {
         // Create a function that returns the i-th component of the gradient
         let gradient_i_func = |x_val: &ArrayView1<f64>| -> f64 {
-            let grad = reverse_gradient_ad(&_func, x_val).unwrap();
+            let grad = reverse_gradient_ad(&func, x_val).unwrap();
             grad[i]
         };
 
@@ -963,7 +963,7 @@ where
 
 /// Check if reverse mode is preferred for the given problem dimensions
 #[allow(dead_code)]
-pub fn is_reverse_mode_efficient(_input_dim: usize, outputdim: usize) -> bool {
+pub fn is_reverse_mode_efficient(_input_dim: usize, output_dim: usize) -> bool {
     // Reverse mode is efficient when output dimension is small
     // Cost is O(output_dim * cost_of_function)
     output_dim <= 10 || (output_dim <= _input_dim && output_dim <= 20)

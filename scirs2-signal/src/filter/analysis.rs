@@ -405,7 +405,7 @@ pub fn find_poles_zeros(b: &[f64], a: &[f64]) -> SignalResult<(Vec<Complex64>, V
 /// ```
 #[allow(dead_code)]
 pub fn compute_q_factor(b: &[f64], a: &[f64], numpoints: usize) -> SignalResult<f64> {
-    let analysis = analyze_filter(b, a, Some(num_points))?;
+    let analysis = analyze_filter(b, a, Some(numpoints))?;
 
     // Find the peak frequency
     let max_mag = analysis.magnitude.iter().fold(0.0f64, |a, &b| a.max(b));
@@ -452,10 +452,10 @@ pub fn compute_q_factor(b: &[f64], a: &[f64], numpoints: usize) -> SignalResult<
 
 /// Find the frequency where magnitude drops to a specific dB level
 #[allow(dead_code)]
-fn find_cutoff_frequency(_frequencies: &[f64], magnitude_db: &[f64], targetdb: f64) -> f64 {
+fn find_cutoff_frequency(frequencies: &[f64], magnitude_db: &[f64], targetdb: f64) -> f64 {
     // Find the index where magnitude first drops below target
     for (i, &mag_db) in magnitude_db.iter().enumerate() {
-        if mag_db <= target_db {
+        if mag_db <= targetdb {
             if i == 0 {
                 return frequencies[0];
             }
@@ -469,9 +469,9 @@ fn find_cutoff_frequency(_frequencies: &[f64], magnitude_db: &[f64], targetdb: f
                 return f1;
             }
 
-            let t = (target_db - m1) / (m2 - m1);
+            let t = (targetdb - m1) / (m2 - m1);
             return f1 + t * (f2 - f1);
         }
     }
-    frequencies[_frequencies.len() - 1]
+    frequencies[frequencies.len() - 1]
 }

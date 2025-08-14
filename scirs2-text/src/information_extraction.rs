@@ -522,7 +522,7 @@ impl RelationExtractor {
 
     /// Add a relation pattern
     pub fn add_relation(&mut self, relationtype: String, pattern: Regex) {
-        self.relation_patterns.push((relation_type, pattern));
+        self.relation_patterns.push((relationtype, pattern));
     }
 
     /// Extract relations from text
@@ -970,7 +970,7 @@ impl ConfidenceScorer {
         feature_weights.insert("length_score".to_string(), 0.1);
         feature_weights.insert("position_score".to_string(), 0.1);
 
-        Self { feature_weights }
+        Self { featureweights: feature_weights }
     }
 
     /// Calculate confidence score for an entity
@@ -986,7 +986,7 @@ impl ConfidenceScorer {
         features.insert("pattern_match".to_string(), pattern_score);
 
         // Context score (surrounding words)
-        let context_score = self.calculate_context_score(entity, text, context_window);
+        let context_score = self.calculate_context_score(entity, text, contextwindow);
         features.insert("context_score".to_string(), context_score);
 
         // Length score (longer entities tend to be more reliable)
@@ -1625,7 +1625,7 @@ mod tests {
         let phrases = extractor.extract(text, &tokenizer).unwrap();
 
         assert!(!phrases.is_empty());
-        assert!(phrases.iter().any(|(p_)| p.contains("machine learning")));
+        assert!(phrases.iter().any(|(p, _)| p.contains("machine learning")));
     }
 
     #[test]

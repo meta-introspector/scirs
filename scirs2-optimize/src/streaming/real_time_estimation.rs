@@ -286,7 +286,7 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
 
     /// Check if update should be skipped due to time constraints
     fn should_skip_for_timing(&self, starttime: Instant) -> bool {
-        start_time.elapsed() > self.max_processing_time
+        starttime.elapsed() > self.max_processing_time
     }
 }
 
@@ -300,8 +300,8 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for RealTimeEstimator<T> 
         }
 
         let old_parameters = self.parameters.clone();
-        let features = &data_point.features;
-        let target = data_point.target;
+        let features = &datapoint.features;
+        let target = datapoint.target;
 
         // Apply method-specific update
         match self.method {
@@ -325,7 +325,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for RealTimeEstimator<T> 
         }
 
         // Update statistics
-        let loss = self.objective.evaluate(&self.parameters.view(), data_point);
+        let loss = self.objective.evaluate(&self.parameters.view(), datapoint);
         self.stats.points_processed += 1;
         self.stats.updates_performed += 1;
         self.stats.current_loss = loss;
@@ -375,7 +375,7 @@ pub fn recursive_least_squares<T: StreamingObjective>(
     initial_uncertainty: Option<f64>,
 ) -> RealTimeEstimator<T> {
     let config = config.unwrap_or_default();
-    let _uncertainty = initial_uncertainty.unwrap_or(1000.0);
+    let uncertainty = initial_uncertainty.unwrap_or(1000.0);
 
     RealTimeEstimator::new(
         initial_parameters,

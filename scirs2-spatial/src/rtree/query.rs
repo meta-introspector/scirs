@@ -202,7 +202,7 @@ impl<T: Clone> RTree<T> {
         }
 
         // Perform the join
-        self.spatial_join_internal(&self.root, &_other.root, &predicate, &mut results)?;
+        self.spatial_join_internal(&self.root, &other.root, &predicate, &mut results)?;
 
         Ok(results)
     }
@@ -236,7 +236,7 @@ impl<T: Clone> RTree<T> {
                                 child1,
                                 &Node {
                                     entries: vec![entry2.clone()],
-                                    is_leaf: true,
+                                    _isleaf: true,
                                     level: 0,
                                 },
                                 predicate,
@@ -248,7 +248,7 @@ impl<T: Clone> RTree<T> {
                             self.spatial_join_internal(
                                 &Node {
                                     entries: vec![entry1.clone()],
-                                    is_leaf: true,
+                                    _isleaf: true,
                                     level: 0,
                                 },
                                 child2,

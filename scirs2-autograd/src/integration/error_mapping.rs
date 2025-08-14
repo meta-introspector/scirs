@@ -127,7 +127,7 @@ impl ErrorMapper {
             }
         }
 
-        let summary = self.generate_error_summary_from_indices(&errors, &by_category);
+        let summary = ErrorMapper::generate_error_summary_from_indices(&errors, &by_category);
 
         AggregatedError {
             errors,
@@ -142,7 +142,7 @@ impl ErrorMapper {
         let enriched = self.enrich_error(error.clone());
 
         ErrorReport {
-            error_id: self.generate_error_id(&enriched),
+            error_id: ErrorMapper::generate_error_id(&enriched),
             timestamp: std::time::SystemTime::now(),
             error_type: self.classify_error(error),
             severity: self.assess_severity(error),
@@ -276,7 +276,7 @@ impl ErrorMapper {
         let mut summary = String::new();
         summary.push_str(&format!("Found {} error categories:\n", by_category.len()));
 
-        for (_category, errors) in by_category {
+        for (category, errors) in by_category {
             summary.push_str(&format!("  {}: {} errors\n", category, errors.len()));
         }
 
@@ -290,7 +290,7 @@ impl ErrorMapper {
         let mut summary = String::new();
         summary.push_str(&format!("Found {} error categories:\n", by_category.len()));
 
-        for (_category, error_indices) in by_category {
+        for (category, error_indices) in by_category {
             summary.push_str(&format!(
                 "  {}: {} _errors\n",
                 category,
@@ -378,7 +378,7 @@ pub struct ErrorContext {
 
 impl ErrorContext {
     /// Create new error context
-    pub fn new(_modulename: String) -> Self {
+    pub fn new(module_name: String) -> Self {
         Self {
             module_name,
             function_name: None,
@@ -388,7 +388,7 @@ impl ErrorContext {
     }
 
     /// Add function name
-    pub fn with_function(mut self, functionname: String) -> Self {
+    pub fn with_function(mut self, function_name: String) -> Self {
         self.function_name = Some(function_name);
         self
     }
@@ -488,7 +488,7 @@ pub struct DocumentationLink {
 struct NeuralErrorMapping;
 
 impl ErrorMapping for NeuralErrorMapping {
-    fn map_error(&self, sourceerror: &dyn std::error::Error) -> IntegrationError {
+    fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
         let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("tensor") || error_str.contains("shape") {
@@ -507,7 +507,7 @@ impl ErrorMapping for NeuralErrorMapping {
 struct OptimErrorMapping;
 
 impl ErrorMapping for OptimErrorMapping {
-    fn map_error(&self, sourceerror: &dyn std::error::Error) -> IntegrationError {
+    fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
         let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("parameter") || error_str.contains("optimizer") {
@@ -528,7 +528,7 @@ impl ErrorMapping for OptimErrorMapping {
 struct LinalgErrorMapping;
 
 impl ErrorMapping for LinalgErrorMapping {
-    fn map_error(&self, sourceerror: &dyn std::error::Error) -> IntegrationError {
+    fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
         let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("matrix") || error_str.contains("dimension") {
@@ -549,7 +549,7 @@ impl ErrorMapping for LinalgErrorMapping {
 struct CoreErrorMapping;
 
 impl ErrorMapping for CoreErrorMapping {
-    fn map_error(&self, sourceerror: &dyn std::error::Error) -> IntegrationError {
+    fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
         let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("config") {
@@ -671,7 +671,7 @@ pub fn push_error_context(context: ErrorContext) -> Result<(), IntegrationError>
     let mut mapper_guard = mapper.lock().map_err(|_| {
         IntegrationError::ModuleCompatibility("Failed to acquire error mapper lock".to_string())
     })?;
-    mapper_guard.push_context(_context);
+    mapper_guard.push_context(context);
     Ok(())
 }
 
@@ -690,9 +690,9 @@ pub fn pop_error_context() -> Result<Option<ErrorContext>, IntegrationError> {
 pub fn generate_error_report(error: &IntegrationError) -> Result<ErrorReport, IntegrationError> {
     let mapper = init_error_mapper();
     let mapper_guard = mapper.lock().map_err(|_| {
-        IntegrationError::ModuleCompatibility("Failed to acquire _error mapper lock".to_string())
+        IntegrationError::ModuleCompatibility("Failed to acquire error mapper lock".to_string())
     })?;
-    Ok(mapper_guard.generate_report(_error))
+    Ok(mapper_guard.generate_report(error))
 }
 
 /// Attempt error recovery

@@ -49,7 +49,7 @@ impl<A: Float + ScalarOperand + Debug> SGD<A> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learningrate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
             learning_rate,
             momentum: A::zero(),
@@ -65,7 +65,7 @@ impl<A: Float + ScalarOperand + Debug> SGD<A> {
     /// * `learning_rate` - The learning rate for parameter updates
     /// * `momentum` - The momentum factor (0.0 means no momentum)
     /// * `weight_decay` - The weight decay factor (L2 regularization)
-    pub fn new_with_config(_learning_rate: A, momentum: A, weightdecay: A) -> Self {
+    pub fn new_with_config(learning_rate: A, momentum: A, weight_decay: A) -> Self {
         Self {
             learning_rate: learning_rate,
             momentum,
@@ -109,7 +109,7 @@ impl<A: Float + ScalarOperand + Debug> SGD<A> {
     /// # Arguments
     ///
     /// * `weight_decay` - The weight decay factor (L2 regularization)
-    pub fn set_weight_decay(&mut self, weightdecay: A) -> &mut Self {
+    pub fn set_weight_decay(&mut self, weight_decay: A) -> &mut Self {
         self.weight_decay = weight_decay;
         self
     }
@@ -119,7 +119,7 @@ impl<A: Float + ScalarOperand + Debug> SGD<A> {
     /// # Arguments
     ///
     /// * `weight_decay` - The weight decay factor (L2 regularization)
-    pub fn with_weight_decay(mut self, weightdecay: A) -> Self {
+    pub fn with_weight_decay(mut self, weight_decay: A) -> Self {
         self.weight_decay = weight_decay;
         self
     }
@@ -181,7 +181,7 @@ where
         self.learning_rate
     }
 
-    fn set_learning_rate(&mut self, learningrate: A) {
+    fn set_learning_rate(&mut self, learning_rate: A) {
         self.learning_rate = learning_rate;
     }
 }

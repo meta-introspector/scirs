@@ -342,7 +342,7 @@ struct GradientInfo<'graph, F: Float> {
 
 impl<'graph, F: Float> GradientInfo<'graph, F> {
     #[inline]
-    fn new(_on_backproppath: bool) -> GradientInfo<'graph, F> {
+    fn new(on_backprop_path: bool) -> GradientInfo<'graph, F> {
         GradientInfo {
             on_backprop_path,
             gradients: SmallVec::new(),
@@ -384,7 +384,7 @@ where
     A: AsRef<Tensor<'graph, F>>,
 {
     for x in xs {
-        if x.as_ref().id == _candidate {
+        if x.as_ref().id == candidate {
             return true;
         }
     }

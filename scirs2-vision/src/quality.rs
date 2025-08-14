@@ -35,7 +35,7 @@ use statrs::statistics::Statistics;
 /// # }
 /// ```
 #[allow(dead_code)]
-pub fn psnr(_img1: &DynamicImage, img2: &DynamicImage, maxvalue: f32) -> Result<f32> {
+pub fn psnr(img1: &DynamicImage, img2: &DynamicImage, maxvalue: f32) -> Result<f32> {
     let gray1 = img1.to_luma8();
     let gray2 = img2.to_luma8();
 
@@ -230,7 +230,7 @@ fn gaussian_window(size: usize, sigma: f32) -> Array2<f32> {
 
 /// Compute weighted mean
 #[allow(dead_code)]
-fn weighted_mean(_data: &ndarray::ArrayView2<f32>, weights: &Array2<f32>, sumweights: f32) -> f32 {
+fn weighted_mean(data: &ndarray::ArrayView2<f32>, weights: &Array2<f32>, sumweights: f32) -> f32 {
     let mut sum = 0.0;
     for ((y, x), &value) in data.indexed_iter() {
         sum += value * weights[[y, x]];

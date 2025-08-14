@@ -97,8 +97,8 @@ pub mod test_functions {
     }
 
     /// Get bounds for a test function
-    pub fn get_bounds(_functionname: &str, dimensions: usize) -> Vec<(f64, f64)> {
-        match _function_name {
+    pub fn get_bounds(function_name: &str, dimensions: usize) -> Vec<(f64, f64)> {
+        match function_name {
             "rosenbrock" => vec![(-5.0, 5.0); dimensions],
             "sphere" => vec![(-5.12, 5.12); dimensions],
             "rastrigin" => vec![(-5.12, 5.12); dimensions],
@@ -111,8 +111,8 @@ pub mod test_functions {
     }
 
     /// Get global optimum for a test function
-    pub fn get_global_optimum(_functionname: &str, dimensions: usize) -> (Array1<f64>, f64) {
-        match _function_name {
+    pub fn get_global_optimum(function_name: &str, dimensions: usize) -> (Array1<f64>, f64) {
+        match function_name {
             "rosenbrock" => (Array1::ones(dimensions), 0.0),
             "sphere" => (Array1::zeros(dimensions), 0.0),
             "rastrigin" => (Array1::zeros(dimensions), 0.0),
@@ -147,7 +147,7 @@ pub struct TestProblem {
 impl TestProblem {
     /// Create a new test problem
     pub fn new(name: &str, dimensions: usize) -> Self {
-        let function = match _name {
+        let function = match name {
             "rosenbrock" => test_functions::rosenbrock,
             "sphere" => test_functions::sphere,
             "rastrigin" => test_functions::rastrigin,
@@ -158,10 +158,9 @@ impl TestProblem {
             _ => test_functions::sphere,
         };
 
-        let bounds = test_functions::get_bounds(_name, dimensions);
-        let (global_optimum, global_minimum) =
-            test_functions::get_global_optimum(_name, dimensions);
-        let characteristics = ProblemCharacteristics::from_function_name(_name);
+        let bounds = test_functions::get_bounds(name, dimensions);
+        let (global_optimum, global_minimum) = test_functions::get_global_optimum(name, dimensions);
+        let characteristics = ProblemCharacteristics::from_function_name(name);
 
         Self {
             name: name.to_string(),
@@ -212,7 +211,7 @@ pub struct ProblemCharacteristics {
 
 impl ProblemCharacteristics {
     fn from_function_name(name: &str) -> Self {
-        match _name {
+        match name {
             "sphere" => Self {
                 multimodal: false,
                 separable: true,
@@ -459,7 +458,7 @@ impl BenchmarkResults {
     }
 
     /// Save results to files
-    pub fn save_results(&self, outputdir: &Path) -> ScirsResult<()> {
+    pub fn save_results(&self, output_dir: &Path) -> ScirsResult<()> {
         std::fs::create_dir_all(output_dir)?;
 
         // Save summary report
@@ -479,7 +478,7 @@ impl BenchmarkResults {
     }
 
     /// Save results in CSV format
-    fn save_csv_results(&self, outputdir: &Path) -> ScirsResult<()> {
+    fn save_csv_results(&self, output_dir: &Path) -> ScirsResult<()> {
         let csv_path = output_dir.join("benchmark_results.csv");
         let mut csv_content = String::from("problem,dimensions,run_id,algorithm,success,final_value,function_evaluations,runtime_ms,distance_to_optimum\n");
 
@@ -503,7 +502,7 @@ impl BenchmarkResults {
     }
 
     /// Generate visualization plots
-    fn generate_visualizations(&self, outputdir: &Path) -> ScirsResult<()> {
+    fn generate_visualizations(&self, output_dir: &Path) -> ScirsResult<()> {
         let viz_dir = output_dir.join("visualizations");
         std::fs::create_dir_all(&viz_dir)?;
 
@@ -571,14 +570,14 @@ impl BenchmarkSystem {
     pub fn new(config: BenchmarkConfig) -> Self {
         let mut test_problems = Vec::new();
 
-        for problem_name in &_config.test_problems {
-            for &dim in &_config.dimensions {
+        for problem_name in &config.test_problems {
+            for &dim in &config.dimensions {
                 test_problems.push(TestProblem::new(problem_name, dim));
             }
         }
 
         Self {
-            config: config,
+            config,
             test_problems,
         }
     }

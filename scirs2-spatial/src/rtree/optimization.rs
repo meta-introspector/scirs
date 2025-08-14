@@ -25,7 +25,7 @@ impl<T: Clone> RTree<T> {
         // if we were creating a new R-tree
         // let _ndim = self.ndim();
         // let _min_entries = self.min_entries;
-        // let _max_entries = self.max_entries;
+        // let _max_entries = self.maxentries;
 
         // Save current size to check at the end
         let size = self.size();
@@ -116,7 +116,7 @@ impl<T: Clone> RTree<T> {
         }
 
         // Convert points to leaf _entries
-        let mut _entries: Vec<Entry<T>> = points
+        let mut entries: Vec<Entry<T>> = points
             .into_iter()
             .enumerate()
             .map(|(index, (point, data))| Entry::Leaf {
@@ -128,7 +128,7 @@ impl<T: Clone> RTree<T> {
 
         // Build the tree recursively
         rtree.root = rtree.str_build_node(&mut entries, 0)?;
-        rtree.root.is_leaf =
+        rtree.root._isleaf =
             rtree.root.entries.is_empty() || matches!(rtree.root.entries[0], Entry::Leaf { .. });
 
         // Update tree height
@@ -149,14 +149,14 @@ impl<T: Clone> RTree<T> {
         }
 
         // If we can fit all _entries in one node, create it
-        if n <= self.max_entries {
+        if n <= self.maxentries {
             let mut node = Node::new(level == 0, level);
-            node.entries = std::mem::take(_entries);
+            node.entries = std::mem::take(entries);
             return Ok(node);
         }
 
         // Calculate the number of leaf nodes needed
-        let leaf_capacity = self.max_entries;
+        let leaf_capacity = self.maxentries;
         let num_leaves = n.div_ceil(leaf_capacity);
 
         // Calculate the number of slices along each dimension
@@ -191,7 +191,7 @@ impl<T: Clone> RTree<T> {
                 // These are leaf entries, group them into leaf nodes
                 while !slice_entries.is_empty() {
                     let mut node = Node::new(true, 0);
-                    let take_count = slice_entries.len().min(self.max_entries);
+                    let take_count = slice_entries.len().min(self.maxentries);
                     node.entries = slice_entries.drain(..take_count).collect();
 
                     if let Ok(Some(mbr)) = node.mbr() {
@@ -217,7 +217,7 @@ impl<T: Clone> RTree<T> {
         entries.clear();
 
         // If we have too many children, build another level
-        if children.len() > self.max_entries {
+        if children.len() > self.maxentries {
             self.str_build_node(&mut children, level + 1)
         } else {
             let mut node = Node::new(false, level + 1);
@@ -229,7 +229,7 @@ impl<T: Clone> RTree<T> {
     /// Calculate the height of the tree
     #[allow(clippy::only_used_in_recursion)]
     fn calculate_height(&self, node: &Node<T>) -> usize {
-        if node.is_leaf {
+        if node._isleaf {
             1
         } else if let Some(Entry::NonLeaf { child, .. }) = node.entries.first() {
             1 + self.calculate_height(child)

@@ -638,7 +638,7 @@ impl NeuralFeatureMatcher {
     /// Configure matcher parameters
     pub fn with_params(mut self, distance_threshold: f32, ratiothreshold: f32) -> Self {
         self.distance_threshold = distance_threshold;
-        self.ratio_threshold = ratio_threshold;
+        self.ratio_threshold = ratiothreshold;
         self
     }
 
@@ -740,7 +740,7 @@ impl AttentionFeatureMatcher {
     /// Create a new attention-based feature matcher
     pub fn new(_attention_dim: usize, numheads: usize) -> Self {
         Self {
-            attention_dim,
+            attention_dim: _attention_dim,
             numheads,
             use_gpu: true,
         }

@@ -144,7 +144,7 @@ pub fn waverec(coeffs: &[Vec<f64>], wavelet: Wavelet) -> SignalResult<Vec<f64>> 
 
     // Case of no transform (just the signal)
     if coeffs.len() == 1 {
-        return Ok(_coeffs[0].clone());
+        return Ok(coeffs[0].clone());
     }
 
     // Start with the coarsest approximation
@@ -155,7 +155,7 @@ pub fn waverec(coeffs: &[Vec<f64>], wavelet: Wavelet) -> SignalResult<Vec<f64>> 
 
     // Reconstruct each level
     for i in 0..n_levels {
-        let detail = &_coeffs[i + 1];
+        let detail = &coeffs[i + 1];
 
         // In some cases, approximation and detail coefficients might be off by 1 or 2
         // elements due to boundary handling and padding. We'll adjust them to make them equal.

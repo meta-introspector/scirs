@@ -174,7 +174,7 @@ where
             if iteration % 100 == 0 {
                 let grad_norm = gradient.mapv(|g| g * g).sum().sqrt();
                 let m_norm = m_hat.mapv(|g: f64| g * g).sum().sqrt();
-                let v_mean = v_final.mean().unwrap_or(0.0);
+                let v_mean = v_final.view().mean();
                 println!("  Iteration {}: loss = {:.6e}, |grad| = {:.3e}, |m| = {:.3e}, <v> = {:.3e}, lr = {:.3e}",
                     iteration, current_loss, grad_norm, m_norm, v_mean, current_lr);
             }

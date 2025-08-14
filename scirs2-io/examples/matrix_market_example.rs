@@ -133,7 +133,7 @@ fn create_dense_matrix_example() -> Result<()> {
 
     // Create a 3x3 dense matrix
     #[rustfmt::skip]
-    let data = Array2::fromshape_vec(
+    let data = Array2::from_shape_vec(
         (3, 3),
         vec![
             1.0, 2.0, 3.0,  // First row

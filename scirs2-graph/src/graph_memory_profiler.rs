@@ -460,12 +460,12 @@ impl AdvancedMemoryProfiler {
 
     /// Estimate workspace memory for an algorithm
     fn estimate_workspace_memory(&self, algorithmname: &str) -> usize {
-        match algorithm_name {
-            _name if name.contains("pagerank") => 1024 * 1024, // 1MB for PageRank workspace
-            _name if name.contains("community") => 2048 * 1024, // 2MB for community detection
-            _name if name.contains("centrality") => 512 * 1024, // 512KB for centrality
-            _name if name.contains("shortest") => 1536 * 1024, // 1.5MB for shortest paths
-            _ => 256 * 1024,                                    // 256KB default
+        match algorithmname {
+            name if name.contains("pagerank") => 1024 * 1024, // 1MB for PageRank workspace
+            name if name.contains("community") => 2048 * 1024, // 2MB for community detection
+            name if name.contains("centrality") => 512 * 1024, // 512KB for centrality
+            name if name.contains("shortest") => 1536 * 1024, // 1.5MB for shortest paths
+            _ => 256 * 1024,                                   // 256KB default
         }
     }
 
@@ -482,7 +482,7 @@ impl AdvancedMemoryProfiler {
             return 1.0;
         }
 
-        let memory_growth_ratio = final_memory as f64 / initial_memory as f64;
+        let memory_growth_ratio = finalmemory as f64 / initial_memory as f64;
         // Efficiency decreases with _memory growth
         1.0 / memory_growth_ratio.max(1.0)
     }
@@ -1098,7 +1098,7 @@ pub fn generate_profiled_large_graph(
     profiler.record_allocation("graph_generation", num_nodes * 8, "_nodes", true);
 
     let mut graph = crate::base::Graph::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Add _nodes with memory tracking
     const NODE_BATCH_SIZE: usize = 25_000;
@@ -1145,7 +1145,7 @@ pub fn generate_profiled_large_graph(
 
         if source != target {
             let weight: f64 = rng.random();
-            if graph.add_edge(source..target, weight).is_ok() {
+            if graph.add_edge(source, target, weight).is_ok() {
                 edges_added += 1;
 
                 if edges_added % 100_000 == 0 {

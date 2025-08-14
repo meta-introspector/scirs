@@ -44,20 +44,20 @@ impl LengthFilter {
     /// Create a new length filter
     pub fn new(_min_length: usize, maxlength: usize) -> Self {
         Self {
-            min_length,
-            max_length,
+            min_length: _min_length,
+            max_length: maxlength,
         }
     }
 
     /// Set minimum token length
     pub fn with_min_length(mut self, minlength: usize) -> Self {
-        self.min_length = min_length;
+        self.min_length = minlength;
         self
     }
 
     /// Set maximum token length
     pub fn with_max_length(mut self, maxlength: usize) -> Self {
-        self.max_length = max_length;
+        self.max_length = maxlength;
         self
     }
 }
@@ -119,13 +119,13 @@ impl FrequencyFilter {
 
     /// Create a new frequency filter from token counts
     pub fn from_counts(_token_counts: HashMap<String, usize>, mincount: usize) -> Self {
-        let total_count = token_counts.values().sum();
+        let total_count = _token_counts.values().sum();
 
         Self {
-            min_count,
+            min_count: mincount,
             max_count: None,
             max_freq: None,
-            token_counts,
+            token_counts: _token_counts,
             total_count,
         }
     }
@@ -158,19 +158,19 @@ impl FrequencyFilter {
 
     /// Set the maximum count threshold
     pub fn with_max_count(mut self, maxcount: usize) -> Self {
-        self.max_count = Some(max_count);
+        self.max_count = Some(maxcount);
         self
     }
 
     /// Set the maximum frequency threshold (0.0 to 1.0)
     pub fn with_max_freq(mut self, maxfreq: f64) -> Result<Self> {
-        if !(0.0..=1.0).contains(&max_freq) {
+        if !(0.0..=1.0).contains(&maxfreq) {
             return Err(TextError::InvalidInput(
                 "max_freq must be between 0.0 and 1.0".to_string(),
             ));
         }
 
-        self.max_freq = Some(max_freq);
+        self.max_freq = Some(maxfreq);
         Ok(self)
     }
 }
@@ -225,11 +225,11 @@ impl RegexFilter {
     pub fn new(_pattern: &str, keepmatching: bool) -> Result<Self> {
         match Regex::new(_pattern) {
             Ok(regex) => Ok(Self {
-                _pattern: regex,
-                keep_matching,
+                pattern: regex,
+                keep_matching: keepmatching,
             }),
             Err(e) => Err(TextError::InvalidInput(format!(
-                "Invalid regex _pattern: {e}"
+                "Invalid regex pattern: {e}"
             ))),
         }
     }
@@ -261,8 +261,8 @@ impl StopwordsFilter {
     /// Create a new stopwords filter
     pub fn new(_stopwords: Vec<String>, removestopwords: bool) -> Self {
         Self {
-            _stopwords: stopwords.into_iter().collect(),
-            remove_stopwords,
+            stopwords: _stopwords.into_iter().collect(),
+            remove_stopwords: removestopwords,
         }
     }
 
@@ -271,7 +271,7 @@ impl StopwordsFilter {
         use std::fs::File;
         use std::io::{BufRead, BufReader};
 
-        let file = File::open(_path).map_err(|e| TextError::IoError(e.to_string()))?;
+        let file = File::open(path).map_err(|e| TextError::IoError(e.to_string()))?;
         let reader = BufReader::new(file);
 
         let mut stopwords = HashSet::new();
@@ -407,7 +407,7 @@ where
 {
     /// Create a new custom filter with the given predicate
     pub fn new(predicate: F) -> Self {
-        Self { _predicate }
+        Self { predicate }
     }
 }
 

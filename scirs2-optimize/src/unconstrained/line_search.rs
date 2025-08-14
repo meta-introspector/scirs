@@ -98,7 +98,7 @@ where
             );
         }
 
-        let grad_new = gradfun(&x_new.view());
+        let grad_new = grad_fun(&x_new.view());
         let dphi = grad_new.dot(direction);
 
         if dphi.abs() <= -c2 * dphi0 {
@@ -153,7 +153,7 @@ where
             alpha_hi = alpha;
             _phi_hi = phi;
         } else {
-            let grad_new = gradfun(&x_new.view());
+            let grad_new = grad_fun(&x_new.view());
             let dphi = grad_new.dot(direction);
 
             if dphi.abs() <= -c2 * dphi0 {
@@ -262,7 +262,7 @@ mod tests {
         let direction = Array1::from_vec(vec![-1.0, -1.0]);
         let grad = Array1::from_vec(vec![2.0, 2.0]);
 
-        let (alpha_f_new) = backtracking_line_search(
+        let (alpha, _f_new) = backtracking_line_search(
             &mut quadratic,
             &x.view(),
             f0,

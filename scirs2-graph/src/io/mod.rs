@@ -77,13 +77,13 @@ where
     P: AsRef<Path>,
 {
     match format {
-        GraphFormat::EdgeList => read_edge_list_format(_path, weighted),
-        GraphFormat::AdjacencyList => read_adjacency_list_format(_path, weighted),
-        GraphFormat::Dot => read_dot_format(_path, weighted),
-        GraphFormat::Json => read_json_format(_path, weighted),
-        GraphFormat::GraphML => read_graphml_format(_path, weighted),
-        GraphFormat::Gml => read_gml_format(_path, weighted),
-        GraphFormat::MatrixMarket => read_matrix_market_format(_path, weighted),
+        GraphFormat::EdgeList => read_edge_list_format(path, weighted),
+        GraphFormat::AdjacencyList => read_adjacency_list_format(path, weighted),
+        GraphFormat::Dot => read_dot_format(path, weighted),
+        GraphFormat::Json => read_json_format(path, weighted),
+        GraphFormat::GraphML => read_graphml_format(path, weighted),
+        GraphFormat::Gml => read_gml_format(path, weighted),
+        GraphFormat::MatrixMarket => read_matrix_market_format(path, weighted),
     }
 }
 
@@ -105,13 +105,13 @@ where
     P: AsRef<Path>,
 {
     match format {
-        GraphFormat::EdgeList => read_edge_list_format_digraph(_path, weighted),
-        GraphFormat::AdjacencyList => read_adjacency_list_format_digraph(_path, weighted),
-        GraphFormat::Dot => read_dot_format_digraph(_path, weighted),
-        GraphFormat::Json => read_json_format_digraph(_path, weighted),
-        GraphFormat::GraphML => read_graphml_format_digraph(_path, weighted),
-        GraphFormat::Gml => read_gml_format_digraph(_path, weighted),
-        GraphFormat::MatrixMarket => read_matrix_market_format_digraph(_path, weighted),
+        GraphFormat::EdgeList => read_edge_list_format_digraph(path, weighted),
+        GraphFormat::AdjacencyList => read_adjacency_list_format_digraph(path, weighted),
+        GraphFormat::Dot => read_dot_format_digraph(path, weighted),
+        GraphFormat::Json => read_json_format_digraph(path, weighted),
+        GraphFormat::GraphML => read_graphml_format_digraph(path, weighted),
+        GraphFormat::Gml => read_gml_format_digraph(path, weighted),
+        GraphFormat::MatrixMarket => read_matrix_market_format_digraph(path, weighted),
     }
 }
 

@@ -28,13 +28,13 @@ pub struct QLearningOptimizer {
 
 impl QLearningOptimizer {
     /// Create new Q-learning optimizer
-    pub fn new(_config: RLOptimizationConfig, numparams: usize) -> Self {
+    pub fn new(config: RLOptimizationConfig, numparams: usize) -> Self {
         let exploration_rate = config.exploration_rate;
         Self {
-            config: config,
+            config,
             q_table: HashMap::new(),
             exploration_rate,
-            best_params: Array1::zeros(num_params),
+            best_params: Array1::zeros(numparams),
             best_objective: f64::INFINITY,
         }
     }
@@ -104,7 +104,7 @@ impl RLOptimizer for QLearningOptimizer {
             // Greedy action
             let actions = self.get_possible_actions();
             let mut best_action = actions[0].clone();
-            let mut best_q = self.get_q_value(state..&best_action);
+            let mut best_q = self.get_q_value(state, &best_action);
 
             for action in &actions[1..] {
                 let q_value = self.get_q_value(state, action);

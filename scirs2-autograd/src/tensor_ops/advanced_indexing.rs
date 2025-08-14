@@ -123,7 +123,7 @@ impl<F: Float> Op<F> for TakeOp {
         let axis_size = datashape[axis];
 
         // Collect indices as integers
-        let index_values: Result<Vec<usize>> = indices_view
+        let index_values: Result<Vec<usize>, OpError> = indices_view
             .iter()
             .map(|&idx| {
                 let idx_int = idx
@@ -409,7 +409,7 @@ impl<F: Float> Op<F> for AdvancedGatherOp {
 pub fn boolean_mask<'g, F: Float>(data: &Tensor<'g, F>, mask: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = data.graph();
     Tensor::builder(g)
-        .append_input(_data, false)
+        .append_input(data, false)
         .append_input(mask, false)
         .build(BooleanMaskOp)
 }

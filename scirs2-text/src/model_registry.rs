@@ -91,10 +91,10 @@ impl ModelMetadata {
     /// Create new model metadata
     pub fn new(_id: String, name: String, modeltype: ModelType) -> Self {
         Self {
-            id,
+            id: _id,
             name,
             version: "1.0.0".to_string(),
-            model_type,
+            model_type: modeltype,
             description: String::new(),
             languages: vec!["en".to_string()],
             size_bytes: 0,
@@ -210,7 +210,7 @@ impl ModelRegistry {
         }
 
         let mut registry = Self {
-            registry_dir,
+            registry_dir: registry_dir.as_ref().to_path_buf(),
             models: HashMap::new(),
             model_cache: HashMap::new(),
             max_cache_size: 10, // Default cache size
@@ -259,7 +259,7 @@ impl ModelRegistry {
 
     /// Load model metadata from directory
     fn load_model_metadata(&self, modeldir: &Path) -> Result<ModelMetadata> {
-        let metadata_file = model_dir.join("metadata.json");
+        let metadata_file = modeldir.join("metadata.json");
         if !metadata_file.exists() {
             return Err(TextError::InvalidInput(format!(
                 "Metadata file not found: {}",
@@ -284,7 +284,7 @@ impl ModelRegistry {
         #[cfg(not(feature = "serde-support"))]
         {
             // Fallback when serde is not available
-            let model_id = model_dir
+            let model_id = modeldir
                 .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or("unknown")
@@ -295,7 +295,7 @@ impl ModelRegistry {
                 format!("Model {model_id}"),
                 ModelType::Custom("unknown".to_string()),
             )
-            .with_file_path(model_dir.to_path_buf()))
+            .with_file_path(modeldir.to_path_buf()))
         }
     }
 
@@ -328,7 +328,7 @@ impl ModelRegistry {
 
     /// Save model data to directory
     fn save_model_data(&self, modeldir: &Path, data: &SerializableModelData) -> Result<()> {
-        let data_file = model_dir.join("model.json");
+        let data_file = modeldir.join("model.json");
 
         #[cfg(feature = "serde-support")]
         {
@@ -353,7 +353,7 @@ impl ModelRegistry {
 
     /// Save model metadata to directory
     fn save_model_metadata(&self, modeldir: &Path, metadata: &ModelMetadata) -> Result<()> {
-        let metadata_file = model_dir.join("metadata.json");
+        let metadata_file = modeldir.join("metadata.json");
 
         #[cfg(feature = "serde-support")]
         {
@@ -385,12 +385,12 @@ impl ModelRegistry {
     pub fn list_models_by_type(&self, modeltype: &ModelType) -> Vec<&ModelMetadata> {
         self.models
             .values()
-            .filter(|metadata| &metadata.model_type == model_type)
+            .filter(|metadata| &metadata.model_type == modeltype)
             .collect()
     }
 
     /// Get model metadata by ID
-    pub fn get_metadata(&self, modelid: &str) -> Option<&ModelMetadata> {
+    pub fn get_metadata(&self, model_id: &str) -> Option<&ModelMetadata> {
         self.models.get(model_id)
     }
 
@@ -443,10 +443,10 @@ impl ModelRegistry {
 
     /// Load model data from directory
     fn load_model_data(&self, modeldir: &Path) -> Result<SerializableModelData> {
-        let data_file = model_dir.join("model.json");
+        let data_file = modeldir.join("model.json");
         if !data_file.exists() {
             // Try legacy format
-            let legacy_file = model_dir.join("model.dat");
+            let legacy_file = modeldir.join("model.dat");
             if legacy_file.exists() {
                 return Ok(SerializableModelData {
                     weights: HashMap::new(),
@@ -485,7 +485,7 @@ impl ModelRegistry {
     }
 
     /// Cache a loaded model
-    fn cache_model(&mut self, modelid: String, model: Box<dyn std::any::Any + Send + Sync>) {
+    fn cache_model(&mut self, model_id: String, model: Box<dyn std::any::Any + Send + Sync>) {
         // Remove oldest cached model if cache is full
         if self.model_cache.len() >= self.max_cache_size {
             if let Some(first_key) = self.model_cache.keys().next().cloned() {
@@ -497,7 +497,7 @@ impl ModelRegistry {
     }
 
     /// Remove model from registry
-    pub fn remove_model(&mut self, modelid: &str) -> Result<()> {
+    pub fn remove_model(&mut self, model_id: &str) -> Result<()> {
         let metadata = self
             .models
             .remove(model_id)
@@ -546,7 +546,7 @@ impl ModelRegistry {
     }
 
     /// Check if model is compatible with current API version
-    pub fn check_model_compatibility(&self, modelid: &str) -> Result<bool> {
+    pub fn check_model_compatibility(&self, model_id: &str) -> Result<bool> {
         let metadata = self
             .models
             .get(model_id)
@@ -578,7 +578,7 @@ impl ModelRegistry {
     }
 
     /// Validate model integrity
-    pub fn validate_model(&self, modelid: &str) -> Result<bool> {
+    pub fn validate_model(&self, model_id: &str) -> Result<bool> {
         let metadata = self
             .models
             .get(model_id)
@@ -593,14 +593,14 @@ impl ModelRegistry {
     }
 
     /// Get detailed model information
-    pub fn get_model_info(&self, modelid: &str) -> Result<HashMap<String, String>> {
+    pub fn get_model_info(&self, model_id: &str) -> Result<HashMap<String, String>> {
         let metadata = self
             .models
             .get(model_id)
             .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {model_id}")))?;
 
         let mut info = HashMap::new();
-        info.insert("_id".to_string(), metadata._id.clone());
+        info.insert("_id".to_string(), metadata.id.clone());
         info.insert("name".to_string(), metadata.name.clone());
         info.insert("version".to_string(), metadata.version.clone());
         info.insert("type".to_string(), metadata.model_type.to_string());
@@ -627,11 +627,11 @@ impl PrebuiltModels {
     pub fn english_transformer_base() -> (TransformerConfig, ModelMetadata) {
         let config = TransformerConfig {
             d_model: 512,
-            n_heads: 8,
+            nheads: 8,
             d_ff: 2048,
             n_encoder_layers: 6,
             n_decoder_layers: 6,
-            max_seq_len: 512,
+            max_seqlen: 512,
             dropout: 0.1,
             vocab_size: 50000,
         };
@@ -655,11 +655,11 @@ impl PrebuiltModels {
     pub fn multilingual_transformer() -> (TransformerConfig, ModelMetadata) {
         let config = TransformerConfig {
             d_model: 768,
-            n_heads: 12,
+            nheads: 12,
             d_ff: 3072,
             n_encoder_layers: 12,
             n_decoder_layers: 12,
-            max_seq_len: 512,
+            max_seqlen: 512,
             dropout: 0.1,
             vocab_size: 120000,
         };
@@ -690,11 +690,11 @@ impl PrebuiltModels {
     pub fn scientific_transformer() -> (TransformerConfig, ModelMetadata) {
         let config = TransformerConfig {
             d_model: 1024,
-            n_heads: 16,
+            nheads: 16,
             d_ff: 4096,
             n_encoder_layers: 24,
             n_decoder_layers: 24,
-            max_seq_len: 1024,
+            max_seqlen: 1024,
             dropout: 0.1,
             vocab_size: 200000,
         };
@@ -721,11 +721,11 @@ impl PrebuiltModels {
     pub fn tiny_transformer() -> (TransformerConfig, ModelMetadata) {
         let config = TransformerConfig {
             d_model: 128,
-            n_heads: 2,
+            nheads: 2,
             d_ff: 512,
             n_encoder_layers: 2,
             n_decoder_layers: 2,
-            max_seq_len: 128,
+            max_seqlen: 128,
             dropout: 0.1,
             vocab_size: 1000,
         };
@@ -752,11 +752,11 @@ impl PrebuiltModels {
     pub fn large_transformer() -> (TransformerConfig, ModelMetadata) {
         let config = TransformerConfig {
             d_model: 1536,
-            n_heads: 24,
+            nheads: 24,
             d_ff: 6144,
             n_encoder_layers: 48,
             n_decoder_layers: 48,
-            max_seq_len: 2048,
+            max_seqlen: 2048,
             dropout: 0.1,
             vocab_size: 100000,
         };
@@ -786,11 +786,11 @@ impl PrebuiltModels {
     pub fn domain_scientific_large() -> (TransformerConfig, ModelMetadata) {
         let config = TransformerConfig {
             d_model: 1024,
-            n_heads: 16,
+            nheads: 16,
             d_ff: 4096,
             n_encoder_layers: 24,
             n_decoder_layers: 24,
-            max_seq_len: 2048,
+            max_seqlen: 2048,
             dropout: 0.05,      // Lower dropout for scientific text
             vocab_size: 150000, // Larger vocab for scientific terms
         };
@@ -820,11 +820,11 @@ impl PrebuiltModels {
     pub fn medical_transformer() -> (TransformerConfig, ModelMetadata) {
         let config = TransformerConfig {
             d_model: 768,
-            n_heads: 12,
+            nheads: 12,
             d_ff: 3072,
             n_encoder_layers: 12,
             n_decoder_layers: 12,
-            max_seq_len: 1024,
+            max_seqlen: 1024,
             dropout: 0.1,
             vocab_size: 80000, // Medical vocabulary
         };
@@ -852,11 +852,11 @@ impl PrebuiltModels {
     pub fn legal_transformer() -> (TransformerConfig, ModelMetadata) {
         let config = TransformerConfig {
             d_model: 768,
-            n_heads: 12,
+            nheads: 12,
             d_ff: 3072,
             n_encoder_layers: 12,
             n_decoder_layers: 12,
-            max_seq_len: 2048, // Longer sequences for legal documents
+            max_seqlen: 2048, // Longer sequences for legal documents
             dropout: 0.1,
             vocab_size: 60000, // Legal vocabulary
         };
@@ -895,7 +895,7 @@ impl PrebuiltModels {
     }
 
     /// Get pre-built model by ID
-    pub fn get_by_id(_modelid: &str) -> Option<(TransformerConfig, ModelMetadata)> {
+    pub fn get_by_id(_model_id: &str) -> Option<(TransformerConfig, ModelMetadata)> {
         match _model_id {
             "english_transformer_base" => Some(Self::english_transformer_base()),
             "multilingual_transformer" => Some(Self::multilingual_transformer()),
@@ -919,7 +919,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
 
         // Serialize transformer config
         config.insert("d_model".to_string(), self.config.d_model.to_string());
-        config.insert("n_heads".to_string(), self.config.n_heads.to_string());
+        config.insert("n_heads".to_string(), self.config.nheads.to_string());
         config.insert("d_ff".to_string(), self.config.d_ff.to_string());
         config.insert(
             "n_encoder_layers".to_string(),
@@ -931,7 +931,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
         );
         config.insert(
             "max_seq_len".to_string(),
-            self.config.max_seq_len.to_string(),
+            self.config.max_seqlen.to_string(),
         );
         config.insert("dropout".to_string(), self.config.dropout.to_string());
         config.insert("vocab_size".to_string(), self.config.vocab_size.to_string());
@@ -948,8 +948,8 @@ impl RegistrableModel for crate::transformer::TransformerModel {
         shapes.insert("token_embeddings".to_string(), embedshape);
 
         // Serialize positional embeddings (placeholder - would need access to internal weights)
-        let pos_embed_weights = vec![0.0f64; self.config.max_seq_len * self.config.d_model];
-        let pos_embedshape = vec![self.config.max_seq_len, self.config.d_model];
+        let pos_embed_weights = vec![0.0f64; self.config.max_seqlen * self.config.d_model];
+        let pos_embedshape = vec![self.config.max_seqlen, self.config.d_model];
         weights.insert("positional_embeddings".to_string(), pos_embed_weights);
         shapes.insert("positional_embeddings".to_string(), pos_embedshape);
 
@@ -1094,46 +1094,46 @@ impl RegistrableModel for crate::transformer::TransformerModel {
 
     fn deserialize(data: &SerializableModelData) -> Result<Self> {
         // Parse config
-        let d_model = _data
+        let d_model = data
             .config
             .get("d_model")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing d_model config".to_string()))?;
-        let n_heads = _data
+        let n_heads = data
             .config
             .get("n_heads")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing n_heads config".to_string()))?;
-        let d_ff = _data
+        let d_ff = data
             .config
             .get("d_ff")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing d_ff config".to_string()))?;
-        let n_encoder_layers = _data
+        let n_encoder_layers = data
             .config
             .get("n_encoder_layers")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| {
                 TextError::InvalidInput("Missing n_encoder_layers config".to_string())
             })?;
-        let n_decoder_layers = _data
+        let n_decoder_layers = data
             .config
             .get("n_decoder_layers")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| {
                 TextError::InvalidInput("Missing n_decoder_layers config".to_string())
             })?;
-        let max_seq_len = _data
+        let max_seq_len = data
             .config
             .get("max_seq_len")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing max_seq_len config".to_string()))?;
-        let dropout = _data
+        let dropout = data
             .config
             .get("dropout")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing dropout config".to_string()))?;
-        let vocab_size = _data
+        let vocab_size = data
             .config
             .get("vocab_size")
             .and_then(|s| s.parse().ok())
@@ -1141,16 +1141,16 @@ impl RegistrableModel for crate::transformer::TransformerModel {
 
         let config = crate::transformer::TransformerConfig {
             d_model,
-            n_heads,
+            nheads: n_heads,
             d_ff,
             n_encoder_layers,
             n_decoder_layers,
-            max_seq_len,
+            max_seqlen: max_seq_len,
             dropout,
             vocab_size,
         };
 
-        // Reconstruct vocabulary from saved _data
+        // Reconstruct vocabulary from saved data
         let vocabulary = data.vocabulary.clone().unwrap_or_else(|| {
             // Fallback to placeholder if vocabulary not saved
             (0..config.vocab_size)
@@ -1166,7 +1166,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             data.weights.get("token_embeddings"),
             data.shapes.get("token_embeddings"),
         ) {
-            let embed_array = ndarray::Array::fromshape_vec(
+            let embed_array = ndarray::Array::from_shape_vec(
                 (embedshape[0], embedshape[1]),
                 embed_weights.clone(),
             )
@@ -1179,7 +1179,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             data.weights.get("positional_embeddings"),
             data.shapes.get("positional_embeddings"),
         ) {
-            let _pos_embed_array = ndarray::Array::fromshape_vec(
+            let _pos_embed_array = ndarray::Array::from_shape_vec(
                 (pos_embedshape[0], pos_embedshape[1]),
                 pos_embed_weights.clone(),
             )
@@ -1216,16 +1216,16 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 data.shapes.get(&format!("encoder_{i}_attention_wo")),
             ) {
                 let w_q =
-                    ndarray::Array::fromshape_vec((wqshape[0], wqshape[1]), wq_weights.clone())
+                    ndarray::Array::from_shape_vec((wqshape[0], wqshape[1]), wq_weights.clone())
                         .map_err(|e| TextError::InvalidInput(format!("Invalid wq shape: {e}")))?;
                 let w_k =
-                    ndarray::Array::fromshape_vec((wkshape[0], wkshape[1]), wk_weights.clone())
+                    ndarray::Array::from_shape_vec((wkshape[0], wkshape[1]), wk_weights.clone())
                         .map_err(|e| TextError::InvalidInput(format!("Invalid wk shape: {e}")))?;
                 let w_v =
-                    ndarray::Array::fromshape_vec((wvshape[0], wvshape[1]), wv_weights.clone())
+                    ndarray::Array::from_shape_vec((wvshape[0], wvshape[1]), wv_weights.clone())
                         .map_err(|e| TextError::InvalidInput(format!("Invalid wv shape: {e}")))?;
                 let w_o =
-                    ndarray::Array::fromshape_vec((woshape[0], woshape[1]), wo_weights.clone())
+                    ndarray::Array::from_shape_vec((woshape[0], woshape[1]), wo_weights.clone())
                         .map_err(|e| TextError::InvalidInput(format!("Invalid wo shape: {e}")))?;
 
                 attention.set_weights(w_q, w_k, w_v, w_o)?;
@@ -1248,10 +1248,10 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 data.weights.get(&format!("encoder_{i}_ff_b2")),
             ) {
                 let w1 =
-                    ndarray::Array::fromshape_vec((w1shape[0], w1shape[1]), w1_weights.clone())
+                    ndarray::Array::from_shape_vec((w1shape[0], w1shape[1]), w1_weights.clone())
                         .map_err(|e| TextError::InvalidInput(format!("Invalid w1 shape: {e}")))?;
                 let w2 =
-                    ndarray::Array::fromshape_vec((w2shape[0], w2shape[1]), w2_weights.clone())
+                    ndarray::Array::from_shape_vec((w2shape[0], w2shape[1]), w2_weights.clone())
                         .map_err(|e| TextError::InvalidInput(format!("Invalid w2 shape: {e}")))?;
                 let b1 = ndarray::Array::from_vec(b1_weights.clone());
                 let b2 = ndarray::Array::from_vec(b2_weights.clone());
@@ -1291,7 +1291,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             data.shapes.get("output_projection"),
         ) {
             let _output_array =
-                ndarray::Array::fromshape_vec(ndarray::IxDyn(outputshape), output_weights.clone())
+                ndarray::Array::from_shape_vec(ndarray::IxDyn(outputshape), output_weights.clone())
                     .map_err(|e| {
                         TextError::InvalidInput(format!("Invalid output projection shape: {e}"))
                     })?;
@@ -1308,7 +1308,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
     fn get_config(&self) -> HashMap<String, String> {
         let mut config = HashMap::new();
         config.insert("d_model".to_string(), self.config.d_model.to_string());
-        config.insert("n_heads".to_string(), self.config.n_heads.to_string());
+        config.insert("n_heads".to_string(), self.config.nheads.to_string());
         config.insert("d_ff".to_string(), self.config.d_ff.to_string());
         config.insert(
             "n_encoder_layers".to_string(),
@@ -1320,7 +1320,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
         );
         config.insert(
             "max_seq_len".to_string(),
-            self.config.max_seq_len.to_string(),
+            self.config.max_seqlen.to_string(),
         );
         config.insert("dropout".to_string(), self.config.dropout.to_string());
         config.insert("vocab_size".to_string(), self.config.vocab_size.to_string());
@@ -1381,17 +1381,17 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
     }
 
     fn deserialize(data: &SerializableModelData) -> Result<Self> {
-        let vector_size = _data
+        let vector_size = data
             .config
             .get("vector_size")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing vector_size config".to_string()))?;
-        let window_size = _data
+        let window_size = data
             .config
             .get("window_size")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing window_size config".to_string()))?;
-        let min_count = _data
+        let min_count = data
             .config
             .get("min_count")
             .and_then(|s| s.parse().ok())
@@ -1429,8 +1429,8 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
             data.weights.get("embeddings"),
             data.shapes.get("embeddings"),
         ) {
-            // Restore the full model state from serialized _data
-            let _embedding_matrix = ndarray::Array::fromshape_vec(
+            // Restore the full model state from serialized data
+            let _embedding_matrix = ndarray::Array::from_shape_vec(
                 (embedshape[0], embedshape[1]),
                 embed_weights.clone(),
             )
@@ -1452,7 +1452,7 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
                 restored_word2vec = restored_word2vec.with_window_size(window_size);
             }
 
-            if let Some(negative_samples) = _data
+            if let Some(negative_samples) = data
                 .config
                 .get("negative_samples")
                 .and_then(|s| s.parse().ok())
@@ -1460,7 +1460,7 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
                 restored_word2vec = restored_word2vec.with_negative_samples(negative_samples);
             }
 
-            if let Some(learning_rate) = _data
+            if let Some(learning_rate) = data
                 .config
                 .get("learning_rate")
                 .and_then(|s| s.parse().ok())
@@ -1526,7 +1526,7 @@ mod tests {
     #[test]
     fn test_model_registry_creation() {
         let temp_dir = TempDir::new().unwrap();
-        let registry = ModelRegistry::new(temp_dir.path()).unwrap();
+        let registry = ModelRegistry::new(temp_dir.path(), temp_dir.path()).unwrap();
 
         assert_eq!(registry.models.len(), 0);
         assert_eq!(registry.model_cache.len(), 0);
@@ -1537,7 +1537,7 @@ mod tests {
         let (config, metadata) = PrebuiltModels::english_transformer_base();
 
         assert_eq!(config.d_model, 512);
-        assert_eq!(config.n_heads, 8);
+        assert_eq!(config.nheads, 8);
         assert_eq!(metadata.id, "english_transformer_base");
         assert_eq!(metadata.model_type, ModelType::Transformer);
         assert!(metadata.languages.contains(&"en".to_string()));

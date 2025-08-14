@@ -305,7 +305,7 @@ impl AdaptiveNASSystem {
         let hidden_size = config.hidden_size;
 
         Self {
-            config: config,
+            config,
             architecture_population: Vec::new(),
             performance_history: HashMap::new(),
             controller,
@@ -497,7 +497,7 @@ impl AdaptiveNASSystem {
                 hessian_approximation: HessianApprox::LBFGS {
                     memory_size: 5 + rand::rng().gen_range(0..15),
                 },
-                regularization: 1e-6 + rand::rng().gen_range(0.0..1e-3)..,
+                regularization: 1e-6 + rand::rng().gen_range(0.0..1e-3),
             },
             3 => OptimizerComponent::TrustRegion {
                 initial_radius: 0.1 + rand::rng().gen_range(0.0..0.9),
@@ -522,27 +522,41 @@ impl AdaptiveNASSystem {
         &mut self,
         training_problems: &[OptimizationProblem],
     ) -> OptimizeResult<()> {
-        for architecture in &mut self.architecture_population {
-            let mut total_score = 0.0;
-            let mut num_evaluated = 0;
+        // First evaluate all architectures
+        let scores: Vec<_> = self
+            .architecture_population
+            .iter()
+            .map(|architecture| {
+                let mut total_score = 0.0;
+                let mut num_evaluated = 0;
 
-            for problem in training_problems.iter().take(5) {
-                // Limit for efficiency
-                if let Ok(score) = self.evaluate_architecture_on_problem(architecture, problem) {
-                    total_score += score;
-                    num_evaluated += 1;
+                for problem in training_problems.iter().take(5) {
+                    // Limit for efficiency
+                    if let Ok(score) = self.evaluate_architecture_on_problem(architecture, problem)
+                    {
+                        total_score += score;
+                        num_evaluated += 1;
+                    }
                 }
-            }
 
-            if num_evaluated > 0 {
-                let avg_score = total_score / num_evaluated as f64;
-                architecture.performance_metrics.convergence_rate = avg_score;
+                if num_evaluated > 0 {
+                    Some(total_score / num_evaluated as f64)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        // Now update architectures with their scores
+        for (architecture, score) in self.architecture_population.iter_mut().zip(scores.iter()) {
+            if let Some(avg_score) = score {
+                architecture.performance_metrics.convergence_rate = *avg_score;
 
                 // Update performance history
                 self.performance_history
                     .entry(architecture.id.clone())
                     .or_insert_with(Vec::new)
-                    .push(avg_score);
+                    .push(*avg_score);
             }
         }
 
@@ -586,12 +600,15 @@ impl AdaptiveNASSystem {
             let advantage = reward - baseline;
 
             // Update controller weights (simplified)
-            if i < self.controller.lstmweights.len() {
-                for j in 0..self.controller.lstmweights.nrows() {
-                    for k in 0..self.controller.lstmweights.ncols() {
+            let lstm_len = self.controller.lstm_weights.len();
+            if i < lstm_len {
+                let shape = self.controller.lstm_weights.shape();
+                let dims = (shape[0], shape[1], shape[2]);
+                for j in 0..dims.1 {
+                    for k in 0..dims.2 {
                         let learning_rate = self.config.meta_learning_rate;
-                        self.controller.lstm_weights
-                            [[i % self.controller.lstmweights.len(), j, k]] +=
+                        let idx = (i % lstm_len, j, k);
+                        self.controller.lstm_weights[idx] +=
                             learning_rate * advantage * 0.01;
                     }
                 }
@@ -629,7 +646,7 @@ impl AdaptiveNASSystem {
         let mut architecture = self.generate_random_architecture()?;
 
         // Modify based on controller state
-        let controller_influence = self.controller.controller_state.mean().unwrap_or(0.0);
+        let controller_influence = self.controller.controller_state.view().mean();
 
         // Adjust architecture complexity based on controller
         if controller_influence > 0.5 {
@@ -702,7 +719,7 @@ impl AdaptiveNASSystem {
     /// Select best architectures for next generation
     fn select_next_generation(
         &mut self,
-        new_architectures: Vec<OptimizationArchitecture>,
+        mut new_architectures: Vec<OptimizationArchitecture>,
     ) -> OptimizeResult<()> {
         // Combine current population with new architectures
         self.architecture_population.append(&mut new_architectures);
@@ -820,15 +837,15 @@ impl AdaptiveNASSystem {
 
 impl ArchitectureController {
     /// Create new architecture controller
-    pub fn new(_vocabulary: &ArchitectureVocabulary, hiddensize: usize) -> Self {
+    pub fn new(vocabulary: &ArchitectureVocabulary, hidden_size: usize) -> Self {
         Self {
-            lstm_weights: Array3::fromshape_fn((4, hidden_size, hidden_size), |_| {
+            lstm_weights: Array3::from_shape_fn((4, hidden_size, hidden_size), |_| {
                 (rand::rng().gen_range(0.0..1.0) - 0.5) * 0.1
             }),
-            embedding_layer: Array2::fromshape_fn((hidden_size, vocabulary.vocab_size), |_| {
+            embedding_layer: Array2::from_shape_fn((hidden_size, vocabulary.vocab_size), |_| {
                 (rand::rng().gen_range(0.0..1.0) - 0.5) * 0.1
             }),
-            output_layer: Array2::fromshape_fn((_vocabulary.vocab_size, hidden_size), |_| {
+            output_layer: Array2::from_shape_fn((vocabulary.vocab_size, hidden_size), |_| {
                 (rand::rng().gen_range(0.0..1.0) - 0.5) * 0.1
             }),
             controller_state: Array1::zeros(hidden_size),
@@ -875,7 +892,7 @@ impl ArchitectureVocabulary {
 }
 
 impl LearnedOptimizer for AdaptiveNASSystem {
-    fn meta_train(&mut self, trainingtasks: &[TrainingTask]) -> OptimizeResult<()> {
+    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
         let problems: Vec<OptimizationProblem> = training_tasks
             .iter()
             .map(|task| task.problem.clone())

@@ -360,8 +360,8 @@ impl ChunkedWriter {
         Ok(Self {
             file,
             bytes_written: 0,
-            buffer: Vec::with_capacity(buffer_size),
-            buffer_size,
+            buffer: Vec::with_capacity(buffersize),
+            buffer_size: buffersize,
         })
     }
 

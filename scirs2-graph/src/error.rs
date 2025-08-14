@@ -221,7 +221,7 @@ impl GraphError {
     /// Create a NodeNotFound error with minimal context
     pub fn node_not_found<T: fmt::Display>(node: T) -> Self {
         Self::NodeNotFound {
-            _node: node.to_string(),
+            node: node.to_string(),
             graph_size: 0,
             context: "Node lookup operation".to_string(),
         }
@@ -352,9 +352,22 @@ impl GraphError {
             GraphError::InvalidParameter { .. } => true,
             GraphError::ConvergenceError { .. } => true,
             GraphError::Cancelled { .. } => true,
+            GraphError::AlgorithmFailure { .. } => false,
+            GraphError::GraphStructureError { .. } => false,
+            GraphError::CycleDetected { .. } => false,
+            GraphError::LinAlgError { .. } => false,
+            GraphError::SparseError { .. } => false,
+            GraphError::SerializationError { .. } => false,
+            GraphError::InvalidAttribute { .. } => true,
+            GraphError::ConcurrencyError { .. } => false,
+            GraphError::FormatError { .. } => false,
+            GraphError::InvalidGraph(_) => false,
+            GraphError::AlgorithmError(_) => false,
             GraphError::MemoryError { .. } => false,
             GraphError::IOError { .. } => false,
             GraphError::CoreError(_) => false,
+            GraphError::ComputationError(_) => false,
+            GraphError::Other(_) => false,
         }
     }
 
@@ -448,7 +461,7 @@ impl ErrorContext {
     /// Create new error context
     pub fn new(operation: &str) -> Self {
         Self {
-            _operation: operation.to_string(),
+            operation: operation.to_string(),
             graph_info: None,
         }
     }

@@ -81,7 +81,7 @@ where
     D: Dimension,
 {
     /// Creates a new SAM optimizer with the given inner optimizer and default settings
-    pub fn new(inneroptimizer: O) -> Self {
+    pub fn new(inner_optimizer: O) -> Self {
         Self {
             inner_optimizer,
             rho: A::from(0.05).unwrap(),
@@ -94,7 +94,7 @@ where
     }
 
     /// Creates a new SAM optimizer with the given inner optimizer and configuration
-    pub fn with_config(inneroptimizer: O, rho: A, adaptive: bool) -> Self {
+    pub fn with_config(inner_optimizer: O, rho: A, adaptive: bool) -> Self {
         Self {
             inner_optimizer,
             rho,
@@ -302,7 +302,7 @@ where
         self.second_step(params, gradients)
     }
 
-    fn set_learning_rate(&mut self, learningrate: A) {
+    fn set_learning_rate(&mut self, learning_rate: A) {
         self.inner_optimizer.set_learning_rate(learning_rate);
     }
 

@@ -87,7 +87,7 @@ impl SparseCountVectorizer {
             indices.iter().map(|&idx| counts[&idx]).collect()
         };
 
-        let sparse_vec = SparseVector::from_indices_values(indices, values, self.vocabulary.len());
+        let sparse_vec = SparseVector::fromindices_values(indices, values, self.vocabulary.len());
 
         Ok(sparse_vec)
     }
@@ -166,7 +166,7 @@ impl SparseTfidfVectorizer {
     pub fn fit(&mut self, texts: &[&str]) -> Result<()> {
         self.count_vectorizer.fit(texts)?;
 
-        if self.use_idf {
+        if self.useidf {
             // Calculate IDF values
             let n_docs = texts.len() as f64;
             let vocab_size = self.count_vectorizer.vocabulary_size();
@@ -201,7 +201,7 @@ impl SparseTfidfVectorizer {
         let mut sparse_vec = self.count_vectorizer.transform(text)?;
 
         // Apply IDF weighting if enabled
-        if self.use_idf {
+        if self.useidf {
             if let Some(ref idf) = self.idf {
                 let indices_copy: Vec<usize> = sparse_vec.indices().to_vec();
                 let values = sparse_vec.values_mut();
@@ -289,7 +289,7 @@ pub fn sparse_cosine_similarity(v1: &SparseVector, v2: &SparseVector) -> Result<
         )));
     }
 
-    let dot = v1.dot_sparse(v2)?;
+    let dot = v1.dotsparse(v2)?;
     let norm1 = v1.norm();
     let norm2 = v2.norm();
 
@@ -390,9 +390,9 @@ mod tests {
 
     #[test]
     fn test_sparse_cosine_similarity() {
-        let v1 = SparseVector::from_indices_values(vec![0, 2, 3], vec![1.0, 2.0, 3.0], 5);
+        let v1 = SparseVector::fromindices_values(vec![0, 2, 3], vec![1.0, 2.0, 3.0], 5);
 
-        let v2 = SparseVector::from_indices_values(vec![1, 2, 4], vec![1.0, 2.0, 1.0], 5);
+        let v2 = SparseVector::fromindices_values(vec![1, 2, 4], vec![1.0, 2.0, 1.0], 5);
 
         let similarity = sparse_cosine_similarity(&v1, &v2).unwrap();
 

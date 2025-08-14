@@ -21,8 +21,8 @@
 //! ```no_run
 //! # #[cfg(feature = "neural_common")]
 //! # {
-//! use scirs2__metrics::integration::neural::NeuralMetricAdapter;
-//! use scirs2__metrics::integration::traits::MetricComputation;
+//! use scirs2_metrics::integration::neural::NeuralMetricAdapter;
+//! use scirs2_metrics::integration::traits::MetricComputation;
 //! use ndarray::{Array, IxDyn};
 //!
 //! // Create metric adapters
@@ -48,7 +48,7 @@
 //! ```no_run
 //! # #[cfg(feature = "neural_common")]
 //! # {
-//! use scirs2__metrics::integration::neural::{NeuralMetricAdapter, MetricsCallback};
+//! use scirs2_metrics::integration::neural::{NeuralMetricAdapter, MetricsCallback};
 //!
 //! // Create metric adapters
 //! let metrics = vec![
@@ -72,7 +72,7 @@
 //! ```no_run
 //! # #[cfg(feature = "neural_common")]
 //! # {
-//! use scirs2__metrics::integration::neural::{
+//! use scirs2_metrics::integration::neural::{
 //!     neural_roc_curve_visualization,
 //!     neural_precision_recall_curve_visualization,
 //!     neural_confusion_matrix_visualization,
@@ -107,7 +107,7 @@
 #[cfg(feature = "neural_common")]
 mod neural_adapter;
 #[cfg(feature = "neural_common")]
-pub use neural__adapter::*;
+pub use neural_adapter::*;
 
 // Neural-integration specific implementations that depend on neural crate
 #[cfg(feature = "neural_common")]
@@ -121,6 +121,6 @@ mod visualization;
 #[cfg(feature = "neural_common")]
 pub use callback::*;
 #[cfg(feature = "neural_common")]
-pub use deep__uncertainty::*;
+pub use deep_uncertainty::*;
 #[cfg(feature = "neural_common")]
 pub use visualization::*;

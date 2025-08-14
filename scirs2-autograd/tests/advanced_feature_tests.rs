@@ -9,7 +9,7 @@
 //! - Advanced tensor operations
 
 use ndarray::{Array, IxDyn};
-use scirs2__autograd::tensor_ops as T;
+use scirs2_autograd::tensor_ops as T;
 use scirs2_autograd as ag;
 
 /// Test suite for custom activation functions
@@ -22,7 +22,7 @@ mod custom_activation_tests {
         ag::run(|ctx: &mut ag::Context<f32>| {
             // Create test tensor
             let x = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 1.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 1.0]).unwrap(),
                 ctx,
             );
 
@@ -79,7 +79,7 @@ mod custom_activation_tests {
     fn test_parameterized_activations() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[2]), vec![-0.5, 1.5]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![-0.5, 1.5]).unwrap(),
                 ctx,
             );
 
@@ -107,11 +107,11 @@ mod performance_optimization_tests {
         ag::run(|ctx: &mut ag::Context<f32>| {
             // Test SIMD-optimized operations
             let a = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
                 ctx,
             );
             let b = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[4]), vec![2.0, 3.0, 4.0, 5.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4]), vec![2.0, 3.0, 4.0, 5.0]).unwrap(),
                 ctx,
             );
 
@@ -140,7 +140,7 @@ mod performance_optimization_tests {
     fn test_simd_unary_operations() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 2.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 2.0]).unwrap(),
                 ctx,
             );
 
@@ -168,11 +168,11 @@ mod performance_optimization_tests {
     fn test_cache_friendly_matmul() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let a = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
                 ctx,
             );
             let b = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[3, 2]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3, 2]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
                 ctx,
             );
 
@@ -190,7 +190,7 @@ mod performance_optimization_tests {
     fn test_parallel_reductions() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[4, 3]), (0..12).map(|i| i as f32).collect()).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4, 3]), (0..12).map(|i| i as f32).collect()).unwrap(),
                 ctx,
             );
 
@@ -241,13 +241,13 @@ mod graph_enhancement_tests {
     fn test_conditional_operations() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let condition =
-                T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
+                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
             let true_branch = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[2]), vec![10.0, 20.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0]).unwrap(),
                 ctx,
             );
             let false_branch = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[2]), vec![30.0, 40.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![30.0, 40.0]).unwrap(),
                 ctx,
             );
 
@@ -266,7 +266,7 @@ mod graph_enhancement_tests {
 
             // Test with false condition
             let false_condition =
-                T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![-1.0]).unwrap(), ctx);
+                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![-1.0]).unwrap(), ctx);
             let result2 = T::conditional(
                 &false_condition,
                 &true_branch,
@@ -285,7 +285,7 @@ mod graph_enhancement_tests {
     fn test_smart_checkpointing() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[1000]), (0..1000).map(|i| i as f32).collect())
+                Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|i| i as f32).collect())
                     .unwrap(),
                 ctx,
             );
@@ -309,7 +309,7 @@ mod graph_enhancement_tests {
     fn test_cached_operations() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[3]), vec![1.0, 4.0, 9.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 4.0, 9.0]).unwrap(),
                 ctx,
             );
 
@@ -353,7 +353,7 @@ mod graph_enhancement_tests {
         // Perform some cached operations to populate cache
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
                 ctx,
             );
             let result = T::cached_op(&x, "square");
@@ -458,7 +458,7 @@ mod integration_tests {
             T::set_parallel_enabled(true);
 
             let condition =
-                T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![1.5]).unwrap(), ctx);
+                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.5]).unwrap(), ctx);
 
             // True branch: SIMD-optimized computation
             let data = T::efficient_ones(&[100], ctx);
@@ -537,7 +537,7 @@ mod integration_tests {
 
             // 6. Apply conditional logic
             let condition =
-                T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![0.5]).unwrap(), ctx);
+                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![0.5]).unwrap(), ctx);
             let alternative = T::efficient_zeros(&[16, 32], ctx);
             let conditional_result = T::conditional(
                 &condition,

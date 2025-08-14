@@ -83,7 +83,7 @@ where
         let rng = StdRng::seed_from_u64(seed);
 
         Self {
-            func: func,
+            func,
             bounds,
             options,
             ndim,

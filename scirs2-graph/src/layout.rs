@@ -88,7 +88,7 @@ where
 
     // Initialize with random positions
     let mut positions = vec![Position::new(0.0, 0.0); n];
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for pos in &mut positions {
         pos.x = rng.random::<f64>() * area_width - area_width / 2.0;
@@ -262,7 +262,7 @@ where
     }
 
     // Get the Laplacian matrix
-    let _lap = laplacian(_graph, LaplacianType::Normalized)?;
+    let _lap = laplacian(graph, LaplacianType::Normalized)?;
 
     // For a proper implementation, we would compute eigenvectors here
     // For now, use a simple approximation based on node degrees

@@ -278,6 +278,7 @@ impl super::PlottingBackend for PlotlyInteractiveBackend {
     }
 
     fn render_svg(
+        &self,
         self_data: &VisualizationData,
         _metadata: &VisualizationMetadata,
         options: &VisualizationOptions,
@@ -286,6 +287,7 @@ impl super::PlottingBackend for PlotlyInteractiveBackend {
     }
 
     fn render_png(
+        &self,
         self_data: &VisualizationData,
         _metadata: &VisualizationMetadata,
         options: &VisualizationOptions,

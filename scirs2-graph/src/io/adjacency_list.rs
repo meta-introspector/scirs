@@ -76,7 +76,7 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(_path)?;
+    let file = File::open(path)?;
     let reader = BufReader::new(file);
     let mut graph = Graph::new();
 
@@ -198,7 +198,7 @@ where
 /// * `Err(GraphError)` - If there was an error reading or parsing the file
 #[allow(dead_code)]
 pub fn read_adjacency_list_format_digraph<N, E, P>(
-    _path: P,
+    path: P,
     weighted: bool,
 ) -> Result<DiGraph<N, E>>
 where
@@ -206,7 +206,7 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(_path)?;
+    let file = File::open(path)?;
     let reader = BufReader::new(file);
     let mut graph = DiGraph::new();
 

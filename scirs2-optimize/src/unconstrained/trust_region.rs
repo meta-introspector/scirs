@@ -732,7 +732,7 @@ fn trust_region_exact_subproblem(
 
 /// Find a step that lies on the trust region boundary
 #[allow(dead_code)]
-fn find_boundary_step(s: &Array1<f64>, p: &Array1<f64>, trustradius: f64) -> (f64, Array1<f64>) {
+fn find_boundary_step(s: &Array1<f64>, p: &Array1<f64>, trust_radius: f64) -> (f64, Array1<f64>) {
     // Solve the quadratic equation ||s + alpha*p||^2 = trust_radius^2
     let s_norm_squared = s.dot(s);
     let p_norm_squared = p.dot(p);

@@ -10,7 +10,7 @@
 use std::error::Error;
 
 #[cfg(feature = "optim_integration")]
-use scirs2__metrics::integration::optim::MetricLRScheduler;
+use scirs2_metrics::integration::optim::MetricLRScheduler;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
@@ -74,7 +74,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         // Demonstrate scheduler configuration for external optimizers
         #[cfg(feature = "optim_integration")]
         {
-            use scirs2__metrics::integration::optim::{MetricOptimizer, SchedulerConfig};
+            use scirs2_metrics::integration::optim::{MetricOptimizer, SchedulerConfig};
 
             println!("\nDemonstrating external optimizer integration:");
 
@@ -95,15 +95,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             );
 
             println!("Scheduler configuration created:");
-            println!("  Initial LR: {}", scheduler_configinitial_lr);
-            println!("  Factor: {}", scheduler_configfactor);
-            println!("  Patience: {}", scheduler_configpatience);
-            println!("  Min LR: {}", scheduler_configmin_lr);
-            println!("  Mode: {}", scheduler_configmode);
-            println!("  Metric: {}", scheduler_configmetric_name);
+            println!("  Initial LR: {}", scheduler_config.initial_lr);
+            println!("  Factor: {}", scheduler_config.factor);
+            println!("  Patience: {}", scheduler_config.patience);
+            println!("  Min LR: {}", scheduler_config.min_lr);
+            println!("  Mode: {}", scheduler_config.mode);
+            println!("  Metric: {}", scheduler_config.metric_name);
 
             // Show how to extract configuration values
-            let (initial_lr, factor, patience, min_lr, mode) = scheduler_configas_tuple();
+            let (initial_lr, factor, patience, min_lr, mode) = scheduler_config.as_tuple();
             println!("\nConfiguration as tuple:");
             println!("  ({initial_lr}, {factor}, {patience}, {min_lr}, {mode})");
 
@@ -117,25 +117,25 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 /// Simulate training for one epoch
 #[allow(dead_code)]
-fn simulate_epoch_training(_current_val_loss: f64, learningrate: f64) -> (f64, f64) {
-    // Simulate training _loss
-    let train_loss = _current_val_loss * (0.8 + rand::random::<f64>() * 0.2);
+fn simulate_epoch_training(current_val_loss: f64, learningrate: f64) -> (f64, f64) {
+    // Simulate training loss
+    let train_loss = current_val_loss * (0.8 + rand::random::<f64>() * 0.2);
 
-    // Calculate new validation _loss
-    let base_improvement = if _current_val_loss > 0.2 {
+    // Calculate new validation loss
+    let base_improvement = if current_val_loss > 0.2 {
         0.05 + rand::random::<f64>() * 0.05
     } else {
         0.01 + rand::random::<f64>() * 0.01
     };
 
-    // Learning _rate effect:
+    // Learning rate effect:
     // - Very small learning rates improve slowly
     // - Mid-range learning rates improve well
     // - Very large learning rates can cause instability
-    let lr_factor = if learning_rate < 0.01 {
-        learning_rate / 0.01 // Slower improvement for very small LRs
-    } else if learning_rate > 0.2 {
-        1.0 - ((learning_rate - 0.2) / 0.8) // Worse improvement for very large LRs
+    let lr_factor = if learningrate < 0.01 {
+        learningrate / 0.01 // Slower improvement for very small LRs
+    } else if learningrate > 0.2 {
+        1.0 - ((learningrate - 0.2) / 0.8) // Worse improvement for very large LRs
     } else {
         1.0 // Good improvement for mid-range LRs
     };
@@ -143,7 +143,7 @@ fn simulate_epoch_training(_current_val_loss: f64, learningrate: f64) -> (f64, f
     // Calculate improvement
     let improvement = base_improvement * lr_factor;
 
-    // Calculate new validation _loss
+    // Calculate new validation loss
     let new_val_loss = (current_val_loss - improvement).max(0.01);
 
     (train_loss, new_val_loss)

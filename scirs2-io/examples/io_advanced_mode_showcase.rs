@@ -194,15 +194,15 @@ fn demonstrate_quantum_parallel_processing() -> Result<()> {
     let mut processor = QuantumParallelProcessor::new(5);
 
     // Test different data patterns
-    let test_datasets = vec![
-        ("Random Data", generate_random_data(1000)),
-        ("Structured Data", generate_structured_data(1000)),
+    let testdatasets = vec![
+        ("Random Data", generate_randomdata(1000)),
+        ("Structured Data", generate_structureddata(1000)),
         ("Compressed Pattern", generate_compressed_pattern(1000)),
-        ("High Entropy", generate_high_entropy_data(1000)),
-        ("Low Entropy", generate_low_entropy_data(1000)),
+        ("High Entropy", generate_high_entropydata(1000)),
+        ("Low Entropy", generate_low_entropydata(1000)),
     ];
 
-    for (dataset_name, data) in test_datasets {
+    for (dataset_name, data) in testdatasets {
         println!("\n🔬 Processing: {}", dataset_name);
 
         let start_time = Instant::now();
@@ -266,15 +266,15 @@ fn demonstrate_advanced_think_processor() -> Result<()> {
     let mut processor = AdvancedIoProcessor::new();
 
     // Progressive data sizes to show scaling
-    let data_sizes = vec![100, 1000, 10000, 50000];
+    let datasizes = vec![100, 1000, 10000, 50000];
 
-    for &size in &data_sizes {
+    for &size in &datasizes {
         println!("\n📊 Processing {} bytes of data", size);
 
-        let test_data = generate_mixed_pattern_data(size);
+        let testdata = generate_mixed_patterndata(size);
 
         let start_time = Instant::now();
-        let result = processor.process_data_adaptive(&test_data)?;
+        let result = processor.process_data_adaptive(&testdata)?;
         let processing_time = start_time.elapsed();
 
         let throughput = (size as f64) / (processing_time.as_secs_f64() * 1024.0 * 1024.0);
@@ -284,7 +284,7 @@ fn demonstrate_advanced_think_processor() -> Result<()> {
         println!("  Output Size: {} bytes", result.len());
         println!(
             "  Efficiency Ratio: {:.3}",
-            result.len() as f32 / test_data.len() as f32
+            result.len() as f32 / testdata.len() as f32
         );
     }
 
@@ -320,19 +320,19 @@ fn demonstrate_performance_comparison() -> Result<()> {
     println!("\n\n⚡ Performance Comparison Demo");
     println!("=============================");
 
-    let test_data = generate_benchmark_data(10000);
+    let testdata = generate_benchmarkdata(10000);
 
     // Neural adaptive approach
     println!("\n🧠 Neural Adaptive Approach:");
     let mut neural_processor = AdvancedIoProcessor::new();
     let start = Instant::now();
-    let neural_result = neural_processor.process_data_adaptive(&test_data)?;
+    let neural_result = neural_processor.process_data_adaptive(&testdata)?;
     let neural_time = start.elapsed();
 
     println!("  Processing Time: {:.2} ms", neural_time.as_millis());
     println!(
         "  Throughput: {:.1} MB/s",
-        (test_data.len() as f64) / (neural_time.as_secs_f64() * 1024.0 * 1024.0)
+        (testdata.len() as f64) / (neural_time.as_secs_f64() * 1024.0 * 1024.0)
     );
     println!("  Output Size: {} bytes", neural_result.len());
 
@@ -340,22 +340,22 @@ fn demonstrate_performance_comparison() -> Result<()> {
     println!("\n⚛️  Quantum-Inspired Approach:");
     let mut quantum_processor = QuantumParallelProcessor::new(5);
     let start = Instant::now();
-    let quantum_result = quantum_processor.process_quantum_parallel(&test_data)?;
+    let quantum_result = quantum_processor.process_quantum_parallel(&testdata)?;
     let quantum_time = start.elapsed();
 
     println!("  Processing Time: {:.2} ms", quantum_time.as_millis());
     println!(
         "  Throughput: {:.1} MB/s",
-        (test_data.len() as f64) / (quantum_time.as_secs_f64() * 1024.0 * 1024.0)
+        (testdata.len() as f64) / (quantum_time.as_secs_f64() * 1024.0 * 1024.0)
     );
     println!("  Output Size: {} bytes", quantum_result.len());
 
     // Performance comparison
     println!("\n📊 Comparison Summary:");
     let neural_throughput =
-        (test_data.len() as f64) / (neural_time.as_secs_f64() * 1024.0 * 1024.0);
+        (testdata.len() as f64) / (neural_time.as_secs_f64() * 1024.0 * 1024.0);
     let quantum_throughput =
-        (test_data.len() as f64) / (quantum_time.as_secs_f64() * 1024.0 * 1024.0);
+        (testdata.len() as f64) / (quantum_time.as_secs_f64() * 1024.0 * 1024.0);
 
     if neural_throughput > quantum_throughput {
         println!(
@@ -371,11 +371,11 @@ fn demonstrate_performance_comparison() -> Result<()> {
 
     println!(
         "  Neural Compression: {:.3}",
-        neural_result.len() as f32 / test_data.len() as f32
+        neural_result.len() as f32 / testdata.len() as f32
     );
     println!(
         "  Quantum Compression: {:.3}",
-        quantum_result.len() as f32 / test_data.len() as f32
+        quantum_result.len() as f32 / testdata.len() as f32
     );
 
     Ok(())
@@ -462,34 +462,34 @@ fn demonstrate_adaptive_learning() -> Result<()> {
 // Helper functions for generating test data
 
 #[allow(dead_code)]
-fn generate_random_data(size: usize) -> Vec<u8> {
-    (0.._size).map(|i| ((i * 17 + 23) % 256) as u8).collect()
+fn generate_randomdata(size: usize) -> Vec<u8> {
+    (0..size).map(|i| ((i * 17 + 23) % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
-fn generate_structured_data(size: usize) -> Vec<u8> {
-    (0.._size).map(|i| (i % 64) as u8).collect()
+fn generate_structureddata(size: usize) -> Vec<u8> {
+    (0..size).map(|i| (i % 64) as u8).collect()
 }
 
 #[allow(dead_code)]
 fn generate_compressed_pattern(size: usize) -> Vec<u8> {
     let pattern = vec![1, 2, 3, 4];
-    (0.._size).map(|i| pattern[i % pattern.len()]).collect()
+    (0..size).map(|i| pattern[i % pattern.len()]).collect()
 }
 
 #[allow(dead_code)]
-fn generate_high_entropy_data(size: usize) -> Vec<u8> {
-    (0.._size).map(|i| ((i * 157 + 73) % 256) as u8).collect()
+fn generate_high_entropydata(size: usize) -> Vec<u8> {
+    (0..size).map(|i| ((i * 157 + 73) % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
-fn generate_low_entropy_data(size: usize) -> Vec<u8> {
-    vec![42; _size]
+fn generate_low_entropydata(size: usize) -> Vec<u8> {
+    vec![42; size]
 }
 
 #[allow(dead_code)]
-fn generate_mixed_pattern_data(size: usize) -> Vec<u8> {
-    (0.._size)
+fn generate_mixed_patterndata(size: usize) -> Vec<u8> {
+    (0..size)
         .map(|i| {
             if i % 10 < 3 {
                 ((i * 13) % 256) as u8
@@ -501,14 +501,14 @@ fn generate_mixed_pattern_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_benchmark_data(size: usize) -> Vec<u8> {
-    (0.._size).map(|i| ((i * 31 + i * i) % 256) as u8).collect()
+fn generate_benchmarkdata(size: usize) -> Vec<u8> {
+    (0..size).map(|i| ((i * 31 + i * i) % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
 fn calculate_entropy(data: &[u8]) -> f32 {
     let mut frequency = [0u32; 256];
-    for &byte in _data {
+    for &byte in data {
         frequency[byte as usize] += 1;
     }
 

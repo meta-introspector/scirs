@@ -367,7 +367,7 @@ pub fn remez(
 fn generate_window(_length: usize, windowtype: &str) -> SignalResult<Vec<f64>> {
     let mut window = vec![0.0; _length];
 
-    match window_type.to_lowercase().as_str() {
+    match windowtype.to_lowercase().as_str() {
         "hamming" => {
             for (i, w) in window.iter_mut().enumerate() {
                 let n = i as f64;
@@ -395,8 +395,8 @@ fn generate_window(_length: usize, windowtype: &str) -> SignalResult<Vec<f64>> {
         }
         _ => {
             return Err(SignalError::ValueError(format!(
-                "Unknown window _type: {}. Supported types: hamming, hann, blackman, rectangular",
-                window_type
+                "Unknown window type: {}. Supported types: hamming, hann, blackman, rectangular",
+                windowtype
             )));
         }
     }

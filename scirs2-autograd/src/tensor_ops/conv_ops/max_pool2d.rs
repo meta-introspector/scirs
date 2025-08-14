@@ -219,9 +219,9 @@ impl<T: Float> crate::op::Op<T> for MaxPool2D {
         };
         unsafe {
             let output =
-                NdArray::fromshape_vec_unchecked(ndarray::IxDyn(&[batch, c, yh, yw]), output);
+                NdArray::from_shape_vec_unchecked(ndarray::IxDyn(&[batch, c, yh, yw]), output);
             let indices =
-                NdArray::fromshape_vec_unchecked(ndarray::IxDyn(&[batch, c, yh, yw]), indices);
+                NdArray::from_shape_vec_unchecked(ndarray::IxDyn(&[batch, c, yh, yw]), indices);
             ctx.append_output(output);
             ctx.append_output(indices);
         }
@@ -274,7 +274,7 @@ impl<T: Float> crate::op::Op<T> for MaxPool2DGrad {
             ));
         };
         unsafe {
-            let gx = NdArray::fromshape_vec_unchecked(ndarray::IxDyn(&[batch, c, xh, xw]), gx);
+            let gx = NdArray::from_shape_vec_unchecked(ndarray::IxDyn(&[batch, c, xh, xw]), gx);
             ctx.append_output(gx);
         }
         Ok(())
@@ -326,7 +326,7 @@ impl<T: Float> crate::op::Op<T> for MaxPool2DGradGrad {
                     "MaxPool2DGradGrad supports only f32 and f64".to_string(),
                 ));
             };
-            NdArray::fromshape_vec_unchecked(ndarray::IxDyn(&[batch, c, yh, yw]), ggy)
+            NdArray::from_shape_vec_unchecked(ndarray::IxDyn(&[batch, c, yh, yw]), ggy)
         };
         ctx.append_output(ggy);
         Ok(())

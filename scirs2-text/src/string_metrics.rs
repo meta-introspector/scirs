@@ -188,7 +188,7 @@ impl Soundex {
 
     /// Create with custom code length
     pub fn with_length(length: usize) -> Self {
-        Self { _length }
+        Self { length }
     }
 }
 
@@ -306,7 +306,7 @@ impl Metaphone {
 
     /// Create with custom maximum length
     pub fn with_max_length(_maxlength: usize) -> Self {
-        Self { _max_length }
+        Self { max_length: _maxlength }
     }
 }
 
@@ -470,7 +470,7 @@ impl Nysiis {
 
     /// Create with custom maximum length
     pub fn with_max_length(_maxlength: usize) -> Self {
-        Self { _max_length }
+        Self { max_length: _maxlength }
     }
 }
 
@@ -669,9 +669,9 @@ impl NeedlemanWunsch {
     /// Create with custom scoring parameters
     pub fn with_scores(_match_score: i32, mismatch_penalty: i32, gappenalty: i32) -> Self {
         Self {
-            match_score,
+            match_score: _match_score,
             mismatch_penalty,
-            gap_penalty,
+            gap_penalty: gappenalty,
         }
     }
 
@@ -786,9 +786,9 @@ impl SmithWaterman {
     /// Create with custom scoring parameters
     pub fn with_scores(_match_score: i32, mismatch_penalty: i32, gappenalty: i32) -> Self {
         Self {
-            match_score,
+            match_score: _match_score,
             mismatch_penalty,
-            gap_penalty,
+            gap_penalty: gappenalty,
         }
     }
 

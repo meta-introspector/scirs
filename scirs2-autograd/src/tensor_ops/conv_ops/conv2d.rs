@@ -377,7 +377,7 @@ fn conv2d_extract_params<F: Float>(
         let wshape = w.shape();
         if wshape.len() != 4 {
             return Err(op::OpError::IncompatibleShape(format!(
-                "conv2d: filter must be 4D (got {_wshape:?})"
+                "conv2d: filter must be 4D (got {wshape:?})"
             )));
         }
         if xch != wshape[1] {
@@ -445,9 +445,9 @@ fn conv2d_impl<F: Float>(
     }
 
     if let Some(_w) = w.as_slice() {
-        w_slice = w;
+        w_slice = _w;
     } else {
-        copied_w = ndarray_ext::deep_copy(_w);
+        copied_w = ndarray_ext::deep_copy(w);
         unsafe {
             w_slice = slice::from_raw_parts(copied_w.as_ptr(), copied_w.len());
         }
@@ -480,9 +480,9 @@ fn conv2d_impl<F: Float>(
         dilation_h as i32,
         dilation_w as i32,
     );
-    let y = NdArray::fromshape_vec(IxDyn(&[batch_size, ych, yh, yw]), y).unwrap();
+    let y = NdArray::from_shape_vec(IxDyn(&[batch_size, ych, yh, yw]), y).unwrap();
     let cols = unsafe {
-        NdArray::fromshape_vec_unchecked(IxDyn(&[batch_size, xch, kw, kh, yh, yw]), cols)
+        NdArray::from_shape_vec_unchecked(IxDyn(&[batch_size, xch, kw, kh, yh, yw]), cols)
     };
     Ok((y, cols))
 }
@@ -527,7 +527,7 @@ fn conv2d_with_cols_impl<F: Float>(cols: &NdArrayView<F>, w: &NdArrayView<F>) ->
         kw,
         batch_size,
     );
-    unsafe { NdArray::fromshape_vec_unchecked(ndarray::IxDyn(&[batch_size, ych, yh, yw]), y) }
+    unsafe { NdArray::from_shape_vec_unchecked(ndarray::IxDyn(&[batch_size, ych, yh, yw]), y) }
 }
 
 impl<T: Float> crate::op::Op<T> for Conv2D {
@@ -732,7 +732,7 @@ fn conv2d_filter_grad_impl<F: Float>(
 
     unsafe {
         gw.set_len(gw_len);
-        NdArray::fromshape_vec_unchecked(kshape, gw)
+        NdArray::from_shape_vec_unchecked(kshape, gw)
     }
 }
 

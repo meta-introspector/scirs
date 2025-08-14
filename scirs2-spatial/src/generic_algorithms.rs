@@ -846,7 +846,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
 
     /// Set the maximum number of iterations
     pub fn with_max_iterations(mut self, maxiterations: usize) -> Self {
-        self.max_iterations = max_iterations;
+        self.max_iterations = maxiterations;
         self
     }
 
@@ -1322,7 +1322,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
     /// Create a new DBSCAN clusterer
     pub fn new(_eps: T, minsamples: usize) -> Self {
         Self {
-            eps: eps,
+            eps: _eps,
             minsamples,
             _phantom: PhantomData,
         }
@@ -1609,7 +1609,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
 
     /// Set maximum iterations
     pub fn with_max_iterations(mut self, maxiterations: usize) -> Self {
-        self.max_iterations = max_iterations;
+        self.max_iterations = maxiterations;
         self
     }
 
@@ -1621,7 +1621,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
 
     /// Set regularization parameter for covariance
     pub fn with_reg_covar(mut self, regcovar: T) -> Self {
-        self.reg_covar = reg_covar;
+        self.reg_covar = regcovar;
         self
     }
 

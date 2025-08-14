@@ -28,12 +28,12 @@ macro_rules! bin_op_sameshape {
                 let mut y = Vec::with_capacity($a.len());
                 $vms_op($a.len() as MklInt, $a.as_ptr() as *const f32, $b.as_ptr() as *const f32, y.as_mut_ptr() as *mut f32);
                 y.set_len($a.len());
-                NdArray::fromshape_vec_unchecked($a.shape(), y)
+                NdArray::from_shape_vec_unchecked($a.shape(), y)
             } else if same_type::<T, f64>() {
                 let mut y = Vec::with_capacity($a.len());
                 $vmd_op($a.len() as MklInt, $a.as_ptr() as *const f64, $b.as_ptr() as *const f64, y.as_mut_ptr() as *mut f64);
                 y.set_len($a.len());
-                NdArray::fromshape_vec_unchecked($a.shape(), y)
+                NdArray::from_shape_vec_unchecked($a.shape(), y)
             } else {
                 $a $std_op $b
             }
@@ -67,7 +67,7 @@ impl<T: Float> op::Op<T> for MaybeReduceSum {
         if origshape == gyshape {
             // The case where forward path didn't cause broadcast.
             ctx.append_output(
-                gy.intoshape_with_order(ndarray::IxDyn(origshape_))
+                gy.into_shape_with_order(ndarray::IxDyn(origshape_))
                     .unwrap()
                     .to_owned(),
             );
@@ -95,7 +95,7 @@ impl<T: Float> op::Op<T> for MaybeReduceSum {
         }
         let ret = folded.unwrap();
         ctx.append_output(
-            ret.intoshape_with_order(origshape_)
+            ret.into_shape_with_order(origshape_)
                 .expect("bug of MaybeReduceSum probably"),
         );
         Ok(())
@@ -129,7 +129,7 @@ impl<T: Float> op::Op<T> for MaybeBroadcast {
         let input_is_scalar = crate::ndarray_ext::is_scalarshape(raw_input.shape());
         let input = if input_is_scalar {
             raw_input
-                .intoshape_with_order(vec![1; targetshape.len()])
+                .into_shape_with_order(vec![1; targetshape.len()])
                 .unwrap()
         } else {
             raw_input

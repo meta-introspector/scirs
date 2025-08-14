@@ -177,7 +177,7 @@ pub fn print_model_summary<F: Float>(model: &Tensor<F>) {
 /// Helper function to profile memory usage of a model.
 #[allow(dead_code)]
 pub fn profile_memory_usage<F: Float>(model: &Tensor<F>, inputs: &[Tensor<F>]) {
-    let _ = (_model, inputs);
+    let _ = (model, inputs);
     // Implementation placeholder
     // In a real implementation, this would profile memory usage during forward and backward passes
     println!("Memory usage: [placeholder]");

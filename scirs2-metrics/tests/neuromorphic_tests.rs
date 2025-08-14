@@ -6,7 +6,7 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(dead_code)]
 
-use scirs2__metrics::domains::neuromorphic::*;
+use scirs2_metrics::domains::neuromorphic::*;
 use std::time::Duration;
 
 #[cfg(test)]
@@ -28,7 +28,7 @@ mod tests {
             enable_stdp: true,
             enable_homeostasis: true,
             enable_memory_consolidation: true,
-            time_step: Duration::from_micros(100),
+            timestep: Duration::from_micros(100),
             max_simulation_time: Duration::from_secs(60),
         };
 
@@ -414,7 +414,7 @@ mod edge_case_tests {
             enable_stdp: false,
             enable_homeostasis: false,
             enable_memory_consolidation: false,
-            time_step: Duration::from_micros(1),
+            timestep: Duration::from_micros(1),
             max_simulation_time: Duration::from_secs(1),
         };
 
@@ -439,7 +439,7 @@ mod edge_case_tests {
             enable_stdp: true,
             enable_homeostasis: true,
             enable_memory_consolidation: true,
-            time_step: Duration::from_millis(1),
+            timestep: Duration::from_millis(1),
             max_simulation_time: Duration::from_secs(3600),
         };
 

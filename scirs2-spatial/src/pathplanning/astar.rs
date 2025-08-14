@@ -194,7 +194,7 @@ impl AStarPlanner {
 
     /// Set the maximum number of iterations
     pub fn with_max_iterations(mut self, maxiterations: usize) -> Self {
-        self.max_iterations = Some(max_iterations);
+        self.max_iterations = Some(maxiterations);
         self
     }
 
@@ -310,8 +310,8 @@ impl AStarPlanner {
 
         while let Some(_node) = current {
             path.push(_node.state.clone());
-            cost = node.g;
-            current = node.parent.clone();
+            cost = _node.g;
+            current = _node.parent.clone();
         }
 
         // Reverse the path so it goes from start to goal
@@ -371,7 +371,7 @@ impl GridAStarPlanner {
     ///
     /// * `grid` - 2D grid where true represents an obstacle
     /// * `diagonalsallowed` - Whether diagonal movements are allowed
-    pub fn new(_grid: Vec<Vec<bool>>, diagonalsallowed: bool) -> Self {
+    pub fn new(grid: Vec<Vec<bool>>, diagonalsallowed: bool) -> Self {
         GridAStarPlanner {
             grid: grid,
             diagonalsallowed,
@@ -479,7 +479,7 @@ pub struct ContinuousAStarPlanner {
 
 impl ContinuousAStarPlanner {
     /// Create a new continuous space A* planner
-    pub fn new(_obstacles: Vec<Vec<[f64; 2]>>, step_size: f64, collisionthreshold: f64) -> Self {
+    pub fn new(obstacles: Vec<Vec<[f64; 2]>>, step_size: f64, collisionthreshold: f64) -> Self {
         ContinuousAStarPlanner {
             obstacles: obstacles,
             step_size,
@@ -618,7 +618,7 @@ impl ContinuousAStarPlanner {
         }
 
         let planner = AStarPlanner::new();
-        let _radius = neighbor_radius;
+        let radius = neighbor_radius;
         let planner_clone = self.clone();
 
         // Create neighbor and heuristic functions that work with the Point2D type

@@ -359,7 +359,7 @@ impl QuantumTransformationOptimizer {
         // Parameter 0: StandardScaler usage probability
         if params[0] > 0.5 {
             configs.push(TransformationConfig {
-                transformationtype: TransformationType::StandardScaler,
+                transformation_type: TransformationType::StandardScaler,
                 parameters: HashMap::new(),
                 expected_performance: params[0],
             });

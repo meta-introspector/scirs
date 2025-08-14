@@ -361,20 +361,20 @@ fn demonstrate_memory_analysis() -> Result<()> {
 /// Create a sample sparse matrix (tridiagonal pattern)
 #[allow(dead_code)]
 fn create_sample_sparse_matrix(size: usize) -> SparseMatrix<f64> {
-    let mut sparse = SparseMatrix::new(_size, size);
+    let mut sparse = SparseMatrix::new(size, size);
 
     // Main diagonal
-    for i in 0.._size {
+    for i in 0..size {
         sparse.insert(i, i, 2.0);
     }
 
     // Super-diagonal
-    for i in 0.._size - 1 {
+    for i in 0..size - 1 {
         sparse.insert(i, i + 1, -1.0);
     }
 
     // Sub-diagonal
-    for i in 1.._size {
+    for i in 1..size {
         sparse.insert(i, i - 1, -1.0);
     }
 
@@ -384,12 +384,12 @@ fn create_sample_sparse_matrix(size: usize) -> SparseMatrix<f64> {
 /// Format bytes in human-readable format
 #[allow(dead_code)]
 fn format_bytes(bytes: usize) -> String {
-    if _bytes < 1024 {
+    if bytes < 1024 {
         format!("{}B", bytes)
-    } else if _bytes < 1024 * 1024 {
-        format!("{:.1}KB", _bytes as f64 / 1024.0)
+    } else if bytes < 1024 * 1024 {
+        format!("{:.1}KB", bytes as f64 / 1024.0)
     } else {
-        format!("{:.1}MB", _bytes as f64 / (1024.0 * 1024.0))
+        format!("{:.1}MB", bytes as f64 / (1024.0 * 1024.0))
     }
 }
 
@@ -422,7 +422,7 @@ mod benchmarks {
         let mut total_csc_time = std::time::Duration::new(0, 0);
 
         for _ in 0..iterations {
-            let mut sparse = create_sample_sparse_matrix(_size);
+            let mut sparse = create_sample_sparse_matrix(size);
 
             let start = Instant::now();
             let _csr = sparse.to_csr()?;

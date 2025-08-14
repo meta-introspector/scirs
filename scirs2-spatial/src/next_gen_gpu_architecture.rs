@@ -858,7 +858,7 @@ impl PhotonicAccelerator {
     async fn initialize_photonic_system(&mut self, _numunits: usize) -> SpatialResult<()> {
         self.photonic_units.clear();
 
-        for i in 0.._num_units {
+        for i in 0.._numunits {
             let unit = PhotonicProcessingUnit {
                 unit_id: i,
                 wavelength_range: (700.0 + i as f64 * 50.0, 750.0 + i as f64 * 50.0), // Different wavelengths
@@ -870,10 +870,10 @@ impl PhotonicAccelerator {
         }
 
         // Create optical interconnects
-        for i in 0.._num_units {
-            for j in (i + 1).._num_units {
+        for i in 0.._numunits {
+            for j in (i + 1).._numunits {
                 let interconnect = OpticalInterconnect {
-                    interconnect_id: i * _num_units + j,
+                    interconnect_id: i * _numunits + j,
                     source_unit: i,
                     target_unit: j,
                     transmission_efficiency: 0.99,
@@ -1002,7 +1002,7 @@ impl PhotonicAccelerator {
     /// Calculate optical similarity between waveform and cluster
     fn calculate_optical_similarity(
         &mut self,
-        _waveform: &Array1<Complex64>,
+        waveform: &Array1<Complex64>,
         cluster: usize,
     ) -> f64 {
         // Simplified optical correlation calculation

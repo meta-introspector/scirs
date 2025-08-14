@@ -42,19 +42,19 @@ impl TrainingHistoryVisualizer {
 
     /// Add validation history
     pub fn with_validation(mut self, valhistory: Vec<HashMap<String, f64>>) -> Self {
-        self.val_history = Some(val_history);
+        self.val_history = Some(valhistory);
         self
     }
 
     /// Set x-axis label
     pub fn with_x_label(mut self, xlabel: impl Into<String>) -> Self {
-        self.x_label = x_label.into();
+        self.x_label = xlabel.into();
         self
     }
 
     /// Set y-axis label
     pub fn with_y_label(mut self, ylabel: impl Into<String>) -> Self {
-        self.y_label = Some(y_label.into());
+        self.y_label = Some(ylabel.into());
         self
     }
 }

@@ -75,7 +75,7 @@ where
 /// # Returns
 /// * The chromatic number if found within max_colors, None otherwise
 #[allow(dead_code)]
-pub fn chromatic_number<N, E, Ix>(_graph: &Graph<N, E, Ix>, maxcolors: usize) -> Option<usize>
+pub fn chromatic_number<N, E, Ix>(graph: &Graph<N, E, Ix>, max_colors: usize) -> Option<usize>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
@@ -86,7 +86,7 @@ where
     }
 
     // Try coloring with 1, 2, 3, ... _colors
-    (1..=max_colors).find(|&num_colors| can_color_with_k_colors(_graph, num_colors))
+    (1..=max_colors).find(|&num_colors| can_color_with_k_colors(graph, num_colors))
 }
 
 /// Helper function to check if a graph can be colored with k colors
@@ -123,7 +123,7 @@ where
             let mut valid = true;
             for (i, &other_node) in nodes.iter().enumerate().take(node_idx) {
                 if (_graph.inner().contains_edge(node, other_node)
-                    || graph.inner().contains_edge(other_node, node))
+                    || _graph.inner().contains_edge(other_node, node))
                     && coloring[i] == color
                 {
                     valid = false;
@@ -142,7 +142,7 @@ where
         false
     }
 
-    backtrack(_graph, &nodes, &mut coloring, 0, k)
+    backtrack(graph, &nodes, &mut coloring, 0, k)
 }
 
 #[cfg(test)]

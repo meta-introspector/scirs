@@ -218,7 +218,7 @@ where
     use crate::gradient::compute_gradients;
 
     let g = ys[0].as_ref().graph();
-    let mut _grads = compute_gradients(ys, xs, Some(ys_grads), g);
+    let mut grads = compute_gradients(ys, xs, Some(ys_grads), g);
     let mut ret = Vec::with_capacity(xs.len());
     for x in xs {
         if let Some(gx) = grads.extract_grad(x) {
@@ -283,7 +283,7 @@ where
         vec_vec.push(grad(&[y.access_elem(i)], xs_));
     }
 
-    let _len = xs_._len();
+    let _len = xs_.len();
     let mut ret = Vec::with_capacity(_len);
     // post process gradients
     for i in 0.._len {
@@ -575,7 +575,7 @@ where
     B: AsRef<Tensor<'graph, F>> + Copy,
 {
     let _param = param.as_ref();
-    let g = param.graph();
+    let g = _param.graph();
     let op = array_ops::Gather {
         axis,
         should_normalize_negative_indices: true,
@@ -614,7 +614,7 @@ where
     B: AsRef<Tensor<'graph, F>> + Copy,
 {
     let _param = param.as_ref();
-    let g = param.graph();
+    let g = _param.graph();
     let op = array_ops::Gather {
         axis,
         should_normalize_negative_indices: false,
@@ -743,7 +743,7 @@ where
 {
     dropout_rng(
         x,
-        dropout_ratio,
+        dropoutratio,
         train,
         crate::ndarray_ext::get_default_rng::<F>(),
     )
@@ -903,7 +903,7 @@ where
 ///    ```
 #[allow(dead_code)]
 pub fn scalar<F: Float>(val: F, graph: &impl AsGraph<F>) -> Tensor<F> {
-    let op = const_gen_ops::Scalar { _val };
+    let op = const_gen_ops::Scalar { val };
     // For scalars, use set_knownshape with empty shape (scalar)
     Tensor::builder(graph).set_knownshape(&[]).build(op)
 }
@@ -1313,27 +1313,27 @@ impl<'g, F: Float> Tensor<'g, F> {
     /// Same as [tensor_ops::reduce_sum](reduce_sum)
     #[inline]
     pub fn reduce_sum<AT: AsTensor<'g, F>>(&self, axes: &AT, keepdims: bool) -> Tensor<'g, F> {
-        reduce_sum(self, axes, keep_dims)
+        reduce_sum(self, axes, keepdims)
     }
     /// Same as [tensor_ops::reduce_mean](reduce_mean)
     #[inline]
     pub fn reduce_mean<AT: AsTensor<'g, F>>(&self, axes: &AT, keepdims: bool) -> Tensor<'g, F> {
-        reduce_mean(self, axes, keep_dims)
+        reduce_mean(self, axes, keepdims)
     }
     /// Same as [tensor_ops::reduce_prod](reduce_prod)
     #[inline]
     pub fn reduce_prod<AT: AsTensor<'g, F>>(&self, axes: &AT, keepdims: bool) -> Tensor<'g, F> {
-        reduce_prod(self, axes, keep_dims)
+        reduce_prod(self, axes, keepdims)
     }
     /// Same as [tensor_ops::reduce_min](reduce_min)
     #[inline]
     pub fn reduce_min<AT: AsTensor<'g, F>>(&self, axes: &AT, keepdims: bool) -> Tensor<'g, F> {
-        reduce_min(self, axes, keep_dims)
+        reduce_min(self, axes, keepdims)
     }
     /// Same as [tensor_ops::reduce_max](reduce_max)
     #[inline]
     pub fn reduce_max<AT: AsTensor<'g, F>>(&self, axes: &AT, keepdims: bool) -> Tensor<'g, F> {
-        reduce_max(self, axes, keep_dims)
+        reduce_max(self, axes, keepdims)
     }
     /// Same as [tensor_ops::reduce_variance](reduce_variance)
     #[inline]

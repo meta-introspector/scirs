@@ -350,7 +350,7 @@ impl DiagnosticCollector {
     pub fn new(options: DiagnosticOptions) -> Self {
         let history_window = options.history_window;
         Self {
-            options: options,
+            options,
             nit: Vec::new(),
             start_time: Instant::now(),
             f_history: VecDeque::with_capacity(history_window),
@@ -401,7 +401,7 @@ impl DiagnosticCollector {
     }
 
     /// Update history buffers
-    fn update_history(&mut self, f_value: f64, grad_norm: f64, stepsize: f64) {
+    fn update_history(&mut self, f_value: f64, grad_norm: f64, step_size: f64) {
         self.f_history.push_back(f_value);
         if self.f_history.len() > self.options.history_window {
             self.f_history.pop_front();
@@ -824,7 +824,7 @@ impl DiagnosticCollector {
     }
 
     /// Generate recommendations for stagnation
-    fn generate_stagnation_recommendations(&self, stagnationtype: &StagnationType) -> Vec<String> {
+    fn generate_stagnation_recommendations(&self, stagnation_type: &StagnationType) -> Vec<String> {
         match stagnation_type {
             StagnationType::None => vec![],
             StagnationType::FunctionPlateau => vec![

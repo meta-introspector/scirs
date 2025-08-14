@@ -174,7 +174,8 @@ impl SamplingTable {
         }
 
         Ok(Self {
-            cdfweights: weights.to_vec(),
+            cdf,
+            weights: weights.to_vec(),
         })
     }
 
@@ -349,19 +350,19 @@ impl Word2Vec {
 
     /// Set vector size
     pub fn with_vector_size(mut self, vectorsize: usize) -> Self {
-        self.config.vector_size = vector_size;
+        self.config.vector_size = vectorsize;
         self
     }
 
     /// Set window size
     pub fn with_window_size(mut self, windowsize: usize) -> Self {
-        self.config.window_size = window_size;
+        self.config.window_size = windowsize;
         self
     }
 
     /// Set minimum count
     pub fn with_min_count(mut self, mincount: usize) -> Self {
-        self.config.min_count = min_count;
+        self.config.min_count = mincount;
         self
     }
 
@@ -373,8 +374,8 @@ impl Word2Vec {
 
     /// Set learning rate
     pub fn with_learning_rate(mut self, learningrate: f64) -> Self {
-        self.config.learning_rate = learning_rate;
-        self.current_learning_rate = learning_rate;
+        self.config.learning_rate = learningrate;
+        self.current_learning_rate = learningrate;
         self
     }
 
@@ -386,7 +387,7 @@ impl Word2Vec {
 
     /// Set number of negative samples
     pub fn with_negative_samples(mut self, negativesamples: usize) -> Self {
-        self.config.negative_samples = negative_samples;
+        self.config.negative_samples = negativesamples;
         self
     }
 
@@ -398,7 +399,7 @@ impl Word2Vec {
 
     /// Set batch size
     pub fn with_batch_size(mut self, batchsize: usize) -> Self {
-        self.config.batch_size = batch_size;
+        self.config.batch_size = batchsize;
         self
     }
 
@@ -463,7 +464,7 @@ impl Word2Vec {
         // Prepare sampling weights (unigram distribution raised to 3/4 power)
         let mut sampling_weights = vec![0.0; self.vocabulary.len()];
 
-        for (word, &count) in word_counts.iter() {
+        for (word, &count) in wordcounts.iter() {
             if let Some(idx) = self.vocabulary.get_index(word) {
                 // Apply smoothing: frequency^0.75
                 sampling_weights[idx] = (count as f64).powf(0.75);
@@ -580,7 +581,7 @@ impl Word2Vec {
         // This is a simplified version; ideal implementation would track actual frequencies
         // For now, we'll use the sampling table weights as a proxy
         if let Some(table) = &self.sampling_table {
-            table.weights()[word_idx]
+            table.weights()[wordidx]
         } else {
             1.0 // Default weight if no sampling table exists
         }
@@ -633,7 +634,7 @@ impl Word2Vec {
 
             // Create a copy for update
             let mut target_update = target_output.to_owned();
-            target_update.scaled_add(error..&context_avg);
+            target_update.scaled_add(error, &context_avg);
             target_output.assign(&target_update);
 
             // Negative sampling
@@ -732,7 +733,7 @@ impl Word2Vec {
 
                 // Create a copy for update
                 let mut context_update = context_output.to_owned();
-                context_update.scaled_add(error..&target_input);
+                context_update.scaled_add(error, &target_input);
                 context_output.assign(&context_update);
 
                 // Gradient for input word vector
@@ -795,7 +796,7 @@ impl Word2Vec {
     /// Get the most similar words to a given word
     pub fn most_similar(&self, word: &str, topn: usize) -> Result<Vec<(String, f64)>> {
         let word_vec = self.get_word_vector(word)?;
-        self.most_similar_by_vector(&word_vec, top_n, &[word])
+        self.most_similar_by_vector(&word_vec, topn, &[word])
     }
 
     /// Get the most similar words to a given vector
@@ -867,7 +868,7 @@ impl Word2Vec {
         d_vec.mapv_inplace(|val| val / norm);
 
         // Find most similar words to d_vec
-        self.most_similar_by_vector(&d_vec, top_n, &[a, b, c])
+        self.most_similar_by_vector(&d_vec, topn, &[a, b, c])
     }
 
     /// Save the Word2Vec model to a file

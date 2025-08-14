@@ -652,13 +652,13 @@ impl GpuDistanceMatrix {
 
     /// Configure batch size for GPU processing
     pub fn with_batch_size(mut self, batchsize: usize) -> Self {
-        self.batch_size = batch_size;
+        self.batch_size = batchsize;
         self
     }
 
     /// Configure mixed precision (f32 vs f64)
     pub fn with_mixed_precision(mut self, use_mixedprecision: bool) -> Self {
-        self.use_mixed_precision = use_mixed_precision;
+        self.use_mixed_precision = use_mixedprecision;
         self
     }
 
@@ -757,7 +757,7 @@ impl GpuKMeans {
 
     /// Configure maximum iterations
     pub fn with_max_iterations(mut self, maxiterations: usize) -> Self {
-        self.max_iterations = max_iterations;
+        self.max_iterations = maxiterations;
         self
     }
 
@@ -769,7 +769,7 @@ impl GpuKMeans {
 
     /// Configure batch size for GPU processing
     pub fn with_batch_size(mut self, batchsize: usize) -> Self {
-        self.batch_size = batch_size;
+        self.batch_size = batchsize;
         self
     }
 

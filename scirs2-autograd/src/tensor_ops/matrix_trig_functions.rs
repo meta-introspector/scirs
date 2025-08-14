@@ -429,7 +429,7 @@ fn compute_matrix_exp<F: Float + ndarray::ScalarOperand + FromPrimitive>(
 /// Compute matrix inverse
 #[allow(dead_code)]
 fn compute_matrix_inverse<F: Float>(
-    _matrix: &ndarray::ArrayView2<F>,
+    matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array2<F>, OpError> {
     let n = matrix.shape()[0];
     let mut a = matrix.to_owned();
@@ -525,7 +525,7 @@ fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
     let n = matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (_matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
+            if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
                 return false;
             }
         }

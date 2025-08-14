@@ -191,7 +191,7 @@ where
     let h = compute_step_sizes(x, options);
 
     // Create result matrix with the same sparsity pattern as the upper triangle
-    let (rows, cols) = sparsity.find();
+    let (rows, cols, _) = sparsity.find();
     let (m, n) = sparsity.shape();
     let zeros = vec![0.0; rows.len()];
     let mut hess = CsrArray::from_triplets(&rows.to_vec(), &cols.to_vec(), &zeros, (m, n), false)?;
@@ -338,7 +338,7 @@ where
     let h = compute_step_sizes(x, options);
 
     // Create result matrix with the same sparsity pattern as the upper triangle
-    let (rows, cols) = sparsity.find();
+    let (rows, cols, _) = sparsity.find();
     let (m, n_cols) = sparsity.shape();
     let zeros = vec![0.0; rows.len()];
     let mut hess =
@@ -512,7 +512,7 @@ where
     let groups = determine_column_groups(sparsity, None, None)?;
 
     // Create result matrix with the same sparsity pattern
-    let (rows, cols) = sparsity.find();
+    let (rows, cols, _) = sparsity.find();
     let zeros = vec![0.0; rows.len()];
     let mut hess = CsrArray::from_triplets(&rows.to_vec(), &cols.to_vec(), &zeros, (n, n), false)?;
 
@@ -602,11 +602,11 @@ where
     x_plus2[i] += 2.0 * h;
     x_minus2[i] -= 2.0 * h;
 
-    let f_plus = _func(&x_plus.view());
-    let f_minus = _func(&x_minus.view());
-    let f_plus2 = _func(&x_plus2.view());
-    let f_minus2 = _func(&x_minus2.view());
-    let f0 = _func(x);
+    let f_plus = func(&x_plus.view());
+    let f_minus = func(&x_minus.view());
+    let f_plus2 = func(&x_plus2.view());
+    let f_minus2 = func(&x_minus2.view());
+    let f0 = func(x);
 
     // 6th-order accurate second derivative formula
     // f''(x) ≈ (-f(x+2h) + 16f(x+h) - 30f(x) + 16f(x-h) - f(x-2h)) / (12h²)

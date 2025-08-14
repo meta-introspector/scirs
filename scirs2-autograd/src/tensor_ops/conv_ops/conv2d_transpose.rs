@@ -132,9 +132,9 @@ fn conv2d_transpose_impl<F: Float>(
     }
 
     if let Some(_w) = w.as_slice() {
-        w_slice = w;
+        w_slice = _w;
     } else {
-        copied_w = ndarray_ext::deep_copy(_w);
+        copied_w = ndarray_ext::deep_copy(w);
         unsafe {
             w_slice = slice::from_raw_parts(copied_w.as_ptr(), copied_w.len());
         }
@@ -238,7 +238,7 @@ fn conv2d_transpose_impl<F: Float>(
 
     // return gx
     unsafe {
-        Ok(NdArray::fromshape_vec_unchecked(
+        Ok(NdArray::from_shape_vec_unchecked(
             ndarray::IxDyn(&[batch_size, xch, xh, xw]),
             gx,
         ))
@@ -425,7 +425,7 @@ fn conv2d_transpose_filter_grad_impl<F: Float>(
     }
     unsafe {
         gw.set_len(gw_size);
-        NdArray::fromshape_vec_unchecked(kshape, gw)
+        NdArray::from_shape_vec_unchecked(kshape, gw)
     }
 }
 
@@ -487,7 +487,7 @@ fn test_deconv() {
     let (xch, ych) = (3, 2);
     let (yh, yw) = (2, 2);
     let batch_size = 2;
-    let ans = NdArray::<f32>::fromshape_vec(
+    let ans = NdArray::<f32>::from_shape_vec(
         ndarray::IxDyn(&[2, 3, 3, 3]),
         vec![
             2.0, 4.0, 2.0, 4.0, 8.0, 4.0, 2.0, 4.0, 2.0, 2.0, 4.0, 2.0, 4.0, 8.0, 4.0, 2.0, 4.0,

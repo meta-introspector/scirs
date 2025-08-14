@@ -424,7 +424,7 @@ where
         // Compute gradient at this point
         let options = SparseFiniteDiffOptions::default();
         if let Ok(grad) =
-            finite_difference_gradient_sparse(&mut fun.clone()..&x_pert.view(), &options)
+            finite_difference_gradient_sparse(&mut fun.clone(), &x_pert.view(), &options)
         {
             for i in 0..n {
                 if grad[i].abs() > threshold {

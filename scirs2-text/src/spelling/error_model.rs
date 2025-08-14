@@ -71,7 +71,7 @@ impl Default for ErrorModel {
             p_insertion: 0.25,
             p_substitution: 0.25,
             p_transposition: 0.25,
-            _confusion: HashMap::new(),
+            _char_confusion: HashMap::new(),
             max_edit_distance: 2, // Default max distance
         }
     }
@@ -92,14 +92,14 @@ impl ErrorModel {
             p_insertion: p_insertion / total,
             p_substitution: p_substitution / total,
             p_transposition: p_transposition / total,
-            _confusion: HashMap::new(),
+            _char_confusion: HashMap::new(),
             max_edit_distance: 2,
         }
     }
 
     /// Set the maximum edit distance to consider
     pub fn with_max_distance(mut self, maxdistance: usize) -> Self {
-        self.max_edit_distance = max_distance;
+        self.max_edit_distance = maxdistance;
         self
     }
 
@@ -120,8 +120,8 @@ impl ErrorModel {
                 match edit_distance[0] {
                     EditOp::Delete(_) => self.p_deletion,
                     EditOp::Insert(_) => self.p_insertion,
-                    EditOp::Substitute(__) => self.p_substitution,
-                    EditOp::Transpose(__) => self.p_transposition,
+                    EditOp::Substitute(_, _) => self.p_substitution,
+                    EditOp::Transpose(_, _) => self.p_transposition,
                 }
             }
             n => {
@@ -133,8 +133,8 @@ impl ErrorModel {
                     match op {
                         EditOp::Delete(_) => prob *= self.p_deletion,
                         EditOp::Insert(_) => prob *= self.p_insertion,
-                        EditOp::Substitute(__) => prob *= self.p_substitution,
-                        EditOp::Transpose(__) => prob *= self.p_transposition,
+                        EditOp::Substitute(_, _) => prob *= self.p_substitution,
+                        EditOp::Transpose(_, _) => prob *= self.p_transposition,
                     }
                 }
 
@@ -556,7 +556,7 @@ mod tests {
         // The implementation might return empty list or a placeholder - both are valid behaviors
         if !ops.is_empty() {
             // If we got operations, check that they're valid
-            assert!(matches!(ops[0], EditOp::Substitute(__)) || ops.len() > 1);
+            assert!(matches!(ops[0], EditOp::Substitute(_, _)) || ops.len() > 1);
         }
 
         // Test with a longer distance
@@ -572,7 +572,7 @@ mod tests {
         // depending on the implementation
         if ops.len() == 1 {
             // Placeholder case
-            assert!(matches!(ops[0], EditOp::Substitute(__)));
+            assert!(matches!(ops[0], EditOp::Substitute(_, _)));
         } else {
             // Full operations list
             assert!(!ops.is_empty());

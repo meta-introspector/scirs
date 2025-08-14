@@ -37,7 +37,7 @@ where
     // Compute all-pairs shortest paths
     for i in 0..n {
         for j in i + 1..n {
-            match dijkstra_path(_graph, &nodes[i], &nodes[j]) {
+            match dijkstra_path(graph, &nodes[i], &nodes[j]) {
                 Ok(Some(path)) => {
                     let distance: f64 = path.total_weight.into();
                     if distance > max_distance {
@@ -88,7 +88,7 @@ where
 
         for j in 0..n {
             if i != j {
-                match dijkstra_path(_graph, &nodes[i], &nodes[j]) {
+                match dijkstra_path(graph, &nodes[i], &nodes[j]) {
                     Ok(Some(path)) => {
                         let distance: f64 = path.total_weight.into();
                         if distance > max_distance_from_i {
@@ -144,7 +144,7 @@ where
 
         for j in 0..n {
             if i != j {
-                match dijkstra_path(_graph, &nodes[i], &nodes[j]) {
+                match dijkstra_path(graph, &nodes[i], &nodes[j]) {
                     Ok(Some(path)) => {
                         let distance: f64 = path.total_weight.into();
                         if distance > max_distance_from_i {
@@ -168,7 +168,7 @@ where
     nodes
         .into_iter()
         .enumerate()
-        .filter(|(i_)| (eccentricities[*i] - min_eccentricity).abs() < f64::EPSILON)
+        .filter(|(i, _)| (eccentricities[*i] - min_eccentricity).abs() < f64::EPSILON)
         .map(|(_, node)| node)
         .collect()
 }
@@ -203,7 +203,7 @@ mod tests {
     }
 
     #[test]
-    fn test_star_graph() -> GraphResult<()> {
+    fn test_stargraph() -> GraphResult<()> {
         // Create a star graph with center 0
         let mut star = create_graph::<i32, f64>();
         star.add_edge(0, 1, 1.0)?;
@@ -226,7 +226,7 @@ mod tests {
     }
 
     #[test]
-    fn test_disconnected_graph() -> GraphResult<()> {
+    fn test_disconnectedgraph() -> GraphResult<()> {
         // Create a disconnected graph
         let mut graph = create_graph::<i32, f64>();
         graph.add_edge(0, 1, 1.0)?;

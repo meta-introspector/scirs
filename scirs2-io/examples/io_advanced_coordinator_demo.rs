@@ -609,12 +609,12 @@ fn display_final_statistics(coordinator: &AdvancedCoordinator) -> Result<()> {
 
 #[allow(dead_code)]
 fn generate_simple_pattern(size: usize) -> Vec<u8> {
-    (0.._size).map(|i| (i % 16) as u8).collect()
+    (0..size).map(|i| (i % 16) as u8).collect()
 }
 
 #[allow(dead_code)]
 fn generate_complex_structure(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let base = (i as f32 * 0.1).sin() * 127.0 + 128.0;
             let noise = ((i * 17) % 256) as f32 * 0.2;
@@ -625,12 +625,12 @@ fn generate_complex_structure(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_random_entropy(size: usize) -> Vec<u8> {
-    (0.._size).map(|i| ((i * 157 + 73) % 256) as u8).collect()
+    (0..size).map(|i| ((i * 157 + 73) % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
 fn generate_hybrid_dataset(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             if i % 3 == 0 {
                 ((i * 13) % 256) as u8
@@ -645,12 +645,12 @@ fn generate_hybrid_dataset(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_advanced_complex_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let fractal =
                 ((i as f32 / 100.0).sin() * (i as f32 / 200.0).cos() * 127.0 + 128.0) as u8;
             let chaos = ((i * 31 + i * i) % 256) as u8;
-            let trend = (i as f32 / _size as f32 * 100.0) as u8;
+            let trend = (i as f32 / size as f32 * 100.0) as u8;
             ((fractal as u16 + chaos as u16 + trend as u16) / 3) as u8
         })
         .collect()
@@ -658,14 +658,14 @@ fn generate_advanced_complex_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_benchmark_dataset(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| ((i * 31 + i * i + 17) % 256) as u8)
         .collect()
 }
 
 #[allow(dead_code)]
 fn generate_cpu_intensive_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let complex_calc =
                 ((i as f32).sqrt().sin() * (i as f32).ln().cos() * 127.0 + 128.0) as u8;
@@ -677,17 +677,17 @@ fn generate_cpu_intensive_data(size: usize) -> Vec<u8> {
 #[allow(dead_code)]
 fn generate_memory_heavy_data(size: usize) -> Vec<u8> {
     let pattern = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    (0.._size).map(|i| pattern[i % pattern.len()]).collect()
+    (0..size).map(|i| pattern[i % pattern.len()]).collect()
 }
 
 #[allow(dead_code)]
 fn generate_io_bound_data(size: usize) -> Vec<u8> {
-    (0.._size).map(|i| ((i / 100) % 256) as u8).collect()
+    (0..size).map(|i| ((i / 100) % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
 fn generate_balanced_workload(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let balanced = (i % 128) as f32 + (i as f32 * 0.01).sin() * 50.0;
             balanced as u8
@@ -697,7 +697,7 @@ fn generate_balanced_workload(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_gpu_optimal_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let parallel = (i as f32 * 0.1).sin() * (i as f32 * 0.2).cos() * 127.0 + 128.0;
             parallel as u8
@@ -707,7 +707,7 @@ fn generate_gpu_optimal_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_scientific_domain_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let measurement = (i as f32 * 0.01).exp().ln() * 50.0 + 100.0;
             measurement as u8
@@ -717,7 +717,7 @@ fn generate_scientific_domain_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_financial_domain_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let price = 100.0 + (i as f32 * 0.1).sin() * 20.0 + ((i * 7) % 10) as f32;
             price as u8
@@ -727,7 +727,7 @@ fn generate_financial_domain_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_image_domain_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let pixel = ((i % 256) as f32 * 0.8) + ((i / 256) % 256) as f32 * 0.2;
             pixel as u8
@@ -737,7 +737,7 @@ fn generate_image_domain_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generatetext_domain_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let char_code = (i % 94) + 32; // Printable ASCII
             char_code as u8
@@ -747,7 +747,7 @@ fn generatetext_domain_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_sensor_domain_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let sensor_reading = (i as f32 * 0.1).sin() * 100.0 + 128.0 + ((i * 3) % 20) as f32;
             sensor_reading as u8
@@ -757,9 +757,9 @@ fn generate_sensor_domain_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_fractal_pattern_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
-            let x = (i as f32) / (_size as f32) * 4.0 - 2.0;
+            let x = (i as f32) / (size as f32) * 4.0 - 2.0;
             let fractal = ((x * x - 1.0).sin() * 127.0 + 128.0) as u8;
             fractal
         })
@@ -769,7 +769,7 @@ fn generate_fractal_pattern_data(size: usize) -> Vec<u8> {
 #[allow(dead_code)]
 fn generate_chaotic_series_data(size: usize) -> Vec<u8> {
     let mut chaos = 0.5;
-    (0.._size)
+    (0..size)
         .map(|_| {
             chaos = 4.0 * chaos * (1.0 - chaos); // Logistic map
             (chaos * 255.0) as u8
@@ -779,7 +779,7 @@ fn generate_chaotic_series_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_quantum_like_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let wave1 = (i as f32 * 0.1).sin();
             let wave2 = (i as f32 * 0.2).cos();
@@ -791,7 +791,7 @@ fn generate_quantum_like_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_adaptive_pattern_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let adaptation = (i as f32 / 1000.0).tanh() * (i as f32 * 0.05).sin() * 127.0 + 128.0;
             adaptation as u8
@@ -801,7 +801,7 @@ fn generate_adaptive_pattern_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_evolution_trigger_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let evolution = if i % 1000 < 100 {
                 255 // Trigger event
@@ -815,7 +815,7 @@ fn generate_evolution_trigger_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_database_export_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             if i % 50 < 10 {
                 // Headers
@@ -830,7 +830,7 @@ fn generate_database_export_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_log_analysis_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             if i % 100 < 20 {
                 // Timestamps
@@ -845,7 +845,7 @@ fn generate_log_analysis_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_backup_process_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let backup_chunk = ((i / 1024) % 256) as u8;
             let data_variation = ((i * 23) % 64) as u8;
@@ -856,7 +856,7 @@ fn generate_backup_process_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_ml_dataset_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let feature = (i as f32 / 100.0).sin() * (i as f32 / 200.0).cos() * 127.0 + 128.0;
             let noise = ((i * 7) % 20) as f32;
@@ -867,7 +867,7 @@ fn generate_ml_dataset_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_realtime_stream_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let timestamp_factor = (i as f32 / 1000.0).sin() * 50.0;
             let stream_data = ((i * 17) % 200) as f32;

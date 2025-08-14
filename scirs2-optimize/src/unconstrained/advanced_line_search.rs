@@ -131,14 +131,14 @@ pub struct NonMonotoneState {
 }
 
 impl NonMonotoneState {
-    fn new(_maxmemory: usize) -> Self {
+    fn new(max_memory: usize) -> Self {
         Self {
             f_history: VecDeque::new(),
-            max_memory: max_memory,
+            max_memory,
         }
     }
 
-    fn update(&mut self, fnew: f64) {
+    fn update(&mut self, f_new: f64) {
         self.f_history.push_back(f_new);
         while self.f_history.len() > self.max_memory {
             self.f_history.pop_front();
@@ -253,7 +253,7 @@ where
         if phi <= f0 + options.c1 * alpha * dphi0 {
             // Compute gradient if needed
             if let Some(ref mut grad_fun) = grad_fun {
-                let grad_new = gradfun(&x_new.view());
+                let grad_new = grad_fun(&x_new.view());
                 n_gev += 1;
                 let dphi = grad_new.dot(direction);
 
@@ -350,7 +350,7 @@ where
         // Check Armijo condition
         if phi <= f0 + options.c1 * alpha * dphi0 {
             if let Some(ref mut grad_fun) = grad_fun {
-                let grad_new = gradfun(&x_new.view());
+                let grad_new = grad_fun(&x_new.view());
                 n_gev += 1;
                 let dphi = grad_new.dot(direction);
 
@@ -520,7 +520,7 @@ where
         if phi <= f_ref + options.c1 * alpha * dphi0 {
             // Check Wolfe condition if gradient function is provided
             if let Some(ref mut grad_fun) = grad_fun {
-                let grad_new = gradfun(&x_new.view());
+                let grad_new = grad_fun(&x_new.view());
                 n_gev += 1;
                 let dphi = grad_new.dot(direction);
 
@@ -645,7 +645,7 @@ where
             );
         }
 
-        let grad_new = gradfun(&x_new.view());
+        let grad_new = grad_fun(&x_new.view());
         n_gev += 1;
         let dphi = grad_new.dot(direction);
 
@@ -746,7 +746,7 @@ where
             alpha_hi = alpha;
             phi_hi = phi;
         } else {
-            let grad_new = gradfun(&x_new.view());
+            let grad_new = grad_fun(&x_new.view());
             *n_gev += 1;
             let dphi = grad_new.dot(direction);
 
@@ -900,7 +900,7 @@ fn interpolate_cubic(
 
 #[allow(dead_code)]
 fn interpolate_quadratic(alpha: f64, phi: f64, phi0: f64, dphi: f64, dphi0: f64) -> f64 {
-    let alpha_q = -dphi0 * _alpha * _alpha / (2.0 * (phi - phi0 - dphi0 * alpha));
+    let alpha_q = -dphi0 * alpha * alpha / (2.0 * (phi - phi0 - dphi0 * alpha));
     alpha_q.max(1.1 * alpha)
 }
 
@@ -930,21 +930,21 @@ fn interpolate_cubic_zoom(
 }
 
 #[allow(dead_code)]
-fn interpolate_quadratic_zoom(_alpha_lo: f64, alpha_hi: f64, phi_lo: f64, phihi: f64) -> f64 {
+fn interpolate_quadratic_zoom(alpha_lo: f64, alpha_hi: f64, phi_lo: f64, phi_hi: f64) -> f64 {
     let d = alpha_hi - alpha_lo;
     let a = (phi_hi - phi_lo) / (d * d);
 
     if a > 0.0 {
-        let alpha_q = _alpha_lo + 0.5 * d;
-        alpha_q.max(_alpha_lo + 0.01 * d).min(alpha_hi - 0.01 * d)
+        let alpha_q = alpha_lo + 0.5 * d;
+        alpha_q.max(alpha_lo + 0.01 * d).min(alpha_hi - 0.01 * d)
     } else {
-        0.5 * (_alpha_lo + alpha_hi)
+        0.5 * (alpha_lo + alpha_hi)
     }
 }
 
 /// Create a non-monotone state for algorithms that need it
 #[allow(dead_code)]
-pub fn create_non_monotone_state(_memorysize: usize) -> NonMonotoneState {
+pub fn create_non_monotone_state(_memory_size: usize) -> NonMonotoneState {
     NonMonotoneState::new(_memory_size)
 }
 

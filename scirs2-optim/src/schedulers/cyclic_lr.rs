@@ -71,7 +71,7 @@ impl<A: Float + ScalarOperand + std::fmt::Debug> CyclicLR<A> {
     /// * `max_lr` - Maximum learning rate
     /// * `step_size` - Number of training iterations per half cycle
     /// * `mode` - Cycling mode (Triangular, Triangular2, or ExpRange)
-    pub fn new(base_lr: A, max_lr: A, stepsize: usize, mode: CyclicMode) -> Self {
+    pub fn new(base_lr: A, max_lr: A, step_size: usize, mode: CyclicMode) -> Self {
         let gamma = match mode {
             CyclicMode::ExpRange(g) => A::from(g).unwrap(),
             _ => A::one(),
@@ -102,22 +102,22 @@ impl<A: Float + ScalarOperand + std::fmt::Debug> CyclicLR<A> {
     }
 
     /// Create a new triangular cyclic scheduler
-    pub fn triangular(_base_lr: A, max_lr: A, stepsize: usize) -> Self {
-        Self::new(_base_lr, max_lr, step_size, CyclicMode::Triangular)
+    pub fn triangular(base_lr: A, max_lr: A, step_size: usize) -> Self {
+        Self::new(base_lr, max_lr, step_size, CyclicMode::Triangular)
     }
 
     /// Create a new triangular2 cyclic scheduler
-    pub fn triangular2(_base_lr: A, max_lr: A, stepsize: usize) -> Self {
-        Self::new(_base_lr, max_lr, step_size, CyclicMode::Triangular2)
+    pub fn triangular2(base_lr: A, max_lr: A, step_size: usize) -> Self {
+        Self::new(base_lr, max_lr, step_size, CyclicMode::Triangular2)
     }
 
     /// Create a new exponential range cyclic scheduler
-    pub fn exp_range(_base_lr: A, max_lr: A, stepsize: usize, gamma: f64) -> Self {
-        Self::new(_base_lr, max_lr, step_size, CyclicMode::ExpRange(gamma))
+    pub fn exp_range(base_lr: A, max_lr: A, step_size: usize, gamma: f64) -> Self {
+        Self::new(base_lr, max_lr, step_size, CyclicMode::ExpRange(gamma))
     }
 
     /// Set custom scale function
-    pub fn with_scale_fn<F>(mut self, scalefn: F) -> Self
+    pub fn with_scale_fn<F>(mut self, scale_fn: F) -> Self
     where
         F: Fn(usize, usize, A, A) -> A + Send + Sync + 'static,
     {

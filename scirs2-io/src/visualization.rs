@@ -293,7 +293,7 @@ trait VisualizationExporter {
 /// Get appropriate exporter for format
 #[allow(dead_code)]
 fn get_exporter(format: VisualizationFormat) -> Box<dyn VisualizationExporter> {
-    match _format {
+    match format {
         VisualizationFormat::PlotlyJson => Box::new(PlotlyExporter),
         VisualizationFormat::MatplotlibPython => Box::new(MatplotlibExporter),
         VisualizationFormat::Gnuplot => Box::new(GnuplotExporter),
@@ -313,7 +313,7 @@ impl VisualizationExporter for PlotlyExporter {
         &self,
         data: &[DataSeries],
         config: &PlotConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
         let json_str = self.to_string(data, config, metadata)?;
@@ -326,7 +326,7 @@ impl VisualizationExporter for PlotlyExporter {
         &self,
         data: &[DataSeries],
         config: &PlotConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
     ) -> Result<String> {
         let mut traces = Vec::new();
 
@@ -423,7 +423,7 @@ impl VisualizationExporter for MatplotlibExporter {
         &self,
         data: &[DataSeries],
         config: &PlotConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
         let script = self.to_string(data, config, metadata)?;
@@ -436,7 +436,7 @@ impl VisualizationExporter for MatplotlibExporter {
         &self,
         data: &[DataSeries],
         config: &PlotConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
     ) -> Result<String> {
         let mut script = String::from("import matplotlib.pyplot as plt\nimport numpy as np\n\n");
 
@@ -507,7 +507,7 @@ impl VisualizationExporter for GnuplotExporter {
         &self,
         data: &[DataSeries],
         config: &PlotConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
         let script = self.to_string(data, config, metadata)?;
@@ -520,7 +520,7 @@ impl VisualizationExporter for GnuplotExporter {
         &self,
         data: &[DataSeries],
         config: &PlotConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
     ) -> Result<String> {
         let mut script = String::new();
 
@@ -596,7 +596,7 @@ impl VisualizationExporter for VegaLiteExporter {
         &self,
         data: &[DataSeries],
         config: &PlotConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
         let spec = self.to_string(data, config, metadata)?;
@@ -609,7 +609,7 @@ impl VisualizationExporter for VegaLiteExporter {
         &self,
         data: &[DataSeries],
         config: &PlotConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
     ) -> Result<String> {
         let mut data_values = Vec::new();
 
@@ -680,7 +680,7 @@ pub mod quick {
     pub fn plot_histogram(values: &[f64], output: impl AsRef<Path>) -> Result<()> {
         VisualizationBuilder::new()
             .title("Histogram")
-            .add_histogram(_values, None)
+            .add_histogram(values, None)
             .export(VisualizationFormat::PlotlyJson, output)
     }
 
@@ -1138,7 +1138,7 @@ impl VisualizationExporter for D3Exporter {
         &self,
         data: &[DataSeries],
         config: &PlotConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
         let html = self.to_string(data, config, metadata)?;
@@ -1151,7 +1151,7 @@ impl VisualizationExporter for D3Exporter {
         &self,
         _data: &[DataSeries],
         config: &PlotConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
     ) -> Result<String> {
         let mut html = String::from(
             r#"<!DOCTYPE html>
@@ -1208,7 +1208,7 @@ impl VisualizationExporter for BokehExporter {
         &self,
         data: &[DataSeries],
         config: &PlotConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
         let json = self.to_string(data, config, metadata)?;
@@ -1221,7 +1221,7 @@ impl VisualizationExporter for BokehExporter {
         &self,
         _data: &[DataSeries],
         config: &PlotConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
     ) -> Result<String> {
         let doc = serde_json::json!({
             "version": "2.4.0",
@@ -1239,7 +1239,7 @@ impl VisualizationExporter for BokehExporter {
 /// Get appropriate 3D exporter
 #[allow(dead_code)]
 fn get_3d_exporter(format: VisualizationFormat) -> Box<dyn Visualization3DExporter> {
-    match _format {
+    match format {
         VisualizationFormat::PlotlyJson => Box::new(Plotly3DExporter),
         _ => Box::new(Plotly3DExporter), // Default to Plotly for 3D
     }
@@ -1264,7 +1264,7 @@ impl Visualization3DExporter for Plotly3DExporter {
         &self,
         data: &[DataSeries3D],
         config: &Plot3DConfig,
-        _metadata: &Metadata,
+        metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
         let mut traces = Vec::new();
@@ -1342,7 +1342,7 @@ pub mod external {
     impl PlotlyCloud {
         pub fn new(_apikey: String, username: String) -> Self {
             Self {
-                api_key: api_key,
+                api_key: _apikey,
                 username,
             }
         }

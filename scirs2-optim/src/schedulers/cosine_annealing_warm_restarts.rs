@@ -86,7 +86,7 @@ impl<A: Float + Debug> CosineAnnealingWarmRestarts<A> {
     /// * `min_lr` - Minimum learning rate
     /// * `t_0` - Initial cycle length
     /// * `t_mult` - Multiplicative factor for cycle length after each restart
-    pub fn new(initial_lr: A, min_lr: A, t_0: usize, tmult: A) -> Self {
+    pub fn new(initial_lr: A, min_lr: A, t_0: usize, t_mult: A) -> Self {
         Self {
             initial_lr,
             min_lr,

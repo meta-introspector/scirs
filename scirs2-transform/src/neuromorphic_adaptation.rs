@@ -230,7 +230,7 @@ impl NeuromorphicAdaptationNetwork {
     /// Convert meta-features to spike patterns
     fn meta_features_to_spikes(&self, metafeatures: &DatasetMetaFeatures) -> Result<Array1<f64>> {
         // Normalize meta-_features and convert to spike rates
-        let _features = vec![
+        let features = vec![
             (metafeatures.n_samples as f64).ln().max(0.0) / 10.0,
             (metafeatures.n_features as f64).ln().max(0.0) / 10.0,
             metafeatures.sparsity,
@@ -251,7 +251,7 @@ impl NeuromorphicAdaptationNetwork {
             )));
         }
 
-        Ok(Array1::from_vec(_features))
+        Ok(Array1::from_vec(features))
     }
 
     /// Simulate network dynamics
@@ -476,7 +476,7 @@ impl NeuromorphicAdaptationNetwork {
             .iter()
             .rev()
             .take(10)
-            .map(|(_, perf)| *perf)
+            .map(|(_, _, perf)| *perf)
             .collect();
 
         let avg_performance =
@@ -1133,10 +1133,10 @@ impl AdvancedNeuromorphicProcessor {
         ];
 
         // ✅ Advanced OPTIMIZATION: SIMD normalization
-        let _features = Array1::from_vec(raw_features);
-        let norm = f64::simd_norm(&_features.view());
+        let features = Array1::from_vec(raw_features);
+        let norm = f64::simd_norm(&features.view());
         let normalized = if norm > 1e-8 {
-            f64::simd_scalar_mul(&_features.view(), 1.0 / norm)
+            f64::simd_scalar_mul(&features.view(), 1.0 / norm)
         } else {
             features.clone()
         };

@@ -19,7 +19,7 @@ impl<F: Float> Op<F> for EyeOp {
         Ok(())
     }
 
-    fn grad(selfctx: &mut GradientContext<F>) {
+    fn grad<'a>(&self, _ctx: &mut GradientContext<'a, 'a, F>) {
         // Identity matrix is constant, no gradient
     }
 }
@@ -266,7 +266,7 @@ pub fn eye<'g, F: Float>(n: usize, ctx: &'g Context<F>) -> Tensor<'g, F> {
 pub fn trace<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(TraceOp)
 }
 
@@ -282,6 +282,6 @@ pub fn diag<'g, F: Float>(v: &Tensor<'g, F>) -> Tensor<'g, F> {
 pub fn extract_diag<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(ExtractDiagOp)
 }

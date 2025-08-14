@@ -237,8 +237,8 @@ pub fn get_cache_stats() -> CacheStats {
 #[allow(dead_code)]
 pub fn configure_cache(_max_entries: usize, ttlseconds: u64) {
     let mut config = CACHE_CONFIG.lock().unwrap();
-    config._max_entries = max_entries;
-    config.ttl_seconds = ttl_seconds;
+    config.max_entries = _max_entries;
+    config.ttl_seconds = ttlseconds;
 }
 
 /// Run garbage collection
@@ -300,12 +300,12 @@ pub fn smart_checkpoint<'g, F: Float>(
 pub fn cached_op<'g, F: Float>(tensor: &Tensor<'g, F>, operationname: &str) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
-        .append_input(_tensor, false)
+        .append_input(tensor, false)
         .build(CachedOp {
-            operation_name: operation_name.to_string(),
+            operation_name: operationname.to_string(),
             cache_key: format!(
                 "{}_{}",
-                operation_name,
+                operationname,
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap()

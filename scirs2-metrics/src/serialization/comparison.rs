@@ -338,7 +338,7 @@ where
 /// * A new collection with filtered metrics
 #[allow(dead_code)]
 pub fn filter_by_name(collection: &MetricCollection, pattern: &str) -> MetricCollection {
-    filter_metrics(_collection, |metric| metric.name.contains(pattern))
+    filter_metrics(collection, |metric| metric.name.contains(pattern))
 }
 
 /// Get metrics from a collection by time range

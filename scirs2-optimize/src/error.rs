@@ -49,7 +49,7 @@ pub type OptimizeResult<T> = Result<T, OptimizeError>;
 // Implement conversion from SparseError to OptimizeError
 impl From<scirs2_sparse::error::SparseError> for OptimizeError {
     fn from(error: scirs2_sparse::error::SparseError) -> Self {
-        match _error {
+        match error {
             scirs2_sparse::SparseError::ComputationError(msg) => {
                 OptimizeError::ComputationError(msg)
             }
@@ -130,14 +130,14 @@ impl From<scirs2_sparse::error::SparseError> for OptimizeError {
 // Implement conversion from GpuError to OptimizeError
 impl From<scirs2_core::GpuError> for OptimizeError {
     fn from(error: scirs2_core::GpuError) -> Self {
-        OptimizeError::ComputationError(_error.to_string())
+        OptimizeError::ComputationError(error.to_string())
     }
 }
 
 // Implement conversion from OptimizeError to CoreError
 impl From<OptimizeError> for CoreError {
     fn from(error: OptimizeError) -> Self {
-        match _error {
+        match error {
             OptimizeError::ComputationError(msg) => CoreError::ComputationError(
                 scirs2_core::error::ErrorContext::new(msg)
                     .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),

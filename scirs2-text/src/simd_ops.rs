@@ -48,11 +48,11 @@ impl SimdStringOps {
         }
 
         // Advanced-optimized SIMD processing with larger chunks and prefetching
-        let simd_chunk_size = 512; // Increased for better SIMD utilization
+        let simdchunk_size = 512; // Increased for better SIMD utilization
         let mut count = 0usize;
 
         // Process complete chunks with advanced-vectorized counting
-        let chunks: Vec<_> = data.chunks(simd_chunk_size).collect();
+        let chunks: Vec<_> = data.chunks(simdchunk_size).collect();
 
         // Use parallel processing for large datasets
         use scirs2_core::parallel_ops::*;
@@ -141,7 +141,7 @@ impl SimdStringOps {
     /// Find positions of a specific byte using SIMD
     fn find_byte_positions(data: &[u8], target: u8) -> Vec<usize> {
         if data.len() < 64 {
-            return _data
+            return data
                 .iter()
                 .enumerate()
                 .filter(|(_, &b)| b == target)
@@ -190,7 +190,7 @@ impl SimdStringOps {
 
     /// SIMD-accelerated substring search using byte comparison
     pub fn find_substring(haystack: &str, needle: &str) -> Option<usize> {
-        if !Self::is_available() || !_haystack.is_ascii() || !needle.is_ascii() {
+        if !Self::is_available() || !haystack.is_ascii() || !needle.is_ascii() {
             return haystack.find(needle);
         }
 
@@ -525,7 +525,7 @@ impl VectorizedStringOps {
         let mut chunks = bytes.chunks_exact(chunk_size);
 
         for chunk in &mut chunks {
-            count += Self::count_target_in_chunk(chunk, target_byte);
+            count += Self::count_target_inchunk(chunk, target_byte);
         }
 
         // Process remaining bytes
@@ -538,7 +538,7 @@ impl VectorizedStringOps {
     }
 
     /// Count target byte in a chunk using vectorized operations
-    fn count_target_in_chunk(chunk: &[u8], target: u8) -> usize {
+    fn count_target_inchunk(chunk: &[u8], target: u8) -> usize {
         // This would use actual SIMD intrinsics in a real implementation
         // For now, we use an optimized scalar version that can be vectorized by the compiler
         let mut count = 0;
@@ -573,14 +573,14 @@ impl VectorizedStringOps {
 
         // Process in SIMD-friendly chunks
         for chunk in bytes.chunks(64) {
-            let mut transformed_chunk = Vec::with_capacity(chunk.len());
+            let mut transformedchunk = Vec::with_capacity(chunk.len());
 
             // Vectorizable transformation
             for &byte in chunk {
-                transformed_chunk.push(transform(byte));
+                transformedchunk.push(transform(byte));
             }
 
-            result.extend_from_slice(&transformed_chunk);
+            result.extend_from_slice(&transformedchunk);
         }
 
         // Safe because we only transform ASCII bytes
@@ -601,7 +601,7 @@ impl VectorizedStringOps {
 
         // Process in chunks for better SIMD utilization
         for chunk in bytes.chunks(256) {
-            let (letters, digits, spaces, others) = Self::classify_chunk(chunk);
+            let (letters, digits, spaces, others) = Self::classifychunk(chunk);
             letter_count += letters;
             digit_count += digits;
             space_count += spaces;
@@ -612,14 +612,14 @@ impl VectorizedStringOps {
     }
 
     /// Classify characters in a chunk
-    fn classify_chunk(chunk: &[u8]) -> (usize, usize, usize, usize) {
+    fn classifychunk(chunk: &[u8]) -> (usize, usize, usize, usize) {
         let mut letters = 0;
         let mut digits = 0;
         let mut spaces = 0;
         let mut others = 0;
 
         // Vectorizable classification
-        for &byte in _chunk {
+        for &byte in chunk {
             match byte {
                 b'a'..=b'z' | b'A'..=b'Z' => letters += 1,
                 b'0'..=b'9' => digits += 1,
@@ -685,11 +685,11 @@ impl VectorizedStringOps {
             return String::new();
         }
 
-        // Check if all _strings are ASCII for SIMD optimization
+        // Check if all strings are ASCII for SIMD optimization
         let all_ascii = strings.iter().all(|s| s.is_ascii());
 
         if !SimdStringOps::is_available() || !all_ascii {
-            return Self::longest_common_prefix_scalar(_strings);
+            return Self::longest_common_prefix_scalar(strings);
         }
 
         let first_bytes = strings[0].as_bytes();
@@ -698,15 +698,15 @@ impl VectorizedStringOps {
         // Process in SIMD-friendly chunks
         for chunk_start in (0..min_len).step_by(64) {
             let chunk_end = (chunk_start + 64).min(min_len);
-            let _chunk_size = chunk_end - chunk_start;
+            let chunk_size = chunk_end - chunk_start;
 
             let mut all_match = true;
             #[allow(clippy::needless_range_loop)]
             for pos in chunk_start..chunk_end {
                 let first_byte = first_bytes[pos];
 
-                // Check if all _strings have the same byte at this position
-                for &s in &_strings[1..] {
+                // Check if all strings have the same byte at this position
+                for &s in &strings[1..] {
                     if s.as_bytes()[pos] != first_byte {
                         all_match = false;
                         break;
@@ -815,7 +815,7 @@ impl SimdPatternMatcher {
 
         // For small slices, use direct comparison
         if slice1.len() < 16 {
-            return _slice1 == slice2;
+            return slice1 == slice2;
         }
 
         // Process in SIMD-friendly chunks
@@ -848,14 +848,14 @@ impl SimdPatternMatcher {
     pub fn fuzzy_search_vectorized(
         text: &str,
         pattern: &str,
-        max_distance: usize,
+        maxdistance: usize,
     ) -> Vec<(usize, usize)> {
         if pattern.is_empty() || text.is_empty() {
             return Vec::new();
         }
 
         if !SimdStringOps::is_available() || pattern.len() > 64 {
-            return Self::fuzzy_search_scalar(text, pattern, max_distance);
+            return Self::fuzzy_search_scalar(text, pattern, maxdistance);
         }
 
         let mut matches = Vec::new();
@@ -875,16 +875,16 @@ impl SimdPatternMatcher {
             let mut best_match_found = false;
 
             // Try different window lengths around the pattern length
-            let min_len = pattern_len.saturating_sub(max_distance).max(1);
-            let max_len = pattern_len + max_distance;
+            let min_len = pattern_len.saturating_sub(maxdistance).max(1);
+            let max_len = pattern_len + maxdistance;
 
             for len in min_len..=max_len {
                 if start + len <= text.len() {
                     let window = &text[start..start + len];
                     let _distance = Self::edit_distance_simd(window, pattern);
 
-                    if _distance <= max_distance && _distance < best_distance {
-                        best_distance = distance;
+                    if _distance <= maxdistance && _distance < best_distance {
+                        best_distance = _distance;
                         best_len = len;
                         best_match_found = true;
 
@@ -914,7 +914,7 @@ impl SimdPatternMatcher {
     /// SIMD-accelerated edit distance for short strings
     fn edit_distance_simd(s1: &str, s2: &str) -> usize {
         if s1.len() > 64 || s2.len() > 64 {
-            return SimdEditDistance::levenshtein(_s1, s2);
+            return SimdEditDistance::levenshtein(s1, s2);
         }
 
         // Use optimized algorithm for short strings
@@ -973,16 +973,16 @@ impl SimdPatternMatcher {
             let mut best_match_found = false;
 
             // Try different window lengths around the pattern length
-            let min_len = pattern_len.saturating_sub(max_distance).max(1);
-            let max_len = pattern_len + max_distance;
+            let min_len = pattern_len.saturating_sub(maxdistance).max(1);
+            let max_len = pattern_len + maxdistance;
 
             for len in min_len..=max_len {
                 if start + len <= text.len() {
                     let window = &text[start..start + len];
                     let _distance = SimdEditDistance::levenshtein(window, pattern);
 
-                    if _distance <= max_distance && _distance < best_distance {
-                        best_distance = distance;
+                    if _distance <= maxdistance && _distance < best_distance {
+                        best_distance = _distance;
                         best_match_found = true;
 
                         // If we find an exact match, we can break early
@@ -1073,13 +1073,13 @@ pub struct SimdNgramGenerator;
 
 impl SimdNgramGenerator {
     /// Generate character n-grams using SIMD-optimized sliding window
-    pub fn char_ngrams(text: &str, n: usize) -> Vec<String> {
+    pub fn charngrams(text: &str, n: usize) -> Vec<String> {
         if n == 0 || text.len() < n {
             return Vec::new();
         }
 
         if !SimdStringOps::is_available() || !text.is_ascii() {
-            return Self::char_ngrams_scalar(text, n);
+            return Self::charngrams_scalar(text, n);
         }
 
         let bytes = text.as_bytes();
@@ -1097,7 +1097,7 @@ impl SimdNgramGenerator {
     }
 
     /// Generate word n-grams using SIMD-accelerated tokenization
-    pub fn word_ngrams(text: &str, n: usize) -> Vec<Vec<String>> {
+    pub fn wordngrams(text: &str, n: usize) -> Vec<Vec<String>> {
         if n == 0 {
             return Vec::new();
         }
@@ -1143,7 +1143,7 @@ impl SimdNgramGenerator {
     }
 
     /// Scalar fallback for character n-grams
-    fn char_ngrams_scalar(text: &str, n: usize) -> Vec<String> {
+    fn charngrams_scalar(text: &str, n: usize) -> Vec<String> {
         let chars: Vec<char> = text.chars().collect();
         let mut ngrams = Vec::with_capacity(chars.len().saturating_sub(n - 1));
 
@@ -1167,7 +1167,7 @@ impl SimdNgramGenerator {
             }
         } else {
             // Standard processing for smaller datasets
-            for ngram in _ngrams {
+            for ngram in ngrams {
                 *frequency.entry(ngram.clone()).or_insert(0) += 1;
             }
         }
@@ -1178,9 +1178,9 @@ impl SimdNgramGenerator {
     /// Calculate n-gram similarity between two texts using Jaccard coefficient
     pub fn ngram_similarity(text1: &str, text2: &str, n: usize) -> f64 {
         let ngrams1: std::collections::HashSet<String> =
-            Self::char_ngrams(text1, n).into_iter().collect();
+            Self::charngrams(text1, n).into_iter().collect();
         let ngrams2: std::collections::HashSet<String> =
-            Self::char_ngrams(text2, n).into_iter().collect();
+            Self::charngrams(text2, n).into_iter().collect();
 
         if ngrams1.is_empty() && ngrams2.is_empty() {
             return 1.0;
@@ -2036,7 +2036,7 @@ mod tests {
             .filter(|(_, distance)| *distance == 0)
             .collect();
         assert!(!exact_matches.is_empty());
-        assert!(exact_matches.iter().any(|(pos_)| *pos == 0));
+        assert!(exact_matches.iter().any(|(pos_, _)| *pos_ == 0));
     }
 
     #[test]
@@ -2128,7 +2128,7 @@ mod tests {
     }
 
     #[test]
-    fn test_simd_edit_distance_short_strings() {
+    fn test_simd_edit_distance_shortstrings() {
         // Test the SIMD edit distance for short strings
         assert_eq!(SimdPatternMatcher::edit_distance_simd("", ""), 0);
         assert_eq!(SimdPatternMatcher::edit_distance_simd("a", ""), 1);
@@ -2145,20 +2145,20 @@ mod tests {
     fn test_simd_ngram_generator() {
         // Test character n-grams
         let text = "hello";
-        let bigrams = SimdNgramGenerator::char_ngrams(text, 2);
+        let bigrams = SimdNgramGenerator::charngrams(text, 2);
         assert_eq!(bigrams, vec!["he", "el", "ll", "lo"]);
 
-        let trigrams = SimdNgramGenerator::char_ngrams(text, 3);
+        let trigrams = SimdNgramGenerator::charngrams(text, 3);
         assert_eq!(trigrams, vec!["hel", "ell", "llo"]);
 
         // Test edge cases
-        assert!(SimdNgramGenerator::char, _ngrams("", 2).is_empty());
-        assert!(SimdNgramGenerator::char, _ngrams("a", 2).is_empty());
-        assert_eq!(SimdNgramGenerator::char, _ngrams("ab", 2), vec!["ab"]);
+        assert!(SimdNgramGenerator::charngrams("", 2).is_empty());
+        assert!(SimdNgramGenerator::charngrams("a", 2).is_empty());
+        assert_eq!(SimdNgramGenerator::charngrams("ab", 2), vec!["ab"]);
 
         // Test word n-grams
         let text = "hello world test";
-        let word_bigrams = SimdNgramGenerator::word_ngrams(text, 2);
+        let word_bigrams = SimdNgramGenerator::wordngrams(text, 2);
         assert_eq!(word_bigrams.len(), 2);
         assert_eq!(word_bigrams[0], vec!["hello", "world"]);
         assert_eq!(word_bigrams[1], vec!["world", "test"]);
@@ -2274,7 +2274,7 @@ mod tests {
 
         // Matrix should be symmetric
         for (i, row) in matrix.iter().enumerate().take(4) {
-            for (j_) in row.iter().enumerate().take(4) {
+            for (j, _) in row.iter().enumerate().take(4) {
                 assert_eq!(matrix[i][j], matrix[j][i]);
             }
         }
@@ -2318,16 +2318,16 @@ mod tests {
     #[test]
     fn test_simd_ngram_edge_cases() {
         // Test with n=0
-        assert!(SimdNgramGenerator::char, _ngrams("hello", 0).is_empty());
-        assert!(SimdNgramGenerator::word_ngrams("hello world", 0).is_empty());
+        assert!(SimdNgramGenerator::charngrams("hello", 0).is_empty());
+        assert!(SimdNgramGenerator::wordngrams("hello world", 0).is_empty());
 
         // Test with text shorter than n
-        assert!(SimdNgramGenerator::char, _ngrams("hi", 5).is_empty());
-        assert!(SimdNgramGenerator::word_ngrams("hello", 3).is_empty());
+        assert!(SimdNgramGenerator::charngrams("hi", 5).is_empty());
+        assert!(SimdNgramGenerator::wordngrams("hello", 3).is_empty());
 
         // Test with Unicode text (should fall back to scalar)
         let unicodetext = "héllo wörld";
-        let ngrams = SimdNgramGenerator::char_ngrams(unicodetext, 2);
+        let ngrams = SimdNgramGenerator::charngrams(unicodetext, 2);
         assert!(!ngrams.is_empty());
         assert!(ngrams[0].chars().count() <= 2);
     }
@@ -2363,7 +2363,7 @@ mod tests {
     }
 
     #[test]
-    fn test_simd_parallel_processor_small_datasets() {
+    fn test_simd_parallel_processor_smalldatasets() {
         // Test with small dataset (should use sequential processing)
         let smalltexts = vec!["hello".to_string(), "world".to_string()];
 

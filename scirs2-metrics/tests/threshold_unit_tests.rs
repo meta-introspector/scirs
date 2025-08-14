@@ -2,7 +2,7 @@
 mod tests {
     use approx::assert_abs_diff_eq;
     use ndarray::array;
-    use scirs2__metrics::classification::threshold::{
+    use scirs2_metrics::classification::threshold::{
         average_precision_score, find_optimal_threshold, find_optimal_threshold_g_means,
         g_means_score, precision_recall_curve,
     };
@@ -40,7 +40,7 @@ mod tests {
         let y_true_all_pos = array![1.0, 1.0, 1.0, 1.0];
         let y_prob_all_pos = array![0.9, 0.8, 0.7, 0.6];
 
-        let (precision_all_pos_recall_all_pos_) =
+        let (precision_all_pos, _recall_all_pos, _thresholds) =
             precision_recall_curve(&y_true_all_pos, &y_prob_all_pos, None, None).unwrap();
 
         // All precisions should be 1.0 for all-positive case

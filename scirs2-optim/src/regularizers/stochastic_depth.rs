@@ -52,7 +52,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> StochasticDepth<A> {
         Self {
             drop_prob,
             layer_idx,
-            num_layers,
+            num_layers: numlayers,
             rng_state: 0,
         }
     }
@@ -63,7 +63,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> StochasticDepth<A> {
     ///
     /// * `layer_idx` - New layer index
     pub fn set_layer(&mut self, layeridx: usize) {
-        self.layer_idx = layer_idx;
+        self.layer_idx = layeridx;
     }
 
     /// Set the RNG state for deterministic behavior

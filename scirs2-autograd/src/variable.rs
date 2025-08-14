@@ -218,8 +218,8 @@ pub struct VariableNamespaceMut<'env, F: Float> {
 impl FullName {
     fn new(_namespace_id: &'static str, variablename: String) -> Self {
         FullName {
-            namespace_id: namespace_id.to_string(),
-            variable_name,
+            namespace_id: _namespace_id.to_string(),
+            variable_name: variablename,
         }
     }
 }
@@ -277,7 +277,7 @@ pub trait NamespaceTrait<F: Float> {
         self.env()
             .name_to_id
             .iter()
-            .filter_map(|(v_name_)| {
+            .filter_map(|(v_name, _v_id)| {
                 if v_name.namespace_id == self.name() {
                     Some(v_name.variable_name.deref())
                 } else {
@@ -454,16 +454,23 @@ fn test_namespace_iter() {
     env.slot().name("v1").set(ndarray_ext::zeros(&[3, 2]));
     env.slot().name("v2").set(ndarray_ext::zeros(&[2, 3]));
 
-    for (i, (name, arr)) in env.default_namespace().iter().enumerate() {
-        if i == 0 {
-            assert_eq!(name, "v1");
-            assert_eq!(arr.borrow().shape(), &[3, 2]);
-        }
-        if i == 1 {
-            assert_eq!(name, "v2");
-            assert_eq!(arr.borrow().shape(), &[2, 3]);
+    let mut found_v1 = false;
+    let mut found_v2 = false;
+    for (name, arr) in env.default_namespace().iter() {
+        match name {
+            "v1" => {
+                assert_eq!(arr.borrow().shape(), &[3, 2]);
+                found_v1 = true;
+            }
+            "v2" => {
+                assert_eq!(arr.borrow().shape(), &[2, 3]);
+                found_v2 = true;
+            }
+            _ => panic!("Unexpected variable name: {}", name),
         }
     }
+    assert!(found_v1, "Variable v1 not found");
+    assert!(found_v2, "Variable v2 not found");
 
     for (i, (name, arr)) in env.default_namespace_mut().iter().enumerate() {
         if i == 0 {
@@ -495,7 +502,7 @@ impl VariableEnvironment<f32> {
     ///
     /// Returns the result of the execution.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<VariableEnvironment<f32>, Box<dyn Error>> {
-        let raw: DeserializedVariableEnvironment<f32> = Self::deserialize(_path)?;
+        let raw: DeserializedVariableEnvironment<f32> = Self::deserialize(path)?;
         Self::load_internal(raw)
     }
 
@@ -518,7 +525,7 @@ impl VariableEnvironment<f64> {
     ///
     /// Returns the result of the execution.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<VariableEnvironment<f64>, Box<dyn Error>> {
-        let raw: DeserializedVariableEnvironment<f64> = Self::deserialize(_path)?;
+        let raw: DeserializedVariableEnvironment<f64> = Self::deserialize(path)?;
         Self::load_internal(raw)
     }
 
@@ -574,7 +581,7 @@ impl<'env, F: Float> VariableEnvironment<F> {
     where
         T: for<'de> Deserialize<'de>,
     {
-        let f = File::open(_path.as_ref())?;
+        let f = File::open(path.as_ref())?;
         let ret = serde_json::from_reader(f)?;
         Ok(ret)
     }
@@ -637,7 +644,7 @@ impl<'env, F: Float> VariableEnvironment<F> {
     #[inline]
     pub fn namespace(&'env self, namespaceid: &'static str) -> VariableNamespace<'env, F> {
         VariableNamespace {
-            namespace_id,
+            namespace_id: namespaceid,
             env: self,
         }
     }
@@ -834,7 +841,7 @@ fn save_and_load() {
 
         // Now manually compare array values since RefCell<NdArray> doesn't implement AbsDiffEq
         for (vid, array) in env.iter() {
-            let loaded_env_map: HashMap<__> = loaded_env.iter().collect();
+            let loaded_env_map: HashMap<_, _> = loaded_env.iter().collect();
             let loaded_array = loaded_env_map.get(&vid).unwrap();
 
             // Compare arrays by borrowing them and comparing elements

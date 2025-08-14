@@ -470,7 +470,7 @@ fn main() -> Result<()> {
 
 #[allow(dead_code)]
 fn generate_scientific_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             // Simulate scientific data with patterns
             let base = (i as f32 * 0.1).sin() * 127.0 + 128.0;
@@ -482,10 +482,10 @@ fn generate_scientific_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_time_series_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             // Simulate time series with trends and seasonality
-            let trend = (i as f32 / _size as f32) * 50.0;
+            let trend = (i as f32 / size as f32) * 50.0;
             let seasonal = (i as f32 * 2.0 * std::f32::consts::PI / 100.0).sin() * 30.0;
             let noise = ((i * 23 + 7) % 256) as f32 * 0.2;
             (128.0 + trend + seasonal + noise) as u8
@@ -496,7 +496,7 @@ fn generate_time_series_data(size: usize) -> Vec<u8> {
 #[allow(dead_code)]
 fn generate_genomic_data(size: usize) -> Vec<u8> {
     // Simulate genomic sequences (A, T, G, C)
-    (0.._size)
+    (0..size)
         .map(|i| match (i * 31 + 13) % 4 {
             0 => b'A',
             1 => b'T',
@@ -507,12 +507,12 @@ fn generate_genomic_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_streaming_data(_size: usize, chunkid: usize) -> Vec<u8> {
-    (0.._size)
+fn generate_streaming_data(size: usize, chunkid: usize) -> Vec<u8> {
+    (0..size)
         .map(|i| {
             // Simulate streaming data with chunk correlation
-            let chunk_factor = (chunk_id as f32 * 0.1).cos() * 50.0;
-            let local_pattern = ((i * 7 + chunk_id * 3) % 256) as f32;
+            let chunk_factor = (chunkid as f32 * 0.1).cos() * 50.0;
+            let local_pattern = ((i * 7 + chunkid * 3) % 256) as f32;
             (chunk_factor + local_pattern) as u8
         })
         .collect()
@@ -520,7 +520,7 @@ fn generate_streaming_data(_size: usize, chunkid: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_database_backup_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             // Simulate structured database data
             if i % 100 < 20 {
@@ -536,7 +536,7 @@ fn generate_database_backup_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_log_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             // Simulate log file patterns
             if i % 50 < 10 {
@@ -552,7 +552,7 @@ fn generate_log_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_document_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             // Simulate document text
             ((i * 7 + 11) % 94 + 32) as u8 // Printable ASCII
@@ -562,7 +562,7 @@ fn generate_document_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_financial_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             // Simulate financial transaction data
             if i % 20 < 8 {
@@ -578,7 +578,7 @@ fn generate_financial_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_analytics_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             // Simulate analytics data with correlations
             let base_value = (i as f32 / 1000.0).sin() * 100.0 + 128.0;

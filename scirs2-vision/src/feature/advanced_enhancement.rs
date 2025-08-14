@@ -55,7 +55,7 @@ pub enum ToneMappingMethod {
 
 impl HDRProcessor {
     /// Create a new HDR processor
-    pub fn new(_exposure_values: Vec<f32>, tonemapping: ToneMappingMethod) -> Self {
+    pub fn new(exposure_values: Vec<f32>, tonemapping: ToneMappingMethod) -> Self {
         Self {
             exposure_values,
             tonemapping,
@@ -817,7 +817,7 @@ pub enum DenoisingMethod {
 
 impl AdvancedDenoiser {
     /// Create a new advanced denoiser
-    pub fn new(_method: DenoisingMethod, noisevariance: f32) -> Self {
+    pub fn new(method: DenoisingMethod, noisevariance: f32) -> Self {
         Self {
             method,
             noisevariance,
@@ -924,8 +924,8 @@ impl AdvancedDenoiser {
         let search_end_x = (center_x + search_window / 2).min(width - block_w);
 
         for y in (search_start_y..search_end_y).step_by(2) {
-            for _x in (search_start_x..search_end_x).step_by(2) {
-                let candidate_block = image.slice(s![y..y + block_h, x.._x + block_w]);
+            for x in (search_start_x..search_end_x).step_by(2) {
+                let candidate_block = image.slice(s![y..y + block_h, x..x + block_w]);
                 let similarity = self.compute_block_similarity(ref_block, &candidate_block);
 
                 similarities.push((similarity, y, x));
@@ -941,7 +941,7 @@ impl AdvancedDenoiser {
         let mut similar_blocks = Array3::zeros((block_h, block_w, num_blocks));
 
         for (i, &(_, y, x)) in similarities.iter().enumerate() {
-            let _block = image.slice(s![y..y + block_h, x.._x + block_w]);
+            let _block = image.slice(s![y..y + block_h, x..x + block_w]);
             similar_blocks.slice_mut(s![.., .., i]).assign(&_block);
         }
 

@@ -58,7 +58,7 @@ impl EnhancedStandardScaler {
             PerfUtils::choose_processing_strategy(n_samples, n_features, self.memory_limitmb);
 
         match &self.strategy {
-            ProcessingStrategy::OutOfCore { chunksize } => self.fit_out_of_core(x, *chunksize),
+            ProcessingStrategy::OutOfCore { chunk_size } => self.fit_out_of_core(x, *chunk_size),
             ProcessingStrategy::Parallel => self.fit_parallel(x),
             ProcessingStrategy::Simd => self.fit_simd(x),
             ProcessingStrategy::Standard => self.fit_standard(x),
@@ -122,7 +122,7 @@ impl EnhancedStandardScaler {
                 .into_par_iter()
                 .map(|j| {
                     let col = x.column(j);
-                    Ok(col.mean().unwrap_or(0.0))
+                    Ok(col.mean())
                 })
                 .collect::<Result<Vec<_>>>()
                 .map(Array1::from_vec);
@@ -264,8 +264,8 @@ impl EnhancedStandardScaler {
         }
 
         match &self.strategy {
-            ProcessingStrategy::OutOfCore { chunksize } => {
-                self.transform_out_of_core(x, means, stds, *chunksize)
+            ProcessingStrategy::OutOfCore { chunk_size } => {
+                self.transform_out_of_core(x, means, stds, *chunk_size)
             }
             ProcessingStrategy::Parallel => self.transform_parallel(x, means, stds),
             ProcessingStrategy::Simd => self.transform_simd(x, means, stds),
@@ -399,7 +399,8 @@ impl EnhancedPCA {
 
         Ok(EnhancedPCA {
             n_components,
-            center_components: None,
+            center: true,
+            components: None,
             explained_variance: None,
             explained_variance_ratio: None,
             mean: None,
@@ -446,8 +447,8 @@ impl EnhancedPCA {
         }
 
         match &self.strategy {
-            ProcessingStrategy::OutOfCore { chunksize } => {
-                self.fit_incremental_pca(x, *chunksize)
+            ProcessingStrategy::OutOfCore { chunk_size } => {
+                self.fit_incremental_pca(x, *chunk_size)
             }
             _ => {
                 if self.use_randomized {
@@ -928,7 +929,7 @@ impl EnhancedPCA {
                 let u1 = if u1 == 0.0 { f64::EPSILON } else { u1 };
 
                 let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-                random_matrix[[i..j]] = z;
+                random_matrix[[i, j]] = z;
             }
         }
 
@@ -1109,7 +1110,7 @@ impl EnhancedPCA {
         // Start with a random vector
         use rand::Rng;
         let mut rng = rand::rng();
-        let mut vector: Array1<f64> = Array1::fromshape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
+        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
 
         // Normalize the initial vector
         let norm = vector.dot(&vector).sqrt();
@@ -1150,7 +1151,7 @@ impl EnhancedPCA {
             }
 
             // Check for convergence
-            if iteration > 0 && (eigenvalue - prev_eigenvalue).abs() < tolerance {
+            if iteration > 0 && ((eigenvalue - prev_eigenvalue) as f64).abs() < tolerance {
                 break;
             }
 
@@ -2367,7 +2368,7 @@ impl AdvancedPCA {
         // Initialize with normalized random vector
         use rand::Rng;
         let mut rng = rand::rng();
-        let mut vector: Array1<f64> = Array1::fromshape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
+        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
 
         // Initial normalization
         let initial_norm = vector.dot(&vector).sqrt();
@@ -2405,7 +2406,7 @@ impl AdvancedPCA {
             }
 
             // Convergence check
-            if iteration > 0 && (eigenvalue - prev_eigenvalue).abs() < tolerance {
+            if iteration > 0 && ((eigenvalue - prev_eigenvalue) as f64).abs() < tolerance {
                 break;
             }
 
@@ -2736,7 +2737,7 @@ impl CacheOptimizedAlgorithms {
         // Initialize random vector
         use rand::Rng;
         let mut rng = rand::rng();
-        let mut vector: Array1<f64> = Array1::fromshape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
+        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
 
         // Normalize
         let norm = Self::blocked_norm(&vector..block_size)?;
@@ -2760,7 +2761,7 @@ impl CacheOptimizedAlgorithms {
             vector = new_vector / norm;
 
             // Check convergence
-            if iteration > 0 && (eigenvalue - prev_eigenvalue).abs() < tolerance {
+            if iteration > 0 && ((eigenvalue - prev_eigenvalue) as f64).abs() < tolerance {
                 break;
             }
 

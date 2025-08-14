@@ -74,7 +74,7 @@ pub fn softmax_impl<T: Float>(x: &NdArrayView<T>, axis: isize) -> NdArray<T> {
         .fold_axis(ndarray::Axis(axis), T::min_value(), move |&a, &b| {
             max_fn(a, b)
         })
-        .intoshape_with_order(ndarray::IxDyn(reducedshape))
+        .into_shape_with_order(ndarray::IxDyn(reducedshape))
         .unwrap();
     // subtract `max` to prevent overflow
     let mut tmp = x - max;
@@ -82,7 +82,7 @@ pub fn softmax_impl<T: Float>(x: &NdArrayView<T>, axis: isize) -> NdArray<T> {
     // unwrap is safe
     let sum = tmp
         .sum_axis(ndarray::Axis(axis))
-        .intoshape_with_order(ndarray::IxDyn(reducedshape))
+        .into_shape_with_order(ndarray::IxDyn(reducedshape))
         .unwrap();
     tmp /= &sum;
     tmp
@@ -409,7 +409,7 @@ impl<T: Float> op::Op<T> for PReLUGrad<T> {
         Ok(())
     }
 
-    fn grad<'a>(selfctx: &mut crate::op::GradientContext<'a, 'a, T>) {
+    fn grad<'a>(&self, ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
         // Second-order gradients not implemented
     }
 }
@@ -471,7 +471,7 @@ impl<T: Float> op::Op<T> for LearnableELUGrad<T> {
         Ok(())
     }
 
-    fn grad<'a>(selfctx: &mut crate::op::GradientContext<'a, 'a, T>) {
+    fn grad<'a>(&self, ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
         // Second-order gradients not implemented
     }
 }
@@ -540,7 +540,7 @@ impl<T: Float> op::Op<T> for LearnableSwishGrad<T> {
         Ok(())
     }
 
-    fn grad<'a>(selfctx: &mut crate::op::GradientContext<'a, 'a, T>) {
+    fn grad<'a>(&self, ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
         // Second-order gradients not implemented
     }
 }
@@ -633,7 +633,7 @@ impl<T: Float> op::Op<T> for AdaptiveActivationGrad<T> {
         Ok(())
     }
 
-    fn grad<'a>(selfctx: &mut crate::op::GradientContext<'a, 'a, T>) {
+    fn grad<'a>(&self, ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
         // Second-order gradients not implemented
     }
 }

@@ -80,10 +80,10 @@ struct LBFGSHistory {
 impl LBFGSHistory {
     fn new(_memorysize: usize) -> Self {
         Self {
-            s_vectors: Vec::with_capacity(_memory_size),
-            y_vectors: Vec::with_capacity(_memory_size),
-            rho_values: Vec::with_capacity(_memory_size),
-            memory_size: memory_size,
+            s_vectors: Vec::with_capacity(_memorysize),
+            y_vectors: Vec::with_capacity(_memorysize),
+            rho_values: Vec::with_capacity(_memorysize),
+            memory_size: _memorysize,
             current_pos: 0,
             stored_count: 0,
         }
@@ -159,7 +159,8 @@ impl<T: StreamingObjective> IncrementalNewton<T> {
     ) -> Self {
         let n_params = initial_parameters.len();
         let memory_size = match method {
-            IncrementalNewtonMethod::LBFGS(m) => m.unwrap_or(10), // Default memory size
+            IncrementalNewtonMethod::LBFGS(m) => m,
+            _ => 10, // Default memory size for other methods
         };
 
         Self {
@@ -245,7 +246,7 @@ impl<T: StreamingObjective> IncrementalNewton<T> {
                 // Use exact Hessian if available from objective function
                 if let Some(data_point) = self.get_current_data_point() {
                     if let Some(hessian) =
-                        self.objective.hessian(&self.parameters.view(), &data_point)
+                        T::hessian(&self.parameters.view(), &data_point)
                     {
                         // Add regularization for numerical stability
                         let mut reg_hessian = hessian;
@@ -313,13 +314,13 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for IncrementalNewton<T> 
         let start_time = std::time::Instant::now();
 
         // Compute current gradient
-        let gradient = self.objective.gradient(&self.parameters.view(), data_point);
+        let gradient = self.objective.gradient(&self.parameters.view(), datapoint);
 
         // Compute Newton direction
         let direction = self.compute_newton_direction(&gradient.view())?;
 
         // Perform line search
-        let alpha = self.line_search(&direction.view(), &gradient.view(), data_point);
+        let alpha = self.line_search(&direction.view(), &gradient.view(), datapoint);
 
         // Update parameters
         let old_parameters = self.parameters.clone();
@@ -377,7 +378,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for IncrementalNewton<T> 
         );
 
         // Update statistics
-        let loss = self.objective.evaluate(&self.parameters.view(), data_point);
+        let loss = self.objective.evaluate(&self.parameters.view(), datapoint);
         self.stats.points_processed += 1;
         self.stats.updates_performed += 1;
         self.stats.current_loss = loss;

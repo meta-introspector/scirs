@@ -12,7 +12,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::fairness::{
+//! use scirs2_metrics::fairness::{
 //!     demographic_parity_difference, equalized_odds_difference, equal_opportunity_difference
 //! };
 //!
@@ -50,10 +50,10 @@
 //!
 //! ```
 //! use ndarray::{array, Array2};
-//! use scirs2__metrics::fairness::consistency_score;
+//! use scirs2_metrics::fairness::consistency_score;
 //!
 //! // Features matrix: each row is an individual, each column is a feature
-//! let features = Array2::fromshape_vec((6, 2),
+//! let features = Array2::from_shape_vec((6, 2),
 //!     vec![0.1, 0.2, 0.15, 0.21, 0.9, 0.8, 0.92, 0.79, 0.5, 0.51, 0.52, 0.49]
 //! ).unwrap();
 //!
@@ -84,8 +84,8 @@
 //!
 //! ```
 //! use ndarray::{array, Array2};
-//! use scirs2__metrics::fairness::{demographic_parity_difference, disparate_impact};
-//! use scirs2__metrics::fairness::robustness::{
+//! use scirs2_metrics::fairness::{demographic_parity_difference, disparate_impact};
+//! use scirs2_metrics::fairness::robustness::{
 //!     performance_invariance, influence_function, perturbation_sensitivity, PerturbationType
 //! };
 //!
@@ -118,17 +118,17 @@
 //!
 //! ```
 //! use ndarray::{array, Array2};
-//! use scirs2__metrics::fairness::bias_detection::{
+//! use scirs2_metrics::fairness::bias_detection::{
 //!     slice_analysis, subgroup_performance, intersectional_fairness
 //! };
-//! use scirs2__metrics::classification::accuracy_score;
+//! use scirs2_metrics::classification::accuracy_score;
 //!
 //! // For demo purposes, create a simple dataset
 //! let y_true = array![0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0];
 //! let y_pred = array![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0];
 //!
 //! // Protected attributes: gender (0=male, 1=female) and race (0=group A, 1=group B)
-//! let protected_features = Array2::fromshape_vec((8, 2), vec![
+//! let protected_features = Array2::from_shape_vec((8, 2), vec![
 //!     0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0,
 //! ]).unwrap();
 //!
@@ -187,7 +187,7 @@ pub mod robustness;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::fairness::demographic_parity_difference;
+/// use scirs2_metrics::fairness::demographic_parity_difference;
 ///
 /// let y_pred = array![1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
 /// let protected_group = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
@@ -283,7 +283,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::fairness::disparate_impact;
+/// use scirs2_metrics::fairness::disparate_impact;
 ///
 /// let y_pred = array![1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
 /// let protected_group = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
@@ -389,7 +389,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::fairness::equalized_odds_difference;
+/// use scirs2_metrics::fairness::equalized_odds_difference;
 ///
 /// let y_true = array![0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
 /// let y_pred = array![1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
@@ -540,7 +540,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::fairness::equal_opportunity_difference;
+/// use scirs2_metrics::fairness::equal_opportunity_difference;
 ///
 /// let y_true = array![0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
 /// let y_pred = array![1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
@@ -657,10 +657,10 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__metrics::fairness::consistency_score;
+/// use scirs2_metrics::fairness::consistency_score;
 ///
 /// // Features matrix (6 instances, 2 features each)
-/// let features = Array2::fromshape_vec((6, 2),
+/// let features = Array2::from_shape_vec((6, 2),
 ///     vec![0.1, 0.2, 0.15, 0.21, 0.9, 0.8, 0.92, 0.79, 0.5, 0.51, 0.52, 0.49]
 /// ).unwrap();
 ///
@@ -733,10 +733,10 @@ where
     let mut consistency_sum = 0.0;
     for i in 0..n_samples {
         // Get distances from instance i to all other instances
-        let mut neighbors: Vec<_> = distances.iter().filter(|(idx, _)| *idx == i).collect();
+        let mut neighbors: Vec<_> = distances.iter().filter(|(idx, _, _)| *idx == i).collect();
 
         // Sort by distance
-        neighbors.sort_by(|(_, dist_a), (_, dist_b)| {
+        neighbors.sort_by(|(_, _, dist_a), (_, _, dist_b)| {
             dist_a.partial_cmp(dist_b).unwrap_or(Ordering::Equal)
         });
 
@@ -744,7 +744,7 @@ where
         let nearest_k = neighbors
             .iter()
             .take(k)
-            .map(|(_, j)| *j)
+            .map(|(_, j, _)| *j)
             .collect::<Vec<_>>();
 
         // Calculate mean absolute difference between prediction and neighbors' predictions

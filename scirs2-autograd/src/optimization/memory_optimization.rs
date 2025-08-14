@@ -163,7 +163,7 @@ impl<F: Float> MemoryOptimizer<F> {
         // Create pools for common sizes
         for (size, frequency) in size_patterns {
             if frequency >= self.config.pool_frequency_threshold {
-                self.create_memory_pool(size)?;
+                MemoryOptimizer::<F>::create_memory_pool(size)?;
                 pools_created += 1;
             }
         }
@@ -184,7 +184,7 @@ impl<F: Float> MemoryOptimizer<F> {
     }
 
     /// Create a memory pool for a specific size
-    fn create_memory_pool(&selfsize: usize) -> Result<(), OptimizationError> {
+    fn create_memory_pool(size: usize) -> Result<(), OptimizationError> {
         // Create a memory pool that can reuse buffers of the specified _size
         Ok(())
     }
@@ -201,7 +201,7 @@ impl<F: Float> MemoryOptimizer<F> {
         let candidates = self.find_in_place_candidates(graph)?;
 
         for candidate in candidates {
-            if self.can_apply_in_place(&candidate) {
+            if MemoryOptimizer::<F>::can_apply_in_place(&candidate) {
                 self.convert_to_in_place(graph, &candidate)?;
                 in_place_applied += 1;
             }
@@ -224,7 +224,7 @@ impl<F: Float> MemoryOptimizer<F> {
     }
 
     /// Check if an operation can be safely converted to in-place
-    fn can_apply_in_place(selfcandidate: &InPlaceCandidate<F>) -> bool {
+    fn can_apply_in_place(candidate: &InPlaceCandidate<F>) -> bool {
         // Safety checks:
         // - Input tensor is not used by other operations
         // - No gradient computation conflicts

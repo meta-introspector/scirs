@@ -224,7 +224,7 @@ pub fn minimum_phase(b: &[f64], discretetime: bool) -> SignalResult<Vec<f64>> {
     let mut gain_adjustment = 1.0;
 
     for zero in zeros {
-        if discrete_time {
+        if discretetime {
             // For discrete-_time: zeros inside unit circle are minimum phase
             if zero.norm() > 1.0 {
                 // Reflect zero to its conjugate reciprocal: 1/conj(zero)
@@ -560,7 +560,7 @@ fn evaluate_polynomial_and_derivative(coeffs: &[f64], z: Complex64) -> (Complex6
     }
 
     let n = coeffs.len() - 1;
-    let mut p_val = Complex64::new(_coeffs[0], 0.0);
+    let mut p_val = Complex64::new(coeffs[0], 0.0);
     let mut p_prime = Complex64::zero();
 
     for (i, &coeff) in coeffs.iter().enumerate().skip(1) {
@@ -583,7 +583,7 @@ fn polynomial_from_roots(roots: &[Complex64]) -> Vec<f64> {
     let mut poly = vec![Complex64::new(1.0, 0.0)];
 
     // Multiply by (z - root) for each root
-    for &root in _roots {
+    for &root in roots {
         let mut new_poly = vec![Complex64::zero(); poly.len() + 1];
 
         // Multiply existing polynomial by z

@@ -16,7 +16,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::classification::{accuracy_score, precision_score, f1_score};
+//! use scirs2_metrics::classification::{accuracy_score, precision_score, f1_score};
 //!
 //! let y_true = array![0, 1, 2, 0, 1, 2];
 //! let y_pred = array![0, 2, 1, 0, 0, 2];
@@ -33,7 +33,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::classification::one_vs_one::{one_vs_one_accuracy, weighted_one_vs_one_f1_score};
+//! use scirs2_metrics::classification::one_vs_one::{one_vs_one_accuracy, weighted_one_vs_one_f1_score};
 //!
 //! let y_true = array![0, 1, 2, 0, 1, 2];
 //! let y_pred = array![0, 2, 1, 0, 0, 2];
@@ -48,7 +48,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::regression::{mean_squared_error, r2_score};
+//! use scirs2_metrics::regression::{mean_squared_error, r2_score};
 //!
 //! let y_true = array![3.0, -0.5, 2.0, 7.0];
 //! let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -63,10 +63,10 @@
 //!
 //! ```
 //! use ndarray::{array, Array2};
-//! use scirs2__metrics::clustering::silhouette_score;
+//! use scirs2_metrics::clustering::silhouette_score;
 //!
 //! // Create a small dataset with 2 clusters
-//! let X = Array2::fromshape_vec((6, 2), vec![
+//! let X = Array2::from_shape_vec((6, 2), vec![
 //!     1.0, 2.0,
 //!     1.5, 1.8,
 //!     1.2, 2.2,
@@ -86,11 +86,11 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::ranking::{
+//! use scirs2_metrics::ranking::{
 //!     mean_reciprocal_rank, ndcg_score, mean_average_precision,
 //!     precision_at_k, recall_at_k, map_at_k, click_through_rate
 //! };
-//! use scirs2__metrics::ranking::label::{
+//! use scirs2_metrics::ranking::label::{
 //!     coverage_error, label_ranking_loss, label_ranking_average_precision_score
 //! };
 //!
@@ -123,7 +123,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::ranking::{kendalls_tau, spearmans_rho};
+//! use scirs2_metrics::ranking::{kendalls_tau, spearmans_rho};
 //!
 //! // Compare two different ranking methods
 //! let ranking_a = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -140,19 +140,19 @@
 //!
 //! ```
 //! use ndarray::Array2;
-//! use scirs2__metrics::ranking::label::{
+//! use scirs2_metrics::ranking::label::{
 //!     coverage_error_multiple, label_ranking_loss, label_ranking_average_precision_score
 //! };
 //!
 //! // Multi-label data: 3 samples, 5 labels
-//! let y_true = Array2::fromshape_vec((3, 5), vec![
+//! let y_true = Array2::from_shape_vec((3, 5), vec![
 //!     1.0, 0.0, 1.0, 0.0, 0.0,  // Sample 1: labels 0 and 2 are relevant
 //!     0.0, 0.0, 1.0, 1.0, 0.0,  // Sample 2: labels 2 and 3 are relevant
 //!     0.0, 1.0, 1.0, 0.0, 1.0,  // Sample 3: labels 1, 2, and 4 are relevant
 //! ]).unwrap();
 //!
 //! // Predicted scores for each label
-//! let y_score = Array2::fromshape_vec((3, 5), vec![
+//! let y_score = Array2::from_shape_vec((3, 5), vec![
 //!     0.9, 0.2, 0.8, 0.3, 0.1,  // Scores for sample 1
 //!     0.2, 0.3, 0.9, 0.7, 0.1,  // Scores for sample 2
 //!     0.1, 0.9, 0.8, 0.2, 0.7,  // Scores for sample 3
@@ -174,7 +174,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::anomaly::{
+//! use scirs2_metrics::anomaly::{
 //!     detection_accuracy, false_alarm_rate, miss_detection_rate,
 //!     anomaly_auc_score, anomaly_average_precision_score
 //! };
@@ -208,7 +208,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::anomaly::{
+//! use scirs2_metrics::anomaly::{
 //!     kl_divergence, js_divergence, wasserstein_distance, maximum_mean_discrepancy
 //! };
 //!
@@ -239,14 +239,14 @@
 //!
 //! ```
 //! use ndarray::{array, Array2};
-//! use scirs2__metrics::fairness::{
+//! use scirs2_metrics::fairness::{
 //!     demographic_parity_difference, equalized_odds_difference, equal_opportunity_difference,
 //!     disparate_impact, consistency_score
 //! };
-//! use scirs2__metrics::fairness::bias_detection::{
+//! use scirs2_metrics::fairness::bias_detection::{
 //!     slice_analysis, subgroup_performance, intersectional_fairness
 //! };
-//! use scirs2__metrics::classification::accuracy_score;
+//! use scirs2_metrics::classification::accuracy_score;
 //!
 //! // Example: binary predictions for two protected groups
 //! // y_true: ground truth labels (0 or 1)
@@ -276,7 +276,7 @@
 //!
 //! // Comprehensive bias detection
 //! // Create a dataset with multiple demographic attributes
-//! let features = Array2::fromshape_vec((8, 3), vec![
+//! let features = Array2::from_shape_vec((8, 3), vec![
 //!     // Feature columns: age, gender(0=male, 1=female), income_level(0=low, 1=medium, 2=high)
 //!     30.0, 0.0, 1.0,
 //!     25.0, 0.0, 0.0,
@@ -306,7 +306,7 @@
 //! ).unwrap();
 //!
 //! // Analyze performance for intersectional groups
-//! let protected_attrs = Array2::fromshape_vec((8, 2), vec![
+//! let protected_attrs = Array2::from_shape_vec((8, 2), vec![
 //!     // gender, income_level (simplified to binary: 0=low, 1=high)
 //!     0.0, 1.0,
 //!     0.0, 0.0,
@@ -349,7 +349,7 @@
 //!
 //! ```
 //! use ndarray::{Array, Ix1};
-//! use scirs2__metrics::evaluation::train_test_split;
+//! use scirs2_metrics::evaluation::train_test_split;
 //!
 //! let x = Array::<f64>::linspace(0., 9., 10).intoshape(Ix1(10)).unwrap();
 //! let y = &x * 2.;
@@ -363,11 +363,11 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::optimization::parallel::ParallelConfig;
-//! use scirs2__metrics::optimization::memory::{ChunkedMetrics, StreamingMetric};
-//! use scirs2__metrics::optimization::numeric::StableMetrics;
-//! use scirs2__metrics::error::{Result, MetricsError};
-//! use scirs2__metrics::classification::{accuracy_score, precision_score};
+//! use scirs2_metrics::optimization::parallel::ParallelConfig;
+//! use scirs2_metrics::optimization::memory::{ChunkedMetrics, StreamingMetric};
+//! use scirs2_metrics::optimization::numeric::StableMetrics;
+//! use scirs2_metrics::error::{Result, MetricsError};
+//! use scirs2_metrics::classification::{accuracy_score, precision_score};
 //!
 //! // Example data
 //! let y_true = array![0, 1, 2, 0, 1, 2];
@@ -440,9 +440,9 @@
 //!
 //! ```
 //! use ndarray::{array, Array2};
-//! use scirs2__metrics::classification::confusion_matrix;
-//! use scirs2__metrics::classification::curves::{roc_curve, precision_recall_curve, calibration_curve};
-//! use scirs2__metrics::visualization::{
+//! use scirs2_metrics::classification::confusion_matrix;
+//! use scirs2_metrics::classification::curves::{roc_curve, precision_recall_curve, calibration_curve};
+//! use scirs2_metrics::visualization::{
 //!     MetricVisualizer, VisualizationData, VisualizationMetadata, PlotType,
 //!     confusion_matrix::confusion_matrix_visualization,
 //!     roc_curve::roc_curve_visualization,
@@ -518,8 +518,8 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::classification::curves::roc_curve;
-//! use scirs2__metrics::visualization::{
+//! use scirs2_metrics::classification::curves::roc_curve;
+//! use scirs2_metrics::visualization::{
 //!     helpers, InteractiveOptions,
 //!     backends::{default_interactive_backend, PlotlyInteractiveBackendInterface},
 //! };
@@ -563,7 +563,7 @@
 //!
 //! ```
 //! use std::collections::HashMap;
-//! use scirs2__metrics::serialization::{
+//! use scirs2_metrics::serialization::{
 //!     MetricResult, MetricMetadata, MetricCollection, SerializationFormat,
 //!     create_metric_result,
 //!     comparison::compare_collections

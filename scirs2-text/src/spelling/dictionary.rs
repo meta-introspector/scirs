@@ -327,7 +327,7 @@ impl DictionaryCorrector {
         Self {
             dictionary: HashMap::new(),
             config: DictionaryCorrectorConfig::default(),
-            _metric: Arc::new(metric),
+            metric: Arc::new(metric),
         }
     }
 
@@ -477,11 +477,11 @@ impl SpellingCorrector for DictionaryCorrector {
             });
         } else {
             candidates.sort_by(|a, b| {
-                let (_, dist_a_) = a;
-                let (_, dist_b_) = b;
+                let (_, dist_a, _) = a;
+                let (_, dist_b, _) = b;
 
                 // Sort only by distance
-                dist_a_.cmp(dist_b_)
+                dist_a.cmp(dist_b)
             });
         }
 
@@ -489,7 +489,7 @@ impl SpellingCorrector for DictionaryCorrector {
         let actual_limit = std::cmp::min(limit, candidates.len());
         let suggestions = candidates[0..actual_limit]
             .iter()
-            .map(|(word, _)| word.clone())
+            .map(|(word, _, _)| word.clone())
             .collect();
 
         Ok(suggestions)

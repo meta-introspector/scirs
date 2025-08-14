@@ -63,7 +63,7 @@ impl<T> BoundedHistory<T> {
     /// Create new bounded history with specified capacity
     pub fn new(capacity: usize) -> Self {
         Self {
-            data: VecDeque::with_capacity(_capacity),
+            data: VecDeque::with_capacity(capacity),
             max_capacity: capacity,
         }
     }
@@ -99,13 +99,13 @@ impl<T> BoundedHistory<T> {
 
 impl ComputationCache {
     /// Create new computation cache
-    pub fn new(_maxsize: usize) -> Self {
+    pub fn new(max_size: usize) -> Self {
         Self {
-            gradient_buffer: Array1::zeros(_max_size),
-            feature_buffer: Array1::zeros(_max_size),
-            param_buffer: Array1::zeros(_max_size),
-            network_output_buffer: Array1::zeros(_max_size),
-            temp_buffer: Array1::zeros(_max_size),
+            gradient_buffer: Array1::zeros(max_size),
+            feature_buffer: Array1::zeros(max_size),
+            param_buffer: Array1::zeros(max_size),
+            network_output_buffer: Array1::zeros(max_size),
+            temp_buffer: Array1::zeros(max_size),
             max_buffer_size: max_size,
         }
     }
@@ -150,11 +150,26 @@ impl ComputationCache {
         &mut self.temp_buffer
     }
 
+    /// Get both gradient and param buffers simultaneously to avoid borrowing conflicts
+    pub fn get_gradient_and_param_buffers(
+        &mut self,
+        gradient_size: usize,
+        param_size: usize,
+    ) -> (&mut Array1<f64>, &mut Array1<f64>) {
+        if self.gradient_buffer.len() < gradient_size {
+            self.gradient_buffer = Array1::zeros(gradient_size);
+        }
+        if self.param_buffer.len() < param_size {
+            self.param_buffer = Array1::zeros(param_size);
+        }
+        (&mut self.gradient_buffer, &mut self.param_buffer)
+    }
+
     /// Resize buffer if needed (up to max size)
-    fn resize_buffer(&mut self, buffer: &mut Array1<f64>, requestedsize: usize) {
-        let _size = requested_size.min(self.max_buffer_size);
-        if buffer.len() != _size {
-            *buffer = Array1::zeros(_size);
+    fn resize_buffer(&mut self, buffer: &mut Array1<f64>, requested_size: usize) {
+        let size = requested_size.min(self.max_buffer_size);
+        if buffer.len() != size {
+            *buffer = Array1::zeros(size);
         } else {
             buffer.fill(0.0);
         }
@@ -446,7 +461,7 @@ impl NeuralAdaptiveOptimizer {
     pub fn new(config: LearnedOptimizationConfig) -> Self {
         let architecture = NetworkArchitecture {
             input_size: config.max_parameters.min(100),
-            hidden_sizes: vec![_config.hidden_size, config.hidden_size / 2],
+            hidden_sizes: vec![config.hidden_size, config.hidden_size / 2],
             output_size: 32, // Number of optimization actions
             activations: vec![
                 ActivationType::GELU,
@@ -458,13 +473,13 @@ impl NeuralAdaptiveOptimizer {
         };
 
         let optimization_network = OptimizationNetwork::new(architecture);
-        let adaptation_controller = AdaptationController::new(_config.hidden_size);
-        let performance_predictor = PerformancePredictor::new(_config.hidden_size);
+        let adaptation_controller = AdaptationController::new(config.hidden_size);
+        let performance_predictor = PerformancePredictor::new(config.hidden_size);
         let hidden_size = config.hidden_size;
         let max_buffer_size = config.max_parameters.max(1000); // Reasonable upper bound
 
         Self {
-            config: config,
+            config,
             optimization_network,
             adaptation_controller,
             performance_predictor,
@@ -494,7 +509,7 @@ impl NeuralAdaptiveOptimizer {
         let state_features = self.extract_state_features(objective, current_params, step_number)?;
 
         // Forward pass through optimization network
-        let network_output = self.optimization_network.forward(&state_features)?;
+        let network_output = self.optimization_network.forward(&state_features.view())?;
 
         // Predict performance
         let performance_prediction = self.performance_predictor.predict(&state_features)?;
@@ -567,8 +582,8 @@ impl NeuralAdaptiveOptimizer {
         let mut features = Array1::zeros(20);
 
         if !params.is_empty() {
-            features[0] = params.mean().unwrap_or(0.0).tanh();
-            features[1] = params.variance().sqrt().tanh();
+            features[0] = params.view().mean().tanh();
+            features[1] = params.view().variance().sqrt().tanh();
             features[2] = params.fold(-f64::INFINITY, |a, &b| a.max(b)).tanh();
             features[3] = params.fold(f64::INFINITY, |a, &b| a.min(b)).tanh();
             features[4] = (params.len() as f64).ln().tanh();
@@ -623,10 +638,9 @@ impl NeuralAdaptiveOptimizer {
         // Gradient features using cached buffers
         let h = 1e-6;
         let gradient_sample_size = params.len().min(10); // Limit for efficiency
-        let gradient_buffer = self
+        let (gradient_buffer, param_buffer) = self
             .computation_cache
-            .get_gradient_buffer(gradient_sample_size);
-        let param_buffer = self.computation_cache.get_param_buffer(params.len());
+            .get_gradient_and_param_buffers(gradient_sample_size, params.len());
 
         // Copy parameters to buffer
         for (i, &val) in params.iter().enumerate() {
@@ -692,7 +706,7 @@ impl NeuralAdaptiveOptimizer {
     }
 
     /// Extract temporal features
-    fn extract_temporal_features(&self, stepnumber: usize) -> Array1<f64> {
+    fn extract_temporal_features(&self, step_number: usize) -> Array1<f64> {
         let mut features = Array1::zeros(10);
 
         features[0] = (step_number as f64).ln().tanh();
@@ -721,7 +735,7 @@ impl NeuralAdaptiveOptimizer {
     }
 
     /// Copy features to target array
-    fn copy_features(&self, target: &mut Array1<f64>, source: &Array1<f64>, startidx: usize) {
+    fn copy_features(&self, target: &mut Array1<f64>, source: &Array1<f64>, start_idx: usize) {
         for (i, &value) in source.iter().enumerate() {
             if start_idx + i < target.len() {
                 target[start_idx + i] = value;
@@ -779,7 +793,7 @@ impl NeuralAdaptiveOptimizer {
         for (i, state) in trajectory.states.iter().enumerate() {
             if i + 1 < trajectory.actions.len() {
                 let target_action = &trajectory.actions[i + 1];
-                let predicted_action = self.optimization_network.forward(state)?;
+                let predicted_action = self.optimization_network.forward(&state.view())?;
 
                 // Compute loss (simplified MSE)
                 let mut loss_gradient = Array1::zeros(predicted_action.len());
@@ -891,7 +905,7 @@ impl OptimizationNetwork {
         // Create hidden layers
         let mut prev_size = architecture.input_size;
         for (i, &hidden_size) in architecture.hidden_sizes.iter().enumerate() {
-            let activation = _architecture
+            let activation = architecture
                 .activations
                 .get(i)
                 .copied()
@@ -902,12 +916,12 @@ impl OptimizationNetwork {
         }
 
         // Create input and output layers
-        let input_activation = _architecture
+        let input_activation = architecture
             .activations
             .first()
             .copied()
             .unwrap_or(ActivationType::ReLU);
-        let output_activation = _architecture
+        let output_activation = architecture
             .activations
             .last()
             .copied()
@@ -918,8 +932,7 @@ impl OptimizationNetwork {
             architecture.input_size,
             input_activation,
         );
-        let output_layer =
-            NeuralLayer::new(prev_size, architecture.output_size, output_activation);
+        let output_layer = NeuralLayer::new(prev_size, architecture.output_size, output_activation);
 
         let recurrent_connections = if architecture.use_recurrent {
             RecurrentConnections::new(prev_size)
@@ -958,7 +971,7 @@ impl OptimizationNetwork {
     }
 
     /// Backward pass (simplified)
-    pub fn backward(&mut self, gradient: &Array1<f64>, learningrate: f64) -> OptimizeResult<()> {
+    pub fn backward(&mut self, gradient: &Array1<f64>, learning_rate: f64) -> OptimizeResult<()> {
         // Simplified backpropagation
         // In practice, this would implement proper gradient computation
 
@@ -985,17 +998,18 @@ impl OptimizationNetwork {
 
 impl NeuralLayer {
     /// Create new neural layer
-    pub fn new(_input_size: usize, outputsize: usize, activation: ActivationType) -> Self {
-        let xavier_scale = (2.0 / (_input_size + output_size) as f64).sqrt();
+    pub fn new(input_size: usize, output_size: usize, activation: ActivationType) -> Self {
+        let xavier_scale = (2.0 / (input_size + output_size) as f64).sqrt();
 
         Self {
-            weights: Array2::fromshape_fn((output_size, input_size), |_| {
+            weights: Array2::from_shape_fn((output_size, input_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             biases: Array1::zeros(output_size),
-            activation_size: output_size,
+            size: output_size,
             dropout_rate: 0.1,
             layer_norm: Some(LayerNormalization::new(output_size)),
+            activation: ActivationType::ReLU,
         }
     }
 
@@ -1032,10 +1046,10 @@ impl LayerNormalization {
     /// Create new layer normalization
     pub fn new(size: usize) -> Self {
         Self {
-            gamma: Array1::ones(_size),
-            beta: Array1::zeros(_size),
-            running_mean: Array1::zeros(_size),
-            running_var: Array1::ones(_size),
+            gamma: Array1::ones(size),
+            beta: Array1::zeros(size),
+            running_mean: Array1::zeros(size),
+            running_var: Array1::ones(size),
             momentum: 0.9,
             epsilon: 1e-6,
         }
@@ -1067,18 +1081,18 @@ impl RecurrentConnections {
     /// Create new recurrent connections
     pub fn new(size: usize) -> Self {
         Self {
-            hidden_state: Array1::zeros(_size),
-            cell_state: Array1::zeros(_size),
-            recurrent_weights: Array2::fromshape_fn((_size, size), |_| {
+            hidden_state: Array1::zeros(size),
+            cell_state: Array1::zeros(size),
+            recurrent_weights: Array2::from_shape_fn((size, size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            input_gate_weights: Array2::fromshape_fn((_size, size), |_| {
+            input_gate_weights: Array2::from_shape_fn((size, size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            forget_gate_weights: Array2::fromshape_fn((_size, size), |_| {
+            forget_gate_weights: Array2::from_shape_fn((size, size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            output_gate_weights: Array2::fromshape_fn((_size, size), |_| {
+            output_gate_weights: Array2::from_shape_fn((size, size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
         }
@@ -1142,9 +1156,9 @@ impl RecurrentConnections {
 
 impl AdaptationController {
     /// Create new adaptation controller
-    pub fn new(_hiddensize: usize) -> Self {
+    pub fn new(hidden_size: usize) -> Self {
         Self {
-            strategy_selector: StrategySelector::new(_hidden_size),
+            strategy_selector: StrategySelector::new(hidden_size),
             adaptation_rate_controller: AdaptationRateController::new(),
             progress_monitor: ProgressMonitor::new(),
             strategy_history: BoundedHistory::new(100),
@@ -1166,7 +1180,7 @@ impl AdaptationController {
     }
 
     /// Monitor progress and adapt
-    pub fn monitor_and_adapt(&mut self, performanceprediction: &f64) -> OptimizeResult<()> {
+    pub fn monitor_and_adapt(&mut self, performance_prediction: &f64) -> OptimizeResult<()> {
         self.progress_monitor.update(*performance_prediction)?;
 
         match self.progress_monitor.current_state {
@@ -1200,14 +1214,14 @@ impl AdaptationController {
 
 impl StrategySelector {
     /// Create new strategy selector
-    pub fn new(_hiddensize: usize) -> Self {
+    pub fn new(hidden_size: usize) -> Self {
         let num_strategies = 5;
 
         Self {
-            selection_network: Array2::fromshape_fn((num_strategies, hidden_size), |_| {
+            selection_network: Array2::from_shape_fn((num_strategies, hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            strategy_embeddings: Array2::fromshape_fn((num_strategies, hidden_size), |_| {
+            strategy_embeddings: Array2::from_shape_fn((num_strategies, hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             strategy_weights: Array1::from_elem(num_strategies, 1.0 / num_strategies as f64),
@@ -1235,7 +1249,7 @@ impl StrategySelector {
                 strategy_scores[i] += self.selection_network[[i, j]] * network_output[j];
             }
 
-            // Add performance _prediction influence
+            // Add performance prediction influence
             strategy_scores[i] += performance_prediction * 0.1;
 
             // Add current weight
@@ -1274,7 +1288,7 @@ impl StrategySelector {
         }
 
         // Renormalize
-        let sum = self.strategyweights.sum();
+        let sum = self.strategy_weights.sum();
         if sum > 0.0 {
             self.strategy_weights /= sum;
         }
@@ -1290,7 +1304,7 @@ impl StrategySelector {
         }
 
         // Renormalize
-        let sum = self.strategyweights.sum();
+        let sum = self.strategy_weights.sum();
         if sum > 0.0 {
             self.strategy_weights /= sum;
         }
@@ -1360,7 +1374,7 @@ impl AdaptationRateController {
     /// Create new adaptation rate controller
     pub fn new() -> Self {
         Self {
-            controller_network: Array2::fromshape_fn((1, 10), |_| {
+            controller_network: Array2::from_shape_fn((1, 10), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             current_rate: 0.1,
@@ -1394,7 +1408,7 @@ impl ProgressMonitor {
                 ProgressIndicator::new("gradient_norm".to_string()),
                 ProgressIndicator::new("step_size".to_string()),
             ],
-            monitoring_network: Array2::fromshape_fn((4, 10), |_| {
+            monitoring_network: Array2::from_shape_fn((4, 10), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             alert_thresholds: HashMap::new(),
@@ -1403,7 +1417,7 @@ impl ProgressMonitor {
     }
 
     /// Update progress monitoring
-    pub fn update(&mut self, performancevalue: f64) -> OptimizeResult<()> {
+    pub fn update(&mut self, performance_value: f64) -> OptimizeResult<()> {
         // Update progress indicators
         for indicator in &mut self.progress_indicators {
             indicator.update(performance_value)?;
@@ -1451,8 +1465,8 @@ impl ProgressIndicator {
     }
 
     /// Update indicator
-    pub fn update(&mut self, newvalue: f64) -> OptimizeResult<()> {
-        self._value = new_value;
+    pub fn update(&mut self, new_value: f64) -> OptimizeResult<()> {
+        self.value = new_value;
         self.history.push(new_value);
 
         // Compute trend using bounded history
@@ -1469,21 +1483,21 @@ impl ProgressIndicator {
 
 impl PerformancePredictor {
     /// Create new performance predictor
-    pub fn new(_hiddensize: usize) -> Self {
+    pub fn new(hidden_size: usize) -> Self {
         Self {
-            prediction_network: Array2::fromshape_fn((1, hidden_size), |_| {
+            prediction_network: Array2::from_shape_fn((1, hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            feature_extractor: FeatureExtractor::new(_hidden_size),
+            feature_extractor: FeatureExtractor::new(hidden_size),
             prediction_horizon: 5,
             prediction_accuracy: 0.5,
-            confidence_estimator: ConfidenceEstimator::new(_hidden_size),
+            confidence_estimator: ConfidenceEstimator::new(hidden_size),
         }
     }
 
     /// Predict performance
-    pub fn predict(&self, statefeatures: &Array1<f64>) -> OptimizeResult<f64> {
-        // Extract _features for prediction
+    pub fn predict(&self, state_features: &Array1<f64>) -> OptimizeResult<f64> {
+        // Extract features for prediction
         let prediction_features = self.feature_extractor.extract(state_features)?;
 
         // Forward pass through prediction network
@@ -1501,13 +1515,13 @@ impl PerformancePredictor {
 
 impl FeatureExtractor {
     /// Create new feature extractor
-    pub fn new(_featuredim: usize) -> Self {
+    pub fn new(feature_dim: usize) -> Self {
         Self {
-            extraction_layers: vec![Array2::fromshape_fn((_feature_dim, feature_dim), |_| {
+            extraction_layers: vec![Array2::from_shape_fn((feature_dim, feature_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             })],
-            feature_dim: feature_dim,
-            temporal_features: TemporalFeatures::new(_feature_dim),
+            feature_dim,
+            temporal_features: TemporalFeatures::new(feature_dim),
         }
     }
 
@@ -1534,11 +1548,11 @@ impl TemporalFeatures {
     /// Create new temporal features
     pub fn new(dim: usize) -> Self {
         Self {
-            time_embeddings: Array2::fromshape_fn((_dim, 100), |_| {
+            time_embeddings: Array2::from_shape_fn((dim, 100), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             trend_analyzer: TrendAnalyzer::new(),
-            seasonality_detector: SeasonalityDetector::new(_dim),
+            seasonality_detector: SeasonalityDetector::new(dim),
         }
     }
 }
@@ -1558,7 +1572,7 @@ impl SeasonalityDetector {
     /// Create new seasonality detector
     pub fn new(dim: usize) -> Self {
         Self {
-            seasonal_patterns: Array2::zeros((_dim, 12)),
+            seasonal_patterns: Array2::zeros((dim, 12)),
             pattern_strength: Array1::zeros(12),
             detection_threshold: 0.1,
         }
@@ -1567,9 +1581,9 @@ impl SeasonalityDetector {
 
 impl ConfidenceEstimator {
     /// Create new confidence estimator
-    pub fn new(_hiddensize: usize) -> Self {
+    pub fn new(hidden_size: usize) -> Self {
         Self {
-            confidence_network: Array2::fromshape_fn((1, hidden_size), |_| {
+            confidence_network: Array2::from_shape_fn((1, hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             uncertainty_quantifier: UncertaintyQuantifier::new(),
@@ -1613,8 +1627,8 @@ impl Default for AdaptiveOptimizationStats {
 }
 
 impl LearnedOptimizer for NeuralAdaptiveOptimizer {
-    fn meta_train(&mut self, trainingtasks: &[TrainingTask]) -> OptimizeResult<()> {
-        // Convert training _tasks to trajectories
+    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
+        // Convert training tasks to trajectories
         let mut trajectories = Vec::new();
 
         for task in training_tasks {
@@ -1721,7 +1735,7 @@ impl LearnedOptimizer for NeuralAdaptiveOptimizer {
 impl NeuralAdaptiveOptimizer {
     fn create_trajectory_from_task(
         &self,
-        self_task: &TrainingTask,
+        task: &TrainingTask,
     ) -> OptimizeResult<OptimizationTrajectory> {
         // Simplified trajectory creation
         let num_steps = 10;
@@ -1731,12 +1745,12 @@ impl NeuralAdaptiveOptimizer {
         let mut rewards = Vec::new();
 
         for i in 0..num_steps {
-            states.push(Array1::fromshape_fn(
+            states.push(Array1::from_shape_fn(
                 self.optimization_network.architecture.input_size,
                 |_| rand::rng().gen::<f64>(),
             ));
 
-            actions.push(Array1::fromshape_fn(
+            actions.push(Array1::from_shape_fn(
                 self.optimization_network.architecture.output_size,
                 |_| rand::rng().gen::<f64>(),
             ));
@@ -1769,8 +1783,9 @@ impl NeuralAdaptiveOptimizer {
         // Compute finite difference gradient using cached buffers
         let h = 1e-6;
         let f0 = objective(&params.view());
-        let gradient_buffer = self.computation_cache.get_gradient_buffer(params.len());
-        let param_buffer = self.computation_cache.get_param_buffer(params.len());
+        let (gradient_buffer, param_buffer) = self
+            .computation_cache
+            .get_gradient_and_param_buffers(params.len(), params.len());
 
         // Copy parameters to buffer
         for (i, &val) in params.iter().enumerate() {

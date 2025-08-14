@@ -29,9 +29,9 @@ pub fn neural_precision_recall_curve_visualization<F: num_traits::Float + std::f
         .into_dimensionality::<Ix1>()?;
 
     // Compute Precision-Recall curve
-    let (_precision, recall, thresholds) = precision_recall_curve(&y_true_f64, &y_pred_f64)?;
+    let (precision, recall, thresholds) = precision_recall_curve(&y_true_f64, &y_pred_f64)?;
 
-    // Compute average _precision if not provided
+    // Compute average precision if not provided
     let ap = match average_precision {
         Some(ap) => ap,
         None => average_precision_score(&y_true_f64, &y_pred_f64, None, None)?,

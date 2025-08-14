@@ -23,7 +23,7 @@ use crate::visualization::{
 };
 
 /// Comprehensive optimization pipeline configuration
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct UnifiedOptimizationConfig {
     /// Enable distributed optimization
     pub use_distributed: bool,
@@ -145,7 +145,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
                 .visualizationconfig
                 .clone()
                 .unwrap_or_else(VisualizationConfig::default);
-            let vis = OptimizationVisualizer::withconfig(visconfig);
+            let vis = OptimizationVisualizer::with_config(visconfig);
             let tracker = TrajectoryTracker::new();
             (Some(vis), Some(tracker))
         } else {
@@ -226,35 +226,41 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
             }
 
             // Self-tuning parameter adaptation
-            let tuning_params = if let Some(ref mut tuner) = self.self_tuning_optimizer {
-                let improvement = if iteration > 1 {
-                    // Compute relative improvement in function value
-                    let prev_f = self.previous_function_value.unwrap_or(current_f);
-                    if prev_f.abs() > 1e-14 {
-                        (prev_f - current_f) / prev_f.abs()
+            let tuning_params = {
+                if let Some(ref mut tuner) = self.self_tuning_optimizer {
+                    let improvement = if iteration > 1 {
+                        // Compute relative improvement in function value
+                        let prev_f = self.previous_function_value.unwrap_or(current_f);
+                        if prev_f.abs() > 1e-14 {
+                            (prev_f - current_f) / prev_f.abs()
+                        } else {
+                            prev_f - current_f
+                        }
                     } else {
-                        prev_f - current_f
+                        0.0
+                    };
+
+                    let params_changed = tuner.update_parameters(
+                        iteration,
+                        current_f,
+                        Some(grad_norm),
+                        improvement,
+                    )?;
+
+                    if params_changed {
+                        // Store parameters to apply later (clone to avoid borrow issues)
+                        Some(tuner.get_parameters().clone())
+                    } else {
+                        None
                     }
-                } else {
-                    0.0
-                };
-
-                let params_changed =
-                    tuner.update_parameters(iteration, current_f, Some(grad_norm), improvement)?;
-
-                if params_changed {
-                    // Get tuning parameters before we need to borrow self mutably
-                    Some(tuner.get_parameters())
                 } else {
                     None
                 }
-            } else {
-                None
             };
 
-            // Apply tuned parameters if available
+            // Apply tuning parameters if available (mutable reference to tuner is now dropped)
             if let Some(params) = tuning_params {
-                self.apply_tuned_parameters(params)?;
+                self.apply_tuned_parameters(&params)?;
             }
 
             // GPU-accelerated computation if enabled
@@ -268,16 +274,21 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
             let step_size = if self.distributed_context.is_some() {
                 let current_x_copy = current_x.clone();
                 let search_direction_copy = search_direction.clone();
-                if let Some(ref mut dist_ctx) = self.distributed_context {
+                // Extract distributed context temporarily to avoid borrowing conflicts
+                let mut dist_ctx = self.distributed_context.take();
+                let result = if let Some(ref mut ctx) = dist_ctx {
                     self.distributed_line_search(
-                        dist_ctx,
+                        ctx,
                         &function,
                         &current_x_copy,
                         &search_direction_copy,
-                    )?
+                    )
                 } else {
                     unreachable!()
-                }
+                };
+                // Restore the distributed context
+                self.distributed_context = dist_ctx;
+                result?
             } else {
                 self.standard_line_search(&function, &current_x, &search_direction)?
             };
@@ -523,7 +534,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
     }
 
     /// Update specific algorithm parameters
-    fn update_algorithm_parameter(&mut self_name: &str, value: f64) -> ScirsResult<()> {
+    fn update_algorithm_parameter(&mut self, name: &str, value: f64) -> ScirsResult<()> {
         // Update internal algorithm parameters based on self-tuning
         // This would be algorithm-specific
         Ok(())

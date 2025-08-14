@@ -30,9 +30,9 @@ use std::f64::consts::PI;
 /// ```
 #[allow(dead_code)]
 pub fn morlet(points: usize, w: f64, s: f64) -> SignalResult<Vec<Complex64>> {
-    if _points == 0 {
+    if points == 0 {
         return Err(SignalError::ValueError(
-            "_points must be greater than 0".to_string(),
+            "points must be greater than 0".to_string(),
         ));
     }
 
@@ -43,10 +43,10 @@ pub fn morlet(points: usize, w: f64, s: f64) -> SignalResult<Vec<Complex64>> {
     }
 
     // Generate position vector
-    let mid_point = (_points - 1) as f64 / 2.0;
-    let mut wavelet = Vec::with_capacity(_points);
+    let mid_point = (points - 1) as f64 / 2.0;
+    let mut wavelet = Vec::with_capacity(points);
 
-    for i in 0.._points {
+    for i in 0..points {
         let t = (i as f64 - mid_point) / s;
 
         // Complex exponential term (oscillation)
@@ -180,9 +180,9 @@ pub fn complex_morlet(
 /// ```
 #[allow(dead_code)]
 pub fn paul(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex64>> {
-    if _points == 0 {
+    if points == 0 {
         return Err(SignalError::ValueError(
-            "_points must be greater than 0".to_string(),
+            "points must be greater than 0".to_string(),
         ));
     }
 
@@ -205,10 +205,10 @@ pub fn paul(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex
     let norm = (2.0_f64.powf(m) * fact_2m_1 / (std::f64::consts::PI * fact_m)).sqrt();
 
     // Generate position vector
-    let mid_point = (_points - 1) as f64 / 2.0;
-    let mut wavelet = Vec::with_capacity(_points);
+    let mid_point = (points - 1) as f64 / 2.0;
+    let mut wavelet = Vec::with_capacity(points);
 
-    for i in 0.._points {
+    for i in 0..points {
         let t = (i as f64 - mid_point) / scale;
 
         // The Paul wavelet formula is the same for t != 0
@@ -253,9 +253,9 @@ pub fn paul(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex
 /// ```
 #[allow(dead_code)]
 pub fn complex_gaussian(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex64>> {
-    if _points == 0 {
+    if points == 0 {
         return Err(SignalError::ValueError(
-            "_points must be greater than 0".to_string(),
+            "points must be greater than 0".to_string(),
         ));
     }
 
@@ -272,8 +272,8 @@ pub fn complex_gaussian(points: usize, order: usize, scale: f64) -> SignalResult
     }
 
     // Generate position vector
-    let mid_point = (_points - 1) as f64 / 2.0;
-    let mut wavelet = Vec::with_capacity(_points);
+    let mid_point = (points - 1) as f64 / 2.0;
+    let mut wavelet = Vec::with_capacity(points);
 
     // Helper function to calculate the complex Gaussian derivative of specified order
     let cgauss_derivative = |t: f64, m: usize| -> Complex64 {
@@ -301,7 +301,7 @@ pub fn complex_gaussian(points: usize, order: usize, scale: f64) -> SignalResult
     };
 
     // Calculate wavelet values at each point
-    for i in 0.._points {
+    for i in 0..points {
         let t = (i as f64 - mid_point) / scale;
         let value = cgauss_derivative(t, order);
         wavelet.push(value);

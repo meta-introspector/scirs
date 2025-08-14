@@ -129,7 +129,7 @@ enum Endianness {
 impl IdlReader {
     /// Create a new IDL reader
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+        let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
         let mut reader = BufReader::new(file);
 
         // Read and verify signature
@@ -647,7 +647,7 @@ impl IdlReader {
 /// Read variables from an IDL save file
 #[allow(dead_code)]
 pub fn read_idl<P: AsRef<Path>>(path: P) -> Result<HashMap<String, IdlType>> {
-    let mut reader = IdlReader::new(_path)?;
+    let mut reader = IdlReader::new(path)?;
     reader.read_all()
 }
 
@@ -660,7 +660,7 @@ pub struct IdlWriter {
 impl IdlWriter {
     /// Create a new IDL writer
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+        let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
         let mut writer = BufWriter::new(file);
 
         // Write signature
@@ -950,7 +950,7 @@ impl IdlWriter {
 /// Write variables to an IDL save file
 #[allow(dead_code)]
 pub fn write_idl<P: AsRef<Path>>(path: P, variables: &HashMap<String, IdlType>) -> Result<()> {
-    let mut writer = IdlWriter::new(_path)?;
+    let mut writer = IdlWriter::new(path)?;
     writer.write_all(variables)
 }
 

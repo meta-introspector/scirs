@@ -259,8 +259,8 @@ mod tests {
     fn test_large_vectors() {
         let ops = SimdVectorOps::new();
         let n = 1000;
-        let a: Array1<f64> = Array1::fromshape_fn(n, |i| i as f64);
-        let b: Array1<f64> = Array1::fromshape_fn(n, |i| (i + 1) as f64);
+        let a: Array1<f64> = Array1::from_shape_fn(n, |i| i as f64);
+        let b: Array1<f64> = Array1::from_shape_fn(n, |i| (i + 1) as f64);
 
         // Test that large vectors work without errors
         let dot_result = ops.dot_product(&a.view(), &b.view());

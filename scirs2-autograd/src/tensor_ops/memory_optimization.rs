@@ -91,7 +91,7 @@ impl MemoryPool {
     /// Configure the memory pool
     fn configure(&mut self, max_buffers_per_size: usize, max_poolmemory: usize) {
         self.max_buffers_per_size = max_buffers_per_size;
-        self.max_pool_memory = max_pool_memory;
+        self.max_pool_memory = max_poolmemory;
     }
 
     /// Enable or disable the memory pool
@@ -161,11 +161,11 @@ impl MemoryTracker {
         }
 
         // Update current usage
-        let current = self.current_usage.entry(op_name.to_string()).or_insert(0);
+        let current = self.current_usage.entry(opname.to_string()).or_insert(0);
         *current += size;
 
         // Update peak usage
-        let peak = self.peak_usage.entry(op_name.to_string()).or_insert(0);
+        let peak = self.peak_usage.entry(opname.to_string()).or_insert(0);
         if *current > *peak {
             *peak = *current;
         }
@@ -173,7 +173,7 @@ impl MemoryTracker {
         // Update total allocations
         let total = self
             .total_allocations
-            .entry(op_name.to_string())
+            .entry(opname.to_string())
             .or_insert(0);
         *total += size;
     }
@@ -184,7 +184,7 @@ impl MemoryTracker {
             return;
         }
 
-        let current = self.current_usage.entry(op_name.to_string()).or_insert(0);
+        let current = self.current_usage.entry(opname.to_string()).or_insert(0);
         *current = current.saturating_sub(size);
     }
 
@@ -256,7 +256,8 @@ pub enum InPlaceOperation {
 impl<F: Float> InPlaceOp<F> {
     pub fn new(operation: InPlaceOperation) -> Self {
         Self {
-            _operation_phantom: std::marker::PhantomData,
+            operation,
+            phantom: std::marker::PhantomData,
         }
     }
 }
@@ -279,12 +280,12 @@ impl<F: Float> Op<F> for InPlaceOp<F> {
         let mut target = ctx.input(0).to_owned();
 
         // Record memory allocation for tracking
-        let op_name = self.name();
+        let opname = self.name();
         let size = target.len() * std::mem::size_of::<F>();
         MEMORY_TRACKER
             .lock()
             .unwrap()
-            .record_allocation(op_name, size);
+            .record_allocation(opname, size);
 
         match self.operation {
             InPlaceOperation::AddAssign => {
@@ -426,7 +427,7 @@ impl<F: Float> Op<F> for ViewOp {
         // Create a reshaped view - this is zero-copy when possible
         let reshaped = input
             .view()
-            .intoshape_with_order(IxDyn(&self.newshape))
+            .into_shape_with_order(IxDyn(&self.newshape))
             .map_err(|_| OpError::IncompatibleShape("Cannot create view with new shape".into()))?;
 
         ctx.append_output(reshaped.to_owned());
@@ -449,13 +450,13 @@ impl<F: Float> Op<F> for ViewOp {
 /// Get a buffer from the memory pool
 #[allow(dead_code)]
 pub fn get_pooled_buffer(size: usize) -> Vec<u8> {
-    MEMORY_POOL.lock().unwrap().get_buffer(_size)
+    MEMORY_POOL.lock().unwrap().get_buffer(size)
 }
 
 /// Return a buffer to the memory pool  
 #[allow(dead_code)]
 pub fn return_pooled_buffer(buffer: Vec<u8>) {
-    MEMORY_POOL.lock().unwrap().return_buffer(_buffer);
+    MEMORY_POOL.lock().unwrap().return_buffer(buffer);
 }
 
 /// Configure the memory pool
@@ -464,13 +465,13 @@ pub fn configure_memory_pool(_max_buffers_per_size: usize, max_poolmemory: usize
     MEMORY_POOL
         .lock()
         .unwrap()
-        .configure(_max_buffers_per_size, max_pool_memory);
+        .configure(_max_buffers_per_size, max_poolmemory);
 }
 
 /// Enable or disable the memory pool
 #[allow(dead_code)]
 pub fn set_memory_pool_enabled(enabled: bool) {
-    MEMORY_POOL.lock().unwrap().set_enabled(_enabled);
+    MEMORY_POOL.lock().unwrap().set_enabled(enabled);
 }
 
 /// Clear all buffers from the memory pool
@@ -514,7 +515,7 @@ pub fn get_memory_tracking_stats() -> MemoryTrackerStats {
 pub fn efficient_view<'g, F: Float>(tensor: &Tensor<'g, F>, newshape: &[usize]) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
-        .append_input(_tensor, false)
+        .append_input(tensor, false)
         .build(ViewOp {
             newshape: newshape.to_vec(),
         })
@@ -525,7 +526,7 @@ pub fn efficient_view<'g, F: Float>(tensor: &Tensor<'g, F>, newshape: &[usize]) 
 pub fn inplace_add<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = lhs.graph();
     Tensor::builder(g)
-        .append_input(_lhs, false)
+        .append_input(lhs, false)
         .append_input(rhs, false)
         .build(InPlaceOp::new(InPlaceOperation::AddAssign))
 }
@@ -535,7 +536,7 @@ pub fn inplace_add<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Te
 pub fn inplace_sub<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = lhs.graph();
     Tensor::builder(g)
-        .append_input(_lhs, false)
+        .append_input(lhs, false)
         .append_input(rhs, false)
         .build(InPlaceOp::new(InPlaceOperation::SubAssign))
 }
@@ -545,7 +546,7 @@ pub fn inplace_sub<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Te
 pub fn inplace_mul<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = lhs.graph();
     Tensor::builder(g)
-        .append_input(_lhs, false)
+        .append_input(lhs, false)
         .append_input(rhs, false)
         .build(InPlaceOp::new(InPlaceOperation::MulAssign))
 }
@@ -555,7 +556,7 @@ pub fn inplace_mul<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Te
 pub fn inplace_div<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = lhs.graph();
     Tensor::builder(g)
-        .append_input(_lhs, false)
+        .append_input(lhs, false)
         .append_input(rhs, false)
         .build(InPlaceOp::new(InPlaceOperation::DivAssign))
 }
@@ -565,7 +566,7 @@ pub fn inplace_div<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Te
 pub fn inplace_neg<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
-        .append_input(_tensor, false)
+        .append_input(tensor, false)
         .build(InPlaceOp::new(InPlaceOperation::NegAssign))
 }
 
@@ -574,7 +575,7 @@ pub fn inplace_neg<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 pub fn inplace_abs<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
-        .append_input(_tensor, false)
+        .append_input(tensor, false)
         .build(InPlaceOp::new(InPlaceOperation::AbsAssign))
 }
 
@@ -598,7 +599,7 @@ pub fn efficient_zeros<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>
     // In a full implementation, this would use the memory pool
     crate::tensor_ops::zeros(
         &crate::tensor_ops::convert_to_tensor(
-            ndarray::Array::fromshape_vec(
+            ndarray::Array::from_shape_vec(
                 ndarray::IxDyn(&[shape.len()]),
                 shape
                     .iter()
@@ -619,7 +620,7 @@ pub fn efficient_ones<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>)
     // In a full implementation, this would use the memory pool
     crate::tensor_ops::ones(
         &crate::tensor_ops::convert_to_tensor(
-            ndarray::Array::fromshape_vec(
+            ndarray::Array::from_shape_vec(
                 ndarray::IxDyn(&[shape.len()]),
                 shape
                     .iter()
@@ -742,7 +743,7 @@ mod tests {
             newshape: vec![2, 3],
         };
         assert_eq!(
-            <ViewOp as crate::op::Op<f32>>::name(&viewop),
+            <ViewOp as crate::op::Op<f32>>::name(&view_op),
             "MemoryEfficientView"
         );
         assert_eq!(view_op.newshape, vec![2, 3]);

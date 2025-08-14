@@ -476,12 +476,12 @@ pub struct RateLimiter {
 pub trait NetworkClient {
     fn send_request(
         &self,
-        address: &str,
+        _address: &str,
         message: &DistributedMessage,
     ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>>;
     fn send_request_sync(
         &self,
-        address: &str,
+        _address: &str,
         message: &DistributedMessage,
     ) -> Result<DistributedMessage>;
     fn establish_connection(&self, address: &str) -> Result<()>;
@@ -499,10 +499,10 @@ impl DistributedMetricsCoordinator {
 
         // Create network client based on protocol
         let network_client =
-            Self::create_network_client(&config.network_protocol, &config.auth_config)?;
+            Self::create_network_client(&config.network_protocol, &config._authconfig)?;
 
         let coordinator = Self {
-            _config: config.clone(),
+            config: config.clone(),
             workers,
             task_counter: Arc::new(RwLock::new(0)),
             load_balancer: Arc::new(Mutex::new(load_balancer)),
@@ -549,12 +549,12 @@ impl DistributedMetricsCoordinator {
     ) -> Result<Arc<dyn NetworkClient + Send + Sync>> {
         match protocol {
             NetworkProtocol::Http | NetworkProtocol::Http2 => {
-                Ok(Arc::new(HttpClient::new(auth_configclone())?))
+                Ok(Arc::new(HttpClient::new(_authconfig.clone())?))
             }
-            NetworkProtocol::Grpc => Ok(Arc::new(GrpcClient::new(auth_configclone())?)),
-            NetworkProtocol::Tcp => Ok(Arc::new(TcpClient::new(auth_configclone())?)),
-            NetworkProtocol::WebSocket => Ok(Arc::new(WebSocketClient::new(auth_configclone())?)),
-            NetworkProtocol::Udp => Ok(Arc::new(UdpClient::new(auth_configclone())?)),
+            NetworkProtocol::Grpc => Ok(Arc::new(GrpcClient::new(_authconfig.clone())?)),
+            NetworkProtocol::Tcp => Ok(Arc::new(TcpClient::new(_authconfig.clone())?)),
+            NetworkProtocol::WebSocket => Ok(Arc::new(WebSocketClient::new(_authconfig.clone())?)),
+            NetworkProtocol::Udp => Ok(Arc::new(UdpClient::new(_authconfig.clone())?)),
         }
     }
 
@@ -854,12 +854,12 @@ impl DistributedMetricsCoordinator {
             .map(|worker| self.calculate_worker_weight(&worker.status))
             .collect();
 
-        let total_weight: f64 = worker_weightsiter().sum();
+        let total_weight: f64 = worker_weights.iter().sum();
         let mut chunks = Vec::new();
         let mut current_offset = 0;
 
-        for (i, &weight) in worker_weightsiter().enumerate() {
-            let chunk_size = if i == worker_weightslen() - 1 {
+        for (i, &weight) in worker_weights.iter().enumerate() {
+            let chunk_size = if i == worker_weights.len() - 1 {
                 // Last chunk gets remaining samples
                 total_samples - current_offset
             } else {
@@ -1029,7 +1029,7 @@ impl DistributedMetricsCoordinator {
         let mut handles = Vec::new();
 
         // Spawn threads for concurrent execution
-        for (i, future) in futures.into_iter().enumerate() {
+        for (i, _future) in futures.into_iter().enumerate() {
             let tx_clone = tx.clone();
             let handle = thread::spawn(move || {
                 // Since we can't use async runtime here, we'll use a blocking approach
@@ -1783,7 +1783,7 @@ impl LoadBalancer for RoundRobinBalancer {
         Some(selected)
     }
 
-    fn update_worker_metrics(&mut self, _worker_id: &str, metrics: &WorkerMetrics) {
+    fn update_worker_metrics(&mut self, _worker_id: &str, _metrics: &WorkerMetrics) {
         // Round-robin doesn't use _metrics
     }
 
@@ -1833,7 +1833,7 @@ impl LoadBalancer for LeastConnectionsBalancer {
         selected_worker
     }
 
-    fn update_worker_metrics(&mut self, workerid: &str, metrics: &WorkerMetrics) {
+    fn update_worker_metrics(&mut self, workerid: &str, _metrics: &WorkerMetrics) {
         // Decrease connection count when task completes
         if let Some(count) = self.connection_counts.get_mut(workerid) {
             if *count > 0 {
@@ -1892,7 +1892,7 @@ impl LoadBalancer for WeightedRoundRobinBalancer {
 
         if let Some(ref workerid) = selected_worker {
             let total_weight: f64 = self.weights.values().sum();
-            if let Some(current) = self.currentweights.get_mut(workerid) {
+            if let Some(current) = self.current_weights.get_mut(workerid) {
                 *current -= total_weight;
             }
         }
@@ -1900,7 +1900,7 @@ impl LoadBalancer for WeightedRoundRobinBalancer {
         selected_worker
     }
 
-    fn update_worker_metrics(&mut self, _worker_id: &str, metrics: &WorkerMetrics) {
+    fn update_worker_metrics(&mut self, _worker_id: &str, _metrics: &WorkerMetrics) {
         // Weights are static for this implementation
     }
 
@@ -2756,7 +2756,7 @@ impl NetworkClient for HttpClient {
         let message = message.clone();
 
         let timeout = self.timeout;
-        let _authconfig = self.auth_configclone();
+        let _authconfig = self._authconfig.clone();
 
         Box::pin(async move {
             // Convert message to JSON for HTTP request
@@ -2834,12 +2834,12 @@ impl NetworkClient for HttpClient {
         self.parse_response(&response_json, message)
     }
 
-    fn establish_connection(&self, address: &str) -> Result<()> {
+    fn establish_connection(&self, _address: &str) -> Result<()> {
         // HTTP is stateless, no persistent connection needed
         Ok(())
     }
 
-    fn close_connection(&self, address: &str) -> Result<()> {
+    fn close_connection(&self, _address: &str) -> Result<()> {
         // HTTP is stateless, no persistent connection to close
         Ok(())
     }
@@ -2970,12 +2970,12 @@ impl HttpClient {
         }
     }
 
-    fn establish_connection(&self, address: &str) -> Result<()> {
+    fn establish_connection(&self, _address: &str) -> Result<()> {
         // HTTP is connectionless, so this is a no-op
         Ok(())
     }
 
-    fn close_connection(&self, address: &str) -> Result<()> {
+    fn close_connection(&self, _address: &str) -> Result<()> {
         // HTTP is connectionless, so this is a no-op
         Ok(())
     }
@@ -2999,7 +2999,7 @@ impl GrpcClient {
 impl NetworkClient for GrpcClient {
     fn send_request(
         &self,
-        address: &str,
+        _address: &str,
         _message: &DistributedMessage,
     ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         Box::pin(async move {
@@ -3034,7 +3034,7 @@ impl NetworkClient for GrpcClient {
 
     fn send_request_sync(
         &self,
-        address: &str,
+        _address: &str,
         _message: &DistributedMessage,
     ) -> Result<DistributedMessage> {
         // Simplified sync version
@@ -3065,12 +3065,12 @@ impl NetworkClient for GrpcClient {
         })
     }
 
-    fn establish_connection(&self, address: &str) -> Result<()> {
+    fn establish_connection(&self, _address: &str) -> Result<()> {
         // Establish persistent gRPC connection
         Ok(())
     }
 
-    fn close_connection(&self, address: &str) -> Result<()> {
+    fn close_connection(&self, _address: &str) -> Result<()> {
         // Close gRPC connection
         Ok(())
     }
@@ -3094,7 +3094,7 @@ impl TcpClient {
 impl NetworkClient for TcpClient {
     fn send_request(
         &self,
-        address: &str,
+        _address: &str,
         _message: &DistributedMessage,
     ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         Box::pin(async move {
@@ -3129,7 +3129,7 @@ impl NetworkClient for TcpClient {
 
     fn send_request_sync(
         &self,
-        address: &str,
+        _address: &str,
         _message: &DistributedMessage,
     ) -> Result<DistributedMessage> {
         // Simplified sync version
@@ -3160,12 +3160,12 @@ impl NetworkClient for TcpClient {
         })
     }
 
-    fn establish_connection(&self, address: &str) -> Result<()> {
+    fn establish_connection(&self, _address: &str) -> Result<()> {
         // Establish TCP connection
         Ok(())
     }
 
-    fn close_connection(&self, address: &str) -> Result<()> {
+    fn close_connection(&self, _address: &str) -> Result<()> {
         // Close TCP connection
         Ok(())
     }
@@ -3189,7 +3189,7 @@ impl WebSocketClient {
 impl NetworkClient for WebSocketClient {
     fn send_request(
         &self,
-        address: &str,
+        _address: &str,
         _message: &DistributedMessage,
     ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         Box::pin(async move {
@@ -3223,7 +3223,7 @@ impl NetworkClient for WebSocketClient {
 
     fn send_request_sync(
         &self,
-        address: &str,
+        _address: &str,
         _message: &DistributedMessage,
     ) -> Result<DistributedMessage> {
         std::thread::sleep(Duration::from_millis(35));
@@ -3253,11 +3253,11 @@ impl NetworkClient for WebSocketClient {
         })
     }
 
-    fn establish_connection(&self, address: &str) -> Result<()> {
+    fn establish_connection(&self, _address: &str) -> Result<()> {
         Ok(())
     }
 
-    fn close_connection(&self, address: &str) -> Result<()> {
+    fn close_connection(&self, _address: &str) -> Result<()> {
         Ok(())
     }
 
@@ -3280,7 +3280,7 @@ impl UdpClient {
 impl NetworkClient for UdpClient {
     fn send_request(
         &self,
-        address: &str,
+        _address: &str,
         _message: &DistributedMessage,
     ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         Box::pin(async move {
@@ -3314,7 +3314,7 @@ impl NetworkClient for UdpClient {
 
     fn send_request_sync(
         &self,
-        address: &str,
+        _address: &str,
         _message: &DistributedMessage,
     ) -> Result<DistributedMessage> {
         std::thread::sleep(Duration::from_millis(5));
@@ -3344,12 +3344,12 @@ impl NetworkClient for UdpClient {
         })
     }
 
-    fn establish_connection(&self, address: &str) -> Result<()> {
+    fn establish_connection(&self, _address: &str) -> Result<()> {
         // UDP is connectionless
         Ok(())
     }
 
-    fn close_connection(&self, address: &str) -> Result<()> {
+    fn close_connection(&self, _address: &str) -> Result<()> {
         // UDP is connectionless
         Ok(())
     }

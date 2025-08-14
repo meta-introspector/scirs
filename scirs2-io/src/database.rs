@@ -521,7 +521,7 @@ struct SQLiteConnection {
 #[cfg(feature = "sqlite")]
 impl SQLiteConnection {
     fn new(config: &DatabaseConfig) -> Result<Self> {
-        let conn = SqliteConn::open(&_config.database)
+        let conn = SqliteConn::open(&config.database)
             .map_err(|e| IoError::FileError(format!("Failed to open SQLite database: {}", e)))?;
 
         Ok(Self {
@@ -1760,7 +1760,7 @@ impl DuckDBConnection {
         let conn = if config.database == ":memory:" {
             DuckdbConn::open_in_memory()
         } else {
-            DuckdbConn::open(&_config.database)
+            DuckdbConn::open(&config.database)
         }
         .map_err(|e| IoError::ConnectionError(format!("DuckDB connection failed: {}", e)))?;
 
@@ -2278,10 +2278,10 @@ pub struct PreparedStatement {
 impl PreparedStatement {
     pub fn new(sql: impl Into<String>) -> Result<Self> {
         let _sql = sql.into();
-        let param_count = sql.matches('?').count();
+        let param_count = _sql.matches('?').count();
 
         Ok(Self {
-            sql: sql,
+            sql: _sql,
             param_count,
         })
     }

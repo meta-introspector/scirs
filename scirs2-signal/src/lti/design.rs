@@ -38,7 +38,7 @@ use num_complex::Complex64;
 /// ```
 #[allow(dead_code)]
 pub fn tf(num: Vec<f64>, den: Vec<f64>, dt: Option<bool>) -> SignalResult<TransferFunction> {
-    TransferFunction::new(_num, den, dt)
+    TransferFunction::new(num, den, dt)
 }
 
 /// Create a zeros-poles-gain system
@@ -589,7 +589,7 @@ pub fn subtract_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
 /// Tuple of (quotient, remainder) polynomial coefficients
 #[allow(dead_code)]
 pub fn divide_polynomials(
-    _dividend: &[f64],
+    dividend: &[f64],
     divisor: &[f64],
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     if divisor.is_empty() || divisor.iter().all(|&x: &f64| x.abs() < 1e-10) {
@@ -663,7 +663,7 @@ pub fn evaluate_polynomial(coeffs: &[f64], x: f64) -> f64 {
 
     // Horner's method
     let mut result = coeffs[0];
-    for &coeff in &_coeffs[1..] {
+    for &coeff in &coeffs[1..] {
         result = result * x + coeff;
     }
 
@@ -688,10 +688,10 @@ pub fn polynomial_derivative(coeffs: &[f64]) -> Vec<f64> {
         return vec![0.0];
     }
 
-    let mut derivative = Vec::with_capacity(_coeffs.len() - 1);
+    let mut derivative = Vec::with_capacity(coeffs.len() - 1);
     let n = coeffs.len() - 1;
 
-    for (i, &coeff) in coeffs.iter().enumerate().take(_coeffs.len() - 1) {
+    for (i, &coeff) in coeffs.iter().enumerate().take(coeffs.len() - 1) {
         let power = n - i;
         derivative.push(coeff * power as f64);
     }

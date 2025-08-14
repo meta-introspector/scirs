@@ -6,7 +6,7 @@ use scirs2_autograd as ag;
 fn main() {
     println!("=== scirs2-autograd Linear Algebra Showcase ===\n");
 
-    ag::run::<f64_>(|g| {
+    ag::run(|g| {
         // 1. Basic Linear Algebra Operations
         println!("1. Basic Linear Algebra Operations");
 

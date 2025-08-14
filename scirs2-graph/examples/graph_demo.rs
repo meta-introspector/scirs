@@ -98,7 +98,7 @@ fn main() {
     // 8. Random graph generation
     println!("\n8. Random Graph Generation");
 
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Erdős-Rényi random graph
     let random_graph = erdos_renyi_graph(10, 0.3, &mut rng).unwrap();

@@ -976,7 +976,7 @@ where
         }
 
         // Solve (J^T * J + λ * I) * delta = -J^T * f
-        let neg_jtf = jtf.mapv(|x| -x);
+        let neg_jtf = jtf.mapv(|x: f64| -x);
         let delta = match solve(&jtj, &neg_jtf) {
             Some(d) => d,
             None => {

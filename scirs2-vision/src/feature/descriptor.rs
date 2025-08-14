@@ -320,7 +320,7 @@ pub fn match_descriptors(
 fn euclidean_distance(vec1: &[f32], vec2: &[f32]) -> f32 {
     let mut sum_sq = 0.0;
 
-    for i in 0.._vec1.len().min(vec2.len()) {
+    for i in 0..vec1.len().min(vec2.len()) {
         let diff = vec1[i] - vec2[i];
         sum_sq += diff * diff;
     }

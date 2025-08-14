@@ -382,7 +382,7 @@ impl PyramidTracker {
 
             // Scale new _features for this level
             let scaled_features = if level == 0 {
-                newfeatures.map(|_features| features.to_vec())
+                newfeatures.map(|features| features.to_vec())
             } else {
                 let scale = 2.0_f32.powi(level as i32);
                 newfeatures.map(|_features| {

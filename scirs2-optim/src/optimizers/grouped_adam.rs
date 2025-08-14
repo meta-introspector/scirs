@@ -88,8 +88,8 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> GroupedAdam<A
     }
 
     /// Set default weight decay
-    pub fn with_weight_decay(mut self, weightdecay: A) -> Self {
-        self.default_weight_decay = weightdecay;
+    pub fn with_weight_decay(mut self, weight_decay: A) -> Self {
+        self.default_weight_decay = weight_decay;
         self
     }
 
@@ -268,8 +268,8 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> Optimizer<A, 
         self.defaultlr
     }
 
-    fn set_learning_rate(&mut self, learningrate: A) {
-        self.defaultlr = learningrate;
+    fn set_learning_rate(&mut self, learning_rate: A) {
+        self.defaultlr = learning_rate;
     }
 }
 

@@ -27,7 +27,7 @@ impl SparseMatrix {
     /// Create a new sparse matrix
     pub fn new(nrows: usize, ncols: usize) -> Self {
         Self {
-            row_ptr: vec![0; _nrows + 1],
+            row_ptr: vec![0; nrows + 1],
             col_idx: Vec::new(),
             values: Vec::new(),
             nrows,
@@ -46,7 +46,7 @@ impl SparseMatrix {
             for j in 0..ncols {
                 if matrix[[i, j]].abs() > threshold {
                     col_idx.push(j);
-                    values.push(_matrix[[i, j]]);
+                    values.push(matrix[[i, j]]);
                 }
             }
             row_ptr[i + 1] = values.len();
@@ -553,7 +553,7 @@ where
 fn compute_diagonal_element(jac: &SparseMatrix, col: usize) -> f64 {
     let mut diag = 0.0;
 
-    for row in 0.._jac.nrows {
+    for row in 0..jac.nrows {
         let start = jac.row_ptr[row];
         let end = jac.row_ptr[row + 1];
 
@@ -643,7 +643,7 @@ where
 
 /// Estimate memory usage of sparse matrix in MB
 #[allow(dead_code)]
-fn estimate_memory_usage(_sparsematrix: &SparseMatrix) -> f64 {
+fn estimate_memory_usage(sparse_matrix: &SparseMatrix) -> f64 {
     let nnz = sparse_matrix.values.len();
     let nrows = sparse_matrix.nrows;
 

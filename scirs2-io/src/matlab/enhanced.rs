@@ -49,7 +49,7 @@ pub struct EnhancedMatFile {
 impl EnhancedMatFile {
     /// Create a new enhanced MAT file handler
     pub fn new(config: MatFileConfig) -> Self {
-        Self { config: _config }
+        Self { config }
     }
 
     /// Write variables to a MAT file with enhanced features
@@ -59,7 +59,7 @@ impl EnhancedMatFile {
         let use_v73 = self.config.use_v73 || total_size > self.config.v73_threshold;
 
         if use_v73 {
-            EnhancedMatFile::write_v73(&path, vars)
+            self.write_v73(&path, vars)
         } else {
             write_mat(path, vars)
         }
@@ -68,8 +68,8 @@ impl EnhancedMatFile {
     /// Read variables from a MAT file with enhanced features
     pub fn read<P: AsRef<Path>>(&self, path: P) -> Result<HashMap<String, MatType>> {
         // Try v7.3 format first, then fall back to v5
-        if EnhancedMatFile::is_v73_file(&&path)? {
-            EnhancedMatFile::read_v73(&path)
+        if self.is_v73_file(&path)? {
+            self.read_v73(&path)
         } else {
             read_mat(path)
         }
@@ -86,7 +86,7 @@ impl EnhancedMatFile {
 
     /// Estimate the size of a MatType
     fn estimate_mat_type_size(_mattype: &MatType) -> usize {
-        match _mat_type {
+        match _mattype {
             MatType::Double(array) => array.len() * 8,
             MatType::Single(array) => array.len() * 4,
             MatType::Int8(array) => array.len(),
@@ -110,7 +110,7 @@ impl EnhancedMatFile {
     }
 
     /// Check if a file is in v7.3 format
-    pub fn is_v73_file<P: AsRef<Path>>(self, path: &P) -> Result<bool> {
+    pub fn is_v73_file<P: AsRef<Path>>(&self, path: &P) -> Result<bool> {
         // Try to read as HDF5 file
         #[cfg(feature = "hdf5")]
         {
@@ -141,7 +141,7 @@ impl EnhancedMatFile {
 
     /// Write variables using MAT v7.3 format (fallback without HDF5)
     #[cfg(not(feature = "hdf5"))]
-    fn write_v73<P: AsRef<Path>>(self, path: &P, vars: &HashMap<String, MatType>) -> Result<()> {
+    fn write_v73<P: AsRef<Path>>(&self, path: &P, vars: &HashMap<String, MatType>) -> Result<()> {
         Err(IoError::Other(
             "MAT v7.3 format requires HDF5 feature".to_string(),
         ))
@@ -165,7 +165,7 @@ impl EnhancedMatFile {
 
     /// Read variables using MAT v7.3 format (fallback without HDF5)
     #[cfg(not(feature = "hdf5"))]
-    fn read_v73<P: AsRef<Path>>(self, path: &P) -> Result<HashMap<String, MatType>> {
+    fn read_v73<P: AsRef<Path>>(&self, path: &P) -> Result<HashMap<String, MatType>> {
         Err(IoError::Other(
             "MAT v7.3 format requires HDF5 feature".to_string(),
         ))
@@ -682,14 +682,14 @@ pub fn create_complex_array(real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatT
     }
 
     // Create a complex array by combining _real and imaginary parts
-    let _complex_array = ArrayD::from_shape_fn(_real.raw_dim(), |idx| {
-        Complex64::new(_real[&idx], imag[&idx])
+    let _complex_array = ArrayD::from_shape_fn(real.raw_dim(), |idx| {
+        Complex64::new(real[&idx], imag[&idx])
     });
 
     // For now, store as a struct with _real and imag fields
     // This is how MATLAB v7.3 stores complex data internally
     let mut fields = HashMap::new();
-    fields.insert("_real".to_string(), MatType::Double(_real));
+    fields.insert("_real".to_string(), MatType::Double(real));
     fields.insert("imag".to_string(), MatType::Double(imag));
 
     Ok(MatType::Struct(fields))
@@ -698,13 +698,13 @@ pub fn create_complex_array(real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatT
 /// Create a cell array MatType
 #[allow(dead_code)]
 pub fn create_cell_array(cells: Vec<MatType>) -> MatType {
-    MatType::Cell(_cells)
+    MatType::Cell(cells)
 }
 
 /// Create a structure MatType
 #[allow(dead_code)]
 pub fn create_struct(fields: HashMap<String, MatType>) -> MatType {
-    MatType::Struct(_fields)
+    MatType::Struct(fields)
 }
 
 /// Advanced v7.3+ features for large data handling

@@ -48,13 +48,13 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
     ///
     /// A new DropConnect instance or error if probability is invalid
     pub fn new(dropprob: A) -> Result<Self> {
-        if drop_prob < A::zero() || drop_prob > A::one() {
+        if dropprob < A::zero() || dropprob > A::one() {
             return Err(OptimError::InvalidConfig(
                 "Drop probability must be between 0.0 and 1.0".to_string(),
             ));
         }
 
-        Ok(Self { drop_prob })
+        Ok(Self { drop_prob: dropprob })
     }
 
     /// Apply DropConnect to weights

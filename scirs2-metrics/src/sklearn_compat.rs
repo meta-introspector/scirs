@@ -103,7 +103,7 @@ pub fn classification_report_sklearn(
         let (precision, recall, f1, support) =
             calculate_class_metrics(y_true, y_pred, label, zero_division)?;
 
-        let label_name = if let Some(_names) = target_names {
+        let label_name = if let Some(names) = target_names {
             if let Some(pos) = unique_labels.iter().position(|&x| x == label) {
                 if pos < names.len() {
                     names[pos].clone()
@@ -250,7 +250,7 @@ fn calculate_class_metrics(
 /// Equivalent to sklearn.metrics.accuracy_score
 #[allow(dead_code)]
 pub fn accuracy_score_sklearn(y_true: &Array1<i32>, ypred: &Array1<i32>) -> Result<f64> {
-    if y_true.len() != y_pred.len() {
+    if y_true.len() != ypred.len() {
         return Err(MetricsError::InvalidInput(
             "y_true and y_pred must have the same length".to_string(),
         ));
@@ -258,7 +258,7 @@ pub fn accuracy_score_sklearn(y_true: &Array1<i32>, ypred: &Array1<i32>) -> Resu
 
     let correct = y_true
         .iter()
-        .zip(y_pred.iter())
+        .zip(ypred.iter())
         .filter(|(&true_val, &pred_val)| true_val == pred_val)
         .count();
 
@@ -490,7 +490,7 @@ pub fn multilabel_confusion_matrix_sklearn(
             let true_val = y_true[[sample_idx, label]];
             let pred_val = y_pred[[sample_idx, label]];
 
-            let _weight = if let Some(weights) = sample_weight {
+            let weight = if let Some(weights) = sample_weight {
                 weights[sample_idx] as i32
             } else {
                 1
@@ -560,7 +560,7 @@ pub fn cohen_kappa_score_sklearn(
     let mut total_weight = 0.0;
 
     for (idx, (&true_val, &pred_val)) in y1.iter().zip(y2.iter()).enumerate() {
-        let _weight = if let Some(sw) = sample_weight {
+        let weight = if let Some(sw) = sample_weight {
             sw[idx]
         } else {
             1.0
@@ -684,7 +684,7 @@ pub fn hinge_loss_sklearn(
     let mut total_weight = 0.0;
 
     for (sample_idx, &true_label) in y_true.iter().enumerate() {
-        let _weight = if let Some(sw) = sample_weight {
+        let weight = if let Some(sw) = sample_weight {
             sw[sample_idx]
         } else {
             1.0
@@ -704,7 +704,7 @@ pub fn hinge_loss_sklearn(
                 }
             }
 
-            total_loss += _weight * sample_loss;
+            total_loss += weight * sample_loss;
             total_weight += weight;
         } else {
             return Err(MetricsError::InvalidInput(format!(
@@ -747,7 +747,7 @@ pub fn zero_one_loss_sklearn(
     let mut total_weight = 0.0;
 
     for (idx, (&true_val, &pred_val)) in y_true.iter().zip(y_pred.iter()).enumerate() {
-        let _weight = if let Some(sw) = sample_weight {
+        let weight = if let Some(sw) = sample_weight {
             sw[idx]
         } else {
             1.0
@@ -839,10 +839,10 @@ mod tests {
     #[test]
     fn test_multilabel_confusion_matrix_sklearn() {
         let y_true =
-            Array2::fromshape_vec((4, 3), vec![1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1]).unwrap();
+            Array2::from_shape_vec((4, 3), vec![1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1]).unwrap();
 
         let y_pred =
-            Array2::fromshape_vec((4, 3), vec![1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1]).unwrap();
+            Array2::from_shape_vec((4, 3), vec![1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1]).unwrap();
 
         let confusion_matrices =
             multilabel_confusion_matrix_sklearn(&y_true, &y_pred, None, None).unwrap();

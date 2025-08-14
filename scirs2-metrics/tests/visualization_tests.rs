@@ -3,7 +3,7 @@
 //! This module tests the visualization components in the scirs2-metrics crate.
 
 use ndarray::{array, Array2};
-use scirs2__metrics::{
+use scirs2_metrics::{
     classification::confusion_matrix,
     classification::curves::{calibration_curve, precision_recall_curve, roc_curve},
     visualization::{
@@ -172,8 +172,8 @@ fn test_confusion_matrix_visualizer() {
     let y_true = array![0, 1, 2, 0, 1, 2];
     let y_pred = array![0, 2, 1, 0, 0, 2];
 
-    let (cm_) = confusion_matrix(&y_true, &y_pred, None).unwrap();
-    let cm_f64 = cm.mapv(|x| x as f64);
+    let (cm_, _labels) = confusion_matrix(&y_true, &y_pred, None).unwrap();
+    let cm_f64 = cm_.mapv(|x| x as f64);
 
     // Test creating a visualizer
     let visualizer = helpers::visualize_confusion_matrix(
@@ -260,11 +260,11 @@ fn test_calibration_visualizer() {
     let y_score = array![0.1, 0.8, 0.7, 0.3, 0.9, 0.2];
 
     // Compute calibration curve
-    let (prob_true, prob_pred_) = calibration_curve(&y_true, &y_score, Some(3)).unwrap();
+    let (prob_true, prob_pred_, _counts) = calibration_curve(&y_true, &y_score, Some(3)).unwrap();
 
     // Test creating a visualizer
     let visualizer =
-        helpers::visualize_calibration_curve(prob_true.view(), prob_pred.view(), 3, "uniform");
+        helpers::visualize_calibration_curve(prob_true.view(), prob_pred_.view(), 3, "uniform");
 
     // Test preparing data
     let data = visualizer.prepare_data().unwrap();
@@ -353,7 +353,7 @@ fn test_multi_curve_visualizer() {
 fn test_heatmap_visualizer() {
     // Create a matrix
     let matrix =
-        Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]).unwrap();
+        Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]).unwrap();
 
     // Test creating a visualizer
     let visualizer = helpers::visualize_heatmap(

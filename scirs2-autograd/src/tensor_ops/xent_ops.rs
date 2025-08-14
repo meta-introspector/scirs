@@ -104,7 +104,7 @@ impl<T: Float> op::Op<T> for SparseSoftmaxCrossEntropy {
                     )
                     .expect("Wrong label value")
             })
-            .intoshape_with_order(ndarray::IxDyn(&[log_x.shape()[0], 1]))
+            .into_shape_with_order(ndarray::IxDyn(&[log_x.shape()[0], 1]))
             .unwrap();
 
         ctx.append_output(ret);

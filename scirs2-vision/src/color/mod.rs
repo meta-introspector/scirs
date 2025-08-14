@@ -105,7 +105,7 @@ pub fn rgb_to_hsv(img: &DynamicImage) -> Result<DynamicImage> {
 /// * Result containing an RGB image
 #[allow(dead_code)]
 pub fn hsv_to_rgb(_hsvimg: &DynamicImage) -> Result<DynamicImage> {
-    let hsv = hsv_img.to_rgb8();
+    let hsv = _hsvimg.to_rgb8();
     let (width, height) = hsv.dimensions();
 
     let mut rgb_img = ImageBuffer::new(width, height);
@@ -291,7 +291,7 @@ pub fn rgb_to_lab(img: &DynamicImage) -> Result<DynamicImage> {
 /// * Result containing an RGB image
 #[allow(dead_code)]
 pub fn lab_to_rgb(_labimg: &DynamicImage) -> Result<DynamicImage> {
-    let lab = lab_img.to_rgb8();
+    let lab = _labimg.to_rgb8();
     let (width, height) = lab.dimensions();
 
     let mut rgb_img = ImageBuffer::new(width, height);

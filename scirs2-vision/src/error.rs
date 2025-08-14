@@ -77,7 +77,7 @@ impl Clone for VisionError {
 /// Convert GPU errors to vision errors
 impl From<scirs2_core::gpu::GpuError> for VisionError {
     fn from(err: scirs2_core::gpu::GpuError) -> Self {
-        VisionError::GpuError(_err.to_string())
+        VisionError::GpuError(err.to_string())
     }
 }
 
@@ -671,7 +671,7 @@ static ERROR_RECOVERY: std::sync::Mutex<Option<ErrorRecoveryManager>> = std::syn
 #[allow(dead_code)]
 pub fn initialize_error_recovery(config: RecoveryConfig) {
     let mut global_recovery = ERROR_RECOVERY.lock().unwrap();
-    *global_recovery = Some(ErrorRecoveryManager::new(_config));
+    *global_recovery = Some(ErrorRecoveryManager::new(config));
 }
 
 /// Get global error recovery manager

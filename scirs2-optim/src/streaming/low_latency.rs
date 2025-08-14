@@ -681,7 +681,7 @@ impl<A: Float> ApproximationController<A> {
         self.approximation_level
     }
 
-    fn record_performance(&mut self, latency: Duration, approximationlevel: A, accuracy: A) {
+    fn record_performance(&mut self, latency: Duration, approximation_level: A, accuracy: A) {
         let point = PerformancePoint {
             latency,
             approximation_level,

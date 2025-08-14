@@ -339,7 +339,7 @@ fn find_min_max(arr: &ndarray::ArrayView2<f32>) -> (f32, f32) {
 
 /// Simplified Retinex with dynamic adaptation
 #[allow(dead_code)]
-pub fn adaptive_retinex(_img: &DynamicImage, adaptationlevel: f32) -> Result<DynamicImage> {
+pub fn adaptive_retinex(img: &DynamicImage, adaptationlevel: f32) -> Result<DynamicImage> {
     // Use different scales based on image size
     let (width, height) = img.dimensions();
     let image_size = ((width * height) as f32).sqrt();
@@ -350,7 +350,7 @@ pub fn adaptive_retinex(_img: &DynamicImage, adaptationlevel: f32) -> Result<Dyn
         image_size * 0.1 * adaptationlevel,
     ];
 
-    multi_scale_retinex(_img, &sigmas, None)
+    multi_scale_retinex(img, &sigmas, None)
 }
 
 #[cfg(test)]

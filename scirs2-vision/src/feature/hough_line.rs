@@ -337,7 +337,7 @@ fn extract_line_segment(
 /// Calculate segment length
 #[allow(dead_code)]
 fn segment_length(segment: &LineSegment) -> f32 {
-    ((_segment.x2 - segment.x1).powi(2) + (_segment.y2 - segment.y1).powi(2)).sqrt()
+    ((segment.x2 - segment.x1).powi(2) + (segment.y2 - segment.y1).powi(2)).sqrt()
 }
 
 /// Draw detected lines on an image

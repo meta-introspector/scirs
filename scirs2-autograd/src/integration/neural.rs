@@ -24,7 +24,7 @@ pub struct AutogradLayer<'a, F: Float> {
 
 impl<'a, F: Float> AutogradLayer<'a, F> {
     /// Create a new autograd layer
-    pub fn new(_layertype: LayerType, config: LayerConfig) -> Self {
+    pub fn new(layer_type: LayerType, config: LayerConfig) -> Self {
         Self {
             layer_type,
             parameters: HashMap::new(),

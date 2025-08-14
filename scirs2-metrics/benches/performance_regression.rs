@@ -5,7 +5,7 @@
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2};
-use scirs2__metrics::{
+use scirs2_metrics::{
     anomaly::{js_divergence, kl_divergence, wasserstein_distance},
     classification::{accuracy_score, confusion_matrix, f1_score, precision_score, recall_score},
     clustering::{davies_bouldin_score, silhouette_score},
@@ -16,38 +16,38 @@ use scirs2__metrics::{
 /// Generate synthetic classification data for benchmarking
 #[allow(dead_code)]
 fn generate_classification_data(_nsamples: usize) -> (Array1<f64>, Array1<f64>) {
-    let y_true: Array1<f64> = Array1::from_iter((0.._n_samples).map(|i| (i % 2) as f64));
-    let y_pred: Array1<f64> = Array1::from_iter((0.._n_samples).map(|i| ((i + 1) % 2) as f64));
+    let y_true: Array1<f64> = Array1::from_iter((0.._nsamples).map(|i| (i % 2) as f64));
+    let y_pred: Array1<f64> = Array1::from_iter((0.._nsamples).map(|i| ((i + 1) % 2) as f64));
     (y_true, y_pred)
 }
 
 /// Generate synthetic classification data with integer labels for confusion matrix
 #[allow(dead_code)]
 fn generate_classification_data_int(_nsamples: usize) -> (Array1<i32>, Array1<i32>) {
-    let y_true: Array1<i32> = Array1::from_iter((0.._n_samples).map(|i| (i % 2) as i32));
-    let y_pred: Array1<i32> = Array1::from_iter((0.._n_samples).map(|i| ((i + 1) % 2) as i32));
+    let y_true: Array1<i32> = Array1::from_iter((0.._nsamples).map(|i| (i % 2) as i32));
+    let y_pred: Array1<i32> = Array1::from_iter((0.._nsamples).map(|i| ((i + 1) % 2) as i32));
     (y_true, y_pred)
 }
 
 /// Generate synthetic regression data for benchmarking
 #[allow(dead_code)]
 fn generate_regression_data(_nsamples: usize) -> (Array1<f64>, Array1<f64>) {
-    let y_true: Array1<f64> = Array1::from_iter((0.._n_samples).map(|i| i as f64));
-    let y_pred: Array1<f64> = Array1::from_iter((0.._n_samples).map(|i| (i as f64) + 0.1));
+    let y_true: Array1<f64> = Array1::from_iter((0.._nsamples).map(|i| i as f64));
+    let y_pred: Array1<f64> = Array1::from_iter((0.._nsamples).map(|i| (i as f64) + 0.1));
     (y_true, y_pred)
 }
 
 /// Generate synthetic clustering data for benchmarking
 #[allow(dead_code)]
 fn generate_clustering_data(_n_samples: usize, nfeatures: usize) -> (Array2<f64>, Array1<usize>) {
-    let mut data = Array2::zeros((_n_samples, n_features));
+    let mut data = Array2::zeros((_n_samples, nfeatures));
     let mut labels = Array1::zeros(_n_samples);
 
     for i in 0.._n_samples {
         let cluster = i % 3; // 3 clusters
         labels[i] = cluster;
 
-        for j in 0..n_features {
+        for j in 0..nfeatures {
             // Create cluster-specific offsets
             let offset = (cluster as f64) * 10.0;
             data[[i, j]] = offset + (i as f64) + (j as f64) * 0.1;
@@ -60,14 +60,14 @@ fn generate_clustering_data(_n_samples: usize, nfeatures: usize) -> (Array2<f64>
 /// Generate synthetic probability distributions for benchmarking
 #[allow(dead_code)]
 fn generate_probability_distributions(_nsamples: usize) -> (Array1<f64>, Array1<f64>) {
-    let mut p = Array1::zeros(_n_samples);
-    let mut q = Array1::zeros(_n_samples);
+    let mut p = Array1::zeros(_nsamples);
+    let mut q = Array1::zeros(_nsamples);
 
     // Generate unnormalized weights
     let mut sum_p = 0.0;
     let mut sum_q = 0.0;
 
-    for i in 0.._n_samples {
+    for i in 0.._nsamples {
         p[i] = (i + 1) as f64;
         q[i] = ((i + 1) * 2) as f64;
         sum_p += p[i];
@@ -75,7 +75,7 @@ fn generate_probability_distributions(_nsamples: usize) -> (Array1<f64>, Array1<
     }
 
     // Normalize to make them proper probability distributions
-    for i in 0..n_samples {
+    for i in 0.._nsamples {
         p[i] /= sum_p;
         q[i] /= sum_q;
     }

@@ -53,7 +53,7 @@ struct MemoryPool {
 }
 
 impl MemoryPool {
-    fn new(_maxsize: usize) -> Self {
+    fn new(max_size: usize) -> Self {
         Self {
             array_pool: VecDeque::new(),
             max_pool_size: max_size,
@@ -88,7 +88,7 @@ struct StreamingGradient {
 }
 
 impl StreamingGradient {
-    fn new(_chunksize: usize, eps: f64) -> Self {
+    fn new(chunk_size: usize, eps: f64) -> Self {
         Self { chunk_size, eps }
     }
 
@@ -198,7 +198,7 @@ where
         // Compute search direction using L-BFGS two-loop recursion
         let mut p = if s_history.is_empty() {
             // Use steepest descent if no history
-            get_array_from_pool(&mut memory_pool, n, |_size| -&g)
+            get_array_from_pool(&mut memory_pool, n, |_| -&g)
         } else {
             compute_lbfgs_direction_memory_efficient(&g, &s_history, &y_history, &mut memory_pool)?
         };
@@ -412,7 +412,7 @@ where
     F: FnOnce(usize) -> Array1<f64>,
 {
     match memory_pool {
-        Some(_pool) => {
+        Some(pool) => {
             let mut array = pool.get_array(size);
             if array.len() != size {
                 array = Array1::zeros(size);
@@ -427,8 +427,8 @@ where
 
 /// Return array to memory pool
 #[allow(dead_code)]
-fn return_array_to_pool(_memorypool: &mut Option<MemoryPool>, array: Array1<f64>) {
-    if let Some(_pool) = _memory_pool {
+fn return_array_to_pool(_memory_pool: &mut Option<MemoryPool>, array: Array1<f64>) {
+    if let Some(pool) = _memory_pool {
         pool.return_array(array);
     }
     // If no pool, array will be dropped normally
@@ -436,7 +436,7 @@ fn return_array_to_pool(_memorypool: &mut Option<MemoryPool>, array: Array1<f64>
 
 /// Compute dot product in chunks to reduce memory usage
 #[allow(dead_code)]
-fn chunked_dot_product(a: &Array1<f64>, b: &Array1<f64>, chunksize: usize) -> f64 {
+fn chunked_dot_product(a: &Array1<f64>, b: &Array1<f64>, chunk_size: usize) -> f64 {
     let n = a.len();
     let mut result = 0.0;
 
@@ -452,9 +452,9 @@ fn chunked_dot_product(a: &Array1<f64>, b: &Array1<f64>, chunksize: usize) -> f6
 
 /// Compute array norm in chunks to reduce memory usage
 #[allow(dead_code)]
-fn array_norm_chunked(_array: &Array1<f64>, chunksize: usize) -> f64 {
+fn array_norm_chunked(array: &Array1<f64>, chunk_size: usize) -> f64 {
     let n = array.len();
-    let mut sum_sq = 0.0;
+    let mut sum_sq: f64 = 0.0;
 
     for chunk_start in (0..n).step_by(chunk_size) {
         let chunk_end = std::cmp::min(chunk_start + chunk_size, n);
@@ -475,7 +475,7 @@ fn estimate_memory_usage(n: usize, maxhistory: usize) -> usize {
     let current_vars = 2 * n * F64_SIZE;
 
     // L-BFGS _history (s and y vectors)
-    let history_size = 2 * max_history * n * F64_SIZE;
+    let history_size = 2 * maxhistory * n * F64_SIZE;
 
     // Temporary arrays for computation
     let temp_arrays = 4 * n * F64_SIZE;

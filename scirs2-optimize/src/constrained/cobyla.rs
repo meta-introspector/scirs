@@ -349,6 +349,6 @@ fn update_interpolation_set(
 // Implement error conversion for validation errors
 impl From<scirs2_core::error::CoreError> for OptimizeError {
     fn from(error: scirs2_core::error::CoreError) -> Self {
-        OptimizeError::ValueError(_error.to_string())
+        OptimizeError::ValueError(error.to_string())
     }
 }

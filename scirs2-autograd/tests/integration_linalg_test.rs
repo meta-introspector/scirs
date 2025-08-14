@@ -87,8 +87,8 @@ fn test_complete_linear_algebra_pipeline() {
 
         // Basic positive definite check - all diagonal elements should be positive
         // and determinant should be positive
-        let is_positive_definite = det_val > 0.0 && {
-            let matrix_val = matrix.eval(g).unwrap();
+        let is_positive_definite = det_val[[]] > 0.0 && {
+            let matrix_val = a.eval(g).unwrap();
             matrix_val.diag().iter().all(|&x| x > 0.0)
         };
 
@@ -197,13 +197,13 @@ fn test_gradient_flow_through_decompositions() {
         // assert!(grads_qr[0].eval(g).is_ok());
 
         // Test gradient through eigendecomposition
-        let (eigenvals_) = eigen(a);
+        let (eigenvals, _) = eigen(a);
         let loss_eigen = sum_all(square(eigenvals));
         let grads_eigen = grad(&[&loss_eigen], &[&a]);
         assert!(grads_eigen[0].eval(g).is_ok());
 
         // Test gradient through SVD
-        let (_, s_) = svd(a);
+        let (_, s, _) = svd(a);
         let loss_svd = sum_all(square(s));
         let grads_svd = grad(&[&loss_svd], &[&a]);
         assert!(grads_svd[0].eval(g).is_ok());

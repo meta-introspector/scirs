@@ -104,7 +104,7 @@ struct AugmentedLagrangianState {
 }
 
 impl AugmentedLagrangianState {
-    fn new(n: usize, m_eq: usize, m_ineq: usize, initialpenalty: f64) -> Self {
+    fn new(n: usize, m_eq: usize, m_ineq: usize, initial_penalty: f64) -> Self {
         Self {
             penalty: initial_penalty,
             lambda_eq: if m_eq > 0 {
@@ -124,7 +124,7 @@ impl AugmentedLagrangianState {
     }
 
     /// Update Lagrange multipliers based on constraint values
-    fn update_multipliers(&mut self, c_eq: &Option<Array1<f64>>, cineq: &Option<Array1<f64>>) {
+    fn update_multipliers(&mut self, c_eq: &Option<Array1<f64>>, c_ineq: &Option<Array1<f64>>) {
         // Update equality constraint multipliers
         if let (Some(ref mut lambda), Some(ref c)) = (&mut self.lambda_eq, c_eq) {
             for i in 0..lambda.len() {
@@ -245,7 +245,7 @@ where
         x = result.x;
         total_nfev += result.func_evals;
 
-        // Evaluate _constraints at current point
+        // Evaluate constraints at current point
         let c_eq = eq_constraints.as_ref().map(|f| f(&x.view()));
         let c_ineq = ineq_constraints.as_ref().map(|f| f(&x.view()));
 

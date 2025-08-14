@@ -290,7 +290,7 @@ where
     S2: Data<Elem = f64>,
     D1: Dimension,
 {
-    let (precision, recall_) = precision_recall_curve(y_true, y_prob, pos_label, sample_weight)?;
+    let (precision, recall_, _thresholds) = precision_recall_curve(y_true, y_prob, pos_label, sample_weight)?;
     Ok(average_precision_score_from_curve(&precision, &recall_))
 }
 
@@ -336,7 +336,7 @@ pub fn find_optimal_threshold<T, S1, S2, D1, F>(
     y_prob: &ArrayBase<S2, Ix1>,
     pos_label: Option<T>,
     score_func: F,
-    sample_weight: Option<&ArrayBase<S2, Ix1>>,
+    _sample_weight: Option<&ArrayBase<S2, Ix1>>,
 ) -> Result<(f64, f64)>
 where
     T: Real + PartialOrd + Clone,

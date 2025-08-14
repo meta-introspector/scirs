@@ -14,7 +14,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::classification::advanced::{matthews_corrcoef, balanced_accuracy_score};
+//! use scirs2_metrics::classification::advanced::{matthews_corrcoef, balanced_accuracy_score};
 //!
 //! let y_true = array![0, 1, 2, 0, 1, 2];
 //! let y_pred = array![0, 2, 1, 0, 0, 2];
@@ -30,7 +30,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::classification::one_vs_one::{one_vs_one_accuracy, one_vs_one_f1_score};
+//! use scirs2_metrics::classification::one_vs_one::{one_vs_one_accuracy, one_vs_one_f1_score};
 //!
 //! let y_true = array![0, 1, 2, 0, 1, 2];
 //! let y_pred = array![0, 2, 1, 0, 0, 2];
@@ -99,7 +99,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::accuracy_score;
+/// use scirs2_metrics::classification::accuracy_score;
 ///
 /// let y_true = array![0, 1, 2, 3];
 /// let y_pred = array![0, 2, 1, 3];
@@ -165,7 +165,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::confusion_matrix;
+/// use scirs2_metrics::classification::confusion_matrix;
 ///
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 2, 1, 0, 0, 2];
@@ -309,7 +309,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::precision_score;
+/// use scirs2_metrics::classification::precision_score;
 ///
 /// let y_true = array![0, 1, 0, 0, 1, 1];
 /// let y_pred = array![0, 0, 1, 0, 1, 1];
@@ -436,7 +436,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::recall_score;
+/// use scirs2_metrics::classification::recall_score;
 ///
 /// let y_true = array![0, 1, 0, 0, 1, 1];
 /// let y_pred = array![0, 0, 1, 0, 1, 1];
@@ -575,7 +575,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::f1_score;
+/// use scirs2_metrics::classification::f1_score;
 ///
 /// let y_true = array![0, 1, 0, 0, 1, 1];
 /// let y_pred = array![0, 0, 1, 0, 1, 1];
@@ -624,7 +624,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::fbeta_score;
+/// use scirs2_metrics::classification::fbeta_score;
 ///
 /// let y_true = array![0, 1, 0, 0, 1, 1];
 /// let y_pred = array![0, 0, 1, 0, 1, 1];
@@ -685,7 +685,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::binary_log_loss;
+/// use scirs2_metrics::classification::binary_log_loss;
 ///
 /// let y_true = array![0, 1, 1, 0];
 /// let y_prob = array![0.1, 0.9, 0.8, 0.3];
@@ -754,7 +754,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::roc_auc_score;
+/// use scirs2_metrics::classification::roc_auc_score;
 ///
 /// let y_true = array![0, 0, 1, 1];
 /// let y_score = array![0.1, 0.4, 0.35, 0.8];
@@ -871,7 +871,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::lift_chart;
+/// use scirs2_metrics::classification::lift_chart;
 ///
 /// let y_true = array![0, 0, 1, 0, 1, 1, 0, 1, 0, 1];
 /// let y_score = array![0.1, 0.2, 0.7, 0.3, 0.8, 0.9, 0.4, 0.6, 0.2, 0.5];
@@ -1001,7 +1001,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::gain_chart;
+/// use scirs2_metrics::classification::gain_chart;
 ///
 /// let y_true = array![0, 0, 1, 0, 1, 1, 0, 1, 0, 1];
 /// let y_score = array![0.1, 0.2, 0.7, 0.3, 0.8, 0.9, 0.4, 0.6, 0.2, 0.5];
@@ -1021,7 +1021,7 @@ where
     D2: Dimension,
 {
     // Reuse lift_chart function to get the data
-    let (percentiles, cum_gains) = lift_chart(y_true, y_score, n_bins)?;
+    let (percentiles, cum_gains, _lift_values) = lift_chart(y_true, y_score, n_bins)?;
     Ok((percentiles, cum_gains))
 }
 
@@ -1041,7 +1041,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::classification_report;
+/// use scirs2_metrics::classification::classification_report;
 ///
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 2, 1, 0, 0, 2];

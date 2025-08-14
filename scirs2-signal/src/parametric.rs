@@ -616,8 +616,8 @@ pub fn ar_spectrum(
 ///
 /// # Arguments
 /// * `signal` - Input signal
-/// * `ar_order` - AR model order (p)
-/// * `ma_order` - MA model order (q)
+/// * `arorder` - AR model order (p)
+/// * `maorder` - MA model order (q)
 ///
 /// # Returns
 /// * `ar_coeffs` - AR coefficients [1, a1, a2, ..., ap]
@@ -626,28 +626,28 @@ pub fn ar_spectrum(
 #[allow(dead_code)]
 pub fn estimate_arma(
     signal: &Array1<f64>,
-    ar_order: usize,
-    ma_order: usize,
+    arorder: usize,
+    maorder: usize,
 ) -> SignalResult<(Array1<f64>, Array1<f64>, f64)> {
-    if ar_order + ma_order >= signal.len() {
+    if arorder + maorder >= signal.len() {
         return Err(SignalError::ValueError(format!(
-            "Total ARMA _order ({}) must be less than signal length ({})",
-            ar_order + ma_order,
+            "Total ARMA order ({}) must be less than signal length ({})",
+            arorder + maorder,
             signal.len()
         )));
     }
 
-    // Step 1: Estimate AR parameters using Burg's method with increased _order
-    let ar_init_order = ar_order + ma_order;
-    let ar_init = burg_method(signal, ar_init_order)?;
+    // Step 1: Estimate AR parameters using Burg's method with increased order
+    let ar_initorder = arorder + maorder;
+    let ar_init = burg_method(signal, ar_initorder)?;
 
     // Step 2: Compute the residuals
     let n = signal.len();
     let mut residuals = Array1::<f64>::zeros(n);
 
-    for t in ar_init_order..n {
+    for t in ar_initorder..n {
         let mut pred = 0.0;
-        for i in 1..=ar_init_order {
+        for i in 1..=ar_initorder {
             pred += ar_init.0[i] * signal[t - i];
         }
         residuals[t] = signal[t] - pred;
@@ -657,12 +657,12 @@ pub fn estimate_arma(
     // This is a simplified approach for MA parameter estimation
 
     // Compute autocorrelation of residuals
-    let mut r = Array1::<f64>::zeros(ma_order + 1);
-    for k in 0..=ma_order {
+    let mut r = Array1::<f64>::zeros(maorder + 1);
+    for k in 0..=maorder {
         let mut sum = 0.0;
         let mut count = 0;
 
-        for t in ar_init_order..(n - k) {
+        for t in ar_initorder..(n - k) {
             sum += residuals[t] * residuals[t + k];
             count += 1;
         }
@@ -673,13 +673,13 @@ pub fn estimate_arma(
     }
 
     // Solve for MA parameters using Durbin's method
-    let mut ma_coeffs = Array1::<f64>::zeros(ma_order + 1);
+    let mut ma_coeffs = Array1::<f64>::zeros(maorder + 1);
     ma_coeffs[0] = 1.0;
 
-    let mut v = Array1::<f64>::zeros(ma_order + 1);
+    let mut v = Array1::<f64>::zeros(maorder + 1);
     v[0] = r[0];
 
-    for k in 1..=ma_order {
+    for k in 1..=maorder {
         let mut sum = 0.0;
         for j in 1..k {
             sum += ma_coeffs[j] * r[k - j];
@@ -700,14 +700,14 @@ pub fn estimate_arma(
     // This is a simplified version - in practice, more iterative approaches are used
 
     // Extract the final model parameters
-    let mut final_ar = Array1::<f64>::zeros(ar_order + 1);
+    let mut final_ar = Array1::<f64>::zeros(arorder + 1);
     final_ar[0] = 1.0;
-    for i in 1..=ar_order {
+    for i in 1..=arorder {
         final_ar[i] = ar_init.0[i];
     }
 
     // Compute innovation variance
-    let variance = v[ma_order];
+    let variance = v[maorder];
 
     Ok((final_ar, ma_coeffs, variance))
 }
@@ -800,7 +800,7 @@ pub enum OrderSelection {
 ///
 /// # Arguments
 /// * `signal` - Input signal
-/// * `max_order` - Maximum order to consider
+/// * `maxorder` - Maximum order to consider
 /// * `criterion` - Information criterion to use for selection
 /// * `ar_method` - Method to use for AR parameter estimation
 ///
@@ -808,37 +808,37 @@ pub enum OrderSelection {
 /// * Optimal order
 /// * Criterion values for all tested orders
 #[allow(dead_code)]
-pub fn select_ar_order(
+pub fn select_arorder(
     signal: &Array1<f64>,
-    max_order: usize,
+    maxorder: usize,
     criterion: OrderSelection,
     ar_method: ARMethod,
 ) -> SignalResult<(usize, Array1<f64>)> {
-    if max_order >= signal.len() / 2 {
+    if maxorder >= signal.len() / 2 {
         return Err(SignalError::ValueError(format!(
-            "Maximum AR _order ({}) should be less than half the signal length ({})",
-            max_order,
+            "Maximum AR order ({}) should be less than half the signal length ({})",
+            maxorder,
             signal.len()
         )));
     }
 
     let n = signal.len() as f64;
-    let mut criteria = Array1::<f64>::zeros(max_order + 1);
+    let mut criteria = Array1::<f64>::zeros(maxorder + 1);
 
-    for _order in 0..=max_order {
-        if _order == 0 {
-            // Special case for _order 0: just use the signal variance
+    for order in 0..=maxorder {
+        if order == 0 {
+            // Special case for order 0: just use the signal variance
             let variance = signal.iter().map(|&x| x * x).sum::<f64>() / n;
 
             // Compute information criteria based on variance
             match criterion {
-                OrderSelection::AIC => criteria[_order] = n * variance.ln() + 2.0,
-                OrderSelection::BIC => criteria[_order] = n * variance.ln() + (0 as f64).ln() * n,
-                OrderSelection::FPE => criteria[_order] = variance * (n + 1.0) / (n - 1.0),
+                OrderSelection::AIC => criteria[order] = n * variance.ln() + 2.0,
+                OrderSelection::BIC => criteria[order] = n * variance.ln() + (0 as f64).ln() * n,
+                OrderSelection::FPE => criteria[order] = variance * (n + 1.0) / (n - 1.0),
                 OrderSelection::MDL => {
-                    criteria[_order] = n * variance.ln() + 0.5 * (0 as f64).ln() * n
+                    criteria[order] = n * variance.ln() + 0.5 * (0 as f64).ln() * n
                 }
-                OrderSelection::AICc => criteria[_order] = n * variance.ln() + 2.0,
+                OrderSelection::AICc => criteria[order] = n * variance.ln() + 2.0,
             }
         } else {
             // Estimate AR parameters
@@ -848,27 +848,27 @@ pub fn select_ar_order(
             // Compute information criteria based on the _method
             match criterion {
                 OrderSelection::AIC => {
-                    criteria[_order] = n * variance.ln() + 2.0 * _order as f64;
+                    criteria[order] = n * variance.ln() + 2.0 * order as f64;
                 }
                 OrderSelection::BIC => {
-                    criteria[_order] = n * variance.ln() + _order as f64 * n.ln();
+                    criteria[order] = n * variance.ln() + order as f64 * n.ln();
                 }
                 OrderSelection::FPE => {
-                    criteria[_order] = variance * (n + _order as f64) / (n - _order as f64);
+                    criteria[order] = variance * (n + order as f64) / (n - order as f64);
                 }
                 OrderSelection::MDL => {
-                    criteria[_order] = n * variance.ln() + 0.5 * _order as f64 * n.ln();
+                    criteria[order] = n * variance.ln() + 0.5 * order as f64 * n.ln();
                 }
                 OrderSelection::AICc => {
                     // Corrected AIC for small samples
-                    criteria[_order] =
-                        n * variance.ln() + 2.0 * _order as f64 * (n / (n - _order as f64 - 1.0));
+                    criteria[order] =
+                        n * variance.ln() + 2.0 * order as f64 * (n / (n - order as f64 - 1.0));
                 }
             }
         }
     }
 
-    // Find the _order with the minimum criterion value
+    // Find the order with the minimum criterion value
     let mut min_idx = 0;
     let mut min_val = criteria[0];
 
@@ -892,17 +892,17 @@ pub fn select_ar_order(
 #[allow(dead_code)]
 pub fn estimate_arma_enhanced(
     signal: &Array1<f64>,
-    ar_order: usize,
-    ma_order: usize,
+    arorder: usize,
+    maorder: usize,
     options: Option<ARMAOptions>,
 ) -> SignalResult<EnhancedARMAResult> {
     let opts = options.unwrap_or_default();
 
     // Validate input parameters
-    validate_arma_parameters(signal, ar_order, ma_order, &opts)?;
+    validate_arma_parameters(signal, arorder, maorder, &opts)?;
 
     // Initialize parameters using method of moments or other robust technique
-    let initial_params = initialize_arma_parameters(signal, ar_order, ma_order, &opts)?;
+    let initial_params = initialize_arma_parameters(signal, arorder, maorder, &opts)?;
 
     // Optimize parameters using iterative algorithm
     let optimized_params = optimize_arma_parameters(signal, initial_params, &opts)?;
@@ -1013,29 +1013,29 @@ pub fn arma_spectrum_enhanced(
 #[allow(dead_code)]
 pub fn estimate_varma(
     signals: &Array2<f64>,
-    ar_order: usize,
-    ma_order: usize,
+    arorder: usize,
+    maorder: usize,
     options: Option<VARMAOptions>,
 ) -> SignalResult<VARMAResult> {
     let opts = options.unwrap_or_default();
 
-    validate_varma_parameters(signals, ar_order, ma_order, &opts)?;
+    validate_varma_parameters(signals, arorder, maorder, &opts)?;
 
     // For multiple time series, use VAR methodology
     let n_series = signals.nrows();
     let n_samples = signals.ncols();
 
-    if n_samples < (ar_order + ma_order) * n_series + 10 {
+    if n_samples < (arorder + maorder) * n_series + 10 {
         return Err(SignalError::ValueError(
             "Insufficient data for reliable VARMA estimation".to_string(),
         ));
     }
 
     // Initialize with VAR estimation
-    let var_result = estimate_var_for_varma(signals, ar_order, &opts)?;
+    let var_result = estimate_var_for_varma(signals, arorder, &opts)?;
 
     // Extend to VARMA using residual analysis
-    let varma_result = extend_var_to_varma(signals, var_result, ma_order, &opts)?;
+    let varma_result = extend_var_to_varma(signals, var_result, maorder, &opts)?;
 
     Ok(varma_result)
 }
@@ -1048,10 +1048,10 @@ pub fn estimate_varma(
 /// - Prediction error criteria
 /// - Stability analysis
 #[allow(dead_code)]
-pub fn select_arma_order_enhanced(
+pub fn select_armaorder_enhanced(
     signal: &Array1<f64>,
-    max_ar_order: usize,
-    max_ma_order: usize,
+    max_arorder: usize,
+    max_maorder: usize,
     criteria: Vec<OrderSelectionCriterion>,
     options: Option<OrderSelectionOptions>,
 ) -> SignalResult<EnhancedOrderSelectionResult> {
@@ -1060,28 +1060,28 @@ pub fn select_arma_order_enhanced(
     let mut results = Vec::new();
 
     // Test all combinations of AR and MA orders
-    for ar_order in 0..=max_ar_order {
-        for ma_order in 0..=max_ma_order {
-            if ar_order == 0 && ma_order == 0 {
+    for arorder in 0..=max_arorder {
+        for maorder in 0..=max_maorder {
+            if arorder == 0 && maorder == 0 {
                 continue; // Skip trivial model
             }
 
             // Fit ARMA model
-            let model_result = estimate_arma_enhanced(signal, ar_order, ma_order, None);
+            let model_result = estimate_arma_enhanced(signal, arorder, maorder, None);
 
             if let Ok(result) = model_result {
                 // Compute all requested criteria
                 let mut criterion_values = std::collections::HashMap::new();
 
                 for criterion in &criteria {
-                    let value = compute_order_criterion(signal, &result, criterion, &opts)?;
+                    let value = computeorder_criterion(signal, &result, criterion, &opts)?;
                     criterion_values.insert(criterion.clone(), value);
                 }
 
                 // Cross-validation score
                 let cv_score = if opts.use_cross_validation {
                     Some(compute_cross_validation_score(
-                        signal, ar_order, ma_order, &opts,
+                        signal, arorder, maorder, &opts,
                     )?)
                 } else {
                     None
@@ -1091,8 +1091,8 @@ pub fn select_arma_order_enhanced(
                 let stability = analyze_model_stability(&result)?;
 
                 results.push(OrderSelectionCandidate {
-                    ar_order,
-                    ma_order,
+                    arorder,
+                    maorder,
                     criterion_values,
                     cv_score,
                     stability,
@@ -1108,7 +1108,7 @@ pub fn select_arma_order_enhanced(
     Ok(EnhancedOrderSelectionResult {
         best_models: best_models.clone(),
         all_candidates: Vec::new(), // Could store all if needed
-        recommendations: generate_order_recommendations(&best_models, &opts)?,
+        recommendations: generateorder_recommendations(&best_models, &opts)?,
     })
 }
 
@@ -1122,18 +1122,18 @@ pub fn select_arma_order_enhanced(
 #[allow(dead_code)]
 pub fn adaptive_arma_estimator(
     initial_signal: &Array1<f64>,
-    ar_order: usize,
-    ma_order: usize,
+    arorder: usize,
+    maorder: usize,
     adaptation_options: Option<AdaptationOptions>,
 ) -> SignalResult<AdaptiveARMAEstimator> {
     let opts = adaptation_options.unwrap_or_default();
 
     // Initialize with batch estimation
-    let initial_estimate = estimate_arma_enhanced(initial_signal, ar_order, ma_order, None)?;
+    let initial_estimate = estimate_arma_enhanced(initial_signal, arorder, maorder, None)?;
 
     Ok(AdaptiveARMAEstimator {
-        ar_order,
-        ma_order,
+        arorder,
+        maorder,
         current_ar_coeffs: initial_estimate.ar_coeffs,
         current_ma_coeffs: initial_estimate.ma_coeffs,
         current_variance: initial_estimate.variance,
@@ -1315,8 +1315,8 @@ pub struct EnhancedOrderSelectionResult {
 
 #[derive(Debug, Clone)]
 pub struct OrderSelectionCandidate {
-    pub ar_order: usize,
-    pub ma_order: usize,
+    pub arorder: usize,
+    pub maorder: usize,
     pub criterion_values: std::collections::HashMap<OrderSelectionCriterion, f64>,
     pub cv_score: Option<f64>,
     pub stability: StabilityAnalysis,
@@ -1345,8 +1345,8 @@ impl Default for AdaptationOptions {
 
 #[derive(Debug)]
 pub struct AdaptiveARMAEstimator {
-    pub ar_order: usize,
-    pub ma_order: usize,
+    pub arorder: usize,
+    pub maorder: usize,
     pub current_ar_coeffs: Array1<f64>,
     pub current_ma_coeffs: Array1<f64>,
     pub current_variance: f64,
@@ -1475,7 +1475,7 @@ pub struct CircularBuffer<T> {
 impl<T: Clone> CircularBuffer<T> {
     pub fn new(capacity: usize) -> Self {
         Self {
-            buffer: Vec::with_capacity(_capacity),
+            buffer: Vec::with_capacity(capacity),
             capacity: capacity,
             head: 0,
             tail: 0,
@@ -1575,7 +1575,7 @@ fn estimate_ma_ml(signal: &Array1<f64>, order: usize) -> SignalResult<MAResult> 
 
     // Center the _signal
     let signal_mean = signal.mean().unwrap_or(0.0);
-    let centered_signal = _signal - signal_mean;
+    let centered_signal = signal - signal_mean;
 
     // Initialize with small random values
     for i in 1..=order {
@@ -1682,7 +1682,7 @@ fn estimate_ma_durbin(signal: &Array1<f64>, order: usize) -> SignalResult<MAResu
 
     // Center the _signal
     let signal_mean = signal.mean().unwrap_or(0.0);
-    let centered_signal = _signal - signal_mean;
+    let centered_signal = signal - signal_mean;
 
     // Compute autocovariance function
     let max_lag = order + 10; // Use more lags for better estimation
@@ -1736,7 +1736,7 @@ fn estimate_ma_durbin(signal: &Array1<f64>, order: usize) -> SignalResult<MAResu
         variance = autocovariance[0] * (1.0 + ma_coeffs.slice(s![1..]).mapv(|x| x * x).sum());
     } else {
         // For higher orders, fall back to innovations method
-        return estimate_ma_innovations(_signal, order);
+        return estimate_ma_innovations(signal, order);
     }
 
     Ok(MAResult {
@@ -1824,7 +1824,7 @@ fn find_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
     if n == 1 {
         // Linear case: ax + b = 0 => x = -b/a
         if coeffs[0].abs() > 1e-15 {
-            return Ok(vec![Complex64::new(-_coeffs[0], 0.0)]);
+            return Ok(vec![Complex64::new(-coeffs[0], 0.0)]);
         } else {
             return Ok(Vec::new());
         }
@@ -1843,7 +1843,7 @@ fn find_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
     }
 
     for i in 0..n {
-        companion[[n - 1, i]] = -_coeffs[i] / leading_coeff;
+        companion[[n - 1, i]] = -coeffs[i] / leading_coeff;
     }
 
     // Fill the upper subdiagonal with ones
@@ -2032,11 +2032,11 @@ fn compute_spectrum_metrics(
 #[allow(dead_code)]
 fn validate_varma_parameters(
     signals: &Array2<f64>,
-    ar_order: usize,
-    ma_order: usize,
+    arorder: usize,
+    maorder: usize,
     _opts: &VARMAOptions,
 ) -> SignalResult<()> {
-    if signals.ncols() < (ar_order + ma_order) * signals.nrows() + 10 {
+    if signals.ncols() < (arorder + maorder) * signals.nrows() + 10 {
         return Err(SignalError::ValueError(
             "Insufficient data for VARMA estimation".to_string(),
         ));
@@ -2047,12 +2047,12 @@ fn validate_varma_parameters(
 #[allow(dead_code)]
 fn estimate_var_for_varma(
     signals: &Array2<f64>,
-    ar_order: usize,
+    arorder: usize,
     _opts: &VARMAOptions,
 ) -> SignalResult<VARMAResult> {
     let n_series = signals.nrows();
     Ok(VARMAResult {
-        ar_coeffs: Array2::zeros((n_series, ar_order)),
+        ar_coeffs: Array2::zeros((n_series, arorder)),
         ma_coeffs: Array2::zeros((n_series, 0)),
         variance_matrix: Array2::eye(n_series),
         likelihood: 0.0,
@@ -2065,16 +2065,16 @@ fn estimate_var_for_varma(
 fn extend_var_to_varma(
     signals: &Array2<f64>,
     var_result: VARMAResult,
-    ma_order: usize,
+    maorder: usize,
     _opts: &VARMAOptions,
 ) -> SignalResult<VARMAResult> {
-    let mut _result = var_result;
-    result.ma_coeffs = Array2::zeros((signals.nrows(), ma_order));
-    Ok(_result)
+    let mut result = var_result;
+    result.ma_coeffs = Array2::zeros((signals.nrows(), maorder));
+    Ok(result)
 }
 
 #[allow(dead_code)]
-fn compute_order_criterion(
+fn computeorder_criterion(
     _signal: &Array1<f64>,
     result: &EnhancedARMAResult,
     criterion: &OrderSelectionCriterion,
@@ -2090,12 +2090,12 @@ fn compute_order_criterion(
 #[allow(dead_code)]
 fn compute_cross_validation_score(
     _signal: &Array1<f64>,
-    ar_order: usize,
-    ma_order: usize,
+    arorder: usize,
+    maorder: usize,
     _opts: &OrderSelectionOptions,
 ) -> SignalResult<f64> {
     // Simplified CV score
-    Ok(1.0 / (ar_order + ma_order + 1) as f64)
+    Ok(1.0 / (arorder + maorder + 1) as f64)
 }
 
 #[allow(dead_code)]
@@ -2129,15 +2129,15 @@ fn select_best_models(
 }
 
 #[allow(dead_code)]
-fn generate_order_recommendations(
+fn generateorder_recommendations(
     best_models: &std::collections::HashMap<OrderSelectionCriterion, OrderSelectionCandidate>,
     _opts: &OrderSelectionOptions,
 ) -> SignalResult<OrderRecommendations> {
     // Simple recommendation based on AIC if available
     if let Some(aic_model) = best_models.get(&OrderSelectionCriterion::AIC) {
         Ok(OrderRecommendations {
-            recommended_ar: aic_model.ar_order,
-            recommended_ma: aic_model.ma_order,
+            recommended_ar: aic_model.arorder,
+            recommended_ma: aic_model.maorder,
             confidence_level: 0.95,
             rationale: "Selected based on AIC criterion".to_string(),
         })
@@ -2157,11 +2157,11 @@ fn generate_order_recommendations(
 #[allow(dead_code)]
 fn validate_arma_parameters(
     signal: &Array1<f64>,
-    ar_order: usize,
-    ma_order: usize,
+    arorder: usize,
+    maorder: usize,
     _opts: &ARMAOptions,
 ) -> SignalResult<()> {
-    if signal.len() < (ar_order + ma_order) * 5 {
+    if signal.len() < (arorder + maorder) * 5 {
         return Err(SignalError::ValueError(
             "Insufficient data for reliable ARMA estimation".to_string(),
         ));
@@ -2172,14 +2172,14 @@ fn validate_arma_parameters(
 #[allow(dead_code)]
 fn initialize_arma_parameters(
     _signal: &Array1<f64>,
-    ar_order: usize,
-    ma_order: usize,
+    arorder: usize,
+    maorder: usize,
     _opts: &ARMAOptions,
 ) -> SignalResult<ARMAParameters> {
     // Placeholder implementation
     Ok(ARMAParameters {
-        ar_coeffs: Array1::zeros(ar_order + 1),
-        ma_coeffs: Array1::zeros(ma_order + 1),
+        ar_coeffs: Array1::zeros(arorder + 1),
+        ma_coeffs: Array1::zeros(maorder + 1),
         variance: 1.0,
         noise_variance: 1.0,
         likelihood: 0.0,
@@ -2372,10 +2372,10 @@ fn compute_parameter_gradient(
 #[allow(dead_code)]
 fn is_stable(params: &ARMAParameters) -> bool {
     // Check AR stability: roots of AR polynomial should be outside unit circle
-    let ar_stable = check_ar_stability(&_params.ar_coeffs);
+    let ar_stable = check_ar_stability(&params.ar_coeffs);
 
     // Check MA invertibility: roots of MA polynomial should be outside unit circle
-    let ma_stable = check_ma_invertibility(&_params.ma_coeffs);
+    let ma_stable = check_ma_invertibility(&params.ma_coeffs);
 
     ar_stable && ma_stable
 }
@@ -2383,30 +2383,30 @@ fn is_stable(params: &ARMAParameters) -> bool {
 /// Check AR polynomial stability
 #[allow(dead_code)]
 fn check_ar_stability(arcoeffs: &Array1<f64>) -> bool {
-    if ar_coeffs.is_empty() {
+    if arcoeffs.is_empty() {
         return true;
     }
 
     // For AR(1): |a1| < 1
-    if ar_coeffs.len() == 1 {
-        return ar_coeffs[0].abs() < 1.0;
+    if arcoeffs.len() == 1 {
+        return arcoeffs[0].abs() < 1.0;
     }
 
     // For higher orders, use companion matrix approach (simplified)
     // This is a basic stability check - could be enhanced with proper root finding
-    let sum_abs: f64 = ar_coeffs.iter().map(|&x: &f64| x.abs()).sum();
+    let sum_abs: f64 = arcoeffs.iter().map(|&x: &f64| x.abs()).sum();
     sum_abs < 1.0 // Sufficient condition for stability
 }
 
 /// Check MA polynomial invertibility
 #[allow(dead_code)]
 fn check_ma_invertibility(macoeffs: &Array1<f64>) -> bool {
-    if ma_coeffs.is_empty() {
+    if macoeffs.is_empty() {
         return true;
     }
 
     // Similar to AR stability check
-    let sum_abs: f64 = ma_coeffs.iter().map(|&x: &f64| x.abs()).sum();
+    let sum_abs: f64 = macoeffs.iter().map(|&x: &f64| x.abs()).sum();
     sum_abs < 1.0
 }
 
@@ -2451,7 +2451,7 @@ fn compute_stability_margin(params: &ARMAParameters) -> f64 {
 #[allow(dead_code)]
 fn compute_log_likelihood(signal: &Array1<f64>, params: &ARMAParameters) -> SignalResult<f64> {
     let _n = signal.len();
-    let residuals = compute_residuals(_signal, params)?;
+    let residuals = compute_residuals(signal, params)?;
 
     let mut log_likelihood = 0.0;
     let two_pi_sigma2 = 2.0 * PI * params.noise_variance;
@@ -2563,7 +2563,7 @@ fn compute_ljung_box_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<
     // Compute sample autocorrelations
     let mut autocorrs = Vec::with_capacity(lags);
     let mean = residuals.mean().unwrap_or(0.0);
-    let variance = _residuals
+    let variance = residuals
         .mapv(|x| (x - mean).powi(2))
         .mean();
 
@@ -2572,7 +2572,7 @@ fn compute_ljung_box_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<
         let valid_pairs = n - lag;
 
         for i in 0..valid_pairs {
-            sum += (_residuals[i] - mean) * (_residuals[i + lag] - mean);
+            sum += (residuals[i] - mean) * (residuals[i + lag] - mean);
         }
 
         let autocorr = sum / (valid_pairs as f64 * variance);
@@ -2608,7 +2608,7 @@ fn compute_jarque_bera_test(residuals: &Array1<f64>) -> SignalResult<JarqueBeraT
     }
 
     let mean = residuals.mean().unwrap_or(0.0);
-    let variance = _residuals
+    let variance = residuals
         .mapv(|x| (x - mean).powi(2))
         .mean();
     let std_dev = variance.sqrt();
@@ -2861,7 +2861,7 @@ pub fn robust_ar_estimation(
 ///
 /// # Arguments
 /// * `signal` - Input signal
-/// * `state_order` - Order of the state-space model
+/// * `stateorder` - Order of the state-space model
 /// * `ss_options` - Configuration for state-space estimation
 ///
 /// # Returns
@@ -2869,22 +2869,22 @@ pub fn robust_ar_estimation(
 #[allow(dead_code)]
 pub fn state_space_parametric_estimation(
     signal: &Array1<f64>,
-    state_order: usize,
+    stateorder: usize,
     ss_options: Option<StateSpaceOptions>,
 ) -> SignalResult<StateSpaceParametricResult> {
     let opts = ss_options.unwrap_or_default();
 
     // Initialize state-space matrices
     let n = signal.len();
-    let mut state_transition = Array2::eye(state_order); // A matrix
-    let mut observation = Array1::zeros(state_order); // C vector
+    let mut state_transition = Array2::eye(stateorder); // A matrix
+    let mut observation = Array1::zeros(stateorder); // C vector
     observation[0] = 1.0; // Observe first state
 
-    let mut process_noise_cov = Array2::eye(state_order) * opts.initial_process_variance;
+    let mut process_noise_cov = Array2::eye(stateorder) * opts.initial_process_variance;
     let mut observation_noise_var = opts.initial_observation_variance;
 
     // Initialize state estimate and covariance
-    let mut state_estimates = Array2::zeros((n, state_order));
+    let mut state_estimates = Array2::zeros((n, stateorder));
     let mut state_covariances = Vec::with_capacity(n);
     let mut innovations = Array1::zeros(n);
     let mut innovation_covariances = Array1::zeros(n);
@@ -2938,16 +2938,16 @@ pub fn state_space_parametric_estimation(
     }
 
     // Compute model diagnostics
-    let aic = -2.0 * log_likelihood + 2.0 * (state_order * state_order + state_order + 2) as f64;
+    let aic = -2.0 * log_likelihood + 2.0 * (stateorder * stateorder + stateorder + 2) as f64;
     let bic = -2.0 * log_likelihood
-        + (state_order * state_order + state_order + 2) as f64 * (n as f64).ln();
+        + (stateorder * stateorder + stateorder + 2) as f64 * (n as f64).ln();
 
     // Convert state-space form back to ARMA representation if requested
     let arma_equivalent = if opts.compute_arma_equivalent {
         Some(state_space_to_arma(
             &state_transition,
             &observation,
-            state_order,
+            stateorder,
         )?)
     } else {
         None
@@ -2977,8 +2977,8 @@ pub fn state_space_parametric_estimation(
 ///
 /// # Arguments
 /// * `signal` - Input signal
-/// * `ar_order` - AR order (p)
-/// * `ma_order` - MA order (q)  
+/// * `arorder` - AR order (p)
+/// * `maorder` - MA order (q)  
 /// * `farima_options` - Configuration for FARIMA estimation
 ///
 /// # Returns
@@ -2986,8 +2986,8 @@ pub fn state_space_parametric_estimation(
 #[allow(dead_code)]
 pub fn estimate_farima(
     signal: &Array1<f64>,
-    ar_order: usize,
-    ma_order: usize,
+    arorder: usize,
+    maorder: usize,
     farima_options: Option<FARIMAOptions>,
 ) -> SignalResult<FARIMAResult> {
     let opts = farima_options.unwrap_or_default();
@@ -2999,7 +2999,7 @@ pub fn estimate_farima(
     let differenced_signal = fractional_differencing(signal, d_estimate, opts.truncation_lag)?;
 
     // Step 3: Fit ARMA model to the differenced series
-    let arma_result = estimate_arma_enhanced(&differenced_signal, ar_order, ma_order, None)?;
+    let arma_result = estimate_arma_enhanced(&differenced_signal, arorder, maorder, None)?;
 
     // Step 4: Compute spectral density of FARIMA process
     let spectrum = farima_spectrum(
@@ -3379,7 +3379,7 @@ fn weighted_ar_estimation(
 
 #[allow(dead_code)]
 pub fn compute_parameter_change(_old_params: &Array1<f64>, newparams: &Array1<f64>) -> f64 {
-    (_old_params - new_params).mapv(|x| x.abs()).sum()
+    (_old_params - newparams).mapv(|x| x.abs()).sum()
 }
 
 #[allow(dead_code)]
@@ -3444,7 +3444,7 @@ fn update_state_space_parameters(
 fn state_space_to_arma(
     _state_transition: &Array2<f64>,
     _observation: &Array1<f64>,
-    _order: usize,
+    order: usize,
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     // Convert state-space to ARMA representation stub
     Ok((Array1::zeros(1), Array1::zeros(1)))
@@ -3503,7 +3503,7 @@ fn compute_d_standard_error(_signal: &Array1<f64>, d: f64) -> SignalResult<f64> 
 #[allow(dead_code)]
 fn construct_var_matrices(
     _signals: &Array2<f64>,
-    _order: usize,
+    order: usize,
 ) -> SignalResult<(Array2<f64>, Array2<f64>)> {
     Ok((Array2::zeros((1, 1)), Array2::zeros((1, 1)))) // Placeholder
 }
@@ -3526,7 +3526,7 @@ fn compute_var_log_likelihood(_residuals: &Array2<f64>, _errorcov: &Array2<f64>)
 
 #[allow(dead_code)]
 fn compute_granger_causality_tests(
-    _y: &Array2<f64>,
+    y: &Array2<f64>,
     _x: &Array2<f64>,
     _coeffs: &Array2<f64>,
     _error_cov: &Array2<f64>,
@@ -3547,7 +3547,7 @@ fn compute_var_impulse_responses(
 #[allow(dead_code)]
 fn compute_var_cross_spectrum(
     _coeffs: &Array2<f64>,
-    _error_cov: &Array2<f64>,
+    error_cov: &Array2<f64>,
     _points: usize,
 ) -> SignalResult<Array2<Complex64>> {
     let (n_vars, _) = error_cov.dim();
@@ -3558,7 +3558,7 @@ fn compute_var_cross_spectrum(
 fn reshape_var_coefficients(
     _coeff_matrix: &Array2<f64>,
     _n_vars: usize,
-    _order: usize,
+    order: usize,
 ) -> SignalResult<Vec<Array2<f64>>> {
     Ok(vec![Array2::zeros((1, 1))]) // Placeholder
 }
@@ -3567,7 +3567,7 @@ fn reshape_var_coefficients(
 fn compute_var_stability_eigenvalues(
     _coeffs: &Array2<f64>,
     _n_vars: usize,
-    _order: usize,
+    order: usize,
 ) -> SignalResult<Array1<Complex64>> {
     Ok(Array1::zeros(1)) // Placeholder
 }

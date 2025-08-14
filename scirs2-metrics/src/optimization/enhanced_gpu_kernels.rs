@@ -1591,19 +1591,19 @@ impl GpuBackend for CudaBackend {
         })
     }
 
-    fn copy_to_gpu(self_handle: &GpuMemoryHandle, data: &[f32]) -> Result<()> {
+    fn copy_to_gpu(&self, self_handle: &GpuMemoryHandle, data: &[f32]) -> Result<()> {
         // Simulate memory copy
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn copy_from_gpu(self_handle: &GpuMemoryHandle, data: &mut [f32]) -> Result<()> {
+    fn copy_from_gpu(&self, self_handle: &GpuMemoryHandle, data: &mut [f32]) -> Result<()> {
         // Simulate memory copy
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn execute_kernel(self_kernel: &ComputeKernel, params: &KernelParams) -> Result<()> {
+    fn execute_kernel(&self, self_kernel: &ComputeKernel, params: &KernelParams) -> Result<()> {
         // Simulate _kernel execution
         std::thread::sleep(Duration::from_micros(10));
         Ok(())
@@ -1693,17 +1693,17 @@ impl GpuBackend for OpenClBackend {
         })
     }
 
-    fn copy_to_gpu(self_handle: &GpuMemoryHandle, data: &[f32]) -> Result<()> {
+    fn copy_to_gpu(&self, self_handle: &GpuMemoryHandle, data: &[f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn copy_from_gpu(self_handle: &GpuMemoryHandle, data: &mut [f32]) -> Result<()> {
+    fn copy_from_gpu(&self, self_handle: &GpuMemoryHandle, data: &mut [f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn execute_kernel(self_kernel: &ComputeKernel, params: &KernelParams) -> Result<()> {
+    fn execute_kernel(&self, self_kernel: &ComputeKernel, params: &KernelParams) -> Result<()> {
         std::thread::sleep(Duration::from_micros(10));
         Ok(())
     }
@@ -1787,17 +1787,17 @@ impl GpuBackend for WebGpuBackend {
         })
     }
 
-    fn copy_to_gpu(self_handle: &GpuMemoryHandle, data: &[f32]) -> Result<()> {
+    fn copy_to_gpu(&self, self_handle: &GpuMemoryHandle, data: &[f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(2));
         Ok(())
     }
 
-    fn copy_from_gpu(self_handle: &GpuMemoryHandle, data: &mut [f32]) -> Result<()> {
+    fn copy_from_gpu(&self, self_handle: &GpuMemoryHandle, data: &mut [f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(2));
         Ok(())
     }
 
-    fn execute_kernel(self_kernel: &ComputeKernel, params: &KernelParams) -> Result<()> {
+    fn execute_kernel(&self, self_kernel: &ComputeKernel, params: &KernelParams) -> Result<()> {
         std::thread::sleep(Duration::from_micros(15));
         Ok(())
     }

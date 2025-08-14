@@ -236,10 +236,10 @@ fn compute_corner_score(pixels: &[f32; 16], center: f32, threshold: f32) -> f32 
 
 /// Apply non-maximum suppression to corner scores
 #[allow(dead_code)]
-fn apply_non_max_suppression(_corners: &Array2<f32>, windowsize: usize) -> Array2<f32> {
+fn apply_non_max_suppression(corners: &Array2<f32>, windowsize: usize) -> Array2<f32> {
     let (height, width) = corners.dim();
     let mut result = Array2::zeros((height, width));
-    let radius = window_size / 2;
+    let radius = windowsize / 2;
 
     for y in radius..(height - radius) {
         for x in radius..(width - radius) {
@@ -289,7 +289,7 @@ fn apply_non_max_suppression(_corners: &Array2<f32>, windowsize: usize) -> Array
 /// * Result containing corner points
 #[allow(dead_code)]
 pub fn fast_corners_simple(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
-    fast_corners(_img, threshold, 9, true)
+    fast_corners(img, threshold, 9, true)
 }
 
 #[cfg(test)]

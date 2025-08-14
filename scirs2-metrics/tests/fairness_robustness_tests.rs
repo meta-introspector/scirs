@@ -1,10 +1,10 @@
 use approx::assert_abs_diff_eq;
 use ndarray::{array, Array2};
-use scirs2__metrics::classification::accuracy_score;
-use scirs2__metrics::fairness::robustness::{
+use scirs2_metrics::classification::accuracy_score;
+use scirs2_metrics::fairness::robustness::{
     influence_function, performance_invariance, perturbation_sensitivity, PerturbationType,
 };
-use scirs2__metrics::fairness::{demographic_parity_difference, equalized_odds_difference};
+use scirs2_metrics::fairness::{demographic_parity_difference, equalized_odds_difference};
 
 #[test]
 #[allow(dead_code)]
@@ -14,7 +14,7 @@ fn test_performance_invariance() {
     let y_pred = array![0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0];
 
     // Two protected attributes: gender and age
-    let protected_groups = Array2::fromshape_vec(
+    let protected_groups = Array2::from_shape_vec(
         (8, 2),
         vec![
             // Gender (0=male, 1=female), Age (0=young, 1=old)

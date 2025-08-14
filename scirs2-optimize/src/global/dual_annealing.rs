@@ -8,7 +8,7 @@ use crate::error::OptimizeError;
 use crate::unconstrained::{minimize, Bounds, Method, OptimizeResult, Options};
 use ndarray::{Array1, ArrayView1};
 use rand::rngs::StdRng;
-use rand::Rng;
+use rand::{Rng, SeedableRng};
 #[allow(unused_imports)]
 use rand_distr::{Cauchy, Distribution as RandDistribution};
 
@@ -80,11 +80,11 @@ where
             .unwrap_or_else(|| rand::rng().gen_range(0..u64::MAX));
         let rng = StdRng::seed_from_u64(seed);
 
-        let initial_energy = _func(&x0.view());
+        let initial_energy = func(&x0.view());
         let temperature = options.initial_temp;
 
         Self {
-            func: func,
+            func,
             x0: x0.clone(),
             options,
             ndim,
@@ -134,7 +134,7 @@ where
     }
 
     /// Calculate acceptance probability
-    fn accept_probability(&self, energynew: f64) -> f64 {
+    fn accept_probability(&self, energy_new: f64) -> f64 {
         if energy_new <= self.current_energy {
             1.0
         } else {

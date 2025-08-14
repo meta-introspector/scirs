@@ -4,9 +4,9 @@
 //! for real-time metrics monitoring and visualization.
 
 use ndarray::Array1;
-use scirs2__metrics::dashboard::utils::*;
-use scirs2__metrics::dashboard::*;
-use scirs2__metrics::error::Result;
+use scirs2_metrics::dashboard::utils::*;
+use scirs2_metrics::dashboard::*;
+use scirs2_metrics::error::Result;
 use std::collections::HashMap;
 use std::thread;
 use std::time::Duration;

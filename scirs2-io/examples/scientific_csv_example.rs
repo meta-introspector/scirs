@@ -86,7 +86,7 @@ fn create_sample_scientific_data() -> Result<(), Box<dyn Error>> {
 /// Extract metadata from comment lines
 #[allow(dead_code)]
 fn extract_metadata_from_file(_filepath: &str) -> Result<HashMap<String, String>, Box<dyn Error>> {
-    let file = File::open(_file_path)?;
+    let file = File::open(_filepath)?;
     let reader = std::io::BufReader::new(file);
     let mut metadata = HashMap::new();
 

@@ -95,9 +95,9 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__metrics::optimization::parallel::{compute_metrics_batch, ParallelConfig};
-/// use scirs2__metrics::error::Result;
-/// use scirs2__metrics::classification::{accuracy_score, precision_score};
+/// use scirs2_metrics::optimization::parallel::{compute_metrics_batch, ParallelConfig};
+/// use scirs2_metrics::error::Result;
+/// use scirs2_metrics::classification::{accuracy_score, precision_score};
 ///
 /// // Create sample data
 /// let y_true = Array1::from_vec(vec![0, 1, 2, 0, 1, 2]);
@@ -167,8 +167,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__metrics::optimization::parallel::{chunked_parallel_compute, ParallelConfig};
-/// use scirs2__metrics::error::Result;
+/// use scirs2_metrics::optimization::parallel::{chunked_parallel_compute, ParallelConfig};
+/// use scirs2_metrics::error::Result;
 ///
 /// // Create sample data
 /// let data: Vec<f64> = (0..1000).map(|x| x as f64).collect();
@@ -324,7 +324,7 @@ mod tests {
                 let correct = a.iter().zip(b.iter()).filter(|&(a, b)| a == b).count();
                 Ok(correct as f64 / a.len() as f64)
             }),
-            Box::new(|a_b| {
+            Box::new(|a, _b| {
                 // Another dummy metric
                 Ok(a.len() as f64)
             }),

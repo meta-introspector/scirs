@@ -119,7 +119,7 @@ impl AdvancedScaleState {
                 OptimizeError::ComputationError(format!("Failed to create temp file: {}", e))
             })?;
 
-            let bytes: Vec<u8> = _x0
+            let bytes: Vec<u8> = x0
                 .as_slice()
                 .unwrap()
                 .iter()
@@ -136,7 +136,7 @@ impl AdvancedScaleState {
                 active_indices: Vec::new(),
             }
         } else {
-            VariableStorage::Memory(_x0)
+            VariableStorage::Memory(x0)
         };
 
         // Create variable blocks for progressive processing
@@ -189,9 +189,9 @@ impl AdvancedScaleState {
     }
 
     /// Update variables (writing to disk if necessary)
-    fn update_variables(&mut self, newx: &Array1<f64>) -> Result<(), OptimizeError> {
+    fn update_variables(&mut self, new_x: &Array1<f64>) -> Result<(), OptimizeError> {
         match &mut self.variables {
-            VariableStorage::Memory(_x) => {
+            VariableStorage::Memory(x) => {
                 x.assign(new_x);
                 Ok(())
             }
@@ -213,7 +213,7 @@ impl AdvancedScaleState {
                     .as_slice()
                     .unwrap()
                     .iter()
-                    .flat_map(|&_x| x.to_le_bytes())
+                    .flat_map(|&x| x.to_le_bytes())
                     .collect();
 
                 file.seek(SeekFrom::Start(0)).map_err(|e| {
@@ -241,16 +241,16 @@ impl Drop for AdvancedScaleState {
 
 /// Create variable blocks for progressive processing
 #[allow(dead_code)]
-fn create_variable_blocks(n: usize, blocksize: usize) -> Vec<VariableBlock> {
-    let mut blocks = Vec::new();
+fn create_variable_blocks(n: usize, block_size: usize) -> Vec<VariableBlock> {
+    let mut _blocks = Vec::new();
     let num_blocks = n.div_ceil(block_size);
 
     for i in 0..num_blocks {
         let start_idx = i * block_size;
         let end_idx = std::cmp::min((i + 1) * block_size, n);
-        let _size = end_idx - start_idx;
+        let size = end_idx - start_idx;
 
-        blocks.push(VariableBlock {
+        _blocks.push(VariableBlock {
             start_idx,
             size,
             priority: 1.0, // Initial priority
@@ -258,7 +258,7 @@ fn create_variable_blocks(n: usize, blocksize: usize) -> Vec<VariableBlock> {
         });
     }
 
-    blocks
+    _blocks
 }
 
 /// Advanced-large-scale optimization using progressive refinement and memory management
@@ -425,7 +425,7 @@ where
 /// Update block priorities based on gradient magnitude
 #[allow(dead_code)]
 fn update_block_priorities(blocks: &mut [VariableBlock], gradient: &CsrArray<f64>) {
-    for block in _blocks {
+    for block in blocks {
         // Compute average gradient magnitude in this block
         let mut total_grad_mag = 0.0;
         let mut count = 0;

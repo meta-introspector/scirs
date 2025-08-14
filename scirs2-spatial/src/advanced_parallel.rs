@@ -117,7 +117,7 @@ impl WorkStealingConfig {
 
     /// Set number of threads
     pub fn with_threads(mut self, numthreads: usize) -> Self {
-        self.num_threads = num_threads;
+        self.num_threads = numthreads;
         self
     }
 

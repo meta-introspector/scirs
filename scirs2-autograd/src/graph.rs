@@ -64,7 +64,7 @@ impl<'graph, F: Float> Graph<F> {
 
             // Process dependencies first (depth-first)
             for incoming_node in &incoming {
-                collect_nodes_topo(incoming_node._id, graph, eval_nodes, visited);
+                collect_nodes_topo(incoming_node.id, graph, eval_nodes, visited);
             }
 
             // Add this node after its dependencies
@@ -347,7 +347,7 @@ impl<'graph, 'env, F: Float> Context<'env, F> {
     ///
     /// Use `namespace_mut` for mutable operations such as variables registrations.
     #[inline]
-    pub fn namespace(&'env self, namespaceid: &'static str) -> VariableNamespace<'env, F> {
+    pub fn namespace(&'env self, namespace_id: &'static str) -> VariableNamespace<'env, F> {
         self.var_env_ref.namespace(namespace_id)
     }
 

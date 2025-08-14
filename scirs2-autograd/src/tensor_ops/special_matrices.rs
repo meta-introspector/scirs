@@ -25,7 +25,7 @@ impl<F: Float + ScalarOperand> Op<F> for CholeskyOp {
         }
 
         // Get ndarray data directly
-        let _matrix = input
+        let matrix = input
             .view()
             .into_dimensionality::<ndarray::Ix2>()
             .map_err(|_| OpError::Other("Failed to convert to 2D array".into()))?;
@@ -536,7 +536,7 @@ impl<F: Float> Op<F> for BandMatrixOp {
 pub fn cholesky<'g, F: Float + ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(CholeskyOp)
 }
 
@@ -545,7 +545,7 @@ pub fn cholesky<'g, F: Float + ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<
 pub fn symmetrize<'g, F: Float + ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(SymmetrizeOp)
 }
 
@@ -555,10 +555,10 @@ pub fn tril<'g, F: Float>(matrix: &Tensor<'g, F>, diagonal: i32) -> Tensor<'g, F
     let g = matrix.graph();
 
     // Get the shape of the input tensor for setting the output shape
-    let matrixshape = crate::tensor_ops::shape(_matrix);
+    let matrixshape = crate::tensor_ops::shape(matrix);
 
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .setshape(&matrixshape)  // Preserve shape information
         .build(LowerTriangularOp { diagonal })
 }
@@ -569,10 +569,10 @@ pub fn triu<'g, F: Float>(matrix: &Tensor<'g, F>, diagonal: i32) -> Tensor<'g, F
     let g = matrix.graph();
 
     // Get the shape of the input tensor for setting the output shape
-    let matrixshape = crate::tensor_ops::shape(_matrix);
+    let matrixshape = crate::tensor_ops::shape(matrix);
 
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .setshape(&matrixshape)  // Preserve shape information
         .build(UpperTriangularOp { diagonal })
 }
@@ -583,10 +583,10 @@ pub fn band_matrix<'g, F: Float>(matrix: &Tensor<'g, F>, lower: i32, upper: i32)
     let g = matrix.graph();
 
     // Get the shape of the input tensor for setting the output shape
-    let matrixshape = crate::tensor_ops::shape(_matrix);
+    let matrixshape = crate::tensor_ops::shape(matrix);
 
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .setshape(&matrixshape)  // Preserve shape information
         .build(BandMatrixOp { lower, upper })
 }

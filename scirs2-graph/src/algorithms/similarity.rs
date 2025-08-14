@@ -18,16 +18,16 @@ where
     E: EdgeWeight,
     Ix: IndexType,
 {
-    if !_graph.contains_node(node1) || !_graph.contains_node(node2) {
+    if !graph.contains_node(node1) || !graph.contains_node(node2) {
         return Err(GraphError::node_not_found("node"));
     }
 
-    let neighbors1: HashSet<N> = _graph
+    let neighbors1: HashSet<N> = graph
         .neighbors(node1)
         .unwrap_or_default()
         .into_iter()
         .collect();
-    let neighbors2: HashSet<N> = _graph
+    let neighbors2: HashSet<N> = graph
         .neighbors(node2)
         .unwrap_or_default()
         .into_iter()
@@ -51,7 +51,7 @@ where
     E: EdgeWeight + Into<f64>,
     Ix: IndexType,
 {
-    if !_graph.contains_node(node1) || !_graph.contains_node(node2) {
+    if !graph.contains_node(node1) || !graph.contains_node(node2) {
         return Err(GraphError::node_not_found("node"));
     }
 
@@ -95,7 +95,7 @@ where
     Ix: IndexType,
 {
     // Get all edges from both graphs
-    let edges1: HashSet<(N, N)> = _graph1
+    let edges1: HashSet<(N, N)> = graph1
         .edges()
         .into_iter()
         .map(|edge| (edge.source, edge.target))

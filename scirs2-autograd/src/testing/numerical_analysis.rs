@@ -255,7 +255,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         Ok(inf_norm * inverse_inf_norm)
     }
 
-    fn compute_singular_values(selfmatrix: &Array<F, IxDyn>) -> Result<Vec<f64>, StabilityError> {
+    fn compute_singular_values(&self, matrix: &Array<F, IxDyn>) -> Result<Vec<f64>, StabilityError> {
         // Simplified - would use actual SVD computation
         Ok(vec![10.0, 5.0, 1.0, 0.1])
     }
@@ -308,20 +308,21 @@ impl<F: Float> NumericalAnalyzer<F> {
         Ok(max_row_sum)
     }
 
-    fn estimate_inverse_frobenius_norm(
+    fn estimate_inverse_frobenius_norm(&self, 
         self_matrix: &Array<F, IxDyn>,
     ) -> Result<f64, StabilityError> {
         // Simplified estimation
         Ok(0.1)
     }
 
-    fn estimate_inverse_one_norm(selfmatrix: &Array<F, IxDyn>) -> Result<f64, StabilityError> {
+    fn estimate_inverse_one_norm(&self, matrix: &Array<F, IxDyn>) -> Result<f64, StabilityError> {
         // Simplified estimation
         Ok(0.1)
     }
 
     fn estimate_inverse_infinity_norm(
-        self_matrix: &Array<F, IxDyn>,
+        &self,
+        matrix: &Array<F, IxDyn>,
     ) -> Result<f64, StabilityError> {
         // Simplified estimation
         Ok(0.1)
@@ -544,7 +545,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         let mut cases = Vec::new();
 
         // Test for NaN production
-        if self.test_nan_production(function, input)? {
+        if NumericalAnalyzer::<F>::test_nan_production(function, input)? {
             cases.push(PathologicalCase {
                 case_type: PathologyType::NaNProduction,
                 description: "Function produces NaN values under perturbation".to_string(),
@@ -553,7 +554,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         }
 
         // Test for infinite output
-        if self.test_infinite_output(function, input)? {
+        if NumericalAnalyzer::<F>::test_infinite_output(function, input)? {
             cases.push(PathologicalCase {
                 case_type: PathologyType::InfiniteOutput,
                 description: "Function produces infinite values".to_string(),
@@ -562,7 +563,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         }
 
         // Test for extreme sensitivity
-        if self.test_extreme_sensitivity(function, input)? {
+        if NumericalAnalyzer::<F>::test_extreme_sensitivity(function, input)? {
             cases.push(PathologicalCase {
                 case_type: PathologyType::ExtremeSensitivity,
                 description: "Function exhibits extreme sensitivity to input changes".to_string(),
@@ -576,7 +577,8 @@ impl<F: Float> NumericalAnalyzer<F> {
     // Helper methods for roundoff error analysis
 
     fn analyze_machine_epsilon_effects<Func>(
-        self_function: &Func,
+        &self,
+        function: &Func,
         _input: &Tensor<F>,
     ) -> Result<f64, StabilityError>
     where
@@ -587,7 +589,8 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn analyze_catastrophic_cancellation<Func>(
-        self_function: &Func,
+        &self,
+        function: &Func,
         _input: &Tensor<F>,
     ) -> Result<CancellationAnalysis, StabilityError>
     where
@@ -601,7 +604,8 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn estimate_total_roundoff_error<Func>(
-        self_function: &Func,
+        &self,
+        function: &Func,
         _input: &Tensor<F>,
     ) -> Result<f64, StabilityError>
     where
@@ -612,7 +616,8 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn analyze_precision_sensitivity<Func>(
-        self_function: &Func,
+        &self,
+        function: &Func,
         _input: &Tensor<F>,
     ) -> Result<PrecisionSensitivityAnalysis, StabilityError>
     where
@@ -676,8 +681,9 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn compute_std_tensor<'a>(
-        self_tensors: &[Tensor<F>],
-        _mean: &Tensor<'a, F>,
+        &self,
+        tensors: &[Tensor<F>],
+        mean: &Tensor<'a, F>,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Simplified - would compute actual standard deviation
         let shape = mean.shape();
@@ -686,7 +692,8 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn compute_confidence_interval<'a>(
-        self_tensors: &[Tensor<'a, F>],
+        &self,
+        tensors: &[Tensor<'a, F>],
         _confidence: f64,
     ) -> Result<(Tensor<'a, F>, Tensor<'a, F>), StabilityError> {
         // Simplified - would compute actual _confidence interval
@@ -711,7 +718,8 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn estimate_critical_perturbation_size(
-        self_sensitivities: &[f64],
+        &self,
+        sensitivities: &[f64],
     ) -> Result<f64, StabilityError> {
         // Simplified estimation
         Ok(1e-8)

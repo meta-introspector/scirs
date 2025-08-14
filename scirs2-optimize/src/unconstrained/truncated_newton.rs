@@ -360,7 +360,7 @@ where
 
         // Line search
         let f = fun(&x.view());
-        let step_size = backtracking_line_search(
+        let (step_size, _) = backtracking_line_search(
             &mut |x_view| fun(x_view),
             &x.view(),
             f,

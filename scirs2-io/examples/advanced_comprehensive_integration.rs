@@ -401,23 +401,23 @@ fn demonstrate_autonomous_system_evolution() -> Result<()> {
 #[allow(dead_code)]
 fn generate_repetitive_data(size: usize) -> Vec<u8> {
     let pattern = vec![1, 2, 3, 4, 5];
-    (0.._size).map(|i| pattern[i % pattern.len()]).collect()
+    (0..size).map(|i| pattern[i % pattern.len()]).collect()
 }
 
 #[allow(dead_code)]
 fn generate_random_data(size: usize) -> Vec<u8> {
-    (0.._size).map(|_| rand::random::<u8>()).collect()
+    (0..size).map(|_| rand::random::<u8>()).collect()
 }
 
 #[allow(dead_code)]
 fn generate_sequential_data(size: usize) -> Vec<u8> {
-    (0.._size).map(|i| (i % 256) as u8).collect()
+    (0..size).map(|i| (i % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
 fn generate_fractal_data(size: usize) -> Vec<u8> {
-    let mut data = Vec::with_capacity(_size);
-    for i in 0.._size {
+    let mut data = Vec::with_capacity(size);
+    for i in 0..size {
         let value = ((i as f64).sin() * 127.0 + 128.0) as u8;
         data.push(value);
     }
@@ -426,8 +426,8 @@ fn generate_fractal_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_mixed_pattern_data(size: usize) -> Vec<u8> {
-    let mut data = Vec::with_capacity(_size);
-    for i in 0.._size {
+    let mut data = Vec::with_capacity(size);
+    for i in 0..size {
         let value = match i % 4 {
             0 => (i % 256) as u8,
             1 => rand::random::<u8>(),
@@ -440,15 +440,15 @@ fn generate_mixed_pattern_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_correlated_data_sequence(_size: usize, sequenceid: usize) -> Vec<u8> {
-    (0.._size)
-        .map(|i| ((i + sequence_id * 100) % 256) as u8)
+fn generate_correlated_data_sequence(size: usize, sequenceid: usize) -> Vec<u8> {
+    (0..size)
+        .map(|i| ((i + sequenceid * 100) % 256) as u8)
         .collect()
 }
 
 #[allow(dead_code)]
 fn generate_scientific_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             let t = i as f64 / 100.0;
             ((t.sin() * t.cos() * 127.0) + 128.0) as u8
@@ -458,9 +458,9 @@ fn generate_scientific_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_financial_data(size: usize) -> Vec<u8> {
-    let mut data = Vec::with_capacity(_size);
+    let mut data = Vec::with_capacity(size);
     let mut value = 128.0;
-    for _ in 0.._size {
+    for _ in 0..size {
         value += (rand::random::<f64>() - 0.5) * 10.0;
         value = value.max(0.0).min(255.0);
         data.push(value as u8);
@@ -470,8 +470,8 @@ fn generate_financial_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_image_like_data(size: usize) -> Vec<u8> {
-    let width = (_size as f64).sqrt() as usize;
-    let mut data = Vec::with_capacity(_size);
+    let width = (size as f64).sqrt() as usize;
+    let mut data = Vec::with_capacity(size);
     for y in 0..width {
         for x in 0..width {
             let distance = ((x as f64 - width as f64 / 2.0).powi(2)
@@ -481,13 +481,13 @@ fn generate_image_like_data(size: usize) -> Vec<u8> {
             data.push(value);
         }
     }
-    data.resize(_size, 0);
+    data.resize(size, 0);
     data
 }
 
 #[allow(dead_code)]
 fn generate_network_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| {
             if i % 100 < 10 {
                 // Simulate packet headers
@@ -501,7 +501,7 @@ fn generate_network_data(size: usize) -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_hybrid_domain_data(size: usize) -> Vec<u8> {
-    (0.._size)
+    (0..size)
         .map(|i| match i % 5 {
             0..=1 => generate_scientific_data(1)[0],
             2 => generate_financial_data(1)[0],
@@ -535,8 +535,8 @@ fn simulate_realtime_analytics_workflow() -> Vec<u8> {
 
 #[allow(dead_code)]
 fn generate_varied_workload(size: usize) -> Vec<u8> {
-    let mut data = Vec::with_capacity(_size);
-    for i in 0.._size {
+    let mut data = Vec::with_capacity(size);
+    for i in 0..size {
         let value = match i % 6 {
             0 => generate_repetitive_data(1)[0],
             1 => generate_random_data(1)[0],

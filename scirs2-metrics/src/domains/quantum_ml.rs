@@ -15,7 +15,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__metrics::domains::quantum_ml::QuantumMLSuite;
+//! use scirs2_metrics::domains::quantum_ml::QuantumMLSuite;
 //! use ndarray::array;
 //! use num_complex::Complex64;
 //!
@@ -660,7 +660,7 @@ impl QuantumMLSuite {
     fn is_two_qubit_gate(&self, gate: &QuantumGate) -> bool {
         matches!(
             gate,
-            QuantumGate::CNOT(__) | QuantumGate::CZ(__) | QuantumGate::SWAP(__)
+            QuantumGate::CNOT(_, _) | QuantumGate::CZ(_, _) | QuantumGate::SWAP(_, _)
         )
     }
 

@@ -52,7 +52,7 @@ impl HttpResponse {
     }
 
     /// Set content type header
-    fn content_type(mut self, contenttype: &str) -> Self {
+    fn content_type(mut self, content_type: &str) -> Self {
         self.headers
             .push(("Content-Type".to_string(), content_type.to_string()));
         self
@@ -170,16 +170,16 @@ impl DashboardHttpServer {
 
 /// Serve the dashboard over HTTP
 async fn serve_dashboard(
-    _addr: SocketAddr,
+    addr: SocketAddr,
     dashboard: InteractiveDashboard,
 ) -> std::io::Result<()> {
-    let listener = TcpListener::bind(_addr).await?;
+    let listener = TcpListener::bind(addr).await?;
     println!("Dashboard listening on http://{}", addr);
 
     let dashboard = Arc::new(dashboard);
 
     loop {
-        let (stream_) = listener.accept().await?;
+        let (stream, _) = listener.accept().await?;
         let dashboard = Arc::clone(&dashboard);
 
         tokio::spawn(async move {
@@ -286,7 +286,7 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
     // Analyze metric trends
     let mut metric_groups: std::collections::HashMap<String, Vec<&MetricDataPoint>> =
         std::collections::HashMap::new();
-    for metric in _metrics {
+    for metric in metrics {
         metric_groups
             .entry(metric.name.clone())
             .or_default()
@@ -360,7 +360,7 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
         if overall_avg > 0.9 {
             insights.push(AiInsight {
                 insight_type: "system_health".to_string(),
-                message: "System performance is excellent across all _metrics".to_string(),
+                message: "System performance is excellent across all metrics".to_string(),
                 confidence: 0.90,
                 severity: "info".to_string(),
                 timestamp: std::time::SystemTime::now()
@@ -371,7 +371,7 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
         } else if overall_avg < 0.5 {
             insights.push(AiInsight {
                 insight_type: "system_health".to_string(),
-                message: "System performance may need attention - multiple _metrics below optimal"
+                message: "System performance may need attention - multiple metrics below optimal"
                     .to_string(),
                 confidence: 0.80,
                 severity: "high".to_string(),
@@ -397,7 +397,7 @@ fn detect_anomalies(metrics: &[MetricDataPoint]) -> Vec<AnomalyAlert> {
 
     let mut metric_groups: std::collections::HashMap<String, Vec<&MetricDataPoint>> =
         std::collections::HashMap::new();
-    for metric in _metrics {
+    for metric in metrics {
         metric_groups
             .entry(metric.name.clone())
             .or_default()
@@ -455,7 +455,7 @@ fn predict_future_performance(metrics: &[MetricDataPoint]) -> Vec<PerformancePre
 
     let mut metric_groups: std::collections::HashMap<String, Vec<&MetricDataPoint>> =
         std::collections::HashMap::new();
-    for metric in _metrics {
+    for metric in metrics {
         metric_groups
             .entry(metric.name.clone())
             .or_default()
@@ -476,7 +476,7 @@ fn predict_future_performance(metrics: &[MetricDataPoint]) -> Vec<PerformancePre
         let x_values: Vec<f64> = sorted_points
             .iter()
             .enumerate()
-            .map(|(i_)| i as f64)
+            .map(|(i, _)| i as f64)
             .collect();
         let y_values: Vec<f64> = sorted_points.iter().map(|p| p.value).collect();
 
@@ -535,7 +535,7 @@ fn predict_future_performance(metrics: &[MetricDataPoint]) -> Vec<PerformancePre
 async fn generate_dashboard_html(dashboard: &Arc<InteractiveDashboard>) -> String {
     let metrics = dashboard.get_all_metrics().unwrap_or_default();
     let metric_names = dashboard.get_metric_names().unwrap_or_default();
-    let config = &_dashboard.config;
+    let config = &dashboard.config;
 
     let metrics_json = serde_json::to_string(&metrics).unwrap_or_default();
 
@@ -820,7 +820,7 @@ async fn generate_dashboard_html(dashboard: &Arc<InteractiveDashboard>) -> Strin
 /// Create and start an HTTP server for the given dashboard
 #[allow(dead_code)]
 pub fn start_http_server(dashboard: InteractiveDashboard) -> Result<DashboardHttpServer> {
-    let mut server = DashboardHttpServer::new(_dashboard)?;
+    let mut server = DashboardHttpServer::new(dashboard)?;
     server.start()?;
     Ok(server)
 }

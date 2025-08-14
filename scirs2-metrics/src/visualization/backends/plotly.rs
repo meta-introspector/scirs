@@ -33,7 +33,7 @@ impl PlotlyBackend {
 
     /// Map the scirs2-metrics color map to a plotly color scale
     fn map_color_scheme(&self, colormap: &ColorMap) -> ColorScale {
-        match color_map {
+        match colormap {
             ColorMap::BlueRed => ColorScale::Palette(ColorScalePalette::RdBu),
             ColorMap::GreenRed => ColorScale::Palette(ColorScalePalette::Greens),
             ColorMap::Grayscale => ColorScale::Palette(ColorScalePalette::Greys),
@@ -238,6 +238,7 @@ impl PlottingBackend for PlotlyBackend {
     }
 
     fn render_svg(
+        &self,
         self_data: &VisualizationData,
         _metadata: &VisualizationMetadata,
         options: &VisualizationOptions,
@@ -251,6 +252,7 @@ impl PlottingBackend for PlotlyBackend {
     }
 
     fn render_png(
+        &self,
         self_data: &VisualizationData,
         _metadata: &VisualizationMetadata,
         options: &VisualizationOptions,

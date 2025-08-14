@@ -735,7 +735,7 @@ where
     let g = x.graph();
 
     let min_tensor = crate::tensor_ops::scalar(min_value, g);
-    let max_tensor = crate::tensor_ops::scalar(max_value, g);
+    let max_tensor = crate::tensor_ops::scalar(maxvalue, g);
 
     // clip(x, min, max) = max(min(x, max), min)
     let clipped_upper = minimum(x, max_tensor);

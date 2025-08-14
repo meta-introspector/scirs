@@ -179,19 +179,19 @@ impl DeepWalk {
 
     /// Set the number of walks per node
     pub fn with_n_walks(mut self, nwalks: usize) -> Self {
-        self.n_walks = n_walks;
+        self.n_walks = nwalks;
         self
     }
 
     /// Set the walk length
     pub fn with_walk_length(mut self, walklength: usize) -> Self {
-        self.walk_length = walk_length;
+        self.walk_length = walklength;
         self
     }
 
     /// Set the window size
     pub fn with_window_size(mut self, windowsize: usize) -> Self {
-        self.window_size = window_size;
+        self.window_size = windowsize;
         self
     }
 
@@ -424,7 +424,7 @@ impl Node2Vec {
                     for &next in current_neighbors {
                         let prob = if next == prev {
                             1.0 / self.p // Return to previous node
-                        } else if adjacency[[next..prev]] > 0.0 {
+                        } else if adjacency[[next, prev]] > 0.0 {
                             1.0 // Move to neighbor of previous node
                         } else {
                             1.0 / self.q // Move to non-neighbor of previous node
@@ -528,7 +528,7 @@ impl GraphAutoencoder {
 
     /// Set number of epochs
     pub fn with_n_epochs(mut self, nepochs: usize) -> Self {
-        self.n_epochs = n_epochs;
+        self.n_epochs = nepochs;
         self
     }
 
@@ -623,7 +623,7 @@ impl GraphAutoencoder {
             // Compute loss (binary cross-entropy)
             let loss = -adjacency * &reconstruction.mapv(|v| (v + 1e-8).ln())
                 - (1.0 - adjacency) * &reconstruction.mapv(|v| (1.0 - v + 1e-8).ln());
-            let _avg_loss = loss.mean().unwrap();
+            let _avg_loss = loss.mean();
 
             // Backward pass
             let mut delta = &reconstruction - adjacency;

@@ -627,7 +627,7 @@ impl PluginQueryBuilder {
     }
 
     pub fn data_type(mut self, datatype: DataType) -> Self {
-        self.query.data_types.push(data_type);
+        self.query.data_types.push(datatype);
         self
     }
 

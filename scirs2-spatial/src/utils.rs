@@ -44,7 +44,7 @@ where
         return false;
     }
 
-    for i in 0.._point1.len() {
+    for i in 0..point1.len() {
         if point1[i] > point2[i] && point1[i] - point2[i] > tol {
             return false;
         }
@@ -97,7 +97,7 @@ pub fn scale_points(points: &Array2<f64>) -> ScaledPointsResult {
     for i in 0..n {
         for j in 0..d {
             if ranges[j].1 > 0.0 {
-                scaled[[i, j]] = (_points[[i, j]] - ranges[j].0) / ranges[j].1;
+                scaled[[i, j]] = (points[[i, j]] - ranges[j].0) / ranges[j].1;
             } else {
                 scaled[[i, j]] = 0.5; // All _points have same value in this dimension
             }

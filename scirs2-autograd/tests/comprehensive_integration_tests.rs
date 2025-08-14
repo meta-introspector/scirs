@@ -8,13 +8,13 @@
 //! - Memory optimization and efficient operations
 
 use ndarray::{Array, IxDyn};
-use scirs2__autograd::optimization::{
+use scirs2_autograd::optimization::{
     memory_optimization::{MemoryOptimizationConfig, MemoryOptimizer},
     GraphOptimizer, OptimizationLevel,
 };
-use scirs2__autograd::parallel::{init_thread_pool_with_config, ThreadPoolConfig};
-use scirs2__autograd::tensor_ops as T;
-use scirs2__autograd::visualization::{GraphVisualizer, OutputFormat, VisualizationConfig};
+use scirs2_autograd::parallel::{init_thread_pool_with_config, ThreadPoolConfig};
+use scirs2_autograd::tensor_ops as T;
+use scirs2_autograd::visualization::{GraphVisualizer, OutputFormat, VisualizationConfig};
 use scirs2_autograd as ag;
 
 /// Test the complete Advanced feature integration pipeline
@@ -216,7 +216,7 @@ fn test_comprehensive_memory_optimization() {
 #[test]
 #[allow(dead_code)]
 fn test_comprehensive_parallel_operations() {
-    use scirs2__autograd::parallel::parallel_ops::{
+    use scirs2_autograd::parallel::parallel_ops::{
         ParallelConfig, ParallelElementWise, ParallelReduction,
     };
 
@@ -237,8 +237,8 @@ fn test_comprehensive_parallel_operations() {
     for (i, config) in configs.iter().enumerate() {
         // Test parallel element-wise operations
         let a =
-            Array::fromshape_vec(IxDyn(&[1000]), (0..1000).map(|x| x as f32).collect()).unwrap();
-        let b = Array::fromshape_vec(IxDyn(&[1000]), (0..1000).map(|x| (x * 2) as f32).collect())
+            Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|x| x as f32).collect()).unwrap();
+        let b = Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|x| (x * 2) as f32).collect())
             .unwrap();
 
         let add_result = ParallelElementWise::add(&a, &b, config).unwrap();
@@ -263,7 +263,7 @@ fn test_comprehensive_parallel_operations() {
 #[allow(dead_code)]
 fn test_comprehensive_custom_activations() {
     ag::run(|ctx: &mut ag::Context<f32>| {
-        let test_data = Array::fromshape_vec(
+        let test_data = Array::from_shape_vec(
             IxDyn(&[100]),
             (0..100).map(|x| (x as f32 - 50.0) / 10.0).collect(), // Range from -5 to 4.5
         )
@@ -353,11 +353,11 @@ fn test_comprehensive_simd_operations() {
         // Create test data that benefits from SIMD
         let size = 1024; // Good for SIMD alignment
         let a = T::convert_to_tensor(
-            Array::fromshape_vec(IxDyn(&[size]), (0..size).map(|x| x as f32).collect()).unwrap(),
+            Array::from_shape_vec(IxDyn(&[size]), (0..size).map(|x| x as f32).collect()).unwrap(),
             ctx,
         );
         let b = T::convert_to_tensor(
-            Array::fromshape_vec(IxDyn(&[size]), (0..size).map(|x| (x * 2) as f32).collect())
+            Array::from_shape_vec(IxDyn(&[size]), (0..size).map(|x| (x * 2) as f32).collect())
                 .unwrap(),
             ctx,
         );
@@ -380,7 +380,7 @@ fn test_comprehensive_simd_operations() {
 
         // Test SIMD unary operations
         let test_values =
-            Array::fromshape_vec(IxDyn(&[8]), vec![-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0, 3.0])
+            Array::from_shape_vec(IxDyn(&[8]), vec![-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0, 3.0])
                 .unwrap();
         let x = T::convert_to_tensor(test_values, ctx);
 
@@ -438,9 +438,9 @@ fn test_comprehensive_graph_enhancements() {
 
         // Test conditional operations
         let condition_true =
-            T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
+            T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
         let condition_false =
-            T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![-1.0]).unwrap(), ctx);
+            T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![-1.0]).unwrap(), ctx);
 
         let true_branch = T::efficient_ones(&[5], ctx);
         let false_branch = T::efficient_zeros(&[5], ctx);

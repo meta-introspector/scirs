@@ -301,7 +301,7 @@ impl IDWInterpolator {
             }
         }
 
-        self.n_neighbors = n_neighbors;
+        self.n_neighbors = _nneighbors;
         Ok(())
     }
 

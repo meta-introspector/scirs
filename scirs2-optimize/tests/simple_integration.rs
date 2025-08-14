@@ -45,7 +45,7 @@ fn test_basic_sgd_integration() {
     );
     println!(
         "SGD converged to f = {:.2e} in {} iterations",
-        result.fun, result.iterations
+        result.fun, result.nit
     );
 }
 
@@ -73,7 +73,7 @@ fn test_basic_adam_integration() {
     );
     println!(
         "Adam converged to f = {:.2e} in {} iterations",
-        result.fun, result.iterations
+        result.fun, result.nit
     );
 }
 

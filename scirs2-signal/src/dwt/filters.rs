@@ -928,7 +928,7 @@ fn coif_filters(n: usize) -> SignalResult<WaveletFilters> {
 #[allow(dead_code)]
 fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
     // Biorthogonal wavelets use different filters for decomposition and reconstruction
-    // The filters are defined by their order (_nr, nd)
+    // The filters are defined by their order (nr, nd)
 
     // Check valid combinations for biorthogonal wavelets
     let valid_combinations = [
@@ -949,14 +949,14 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
         (6, 8),
     ];
 
-    if !valid_combinations.contains(&(_nr, nd)) {
+    if !valid_combinations.contains(&(nr, nd)) {
         return Err(SignalError::ValueError(format!(
             "Invalid biorthogonal wavelet specification: bior{}.{}. Valid combinations are: {:?}",
             nr, nd, valid_combinations
         )));
     }
 
-    match (_nr, nd) {
+    match (nr, nd) {
         // bior1.1 - Same as Haar
         (1, 1) => {
             let dec_lo = vec![0.7071067811865475, 0.7071067811865475];
@@ -1288,7 +1288,7 @@ fn rbior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
         (6, 8),
     ];
 
-    if !valid_combinations.contains(&(_nr, nd)) {
+    if !valid_combinations.contains(&(nr, nd)) {
         return Err(SignalError::ValueError(format!(
             "Invalid reverse biorthogonal wavelet specification: rbio{}.{}. Valid combinations are: {:?}",
             nr, nd, valid_combinations
@@ -1296,7 +1296,7 @@ fn rbior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
     }
 
     // First get the biorthogonal filters
-    let bior = bior_filters(nd, nr)?; // Note the swapped 'nd' and '_nr' parameters
+    let bior = bior_filters(nd, nr)?; // Note the swapped 'nd' and 'nr' parameters
 
     // Swap decomposition and reconstruction filters
     let filters = WaveletFilters::new(

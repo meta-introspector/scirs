@@ -642,7 +642,7 @@ where
 // Implementation of helper structures
 
 impl AdaptiveClippingState {
-    fn new(_initial_threshold: f64, adaptationlr: f64) -> Result<Self> {
+    fn new(initial_threshold: f64, adaptationlr: f64) -> Result<Self> {
         Ok(Self {
             current_threshold: initial_threshold,
             target_quantile: 0.5,

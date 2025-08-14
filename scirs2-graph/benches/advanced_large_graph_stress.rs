@@ -25,7 +25,7 @@ const MEMORY_PRESSURE_THRESHOLD: usize = 8 * 1024 * 1024 * 1024; // 8GB threshol
 #[allow(dead_code)]
 fn generate_large_random_graph(_num_nodes: usize, edgeprobability: f64) -> Graph<usize, f64> {
     let mut graph = Graph::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     println!("  🏗️  Generating random graph with {} nodes...", num_nodes);
 
@@ -73,7 +73,7 @@ fn generate_large_random_graph(_num_nodes: usize, edgeprobability: f64) -> Graph
 #[allow(dead_code)]
 fn generate_scale_free_graph(_num_nodes: usize, initialedges: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut degree_sum = 0;
     let mut node_degrees: HashMap<usize, usize> = HashMap::new();
 
@@ -136,7 +136,7 @@ fn generate_scale_free_graph(_num_nodes: usize, initialedges: usize) -> Graph<us
 #[allow(dead_code)]
 fn generate_memory_efficient_graph(_numnodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     println!(
         "  🧠 Generating memory-efficient graph with {} nodes...",
@@ -201,7 +201,7 @@ fn generate_memory_efficient_graph(_numnodes: usize) -> Graph<usize, f64> {
 #[allow(dead_code)]
 fn generate_biological_network(_numnodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut degrees = vec![0; _num_nodes];
 
     println!(
@@ -243,12 +243,9 @@ fn generate_biological_network(_numnodes: usize) -> Graph<usize, f64> {
 #[allow(dead_code)]
 fn generate_social_network(_numnodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
-    println!(
-        "  👥 Generating social network with {} nodes...",
-        num_nodes
-    );
+    println!("  👥 Generating social network with {} nodes...", num_nodes);
 
     // Add _nodes
     for i in 0..num_nodes {
@@ -1116,7 +1113,7 @@ fn bench_memory_usage_analysis(c: &mut Criterion) {
                             }
 
                             // Random access simulation
-                            let mut rng = rand::rng();
+                            let mut rng = rand::thread_rng();
                             for _ in 0..1000 {
                                 let idx = rng.gen_range(0..memory_data.len());
                                 memory_data[idx] *= 1.1;

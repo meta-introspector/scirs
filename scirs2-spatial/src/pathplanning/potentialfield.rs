@@ -120,13 +120,13 @@ impl PotentialConfig {
 
     /// Set the step size for path following
     pub fn with_step_size(mut self, stepsize: f64) -> Self {
-        self.step_size = step_size;
+        self.step_size = stepsize;
         self
     }
 
     /// Set the maximum number of iterations
     pub fn with_max_iterations(mut self, maxiterations: usize) -> Self {
-        self.max_iterations = max_iterations;
+        self.max_iterations = maxiterations;
         self
     }
 
@@ -150,7 +150,7 @@ impl PotentialConfig {
 
     /// Enable/disable fast path option
     pub fn with_use_fast_path(mut self, use_fastpath: bool) -> Self {
-        self.use_fast_path = use_fast_path;
+        self.use_fast_path = use_fastpath;
         self
     }
 }

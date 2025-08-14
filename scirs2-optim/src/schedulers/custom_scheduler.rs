@@ -53,7 +53,7 @@ where
     /// ```
     pub fn new(initial_lr: A, lrfunc: F) -> Self {
         Self {
-            lr_func: Rc::new(RefCell::new(lr_func)),
+            lr_func: Rc::new(RefCell::new(lrfunc)),
             step_count: 0,
             _phantom: PhantomData,
         }
@@ -198,7 +198,7 @@ where
 {
     /// Create a new scheduler builder with the given initial learning rate
     pub fn new(initiallr: A) -> Self {
-        Self { initial_lr }
+        Self { initial_lr: initiallr }
     }
 
     /// Create a step decay scheduler

@@ -33,7 +33,7 @@ impl CheckpointRegistry {
     fn register_checkpoint(&mut self, tensor_id: usize, estimatedsize: usize) {
         self.checkpoint_ops.insert(tensor_id);
         if self.tracking_enabled {
-            self.estimated_memory_saved += estimated_size;
+            self.estimated_memory_saved += estimatedsize;
         }
     }
 
@@ -117,7 +117,7 @@ impl<F: Float> Op<F> for CheckpointOp {
                     // For now with our temporary gradient fix, we'll use a simple ones tensor
                     // with the same shape as the input
                     let shape_tensor = crate::tensor_ops::convert_to_tensor(
-                        ndarray::Array::fromshape_vec(
+                        ndarray::Array::from_shape_vec(
                             ndarray::IxDyn(&[inputshape.len()]),
                             inputshape
                                 .iter()
@@ -194,7 +194,7 @@ pub fn checkpoint<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = tensor.graph();
 
     Tensor::builder(g)
-        .append_input(_tensor, false)
+        .append_input(tensor, false)
         .build(CheckpointOp)
 }
 
@@ -215,7 +215,7 @@ pub fn detach<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 
     // Use the same checkpoint op but mark it as not differentiable
     Tensor::builder(g)
-        .append_input(_tensor, false)
+        .append_input(tensor, false)
         .set_differentiable(false)
         .build(CheckpointOp)
 }
@@ -316,8 +316,8 @@ impl<'g, F: Float> CheckpointGroup<'g, F> {
     /// A new CheckpointGroup instance
     pub fn new(ctx: &'g crate::graph::Context<'g, F>) -> Self {
         Self {
-            ctx,
-            phantom: PhantomData,
+            _ctx: ctx,
+            _phantom: PhantomData,
         }
     }
 
@@ -339,7 +339,7 @@ impl<'g, F: Float> CheckpointGroup<'g, F> {
         Outputs: CheckpointOutput<'g, F>,
     {
         // Apply the function to get outputs
-        let outputs = segment_fn(inputs);
+        let outputs = segmentfn(inputs);
 
         // Checkpoint all outputs
         outputs.checkpoint()

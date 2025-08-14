@@ -69,7 +69,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::mean_squared_error;
+/// use scirs2_metrics::regression::mean_squared_error;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -137,7 +137,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::root_mean_squared_error;
+/// use scirs2_metrics::regression::root_mean_squared_error;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -180,7 +180,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::mean_absolute_error;
+/// use scirs2_metrics::regression::mean_absolute_error;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -254,7 +254,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::mean_absolute_percentage_error;
+/// use scirs2_metrics::regression::mean_absolute_percentage_error;
 ///
 /// let y_true = array![3.0, 0.5, 2.0, 7.0];
 /// let y_pred = array![2.7, 0.4, 1.8, 7.7];
@@ -316,7 +316,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::symmetric_mean_absolute_percentage_error;
+/// use scirs2_metrics::regression::symmetric_mean_absolute_percentage_error;
 ///
 /// let y_true = array![3.0, 0.01, 2.0, 7.0];
 /// let y_pred = array![2.7, 0.0, 1.8, 7.7];
@@ -378,7 +378,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::max_error;
+/// use scirs2_metrics::regression::max_error;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -431,7 +431,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::median_absolute_error;
+/// use scirs2_metrics::regression::median_absolute_error;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -499,7 +499,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::mean_squared_log_error;
+/// use scirs2_metrics::regression::mean_squared_log_error;
 ///
 /// let y_true = array![3.0, 5.0, 2.5, 7.0];
 /// let y_pred = array![2.5, 5.0, 3.0, 8.0];
@@ -573,7 +573,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::huber_loss;
+/// use scirs2_metrics::regression::huber_loss;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -640,7 +640,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::normalized_root_mean_squared_error;
+/// use scirs2_metrics::regression::normalized_root_mean_squared_error;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -747,7 +747,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::relative_absolute_error;
+/// use scirs2_metrics::regression::relative_absolute_error;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -809,7 +809,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::relative_squared_error;
+/// use scirs2_metrics::regression::relative_squared_error;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];

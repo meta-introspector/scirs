@@ -183,7 +183,7 @@ fn gmres_solve(a: &Array2<f64>, b: &Array1<f64>, lambda: f64, maxiter: usize) ->
 
     // Initial residual: r = b - A*x (x is zero, so r = b)
     let r = b.clone();
-    let r_norm_initial = r._iter().map(|&ri| ri.powi(2)).sum::<f64>().sqrt();
+    let r_norm_initial = r.iter().map(|&ri| ri.powi(2)).sum::<f64>().sqrt();
 
     // If the initial residual is small, return zero solution
     if r_norm_initial < 1e-10 {
@@ -191,7 +191,7 @@ fn gmres_solve(a: &Array2<f64>, b: &Array1<f64>, lambda: f64, maxiter: usize) ->
     }
 
     // Arnoldi basis vectors (orthonormal basis for the Krylov subspace)
-    let mut v = Vec::with_capacity(max_iter + 1);
+    let mut v = Vec::with_capacity(maxiter + 1);
 
     // First basis vector: v[0] = r / ||r||
     let mut v0 = r.clone();
@@ -199,10 +199,10 @@ fn gmres_solve(a: &Array2<f64>, b: &Array1<f64>, lambda: f64, maxiter: usize) ->
     v.push(v0);
 
     // Hessenberg matrix (stores the projection of A onto the Krylov subspace)
-    let mut h = Array2::zeros((max_iter + 1, max_iter));
+    let mut h = Array2::zeros((maxiter + 1, maxiter));
 
     // Construct the Krylov subspace and Hessenberg matrix
-    for j in 0..max_iter {
+    for j in 0..maxiter {
         // Apply the matrix operator with Levenberg-Marquardt regularization:
         // w = A * v[j]
         let w = a.dot(&v[j]);
@@ -226,7 +226,7 @@ fn gmres_solve(a: &Array2<f64>, b: &Array1<f64>, lambda: f64, maxiter: usize) ->
 
         // Compute the norm of the orthogonalized vector
         let w_norm = w_regularized
-            ._iter()
+            .iter()
             .map(|&wi| wi.powi(2))
             .sum::<f64>()
             .sqrt();

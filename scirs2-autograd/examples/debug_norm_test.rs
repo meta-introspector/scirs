@@ -4,7 +4,7 @@ use scirs2_autograd as ag;
 
 #[allow(dead_code)]
 fn main() {
-    ag::run::<f64_>(|ctx| {
+    ag::run(|ctx| {
         println!("=== Debug Norm Gradient Test ===");
 
         // Test with a simple 2x2 matrix

@@ -27,14 +27,14 @@ impl TryFrom<u16> for WavFormat {
     type Error = IoError;
 
     fn try_from(value: u16) -> std::result::Result<Self, Self::Error> {
-        match _value {
+        match value {
             1 => Ok(WavFormat::Pcm),
             3 => Ok(WavFormat::Float),
             6 => Ok(WavFormat::Alaw),
             7 => Ok(WavFormat::Mulaw),
             _ => Err(IoError::FormatError(format!(
                 "Unknown WAV format code: {}",
-                _value
+                value
             ))),
         }
     }
@@ -110,7 +110,7 @@ impl RiffChunk {
 /// ```
 #[allow(dead_code)]
 pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
-    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut reader = BufReader::new(file);
 
     // Read RIFF chunk
@@ -328,7 +328,7 @@ pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
 /// ```
 #[allow(dead_code)]
 pub fn write_wav<P: AsRef<Path>>(path: P, samplerate: u32, data: &ArrayD<f32>) -> Result<()> {
-    let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
     // Check that data is at least 2D (channels, samples)
@@ -346,7 +346,7 @@ pub fn write_wav<P: AsRef<Path>>(path: P, samplerate: u32, data: &ArrayD<f32>) -
     let bits_per_sample: u16 = 32; // 32-bit float
     let bytes_per_sample = bits_per_sample / 8;
     let block_align = channels * bytes_per_sample;
-    let byte_rate = sample_rate * block_align as u32;
+    let byte_rate = samplerate * block_align as u32;
 
     // Calculate total data size
     let data_size = samples_per_channel * channels as usize * bytes_per_sample as usize;
@@ -381,7 +381,7 @@ pub fn write_wav<P: AsRef<Path>>(path: P, samplerate: u32, data: &ArrayD<f32>) -
         .map_err(|e| IoError::FileError(format!("Failed to write channel count: {}", e)))?;
 
     writer
-        .write_u32::<LittleEndian>(sample_rate)
+        .write_u32::<LittleEndian>(samplerate)
         .map_err(|e| IoError::FileError(format!("Failed to write sample rate: {}", e)))?;
 
     writer

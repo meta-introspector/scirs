@@ -619,7 +619,7 @@ where
     O: Optimizer<A, ndarray::Ix1> + Send + Sync,
 {
     /// Create a new TPU optimizer
-    pub fn new(baseoptimizer: O, config: TPUConfig) -> Result<Self> {
+    pub fn new(base_optimizer: O, config: TPUConfig) -> Result<Self> {
         let memory_allocator = TPUMemoryAllocator::new(&config)?;
         let pod_coordinator = if config.enable_pod_coordination {
             Some(TPUPodCoordinator::new(&config)?)
@@ -1074,7 +1074,7 @@ impl TPUProfiler {
 }
 
 impl XLAComputationBuilder {
-    fn new(optimization_level: XLAOptimizationLevel, targetconfig: TPUConfig) -> Self {
+    fn new(optimization_level: XLAOptimizationLevel, target_config: TPUConfig) -> Self {
         Self {
             instruction_count: 0,
             optimization_level,

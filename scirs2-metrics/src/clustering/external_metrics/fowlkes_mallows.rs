@@ -31,7 +31,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::clustering::fowlkes_mallows_score;
+/// use scirs2_metrics::clustering::fowlkes_mallows_score;
 ///
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![0, 0, 0, 1, 1, 1];

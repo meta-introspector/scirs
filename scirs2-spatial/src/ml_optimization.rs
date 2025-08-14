@@ -185,15 +185,15 @@ impl NeuralSpatialOptimizer {
 
     /// Configure network architecture
     pub fn with_network_architecture(mut self, layersizes: impl AsRef<[usize]>) -> Self {
-        let _sizes = layersizes.as_ref();
+        let sizes = layersizes.as_ref();
         self.layers.clear();
 
-        for i in 0.._sizes.len() - 1 {
+        for i in 0..sizes.len() - 1 {
             let input_size = sizes[i];
             let output_size = sizes[i + 1];
 
             // Xavier/Glorot initialization
-            let scale = (2.0 / (input_size + output_size) as f64).sqrt();
+            let scale = (2.0_f64 / (input_size + output_size) as f64).sqrt();
             let weights = Array2::from_shape_fn((output_size, input_size), |_| {
                 (rand::random::<f64>() - 0.5) * 2.0 * scale
             });
@@ -217,15 +217,15 @@ impl NeuralSpatialOptimizer {
 
     /// Set network architecture in place (for use when already borrowed mutably)
     pub fn set_network_architecture(&mut self, layersizes: impl AsRef<[usize]>) {
-        let _sizes = layersizes.as_ref();
+        let sizes = layersizes.as_ref();
         self.layers.clear();
 
-        for i in 0.._sizes.len() - 1 {
+        for i in 0..sizes.len() - 1 {
             let input_size = sizes[i];
             let output_size = sizes[i + 1];
 
             // Xavier/Glorot initialization
-            let scale = (2.0 / (input_size + output_size) as f64).sqrt();
+            let scale = (2.0_f64 / (input_size + output_size) as f64).sqrt();
             let weights = Array2::from_shape_fn((output_size, input_size), |_| {
                 (rand::random::<f64>() - 0.5) * 2.0 * scale
             });
@@ -290,16 +290,16 @@ impl NeuralSpatialOptimizer {
         &self,
         n_points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array1<f64>> {
-        let (n_points, n_dims) = points.dim();
+        let (num_points, n_dims) = n_points.dim();
         let mut features = Vec::new();
 
         // Basic statistics
-        features.push(n_points as f64);
+        features.push(num_points as f64);
         features.push(n_dims as f64);
 
         // Data distribution features
         for dim in 0..n_dims {
-            let column = points.column(dim);
+            let column = n_points.column(dim);
             let mean = column.mean();
             let std = (column.mapv(|x| (x - mean).powi(2)).mean()).sqrt();
             let min_val = column.fold(f64::INFINITY, |a, &b| a.min(b));
@@ -317,9 +317,9 @@ impl NeuralSpatialOptimizer {
 
         // Pairwise distance statistics
         let mut distances = Vec::new();
-        for i in 0..n_points.min(100) {
+        for i in 0..num_points.min(100) {
             // Sample for efficiency
-            for j in (i + 1)..n_points.min(100) {
+            for j in (i + 1)..num_points.min(100) {
                 let dist: f64 = n_points
                     .row(i)
                     .iter()
@@ -379,10 +379,10 @@ impl NeuralSpatialOptimizer {
 
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = n_points
+                    let dist: f64 = points
                         .row(i)
                         .iter()
-                        .zip(n_points.row(j).iter())
+                        .zip(points.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -424,10 +424,10 @@ impl NeuralSpatialOptimizer {
             let mut min_dist = f64::INFINITY;
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = n_points
+                    let dist: f64 = points
                         .row(i)
                         .iter()
-                        .zip(n_points.row(j).iter())
+                        .zip(points.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -438,7 +438,7 @@ impl NeuralSpatialOptimizer {
         }
 
         // Generate random n_points and calculate distances
-        let bounds = self.get_data_bounds(n_points);
+        let bounds = self.get_data_bounds(points);
         for _ in 0..sample_size {
             let random_point: Array1<f64> = Array1::from_shape_fn(n_dims, |i| {
                 rand::random::<f64>() * (bounds[i].1 - bounds[i].0) + bounds[i].0
@@ -448,7 +448,7 @@ impl NeuralSpatialOptimizer {
             for j in 0..n_points {
                 let dist: f64 = random_point
                     .iter()
-                    .zip(n_points.row(j).iter())
+                    .zip(points.row(j).iter())
                     .map(|(&a, &b)| (a - b).powi(2))
                     .sum::<f64>()
                     .sqrt();
@@ -1122,7 +1122,7 @@ impl ReinforcementLearningSelector {
         };
 
         // Estimate density
-        let density = self.estimate_density(n_points)?;
+        let density = self.estimate_density(points)?;
         let density_category = if density < 0.3 {
             DensityCategory::Low
         } else if density < 0.7 {
@@ -1132,7 +1132,7 @@ impl ReinforcementLearningSelector {
         };
 
         // Estimate clustering tendency
-        let hopkins = self.estimate_hopkins_statistic(n_points)?;
+        let hopkins = self.estimate_hopkins_statistic(points)?;
         let clustering_tendency_category = if hopkins < 0.3 {
             ClusteringTendencyCategory::HighlyStructured
         } else if hopkins < 0.7 {
@@ -1166,10 +1166,10 @@ impl ReinforcementLearningSelector {
 
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = n_points
+                    let dist: f64 = points
                         .row(i)
                         .iter()
-                        .zip(n_points.row(j).iter())
+                        .zip(points.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -1210,10 +1210,10 @@ impl ReinforcementLearningSelector {
             let mut min_dist = f64::INFINITY;
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = n_points
+                    let dist: f64 = points
                         .row(i)
                         .iter()
-                        .zip(n_points.row(j).iter())
+                        .zip(points.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -1224,7 +1224,7 @@ impl ReinforcementLearningSelector {
         }
 
         // Random point distances
-        let bounds = self.get_data_bounds(n_points);
+        let bounds = self.get_data_bounds(points);
         for _ in 0..sample_size {
             let random_point: Array1<f64> = Array1::from_shape_fn(n_dims, |i| {
                 rand::random::<f64>() * (bounds[i].1 - bounds[i].0) + bounds[i].0
@@ -1234,7 +1234,7 @@ impl ReinforcementLearningSelector {
             for j in 0..n_points {
                 let dist: f64 = random_point
                     .iter()
-                    .zip(n_points.row(j).iter())
+                    .zip(points.row(j).iter())
                     .map(|(&a, &b)| (a - b).powi(2))
                     .sum::<f64>()
                     .sqrt();

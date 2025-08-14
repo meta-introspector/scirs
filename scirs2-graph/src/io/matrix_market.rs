@@ -88,7 +88,7 @@ pub struct MatrixMarketHeader {
 impl MatrixMarketHeader {
     /// Parse a Matrix Market header from a string
     pub fn parse_header_line(line: &str) -> Result<(String, String, String, String)> {
-        if !_line.starts_with("%%MatrixMarket") {
+        if !line.starts_with("%%MatrixMarket") {
             return Err(GraphError::Other(
                 "Invalid Matrix Market header - must start with %%MatrixMarket".to_string(),
             ));
@@ -205,7 +205,7 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(_path)?;
+    let file = File::open(path)?;
     let reader = BufReader::new(file);
     let mut lines = reader.lines();
     let mut graph = Graph::new();
@@ -341,7 +341,7 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(_path)?;
+    let file = File::open(path)?;
     let reader = BufReader::new(file);
     let mut lines = reader.lines();
     let mut graph = DiGraph::new();

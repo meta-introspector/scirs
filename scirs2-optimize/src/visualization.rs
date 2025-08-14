@@ -60,12 +60,12 @@ impl OptimizationTrajectory {
     }
 
     /// Add gradient norm information
-    pub fn add_gradient_norm(&mut self, gradnorm: f64) {
+    pub fn add_gradient_norm(&mut self, grad_norm: f64) {
         self.gradient_norms.push(grad_norm);
     }
 
     /// Add step size information
-    pub fn add_step_size(&mut self, stepsize: f64) {
+    pub fn add_step_size(&mut self, step_size: f64) {
         self.step_sizes.push(step_size);
     }
 
@@ -925,19 +925,19 @@ pub mod tracking {
         }
 
         /// Record a new point in the optimization trajectory
-        pub fn record(&mut self, iteration: usize, params: &ArrayView1<f64>, functionvalue: f64) {
+        pub fn record(&mut self, iteration: usize, params: &ArrayView1<f64>, function_value: f64) {
             let elapsed = self.start_time.elapsed().as_secs_f64();
             self.trajectory
                 .add_point(iteration, params, function_value, elapsed);
         }
 
         /// Record gradient norm
-        pub fn record_gradient_norm(&mut self, gradnorm: f64) {
+        pub fn record_gradient_norm(&mut self, grad_norm: f64) {
             self.trajectory.add_gradient_norm(grad_norm);
         }
 
         /// Record step size
-        pub fn record_step_size(&mut self, stepsize: f64) {
+        pub fn record_step_size(&mut self, step_size: f64) {
             self.trajectory.add_step_size(step_size);
         }
 

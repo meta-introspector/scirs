@@ -141,7 +141,7 @@ struct CachedChunk<T> {
 impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     /// Create a new out-of-core array
     pub fn create<P: AsRef<Path>>(path: P, shape: &[usize]) -> Result<Self> {
-        Self::create_with_config(_path, shape, OutOfCoreConfig::default())
+        Self::create_with_config(path, shape, OutOfCoreConfig::default())
     }
 
     /// Create with custom configuration
@@ -215,7 +215,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
     /// Open an existing out-of-core array
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-        Self::open_with_config(_path, OutOfCoreConfig::default())
+        Self::open_with_config(path, OutOfCoreConfig::default())
     }
 
     /// Open with custom configuration
@@ -272,7 +272,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     /// Calculate chunk shape based on target chunk size
     fn calculate_chunkshape(shape: &[usize], targetsize: usize) -> Vec<usize> {
         let ndim = shape.len();
-        let elements_per_dim = (target_size as f64).powf(1.0 / ndim as f64) as usize;
+        let elements_per_dim = (targetsize as f64).powf(1.0 / ndim as f64) as usize;
 
         shape
             .iter()
@@ -330,7 +330,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         };
         buffer[cursor] = compression_id;
 
-        _file
+        file
             .write_all(&buffer)
             .map_err(|e| IoError::FileError(format!("Failed to write metadata: {e}")))
     }
@@ -338,7 +338,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     /// Read metadata from file
     fn read_metadata(file: &mut File) -> Result<ArrayMetadata> {
         let mut buffer = vec![0u8; Self::metadata_size()];
-        _file
+        file
             .read_exact(&mut buffer)
             .map_err(|e| IoError::ParseError(format!("Failed to read metadata: {e}")))?;
 
@@ -415,18 +415,18 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         // Check cache first
         {
             let cache = self.cache.read().unwrap();
-            if let Some(cached) = cache.chunks.get(&chunk_id) {
+            if let Some(cached) = cache.chunks.get(&chunkid) {
                 return Ok(cached.data.clone());
             }
         }
 
         // Read from disk
-        let data = self.read_chunk_from_disk(chunk_id)?;
+        let data = self.read_chunk_from_disk(chunkid)?;
 
         // Update cache
         {
             let mut cache = self.cache.write().unwrap();
-            self.update_cache(&mut cache, chunk_id, data.clone());
+            self.update_cache(&mut cache, chunkid, data.clone());
         }
 
         Ok(data)
@@ -577,14 +577,14 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
         // Add to cache
         cache.chunks.insert(
-            chunk_id,
+            chunkid,
             CachedChunk {
                 data,
                 dirty: false,
                 access_count: 1,
             },
         );
-        cache.lru_queue.push_back(chunk_id);
+        cache.lru_queue.push_back(chunkid);
         cache.current_size_bytes += chunk_size_bytes;
     }
 
@@ -1168,7 +1168,7 @@ impl<T: Clone> VirtualArray<T> {
 
         // Validate shapes
         let firstshape = arrays[0].shape();
-        for array in &_arrays[1..] {
+        for array in &arrays[1..] {
             let shape = array.shape();
             if shape.len() != firstshape.len() {
                 return Err(IoError::ParseError(

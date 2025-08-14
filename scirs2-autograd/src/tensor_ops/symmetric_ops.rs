@@ -90,18 +90,18 @@ impl<F: Float + ndarray::ScalarOperand + FromPrimitive> Op<F> for SymmetricEigen
         let eigen_vals = y_array.slice(ndarray::s![0..values_size]);
         let eigen_vecs = y_array.slice(ndarray::s![vectors_start..]);
 
-        let eigen_vals_1d = eigen_vals.toshape(n).unwrap().to_owned();
-        let eigen_vecs_2d = eigen_vecs.toshape((n, n)).unwrap().to_owned();
+        let eigen_vals_1d = eigen_vals.to_shape(n).unwrap().to_owned();
+        let eigen_vecs_2d = eigen_vecs.to_shape((n, n)).unwrap().to_owned();
 
         // Get gradients
         let grad_vals = gy_array
             .slice(ndarray::s![0..values_size])
-            .toshape(n)
+            .to_shape(n)
             .unwrap()
             .to_owned();
         let grad_vecs = gy_array
             .slice(ndarray::s![vectors_start..])
-            .toshape((n, n))
+            .to_shape((n, n))
             .unwrap()
             .to_owned();
 
@@ -177,7 +177,7 @@ fn is_symmetric<F: Float>(matrix: &ArrayView2<F>) -> bool {
 
     for i in 0..n {
         for j in i + 1..n {
-            if (_matrix[[i, j]] - matrix[[j, i]]).abs() > tol {
+            if (matrix[[i, j]] - matrix[[j, i]]).abs() > tol {
                 return false;
             }
         }
@@ -196,7 +196,7 @@ fn compute_symmetric_eigen<F: Float + ndarray::ScalarOperand + FromPrimitive>(
     if n == 1 {
         let eigenvalue = matrix[[0, 0]];
         let eigenvalues = Array1::from_vec(vec![eigenvalue]);
-        let eigenvectors = Array2::fromshape_vec((1, 1), vec![F::one()]).unwrap();
+        let eigenvectors = Array2::from_shape_vec((1, 1), vec![F::one()]).unwrap();
         return Ok((eigenvalues, eigenvectors));
     } else if n == 2 {
         // For 2x2 symmetric matrices, use analytical formula

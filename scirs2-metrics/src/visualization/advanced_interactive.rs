@@ -754,7 +754,7 @@ pub struct EventResponse {
 pub enum ResponseAction {
     /// Update widget data
     UpdateData {
-        widgetid: String,
+        widget_id: String,
         data: Value,
         json: Value,
     },
@@ -880,7 +880,7 @@ pub trait DataSource {
     fn subscribe(&mut self, callback: Box<dyn Fn(WidgetData) + Send + Sync>) -> Result<String>;
 
     /// Unsubscribe from data updates
-    fn unsubscribe(&mut self, subscriptionid: &str) -> Result<()>;
+    fn unsubscribe(&mut self, subscription_id: &str) -> Result<()>;
 
     /// Check if data source is active
     fn is_active(&self) -> bool;
@@ -899,7 +899,7 @@ pub trait DataSource {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataSourceConfig {
     /// Data source ID
-    pub _id: String,
+    pub id: String,
     /// Data source type
     pub source_type: DataSourceType,
     /// Connection settings
@@ -1331,13 +1331,13 @@ pub trait RenderingEngine {
     fn initialize(&mut self, config: &DashboardConfig) -> Result<()>;
 
     /// Render dashboard
-    fn render_dashboard(&self, dashboardstate: &DashboardState) -> Result<RenderOutput>;
+    fn render_dashboard(&self, dashboard_state: &DashboardState) -> Result<RenderOutput>;
 
     /// Update widget rendering
-    fn update_widget(&self, widgetid: &str, widgetdata: &WidgetData) -> Result<()>;
+    fn update_widget(&self, widget_id: &str, widget_data: &WidgetData) -> Result<()>;
 
     /// Handle resize events
-    fn handle_resize(&self, newsize: Size) -> Result<()>;
+    fn handle_resize(&self, new_size: Size) -> Result<()>;
 
     /// Get rendering capabilities
     fn get_capabilities(&self) -> RenderingCapabilities;
@@ -1409,7 +1409,7 @@ pub struct RenderingCapabilities {
     /// Supports hardware acceleration
     pub hardware_acceleration: bool,
     /// Maximum texture size
-    pub maxtexture_size: Option<u32>,
+    pub max_texture_size: Option<u32>,
     /// Supported shader versions
     pub shader_versions: Vec<String>,
 }
@@ -1432,7 +1432,7 @@ pub struct UpdateSubscription {
     /// Subscription ID
     pub id: String,
     /// Widget ID
-    pub widgetid: String,
+    pub widget_id: String,
     /// Data source ID
     pub data_source_id: String,
     /// Update frequency
@@ -1447,7 +1447,7 @@ impl std::fmt::Debug for UpdateSubscription {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("UpdateSubscription")
             .field("id", &self.id)
-            .field("widgetid", &self.widgetid)
+            .field("widget_id", &self.widget_id)
             .field("data_source_id", &self.data_source_id)
             .field("frequency", &self.frequency)
             .field("last_update", &self.last_update)
@@ -1462,7 +1462,7 @@ pub struct UpdateEvent {
     /// Event ID
     pub id: String,
     /// Widget ID
-    pub widgetid: String,
+    pub widget_id: String,
     /// Data source ID
     pub data_source_id: String,
     /// Updated data
@@ -1566,7 +1566,7 @@ pub struct Annotation {
     /// Annotation position
     pub position: Position,
     /// Associated widget ID
-    pub widgetid: Option<String>,
+    pub widget_id: Option<String>,
     /// Creation timestamp
     pub created_at: SystemTime,
     /// Modification timestamp
@@ -1878,20 +1878,20 @@ impl InteractiveDashboard {
 
     /// Add widget to dashboard
     pub fn add_widget(&self, widget: Box<dyn InteractiveWidget + Send + Sync>) -> Result<()> {
-        let widgetid = widget.get_id().to_string();
+        let widget_id = widget.get_id().to_string();
         let mut widgets = self.widgets.write().map_err(|_| {
             MetricsError::ComputationError("Failed to acquire widget lock".to_string())
         })?;
-        widgets.insert(widgetid, widget);
+        widgets.insert(widget_id, widget);
         Ok(())
     }
 
     /// Remove widget from dashboard
-    pub fn remove_widget(&self, widgetid: &str) -> Result<()> {
+    pub fn remove_widget(&self, widget_id: &str) -> Result<()> {
         let mut widgets = self.widgets.write().map_err(|_| {
             MetricsError::ComputationError("Failed to acquire widget lock".to_string())
         })?;
-        widgets.remove(widgetid);
+        widgets.remove(widget_id);
         Ok(())
     }
 
@@ -2154,10 +2154,10 @@ impl EventSystem {
     /// Register event handler for specific widget
     pub fn register_handler(
         &mut self,
-        widgetid: String,
+        widget_id: String,
         handler: Box<dyn EventHandler + Send + Sync>,
     ) {
-        self.handlers.insert(widgetid, vec![handler]);
+        self.handlers.insert(widget_id, vec![handler]);
     }
 
     /// Get event history
@@ -2186,35 +2186,35 @@ impl LayoutManager {
     }
 
     /// Add widget to layout
-    pub fn add_widget(&mut self, widgetid: String, layout: WidgetLayout) -> Result<()> {
+    pub fn add_widget(&mut self, widget_id: String, layout: WidgetLayout) -> Result<()> {
         // Validate layout constraints
         self.validate_layout(&layout)?;
 
         // Add widget to layout map
-        self.widget_layouts.insert(widgetid.clone(), layout.clone());
+        self.widget_layouts.insert(widget_id.clone(), layout.clone());
 
         // Apply layout constraints
-        self.apply_constraints(&widgetid, &layout)?;
+        self.apply_constraints(&widget_id, &layout)?;
 
         Ok(())
     }
 
     /// Update widget layout
-    pub fn update_widget_layout(&mut self, widgetid: &str, layout: WidgetLayout) -> Result<()> {
+    pub fn update_widget_layout(&mut self, widget_id: &str, layout: WidgetLayout) -> Result<()> {
         self.validate_layout(&layout)?;
 
-        if let Some(current_layout) = self.widget_layouts.get_mut(widgetid) {
+        if let Some(current_layout) = self.widget_layouts.get_mut(widget_id) {
             *current_layout = layout.clone();
-            self.apply_constraints(widgetid, &layout)?;
+            self.apply_constraints(widget_id, &layout)?;
         }
 
         Ok(())
     }
 
     /// Remove widget from layout
-    pub fn remove_widget(&mut self, widgetid: &str) -> Result<()> {
-        self.widget_layouts.remove(widgetid);
-        self.remove_widget_constraints(widgetid);
+    pub fn remove_widget(&mut self, widget_id: &str) -> Result<()> {
+        self.widget_layouts.remove(widget_id);
+        self.remove_widget_constraints(widget_id);
         Ok(())
     }
 
@@ -2248,7 +2248,7 @@ impl LayoutManager {
             let mut current_row = 0;
             let mut current_col = 0;
 
-            for (widgetid, widget_layout) in &self.widget_layouts {
+            for (widget_id, widget_layout) in &self.widget_layouts {
                 let x = current_col as f64 * (cell_width + grid_config.gap as f64) + grid_config.gap as f64;
                 let y =
                     current_row as f64 * (cell_height + grid_config.gap as f64) + grid_config.gap as f64;
@@ -2265,7 +2265,7 @@ impl LayoutManager {
                 let height = cell_height * span_rows as f64;
 
                 positions.insert(
-                    widgetid.clone(),
+                    widget_id.clone(),
                     WidgetPosition {
                         x: x as f32,
                         y: y as f32,
@@ -2295,7 +2295,7 @@ impl LayoutManager {
         let mut current_y = 0u32;
         let mut row_height = 0u32;
 
-        for (widgetid, widget_layout) in &self.widget_layouts {
+        for (widget_id, widget_layout) in &self.widget_layouts {
             let width = if widget_layout.size.width > 0.0 {
                 widget_layout.size.width
             } else {
@@ -2315,7 +2315,7 @@ impl LayoutManager {
             }
 
             positions.insert(
-                widgetid.clone(),
+                widget_id.clone(),
                 WidgetPosition {
                     x: current_x as f32,
                     y: current_y as f32,
@@ -2339,7 +2339,7 @@ impl LayoutManager {
     ) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
 
-        for (widgetid, widget_layout) in &self.widget_layouts {
+        for (widget_id, widget_layout) in &self.widget_layouts {
             let widget_position = WidgetPosition {
                 x: widget_layout.position.x as f32,
                 y: widget_layout.position.y as f32,
@@ -2347,7 +2347,7 @@ impl LayoutManager {
                 height: widget_layout.size.height as f32,
                 z_index: widget_layout.z_index,
             };
-            positions.insert(widgetid.clone(), widget_position);
+            positions.insert(widget_id.clone(), widget_position);
         }
 
         Ok(positions)
@@ -2363,7 +2363,7 @@ impl LayoutManager {
                 / grid_config.columns as f64;
             let mut column_heights = vec![0u32; grid_config.columns as usize];
 
-            for (widgetid, widget_layout) in &self.widget_layouts {
+            for (widget_id, widget_layout) in &self.widget_layouts {
                 // Find shortest column
                 let shortest_column = column_heights
                     .iter()
@@ -2384,7 +2384,7 @@ impl LayoutManager {
                 } as u32;
 
                 positions.insert(
-                    widgetid.clone(),
+                    widget_id.clone(),
                     WidgetPosition {
                         x: x as f32,
                         y: y as f32,
@@ -2426,13 +2426,13 @@ impl LayoutManager {
     }
 
     /// Apply layout constraints
-    fn apply_constraints(&mut self, widgetid: &str, layout: &WidgetLayout) -> Result<()> {
+    fn apply_constraints(&mut self, widget_id: &str, layout: &WidgetLayout) -> Result<()> {
         // Add basic constraint based on position and size
         if layout.position.x >= 0.0 && layout.position.y >= 0.0 {
             self.constraints.push(LayoutConstraint {
-                id: format!("layout_{}", widgetid),
+                id: format!("layout_{}", widget_id),
                 constraint_type: ConstraintType::Check,
-                target_widgets: vec![widgetid.to_string()],
+                target_widgets: vec![widget_id.to_string()],
                 parameters: HashMap::from([
                     ("x".to_string(), layout.position.x),
                     ("y".to_string(), layout.position.y),
@@ -2446,9 +2446,9 @@ impl LayoutManager {
     }
 
     /// Remove widget constraints
-    fn remove_widget_constraints(&mut self, widgetid: &str) {
+    fn remove_widget_constraints(&mut self, widget_id: &str) {
         self.constraints
-            .retain(|constraint| !constraint.target_widgets.contains(&widgetid.to_string()));
+            .retain(|constraint| !constraint.target_widgets.contains(&widget_id.to_string()));
     }
 
     /// Add default responsive rules
@@ -2534,7 +2534,7 @@ impl DefaultRenderingEngine {
                 webgl_support: false,
                 webgl_version: None,
                 hardware_acceleration: false,
-                maxtexture_size: None,
+                max_texture_size: None,
                 shader_versions: Vec::new(),
             },
         }
@@ -2546,7 +2546,7 @@ impl RenderingEngine for DefaultRenderingEngine {
         Ok(())
     }
 
-    fn render_dashboard(&self, dashboardstate: &DashboardState) -> Result<RenderOutput> {
+    fn render_dashboard(&self, dashboard_state: &DashboardState) -> Result<RenderOutput> {
         let start_time = Instant::now();
 
         // Generate comprehensive HTML structure
@@ -2556,18 +2556,18 @@ impl RenderingEngine for DefaultRenderingEngine {
         html.push_str(
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
         );
-        html.push_str(&format!("<title>{}</title>\n", dashboardstate.config.title));
+        html.push_str(&format!("<title>{}</title>\n", dashboard_state.config.title));
         html.push_str("<style id=\"dashboard-styles\"></style>\n");
         html.push_str("</head>\n<body>\n");
 
         // Dashboard container with responsive grid layout
         html.push_str(&format!(
             "<div id=\"dashboard-container\" data-width=\"{}\" data-height=\"{}\">\n",
-            dashboardstate.config.width, dashboardstate.config.height
+            dashboard_state.config.width, dashboard_state.config.height
         ));
 
         html.push_str("<header class=\"dashboard-header\">\n");
-        html.push_str(&format!("  <h1>{}</h1>\n", dashboardstate.config.title));
+        html.push_str(&format!("  <h1>{}</h1>\n", dashboard_state.config.title));
         html.push_str("  <div class=\"dashboard-controls\">\n");
         html.push_str("    <button id=\"refresh-btn\" class=\"control-btn\">Refresh</button>\n");
         html.push_str("    <button id=\"export-btn\" class=\"control-btn\">Export</button>\n");
@@ -2577,10 +2577,10 @@ impl RenderingEngine for DefaultRenderingEngine {
         html.push_str("<main class=\"dashboard-grid\">\n");
 
         // Render each widget
-        for (widgetid, widget_state) in &dashboardstate.widgets {
+        for (widget_id, widget_state) in &dashboard_state.widgets {
             html.push_str(&format!(
                 "  <div id=\"widget-{}\" class=\"dashboard-widget widget-generic\" data-type=\"generic\">\n",
-                widgetid
+                widget_id
             ));
             html.push_str("    <div class=\"widget-header\">\n");
             html.push_str(&format!(
@@ -2658,11 +2658,11 @@ impl RenderingEngine for DefaultRenderingEngine {
         })
     }
 
-    fn update_widget(&self, _widget_id: &str, _widgetdata: &WidgetData) -> Result<()> {
+    fn update_widget(&self, _widget_id: &str, _widget_data: &WidgetData) -> Result<()> {
         Ok(())
     }
 
-    fn handle_resize(&self, newsize: Size) -> Result<()> {
+    fn handle_resize(&self, new_size: Size) -> Result<()> {
         Ok(())
     }
 
@@ -2752,7 +2752,8 @@ impl DefaultConflictResolver {
 
 impl ConflictResolver for DefaultConflictResolver {
     fn resolve_conflict(
-        self_base: &SharedState,
+        &self,
+        _base: &SharedState,
         _local: &SharedState,
         remote: &SharedState,
     ) -> Result<SharedState> {
@@ -2822,7 +2823,7 @@ mod tests {
     fn test_layout_config_creation() {
         let layout = LayoutConfig::default();
         matches!(layout.layout_type, LayoutType::Grid);
-        assert!(layout.grid_configis_some());
+        assert!(layout.grid_config.is_some());
         assert!(layout.animations.enabled);
     }
 

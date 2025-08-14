@@ -3,7 +3,7 @@
 //! This example demonstrates how to use the model selection framework
 //! to automatically choose the best model from a set of candidates.
 
-use scirs2__metrics::selection::{AggregationStrategy, ModelSelectionBuilder, ModelSelector};
+use scirs2_metrics::selection::{AggregationStrategy, ModelSelectionBuilder, ModelSelector};
 use std::collections::HashMap;
 
 #[allow(dead_code)]

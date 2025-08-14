@@ -195,7 +195,7 @@ fn reshape_for_solve<F: Float>(
 ) -> Result<Array2<F>, OpError> {
     let tensor_view = tensor.view();
     let flat = tensor_view
-        .toshape(rows * cols)
+        .to_shape(rows * cols)
         .map_err(|_| OpError::IncompatibleShape("Failed to flatten tensor for solve".into()))?;
 
     let mut matrix = Array2::<F>::zeros((rows, cols));
@@ -215,7 +215,7 @@ fn reshape_vector<F: Float>(
 ) -> Result<ndarray::Array1<F>, OpError> {
     tensor
         .view()
-        .toshape(size)
+        .to_shape(size)
         .map_err(|_| OpError::IncompatibleShape("Failed to reshape vector".into()))
         .map(|v| v.to_owned())
 }
@@ -309,7 +309,7 @@ fn solve_square_system<F: Float>(
 #[allow(dead_code)]
 fn compute_solutionshape(
     ashape: &[usize],
-    _bshape: &[usize],
+    bshape: &[usize],
     axes: &Option<Vec<i32>>,
 ) -> Result<Vec<usize>, OpError> {
     let ndim_a = ashape.len();
@@ -353,7 +353,7 @@ fn reshape_solution<F: Float>(
 
     let dynshape = IxDyn(shape);
     flat.view()
-        .toshape(dynshape)
+        .to_shape(dynshape)
         .map_err(|_| OpError::IncompatibleShape("Failed to reshape solution".into()))
         .map(|v| v.to_owned())
 }

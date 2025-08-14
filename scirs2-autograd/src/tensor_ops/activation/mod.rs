@@ -533,7 +533,7 @@ where
     AT: AsTensor<'graph, F>,
 {
     let _x = x.as_ref();
-    let g = x.graph();
+    let g = _x.graph();
     let _axes = axes.as_tensor(g);
     let mean = crate::tensor_ops::reduction::reduce_mean(_x, &_axes, true);
     let centered = _x - mean;

@@ -96,7 +96,7 @@ pub trait PlottingBackend {
 /// # Example
 ///
 /// ```
-/// use scirs2__metrics::visualization::backends;
+/// use scirs2_metrics::visualization::backends;
 ///
 /// let backend = backends::default_backend();
 /// ```
@@ -156,7 +156,7 @@ pub fn default_backend() -> impl PlottingBackend {
 /// # Example
 ///
 /// ```
-/// use scirs2__metrics::visualization::backends;
+/// use scirs2_metrics::visualization::backends;
 ///
 /// let backend = backends::default_interactive_backend();
 /// ```

@@ -729,7 +729,7 @@ impl<A: Float + Default + Clone + Send + Sync> EnhancedAdaptiveLRController<A> {
     }
 
     /// Apply meta-learning adjustment to base decision
-    fn apply_meta_adjustment(&self, base_lr: A, metaadjustment: A) -> A {
+    fn apply_meta_adjustment(&self, base_lr: A, meta_adjustment: A) -> A {
         // Combine base decision with meta-learning recommendation
         let alpha = A::from(0.7).unwrap(); // Weight for base decision
         let beta = A::from(0.3).unwrap(); // Weight for meta-learning
@@ -738,7 +738,7 @@ impl<A: Float + Default + Clone + Send + Sync> EnhancedAdaptiveLRController<A> {
     }
 
     /// Evaluate adaptation effectiveness retrospectively
-    pub fn evaluate_adaptation_effectiveness(&mut self, performanceimprovement: A) {
+    pub fn evaluate_adaptation_effectiveness(&mut self, performance_improvement: A) {
         if let Some(last_event) = self.adaptation_history.back_mut() {
             last_event.effectiveness_score = Some(performance_improvement);
 
@@ -816,7 +816,7 @@ impl<A: Float + Default + Clone> MultiSignalAdaptationStrategy<A> {
         })
     }
 
-    fn update_signal_reliability(&mut self, signaltype: AdaptationSignalType, effectiveness: A) {
+    fn update_signal_reliability(&mut self, signal_type: AdaptationSignalType, effectiveness: A) {
         let reliability = self
             .signal_reliability
             .entry(signal_type)

@@ -52,7 +52,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> SpectralNorm<A> {
     /// * `n_power_iterations` - Number of power iterations for SVD approximation
     pub fn new(n_poweriterations: usize) -> Self {
         Self {
-            n_power_iterations,
+            n_power_iterations: n_poweriterations,
             eps: A::from_f64(1e-12).unwrap(),
             u: None,
             v: None,

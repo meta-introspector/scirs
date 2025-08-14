@@ -4557,7 +4557,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
     }
 
     /// Run a specific analysis on the computation
-    fn run_analysis(&mut self, analysisname: &str, computation: &XLAComputation<T>) -> Result<()> {
+    fn run_analysis(&mut self, analysis_name: &str, computation: &XLAComputation<T>) -> Result<()> {
         // Check if analysis is cached and valid
         if let Some(cached_result) = self.analysis_cache.get(analysis_name) {
             if cached_result.validity.is_valid {

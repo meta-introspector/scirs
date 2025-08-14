@@ -32,7 +32,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::clustering::validation::jaccard_similarity;
+/// use scirs2_metrics::clustering::validation::jaccard_similarity;
 ///
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![1, 1, 0, 0, 2, 2];
@@ -131,9 +131,9 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__metrics::clustering::validation::cluster_stability;
+/// use scirs2_metrics::clustering::validation::cluster_stability;
 ///
-/// let x = Array2::fromshape_vec((6, 2), vec![
+/// let x = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,
 /// ]).unwrap();
@@ -210,9 +210,9 @@ where
         // Add Gaussian noise
         for i in 0..n_samples {
             for j in 0..x.ncols() {
-                let noise: f64 = rng.gen_range(-1.0..1.0);
+                let noise: f64 = rng.random_range(-1.0..1.0);
                 let noise_value = F::from(noise).unwrap() * perturbation_scale;
-                perturbed_data[[i..j]] = x[[i, j]] + noise_value;
+                perturbed_data[[i, j]] = x[[i, j]] + noise_value;
             }
         }
 
@@ -303,7 +303,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::clustering::validation::consensus_score;
+/// use scirs2_metrics::clustering::validation::consensus_score;
 ///
 /// let clustering1 = array![0, 0, 0, 1, 1, 1];
 /// let clustering2 = array![1, 1, 1, 0, 0, 0];  // Same as clustering1 but with inverted labels
@@ -415,9 +415,9 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__metrics::clustering::validation::fold_stability;
+/// use scirs2_metrics::clustering::validation::fold_stability;
 ///
-/// let x = Array2::fromshape_vec((10, 2), vec![
+/// let x = Array2::from_shape_vec((10, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 1.3, 2.1, 1.4, 1.9,
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2, 5.3, 6.1, 5.4, 5.9,
 /// ]).unwrap();
@@ -488,7 +488,7 @@ where
 
         // Shuffle available indices
         for i in (1..available_indices.len()).rev() {
-            let j = rng.gen_range(0..=i);
+            let j = rng.random_range(0..=i);
             available_indices.swap(i, j);
         }
 
@@ -659,7 +659,7 @@ mod tests {
     #[test]
     fn test_cluster_stability() {
         // Create a simple dataset with well-separated clusters
-        let x = Array2::fromshape_vec(
+        let x = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
@@ -674,7 +674,7 @@ mod tests {
         assert!(stability > 0.5);
 
         // Create a dataset with less separated clusters
-        let less_separated = Array2::fromshape_vec(
+        let less_separated = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 2.8, 3.0, 3.2, 3.5, 4.0, 4.2, 4.5, 5.0],
         )
@@ -710,7 +710,7 @@ mod tests {
             labels_data.push(1);
         }
 
-        let x = Array2::fromshape_vec((40, 2), x_data).unwrap();
+        let x = Array2::from_shape_vec((40, 2), x_data).unwrap();
         let labels = Array1::from_vec(labels_data);
 
         // Test fold stability

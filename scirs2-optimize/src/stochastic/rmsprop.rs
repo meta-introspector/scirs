@@ -194,7 +194,7 @@ where
             // Progress reporting
             if iteration % 100 == 0 {
                 let grad_norm = gradient.mapv(|g| g * g).sum().sqrt();
-                let rms_norm = s.mapv(|s| s.sqrt()).mean().unwrap_or(0.0);
+                let rms_norm = s.mapv(|s| s.sqrt()).mean();
                 println!(
                     "  Iteration {}: loss = {:.6e}, |grad| = {:.3e}, RMS = {:.3e}, lr = {:.3e}",
                     iteration, current_loss, grad_norm, rms_norm, current_lr

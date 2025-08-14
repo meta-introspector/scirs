@@ -173,7 +173,7 @@ fn compare_correctors(
     );
     println!("{:-<45}", "");
 
-    for (misspelled_expected) in &test_cases {
+    for (misspelled, _expected) in &test_cases {
         let dict_correction = dict_corrector.correct(misspelled)?;
         let stat_correction = stat_corrector.correct(misspelled)?;
 

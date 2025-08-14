@@ -375,10 +375,10 @@ fn demonstrate_format_detection() -> Result<(), Box<dyn std::error::Error>> {
     // Read and detect formats
     println!("  🔹 Reading and detecting formats:");
 
-    let v5_detected = EnhancedMatFile::is_v73_file(&v5_file)?;
+    let v5_detected = v5_enhanced.is_v73_file(&v5_file)?;
     println!("    v5 file detected as v7.3: {}", v5_detected);
 
-    let auto_detected = EnhancedMatFile::is_v73_file(&auto_file)?;
+    let auto_detected = auto_enhanced.is_v73_file(&auto_file)?;
     println!("    Auto file detected as v7.3: {}", auto_detected);
 
     // Verify reading works

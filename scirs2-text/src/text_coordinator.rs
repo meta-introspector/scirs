@@ -693,13 +693,13 @@ pub struct MultiModalTextCoordinator {
 impl AdvancedTextCoordinator {
     /// Create a new Advanced text coordinator
     pub fn new(config: AdvancedTextConfig) -> Result<Self> {
-        let performance_optimizer = Arc::new(Mutex::new(PerformanceOptimizer::new(&_config)?));
+        let performance_optimizer = Arc::new(Mutex::new(PerformanceOptimizer::new(&config)?));
         #[allow(clippy::arc_with_non_send_sync)]
-        let neural_ensemble = Arc::new(RwLock::new(NeuralProcessingEnsemble::new(&_config)?));
-        let memory_optimizer = Arc::new(Mutex::new(TextMemoryOptimizer::new(&_config)?));
-        let adaptive_engine = Arc::new(Mutex::new(AdaptiveTextEngine::new(&_config)?));
-        let analytics_engine = Arc::new(RwLock::new(TextAnalyticsEngine::new(&_config)?));
-        let multimodal_coordinator = MultiModalTextCoordinator::new(&_config)?;
+        let neural_ensemble = Arc::new(RwLock::new(NeuralProcessingEnsemble::new(&config)?));
+        let memory_optimizer = Arc::new(Mutex::new(TextMemoryOptimizer::new(&config)?));
+        let adaptive_engine = Arc::new(Mutex::new(AdaptiveTextEngine::new(&config)?));
+        let analytics_engine = Arc::new(RwLock::new(TextAnalyticsEngine::new(&config)?));
+        let multimodal_coordinator = MultiModalTextCoordinator::new(&config)?;
         let performance_tracker = Arc::new(RwLock::new(TextPerformanceTracker::new()));
 
         Ok(AdvancedTextCoordinator {
@@ -755,7 +755,7 @@ impl AdvancedTextCoordinator {
         // Step 5: Real-time adaptation
         if self.config.enable_real_time_adaptation {
             let adaptive_engine = self.adaptive_engine.lock().unwrap();
-            adaptive_engine.adapt_based_on_performance(&start_time.elapsed())?;
+            AdaptiveTextEngine::adapt_based_on_performance(&start_time.elapsed())?;
             optimizations_applied.push("Real-time performance adaptation".to_string());
         }
 
@@ -763,7 +763,7 @@ impl AdvancedTextCoordinator {
 
         // Step 6: Performance tracking and metrics
         let performance_metrics = self.calculate_performance_metrics(texts.len(), total_time)?;
-        let confidence_scores = self.calculate_confidence_scores(&primary_result, &analytics)?;
+        let confidence_scores = AdvancedTextCoordinator::calculate_confidence_scores(&primary_result, &analytics)?;
         let timing_breakdown = self.calculate_timing_breakdown(total_time)?;
 
         Ok(AdvancedTextResult {
@@ -837,7 +837,7 @@ impl AdvancedTextCoordinator {
         drop(neural_ensemble);
 
         // Advanced confidence estimation
-        let confidence_estimates = self.calculate_classification_confidence(&classifications)?;
+        let confidence_estimates = AdvancedTextCoordinator::calculate_classification_confidence(&classifications)?;
 
         // Performance analytics
         let performance_metrics = TextPerformanceMetrics {
@@ -870,7 +870,7 @@ impl AdvancedTextCoordinator {
         // Adaptive parameter optimization
         let adaptive_engine = self.adaptive_engine.lock().unwrap();
         let optimal_params =
-            adaptive_engine.optimize_topic_modeling_params(documents, num_topics)?;
+            AdaptiveTextEngine::optimize_topic_modeling_params(documents, num_topics)?;
         drop(adaptive_engine);
 
         // Neural-enhanced topic modeling
@@ -882,13 +882,13 @@ impl AdvancedTextCoordinator {
         // Advanced topic analytics
         let analytics_engine = self.analytics_engine.read().unwrap();
         let topic_analytics =
-            analytics_engine.analyze_topic_quality(&enhanced_topics, documents)?;
+            TextAnalyticsEngine::analyze_topic_quality(&enhanced_topics, documents)?;
         drop(analytics_engine);
 
-        let quality_metrics = self.calculate_topic_quality_metrics(&enhanced_topics)?;
+        let quality_metrics = AdvancedTextCoordinator::calculate_topic_quality_metrics(&enhanced_topics)?;
 
         Ok(AdvancedTopicModelingResult {
-            _topics: enhanced_topics,
+            topics: enhanced_topics,
             topic_analytics,
             optimal_params,
             processing_time: start_time.elapsed(),
@@ -1307,7 +1307,7 @@ impl PerformanceOptimizer {
         })
     }
 
-    fn determine_optimal_strategy(&selftexts: &[String]) -> Result<OptimizationStrategy> {
+    fn determine_optimal_strategy(&self, texts: &[String]) -> Result<OptimizationStrategy> {
         Ok(OptimizationStrategy::Performance)
     }
 }
@@ -1507,12 +1507,13 @@ impl TextMemoryOptimizer {
         })
     }
 
-    fn optimize_for_batch(&self_batchsize: usize) -> Result<()> {
+    fn optimize_for_batch(&self, batch_size: usize) -> Result<()> {
         Ok(()) // Placeholder
     }
 
     fn optimize_for_classification_batch(
-        &self_numtexts: usize,
+        &self,
+        num_texts: usize,
         _num_categories: usize,
     ) -> Result<()> {
         Ok(()) // Placeholder
@@ -1552,7 +1553,8 @@ impl TextAnalyticsEngine {
     }
 
     fn analyze_comprehensive(
-        &selftexts: &[String],
+        &self,
+        _texts: &[String],
         _result: &TextProcessingResult,
     ) -> Result<AdvancedTextAnalytics> {
         Ok(AdvancedTextAnalytics::empty()) // Placeholder

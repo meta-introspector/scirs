@@ -94,7 +94,7 @@ impl SpatialGrid2D {
         let cells_y = (height / cellsize).ceil() as usize;
         SpatialGrid2D {
             cellsize,
-            width: width,
+            width: _width,
             height,
             cells_x,
             cells_y,
@@ -193,7 +193,7 @@ impl SpatialGrid3D {
         let cells_z = (depth / cellsize).ceil() as usize;
         SpatialGrid3D {
             cellsize,
-            width: width,
+            width: _width,
             height,
             depth,
             cells_x,

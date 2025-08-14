@@ -2204,10 +2204,10 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> GradientAggregator<T> 
             let mut sum_gradient = first_gradients[i].clone();
             let mut count = 1;
 
-            // Sum _gradients from all devices
-            for _gradients in device_gradients.values().skip(1) {
+            // Sum gradients from all devices
+            for gradients in device_gradients.values().skip(1) {
                 if i < gradients.len() {
-                    sum_gradient = sum_gradient + &_gradients[i];
+                    sum_gradient = sum_gradient + &gradients[i];
                     count += 1;
                 }
             }

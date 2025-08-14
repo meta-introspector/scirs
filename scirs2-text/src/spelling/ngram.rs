@@ -59,9 +59,9 @@ pub struct NGramModel {
 impl NGramModel {
     /// Create a new n-gram model with the specified order
     pub fn new(order: usize) -> Self {
-        if _order > 3 {
+        if order > 3 {
             // Warn but limit to 3
-            eprintln!("Warning: NGramModel only supports orders up to 3. Using _order=3.");
+            eprintln!("Warning: NGramModel only supports orders up to 3. Using order=3.");
         }
 
         Self {
@@ -69,7 +69,7 @@ impl NGramModel {
             bigrams: HashMap::new(),
             trigrams: HashMap::new(),
             total_words: 0,
-            _order: order.clamp(1, 3),
+            order: order.clamp(1, 3),
             start_token: "<s>".to_string(),
             end_token: "</s>".to_string(),
         }
@@ -296,7 +296,7 @@ impl NGramModel {
 
     /// Generate potential single-edit typos for a word
     pub fn generate_typos(&self, word: &str, numtypos: usize) -> Vec<String> {
-        let mut _typos = HashSet::new();
+        let mut typos = HashSet::new();
         let word = word.to_lowercase();
         let chars: Vec<char> = word.chars().collect();
 
@@ -349,7 +349,7 @@ impl NGramModel {
         });
 
         // Limit to requested number
-        typos_vec.truncate(num_typos);
+        typos_vec.truncate(numtypos);
 
         typos_vec
     }

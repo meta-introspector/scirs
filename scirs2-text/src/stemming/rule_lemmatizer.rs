@@ -640,8 +640,8 @@ impl RuleLemmatizer {
 
         let mut lemmatizer = Self::new();
 
-        let file = File::open(_path).map_err(|e| {
-            TextError::IoError(format!("Failed to open dictionary file '{_path}': {e}"))
+        let file = File::open(path).map_err(|e| {
+            TextError::IoError(format!("Failed to open dictionary file '{path}': {e}"))
         })?;
 
         let reader = BufReader::new(file);
@@ -834,13 +834,13 @@ impl RuleLemmatizer {
     pub fn lemmatize_with_pos(&self, words: &[&str], postags: &[PosTag]) -> Vec<String> {
         assert_eq!(
             words.len(),
-            pos_tags.len(),
+            postags.len(),
             "Number of words and POS _tags must match"
         );
 
         words
             .iter()
-            .zip(pos_tags.iter())
+            .zip(postags.iter())
             .map(|(word, pos)| self.lemmatize(word, Some(pos.clone())))
             .collect()
     }

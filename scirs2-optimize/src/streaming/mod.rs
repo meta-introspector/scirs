@@ -124,7 +124,7 @@ impl StreamingDataPoint {
     /// Create a new streaming data point
     pub fn new(features: Array1<f64>, target: f64) -> Self {
         Self {
-            features: features,
+            features,
             target,
             weight: None,
             timestamp: None,
@@ -134,7 +134,7 @@ impl StreamingDataPoint {
     /// Create a weighted streaming data point
     pub fn with_weight(features: Array1<f64>, target: f64, weight: f64) -> Self {
         Self {
-            features: features,
+            features,
             target,
             weight: Some(weight),
             timestamp: None,
@@ -144,7 +144,7 @@ impl StreamingDataPoint {
     /// Create a timestamped streaming data point
     pub fn with_timestamp(features: Array1<f64>, target: f64, timestamp: f64) -> Self {
         Self {
-            features: features,
+            features,
             target,
             weight: None,
             timestamp: Some(timestamp),
@@ -159,7 +159,7 @@ pub trait StreamingOptimizer {
 
     /// Process a batch of data points
     fn update_batch(&mut self, datapoints: &[StreamingDataPoint]) -> Result<()> {
-        for _point in data_points {
+        for _point in datapoints {
             self.update(_point)?;
         }
         Ok(())
@@ -186,16 +186,13 @@ pub trait StreamingObjective {
     fn evaluate(&self, parameters: &ArrayView1<f64>, datapoint: &StreamingDataPoint) -> f64;
 
     /// Compute the gradient for a single data point
-    fn gradient(
-        &self,
-        parameters: &ArrayView1<f64>,
-        data_point: &StreamingDataPoint,
-    ) -> Array1<f64>;
+    fn gradient(&self, parameters: &ArrayView1<f64>, datapoint: &StreamingDataPoint)
+        -> Array1<f64>;
 
     /// Compute the Hessian for a single data point (optional)
     fn hessian(
         self_parameters: &ArrayView1<f64>,
-        _data_point: &StreamingDataPoint,
+        _datapoint: &StreamingDataPoint,
     ) -> Option<Array2<f64>> {
         None
     }
@@ -207,35 +204,35 @@ pub struct LinearRegressionObjective;
 
 impl StreamingObjective for LinearRegressionObjective {
     fn evaluate(&self, parameters: &ArrayView1<f64>, datapoint: &StreamingDataPoint) -> f64 {
-        let prediction = parameters.dot(&data_point.features);
-        let residual = prediction - data_point.target;
-        let weight = data_point.weight.unwrap_or(1.0);
+        let prediction = parameters.dot(&datapoint.features);
+        let residual = prediction - datapoint.target;
+        let weight = datapoint.weight.unwrap_or(1.0);
         0.5 * weight * residual * residual
     }
 
     fn gradient(
         &self,
         parameters: &ArrayView1<f64>,
-        data_point: &StreamingDataPoint,
+        datapoint: &StreamingDataPoint,
     ) -> Array1<f64> {
-        let prediction = parameters.dot(&data_point.features);
-        let residual = prediction - data_point.target;
-        let weight = data_point.weight.unwrap_or(1.0);
-        weight * residual * &data_point.features
+        let prediction = parameters.dot(&datapoint.features);
+        let residual = prediction - datapoint.target;
+        let weight = datapoint.weight.unwrap_or(1.0);
+        weight * residual * &datapoint.features
     }
 
     fn hessian(
         self_parameters: &ArrayView1<f64>,
-        data_point: &StreamingDataPoint,
+        datapoint: &StreamingDataPoint,
     ) -> Option<Array2<f64>> {
-        let weight = data_point.weight.unwrap_or(1.0);
-        let n = data_point.features.len();
+        let weight = datapoint.weight.unwrap_or(1.0);
+        let n = datapoint.features.len();
         let mut hessian = Array2::zeros((n, n));
 
         // H = weight * X^T * X for linear regression
         for i in 0..n {
             for j in 0..n {
-                hessian[[i, j]] = weight * data_point.features[i] * data_point.features[j];
+                hessian[[i, j]] = weight * datapoint.features[i] * datapoint.features[j];
             }
         }
 
@@ -249,14 +246,14 @@ pub struct LogisticRegressionObjective;
 
 impl StreamingObjective for LogisticRegressionObjective {
     fn evaluate(&self, parameters: &ArrayView1<f64>, datapoint: &StreamingDataPoint) -> f64 {
-        let z = parameters.dot(&data_point.features);
-        let weight = data_point.weight.unwrap_or(1.0);
+        let z = parameters.dot(&datapoint.features);
+        let weight = datapoint.weight.unwrap_or(1.0);
 
         // Numerical stability for sigmoid
         let loss = if z > 0.0 {
-            z + (1.0 + (-z).exp()).ln() - data_point.target * z
+            z + (1.0 + (-z).exp()).ln() - datapoint.target * z
         } else {
-            (1.0 + z.exp()).ln() - data_point.target * z
+            (1.0 + z.exp()).ln() - datapoint.target * z
         };
 
         weight * loss
@@ -265,30 +262,30 @@ impl StreamingObjective for LogisticRegressionObjective {
     fn gradient(
         &self,
         parameters: &ArrayView1<f64>,
-        data_point: &StreamingDataPoint,
+        datapoint: &StreamingDataPoint,
     ) -> Array1<f64> {
-        let z = parameters.dot(&data_point.features);
+        let z = parameters.dot(&datapoint.features);
         let sigmoid = 1.0 / (1.0 + (-z).exp());
-        let weight = data_point.weight.unwrap_or(1.0);
+        let weight = datapoint.weight.unwrap_or(1.0);
 
-        weight * (sigmoid - data_point.target) * &data_point.features
+        weight * (sigmoid - datapoint.target) * &datapoint.features
     }
 
     fn hessian(
         parameters: &ArrayView1<f64>,
-        data_point: &StreamingDataPoint,
+        datapoint: &StreamingDataPoint,
     ) -> Option<Array2<f64>> {
-        let z = parameters.dot(&data_point.features);
+        let z = parameters.dot(&datapoint.features);
         let sigmoid = 1.0 / (1.0 + (-z).exp());
-        let weight = data_point.weight.unwrap_or(1.0);
+        let weight = datapoint.weight.unwrap_or(1.0);
         let scale = weight * sigmoid * (1.0 - sigmoid);
 
-        let n = data_point.features.len();
+        let n = datapoint.features.len();
         let mut hessian = Array2::zeros((n, n));
 
         for i in 0..n {
             for j in 0..n {
-                hessian[[i, j]] = scale * data_point.features[i] * data_point.features[j];
+                hessian[[i, j]] = scale * datapoint.features[i] * datapoint.features[j];
             }
         }
 
@@ -302,7 +299,7 @@ pub mod utils {
 
     /// Compute exponentially weighted moving average
     pub fn ewma_update(_current: f64, newvalue: f64, alpha: f64) -> f64 {
-        alpha * new_value + (1.0 - alpha) * _current
+        alpha * newvalue + (1.0 - alpha) * _current
     }
 
     /// Adaptive learning rate based on gradient history
@@ -338,7 +335,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_streaming_data_point_creation() {
+    fn test_streaming_datapoint_creation() {
         let features = Array1::from(vec![1.0, 2.0, 3.0]);
         let target = 5.0;
 
@@ -372,10 +369,10 @@ mod tests {
     #[test]
     fn test_utils_ewma() {
         let current = 10.0;
-        let new_value = 20.0;
+        let newvalue = 20.0;
         let alpha = 0.1;
 
-        let result = utils::ewma_update(current, new_value, alpha);
+        let result = utils::ewma_update(current, newvalue, alpha);
         let expected = 0.1 * 20.0 + 0.9 * 10.0;
         assert!((result - expected).abs() < 1e-10);
     }

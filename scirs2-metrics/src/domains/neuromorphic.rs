@@ -1216,14 +1216,14 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
         // Inject _spikes into input layer
         for (neuron_idx, spikes) in true_spikes.iter().enumerate() {
             if neuron_idx < self.config.input_neurons / 2 {
-                self.spiking_network.inject_spikes(spikes)?;
+                self.spiking_network.inject_spikes(neuron_idx, spikes)?;
             }
         }
 
         for (neuron_idx, spikes) in pred_spikes.iter().enumerate() {
             let input_neuron = self.config.input_neurons / 2 + neuron_idx;
             if input_neuron < self.config.input_neurons {
-                self.spiking_network.inject_spikes(spikes)?;
+                self.spiking_network.inject_spikes(input_neuron, spikes)?;
             }
         }
 
@@ -2096,14 +2096,14 @@ impl<F: Float> SpikingNeuralNetwork<F> {
         let new_connections = (current_connections as f64 * factor) as usize;
 
         for _ in 0..new_connections {
-            let pre_neuron = rng.gen_range(0..total_neurons);
-            let post_neuron = rng.gen_range(0..total_neurons);
+            let pre_neuron = rng.random_range(0..total_neurons);
+            let post_neuron = rng.random_range(0..total_neurons);
 
             if pre_neuron != post_neuron
                 && !self
                     .synapses
                     .connections
-                    .contains_key(&(pre_neuron..post_neuron))
+                    .contains_key(&(pre_neuron, post_neuron))
             {
                 let weight = F::from(rng.random::<f64>() * 0.1 - 0.05).unwrap(); // Random weight [-0.05, 0.05]
                 let synapse_type = if weight > F::zero() {
@@ -2388,10 +2388,10 @@ impl<F: Float> SynapticConnections<F> {
                             let post_neuron = &layers[layer_idx + 1].neurons[post_local];
 
                             let weight = match (&pre_neuron.neuron_type, &post_neuron.neuron_type) {
-                                (NeuronType::Excitatory) => {
+                                (NeuronType::Excitatory, _) => {
                                     F::from(rng.random::<f64>() * 0.1).unwrap()
                                 }
-                                (NeuronType::Inhibitory) => {
+                                (NeuronType::Inhibitory, _) => {
                                     F::from(-rng.random::<f64>() * 0.1).unwrap()
                                 }
                                 _ => F::from((rng.random::<f64>() - 0.5) * 0.05).unwrap(),
@@ -2400,6 +2400,9 @@ impl<F: Float> SynapticConnections<F> {
                             let synapse_type = match pre_neuron.neuron_type {
                                 NeuronType::Excitatory => SynapseType::Excitatory,
                                 NeuronType::Inhibitory => SynapseType::Inhibitory,
+                                NeuronType::Modulatory => SynapseType::Excitatory, // Default to excitatory
+                                NeuronType::Input => SynapseType::Excitatory, // Default to excitatory
+                                NeuronType::Output => SynapseType::Excitatory, // Default to excitatory
                             };
 
                             let synapse = Synapse {
@@ -2473,8 +2476,8 @@ impl<F: Float> SynapticConnections<F> {
                                     },
                                 };
 
-                                let delay = Duration::from_millis(rng.gen_range(1..20));
-                                self.connections.insert((pre_global..post_global), synapse);
+                                let delay = Duration::from_millis(rng.random_range(1..20));
+                                self.connections.insert((pre_global, post_global), synapse);
                                 self.delays.insert((pre_global, post_global), delay);
                             }
                         }
@@ -2516,8 +2519,8 @@ impl<F: Float> SynapticConnections<F> {
                                     },
                                 };
 
-                                let delay = Duration::from_millis(rng.gen_range(1..20));
-                                self.connections.insert((pre_global..post_global), synapse);
+                                let delay = Duration::from_millis(rng.random_range(1..20));
+                                self.connections.insert((pre_global, post_global), synapse);
                                 self.delays.insert((pre_global, post_global), delay);
                             }
                         }
@@ -2764,7 +2767,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningControll
 }
 
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> HomeostaticController<F> {
-    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         Ok(Self {
             target_rate: F::from(10.0).unwrap(), // 10 Hz target
             current_rate: F::zero(),
@@ -2929,7 +2932,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SpikePatternRecognizer<F
 }
 
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicMemory<F> {
-    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         let short_term_memory = ShortTermMemory {
             working_memory: VecDeque::new(),
             capacity: 20, // Working memory capacity
@@ -3106,7 +3109,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicMemory<F> {
 }
 
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicPerformanceMonitor<F> {
-    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         let mut metrics = HashMap::new();
         metrics.insert("accuracy".to_string(), F::zero());
         metrics.insert("efficiency".to_string(), F::zero());
@@ -3114,7 +3117,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicPerformanceM
 
         let benchmarks = VecDeque::new();
 
-        let efficiency = EfficiencyMetrics {
+        let _efficiency = EfficiencyMetrics {
             energy_per_operation: F::from(0.001).unwrap(),
             operations_per_second: F::from(1000.0).unwrap(),
             memory_efficiency: F::from(0.8).unwrap(),
@@ -3140,7 +3143,13 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicPerformanceM
         Ok(Self {
             metrics,
             benchmarks,
-            efficiency_config: monitoring_config,
+            efficiency: EfficiencyMetrics {
+                energy_per_operation: F::zero(),
+                operations_per_second: F::zero(),
+                memory_efficiency: F::zero(),
+                spike_efficiency: F::zero(),
+            },
+            config: monitoring_config,
         })
     }
 
@@ -3750,7 +3759,7 @@ impl<F: Float + Send + Sync + std::iter::Sum> ShortTermMemoryWithChunking<F> {
     /// Create new short-term memory with chunking
     pub fn new(max_chunk_size: usize, max_chunks: usize, similaritythreshold: F) -> Self {
         Self {
-            _chunks: HashMap::new(),
+            chunks: HashMap::new(),
             access_counts: HashMap::new(),
             max_chunk_size,
             max_chunks,
@@ -4188,7 +4197,7 @@ pub struct HigherOrderThoughtSystem<F: Float> {
 // Complete implementations for Advanced mode neuromorphic computing
 
 impl<F: Float> MetaLearningSystem<F> {
-    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         Ok(Self {
             meta_learner: MetaLearnerNetwork::new()?,
             task_distribution: TaskDistributionModel::new()?,
@@ -4211,7 +4220,7 @@ impl<F: Float> MetaLearnerNetwork<F> {
 }
 
 impl<F: Float> RealtimeAdaptationEngine<F> {
-    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         Ok(Self {
             online_learners: Vec::new(),
             continual_learning: ContinualLearningSystem::new()?,
@@ -4223,7 +4232,7 @@ impl<F: Float> RealtimeAdaptationEngine<F> {
 }
 
 impl<F: Float + Send + Sync + ndarray::ScalarOperand> AdvancedMemoryArchitecture<F> {
-    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         Ok(Self {
             hierarchical_memory: HierarchicalMemorySystem::new()?,
             associative_memory: AssociativeMemoryNetwork::new()?,
@@ -4236,7 +4245,7 @@ impl<F: Float + Send + Sync + ndarray::ScalarOperand> AdvancedMemoryArchitecture
 }
 
 impl<F: Float> ConsciousnessSimulator<F> {
-    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         Ok(Self {
             global_workspace: GlobalWorkspaceTheory::new()?,
             integrated_information: IntegratedInformationTheory::new()?,

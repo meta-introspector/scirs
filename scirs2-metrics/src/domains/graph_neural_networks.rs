@@ -1232,7 +1232,7 @@ impl GraphNeuralNetworkMetrics {
         // Calculate basic classification metrics
         let accuracy = crate::classification::accuracy_score(y_true, y_pred)?;
         // Calculate precision, recall, and F1 score manually since precision_recall_fscore_support doesn't exist
-        let (_precision_recall, f1_score) = self.calculate_precision_recall_f1(y_true, y_pred)?;
+        let (_precision, _recall, f1_score) = self.calculate_precision_recall_f1(y_true, y_pred)?;
 
         let macro_f1 = f1_score.iter().sum::<f64>() / f1_score.len() as f64;
         let micro_f1 = self.node_metrics.calculate_micro_f1(y_true, y_pred)?;
@@ -2494,7 +2494,7 @@ impl MolecularGraphMetrics {
         validity_checks.push(("admet", admet_score, 0.10)); // 10% weight
 
         // Calculate weighted average
-        let total_weight: f64 = validity_checks.iter().map(|(__, w)| w).sum();
+        let total_weight: f64 = validity_checks.iter().map(|(_, _, w)| w).sum();
         let weighted_sum: f64 = validity_checks
             .iter()
             .map(|(_, score, weight)| score * weight)

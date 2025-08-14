@@ -118,5 +118,5 @@ where
     D: ndarray::Dimension,
 {
     let sum = arr.iter().fold(F::zero(), |acc, &x| acc + x);
-    sum / num_traits::NumCast::from(_arr.len()).unwrap()
+    sum / num_traits::NumCast::from(arr.len()).unwrap()
 }

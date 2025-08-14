@@ -138,7 +138,7 @@ where
     P: AsRef<Path>,
     A: for<'de> Deserialize<'de> + Clone,
 {
-    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
     let serialized: SerializedArray<A> = match format {
@@ -366,7 +366,7 @@ where
     P: AsRef<Path>,
     T: Serialize,
 {
-    let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
     match format {
@@ -424,7 +424,7 @@ where
     P: AsRef<Path>,
     T: for<'de> Deserialize<'de>,
 {
-    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
     match format {
@@ -632,7 +632,7 @@ pub struct SparseMatrixCSC<A> {
 impl<A: Clone> SparseMatrix<A> {
     /// Create a new sparse matrix from COO data
     pub fn from_coo(coo: SparseMatrixCOO<A>) -> Self {
-        let shape = (_coo.rows, coo.cols);
+        let shape = (coo.rows, coo.cols);
         Self {
             shape,
             format: SparseFormat::COO,
@@ -646,9 +646,9 @@ impl<A: Clone> SparseMatrix<A> {
     /// Create a new sparse matrix with specified dimensions
     pub fn new(rows: usize, cols: usize) -> Self {
         Self {
-            shape: (_rows, cols),
+            shape: (rows, cols),
             format: SparseFormat::COO,
-            coo_data: SparseMatrixCOO::new(_rows, cols),
+            coo_data: SparseMatrixCOO::new(rows, cols),
             csr_data: None,
             csc_data: None,
             metadata: HashMap::new(),
@@ -886,7 +886,7 @@ impl<A: Clone> SparseMatrixCSR<A> {
         Self {
             rows: rows,
             cols,
-            row_ptrs: vec![0; _rows + 1],
+            row_ptrs: vec![0; rows + 1],
             col_indices: Vec::new(),
             values: Vec::new(),
             metadata: HashMap::new(),
@@ -982,14 +982,14 @@ where
 /// Convert Matrix Market format to enhanced sparse matrix
 #[allow(dead_code)]
 pub fn from_matrix_market<A>(
-    _mm_matrix: &crate::matrix_market::MMSparseMatrix<A>,
+    mm_matrix: &crate::matrix_market::MMSparseMatrix<A>,
 ) -> SparseMatrix<A>
 where
     A: Clone,
 {
-    let mut coo = SparseMatrixCOO::new(_mm_matrix.rows, mm_matrix.cols);
+    let mut coo = SparseMatrixCOO::new(mm_matrix.rows, mm_matrix.cols);
 
-    for entry in &_mm_matrix.entries {
+    for entry in &mm_matrix.entries {
         coo.push(entry.row, entry.col, entry.value.clone());
     }
 
@@ -1027,12 +1027,12 @@ where
         comments: vec!["Converted from enhanced _sparse matrix".to_string()],
     };
 
-    let entries = _sparse
+    let entries = sparse
         .coo_data
         .row_indices
         .iter()
-        .zip(_sparse.coo_data.col_indices.iter())
-        .zip(_sparse.coo_data.values.iter())
+        .zip(sparse.coo_data.col_indices.iter())
+        .zip(sparse.coo_data.values.iter())
         .map(|((&row, &col), value)| crate::matrix_market::SparseEntry {
             row,
             col,
@@ -1137,13 +1137,13 @@ pub mod sparse_ops {
     where
         A: Clone,
     {
-        let mut result = SparseMatrixCOO::new(_matrix.cols, matrix.rows);
+        let mut result = SparseMatrixCOO::new(matrix.cols, matrix.rows);
 
-        for ((row, col), value) in _matrix
+        for ((row, col), value) in matrix
             .row_indices
             .iter()
-            .zip(_matrix.col_indices.iter())
-            .zip(_matrix.values.iter())
+            .zip(matrix.col_indices.iter())
+            .zip(matrix.values.iter())
         {
             result.push(*col, *row, value.clone());
         }
@@ -1162,7 +1162,7 @@ where
     A: Serialize + Clone,
     S: ndarray::Data<Elem = A>,
 {
-    serialize_array::<P, A, S>(_path, array, SerializationFormat::JSON)
+    serialize_array::<P, A, S>(path, array, SerializationFormat::JSON)
 }
 
 /// Convenience function to read an array from JSON format
@@ -1172,7 +1172,7 @@ where
     P: AsRef<Path>,
     A: for<'de> Deserialize<'de> + Clone,
 {
-    deserialize_array(_path, SerializationFormat::JSON)
+    deserialize_array(path, SerializationFormat::JSON)
 }
 
 /// Convenience function to write an array to binary format
@@ -1183,7 +1183,7 @@ where
     A: Serialize + Clone,
     S: ndarray::Data<Elem = A>,
 {
-    serialize_array::<P, A, S>(_path, array, SerializationFormat::Binary)
+    serialize_array::<P, A, S>(path, array, SerializationFormat::Binary)
 }
 
 /// Convenience function to read an array from binary format
@@ -1193,7 +1193,7 @@ where
     P: AsRef<Path>,
     A: for<'de> Deserialize<'de> + Clone,
 {
-    deserialize_array(_path, SerializationFormat::Binary)
+    deserialize_array(path, SerializationFormat::Binary)
 }
 
 /// Convenience function to write an array to MessagePack format
@@ -1204,7 +1204,7 @@ where
     A: Serialize + Clone,
     S: ndarray::Data<Elem = A>,
 {
-    serialize_array::<P, A, S>(_path, array, SerializationFormat::MessagePack)
+    serialize_array::<P, A, S>(path, array, SerializationFormat::MessagePack)
 }
 
 /// Convenience function to read an array from MessagePack format
@@ -1214,7 +1214,7 @@ where
     P: AsRef<Path>,
     A: for<'de> Deserialize<'de> + Clone,
 {
-    deserialize_array(_path, SerializationFormat::MessagePack)
+    deserialize_array(path, SerializationFormat::MessagePack)
 }
 
 /// Zero-copy serialization of contiguous arrays
@@ -1317,7 +1317,7 @@ where
 {
     use std::io::Read;
 
-    let mut file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let mut file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
 
     // Read metadata size hint (first 8 bytes)
     let mut size_buf = [0u8; 8];

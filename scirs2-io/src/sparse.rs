@@ -111,10 +111,10 @@ where
     /// Create a new empty sparse matrix
     pub fn new(rows: usize, cols: usize) -> Self {
         Self {
-            shape: (_rows, cols),
+            shape: (rows, cols),
             nnz: 0,
             format: SparseFormat::COO,
-            coo: SparseMatrixCOO::new(_rows, cols),
+            coo: SparseMatrixCOO::new(rows, cols),
             csr: None,
             csc: None,
             metadata: HashMap::new(),
@@ -125,7 +125,7 @@ where
     pub fn from_coo(coo: SparseMatrixCOO<T>) -> Self {
         let nnz = coo.values.len();
         Self {
-            shape: (_coo.rows, coo.cols),
+            shape: (coo.rows, coo.cols),
             nnz,
             format: SparseFormat::COO,
             coo: coo,
@@ -482,7 +482,7 @@ where
 impl SparseMatrix<f64> {
     /// Load a sparse matrix from a Matrix Market file
     pub fn load_matrix_market<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let mm_matrix = crate::matrix_market::read_sparse_matrix(_path)?;
+        let mm_matrix = crate::matrix_market::read_sparse_matrix(path)?;
         Ok(Self::from_matrix_market(&mm_matrix))
     }
 

@@ -22,16 +22,13 @@ pub struct Dual {
 impl Dual {
     /// Create a new dual number
     pub fn new(value: f64, derivative: f64) -> Self {
-        Self {
-            value: value,
-            derivative,
-        }
+        Self { value, derivative }
     }
 
     /// Create a dual number representing a constant (derivative = 0)
     pub fn constant(value: f64) -> Self {
         Self {
-            value: value,
+            value,
             derivative: 0.0,
         }
     }
@@ -39,7 +36,7 @@ impl Dual {
     /// Create a dual number representing a variable (derivative = 1)
     pub fn variable(value: f64) -> Self {
         Self {
-            value: value,
+            value,
             derivative: 1.0,
         }
     }
@@ -335,7 +332,7 @@ impl Neg for Dual {
 // Conversion traits
 impl From<f64> for Dual {
     fn from(value: f64) -> Self {
-        Self::constant(_value)
+        Self::constant(value)
     }
 }
 
@@ -386,15 +383,15 @@ impl DualNumber for Dual {
     }
 
     fn new(value: f64, derivative: f64) -> Self {
-        Self::new(_value, derivative)
+        Self::new(value, derivative)
     }
 
     fn constant(value: f64) -> Self {
-        Self::constant(_value)
+        Self::constant(value)
     }
 
     fn variable(value: f64) -> Self {
-        Self::variable(_value)
+        Self::variable(value)
     }
 }
 
@@ -410,28 +407,22 @@ pub struct MultiDual {
 impl MultiDual {
     /// Create a new multi-dimensional dual number
     pub fn new(value: f64, derivatives: Array1<f64>) -> Self {
-        Self {
-            value: value,
-            derivatives,
-        }
+        Self { value, derivatives }
     }
 
     /// Create a constant multi-dual (all derivatives = 0)
-    pub fn constant(_value: f64, nvars: usize) -> Self {
+    pub fn constant(value: f64, nvars: usize) -> Self {
         Self {
-            value: value,
-            derivatives: Array1::zeros(n_vars),
+            value,
+            derivatives: Array1::zeros(nvars),
         }
     }
 
     /// Create a variable multi-dual (one derivative = 1, others = 0)
-    pub fn variable(_value: f64, var_index: usize, nvars: usize) -> Self {
-        let mut derivatives = Array1::zeros(n_vars);
+    pub fn variable(value: f64, var_index: usize, nvars: usize) -> Self {
+        let mut derivatives = Array1::zeros(nvars);
         derivatives[var_index] = 1.0;
-        Self {
-            value: value,
-            derivatives,
-        }
+        Self { value, derivatives }
     }
 
     /// Get the function value

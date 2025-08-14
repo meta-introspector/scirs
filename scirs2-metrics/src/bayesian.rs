@@ -834,7 +834,7 @@ impl BayesianModelComparison {
             // Weight for this iteration
             let log_width = self.log_sum_exp(&[log_x, new_log_x]) - (2.0_f64).ln(); // Average of current and next
 
-            log_weightspush(log_width);
+            log_weights.push(log_width);
             log_likes.push(min_log_like);
             log_prior_volumes.push(log_x);
 
@@ -852,7 +852,7 @@ impl BayesianModelComparison {
         // Add final contribution from remaining _live points
         let final_log_x = log_x - (nlive as f64).ln();
         for (_, log_like) in &live_points {
-            log_weightspush(final_log_x);
+            log_weights.push(final_log_x);
             log_likes.push(*log_like);
             log_prior_volumes.push(final_log_x);
         }
@@ -886,7 +886,7 @@ impl BayesianModelComparison {
         log_likes: &[f64],
         log_prior_volumes: &[f64],
     ) -> Result<(f64, f64)> {
-        if log_weightslen() != log_likes.len() || log_weightsis_empty() {
+        if log_weights.len() != log_likes.len() || log_weights.is_empty() {
             return Err(MetricsError::InvalidInput(
                 "Mismatched or empty arrays".to_string(),
             ));
@@ -1103,7 +1103,7 @@ impl BayesianInformationCriteria {
             lppd += log_mean_exp;
 
             // Calculate variance of log-likelihood for this observation
-            let mean_ll = obs_likelihoods.mean().unwrap_or(0.0);
+            let mean_ll = obs_likelihoods.mean();
             let var_ll: f64 = obs_likelihoods
                 .iter()
                 .map(|&x| (x - mean_ll).powi(2))
@@ -1167,14 +1167,14 @@ impl BayesianInformationCriteria {
 
     /// Calculate Pareto Smoothed Importance Sampling weights (simplified)
     fn calculate_psis_weights(&self, logweights: &Array1<f64>) -> Result<Array1<f64>> {
-        let n = log_weightslen();
+        let n = logweights.len();
         if n == 0 {
             return Ok(Array1::zeros(0));
         }
 
         // Subtract maximum for numerical stability
-        let max_weight = log_weightsiter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let weights: Array1<f64> = log_weightsmapv(|x| (x - max_weight).exp());
+        let max_weight = logweights.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let weights: Array1<f64> = logweights.mapv(|x| (x - max_weight).exp());
 
         // Simple smoothing (in practice, would use Pareto tail fitting)
         let sum_weights = weights.sum();
@@ -1267,8 +1267,8 @@ impl PosteriorPredictiveCheck {
         }
 
         let predicted_statistics = Array1::from_vec(predicted_statistics);
-        let predicted_statistic_mean = predicted_statistics.mean().unwrap_or(0.0);
         let predicted_statistic_std = self.calculate_std(&predicted_statistics)?;
+        let predicted_statistic_mean = predicted_statistics.clone().mean();
 
         // Calculate Bayesian p-value
         let count_extreme = predicted_statistics
@@ -1581,7 +1581,7 @@ impl BayesianModelAveraging {
             .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
         let exp_weights: Array1<f64> = log_marginal_likelihoods.mapv(|x| (x - max_log_ml).exp());
-        let sum_weights = exp_weightssum();
+        let sum_weights = exp_weights.sum();
 
         if sum_weights > 1e-10 {
             Ok(exp_weights / sum_weights)
@@ -1603,7 +1603,7 @@ impl BayesianModelAveraging {
 
         let delta_ic: Array1<f64> = information_criteria.mapv(|x| x - min_ic);
         let exp_weights: Array1<f64> = delta_ic.mapv(|x| (-0.5 * x).exp());
-        let sum_weights = exp_weightssum();
+        let sum_weights = exp_weights.sum();
 
         if sum_weights > 1e-10 {
             Ok(exp_weights / sum_weights)
@@ -1714,7 +1714,7 @@ mod tests {
             .with_weighting_method(ModelWeightingMethod::InformationCriteria);
 
         // 3 models, 5 observations
-        let predictions = Array2::fromshape_vec(
+        let predictions = Array2::from_shape_vec(
             (3, 5),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, // Model 1
@@ -1729,8 +1729,8 @@ mod tests {
         let result = bma.average_models(&predictions, &modelscores).unwrap();
 
         assert_eq!(result.averaged_prediction.len(), 5);
-        assert_eq!(result.model_weightslen(), 3);
-        assert!((result.model_weightssum() - 1.0).abs() < 1e-6);
+        assert_eq!(result.model_weights.len(), 3);
+        assert!((result.model_weights.sum() - 1.0).abs() < 1e-6);
         assert_eq!(result.model_uncertainty.len(), 5);
     }
 

@@ -43,7 +43,7 @@ use crate::error::{MetricsError, Result};
 /// let y_pred = array![0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0];
 ///
 /// // Protected group memberships (gender and age)
-/// let protected_groups = Array2::fromshape_vec((8, 2), vec![
+/// let protected_groups = Array2::from_shape_vec((8, 2), vec![
 ///     // Column 1: Gender (0=male, 1=female)
 ///     // Column 2: Age group (0=young, 1=old)
 ///     0.0, 0.0,
@@ -543,7 +543,7 @@ where
     let n_flips = (n_samples as f64 * flip_prob).round() as usize;
 
     // Convert to vector for easier manipulation
-    let mut perturbed = y_pred.to_owned().into_raw_vec();
+    let mut perturbed = y_pred.to_owned().into_raw_vec_and_offset().0;
 
     // Create indices to flip
     let mut indices: Vec<usize> = (0..n_samples).collect();
@@ -581,8 +581,8 @@ where
     let n_subsample = (n_samples as f64 * sample_fraction).round() as usize;
 
     // Convert to vectors
-    let y_pred_vec = y_pred.to_owned().into_raw_vec();
-    let protected_vec = protected_group.to_owned().into_raw_vec();
+    let y_pred_vec = y_pred.to_owned().into_raw_vec_and_offset().0;
+    let protected_vec = protected_group.to_owned().into_raw_vec_and_offset().0;
 
     // Create sample of indices
     let mut indices: Vec<usize> = (0..n_samples).collect();
@@ -643,7 +643,7 @@ where
     let n_samples = y_pred.len();
 
     // Get the values from the array
-    let y_pred_vec = y_pred.to_owned().into_raw_vec();
+    let y_pred_vec = y_pred.to_owned().into_raw_vec_and_offset().0;
     let mut perturbed = Vec::with_capacity(n_samples);
 
     for i in 0..n_samples {

@@ -217,7 +217,7 @@ where
         }
 
         // Evaluate gradient at alpha
-        let g_alpha = gradfun(&x_alpha.view());
+        let g_alpha = grad_fun(&x_alpha.view());
         let derphi_alpha = g_alpha.dot(direction);
         ngev += 1;
 
@@ -313,7 +313,7 @@ where
             f_hi = f_alpha;
         } else {
             // Trial point satisfies Armijo condition, check curvature
-            let g_alpha = gradfun(&x_alpha.view());
+            let g_alpha = grad_fun(&x_alpha.view());
             let derphi_alpha = g_alpha.dot(direction);
             ngev += 1;
 
@@ -344,7 +344,7 @@ where
     let alpha = if f_lo < f_hi { alpha_lo } else { alpha_hi };
     let x_alpha = x + alpha * direction;
     let f_alpha = fun(&x_alpha.view()).into();
-    let g_alpha = gradfun(&x_alpha.view());
+    let g_alpha = grad_fun(&x_alpha.view());
     nfev += 1;
     ngev += 1;
 

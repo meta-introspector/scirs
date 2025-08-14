@@ -372,7 +372,7 @@ fn tls_maximum_likelihood<S1, S2, S3, S4>(
     y_measured: &ArrayBase<S2, Ix1>,
     x_variance: Option<&ArrayBase<S3, Ix1>>,
     y_variance: Option<&ArrayBase<S4, Ix1>>,
-    _options: &TotalLeastSquaresOptions,
+    options: &TotalLeastSquaresOptions,
 ) -> OptimizeResult<TotalLeastSquaresResult>
 where
     S1: Data<Elem = f64>,
@@ -617,7 +617,7 @@ mod tests {
         let mut options_iter = TotalLeastSquaresOptions::default();
         options_iter.method = TLSMethod::Iterative;
 
-        let result_svd = total_least_squares::<___>(
+        let result_svd = total_least_squares::<ndarray::OwnedRepr<f64>, ndarray::OwnedRepr<f64>, ndarray::OwnedRepr<f64>, ndarray::OwnedRepr<f64>>(
             &x_measured,
             &y_measured,
             None::<&Array1<f64>>,
@@ -626,7 +626,7 @@ mod tests {
         )
         .unwrap();
 
-        let result_iter = total_least_squares::<___>(
+        let result_iter = total_least_squares::<ndarray::OwnedRepr<f64>, ndarray::OwnedRepr<f64>, ndarray::OwnedRepr<f64>, ndarray::OwnedRepr<f64>>(
             &x_measured,
             &y_measured,
             None::<&Array1<f64>>,

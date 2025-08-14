@@ -30,7 +30,7 @@ pub(crate) fn asshape<T: Float>(x: &NdArrayView<T>) -> Vec<usize> {
 pub(crate) fn expand_dims<T: Float>(x: NdArray<T>, axis: usize) -> NdArray<T> {
     let mut shape = x.shape().to_vec();
     shape.insert(axis, 1);
-    x.intoshape_with_order(shape).unwrap()
+    x.into_shape_with_order(shape).unwrap()
 }
 
 #[inline]
@@ -52,10 +52,10 @@ pub(crate) fn roll_axis<T: Float>(arg: &mut NdArray<T>, to: ndarray::Axis, from:
 
 #[inline]
 pub(crate) fn normalize_negative_axis(axis: isize, ndim: usize) -> usize {
-    if _axis < 0 {
+    if axis < 0 {
         (ndim as isize + axis) as usize
     } else {
-        _axis as usize
+        axis as usize
     }
 }
 
@@ -157,7 +157,7 @@ impl<A: Float> ArrayRng<A> {
 
     /// Creates a new random number generator with the specified seed.
     pub fn from_seed(seed: u64) -> Self {
-        let rng = rand::rngs::StdRng::seed_from_u64(_seed);
+        let rng = rand::rngs::StdRng::seed_from_u64(seed);
         Self {
             rng,
             _phantom: std::marker::PhantomData,
@@ -182,7 +182,7 @@ impl<A: Float> ArrayRng<A> {
         for _ in 0..len {
             data.push(A::from(self.rng.random::<f64>()).unwrap());
         }
-        NdArray::fromshape_vec(shape, data).unwrap()
+        NdArray::from_shape_vec(shape, data).unwrap()
     }
 
     /// Creates a normal random array in the specified shape.
@@ -195,7 +195,7 @@ impl<A: Float> ArrayRng<A> {
         for _ in 0..len {
             data.push(A::from(normal.sample(&mut self.rng)).unwrap());
         }
-        NdArray::fromshape_vec(ndarray::IxDyn(shape), data).unwrap()
+        NdArray::from_shape_vec(ndarray::IxDyn(shape), data).unwrap()
     }
 
     /// Creates a uniform random array in the specified shape.
@@ -208,7 +208,7 @@ impl<A: Float> ArrayRng<A> {
         for _ in 0..len {
             data.push(A::from(uniform.sample(&mut self.rng)).unwrap());
         }
-        NdArray::fromshape_vec(ndarray::IxDyn(shape), data).unwrap()
+        NdArray::from_shape_vec(ndarray::IxDyn(shape), data).unwrap()
     }
 
     /// Creates a random array with Glorot/Xavier uniform initialization.
@@ -277,7 +277,7 @@ impl<A: Float> ArrayRng<A> {
             };
             data.push(val);
         }
-        NdArray::fromshape_vec(ndarray::IxDyn(shape), data).unwrap()
+        NdArray::from_shape_vec(ndarray::IxDyn(shape), data).unwrap()
     }
 
     /// Creates a random array from the exponential distribution.
@@ -289,7 +289,7 @@ impl<A: Float> ArrayRng<A> {
         for _ in 0..len {
             data.push(A::from(exp.sample(&mut self.rng)).unwrap());
         }
-        NdArray::fromshape_vec(ndarray::IxDyn(shape), data).unwrap()
+        NdArray::from_shape_vec(ndarray::IxDyn(shape), data).unwrap()
     }
 
     /// Creates a random array from the log-normal distribution.
@@ -301,11 +301,11 @@ impl<A: Float> ArrayRng<A> {
         for _ in 0..len {
             data.push(A::from(log_normal.sample(&mut self.rng)).unwrap());
         }
-        NdArray::fromshape_vec(ndarray::IxDyn(shape), data).unwrap()
+        NdArray::from_shape_vec(ndarray::IxDyn(shape), data).unwrap()
     }
 
     /// Creates a random array from the gamma distribution.
-    pub fn gamma(&mut self, shape: &[usize], shapeparam: f64, scale: f64) -> NdArray<A> {
+    pub fn gamma(&mut self, shape: &[usize], shape_param: f64, scale: f64) -> NdArray<A> {
         use rand_distr::{Distribution, Gamma};
         let gamma = Gamma::new(shape_param, scale).unwrap();
         let len = shape.iter().product();
@@ -313,7 +313,7 @@ impl<A: Float> ArrayRng<A> {
         for _ in 0..len {
             data.push(A::from(gamma.sample(&mut self.rng)).unwrap());
         }
-        NdArray::fromshape_vec(ndarray::IxDyn(shape), data).unwrap()
+        NdArray::from_shape_vec(ndarray::IxDyn(shape), data).unwrap()
     }
 }
 
@@ -519,7 +519,7 @@ pub mod array_gen {
             data.push(start + step * T::from(i).unwrap());
         }
 
-        NdArray::<T>::fromshape_vec(ndarray::IxDyn(&[num]), data).unwrap()
+        NdArray::<T>::from_shape_vec(ndarray::IxDyn(&[num]), data).unwrap()
     }
 
     /// Creates an array of evenly spaced values within a given interval.
@@ -533,6 +533,6 @@ pub mod array_gen {
             current += step;
         }
 
-        NdArray::<T>::fromshape_vec(ndarray::IxDyn(&[data.len()]), data).unwrap()
+        NdArray::<T>::from_shape_vec(ndarray::IxDyn(&[data.len()]), data).unwrap()
     }
 }

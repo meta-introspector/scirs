@@ -205,7 +205,7 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
         const MAX_TRUST_RADIUS: f64 = 1e6;
         const MIN_TRUST_RADIUS: f64 = 1e-12;
 
-        if ratio >= VERY_SUCCESSFUL && step_norm >= 0.8 * self.trust_radius {
+        if ratio >= VERY_SUCCESSFUL && stepnorm >= 0.8 * self.trust_radius {
             // Very successful step near boundary: expand trust region
             self.trust_radius = (self.trust_radius * EXPANSION_FACTOR).min(MAX_TRUST_RADIUS);
         } else if ratio < SUCCESSFUL {
@@ -224,10 +224,10 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for StreamingTrustRegion<
         let start_time = std::time::Instant::now();
 
         // Evaluate current function value
-        let current_f = self.objective.evaluate(&self.parameters.view(), data_point);
+        let current_f = self.objective.evaluate(&self.parameters.view(), datapoint);
 
         // Compute gradient
-        let gradient = self.objective.gradient(&self.parameters.view(), data_point);
+        let gradient = self.objective.gradient(&self.parameters.view(), datapoint);
 
         // Accumulate gradient for better estimates (exponential smoothing)
         if self.gradient_count == 0 {
@@ -252,9 +252,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for StreamingTrustRegion<
 
         // Trial _point
         let trial_parameters = &self.parameters + &step;
-        let trial_f = self
-            .objective
-            .evaluate(&trial_parameters.view(), data_point);
+        let trial_f = self.objective.evaluate(&trial_parameters.view(), datapoint);
 
         // Compute actual reduction
         let actual_reduction = current_f - trial_f;

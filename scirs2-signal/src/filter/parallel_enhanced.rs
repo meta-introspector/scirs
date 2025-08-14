@@ -386,7 +386,7 @@ fn merge_overlapped_chunks(
 /// Calculate optimal padding length for edge effects
 #[allow(dead_code)]
 fn calculate_optimal_padlen(nb: usize, na: usize) -> usize {
-    3 * (_nb.max(na))
+    3 * (nb.max(na))
 }
 
 /// Apply edge padding to minimize boundary effects
@@ -424,7 +424,7 @@ fn estimate_memory_usage(_signallen: usize, nb: usize, na: usize) -> usize {
     // Rough estimate in MB
     let bytes_per_sample = 8; // f64
     let temp_arrays = 4; // Various temporary arrays
-    let total_samples = _signal_len * temp_arrays;
+    let total_samples = _signallen * temp_arrays;
     (total_samples * bytes_per_sample) / (1024 * 1024)
 }
 

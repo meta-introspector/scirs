@@ -30,7 +30,7 @@ where
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if !_graph.has_node(source) {
+    if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
             "Source node {source:?} not found"
         )));
@@ -41,7 +41,7 @@ where
     let mut result = Vec::new();
 
     // Find the starting node index
-    let start_idx = _graph
+    let start_idx = graph
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *source)
@@ -51,7 +51,7 @@ where
     visited.insert(start_idx);
 
     while let Some(current_idx) = queue.pop_front() {
-        result.push(_graph.inner()[current_idx].clone());
+        result.push(graph.inner()[current_idx].clone());
 
         // Visit all unvisited neighbors
         for neighbor_idx in graph.inner().neighbors(current_idx) {
@@ -151,7 +151,7 @@ where
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if !_graph.has_node(source) {
+    if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
             "Source node {source:?} not found"
         )));
@@ -162,7 +162,7 @@ where
     let mut result = Vec::new();
 
     // Find the starting node index
-    let start_idx = _graph
+    let start_idx = graph
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *source)
@@ -173,7 +173,7 @@ where
     while let Some(current_idx) = stack.pop() {
         if !visited.contains(&current_idx) {
             visited.insert(current_idx);
-            result.push(_graph.inner()[current_idx].clone());
+            result.push(graph.inner()[current_idx].clone());
 
             // Add all unvisited neighbors to the stack (in reverse order for consistent traversal)
             let mut neighbors: Vec<_> = graph.inner().neighbors(current_idx).collect();
@@ -199,7 +199,7 @@ where
 /// * `Result<Vec<N>>` - The nodes visited in DFS order
 #[allow(dead_code)]
 pub fn depth_first_search_digraph<N, E, Ix>(
-    _graph: &DiGraph<N, E, Ix>,
+    graph: &DiGraph<N, E, Ix>,
     source: &N,
 ) -> Result<Vec<N>>
 where
@@ -207,7 +207,7 @@ where
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if !_graph.has_node(source) {
+    if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
             "Source node {source:?} not found"
         )));
@@ -218,7 +218,7 @@ where
     let mut result = Vec::new();
 
     // Find the starting node index
-    let start_idx = _graph
+    let start_idx = graph
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *source)
@@ -229,10 +229,10 @@ where
     while let Some(current_idx) = stack.pop() {
         if !visited.contains(&current_idx) {
             visited.insert(current_idx);
-            result.push(_graph.inner()[current_idx].clone());
+            result.push(graph.inner()[current_idx].clone());
 
             // Add all unvisited neighbors to the stack (outgoing edges only for directed graph)
-            let mut neighbors: Vec<_> = _graph
+            let mut neighbors: Vec<_> = graph
                 .inner()
                 .neighbors_directed(current_idx, petgraph::Direction::Outgoing)
                 .collect();
@@ -700,7 +700,7 @@ where
     let mut backward_path = Vec::new();
     current = meeting_point;
     while current != goal_idx {
-        if let Some(&_parent) = backward_parent.get(&current) {
+        if let Some(&parent) = backward_parent.get(&current) {
             current = parent;
             backward_path.push(graph.inner()[current].clone());
         } else {
@@ -750,7 +750,7 @@ where
     let mut backward_path = Vec::new();
     current = meeting_point;
     while current != goal_idx {
-        if let Some(&_parent) = backward_parent.get(&current) {
+        if let Some(&parent) = backward_parent.get(&current) {
             current = parent;
             backward_path.push(graph.inner()[current].clone());
         } else {

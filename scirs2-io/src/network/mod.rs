@@ -289,7 +289,7 @@ pub async fn download_with_cache<P: AsRef<Path>>(
 /// Create a network client with cloud provider
 #[allow(dead_code)]
 pub fn create_cloud_client(provider: cloud::CloudProvider) -> NetworkClient {
-    NetworkClient::new().with_cloud_provider(_provider)
+    NetworkClient::new().with_cloud_provider(provider)
 }
 
 /// Batch download multiple files

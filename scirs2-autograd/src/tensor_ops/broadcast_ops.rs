@@ -177,8 +177,8 @@ fn analyze_broadcast_impl(
 
 #[allow(dead_code)]
 fn padshape_left(shape: &[usize], targetlen: usize) -> Vec<usize> {
-    let mut padded = vec![1; target_len];
-    let offset = target_len - shape.len();
+    let mut padded = vec![1; targetlen];
+    let offset = targetlen - shape.len();
     padded[offset..].copy_from_slice(shape);
     padded
 }
@@ -231,7 +231,8 @@ impl<F: Float> OptimizedBroadcastOp<F> {
         let info = analyze_broadcast(leftshape, rightshape)?;
         Ok(Self {
             operation,
-            info_phantom: std::marker::PhantomData,
+            info,
+            phantom: std::marker::PhantomData,
         })
     }
 }
@@ -347,27 +348,30 @@ fn apply_binary_op_sameshape<'a, F: Float>(
         BinaryOperation::Subtract => left - right,
         BinaryOperation::Multiply => left * right,
         BinaryOperation::Divide => left / right,
-        BinaryOperation::Power => left
-            .iter()
-            .zip(right.iter())
-            .map(|(&a, &b)| a.powf(b))
-            .collect::<Array<F>>()
-            .intoshape_with_order(left.shape())
-            .unwrap(),
-        BinaryOperation::Maximum => left
-            .iter()
-            .zip(right.iter())
-            .map(|(&a, &b)| a.max(b))
-            .collect::<Array<F>>()
-            .intoshape_with_order(left.shape())
-            .unwrap(),
-        BinaryOperation::Minimum => left
-            .iter()
-            .zip(right.iter())
-            .map(|(&a, &b)| a.min(b))
-            .collect::<Array<F>>()
-            .intoshape_with_order(left.shape())
-            .unwrap(),
+        BinaryOperation::Power => {
+            let vec: Vec<F> = left
+                .iter()
+                .zip(right.iter())
+                .map(|(&a, &b)| a.powf(b))
+                .collect();
+            Array::from_shape_vec(IxDyn(left.shape()), vec).unwrap()
+        }
+        BinaryOperation::Maximum => {
+            let vec: Vec<F> = left
+                .iter()
+                .zip(right.iter())
+                .map(|(&a, &b)| a.max(b))
+                .collect();
+            Array::from_shape_vec(IxDyn(left.shape()), vec).unwrap()
+        }
+        BinaryOperation::Minimum => {
+            let vec: Vec<F> = left
+                .iter()
+                .zip(right.iter())
+                .map(|(&a, &b)| a.min(b))
+                .collect();
+            Array::from_shape_vec(IxDyn(left.shape()), vec).unwrap()
+        }
     }
 }
 
@@ -398,16 +402,16 @@ fn apply_scalar_broadcast<'a, F: Float>(
     };
 
     let result = match (op, is_left_scalar) {
-        (BinaryOperation::Add) => array.mapv(|x| x + scalar_val),
+        (BinaryOperation::Add, _) => array.mapv(|x| x + scalar_val),
         (BinaryOperation::Subtract, true) => array.mapv(|x| scalar_val - x),
         (BinaryOperation::Subtract, false) => array.mapv(|x| x - scalar_val),
-        (BinaryOperation::Multiply) => array.mapv(|x| x * scalar_val),
+        (BinaryOperation::Multiply, _) => array.mapv(|x| x * scalar_val),
         (BinaryOperation::Divide, true) => array.mapv(|x| scalar_val / x),
         (BinaryOperation::Divide, false) => array.mapv(|x| x / scalar_val),
         (BinaryOperation::Power, true) => array.mapv(|x| scalar_val.powf(x)),
         (BinaryOperation::Power, false) => array.mapv(|x| x.powf(scalar_val)),
-        (BinaryOperation::Maximum) => array.mapv(|x| x.max(scalar_val)),
-        (BinaryOperation::Minimum) => array.mapv(|x| x.min(scalar_val)),
+        (BinaryOperation::Maximum, _) => array.mapv(|x| x.max(scalar_val)),
+        (BinaryOperation::Minimum, _) => array.mapv(|x| x.min(scalar_val)),
     };
 
     Ok(result)
@@ -478,13 +482,12 @@ fn apply_standard_broadcast<'a, F: Float>(
                 OpError::IncompatibleShape("Cannot broadcast for power operation".into())
             })?;
 
-            let result: Array<F, IxDyn> = broadcasted_left
+            let vec: Vec<F> = broadcasted_left
                 .iter()
                 .zip(broadcasted_right.iter())
                 .map(|(&a, &b)| a.powf(b))
-                .collect::<Array<F>>()
-                .intoshape_with_order(broadcasted_left.shape())
-                .unwrap();
+                .collect();
+            let result = Array::from_shape_vec(IxDyn(broadcasted_left.shape()), vec).unwrap();
             Ok(result)
         }
         BinaryOperation::Maximum => {
@@ -495,13 +498,12 @@ fn apply_standard_broadcast<'a, F: Float>(
                 OpError::IncompatibleShape("Cannot broadcast for max operation".into())
             })?;
 
-            let result: Array<F, IxDyn> = broadcasted_left
+            let vec: Vec<F> = broadcasted_left
                 .iter()
                 .zip(broadcasted_right.iter())
                 .map(|(&a, &b)| a.max(b))
-                .collect::<Array<F>>()
-                .intoshape_with_order(broadcasted_left.shape())
-                .unwrap();
+                .collect();
+            let result = Array::from_shape_vec(IxDyn(broadcasted_left.shape()), vec).unwrap();
             Ok(result)
         }
         BinaryOperation::Minimum => {
@@ -512,13 +514,12 @@ fn apply_standard_broadcast<'a, F: Float>(
                 OpError::IncompatibleShape("Cannot broadcast for min operation".into())
             })?;
 
-            let result: Array<F, IxDyn> = broadcasted_left
+            let vec: Vec<F> = broadcasted_left
                 .iter()
                 .zip(broadcasted_right.iter())
                 .map(|(&a, &b)| a.min(b))
-                .collect::<Array<F>>()
-                .intoshape_with_order(broadcasted_left.shape())
-                .unwrap();
+                .collect();
+            let result = Array::from_shape_vec(IxDyn(broadcasted_left.shape()), vec).unwrap();
             Ok(result)
         }
     }
@@ -530,7 +531,7 @@ fn reduce_for_broadcast_grad<'g, F: Float>(
     grad: &Tensor<'g, F>,
     reduce_axes: &[usize],
     original_input: &Tensor<'g, F>,
-    _graph: &'g crate::Graph<F>,
+    graph: &'g crate::Graph<F>,
 ) -> Tensor<'g, F> {
     let mut result = *grad;
 
@@ -551,31 +552,31 @@ fn reduce_for_broadcast_grad<'g, F: Float>(
 /// Add tensors with optimized broadcasting
 #[allow(dead_code)]
 pub fn broadcast_add<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
-    broadcast_binary_op(_left, right, BinaryOperation::Add)
+    broadcast_binary_op(left, right, BinaryOperation::Add)
 }
 
 /// Subtract tensors with optimized broadcasting
 #[allow(dead_code)]
 pub fn broadcast_sub<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
-    broadcast_binary_op(_left, right, BinaryOperation::Subtract)
+    broadcast_binary_op(left, right, BinaryOperation::Subtract)
 }
 
 /// Multiply tensors with optimized broadcasting
 #[allow(dead_code)]
 pub fn broadcast_mul<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
-    broadcast_binary_op(_left, right, BinaryOperation::Multiply)
+    broadcast_binary_op(left, right, BinaryOperation::Multiply)
 }
 
 /// Divide tensors with optimized broadcasting
 #[allow(dead_code)]
 pub fn broadcast_div<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
-    broadcast_binary_op(_left, right, BinaryOperation::Divide)
+    broadcast_binary_op(left, right, BinaryOperation::Divide)
 }
 
 /// Power tensors with optimized broadcasting
 #[allow(dead_code)]
 pub fn broadcast_pow<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
-    broadcast_binary_op(_left, right, BinaryOperation::Power)
+    broadcast_binary_op(left, right, BinaryOperation::Power)
 }
 
 /// Element-wise maximum with optimized broadcasting
@@ -713,7 +714,7 @@ mod tests {
     #[test]
     fn test_cache_operations() {
         clear_broadcast_cache();
-        let (size_) = get_broadcast_cache_stats();
+        let (size, _) = get_broadcast_cache_stats();
         assert_eq!(size, 0);
     }
 }

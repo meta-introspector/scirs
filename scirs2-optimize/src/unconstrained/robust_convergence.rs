@@ -133,35 +133,35 @@ struct PlateauState {
 
 impl RobustConvergenceState {
     /// Create new robust convergence state
-    pub fn new(_options: RobustConvergenceOptions, problemdim: usize) -> Self {
+    pub fn new(options: RobustConvergenceOptions, problem_dim: usize) -> Self {
         let adaptive_state =
-            AdaptiveToleranceState::new(_options.adaptive_tolerance.clone(), problem_dim);
+            AdaptiveToleranceState::new(options.adaptive_tolerance.clone(), problem_dim);
 
         Self {
             adaptive_state,
             early_stop_state: EarlyStoppingState {
                 best_value: f64::INFINITY,
                 iterations_without_improvement: 0,
-                improvement_history: VecDeque::with_capacity(_options.early_stopping_patience),
+                improvement_history: VecDeque::with_capacity(options.early_stopping_patience),
             },
             progress_state: ProgressState {
-                recent_values: VecDeque::with_capacity(_options.progress_window),
-                recent_gradients: VecDeque::with_capacity(_options.progress_window),
+                recent_values: VecDeque::with_capacity(options.progress_window),
+                recent_gradients: VecDeque::with_capacity(options.progress_window),
                 progress_rate: 0.0,
             },
             start_time: Some(std::time::Instant::now()),
             noise_state: NoiseRobustState {
-                function_window: VecDeque::with_capacity(_options.noise_window),
-                gradient_window: VecDeque::with_capacity(_options.noise_window),
-                step_window: VecDeque::with_capacity(_options.noise_window),
+                function_window: VecDeque::with_capacity(options.noise_window),
+                gradient_window: VecDeque::with_capacity(options.noise_window),
+                step_window: VecDeque::with_capacity(options.noise_window),
                 stable_convergence_count: 0,
             },
             plateau_state: PlateauState {
-                plateau_window: VecDeque::with_capacity(_options.plateau_window),
+                plateau_window: VecDeque::with_capacity(options.plateau_window),
                 plateau_detected: false,
                 plateau_start_iteration: None,
             },
-            options: options,
+            options,
         }
     }
 
@@ -230,7 +230,7 @@ impl RobustConvergenceState {
     }
 
     /// Update progress tracking
-    fn update_progress(&mut self, function_value: f64, gradientnorm: f64) {
+    fn update_progress(&mut self, function_value: f64, gradient_norm: f64) {
         // Add to recent values
         if self.progress_state.recent_values.len() >= self.options.progress_window {
             self.progress_state.recent_values.pop_front();
@@ -267,7 +267,7 @@ impl RobustConvergenceState {
     }
 
     /// Update noise-robust convergence state
-    fn update_noise_robust(&mut self, function_value: f64, gradient_norm: f64, stepnorm: f64) {
+    fn update_noise_robust(&mut self, function_value: f64, gradient_norm: f64, step_norm: f64) {
         // Add to windows
         if self.noise_state.function_window.len() >= self.options.noise_window {
             self.noise_state.function_window.pop_front();
@@ -286,7 +286,7 @@ impl RobustConvergenceState {
     }
 
     /// Update plateau detection
-    fn update_plateau_detection(&mut self, functionvalue: f64, iteration: usize) {
+    fn update_plateau_detection(&mut self, function_value: f64, iteration: usize) {
         if self.plateau_state.plateau_window.len() >= self.options.plateau_window {
             self.plateau_state.plateau_window.pop_front();
         }

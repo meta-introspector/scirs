@@ -20,7 +20,7 @@ use crate::result::OptimizeResults;
 use statrs::statistics::Statistics;
 
 /// Configuration for distributed GPU optimization
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct DistributedGpuConfig {
     /// Distributed computing configuration
     pub distributed_config: DistributedConfig,
@@ -80,7 +80,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     /// Create a new distributed GPU optimizer
     pub fn new(mpi: M, config: DistributedGpuConfig) -> ScirsResult<Self> {
         let distributed_context =
-            DistributedOptimizationContext::new(_mpi, config.distributed_config.clone());
+            DistributedOptimizationContext::new(mpi, config.distributed_config.clone());
         let gpu_context = GpuOptimizationContext::new(config.gpu_config.clone())?;
         let acceleration_manager = AccelerationManager::new(config.acceleration_config.clone());
 
@@ -406,7 +406,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
         // For simplicity, we'll use a basic approach
         // In a full implementation, this would use MPI all-reduce operations
-        // to find the global _best across all processes
+        // to find the global best across all processes
 
         // Placeholder implementation
         Ok(Some((local_best.clone(), local_best_fitness)))
@@ -440,7 +440,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Direct GPU-to-GPU migration using GPUDirect
     fn gpu_direct_migration(
-        &mut self_population: &mut Array2<f64>,
+        &mut self,
+        population: &mut Array2<f64>,
         _fitness: &mut Array1<f64>,
     ) -> ScirsResult<()> {
         // Placeholder for GPUDirect implementation
@@ -450,7 +451,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Staged migration through CPU memory
     fn staged_migration(
-        &mut self_population: &mut Array2<f64>,
+        &mut self,
+        population: &mut Array2<f64>,
         _fitness: &mut Array1<f64>,
     ) -> ScirsResult<()> {
         // Download from GPU, perform MPI communication, upload back to GPU
@@ -460,7 +462,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Asynchronous migration with computation overlap
     fn async_migration(
-        &mut self_population: &mut Array2<f64>,
+        &mut self,
+        population: &mut Array2<f64>,
         _fitness: &mut Array1<f64>,
     ) -> ScirsResult<()> {
         // Use asynchronous MPI operations to overlap communication with computation
@@ -469,7 +472,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Hierarchical migration (intra-node GPU, inter-node MPI)
     fn hierarchical_migration(
-        &mut self_population: &mut Array2<f64>,
+        &mut self,
+        population: &mut Array2<f64>,
         _fitness: &mut Array1<f64>,
     ) -> ScirsResult<()> {
         // First migrate within node between GPUs, then between nodes via MPI
@@ -482,7 +486,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
             return Ok(false);
         }
 
-        let mean = fitness.mean().unwrap_or(0.0);
+        let mean = fitness.view().mean();
         let variance =
             fitness.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / fitness.len() as f64;
 
@@ -493,7 +497,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     }
 
     /// Generate random indices for differential evolution mutation
-    fn generate_random_indices(&self, popsize: usize) -> ScirsResult<Array2<i32>> {
+    fn generate_random_indices(&self, pop_size: usize) -> ScirsResult<Array2<i32>> {
         use rand::Rng;
         let mut rng = rand::rng();
         let mut indices = Array2::zeros((pop_size, 3));
@@ -506,7 +510,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
                 loop {
                     let idx = rng.gen_range(0..pop_size);
                     if !selected.contains(&idx) {
-                        indices[[i..j]] = idx as i32;
+                        indices[[i, j]] = idx as i32;
                         selected.insert(idx);
                         break;
                     }
@@ -531,7 +535,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     }
 
     /// Generate j_rand values for crossover
-    fn generate_j_rand(&self, popsize: usize, dims: usize) -> ScirsResult<Array1<i32>> {
+    fn generate_j_rand(&self, pop_size: usize, dims: usize) -> ScirsResult<Array1<i32>> {
         use rand::Rng;
         let mut rng = rand::rng();
         let mut j_rand = Array1::zeros(pop_size);

@@ -139,10 +139,10 @@ impl NaturalNeighborInterpolator {
         }
 
         // Create Delaunay triangulation
-        let delaunay = Delaunay::new(&n_points.to_owned())?;
+        let delaunay = Delaunay::new(&points.to_owned())?;
 
         // Create Voronoi diagram
-        let voronoi = Voronoi::new(n_points, false)?;
+        let voronoi = Voronoi::new(points, false)?;
 
         Ok(Self {
             points: points.to_owned(),

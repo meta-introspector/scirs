@@ -7,7 +7,7 @@ fn main() {
     println!("Testing matrix inverse operation");
 
     // Create and evaluate a 2x2 matrix
-    ag::run::<f64_>(|ctx| {
+    ag::run(|ctx| {
         // Create a 2x2 matrix with specific values
         println!("Creating a 2x2 matrix");
         let matrix_data = ndarray::arr2(&[[2.0, 0.0], [0.0, 2.0]]);

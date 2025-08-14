@@ -33,7 +33,7 @@ pub struct GpuMemoryPool {
 
 impl GpuMemoryPool {
     /// Create a new GPU memory pool
-    pub fn new(_context: Arc<GpuContext>, memorylimit: Option<usize>) -> ScirsResult<Self> {
+    pub fn new(context: Arc<GpuContext>, memory_limit: Option<usize>) -> ScirsResult<Self> {
         Ok(Self {
             context,
             pools: Arc::new(Mutex::new(HashMap::new())),
@@ -73,8 +73,12 @@ impl GpuMemoryPool {
         if let Some(limit) = self.memory_limit {
             let current = *self.current_usage.lock().unwrap();
             if current + size > limit {
+                // Drop the stats lock before garbage collection
+                drop(stats);
                 // Try to free some memory
                 self.garbage_collect()?;
+                // Reacquire the lock
+                stats = self.allocation_stats.lock().unwrap();
                 let current = *self.current_usage.lock().unwrap();
                 if current + size > limit {
                     return Err(ScirsError::MemoryError(
@@ -171,11 +175,20 @@ impl GpuMemoryPool {
 }
 
 /// A block of GPU memory
-#[derive(Debug)]
 pub struct GpuMemoryBlock {
     size: usize,
     ptr: *mut u8,
     gpu_buffer: Option<OptimGpuBuffer<u8>>,
+}
+
+impl std::fmt::Debug for GpuMemoryBlock {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GpuMemoryBlock")
+            .field("size", &self.size)
+            .field("ptr", &self.ptr)
+            .field("gpu_buffer", &self.gpu_buffer.is_some())
+            .finish()
+    }
 }
 
 unsafe impl Send for GpuMemoryBlock {}
@@ -196,12 +209,13 @@ impl GpuMemoryBlock {
     pub fn as_typed<T: scirs2_core::GpuDataType>(&self) -> ScirsResult<&OptimGpuBuffer<T>> {
         if let Some(ref buffer) = self.gpu_buffer {
             // Safe casting through scirs2-_core's type system
-            buffer
-                .cast_type::<T>()
-                .map_err(|e| ScirsError::ComputationError(format!("Type casting failed: {}", e)))
+            // Since cast_type doesn't exist, return an error for now
+            Err(ScirsError::ComputationError(
+                scirs2_core::error::ErrorContext::new("Type casting not supported".to_string())
+            ))
         } else {
             Err(ScirsError::InvalidInput(
-                "Memory block not available".to_string(),
+                scirs2_core::error::ErrorContext::new("Memory block not available".to_string()),
             ))
         }
     }
@@ -236,8 +250,8 @@ impl GpuWorkspace {
         // Need to allocate new block
         // For simplicity, we'll just return an error here
         // In a full implementation, this would allocate from the pool
-        Err(ScirsError::OutOfMemory(
-            "No suitable block available".to_string(),
+        Err(ScirsError::MemoryError(
+            scirs2_core::error::ErrorContext::new("No suitable block available".to_string()),
         ))
     }
 
@@ -260,8 +274,10 @@ impl GpuWorkspace {
         let buffer = self.get_buffer::<T>(total_elements)?;
 
         // Convert buffer to array using scirs2-_core's reshape functionality
-        OptimGpuArray::from_buffer(buffer, dimensions)
-            .map_err(|e| ScirsError::ComputationError(format!("Array creation failed: {}", e)))
+        // Since from_buffer doesn't exist, return an error for now
+        Err(ScirsError::ComputationError(
+            scirs2_core::error::ErrorContext::new("Array creation not supported".to_string())
+        ))
     }
 
     /// Get total workspace size
@@ -450,7 +466,7 @@ pub mod optimization {
         /// Create a new memory optimizer
         pub fn new(config: MemoryOptimizationConfig, pool: Arc<GpuMemoryPool>) -> Self {
             Self {
-                config: config,
+                config,
                 pool,
                 optimization_stats: OptimizationStats::new(),
             }
@@ -551,7 +567,7 @@ pub mod utils {
     }
 
     /// Estimate memory usage for a given problem
-    pub fn estimate_memory_usage(_problem_size: usize, batchsize: usize) -> usize {
+    pub fn estimate_memory_usage(_problem_size: usize, batch_size: usize) -> usize {
         // Rough estimation: input data + output data + temporary buffers
         let input_size = batch_size * _problem_size * 8; // f64
         let output_size = batch_size * 8; // f64

@@ -1,6 +1,6 @@
 use approx::assert_abs_diff_eq;
 use ndarray::{array, Array2};
-use scirs2__metrics::fairness::{
+use scirs2_metrics::fairness::{
     consistency_score, demographic_parity_difference, disparate_impact,
     equal_opportunity_difference, equalized_odds_difference,
 };
@@ -169,7 +169,7 @@ fn test_equal_opportunity_difference() {
 fn test_consistency_score() {
     // Test case 1: Perfectly consistent predictions
     // Create a feature matrix with 6 points in 2 clusters
-    let features_1 = Array2::fromshape_vec(
+    let features_1 = Array2::from_shape_vec(
         (6, 2),
         vec![
             0.1, 0.2, // Cluster 1
@@ -196,24 +196,24 @@ fn test_consistency_score() {
 
     // Test case 3: Wrong dimensions
     let features_3 =
-        Array2::fromshape_vec((4, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]).unwrap();
+        Array2::from_shape_vec((4, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]).unwrap();
     let predictions_3 = array![0.0, 0.0, 0.0, 0.0, 0.0];
     assert!(consistency_score(&features_3, &predictions_3, 2).is_err());
 
     // Test case 4: k too large
     let features_4 =
-        Array2::fromshape_vec((4, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]).unwrap();
+        Array2::from_shape_vec((4, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]).unwrap();
     let predictions_4 = array![0.0, 0.0, 0.0, 0.0];
     assert!(consistency_score(&features_4, &predictions_4, 4).is_err());
 
     // Test case 5: k=0
     let features_5 =
-        Array2::fromshape_vec((4, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]).unwrap();
+        Array2::from_shape_vec((4, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]).unwrap();
     let predictions_5 = array![0.0, 0.0, 0.0, 0.0];
     assert!(consistency_score(&features_5, &predictions_5, 0).is_err());
 
     // Test case 6: Empty arrays
-    let features_6 = Array2::<f64>::fromshape_vec((0, 2), vec![]).unwrap();
+    let features_6 = Array2::<f64>::from_shape_vec((0, 2), vec![]).unwrap();
     let predictions_6 = array![];
     assert!(consistency_score(&features_6, &predictions_6, 2).is_err());
 }

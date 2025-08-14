@@ -71,7 +71,7 @@ impl ByzantineFaultDetector {
             reputation_scores: HashMap::new(),
             suspicion_counters: HashMap::new(),
             deviation_history: HashMap::new(),
-            fault_threshold: fault_threshold,
+            fault_threshold: _faultthreshold,
             recovery_period: Duration::from_secs(300), // 5 minutes recovery
             last_detection_times: HashMap::new(),
         }
@@ -130,7 +130,7 @@ impl ByzantineFaultDetector {
     /// Check if a node is currently suspected of Byzantine behavior
     pub fn is_byzantine_suspected(&self, node_id: usize, currenttime: Instant) -> bool {
         if let Some(&last_detection) = self.last_detection_times.get(&node_id) {
-            if current_time.duration_since(last_detection) < self.recovery_period {
+            if currenttime.duration_since(last_detection) < self.recovery_period {
                 return true;
             }
         }
@@ -139,7 +139,7 @@ impl ByzantineFaultDetector {
 
     /// Get trust weight for a node based on reputation
     pub fn get_trust_weight(&self, nodeid: usize) -> f64 {
-        self.reputation_scores.get(&node_id).copied().unwrap_or(1.0)
+        self.reputation_scores.get(&nodeid).copied().unwrap_or(1.0)
     }
 }
 
@@ -169,7 +169,7 @@ impl ConsensusVotingState {
             proposals: HashMap::new(),
             votes: HashMap::new(),
             voting_weights: HashMap::new(),
-            consensus_threshold: consensus_threshold,
+            consensus_threshold: _consensusthreshold,
             round_timeout: Duration::from_millis(100),
             round_start: None,
         }
@@ -185,13 +185,13 @@ impl ConsensusVotingState {
 
     /// Add a parameter proposal
     pub fn add_proposal(&mut self, nodeid: usize, parameters: Array1<f64>) {
-        self.proposals.insert(node_id, parameters);
+        self.proposals.insert(nodeid, parameters);
     }
 
     /// Cast a vote for a proposal
     pub fn vote(&mut self, voter_id: usize, proposalid: usize, weight: f64) {
-        self.votingweights.insert(voter_id, weight);
-        self.votes.entry(proposal_id).or_default().push(voter_id);
+        self.voting_weights.insert(voter_id, weight);
+        self.votes.entry(proposalid).or_default().push(voter_id);
     }
 
     /// Check if consensus has been reached
@@ -202,7 +202,7 @@ impl ConsensusVotingState {
         for (&proposal_id, voters) in &self.votes {
             let total_weight: f64 = voters
                 .iter()
-                .map(|&voter| self.votingweights.get(&voter).copied().unwrap_or(1.0))
+                .map(|&voter| self.voting_weights.get(&voter).copied().unwrap_or(1.0))
                 .sum();
 
             if total_weight > best_weight && total_weight >= self.consensus_threshold {
@@ -244,9 +244,9 @@ pub struct NetworkTopology {
 impl NetworkTopology {
     pub fn new(_numnodes: usize) -> Self {
         Self {
-            adjacency_matrix: Array2::zeros((_num_nodes, num_nodes)),
-            delay_matrix: Array2::zeros((_num_nodes, num_nodes)),
-            bandwidth_matrix: Array2::from_elem((_num_nodes, num_nodes), 1.0),
+            adjacency_matrix: Array2::zeros((_numnodes, _numnodes)),
+            delay_matrix: Array2::zeros((_numnodes, _numnodes)),
+            bandwidth_matrix: Array2::from_elem((_numnodes, _numnodes), 1.0),
             active_connections: HashMap::new(),
             reliability_scores: HashMap::new(),
         }
@@ -274,7 +274,7 @@ impl NetworkTopology {
     /// Get neighbors of a node
     pub fn get_neighbors(&self, nodeid: usize) -> Vec<usize> {
         self.active_connections
-            .get(&node_id)
+            .get(&nodeid)
             .cloned()
             .unwrap_or_default()
     }
@@ -444,14 +444,14 @@ impl FederatedAveragingState {
     /// Add gradient from a peer node
     pub fn add_peer_gradient(&mut self, peer_id: usize, gradient: Array1<f64>, datacount: usize) {
         self.peer_gradients.insert(peer_id, gradient);
-        self.peer_data_counts.insert(peer_id, data_count);
+        self.peer_data_counts.insert(peer_id, datacount);
         self.last_updates.insert(peer_id, Instant::now());
 
         // Compute weight based on data _count (more data = higher weight)
         let total_data: usize = self.peer_data_counts.values().sum();
         if total_data > 0 {
-            let weight = data_count as f64 / total_data as f64;
-            self.peerweights.insert(peer_id, weight);
+            let weight = datacount as f64 / total_data as f64;
+            self.peer_weights.insert(peer_id, weight);
         }
     }
 
@@ -467,12 +467,12 @@ impl FederatedAveragingState {
         for (&peer_id, gradient) in &self.peer_gradients {
             // Check staleness
             if let Some(&last_update) = self.last_updates.get(&peer_id) {
-                if current_time.duration_since(last_update) > self.staleness_tolerance {
+                if currenttime.duration_since(last_update) > self.staleness_tolerance {
                     continue; // Skip stale gradients
                 }
             }
 
-            let weight = self.peerweights.get(&peer_id).copied().unwrap_or(1.0);
+            let weight = self.peer_weights.get(&peer_id).copied().unwrap_or(1.0);
 
             if let Some(ref mut sum) = weighted_sum {
                 *sum = &*sum + &(weight * gradient);
@@ -534,13 +534,13 @@ impl NetworkSynchronizationState {
 
     /// Update clock offset for a node
     pub fn update_clock_offset(&mut self, nodeid: usize, offset: Duration) {
-        self.clock_offsets.insert(node_id, offset);
+        self.clock_offsets.insert(nodeid, offset);
     }
 
     /// Get synchronized timestamp
     pub fn get_synchronized_time(&self, nodeid: usize) -> Instant {
         let now = Instant::now();
-        if let Some(&offset) = self.clock_offsets.get(&node_id) {
+        if let Some(&offset) = self.clock_offsets.get(&nodeid) {
             now - offset
         } else {
             now
@@ -588,7 +588,7 @@ impl<T: StreamingObjective + Clone> AdvancedAdvancedDistributedOnlineGD<T> {
 
     /// Initialize network topology with peers
     pub fn setup_network_topology(&mut self, peerconnections: &[(usize, usize, f64, f64)]) {
-        for &(node1, node2, weight, delay) in peer_connections {
+        for &(node1, node2, weight, delay) in peerconnections {
             self.consensus_node
                 .network_topology
                 .add_connection(node1, node2, weight, delay);
@@ -719,13 +719,13 @@ impl<T: StreamingObjective + Clone> AdvancedAdvancedDistributedOnlineGD<T> {
         let current_trust = self
             .consensus_node
             .trust_scores
-            .get(&suspected_node)
+            .get(&suspectednode)
             .copied()
             .unwrap_or(1.0);
         let new_trust = current_trust * (1.0 - evidence.deviation_magnitude * 0.1);
         self.consensus_node
             .trust_scores
-            .insert(suspected_node, new_trust.max(0.0));
+            .insert(suspectednode, new_trust.max(0.0));
 
         if new_trust < 0.1 {
             self.distributed_stats.byzantine_faults_detected += 1;
@@ -847,7 +847,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for AdvancedAdvancedDistr
         // Compute local gradient
         let gradient = self
             .objective
-            .gradient(&self.consensus_node.local_parameters.view(), data_point);
+            .gradient(&self.consensus_node.local_parameters.view(), datapoint);
 
         // Accumulate gradient for consensus
         self.consensus_node.gradient_accumulator =
@@ -869,7 +869,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for AdvancedAdvancedDistr
         // Regular streaming update
         let loss = self
             .objective
-            .evaluate(&self.consensus_node.local_parameters.view(), data_point);
+            .evaluate(&self.consensus_node.local_parameters.view(), datapoint);
 
         // Update statistics
         self.stats.points_processed += 1;
@@ -1016,7 +1016,7 @@ mod tests {
         let consensus = voting_state.check_consensus();
         assert!(consensus.is_some());
 
-        let winner_id = consensus.unwrap();
+        let (winner_id, _winning_params) = consensus.unwrap();
         assert_eq!(winner_id, 1);
     }
 

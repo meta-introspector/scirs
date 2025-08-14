@@ -81,7 +81,7 @@ pub fn compute_mse_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64>
 #[allow(dead_code)]
 pub fn compute_psnr_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     // First compute MSE
-    let mse = compute_mse_metric(_image1, image2)?;
+    let mse = compute_mse_metric(image1, image2)?;
 
     // Handle case where images are identical (MSE = 0)
     if mse == 0.0 {

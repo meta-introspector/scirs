@@ -532,7 +532,7 @@ impl StreamingCountVectorizer {
                     if let Some(max_feat) = self.max_features {
                         if self.vocabulary.len() >= max_feat {
                             // Find least frequent term to replace
-                            if let Some((min_token_)) = self
+                            if let Some((min_token_, _)) = self
                                 .vocabulary
                                 .iter()
                                 .min_by_key(|(t, _)| self.doc_freq.get(*t).unwrap_or(&0))

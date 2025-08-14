@@ -219,7 +219,7 @@ impl<F: Float> GraphOptimizer<F> {
     /// Apply dead code elimination
     fn apply_dead_code_elimination(
         &self,
-        _graph: &mut Graph<F>,
+        graph: &mut Graph<F>,
     ) -> Result<usize, OptimizationError> {
         // Simplified implementation - in a real optimizer, this would:
         // 1. Mark all reachable nodes from outputs
@@ -255,7 +255,7 @@ impl<F: Float> GraphOptimizer<F> {
     /// Apply expression simplification
     fn apply_expression_simplification(
         &self,
-        _graph: &mut Graph<F>,
+        graph: &mut Graph<F>,
     ) -> Result<usize, OptimizationError> {
         // Temporarily disabled - would be implemented with expression_simplification module
         Ok(0)
@@ -546,7 +546,7 @@ pub fn apply_constant_folding<F: Float>(graph: &mut Graph<F>) -> Result<usize, O
         level: OptimizationLevel::Basic,
     };
     let optimizer = GraphOptimizer::with_config(config);
-    let report = optimizer.optimize(_graph)?;
+    let report = optimizer.optimize(graph)?;
     Ok(report.constant_folding_applied)
 }
 
@@ -584,7 +584,7 @@ pub fn apply_cse<F: Float>(graph: &mut Graph<F>) -> Result<usize, OptimizationEr
         level: OptimizationLevel::Standard,
     };
     let optimizer = GraphOptimizer::with_config(config);
-    let report = optimizer.optimize(_graph)?;
+    let report = optimizer.optimize(graph)?;
     Ok(report.cse_applied)
 }
 

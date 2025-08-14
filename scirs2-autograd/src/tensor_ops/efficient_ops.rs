@@ -47,7 +47,7 @@ impl ReshapeCache {
             }
         }
         self.cache
-            .insert((fromshape.to_vec(), toshape.to_vec()), is_contiguous);
+            .insert((fromshape.to_vec(), toshape.to_vec()), iscontiguous);
     }
 
     fn clear(&mut self) {
@@ -92,7 +92,7 @@ impl<F: Float> Op<F> for EfficientReshapeOp {
 
         let result = if self.allow_zero_copy {
             // Try zero-copy reshape first
-            match input.view().intoshape_with_order(IxDyn(&self.newshape)) {
+            match input.view().into_shape_with_order(IxDyn(&self.newshape)) {
                 Ok(reshaped_view) => {
                     // Successful zero-copy reshape
                     cache.insert(inputshape, &self.newshape, true);
@@ -101,18 +101,14 @@ impl<F: Float> Op<F> for EfficientReshapeOp {
                 Err(_) => {
                     // Zero-copy failed, fall back to copying
                     cache.insert(inputshape, &self.newshape, false);
-                    let flattened: Array<F> = input.iter().cloned().collect();
-                    flattened
-                        .intoshape_with_order(IxDyn(&self.newshape))
-                        .unwrap()
+                    let vec: Vec<F> = input.iter().cloned().collect();
+                    Array::from_shape_vec(IxDyn(&self.newshape), vec).unwrap()
                 }
             }
         } else {
             // Always copy (useful when zero-copy behavior is not desired)
-            let flattened: Array<F> = input.iter().cloned().collect();
-            flattened
-                .intoshape_with_order(IxDyn(&self.newshape))
-                .unwrap()
+            let vec: Vec<F> = input.iter().cloned().collect();
+            Array::from_shape_vec(IxDyn(&self.newshape), vec).unwrap()
         };
 
         ctx.append_output(result);
@@ -162,8 +158,8 @@ impl SliceRange {
 
     pub fn single(index: isize) -> Self {
         Self {
-            start: Some(_index),
-            end: Some(_index + 1),
+            start: Some(index),
+            end: Some(index + 1),
             step: Some(1),
         }
     }
@@ -439,7 +435,7 @@ pub fn efficient_concat<'g, F: Float>(tensors: &[&Tensor<'g, F>], axis: usize) -
     let g = tensors[0].graph();
     let mut builder = Tensor::builder(g);
 
-    for tensor in _tensors {
+    for tensor in tensors {
         builder = builder.append_input(*tensor, false);
     }
 
@@ -460,7 +456,7 @@ pub fn efficient_transpose<'g, F: Float>(
     // We'll simplify this to just use the default transpose
     let g = tensor.graph();
     let axes_tensor = crate::tensor_ops::convert_to_tensor(
-        ndarray::Array::fromshape_vec(
+        ndarray::Array::from_shape_vec(
             ndarray::IxDyn(&[2]),
             vec![F::from(1).unwrap(), F::from(0).unwrap()],
         )

@@ -1076,7 +1076,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             let bin_lower = F::from(bin).unwrap() / F::from(n_bins).unwrap();
             let bin_upper = F::from(bin + 1).unwrap() / F::from(n_bins).unwrap();
 
-            let (bin_accuracy, bin_confidence_) =
+            let (bin_accuracy, bin_confidence_, _bin_count) =
                 self.compute_bin_metrics(predictions, y_true, bin_lower, bin_upper)?;
 
             let bin_error = (bin_accuracy - bin_confidence_).abs();

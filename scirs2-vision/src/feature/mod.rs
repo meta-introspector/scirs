@@ -127,7 +127,7 @@ pub fn array_to_image(array: &Array2<f32>) -> Result<GrayImage> {
 
     for y in 0..height {
         for x in 0..width {
-            let value = (_array[[y, x]] * 255.0).clamp(0.0, 255.0) as u8;
+            let value = (array[[y, x]] * 255.0).clamp(0.0, 255.0) as u8;
             img.put_pixel(x as u32, y as u32, image::Luma([value]));
         }
     }
@@ -147,7 +147,7 @@ pub fn array_to_image(array: &Array2<f32>) -> Result<GrayImage> {
 /// * Result containing an edge image
 #[allow(dead_code)]
 pub fn sobel_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
-    let array = image_to_array(_img)?;
+    let array = image_to_array(img)?;
     let (height, width) = array.dim();
 
     // Create output array

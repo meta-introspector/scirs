@@ -1,7 +1,7 @@
 /// Example demonstrating the use of external clustering metrics
 /// to evaluate clustering algorithm performance.
 use ndarray::{array, Array2};
-use scirs2__metrics::clustering::{
+use scirs2_metrics::clustering::{
     adjusted_mutual_info_score, adjusted_rand_index, fowlkes_mallows_score,
     homogeneity_completeness_v_measure, normalized_mutual_info_score,
 };
@@ -10,7 +10,7 @@ use scirs2_core::error::{CoreError, CoreResult, ErrorContext};
 #[allow(dead_code)]
 fn main() -> CoreResult<()> {
     // Create a sample dataset with simulated clusters
-    let _data = Array2::fromshape_vec(
+    let _data = Array2::from_shape_vec(
         (20, 2),
         vec![
             // Cluster 1

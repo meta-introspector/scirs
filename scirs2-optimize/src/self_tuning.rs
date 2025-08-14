@@ -69,10 +69,10 @@ impl SelfTuningOptimizer {
     pub fn new(config: SelfTuningConfig) -> Self {
         Self {
             parameter_manager: ParameterManager::new(),
-            performance_tracker: PerformanceTracker::new(_config.memory_window),
-            adaptation_engine: AdaptationEngine::new(_config.adaptation_strategy),
+            performance_tracker: PerformanceTracker::new(config.memory_window),
+            adaptation_engine: AdaptationEngine::new(config.adaptation_strategy),
             tuning_history: TuningHistory::new(),
-            config: config,
+            config,
         }
     }
 
@@ -223,21 +223,21 @@ impl ParameterManager {
 
     fn update_parameter(&mut self, name: &str, newvalue: ParameterValue) -> ScirsResult<()> {
         if let Some((min_bound, max_bound)) = self.parameter_bounds.get(name) {
-            if new_value < *min_bound || new_value > *max_bound {
+            if newvalue < *min_bound || newvalue > *max_bound {
                 return Err(ScirsError::InvalidInput(
                     scirs2_core::error::ErrorContext::new(format!(
                         "Parameter {} _value {:?} is out of bounds [{:?}, {:?}]",
-                        name, new_value, min_bound, max_bound
+                        name, newvalue, min_bound, max_bound
                     )),
                 ));
             }
         }
 
         self.current_values
-            .insert(name.to_string(), new_value.clone());
+            .insert(name.to_string(), newvalue.clone());
 
         if let Some(param) = self.parameters.get_mut(name) {
-            param.set_value(new_value)?;
+            param.set_value(newvalue)?;
         }
 
         Ok(())
@@ -408,35 +408,35 @@ impl ParameterValue {
 
         // Handle common types
         if type_id == TypeId::of::<f64>() {
-            if let Some(f_val) = (_value as &dyn Any).downcast_ref::<f64>() {
+            if let Some(f_val) = (value as &dyn Any).downcast_ref::<f64>() {
                 return ParameterValue::Float(*f_val);
             }
         } else if type_id == TypeId::of::<f32>() {
-            if let Some(f_val) = (_value as &dyn Any).downcast_ref::<f32>() {
+            if let Some(f_val) = (value as &dyn Any).downcast_ref::<f32>() {
                 return ParameterValue::Float(*f_val as f64);
             }
         } else if type_id == TypeId::of::<i64>() {
-            if let Some(i_val) = (_value as &dyn Any).downcast_ref::<i64>() {
+            if let Some(i_val) = (value as &dyn Any).downcast_ref::<i64>() {
                 return ParameterValue::Integer(*i_val);
             }
         } else if type_id == TypeId::of::<i32>() {
-            if let Some(i_val) = (_value as &dyn Any).downcast_ref::<i32>() {
+            if let Some(i_val) = (value as &dyn Any).downcast_ref::<i32>() {
                 return ParameterValue::Integer(*i_val as i64);
             }
         } else if type_id == TypeId::of::<usize>() {
-            if let Some(u_val) = (_value as &dyn Any).downcast_ref::<usize>() {
+            if let Some(u_val) = (value as &dyn Any).downcast_ref::<usize>() {
                 return ParameterValue::Integer(*u_val as i64);
             }
         } else if type_id == TypeId::of::<bool>() {
-            if let Some(b_val) = (_value as &dyn Any).downcast_ref::<bool>() {
+            if let Some(b_val) = (value as &dyn Any).downcast_ref::<bool>() {
                 return ParameterValue::Boolean(*b_val);
             }
         } else if type_id == TypeId::of::<String>() {
-            if let Some(s_val) = (_value as &dyn Any).downcast_ref::<String>() {
+            if let Some(s_val) = (value as &dyn Any).downcast_ref::<String>() {
                 return ParameterValue::String(s_val.clone());
             }
         } else if type_id == TypeId::of::<&str>() {
-            if let Some(s_val) = (_value as &dyn Any).downcast_ref::<&str>() {
+            if let Some(s_val) = (value as &dyn Any).downcast_ref::<&str>() {
                 return ParameterValue::String(s_val.to_string());
             }
         }
@@ -491,7 +491,7 @@ struct PerformanceTracker {
 impl PerformanceTracker {
     fn new(_memorywindow: usize) -> Self {
         Self {
-            memory_window: memory_window,
+            memory_window: _memorywindow,
             function_values: VecDeque::new(),
             gradient_norms: VecDeque::new(),
             improvements: VecDeque::new(),
@@ -658,7 +658,7 @@ impl AdaptationEngine {
         };
 
         Self {
-            strategy: strategy,
+            strategy,
             rl_agent,
             bayesian_optimizer,
         }
@@ -891,7 +891,7 @@ impl AdaptationEngine {
         match value {
             ParameterValue::Float(f) => {
                 let new_value = f * factor;
-                if let Some((min_bound)) = bounds {
+                if let Some((min_bound, _)) = bounds {
                     if let Some(min_f) = min_bound.as_f64() {
                         if new_value >= min_f {
                             Some(ParameterValue::Float(new_value))
@@ -907,7 +907,7 @@ impl AdaptationEngine {
             }
             ParameterValue::Integer(i) => {
                 let new_value = ((i as f64) * factor) as i64;
-                if let Some((min_bound)) = bounds {
+                if let Some((min_bound, _)) = bounds {
                     if let Some(min_i) = min_bound.as_i64() {
                         if new_value >= min_i {
                             Some(ParameterValue::Integer(new_value))
@@ -1164,7 +1164,7 @@ impl BayesianParameterOptimizer {
             if let Some((best_params)) = best_observation {
                 // Suggest parameter modifications based on best observation
                 for (name, value) in current_params {
-                    if let Some(best_value) = best_params.get(name) {
+                    if let Some(best_value) = best_params.0.get(name) {
                         // Move toward best observed value with some exploration
                         let suggested_value =
                             self.interpolate_toward_best(value.clone(), best_value.clone(), 0.3);
@@ -1318,8 +1318,8 @@ mod tests {
 
     #[test]
     fn test_parameter_value() {
-        let float_val = ParameterValue::Float(3.14);
-        assert_eq!(float_val.as_f64(), Some(3.14));
+        let float_val = ParameterValue::Float(3.5);
+        assert_eq!(float_val.as_f64(), Some(3.5));
 
         let int_val = ParameterValue::Integer(42);
         assert_eq!(int_val.as_i64(), Some(42));

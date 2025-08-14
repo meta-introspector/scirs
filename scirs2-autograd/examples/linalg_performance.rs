@@ -26,7 +26,7 @@ fn main() {
 
             // Generate random positive definite matrix
             let random_data: Vec<f64> = (0..n * n).map(|_| rand::random::<f64>()).collect();
-            let a_raw = Array2::fromshape_vec((n, n), random_data).unwrap();
+            let a_raw = Array2::from_shape_vec((n, n), random_data).unwrap();
             let a_sym = &a_raw + &a_raw.t();
             let a_pd = &a_sym + Array2::eye(n) * (n as f64);
 
@@ -118,7 +118,7 @@ fn main() {
         let large_data: Vec<f64> = (0..large_n * large_n)
             .map(|i| (i as f64) / (large_n * large_n) as f64)
             .collect();
-        let large_matrix = Array2::fromshape_vec((large_n, large_n), large_data).unwrap();
+        let large_matrix = Array2::from_shape_vec((large_n, large_n), large_data).unwrap();
         let large_a = convert_to_tensor(large_matrix, g);
 
         benchmark!("Large matrix trace", {

@@ -5,8 +5,8 @@
 
 use approx::assert_abs_diff_eq;
 use ndarray::array;
-use scirs2__metrics::classification::accuracy_score;
-use scirs2__metrics::integration::optim::{
+use scirs2_metrics::classification::accuracy_score;
+use scirs2_metrics::integration::optim::{
     MetricOptimizer, MetricSchedulerTrait, OptimizationMode, SchedulerConfig,
 };
 
@@ -175,8 +175,8 @@ fn test_real_world_workflow() {
 
     // Create scheduler configuration for external use
     let scheduler_config = optimizer.create_scheduler_config(0.01, 0.5, 2, 1e-6);
-    assert_eq!(scheduler_configpatience, 2);
-    assert_eq!(scheduler_configmode, OptimizationMode::Maximize);
+    assert_eq!(scheduler_config.patience, 2);
+    assert_eq!(scheduler_config.mode, OptimizationMode::Maximize);
 }
 
 #[test]

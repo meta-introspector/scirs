@@ -6,7 +6,7 @@ use scirs2_autograd as ag;
 fn main() {
     println!("Testing SVD with a simple matrix...");
 
-    ag::run::<f64_>(|g| {
+    ag::run(|g| {
         // Create a 3x2 matrix
         let matrix = convert_to_tensor(array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], g);
         println!(

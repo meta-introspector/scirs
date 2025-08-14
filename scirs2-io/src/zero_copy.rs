@@ -139,7 +139,7 @@ pub struct ZeroCopyReader {
 impl ZeroCopyReader {
     /// Create a new zero-copy reader
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+        let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
         Ok(Self { file, mmap: None })
     }
 
@@ -191,7 +191,7 @@ impl ZeroCopyWriter {
             .write(true)
             .create(true)
             .truncate(true)
-            .open(_path)
+            .open(path)
             .map_err(|e| IoError::FileError(e.to_string()))?;
 
         // Set file size
@@ -424,7 +424,7 @@ pub mod simd_zero_copy {
             }
 
             // Create array views from memory maps
-            let a_slice = unsafe { slice::from_raw_parts(_a_mmap.as_ptr() as *const f32, count) };
+            let a_slice = unsafe { slice::from_raw_parts(a_mmap.as_ptr() as *const f32, count) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f32, count) };
 
             let a_view = ArrayView1::from_shape(count, a_slice).unwrap();
@@ -448,7 +448,7 @@ pub mod simd_zero_copy {
                 return Err(IoError::Other("Memory map too small for shape".to_string()));
             }
 
-            let slice = unsafe { slice::from_raw_parts(_mmap.as_ptr() as *const f32, count) };
+            let slice = unsafe { slice::from_raw_parts(mmap.as_ptr() as *const f32, count) };
 
             let view = ArrayView1::from_shape(count, slice).unwrap();
 
@@ -497,7 +497,7 @@ pub mod simd_zero_copy {
             }
 
             // Create array views from memory maps
-            let a_slice = unsafe { slice::from_raw_parts(_a_mmap.as_ptr() as *const f64, count) };
+            let a_slice = unsafe { slice::from_raw_parts(a_mmap.as_ptr() as *const f64, count) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f64, count) };
 
             let a_view = ArrayView1::from_shape(count, a_slice).unwrap();
@@ -616,7 +616,7 @@ pub enum MemoryAdvice {
 impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
     /// Create a new async zero-copy processor with NUMA awareness
     pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize, config: AsyncConfig) -> Result<Self> {
-        let reader = ZeroCopyReader::new(_path)?;
+        let reader = ZeroCopyReader::new(path)?;
         let numa_node = Self::detect_optimal_numa_node();
 
         Ok(Self {
@@ -704,7 +704,7 @@ impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
         let memory_advice = self.async_config.memory_advice;
         let memory_policy = self.memory_policy;
         let _max_concurrent_operations = self.async_config.max_concurrent_operations;
-        let _enable_readahead = self.async_config.enable_readahead;
+        let enable_readahead = self.async_config.enable_readahead;
         let aligned_chunk_size = self.calculate_aligned_chunk_size();
 
         let mmap = self.reader.map_file()?;
@@ -732,7 +732,7 @@ impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
 
         // Create chunks with optimal alignment
         let chunks: Vec<_> = data_slice.chunks(aligned_chunk_size).collect();
-        let _num_chunks = chunks.len();
+        let num_chunks = chunks.len();
 
         // Process chunks asynchronously with controlled concurrency
         #[cfg(feature = "async")]
@@ -908,7 +908,7 @@ pub struct ZeroCopyStreamProcessor<T> {
 impl<T: Copy + 'static> ZeroCopyStreamProcessor<T> {
     /// Create a new streaming processor
     pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize) -> Result<Self> {
-        let reader = ZeroCopyReader::new(_path)?;
+        let reader = ZeroCopyReader::new(path)?;
         Ok(Self {
             reader,
             chunk_size,

@@ -250,7 +250,7 @@ where
         };
 
         Ok(Self {
-            base_optimizer,
+            base_optimizer: baseoptimizer,
             config,
             accountant,
             rng,
@@ -665,7 +665,7 @@ impl MomentsAccountant {
     fn compute_log_moments(&self, sigma: f64, q: f64, t: f64, alphamax: f64) -> Vec<f64> {
         let mut log_moments = Vec::new();
 
-        for alpha_int in 2..=(alpha_max as usize) {
+        for alpha_int in 2..=(alphamax as usize) {
             let alpha = alpha_int as f64;
 
             // Log moment for Gaussian mechanism with subsampling
@@ -683,7 +683,7 @@ impl MomentsAccountant {
     fn compute_epsilon_from_moments(&self, logmoments: &[f64], delta: f64) -> f64 {
         let mut min_epsilon = f64::INFINITY;
 
-        for (i, &log_moment) in log_moments.iter().enumerate() {
+        for (i, &log_moment) in logmoments.iter().enumerate() {
             let alpha = (i + 2) as f64;
             let epsilon = (log_moment - delta.ln()) / (alpha - 1.0);
 

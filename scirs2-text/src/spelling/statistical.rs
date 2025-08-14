@@ -177,17 +177,17 @@ impl StatisticalCorrector {
     /// Create a statistical corrector from a base dictionary corrector
     pub fn from_dictionary_corrector(dictcorrector: &DictionaryCorrector) -> Self {
         let config = StatisticalCorrectorConfig {
-            max_edit_distance: dict_corrector.config.max_edit_distance,
-            case_sensitive: dict_corrector.config.case_sensitive,
-            max_suggestions: dict_corrector.config.max_suggestions,
-            min_frequency: dict_corrector.config.min_frequency,
+            max_edit_distance: dictcorrector.config.max_edit_distance,
+            case_sensitive: dictcorrector.config.case_sensitive,
+            max_suggestions: dictcorrector.config.max_suggestions,
+            min_frequency: dictcorrector.config.min_frequency,
             ..StatisticalCorrectorConfig::default()
         };
 
         Self {
-            dictionary: dict_corrector.dictionary.clone(),
+            dictionary: dictcorrector.dictionary.clone(),
             config,
-            metric: dict_corrector.metric.clone(),
+            metric: dictcorrector.metric.clone(),
             language_model: NGramModel::new(3),
             error_model: ErrorModel::default(),
         }
@@ -366,14 +366,14 @@ impl StatisticalCorrector {
         }
 
         // Get the best beam
-        if let Some((best_sentence__)) = beams.first() {
+        if let Some((best_sentence, _, _)) = beams.first() {
             // Reconstruct the sentence
             let mut result = sentence.to_string();
 
             // Replace each word with its correction
             for (i, original) in words.iter().enumerate() {
-                if i < best_sentence__.len() && original != &best_sentence__[i] {
-                    result = result.replace(original, &best_sentence__[i]);
+                if i < best_sentence.len() && original != &best_sentence[i] {
+                    result = result.replace(original, &best_sentence[i]);
                 }
             }
 
@@ -436,7 +436,7 @@ impl SpellingCorrector for StatisticalCorrector {
         // Extract just the words
         let suggestions = candidates
             .into_iter()
-            .map(|(word_)| word)
+            .map(|(word, _)| word)
             .take(limit)
             .collect();
 

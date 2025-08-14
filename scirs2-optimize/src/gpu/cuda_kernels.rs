@@ -41,12 +41,9 @@ impl FunctionEvaluationKernel {
             }
         "#;
 
-        let kernel = context.compile(kernel_source)?;
+        let kernel = context.execute(|compiler| compiler.compile(kernel_source))?;
 
-        Ok(Self {
-            context: context,
-            kernel,
-        })
+        Ok(Self { context, kernel })
     }
 
     /// Evaluate a batch of points using the specified function type
@@ -96,12 +93,9 @@ impl GradientKernel {
             }
         "#;
 
-        let kernel = context.compile(kernel_source)?;
+        let kernel = context.execute(|compiler| compiler.compile(kernel_source))?;
 
-        Ok(Self {
-            context: context,
-            kernel,
-        })
+        Ok(Self { context, kernel })
     }
 
     /// Compute gradients for a batch of points using finite differences
@@ -156,12 +150,9 @@ impl ParticleSwarmKernel {
             }
         "#;
 
-        let kernel = context.compile(kernel_source)?;
+        let kernel = context.execute(|compiler| compiler.compile(kernel_source))?;
 
-        Ok(Self {
-            context: context,
-            kernel,
-        })
+        Ok(Self { context, kernel })
     }
 
     /// Update particle positions and velocities
@@ -211,12 +202,9 @@ impl DifferentialEvolutionKernel {
             }
         "#;
 
-        let kernel = context.compile(kernel_source)?;
+        let kernel = context.execute(|compiler| compiler.compile(kernel_source))?;
 
-        Ok(Self {
-            context: context,
-            kernel,
-        })
+        Ok(Self { context, kernel })
     }
 
     /// Generate mutant vectors for differential evolution

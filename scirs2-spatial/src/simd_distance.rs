@@ -462,7 +462,7 @@ pub fn simd_knn_search(
 fn linear_to_condensed_indices(_linearidx: usize, n: usize) -> (usize, usize) {
     // For condensed distance matrix where entry (i,j) with i < j is stored
     // at position (n-1-i)*(n-i)/2 + (j-i-1)
-    let mut k = linear_idx;
+    let mut k = _linearidx;
     let mut i = 0;
 
     while k >= n - i - 1 {
@@ -504,13 +504,13 @@ pub mod advanced_simd_clustering {
 
         /// Configure mixed precision (f32 for speed where possible)
         pub fn with_mixed_precision(mut self, use_mixedprecision: bool) -> Self {
-            self.use_mixed_precision = use_mixed_precision;
+            self.use_mixed_precision = use_mixedprecision;
             self
         }
 
         /// Set block size for cache-optimized processing
         pub fn with_block_size(mut self, blocksize: usize) -> Self {
-            self.block_size = block_size;
+            self.block_size = blocksize;
             self
         }
 

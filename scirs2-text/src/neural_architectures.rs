@@ -111,40 +111,40 @@ pub struct LSTMCell {
 impl LSTMCell {
     /// Create new LSTM cell
     pub fn new(_input_size: usize, hiddensize: usize) -> Self {
-        let scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
+        let scale = (2.0 / (_input_size + hiddensize) as f64).sqrt();
 
         // Initialize weights with Xavier initialization
-        let w_i = Array2::from_shape_fn((hidden_size, input_size), |_| {
+        let w_i = Array2::from_shape_fn((hiddensize, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_f = Array2::from_shape_fn((hidden_size, input_size), |_| {
+        let w_f = Array2::from_shape_fn((hiddensize, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_o = Array2::from_shape_fn((hidden_size, input_size), |_| {
+        let w_o = Array2::from_shape_fn((hiddensize, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_c = Array2::from_shape_fn((hidden_size, input_size), |_| {
+        let w_c = Array2::from_shape_fn((hiddensize, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
-        let u_i = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_i = Array2::from_shape_fn((hiddensize, hiddensize), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let u_f = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_f = Array2::from_shape_fn((hiddensize, hiddensize), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let u_o = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_o = Array2::from_shape_fn((hiddensize, hiddensize), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let u_c = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_c = Array2::from_shape_fn((hiddensize, hiddensize), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
         // Initialize biases (forget gate bias to 1.0 for better gradient flow)
-        let b_i = Array1::zeros(hidden_size);
-        let b_f = Array1::ones(hidden_size);
-        let b_o = Array1::zeros(hidden_size);
-        let b_c = Array1::zeros(hidden_size);
+        let b_i = Array1::zeros(hiddensize);
+        let b_f = Array1::ones(hiddensize);
+        let b_o = Array1::zeros(hiddensize);
+        let b_c = Array1::zeros(hiddensize);
 
         Self {
             w_i,
@@ -159,8 +159,8 @@ impl LSTMCell {
             b_f,
             b_o,
             b_c,
-            input_size: input_size,
-            hidden_size,
+            input_size: _input_size,
+            hidden_size: hiddensize,
         }
     }
 
@@ -242,33 +242,33 @@ pub struct GRUCell {
 impl GRUCell {
     /// Create new GRU cell
     pub fn new(_input_size: usize, hiddensize: usize) -> Self {
-        let scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
+        let scale = (2.0 / (_input_size + hiddensize) as f64).sqrt();
 
         // Initialize weights with Xavier initialization
-        let w_z = Array2::from_shape_fn((hidden_size, input_size), |_| {
+        let w_z = Array2::from_shape_fn((hiddensize, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_r = Array2::from_shape_fn((hidden_size, input_size), |_| {
+        let w_r = Array2::from_shape_fn((hiddensize, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_h = Array2::from_shape_fn((hidden_size, input_size), |_| {
+        let w_h = Array2::from_shape_fn((hiddensize, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
-        let u_z = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_z = Array2::from_shape_fn((hiddensize, hiddensize), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let u_r = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_r = Array2::from_shape_fn((hiddensize, hiddensize), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let u_h = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_h = Array2::from_shape_fn((hiddensize, hiddensize), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
         // Initialize biases
-        let b_z = Array1::zeros(hidden_size);
-        let b_r = Array1::zeros(hidden_size);
-        let b_h = Array1::zeros(hidden_size);
+        let b_z = Array1::zeros(hiddensize);
+        let b_r = Array1::zeros(hiddensize);
+        let b_h = Array1::zeros(hiddensize);
 
         Self {
             w_z,
@@ -280,8 +280,8 @@ impl GRUCell {
             b_z,
             b_r,
             b_h,
-            input_size: input_size,
-            hidden_size,
+            input_size: _input_size,
+            hidden_size: hiddensize,
         }
     }
 
@@ -295,28 +295,28 @@ impl GRUCell {
             )));
         }
 
-        if h_prev.len() != self.hidden_size {
+        if hprev.len() != self.hidden_size {
             return Err(TextError::InvalidInput(format!(
                 "Expected hidden size {}, got {}",
                 self.hidden_size,
-                h_prev.len()
+                hprev.len()
             )));
         }
 
         // Update gate
         let z_t = ActivationFunction::Sigmoid
-            .apply_array(&(self.w_z.dot(&x) + self.u_z.dot(&h_prev) + &self.b_z));
+            .apply_array(&(self.w_z.dot(&x) + self.u_z.dot(&hprev) + &self.b_z));
 
         // Reset gate
         let r_t = ActivationFunction::Sigmoid
-            .apply_array(&(self.w_r.dot(&x) + self.u_r.dot(&h_prev) + &self.b_r));
+            .apply_array(&(self.w_r.dot(&x) + self.u_r.dot(&hprev) + &self.b_r));
 
         // New gate (candidate activation)
         let h_tilde = ActivationFunction::Tanh
-            .apply_array(&(self.w_h.dot(&x) + self.u_h.dot(&(&r_t * &h_prev)) + &self.b_h));
+            .apply_array(&(self.w_h.dot(&x) + self.u_h.dot(&(&r_t * &hprev)) + &self.b_h));
 
         // Final hidden state
-        let h_t = &(&Array1::ones(self.hidden_size) - &z_t) * &h_prev + &z_t * &h_tilde;
+        let h_t = &(&Array1::ones(self.hidden_size) - &z_t) * &hprev + &z_t * &h_tilde;
 
         Ok(h_t)
     }
@@ -340,7 +340,7 @@ impl BiLSTM {
         let mut forward_cells = Vec::new();
         let mut backward_cells = Vec::new();
 
-        for i in 0..num_layers {
+        for i in 0..numlayers {
             let layer_input_size = if i == 0 { _input_size } else { hidden_size * 2 };
             forward_cells.push(LSTMCell::new(layer_input_size, hidden_size));
             backward_cells.push(LSTMCell::new(layer_input_size, hidden_size));
@@ -349,7 +349,7 @@ impl BiLSTM {
         Self {
             forward_cells,
             backward_cells,
-            num_layers,
+            num_layers: numlayers,
             hidden_size,
         }
     }
@@ -453,7 +453,7 @@ impl Conv1D {
         let bias = Array1::zeros(num_filters);
 
         Self {
-            filters: filters,
+            filters: _filters,
             bias,
             num_filters,
             kernel_size,
@@ -509,7 +509,7 @@ pub struct MaxPool1D {
 impl MaxPool1D {
     /// Create new max pooling layer
     pub fn new(poolsize: usize, stride: usize) -> Self {
-        Self { pool_size, stride }
+        Self { pool_size: poolsize, stride }
     }
 
     /// Forward pass through max pooling
@@ -557,15 +557,15 @@ impl ResidualBlock1D {
     /// Create new residual block
     pub fn new(_input_channels: usize, output_channels: usize, kernelsize: usize) -> Self {
         let conv1 = Conv1D::new(
-            input_channels,
+            _input_channels,
             output_channels,
-            kernel_size,
+            kernelsize,
             ActivationFunction::Linear,
         );
         let conv2 = Conv1D::new(
             output_channels,
             output_channels,
-            kernel_size,
+            kernelsize,
             ActivationFunction::Linear,
         );
 
@@ -573,7 +573,7 @@ impl ResidualBlock1D {
         let skip_projection = if _input_channels != output_channels {
             let scale = (2.0 / _input_channels as f64).sqrt();
             Some(Array2::from_shape_fn(
-                (output_channels, input_channels),
+                (output_channels, _input_channels),
                 |_| rand::rng().gen_range(-scale..scale),
             ))
         } else {
@@ -659,11 +659,10 @@ impl ResidualBlock1D {
         // Normalize over the sequence dimension for each channel
         for ch in 0..input.shape()[1] {
             let channel_data = input.column(ch);
-            let mean = channel_data.mean().unwrap_or(0.0);
+            let mean = channel_data.mean();
             let var = channel_data
                 .mapv(|x| (x - mean).powi(2))
-                .mean()
-                .unwrap_or(1.0);
+                .mean();
             let std = (var + eps).sqrt();
 
             let mut normalized = channel_data.mapv(|x| (x - mean) / std);
@@ -729,7 +728,7 @@ impl MultiScaleCNN {
         Self {
             conv_branches,
             bn_branches,
-            combination_weights,
+            combinationweights: combination_weights,
             global_pool,
         }
     }
@@ -781,11 +780,10 @@ impl MultiScaleCNN {
 
         for ch in 0..input.shape()[1] {
             let channel_data = input.column(ch);
-            let mean = channel_data.mean().unwrap_or(0.0);
+            let mean = channel_data.mean();
             let var = channel_data
                 .mapv(|x| (x - mean).powi(2))
-                .mean()
-                .unwrap_or(1.0);
+                .mean();
             let std = (var + eps).sqrt();
 
             let mut normalized = channel_data.mapv(|x| (x - mean) / std);
@@ -818,25 +816,25 @@ pub struct AdditiveAttention {
 impl AdditiveAttention {
     /// Create new additive attention mechanism
     pub fn new(_encoder_dim: usize, decoder_dim: usize, attentiondim: usize) -> Self {
-        let scale = (2.0 / attention_dim as f64).sqrt();
+        let scale = (2.0 / attentiondim as f64).sqrt();
 
-        let w_a = Array2::from_shape_fn((attention_dim, _encoder_dim + decoder_dim), |_| {
+        let w_a = Array2::from_shape_fn((attentiondim, _encoder_dim + decoder_dim), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
-        let w_q = Array2::from_shape_fn((attention_dim, decoder_dim), |_| {
+        let w_q = Array2::from_shape_fn((attentiondim, decoder_dim), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
-        let w_k = Array2::from_shape_fn((attention_dim, encoder_dim), |_| {
+        let w_k = Array2::from_shape_fn((attentiondim, _encoder_dim), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
-        let w_v = Array2::from_shape_fn((_encoder_dim, encoder_dim), |_| {
+        let w_v = Array2::from_shape_fn((_encoder_dim, _encoder_dim), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
-        let v_a = Array1::from_shape_fn(attention_dim, |_| rand::rng().gen_range(-scale..scale));
+        let v_a = Array1::from_shape_fn(attentiondim, |_| rand::rng().gen_range(-scale..scale));
 
         Self {
             w_a,
@@ -912,13 +910,13 @@ pub struct SelfAttention {
 impl SelfAttention {
     /// Create new self-attention layer
     pub fn new(_dmodel: usize, dropout: f64) -> Self {
-        let d_k = d_model;
-        let scale = (2.0 / _d_model as f64).sqrt();
+        let d_k = _dmodel;
+        let scale = (2.0 / _dmodel as f64).sqrt();
 
-        let w_q = Array2::from_shape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
-        let w_k = Array2::from_shape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
-        let w_v = Array2::from_shape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
-        let w_o = Array2::from_shape_fn((d_k, d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w_q = Array2::from_shape_fn((_dmodel, d_k), |_| rand::rng().gen_range(-scale..scale));
+        let w_k = Array2::from_shape_fn((_dmodel, d_k), |_| rand::rng().gen_range(-scale..scale));
+        let w_v = Array2::from_shape_fn((_dmodel, d_k), |_| rand::rng().gen_range(-scale..scale));
+        let w_o = Array2::from_shape_fn((d_k, _dmodel), |_| rand::rng().gen_range(-scale..scale));
 
         Self {
             w_q,
@@ -1016,13 +1014,13 @@ pub struct CrossAttention {
 impl CrossAttention {
     /// Create new cross-attention layer
     pub fn new(_dmodel: usize) -> Self {
-        let d_k = d_model;
-        let scale = (2.0 / _d_model as f64).sqrt();
+        let d_k = _dmodel;
+        let scale = (2.0 / _dmodel as f64).sqrt();
 
-        let w_q = Array2::from_shape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
-        let w_k = Array2::from_shape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
-        let w_v = Array2::from_shape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
-        let w_o = Array2::from_shape_fn((d_k, d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w_q = Array2::from_shape_fn((_dmodel, d_k), |_| rand::rng().gen_range(-scale..scale));
+        let w_k = Array2::from_shape_fn((_dmodel, d_k), |_| rand::rng().gen_range(-scale..scale));
+        let w_v = Array2::from_shape_fn((_dmodel, d_k), |_| rand::rng().gen_range(-scale..scale));
+        let w_o = Array2::from_shape_fn((d_k, _dmodel), |_| rand::rng().gen_range(-scale..scale));
 
         Self {
             w_q,
@@ -1117,14 +1115,14 @@ pub struct PositionwiseFeedForward {
 
 impl PositionwiseFeedForward {
     /// Create new position-wise feed-forward network
-    pub fn new(_d_model: usize, dff: usize, dropout: f64) -> Self {
-        let scale1 = (2.0 / _d_model as f64).sqrt();
-        let scale2 = (2.0 / d_ff as f64).sqrt();
+    pub fn new(_dmodel: usize, dff: usize, dropout: f64) -> Self {
+        let scale1 = (2.0 / _dmodel as f64).sqrt();
+        let scale2 = (2.0 / dff as f64).sqrt();
 
-        let w1 = Array2::from_shape_fn((d_ff, d_model), |_| rand::rng().gen_range(-scale1..scale1));
-        let w2 = Array2::from_shape_fn((_d_model, d_ff), |_| rand::rng().gen_range(-scale2..scale2));
-        let b1 = Array1::zeros(d_ff);
-        let b2 = Array1::zeros(_d_model);
+        let w1 = Array2::from_shape_fn((dff, _dmodel), |_| rand::rng().gen_range(-scale1..scale1));
+        let w2 = Array2::from_shape_fn((_dmodel, dff), |_| rand::rng().gen_range(-scale2..scale2));
+        let b1 = Array1::zeros(dff);
+        let b2 = Array1::zeros(_dmodel);
 
         Self {
             w1,
@@ -1205,7 +1203,7 @@ impl TextCNN {
         Self {
             conv_layers,
             pool_layers,
-            fc_weights,
+            fcweights: fc_weights,
             fc_bias,
             dropout_rate,
         }
@@ -1315,7 +1313,7 @@ impl CNNLSTMHybrid {
         let cnn_features = self.cnn.forward(embeddings)?;
 
         // Reshape for LSTM input (simplified)
-        let lstm_input = Array2::fromshape_vec((1, cnn_features.len()), cnn_features.to_vec())
+        let lstm_input = Array2::from_shape_vec((1, cnn_features.len()), cnn_features.to_vec())
             .map_err(|e| TextError::InvalidInput(format!("Reshape error: {e}")))?;
 
         // Process through LSTM
@@ -1357,8 +1355,8 @@ impl LayerNorm {
 
         // Normalize along the last dimension for each sample
         for (i, row) in x.outer_iter().enumerate() {
-            let mean = row.mean().unwrap_or(0.0);
-            let variance = row.mapv(|v| (v - mean).powi(2)).mean().unwrap_or(0.0);
+            let mean = row.mean();
+            let variance = row.mapv(|v| (v - mean).powi(2)).mean();
             let std = (variance + self.eps).sqrt();
 
             // Apply normalization and learned parameters
@@ -1437,38 +1435,38 @@ pub struct MultiHeadAttention {
 
 impl MultiHeadAttention {
     /// Create new multi-head attention layer
-    pub fn new(_d_model: usize, num_heads: usize, dropoutp: f64) -> Result<Self> {
-        if _d_model % num_heads != 0 {
+    pub fn new(_dmodel: usize, num_heads: usize, dropoutp: f64) -> Result<Self> {
+        if _dmodel % num_heads != 0 {
             return Err(TextError::InvalidInput(
                 "Model dimension must be divisible by number of _heads".to_string(),
             ));
         }
 
-        let d_k = _d_model / num_heads;
-        let scale = (2.0 / _d_model as f64).sqrt();
+        let d_k = _dmodel / num_heads;
+        let scale = (2.0 / _dmodel as f64).sqrt();
 
-        let w_q = Array2::from_shape_fn((_d_model, d_model), |_| {
+        let w_q = Array2::from_shape_fn((_dmodel, _dmodel), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_k = Array2::from_shape_fn((_d_model, d_model), |_| {
+        let w_k = Array2::from_shape_fn((_dmodel, _dmodel), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_v = Array2::from_shape_fn((_d_model, d_model), |_| {
+        let w_v = Array2::from_shape_fn((_dmodel, _dmodel), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_o = Array2::from_shape_fn((_d_model, d_model), |_| {
+        let w_o = Array2::from_shape_fn((_dmodel, _dmodel), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
         Ok(Self {
             num_heads,
-            d_model: d_model,
+            d_model: _dmodel,
             d_k,
             w_q,
             w_k,
             w_v,
             w_o,
-            dropout: Dropout::new(dropout_p),
+            dropout: Dropout::new(dropoutp),
         })
     }
 

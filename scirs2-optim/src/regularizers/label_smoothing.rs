@@ -56,7 +56,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> LabelSmoothing<A> {
             ));
         }
 
-        Ok(Self { alpha, num_classes })
+        Ok(Self { alpha, num_classes: numclasses })
     }
 
     /// Smooth the one-hot encoded target labels

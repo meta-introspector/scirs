@@ -452,7 +452,7 @@ fn power_iteration<F: Float + ndarray::ScalarOperand>(
     }
 
     // Normalize initial vector
-    let norm = v._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+    let norm = v.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
     if norm > F::epsilon() {
         v = &v / norm;
     }
@@ -464,7 +464,7 @@ fn power_iteration<F: Float + ndarray::ScalarOperand>(
         let w = matrix.dot(&v);
 
         // Find largest component to estimate eigenvalue
-        let lambda = w._iter().fold(F::zero(), |acc, &x| acc.max(x.abs()));
+        let lambda = w.iter().fold(F::zero(), |acc, &x| acc.max(x.abs()));
 
         // Check convergence
         if (lambda - lambda_prev).abs() < tol {
@@ -475,7 +475,7 @@ fn power_iteration<F: Float + ndarray::ScalarOperand>(
         lambda_prev = lambda;
 
         // Normalize w to get new v
-        let norm = w._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+        let norm = w.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
         if norm > F::epsilon() {
             v = &w / norm;
         } else {
@@ -484,7 +484,7 @@ fn power_iteration<F: Float + ndarray::ScalarOperand>(
             for i in 0..n {
                 v[i] = F::from((i + 1) as f64 / n as f64).unwrap();
             }
-            let norm = v._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+            let norm = v.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
             if norm > F::epsilon() {
                 v = &v / norm;
             }
@@ -493,7 +493,7 @@ fn power_iteration<F: Float + ndarray::ScalarOperand>(
 
     // Return best guess if max iterations reached
     let w = matrix.dot(&v);
-    let lambda = w._iter().fold(F::zero(), |acc, &x| acc.max(x.abs()));
+    let lambda = w.iter().fold(F::zero(), |acc, &x| acc.max(x.abs()));
     (w, lambda)
 }
 
@@ -535,11 +535,11 @@ pub fn qr<'g, F: Float>(matrix: &Tensor<'g, F>) -> (Tensor<'g, F>, Tensor<'g, F>
 
     // Create component ops directly using extraction operators
     let q = Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(QRExtractOp { component: 0 });
 
     let r = Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(QRExtractOp { component: 1 });
 
     (q, r)
@@ -748,7 +748,7 @@ fn compute_cholesky_gradient<F: Float>(
 pub fn cholesky<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(CholeskyOp)
 }
 
@@ -797,7 +797,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for SymmetricEigenOp {
         if n == 1 {
             // For 1x1 matrix, eigenvalue is the single element, eigenvector is [1]
             let eigenvalues = Array1::from_vec(vec![input_2d[[0, 0]]]);
-            let eigenvectors = Array2::fromshape_vec((1, 1), vec![F::one()])
+            let eigenvectors = Array2::from_shape_vec((1, 1), vec![F::one()])
                 .map_err(|_| OpError::Other("Failed to create eigenvector matrix".into()))?;
 
             ctx.append_output(eigenvalues.into_dyn());
@@ -902,8 +902,8 @@ fn compute_symmetric_eigenvalues<F: Float + ndarray::ScalarOperand>(
         .collect();
     pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-    for (i, (val_)) in pairs.iter().enumerate() {
-        eigenvalues[i] = *val;
+    for (i, (val_, _idx)) in pairs.iter().enumerate() {
+        eigenvalues[i] = *val_;
     }
 
     eigenvalues
@@ -1207,7 +1207,7 @@ fn compute_matrix_power<F: Float + ndarray::ScalarOperand>(
 pub fn matrix_exp<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(MatrixExpOp)
 }
 
@@ -1224,7 +1224,7 @@ pub fn matrix_exp<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>)
 pub fn matrix_log<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .build(MatrixLogOp)
 }
 

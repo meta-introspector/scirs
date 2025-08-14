@@ -61,7 +61,7 @@ impl<A: Float + Debug> LinearDecay<A> {
     /// * `initial_lr` - Initial learning rate
     /// * `final_lr` - Final learning rate
     /// * `total_steps` - Total number of steps
-    pub fn new(initial_lr: A, final_lr: A, totalsteps: usize) -> Self {
+    pub fn new(initial_lr: A, final_lr: A, total_steps: usize) -> Self {
         Self {
             initial_lr,
             final_lr,

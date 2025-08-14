@@ -83,8 +83,8 @@ impl Space {
 
         // Update transformed dimensionality
         self.transformed_n_dims += match &parameter {
-            Parameter::Real(__) => 1,
-            Parameter::Integer(__) => 1,
+            Parameter::Real(_, _) => 1,
+            Parameter::Integer(_, _) => 1,
             Parameter::Categorical(values) => values.len(),
         };
 
@@ -111,9 +111,9 @@ impl Space {
     }
 
     /// Sample random points from the space
-    pub fn sample(&self, nsamples: usize, rng: &mut StdRng) -> Vec<Array1<f64>> {
+    pub fn sample(&self, n_samples: usize, rng: &mut StdRng) -> Vec<Array1<f64>> {
         let n_dims = self.n_dims();
-        let mut _samples = Vec::with_capacity(n_samples);
+        let mut samples = Vec::with_capacity(n_samples);
 
         for _ in 0..n_samples {
             let mut sample = Array1::zeros(n_dims);
@@ -124,7 +124,7 @@ impl Space {
                         // Use gen_range directly instead of Uniform distribution
                         sample[i] = rng.gen_range(*lower..*upper);
                     }
-                    Parameter::Integer((lower, upper)) => {
+                    Parameter::Integer(lower, upper) => {
                         let range = rng.gen_range(*lower..=*upper);
                         sample[i] = range as f64;
                     }
@@ -138,7 +138,7 @@ impl Space {
             samples.push(sample);
         }
 
-        _samples
+        samples
     }
 
     /// Transform a point from the original space to the model space
@@ -248,7 +248,7 @@ pub struct ExpectedImprovement {
 
 impl ExpectedImprovement {
     /// Create a new Expected Improvement acquisition function
-    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, ybest: f64, xi: f64) -> Self {
+    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, y_best: f64, xi: f64) -> Self {
         Self { model, y_best, xi }
     }
 }
@@ -318,7 +318,7 @@ pub struct ProbabilityOfImprovement {
 
 impl ProbabilityOfImprovement {
     /// Create a new Probability of Improvement acquisition function
-    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, ybest: f64, xi: f64) -> Self {
+    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, y_best: f64, xi: f64) -> Self {
         Self { model, y_best, xi }
     }
 }
@@ -726,7 +726,7 @@ impl BayesianOptimizer {
     }
 
     /// Run the full optimization process
-    pub fn optimize<F>(&mut self, func: F, ncalls: usize) -> OptimizeResult<f64>
+    pub fn optimize<F>(&mut self, func: F, n_calls: usize) -> OptimizeResult<f64>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {

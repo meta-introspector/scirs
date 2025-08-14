@@ -86,9 +86,9 @@ struct SubspaceState {
 
 impl SubspaceState {
     fn new(seed: Option<u64>) -> Self {
-        let rng = match _seed {
+        let rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => StdRng::seed_from_u64(42), // Use a fixed _seed as fallback
+            None => StdRng::seed_from_u64(42), // Use a fixed seed as fallback
         };
 
         Self {
@@ -101,7 +101,7 @@ impl SubspaceState {
     }
 
     /// Add gradient to history and manage memory limit
-    fn add_gradient(&mut self, grad: Array1<f64>, memorylimit: usize) {
+    fn add_gradient(&mut self, grad: Array1<f64>, memory_limit: usize) {
         self.gradient_history.push_back(grad);
         if self.gradient_history.len() > memory_limit {
             self.gradient_history.pop_front();
@@ -118,7 +118,7 @@ impl SubspaceState {
     }
 
     /// Generate random subspace basis
-    fn generate_random_subspace(&mut self, n: usize, subspacedim: usize) -> Vec<Array1<f64>> {
+    fn generate_random_subspace(&mut self, n: usize, subspace_dim: usize) -> Vec<Array1<f64>> {
         let mut basis = Vec::new();
         for _ in 0..subspace_dim.min(n) {
             let mut vec = Array1::zeros(n);
@@ -139,7 +139,7 @@ impl SubspaceState {
     }
 
     /// Generate adaptive subspace based on gradient history
-    fn generate_adaptive_subspace(&self, subspacedim: usize) -> Vec<Array1<f64>> {
+    fn generate_adaptive_subspace(&self, subspace_dim: usize) -> Vec<Array1<f64>> {
         if self.gradient_history.len() < 2 {
             return Vec::new();
         }
@@ -189,19 +189,19 @@ impl SubspaceState {
 /// Orthogonalize basis vectors using modified Gram-Schmidt
 #[allow(dead_code)]
 fn orthogonalize_basis(basis: &mut Vec<Array1<f64>>) {
-    for i in 0.._basis.len() {
+    for i in 0..basis.len() {
         // Normalize current vector
         let norm = basis[i].mapv(|x: f64| x.powi(2)).sum().sqrt();
         if norm > 1e-12 {
-            basis[i] = &_basis[i] / norm;
+            basis[i] = &basis[i] / norm;
         } else {
             continue;
         }
 
         // Orthogonalize against all previous vectors
-        for j in i + 1.._basis.len() {
-            let dot_product = basis[i].dot(&_basis[j]);
-            basis[j] = &_basis[j] - dot_product * &_basis[i];
+        for j in i + 1..basis.len() {
+            let dot_product = basis[i].dot(&basis[j]);
+            basis[j] = &basis[j] - dot_product * &basis[i];
         }
     }
 
@@ -445,7 +445,7 @@ where
         }
 
         // Line search
-        let step_size = backtracking_line_search(
+        let (step_size, _) = backtracking_line_search(
             &mut |x_view| fun(x_view),
             &x.view(),
             best_f,
@@ -550,7 +550,7 @@ where
         }
 
         // Line search
-        let step_size = backtracking_line_search(
+        let (step_size, _) = backtracking_line_search(
             &mut |x_view| fun(x_view),
             &x.view(),
             best_f,

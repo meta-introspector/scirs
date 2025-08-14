@@ -5,8 +5,8 @@
 //! predictive checks, credible intervals, and Bayesian model averaging.
 
 use ndarray::{Array1, Array2};
-use scirs2__metrics::bayesian::*;
-use scirs2__metrics::error::Result;
+use scirs2_metrics::bayesian::*;
+use scirs2_metrics::error::Result;
 use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
@@ -260,7 +260,7 @@ fn credible_interval_example() -> Result<()> {
 #[allow(dead_code)]
 fn bayesian_model_averaging_example() -> Result<()> {
     // Simulate predictions from 4 different models for 10 test cases
-    let predictions = Array2::fromshape_vec(
+    let predictions = Array2::from_shape_vec(
         (4, 10),
         vec![
             // Model 1: Linear model
@@ -299,7 +299,7 @@ fn bayesian_model_averaging_example() -> Result<()> {
         let results = bma.average_models(&predictions, &scores)?;
 
         println!("Bayesian Model Averaging ({name}):");
-        println!("  Model weights: {:?}", results.model_weightsto_vec());
+        println!("  Model weights: {:?}", results.model_weights.to_vec());
         println!(
             "  Averaged predictions: {:?}",
             results.averaged_prediction.to_vec()
@@ -414,7 +414,7 @@ fn comprehensive_bayesian_workflow() -> Result<()> {
     );
     println!(
         "  Average model uncertainty: {:.4}",
-        bma_result.model_uncertainty.mean().unwrap_or(0.0)
+        bma_result.model_uncertainty.mean()
     );
 
     // Step 6: Summary and recommendations

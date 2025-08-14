@@ -127,7 +127,7 @@ where
     let h = compute_step_sizes(x, options);
 
     // Create result matrix with the same sparsity pattern
-    let (rows, cols) = sparsity.find();
+    let (rows, cols, _) = sparsity.find();
     let m = sparsity.shape().0;
     let n = sparsity.shape().1;
     let zeros = vec![0.0; rows.len()];
@@ -240,7 +240,7 @@ where
     let h = compute_step_sizes(x, options);
 
     // Create result matrix with the same sparsity pattern
-    let (rows, cols) = sparsity.find();
+    let (rows, cols, _) = sparsity.find();
     let m = sparsity.shape().0;
     let n = sparsity.shape().1;
     let zeros = vec![0.0; rows.len()];
@@ -362,7 +362,7 @@ where
     let groups = determine_column_groups(transposed_csr, None, None)?;
 
     // Create result matrix with the same sparsity pattern
-    let (rows, cols) = sparsity.find();
+    let (rows, cols, _) = sparsity.find();
     let zeros = vec![0.0; rows.len()];
     let mut jac = CsrArray::from_triplets(&rows.to_vec(), &cols.to_vec(), &zeros, (m, n), false)?;
 

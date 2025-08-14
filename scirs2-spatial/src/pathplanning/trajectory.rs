@@ -166,7 +166,7 @@ impl CircularObstacle {
     /// Check if a point is inside the obstacle (with safety margin)
     pub fn contains(&self, x: f64, y: f64, safetymargin: f64) -> bool {
         let distance = ((x - self.x).powi(2) + (y - self.y).powi(2)).sqrt();
-        distance < self.radius + safety_margin
+        distance < self.radius + safetymargin
     }
 }
 
@@ -276,14 +276,14 @@ impl Trajectory {
     pub fn satisfies_velocity_constraints(&self, _maxvelocity: f64) -> bool {
         self.points
             .iter()
-            .all(|p| p.speed() <= _max_velocity + 1e-6)
+            .all(|p| p.speed() <= _maxvelocity + 1e-6)
     }
 
     /// Check if the trajectory satisfies acceleration constraints
     pub fn satisfies_acceleration_constraints(&self, _maxacceleration: f64) -> bool {
         self.points
             .iter()
-            .all(|p| p.acceleration_magnitude() <= _max_acceleration + 1e-6)
+            .all(|p| p.acceleration_magnitude() <= _maxacceleration + 1e-6)
     }
 }
 

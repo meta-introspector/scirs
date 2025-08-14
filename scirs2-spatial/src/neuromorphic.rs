@@ -116,9 +116,9 @@ impl SpikingNeuron {
         }
 
         // Update membrane potential using leaky integrate-and-fire model
-        self.input_current = input_current;
+        self.input_current = inputcurrent;
         let leak_term = -self.leak_constant * self.membrane_potential;
-        self.membrane_potential += dt * (leak_term + input_current);
+        self.membrane_potential += dt * (leak_term + inputcurrent);
 
         // Check for spike
         if self.membrane_potential >= self.threshold {
@@ -179,7 +179,7 @@ impl Synapse {
     }
 
     /// Update synaptic weight using STDP rule
-    pub fn update_stdp(&mut self, _currenttime: f64, pre_spiked: bool, postspiked: bool) {
+    pub fn update_stdp(&mut self, currenttime: f64, pre_spiked: bool, postspiked: bool) {
         if pre_spiked {
             self.last_pre_spike = currenttime;
         }
@@ -1102,7 +1102,7 @@ impl HomeostaticNeuralClusterer {
     /// Fit homeostatic clustering model
     pub fn fit(
         &mut self,
-        _points: &ArrayView2<f64>,
+        points: &ArrayView2<f64>,
         epochs: usize,
     ) -> SpatialResult<Array1<usize>> {
         let (n_samples, n_features) = points.dim();
@@ -1625,7 +1625,7 @@ impl DendriticSpatialClusterer {
     /// Fit dendritic clustering model
     pub fn fit(
         &mut self,
-        _points: &ArrayView2<f64>,
+        points: &ArrayView2<f64>,
         epochs: usize,
     ) -> SpatialResult<Array1<usize>> {
         let (n_samples, n_features) = points.dim();

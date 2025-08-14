@@ -32,21 +32,21 @@ pub enum MotifType {
 
 /// Find all occurrences of a specified motif in the graph
 #[allow(dead_code)]
-pub fn find_motifs<N, E, Ix>(_graph: &Graph<N, E, Ix>, motiftype: MotifType) -> Vec<Vec<N>>
+pub fn find_motifs<N, E, Ix>(graph: &Graph<N, E, Ix>, motiftype: MotifType) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
     E: EdgeWeight + Send + Sync,
     Ix: IndexType + Send + Sync,
 {
-    match motif_type {
-        MotifType::Triangle => find_triangles(_graph),
-        MotifType::Square => find_squares(_graph),
-        MotifType::Star3 => find_star3s(_graph),
-        MotifType::Clique4 => find_clique4s(_graph),
-        MotifType::Path3 => find_path3s(_graph),
-        MotifType::BiFan => find_bi_fans(_graph),
-        MotifType::FeedForwardLoop => find_feed_forward_loops(_graph),
-        MotifType::BiDirectional => find_bidirectional_motifs(_graph),
+    match motiftype {
+        MotifType::Triangle => find_triangles(graph),
+        MotifType::Square => find_squares(graph),
+        MotifType::Star3 => find_star3s(graph),
+        MotifType::Clique4 => find_clique4s(graph),
+        MotifType::Path3 => find_path3s(graph),
+        MotifType::BiFan => find_bi_fans(graph),
+        MotifType::FeedForwardLoop => find_feed_forward_loops(graph),
+        MotifType::BiDirectional => find_bidirectional_motifs(graph),
     }
 }
 
@@ -101,18 +101,18 @@ where
     // For each quadruplet of nodes, check if they form a square
     for i in 0..nodes.len() {
         for j in i + 1..nodes.len() {
-            if !_graph.has_edge(&nodes[i], &nodes[j]) {
+            if !graph.has_edge(&nodes[i], &nodes[j]) {
                 continue;
             }
             for k in j + 1..nodes.len() {
-                if !_graph.has_edge(&nodes[j], &nodes[k]) {
+                if !graph.has_edge(&nodes[j], &nodes[k]) {
                     continue;
                 }
                 for l in k + 1..nodes.len() {
                     if graph.has_edge(&nodes[k], &nodes[l])
                         && graph.has_edge(&nodes[l], &nodes[i])
-                        && !_graph.has_edge(&nodes[i], &nodes[k])
-                        && !_graph.has_edge(&nodes[j], &nodes[l])
+                        && !graph.has_edge(&nodes[i], &nodes[k])
+                        && !graph.has_edge(&nodes[j], &nodes[l])
                     {
                         squares.push(vec![
                             nodes[i].clone(),
@@ -150,9 +150,9 @@ where
                     for j in i + 1..neighbor_list.len() {
                         for k in j + 1..neighbor_list.len() {
                             // Check that the neighbors aren't connected to each other
-                            if !_graph.has_edge(&neighbor_list[i], &neighbor_list[j])
-                                && !_graph.has_edge(&neighbor_list[j], &neighbor_list[k])
-                                && !_graph.has_edge(&neighbor_list[i], &neighbor_list[k])
+                            if !graph.has_edge(&neighbor_list[i], &neighbor_list[j])
+                                && !graph.has_edge(&neighbor_list[j], &neighbor_list[k])
+                                && !graph.has_edge(&neighbor_list[i], &neighbor_list[k])
                             {
                                 stars.push(vec![
                                     center.clone(),
@@ -181,14 +181,14 @@ where
     let mut cliques = Vec::new();
     let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
 
-    // For each quadruplet of nodes, check if they form a complete _graph
+    // For each quadruplet of nodes, check if they form a complete graph
     for i in 0..nodes.len() {
         for j in i + 1..nodes.len() {
-            if !_graph.has_edge(&nodes[i], &nodes[j]) {
+            if !graph.has_edge(&nodes[i], &nodes[j]) {
                 continue;
             }
             for k in j + 1..nodes.len() {
-                if !_graph.has_edge(&nodes[i], &nodes[k]) || !_graph.has_edge(&nodes[j], &nodes[k])
+                if !graph.has_edge(&nodes[i], &nodes[k]) || !graph.has_edge(&nodes[j], &nodes[k])
                 {
                     continue;
                 }
@@ -242,9 +242,9 @@ where
                                 }
 
                                 // Check it's a path (no shortcuts)
-                                if !_graph.has_edge(start_node, &middle2)
-                                    && !_graph.has_edge(start_node, &end_node)
-                                    && !_graph.has_edge(&middle1, &end_node)
+                                if !graph.has_edge(start_node, &middle2)
+                                    && !graph.has_edge(start_node, &end_node)
+                                    && !graph.has_edge(&middle1, &end_node)
                                 {
                                     let mut path = vec![
                                         start_node.clone(),
@@ -287,7 +287,7 @@ where
     nodes.par_iter().enumerate().for_each(|(i, node1)| {
         for node2 in nodes.iter().skip(i + 1) {
             if let (Ok(neighbors1), Ok(neighbors2)) =
-                (_graph.neighbors(node1), graph.neighbors(node2))
+                (graph.neighbors(node1), graph.neighbors(node2))
             {
                 let neighbors1: HashSet<_> = neighbors1.into_iter().collect();
                 let neighbors2: HashSet<_> = neighbors2.into_iter().collect();
@@ -345,9 +345,9 @@ where
                     // Check if B->C exists and no back edges exist
                     if graph.has_edge(node_b, node_c) {
                         // Ensure it's a true feed-forward (no cycles back)
-                        if !_graph.has_edge(node_b, node_a)
-                            && !_graph.has_edge(node_c, node_a)
-                            && !_graph.has_edge(node_c, node_b)
+                        if !graph.has_edge(node_b, node_a)
+                            && !graph.has_edge(node_c, node_a)
+                            && !graph.has_edge(node_c, node_b)
                         {
                             let mut ffl = vec![node_a.clone(), node_b.clone(), node_c.clone()];
                             ffl.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
@@ -423,7 +423,7 @@ where
     motif_types
         .par_iter()
         .map(|motif_type| {
-            let count = find_motifs(_graph, *motif_type).len();
+            let count = find_motifs(graph, *motif_type).len();
             (*motif_type, count)
         })
         .collect()

@@ -52,8 +52,8 @@ impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUni
         #[cfg(feature = "neural_common")]
         {
             Self {
-                _name: name.to_string(),
-                metric_fn,
+                name: _name.to_string(),
+                metric_fn: metricfn,
                 predictions: None,
                 targets: None,
             }

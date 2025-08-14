@@ -30,7 +30,7 @@ impl<T: Tokenizer + Send + Sync> ParallelTokenizer<T> {
 
     /// Set the chunk size
     pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
-        self.chunk_size = chunk_size;
+        self.chunk_size = chunksize;
         self
     }
 
@@ -89,14 +89,14 @@ impl<T: Vectorizer + Send + Sync> ParallelVectorizer<T> {
     /// Create a new parallel vectorizer
     pub fn new(vectorizer: T) -> Self {
         Self {
-            _vectorizer: Arc::new(_vectorizer),
+            vectorizer: Arc::new(vectorizer),
             chunk_size: 100,
         }
     }
 
     /// Set the chunk size
     pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
-        self.chunk_size = chunk_size;
+        self.chunk_size = chunksize;
         self
     }
 
@@ -177,7 +177,7 @@ impl ParallelTextProcessor {
 
     /// Set the number of threads
     pub fn with_threads(mut self, numthreads: usize) -> Self {
-        self.num_threads = num_threads;
+        self.num_threads = numthreads;
         self
     }
 
@@ -247,7 +247,7 @@ impl ParallelTextProcessor {
         F: Fn(&[&str]) -> Vec<R> + Send + Sync,
         R: Send,
     {
-        texts.par_chunks(chunk_size).map(f).collect()
+        texts.par_chunks(chunksize).map(f).collect()
     }
 }
 
@@ -265,7 +265,7 @@ impl ParallelCorpusProcessor {
     /// Create a new parallel corpus processor
     pub fn new(_batchsize: usize) -> Self {
         Self {
-            batch_size,
+            batch_size: _batchsize,
             num_threads: None,
             max_memory: None,
         }
@@ -273,13 +273,13 @@ impl ParallelCorpusProcessor {
 
     /// Set the number of threads
     pub fn with_threads(mut self, numthreads: usize) -> Self {
-        self.num_threads = Some(num_threads);
+        self.num_threads = Some(numthreads);
         self
     }
 
     /// Set the maximum memory usage
     pub fn with_max_memory(mut self, maxmemory: usize) -> Self {
-        self.max_memory = Some(max_memory);
+        self.max_memory = Some(maxmemory);
         self
     }
 

@@ -23,7 +23,7 @@ pub trait MPIInterface {
         T: Clone + Send + Sync;
 
     /// Gather data from all processes to root
-    fn gather<T>(&self, send_data: &[T], recvdata: Option<&mut [T]>, root: i32) -> ScirsResult<()>
+    fn gather<T>(&self, send_data: &[T], recv_data: Option<&mut [T]>, root: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync;
 
@@ -209,7 +209,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
     }
 
     /// Distribute work among processes
-    pub fn distribute_work(&mut self, totalwork: usize) -> WorkAssignment {
+    pub fn distribute_work(&mut self, total_work: usize) -> WorkAssignment {
         self.work_distribution.assign_work(total_work)
     }
 
@@ -225,7 +225,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
     }
 
     /// Gather results from all workers to master
-    pub fn gather_results(&self, localresult: &Array1<f64>) -> ScirsResult<Option<Array2<f64>>> {
+    pub fn gather_results(&self, local_result: &Array1<f64>) -> ScirsResult<Option<Array2<f64>>> {
         if self.is_master() {
             let total_size = local_result.len() * self.size as usize;
             let mut gathered_data = vec![0.0; total_size];
@@ -236,7 +236,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
             )?;
 
             // Reshape into 2D array
-            let _result =
+            let result =
                 Array2::from_shape_vec((self.size as usize, local_result.len()), gathered_data)
                     .map_err(|e| {
                         ScirsError::InvalidInput(scirs2_core::error::ErrorContext::new(format!(
@@ -244,7 +244,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
                             e
                         )))
                     })?;
-            Ok(Some(_result))
+            Ok(Some(result))
         } else {
             self.mpi.gather(local_result.as_slice().unwrap(), None, 0)?;
             Ok(None)
@@ -252,7 +252,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
     }
 
     /// Perform all-reduce operation (sum)
-    pub fn allreduce_sum(&self, localdata: &Array1<f64>) -> ScirsResult<Array1<f64>> {
+    pub fn allreduce_sum(&self, local_data: &Array1<f64>) -> ScirsResult<Array1<f64>> {
         let mut result = Array1::zeros(local_data.len());
         self.mpi.allreduce(
             local_data.as_slice().unwrap(),
@@ -284,7 +284,7 @@ impl WorkDistribution {
         }
     }
 
-    fn assign_work(&self, totalwork: usize) -> WorkAssignment {
+    fn assign_work(&self, total_work: usize) -> WorkAssignment {
         match self.strategy {
             DistributionStrategy::DataParallel => self.data_parallel_assignment(total_work),
             DistributionStrategy::ModelParallel => self.model_parallel_assignment(total_work),
@@ -293,7 +293,7 @@ impl WorkDistribution {
         }
     }
 
-    fn data_parallel_assignment(&self, totalwork: usize) -> WorkAssignment {
+    fn data_parallel_assignment(&self, total_work: usize) -> WorkAssignment {
         let work_per_process = total_work / self.size as usize;
         let remainder = total_work % self.size as usize;
 
@@ -312,7 +312,7 @@ impl WorkDistribution {
         }
     }
 
-    fn model_parallel_assignment(&self, totalwork: usize) -> WorkAssignment {
+    fn model_parallel_assignment(&self, total_work: usize) -> WorkAssignment {
         // For model parallelism, each process handles different parameters
         WorkAssignment {
             start_index: 0,
@@ -321,12 +321,12 @@ impl WorkDistribution {
         }
     }
 
-    fn hybrid_assignment(&self, totalwork: usize) -> WorkAssignment {
+    fn hybrid_assignment(&self, total_work: usize) -> WorkAssignment {
         // Simplified hybrid: use data parallel for now
         self.data_parallel_assignment(total_work)
     }
 
-    fn master_worker_assignment(&self, totalwork: usize) -> WorkAssignment {
+    fn master_worker_assignment(&self, total_work: usize) -> WorkAssignment {
         if self.rank == 0 {
             // Master coordinates but may not do computation
             WorkAssignment {
@@ -335,7 +335,7 @@ impl WorkDistribution {
                 strategy: DistributionStrategy::MasterWorker,
             }
         } else {
-            // Workers split the _work
+            // Workers split the work
             let worker_count = self.size - 1;
             let work_per_worker = total_work / worker_count as usize;
             let remainder = total_work % worker_count as usize;
@@ -413,7 +413,7 @@ pub mod algorithms {
         }
 
         /// Set mutation parameters
-        pub fn with_parameters(mut self, f_scale: f64, crossoverrate: f64) -> Self {
+        pub fn with_parameters(mut self, f_scale: f64, crossover_rate: f64) -> Self {
             self.f_scale = f_scale;
             self.crossover_rate = crossover_rate;
             self
@@ -481,7 +481,7 @@ pub mod algorithms {
             // Final global best search
             let final_best = self.find_global_best(&local_population, &local_fitness)?;
             if final_best.1 < global_best_fitness {
-                global_best = final_best;
+                global_best = final_best.clone();
                 global_best_fitness = final_best.1;
             }
 
@@ -553,7 +553,7 @@ pub mod algorithms {
 
             // Find global best across all processes
             let global_fitness = Array1::from_elem(1, best_fitness);
-            let _global_fitness_sum = self.context.allreduce_sum(&global_fitness)?;
+            let global_fitness_sum = self.context.allreduce_sum(&global_fitness)?;
 
             // For simplicity, we'll use the local best for now
             // In a full implementation, we'd need to communicate the actual best individual
@@ -642,8 +642,8 @@ pub mod algorithms {
             Ok(())
         }
 
-        fn check_convergence(&mut self, localfitness: &Array1<f64>) -> ScirsResult<bool> {
-            let mean = local_fitness.mean().unwrap_or(0.0);
+        fn check_convergence(&mut self, local_fitness: &Array1<f64>) -> ScirsResult<bool> {
+            let mean = local_fitness.view().mean();
             let variance = local_fitness
                 .iter()
                 .map(|&x| (x - mean).powi(2))
@@ -942,7 +942,7 @@ impl MPIInterface for MockMPI {
         self.size
     }
 
-    fn broadcast<T>(self_data: &mut [T], root: i32) -> ScirsResult<()>
+    fn broadcast<T>(&self, data: &mut [T], root: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync,
     {

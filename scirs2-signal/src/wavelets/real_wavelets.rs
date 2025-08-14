@@ -25,9 +25,9 @@ use std::f64::consts::PI;
 /// ```
 #[allow(dead_code)]
 pub fn ricker(points: usize, a: f64) -> SignalResult<Vec<f64>> {
-    if _points == 0 {
+    if points == 0 {
         return Err(SignalError::ValueError(
-            "_points must be greater than 0".to_string(),
+            "points must be greater than 0".to_string(),
         ));
     }
 
@@ -42,10 +42,10 @@ pub fn ricker(points: usize, a: f64) -> SignalResult<Vec<f64>> {
     let wsq = a * a;
 
     // Generate position vector
-    let mid_point = (_points - 1) as f64 / 2.0;
-    let mut wavelet = Vec::with_capacity(_points);
+    let mid_point = (points - 1) as f64 / 2.0;
+    let mut wavelet = Vec::with_capacity(points);
 
-    for i in 0.._points {
+    for i in 0..points {
         let x = i as f64 - mid_point;
         let xsq = x * x;
         let mod_term = 1.0 - xsq / wsq;

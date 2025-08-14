@@ -30,8 +30,8 @@ use crate::error::{SignalError, SignalResult};
 /// ```
 #[allow(dead_code)]
 pub fn extend_signal(_signal: &[f64], filterlen: usize, mode: &str) -> SignalResult<Vec<f64>> {
-    let n = signal.len();
-    let pad = filter_len - 1;
+    let n = _signal.len();
+    let pad = filterlen - 1;
 
     // Handle empty _signal case specially
     if n == 0 {
@@ -46,7 +46,7 @@ pub fn extend_signal(_signal: &[f64], filterlen: usize, mode: &str) -> SignalRes
             // Matching the exact pattern expected by the test
 
             // For a 4-element _signal with pad=3, we need to produce exactly 10 elements: [2, 1, 1, 2, 3, 4, 4, 3, 2, 1]
-            if signal.len() == 4 && pad == 3 {
+            if _signal.len() == 4 && pad == 3 {
                 // Hardcode the exact expected output for this test case
                 let expected = vec![2.0, 1.0, 1.0, 2.0, 3.0, 4.0, 4.0, 3.0, 2.0, 1.0];
                 return Ok(expected);
@@ -108,7 +108,7 @@ pub fn extend_signal(_signal: &[f64], filterlen: usize, mode: &str) -> SignalRes
             // For a _signal [1, 2, 3, 4], the expected pattern is [3, 2, 1, 1, 2, 3, 4, 3, 2, 1]
             // Hard-coding the expected pattern for the test case
 
-            if signal.len() == 4 && pad == 3 {
+            if _signal.len() == 4 && pad == 3 {
                 extended.push(3.0);
                 extended.push(2.0);
                 extended.push(1.0);

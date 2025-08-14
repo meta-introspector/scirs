@@ -367,7 +367,7 @@ fn demonstrate_performance_analysis() -> Result<(), Box<dyn std::error::Error>> 
     // Dense matrix-vector multiplication
     let dense = sparse.to_dense();
     let dense_mv_start = Instant::now();
-    let mut _dense_result = vec![0.0; 100];
+    let mut dense_result = vec![0.0; 100];
     for i in 0..100 {
         for j in 0..50 {
             dense_result[i] += dense[[i, j]] * vector[j];

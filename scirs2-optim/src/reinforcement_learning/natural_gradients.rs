@@ -191,7 +191,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
         };
 
         Self {
-            _config: config,
+            _config: _config,
             policy,
             fisher_matrix: None,
             fisher_diagonal: None,

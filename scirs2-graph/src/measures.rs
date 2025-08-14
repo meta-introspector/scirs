@@ -241,7 +241,7 @@ where
             }
 
             // Find shortest path from s to t
-            if let Ok(Some(path)) = dijkstra_path(_graph, s, t) {
+            if let Ok(Some(path)) = dijkstra_path(graph, s, t) {
                 // Skip source and target nodes
                 for node in &path.nodes[1..path.nodes.len() - 1] {
                     *betweenness.entry(node.clone()).or_insert(0.0) += 1.0;
@@ -299,7 +299,7 @@ where
             }
 
             // Find shortest path from s to t
-            if let Ok(Some(path)) = dijkstra_path_digraph(_graph, s, t) {
+            if let Ok(Some(path)) = dijkstra_path_digraph(graph, s, t) {
                 // Skip source and target nodes
                 for node in &path.nodes[1..path.nodes.len() - 1] {
                     *betweenness.entry(node.clone()).or_insert(0.0) += 1.0;
@@ -357,7 +357,7 @@ where
             }
 
             // Find shortest path from node to other
-            if let Ok(Some(path)) = dijkstra_path(_graph, node, other) {
+            if let Ok(Some(path)) = dijkstra_path(graph, node, other) {
                 sum_distances += path.total_weight.into();
                 reachable_nodes += 1;
             }
@@ -418,7 +418,7 @@ where
             }
 
             // Find shortest path from node to other
-            if let Ok(Some(path)) = dijkstra_path_digraph(_graph, node, other) {
+            if let Ok(Some(path)) = dijkstra_path_digraph(graph, node, other) {
                 sum_distances += path.total_weight.into();
                 reachable_nodes += 1;
             }
@@ -1103,7 +1103,7 @@ where
 
     // Create node index mapping
     let node_to_idx: HashMap<N, usize> = nodes
-        ._iter()
+        .iter()
         .enumerate()
         .map(|(i, n)| (n.clone(), i))
         .collect();
@@ -1112,7 +1112,7 @@ where
     for _ in 0..max_iter {
         // Update authority scores
         new_authorities.fill(0.0);
-        for (i, node) in nodes._iter().enumerate() {
+        for (i, node) in nodes.iter().enumerate() {
             // Authority score is sum of hub scores of nodes pointing to it
             if let Ok(predecessors) = graph.predecessors(node) {
                 for pred in predecessors {
@@ -1125,7 +1125,7 @@ where
 
         // Update hub scores
         new_hubs.fill(0.0);
-        for (i, node) in nodes._iter().enumerate() {
+        for (i, node) in nodes.iter().enumerate() {
             // Hub score is sum of authority scores of nodes it points to
             if let Ok(successors) = graph.successors(node) {
                 for succ in successors {
@@ -1137,8 +1137,8 @@ where
         }
 
         // Normalize scores
-        let auth_norm: f64 = new_authorities._iter().map(|x| x * x).sum::<f64>().sqrt();
-        let hub_norm: f64 = new_hubs._iter().map(|x| x * x).sum::<f64>().sqrt();
+        let auth_norm: f64 = new_authorities.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let hub_norm: f64 = new_hubs.iter().map(|x| x * x).sum::<f64>().sqrt();
 
         if auth_norm > 0.0 {
             for score in &mut new_authorities {
@@ -1154,12 +1154,12 @@ where
 
         // Check convergence
         let auth_diff: f64 = authorities
-            ._iter()
+            .iter()
             .zip(&new_authorities)
             .map(|(old, new)| (old - new).abs())
             .sum();
         let hub_diff: f64 = hubs
-            ._iter()
+            .iter()
             .zip(&new_hubs)
             .map(|(old, new)| (old - new).abs())
             .sum();
@@ -1175,12 +1175,12 @@ where
 
     // Convert to HashMap
     let authority_map = nodes
-        ._iter()
+        .iter()
         .enumerate()
         .map(|(i, n)| (n.clone(), authorities[i]))
         .collect();
     let hub_map = nodes
-        ._iter()
+        .iter()
         .enumerate()
         .map(|(i, n)| (n.clone(), hubs[i]))
         .collect();
@@ -1369,7 +1369,7 @@ where
         for target in &nodes {
             if source != target {
                 // Find shortest weighted path
-                if let Ok(Some(path)) = dijkstra_path(_graph, source, target) {
+                if let Ok(Some(path)) = dijkstra_path(graph, source, target) {
                     // Count how many times each intermediate node appears
                     for intermediate in &path.nodes[1..path.nodes.len() - 1] {
                         *centrality.get_mut(intermediate).unwrap() += 1.0;
@@ -1467,7 +1467,7 @@ where
         // Calculate shortest weighted paths to all other nodes
         for other in &nodes {
             if node != other {
-                if let Ok(Some(path)) = dijkstra_path(_graph, node, other) {
+                if let Ok(Some(path)) = dijkstra_path(graph, node, other) {
                     let distance: f64 = path.total_weight.into();
                     total_distance += distance;
                     reachable_count += 1;

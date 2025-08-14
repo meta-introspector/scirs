@@ -11,7 +11,7 @@ fn main() {
     println!("Original matrix: {:?}", mat);
 
     // For this example, we'll use the autograd SVD implementation
-    ag::run::<f64_>(|g| {
+    ag::run(|g| {
         let mat_tensor = convert_to_tensor(mat.clone().into_dyn(), g);
 
         // Compute SVD using autograd
@@ -46,7 +46,7 @@ fn main() {
     }
 
     // Test the function in autograd context
-    ag::run::<f64_>(|g| {
+    ag::run(|g| {
         // Create the input tensor
         let data = array![[1.0, 2.0], [3.0, 4.0]];
         let x = variable(data.clone(), g);

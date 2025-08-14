@@ -72,7 +72,7 @@ impl<F: Float> Op<F> for DebugScalarOne {
 pub fn debug_identity_with_gradient<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
-        .append_input(_tensor, false)
+        .append_input(tensor, false)
         .build(DebugIdentityWithGradient)
 }
 
@@ -81,6 +81,6 @@ pub fn debug_identity_with_gradient<'g, F: Float>(tensor: &Tensor<'g, F>) -> Ten
 pub fn debug_scalar_one<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
-        .append_input(_tensor, false)
+        .append_input(tensor, false)
         .build(DebugScalarOne)
 }

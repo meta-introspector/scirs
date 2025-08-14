@@ -75,7 +75,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
     pub fn new_with_ranges(p: A, alpharange: (A, A), beta_range: (A, A)) -> Self {
         Self {
             p,
-            alpha_range,
+            alpha_range: alpharange,
             beta_range,
             rng: scirs2_core::random::Random::seed(42),
         }

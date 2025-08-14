@@ -103,7 +103,7 @@ struct SparseQuasiNewton {
 }
 
 impl SparseQuasiNewton {
-    fn new(_n: usize, maxhistory: usize) -> Self {
+    fn new(_n: usize, max_history: usize) -> Self {
         Self {
             h_inv_sparse: None,
             sparse_grad_history: Vec::new(),
@@ -585,12 +585,7 @@ fn sparse_to_dense(sparse: &CsrArray<f64>) -> Array1<f64> {
 
 #[allow(dead_code)]
 fn sparse_vector_norm(sparse: &CsrArray<f64>) -> f64 {
-    _sparse
-        .get_data()
-        .iter()
-        .map(|&x| x * x)
-        .sum::<f64>()
-        .sqrt()
+    sparse.get_data().iter().map(|&x| x * x).sum::<f64>().sqrt()
 }
 
 #[allow(dead_code)]
@@ -672,7 +667,7 @@ fn create_sparse_identity(
 
 #[allow(dead_code)]
 fn sparse_to_dense_matrix(sparse: &CsrArray<f64>) -> Array2<f64> {
-    let (m, n) = (_sparse.nrows(), sparse.ncols());
+    let (m, n) = (sparse.nrows(), sparse.ncols());
     let mut dense = Array2::zeros((m, n));
 
     for i in 0..m {

@@ -386,7 +386,7 @@ fn compute_inverse<F: Float>(matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F
 
 #[allow(dead_code)]
 fn compute_pseudo_inverse<F: Float>(
-    _matrix: &ndarray::ArrayView2<F>,
+    matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array2<F>, OpError> {
     // Simplified pseudo-inverse using transpose
     // For a full implementation, use SVD
@@ -396,7 +396,7 @@ fn compute_pseudo_inverse<F: Float>(
     if m >= n {
         // A^+ = (A^T A)^(-1) A^T
         let at = matrix.t();
-        let ata = at.dot(_matrix);
+        let ata = at.dot(matrix);
         let ata_inv = compute_inverse(&ata.view())?;
         Ok(ata_inv.dot(&at))
     } else {
@@ -749,7 +749,7 @@ fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
     let n = matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (_matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
+            if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
                 return false;
             }
         }
@@ -828,11 +828,11 @@ pub fn matrix_inverse<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
 
     // Get the shape tensor from the input
-    let matrixshape = crate::tensor_ops::shape(_matrix);
+    let matrixshape = crate::tensor_ops::shape(matrix);
 
     // Build the tensor with shape information
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .setshape(&matrixshape)
         .build(MatrixInverseOp)
 }
@@ -842,17 +842,17 @@ pub fn pseudo_inverse<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
 
     // Get the shape tensor from the input
-    let matrixshape = crate::tensor_ops::shape(_matrix);
+    let matrixshape = crate::tensor_ops::shape(matrix);
 
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .setshape(&matrixshape)
         .build(PseudoInverseOp)
 }
 
 #[allow(dead_code)]
 pub fn determinant<'g, F: Float + ndarray::ScalarOperand>(
-    _matrix: &Tensor<'g, F>,
+    matrix: &Tensor<'g, F>,
 ) -> Tensor<'g, F> {
     let g = matrix.graph();
 
@@ -861,7 +861,7 @@ pub fn determinant<'g, F: Float + ndarray::ScalarOperand>(
     let scalarshape = crate::tensor_ops::zeros(&[0], g);
 
     Tensor::builder(g)
-        .append_input(_matrix, false)
+        .append_input(matrix, false)
         .setshape(&scalarshape)
         .build(GeneralDeterminantOp)
 }

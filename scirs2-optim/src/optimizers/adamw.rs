@@ -69,7 +69,7 @@ impl<A: Float + ScalarOperand + Debug> AdamW<A> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learningrate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
             learning_rate,
             beta1: A::from(0.9).unwrap(),
@@ -144,7 +144,7 @@ impl<A: Float + ScalarOperand + Debug> AdamW<A> {
     }
 
     /// Sets the weight decay parameter
-    pub fn set_weight_decay(&mut self, weightdecay: A) -> &mut Self {
+    pub fn set_weight_decay(&mut self, weight_decay: A) -> &mut Self {
         self.weight_decay = weight_decay;
         self
     }
@@ -237,7 +237,7 @@ where
         self.learning_rate
     }
 
-    fn set_learning_rate(&mut self, learningrate: A) {
+    fn set_learning_rate(&mut self, learning_rate: A) {
         self.learning_rate = learning_rate;
     }
 }

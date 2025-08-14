@@ -18,19 +18,19 @@
 //!
 //! ```
 //! use ndarray::Array2;
-//! use scirs2__metrics::ranking::label::{
+//! use scirs2_metrics::ranking::label::{
 //!     coverage_error_multiple, label_ranking_loss, label_ranking_average_precision_score
 //! };
 //!
 //! // Example: 3 samples, 5 possible labels
-//! let y_true = Array2::fromshape_vec((3, 5), vec![
+//! let y_true = Array2::from_shape_vec((3, 5), vec![
 //!     1.0, 0.0, 1.0, 0.0, 0.0,  // Sample 1: labels 0 and 2 are relevant
 //!     0.0, 0.0, 1.0, 1.0, 0.0,  // Sample 2: labels 2 and 3 are relevant
 //!     0.0, 1.0, 1.0, 0.0, 1.0,  // Sample 3: labels 1, 2, and 4 are relevant
 //! ]).unwrap();
 //!
 //! // Predicted scores for each label
-//! let y_score = Array2::fromshape_vec((3, 5), vec![
+//! let y_score = Array2::from_shape_vec((3, 5), vec![
 //!     0.9, 0.2, 0.8, 0.3, 0.1,  // Scores for sample 1
 //!     0.2, 0.3, 0.9, 0.7, 0.1,  // Scores for sample 2
 //!     0.1, 0.9, 0.8, 0.2, 0.7,  // Scores for sample 3
@@ -44,7 +44,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::ranking::{mean_reciprocal_rank, ndcg_score,
+//! use scirs2_metrics::ranking::{mean_reciprocal_rank, ndcg_score,
 //!     mean_average_precision, precision_at_k, recall_at_k};
 //!
 //! // Example: search engine results where each array is a different query
@@ -102,7 +102,7 @@ pub mod label;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::ranking::mean_reciprocal_rank;
+/// use scirs2_metrics::ranking::mean_reciprocal_rank;
 ///
 /// // Example: search engine results where each array is a different query
 /// // Values indicate whether a result is relevant (1.0) or not (0.0)
@@ -231,7 +231,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::ranking::ndcg_score;
+/// use scirs2_metrics::ranking::ndcg_score;
 ///
 /// let y_true = vec![
 ///     array![0.0, 1.0, 0.0, 0.0, 0.0],  // First query: second result is relevant
@@ -376,7 +376,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::ranking::mean_average_precision;
+/// use scirs2_metrics::ranking::mean_average_precision;
 ///
 /// // Example: search engine results where each array is a different query
 /// // Values indicate whether a result is relevant (1.0) or not (0.0)
@@ -471,7 +471,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::ranking::precision_at_k;
+/// use scirs2_metrics::ranking::precision_at_k;
 ///
 /// // Example: search engine results where each array is a different query
 /// // Values indicate whether a result is relevant (1.0) or not (0.0)
@@ -578,7 +578,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::ranking::recall_at_k;
+/// use scirs2_metrics::ranking::recall_at_k;
 ///
 /// // Example: search engine results where each array is a different query
 /// // Values indicate whether a result is relevant (1.0) or not (0.0)
@@ -695,7 +695,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::ranking::kendalls_tau;
+/// use scirs2_metrics::ranking::kendalls_tau;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
@@ -785,7 +785,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::ranking::spearmans_rho;
+/// use scirs2_metrics::ranking::spearmans_rho;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
@@ -906,7 +906,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::ranking::map_at_k;
+/// use scirs2_metrics::ranking::map_at_k;
 ///
 /// // Example: search engine results where each array is a different query
 /// // Values indicate whether a result is relevant (1.0) or not (0.0)
@@ -964,7 +964,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::ranking::click_through_rate;
+/// use scirs2_metrics::ranking::click_through_rate;
 ///
 /// // Example: search engine results where each array is a different query
 /// // Values indicate whether a result is relevant (1.0) or not (0.0)

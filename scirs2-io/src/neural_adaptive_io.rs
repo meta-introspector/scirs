@@ -39,10 +39,10 @@ pub struct AdamOptimizer {
 
 impl AdamOptimizer {
     /// Create a new Adam optimizer
-    pub fn new(weightshape: (usize, usize), bias_size: usize) -> Self {
+    pub fn new(weight_shape: (usize, usize), bias_size: usize) -> Self {
         Self {
-            m_weights: Array2::zeros(_weightshape),
-            v_weights: Array2::zeros(_weightshape),
+            m_weights: Array2::zeros(weight_shape),
+            v_weights: Array2::zeros(weight_shape),
             m_bias: Array1::zeros(bias_size),
             v_bias: Array1::zeros(bias_size),
             beta1: 0.9,
@@ -116,9 +116,9 @@ pub struct NeuralIoNetwork {
 
 impl NeuralIoNetwork {
     /// Create a new neural network with specified layer sizes
-    pub fn new(_input_size: usize, hidden_size: usize, outputsize: usize) -> Self {
+    pub fn new(input_size: usize, hidden_size: usize, output_size: usize) -> Self {
         // Initialize weights with Xavier/Glorot initialization
-        let input_scale = (2.0 / _input_size as f32).sqrt();
+        let input_scale = (2.0 / input_size as f32).sqrt();
         let hidden_scale = (2.0 / hidden_size as f32).sqrt();
         let output_scale = (2.0 / hidden_size as f32).sqrt();
 
@@ -131,7 +131,7 @@ impl NeuralIoNetwork {
             output_bias: Array1::zeros(output_size),
             learning_rate: 0.001,
             adam_optimizer: AdamOptimizer::new((hidden_size, input_size), hidden_size),
-            attention_weights: Array1::from_elem(_input_size, 1.0 / _input_size as f32),
+            attention_weights: Array1::from_elem(input_size, 1.0 / input_size as f32),
             dropout_rate: 0.1,
         }
     }
@@ -484,7 +484,7 @@ pub struct PerformanceFeedback {
 impl PerformanceFeedback {
     /// Convert to target vector for neural network training
     pub fn to_target_vector(&self, baselinethroughput: f32) -> Array1<f32> {
-        let throughput_improvement = (self.throughput_mbps / baseline_throughput.max(1.0)).min(2.0);
+        let throughput_improvement = (self.throughput_mbps / baselinethroughput.max(1.0)).min(2.0);
         let latency_score = (100.0 / (self.latency_ms + 1.0)).min(1.0);
         let efficiency_score = (self.cpu_efficiency + self.memory_efficiency) / 2.0;
         let reliability_score = 1.0 - self.error_rate.min(1.0);
@@ -878,7 +878,7 @@ impl ReinforcementLearningAgent {
         // First, get the max next Q value
         let max_next_q = self
             .q_table
-            .get(next_state)
+            .get(nextstate)
             .map(|actions| actions.values().copied().fold(f32::NEG_INFINITY, f32::max))
             .unwrap_or(0.0);
 

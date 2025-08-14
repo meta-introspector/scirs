@@ -147,11 +147,11 @@ impl MLSentimentAnalyzer {
 
     /// Evaluate on test dataset
     pub fn evaluate(&self, testdataset: &TextDataset) -> Result<EvaluationMetrics> {
-        let texts: Vec<&str> = test_dataset.texts.iter().map(|s| s.as_str()).collect();
+        let texts: Vec<&str> = testdataset.texts.iter().map(|s| s.as_str()).collect();
         let features = self.vectorizer.transform_batch(&texts)?;
 
         let predictions = self.predict_numeric(&features)?;
-        let true_labels = self.labels_to_numeric(&test_dataset.labels)?;
+        let true_labels = self.labels_to_numeric(&testdataset.labels)?;
 
         // Calculate metrics
         let metrics = TextClassificationMetrics::new();
@@ -359,7 +359,7 @@ impl MLSentimentAnalyzer {
     fn calculate_accuracy(&self, predictions: &[i32], truelabels: &[i32]) -> f64 {
         let correct = predictions
             .iter()
-            .zip(true_labels.iter())
+            .zip(truelabels.iter())
             .filter(|(&pred, &true_label)| pred == true_label)
             .count();
 
@@ -370,7 +370,7 @@ impl MLSentimentAnalyzer {
         let n_classes = self.label_map.len();
         let mut matrix = Array2::zeros((n_classes, n_classes));
 
-        for (&pred, &true_label) in predictions.iter().zip(true_labels.iter()) {
+        for (&pred, &true_label) in predictions.iter().zip(truelabels.iter()) {
             if pred >= 0
                 && pred < n_classes as i32
                 && true_label >= 0

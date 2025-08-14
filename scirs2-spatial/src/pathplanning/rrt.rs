@@ -133,7 +133,7 @@ impl RRTPlanner {
     where
         F: Fn(&Array1<f64>, &Array1<f64>) -> bool + 'static,
     {
-        self.collision_checker = Some(Box::new(collision_checker));
+        self.collision_checker = Some(Box::new(collisionchecker));
         self
     }
 
@@ -202,7 +202,7 @@ impl RRTPlanner {
     }
 
     /// Compute a new point that is step_size distance from nearest toward randompoint
-    fn steer(&self, _nearest: &ArrayView1<f64>, randompoint: &ArrayView1<f64>) -> Array1<f64> {
+    fn steer(&self, nearest: &ArrayView1<f64>, randompoint: &ArrayView1<f64>) -> Array1<f64> {
         let mut direction = randompoint - nearest;
         let norm = direction.iter().map(|&x| x * x).sum::<f64>().sqrt();
 
@@ -215,7 +215,7 @@ impl RRTPlanner {
             direction *= self.config.step_size / norm;
         }
 
-        _nearest + direction
+        nearest + direction
     }
 
     /// Check if there is a valid path between two points
@@ -497,9 +497,9 @@ impl RRTPlanner {
 
     /// Update costs in a subtree after rewiring
     #[allow(clippy::only_used_in_recursion)]
-    fn update_subtree_costs(_nodes: &mut [RRTNode], nodeidx: usize) {
+    fn update_subtree_costs(nodes: &mut [RRTNode], nodeidx: usize) {
         // Find all children of this node
-        let children: Vec<usize> = _nodes
+        let children: Vec<usize> = nodes
             .iter()
             .enumerate()
             .filter(|(_, node)| node.parent == Some(nodeidx))
@@ -517,7 +517,7 @@ impl RRTPlanner {
             nodes[child_idx].cost = parent_cost + edge_cost;
 
             // Recursively update this child's subtree
-            Self::update_subtree_costs(_nodes, child_idx);
+            Self::update_subtree_costs(nodes, child_idx);
         }
     }
 
@@ -677,13 +677,13 @@ impl RRTPlanner {
     }
 
     /// Extract the path from the RRT tree
-    fn extract_path(_nodes: &[RRTNode], goalidx: usize) -> Path<Array1<f64>> {
+    fn extract_path(nodes: &[RRTNode], goalidx: usize) -> Path<Array1<f64>> {
         let mut path = Vec::new();
         let mut current_idx = Some(goalidx);
         let cost = nodes[goalidx].cost;
 
         while let Some(_idx) = current_idx {
-            path.push(_nodes[_idx].position.clone());
+            path.push(nodes[_idx].position.clone());
             current_idx = nodes[_idx].parent;
         }
 

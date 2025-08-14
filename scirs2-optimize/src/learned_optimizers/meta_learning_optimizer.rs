@@ -55,7 +55,7 @@ impl MetaLearningOptimizer {
     pub fn new(config: LearnedOptimizationConfig) -> Self {
         let hidden_size = config.hidden_size;
         Self {
-            config: config,
+            config,
             meta_state: MetaOptimizerState {
                 meta_params: Array1::zeros(hidden_size),
                 network_weights: Array2::zeros((hidden_size, hidden_size)),
@@ -69,7 +69,7 @@ impl MetaLearningOptimizer {
     }
 
     /// Learn meta-optimization strategy
-    pub fn learn_meta_strategy(&mut self, trainingtasks: &[TrainingTask]) -> OptimizeResult<()> {
+    pub fn learn_meta_strategy(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
         for task in training_tasks {
             // Create task-specific optimizer
             let task_optimizer = self.create_task_optimizer(&task.problem)?;
@@ -97,7 +97,7 @@ impl MetaLearningOptimizer {
         let param_size = self.estimate_parameter_size(problem);
 
         Ok(TaskSpecificOptimizer {
-            parameters: Array1::fromshape_fn(param_size, |_| rand::rng().gen_range(0.0..0.1)),
+            parameters: Array1::from_shape_fn(param_size, |_| rand::rng().gen_range(0.0..0.1)),
             performance_history: Vec::new(),
             task_id: problem.name.clone(),
         })
@@ -126,12 +126,12 @@ impl MetaLearningOptimizer {
         // Simplified training simulation
         let initial_params = match &task.initial_distribution {
             super::ParameterDistribution::Uniform { low, high } => {
-                Array1::fromshape_fn(task.problem.dimension, |_| {
+                Array1::from_shape_fn(task.problem.dimension, |_| {
                     low + rand::rng().gen_range(0.0..1.0) * (high - low)
                 })
             }
             super::ParameterDistribution::Normal { mean, std } => {
-                Array1::fromshape_fn(task.problem.dimension, |_| {
+                Array1::from_shape_fn(task.problem.dimension, |_| {
                     mean + std * (rand::rng().gen_range(0.0..1.0) - 0.5) * 2.0
                 })
             }
@@ -207,7 +207,7 @@ impl MetaLearningOptimizer {
     }
 
     /// Compute meta-learned step size
-    fn compute_meta_step_size(&self, taskparams: &Array1<f64>) -> OptimizeResult<f64> {
+    fn compute_meta_step_size(&self, task_params: &Array1<f64>) -> OptimizeResult<f64> {
         // Compute step size based on task parameters and meta-parameters
         let mut step_size = self.config.inner_learning_rate;
 
@@ -426,7 +426,7 @@ impl Default for MetaLearningStats {
 }
 
 impl LearnedOptimizer for MetaLearningOptimizer {
-    fn meta_train(&mut self, trainingtasks: &[TrainingTask]) -> OptimizeResult<()> {
+    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
         self.learn_meta_strategy(training_tasks)?;
         self.update_meta_stats();
         Ok(())

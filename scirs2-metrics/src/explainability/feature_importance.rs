@@ -157,7 +157,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
             }
 
             // Create dataset without this feature
-            let _x_without_feature = "self".drop_column(x_test, feature_idx)?;
+            let _x_without_feature = self.drop_column(x_test, feature_idx)?;
 
             // Note: In practice, you'd need a model that can handle different input sizes
             // For this example, we'll set the dropped feature to zero instead
@@ -334,7 +334,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         let feature_weights = self.fit_linear_approximation(&perturbed_samples, &predictions)?;
 
         for (feature_idx, feature_name) in feature_names.iter().enumerate() {
-            if feature_idx < feature_weightslen() {
+            if feature_idx < feature_weights.len() {
                 lime_scores.insert(feature_name.clone(), feature_weights[feature_idx]);
             }
         }

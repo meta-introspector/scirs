@@ -5,7 +5,6 @@
 
 use crate::base::{EdgeWeight, Graph, Node};
 use crate::error::{GraphError, Result};
-use ndarray::ArrayView1;
 use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -44,13 +43,13 @@ pub struct LargeGraphIterator<N: Node, E: EdgeWeight> {
 
 impl<N: Node, E: EdgeWeight> LargeGraphIterator<N, E> {
     /// Create a new iterator for large graphs
-    pub fn new<Ix>(_graph: &Graph<N, E, Ix>, chunksize: usize) -> Self
+    pub fn new<Ix>(graph: &Graph<N, E, Ix>, chunk_size: usize) -> Self
     where
         N: Clone + std::fmt::Debug,
         E: Clone,
         Ix: petgraph::graph::IndexType,
     {
-        let graph_data = _graph
+        let graph_data = graph
             .edges()
             .into_iter()
             .map(|edge| (edge.source, edge.target, edge.weight))
@@ -186,7 +185,7 @@ where
     let mut matrix = vec![vec![E::zero(); n]; n];
 
     // Node to index mapping
-    let node_to_index: HashMap<N, usize> = _graph
+    let node_to_index: HashMap<N, usize> = graph
         .nodes()
         .into_iter()
         .enumerate()
@@ -225,12 +224,12 @@ where
     E: Clone + Send + Sync,
 {
     /// Create a new streaming processor
-    pub fn new(_batchsize: usize) -> Self {
+    pub fn new(batch_size: usize) -> Self {
         StreamingGraphProcessor {
-            current_batch: Vec::with_capacity(_batch_size),
+            current_batch: Vec::with_capacity(batch_size),
             batch_size,
             edge_count: AtomicUsize::new(0),
-            degree_counter: Arc::new(parking, _lot::Mutex::new(HashMap::new())),
+            degree_counter: Arc::new(parking_lot::Mutex::new(HashMap::new())),
         }
     }
 
@@ -258,9 +257,9 @@ where
         // Update degree counts
         {
             let mut degrees = self.degree_counter.lock();
-            for (source, target_) in &self.current_batch {
+            for (source, target_, _) in &self.current_batch {
                 *degrees.entry(source.clone()).or_insert(0) += 1;
-                *degrees.entry(target.clone()).or_insert(0) += 1;
+                *degrees.entry(target_.clone()).or_insert(0) += 1;
             }
         }
 
@@ -411,7 +410,7 @@ pub mod simd_ops {
     #[allow(dead_code)]
     pub fn simd_batch_degree_computation(_rowptr: &[usize], degrees: &mut [usize]) {
         for (i, degree) in degrees.iter_mut().enumerate() {
-            *degree = row_ptr[i + 1] - row_ptr[i];
+            *degree = _rowptr[i + 1] - _rowptr[i];
         }
     }
 }
@@ -511,7 +510,7 @@ pub mod simd_ops {
     #[allow(dead_code)]
     pub fn simd_batch_degree_computation(_rowptr: &[usize], degrees: &mut [usize]) {
         for (i, degree) in degrees.iter_mut().enumerate() {
-            *degree = row_ptr[i + 1] - row_ptr[i];
+            *degree = _rowptr[i + 1] - _rowptr[i];
         }
     }
 }
@@ -536,7 +535,7 @@ where
     {
         LazyGraphMetric {
             value: std::sync::OnceLock::new(),
-            compute_fn: std::sync::Mutex::new(Some(Box::new(_compute_fn))),
+            compute_fn: std::sync::Mutex::new(Some(Box::new(_computefn))),
         }
     }
 
@@ -633,7 +632,7 @@ pub struct RealTimeMemoryProfiler {
 
 impl RealTimeMemoryProfiler {
     /// Create a new real-time profiler
-    pub fn new(_sample_intervalms: u64) -> Self {
+    pub fn new(sample_interval_ms: u64) -> Self {
         RealTimeMemoryProfiler {
             samples: Vec::new(),
             start_time: std::time::Instant::now(),
@@ -646,16 +645,16 @@ impl RealTimeMemoryProfiler {
     /// Record a memory measurement
     pub fn sample_memory(&mut self, currentmemory: usize) {
         self.samples
-            .push((std::time::Instant::now(), current_memory));
+            .push((std::time::Instant::now(), currentmemory));
     }
 
     /// Record an allocation
-    pub fn record_allocation(&selfsize: usize) {
+    pub fn record_allocation(&self, size: usize) {
         self.allocations.fetch_add(1, Ordering::Relaxed);
     }
 
     /// Record a deallocation
-    pub fn record_deallocation(&selfsize: usize) {
+    pub fn record_deallocation(&self, size: usize) {
         self.deallocations.fetch_add(1, Ordering::Relaxed);
     }
 
@@ -764,22 +763,22 @@ pub struct PerformanceMonitor {
 impl PerformanceMonitor {
     /// Start monitoring a new operation with memory profiling
     pub fn start(_operationname: String) -> Self {
-        Self::start_with_config(_operation_name, 100) // Sample every 100ms by default
+        Self::start_with_config(_operationname, 100) // Sample every 100ms by default
     }
 
     /// Start monitoring with custom sampling interval
-    pub fn start_with_config(_operation_name: String, sample_intervalms: u64) -> Self {
+    pub fn start_with_config(operation_name: String, sample_intervalms: u64) -> Self {
         PerformanceMonitor {
             start_time: std::time::Instant::now(),
             operation_name,
-            memory_profiler: RealTimeMemoryProfiler::new(sample_interval_ms),
+            memory_profiler: RealTimeMemoryProfiler::new(sample_intervalms),
             sampling_active: Arc::new(std::sync::atomic::AtomicBool::new(true)),
         }
     }
 
     /// Manually record current memory usage
     pub fn record_memory(&mut self, currentmemory: usize) {
-        self.memory_profiler.sample_memory(current_memory);
+        self.memory_profiler.sample_memory(currentmemory);
     }
 
     /// Record an allocation event
@@ -809,7 +808,7 @@ impl PerformanceMonitor {
 
     /// Update peak memory usage (legacy method)
     pub fn update_memory(&mut self, currentmemory: usize) {
-        self.record_memory(current_memory);
+        self.record_memory(currentmemory);
     }
 
     /// Finish monitoring and return comprehensive performance metrics
@@ -889,7 +888,7 @@ where
     }
 
     fn iter_edges_chunked(&self, chunksize: usize) -> LargeGraphIterator<N, E> {
-        LargeGraphIterator::new(self, chunk_size)
+        LargeGraphIterator::new(self, chunksize)
     }
 
     fn cache_friendly_matrix(&self) -> Result<Vec<Vec<E>>> {

@@ -14,7 +14,7 @@ pub struct BatchProcessor {
 impl BatchProcessor {
     pub fn new(batchsize: usize) -> Self {
         Self {
-            batch_size,
+            batch_size: batchsize,
             prefetch_factor: 2,
         }
     }
@@ -25,7 +25,7 @@ impl BatchProcessor {
         F: Fn(&[MLTensor]) -> Result<Vec<MLTensor>> + Send + Sync,
     {
         let results: Result<Vec<Vec<MLTensor>>> =
-            data.par_chunks(self.batch_size).map(process_fn).collect();
+            data.par_chunks(self.batch_size).map(processfn).collect();
 
         results.map(|chunks| chunks.into_iter().flatten().collect())
     }

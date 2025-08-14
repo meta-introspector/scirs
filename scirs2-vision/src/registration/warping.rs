@@ -1489,18 +1489,18 @@ impl StreamingPanoramaProcessor {
     fn process_tile_for_image(
         &mut self,
         tile_x: u32,
-        tile_x: u32,
+        tile_y: u32,
         image: &RgbImage,
         transform: &TransformMatrix,
     ) -> Result<()> {
         // Calculate tile bounds
-        let tile_bounds = self.calculate_tile_bounds(tile_x, tile_x);
+        let tile_bounds = self.calculate_tile_bounds(tile_x, tile_y);
 
         // Warp only the relevant portion of the image for this tile
         let warpedtile = self.warp_image_for_tile(image, transform, &tile_bounds)?;
 
         // Blend with existing tile data
-        self.blend_tile(tile_x, tile_x, &warpedtile)?;
+        self.blend_tile(tile_x, tile_y, &warpedtile)?;
 
         Ok(())
     }
@@ -1546,10 +1546,10 @@ impl StreamingPanoramaProcessor {
         transform: &TransformMatrix,
         tile_bounds: &(u32, u32, u32, u32),
     ) -> Result<RgbImage> {
-        let (tile_x, tile_x, tile_width, tile_height) = *tile_bounds;
+        let (tile_x, tile_y, tile_width, tile_height) = *tile_bounds;
 
         // Create a sub-transformation that maps tile coordinates to image coordinates
-        let tile_transform = self.create_tile_transform(transform, tile_x, tile_x);
+        let tile_transform = self.create_tile_transform(transform, tile_x, tile_y);
 
         // Warp only the tile region
         warp_rgb_image(
@@ -1576,7 +1576,7 @@ impl StreamingPanoramaProcessor {
         &self,
         base_transform: &TransformMatrix,
         tile_x: u32,
-        tile_x: u32,
+        tile_y: u32,
     ) -> TransformMatrix {
         // Create translation matrix for tile offset
         let mut tile_offset = identity_transform();
@@ -1598,13 +1598,13 @@ impl StreamingPanoramaProcessor {
     /// # Returns
     ///
     /// * Result indicating success or failure
-    fn blend_tile(&mut self, tile_x: u32, tile_x: u32, warpedtile: &RgbImage) -> Result<()> {
+    fn blend_tile(&mut self, tile_x: u32, tile_y: u32, warpedtile: &RgbImage) -> Result<()> {
         match self.blending_mode {
-            BlendingMode::Linear => self.blend_tile_linear(tile_x, tile_x, warpedtile),
+            BlendingMode::Linear => self.blend_tile_linear(tile_x, tile_y, warpedtile),
             BlendingMode::MultiBandBlending => {
-                self.blend_tile_multiband(tile_x, tile_x, warpedtile)
+                self.blend_tile_multiband(tile_x, tile_y, warpedtile)
             }
-            BlendingMode::GraphCutSeaming => self.blend_tile_graphcut(tile_x, tile_x, warpedtile),
+            BlendingMode::GraphCutSeaming => self.blend_tile_graphcut(tile_x, tile_y, warpedtile),
         }
     }
 
@@ -1612,7 +1612,7 @@ impl StreamingPanoramaProcessor {
     fn blend_tile_linear(
         &mut self,
         tile_x: u32,
-        tile_x: u32,
+        tile_y: u32,
         warpedtile: &RgbImage,
     ) -> Result<()> {
         let tileid = TileId {
@@ -1651,7 +1651,7 @@ impl StreamingPanoramaProcessor {
     fn blend_tile_multiband(
         &mut self,
         tile_x: u32,
-        tile_x: u32,
+        tile_y: u32,
         warpedtile: &RgbImage,
     ) -> Result<()> {
         // For now, use linear blending as a placeholder
@@ -1663,7 +1663,7 @@ impl StreamingPanoramaProcessor {
     fn blend_tile_graphcut(
         &mut self,
         tile_x: u32,
-        tile_x: u32,
+        tile_y: u32,
         warpedtile: &RgbImage,
     ) -> Result<()> {
         // For now, use linear blending as a placeholder
@@ -1712,7 +1712,7 @@ impl StreamingPanoramaProcessor {
         &self,
         tile: &RgbImage,
         tile_x: u32,
-        tile_x: u32,
+        tile_y: u32,
         output: &mut RgbImage,
     ) -> Result<()> {
         let tile_bounds = self.calculate_tile_bounds(tile_x, tile_x);

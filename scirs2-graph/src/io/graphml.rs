@@ -124,7 +124,7 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(_path)?;
+    let file = File::open(path)?;
     let reader = BufReader::new(file);
     let mut graph = Graph::new();
     let mut state = ParseState::SearchingGraph;
@@ -200,7 +200,7 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(_path)?;
+    let file = File::open(path)?;
     let reader = BufReader::new(file);
     let mut graph = DiGraph::new();
     let mut state = ParseState::SearchingGraph;
@@ -451,28 +451,28 @@ fn parse_key_definition(line: &str) -> Result<Option<GraphMLKey>> {
     if let Some(id_start) = line.find(r#"id=""#) {
         let start = id_start + 4;
         if let Some(end) = line[start..].find('"') {
-            id = Some(_line[start..start + end].to_string());
+            id = Some(line[start..start + end].to_string());
         }
     }
 
     if let Some(for_start) = line.find(r#"for=""#) {
         let start = for_start + 5;
         if let Some(end) = line[start..].find('"') {
-            for_target = Some(_line[start..start + end].to_string());
+            for_target = Some(line[start..start + end].to_string());
         }
     }
 
     if let Some(name_start) = line.find(r#"attr.name=""#) {
         let start = name_start + 11;
         if let Some(end) = line[start..].find('"') {
-            attr_name = Some(_line[start..start + end].to_string());
+            attr_name = Some(line[start..start + end].to_string());
         }
     }
 
     if let Some(type_start) = line.find(r#"attr.type=""#) {
         let start = type_start + 11;
         if let Some(end) = line[start..].find('"') {
-            attr_type = Some(_line[start..start + end].to_string());
+            attr_type = Some(line[start..start + end].to_string());
         }
     }
 
@@ -493,7 +493,7 @@ fn parse_key_definition(line: &str) -> Result<Option<GraphMLKey>> {
 
 /// Parse a GraphML node element for undirected graphs
 #[allow(dead_code)]
-fn parse_node_element<N, E>(_line: &str, graph: &mut Graph<N, E>, linenum: usize) -> Result<()>
+fn parse_node_element<N, E>(line: &str, graph: &mut Graph<N, E>, linenum: usize) -> Result<()>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
@@ -502,10 +502,10 @@ where
     if let Some(id_start) = line.find(r#"id=""#) {
         let start = id_start + 4;
         if let Some(end) = line[start..].find('"') {
-            let node_id = &_line[start..start + end];
+            let node_id = &line[start..start + end];
             let _node = N::from_str(node_id).map_err(|_| {
                 GraphError::Other(format!(
-                    "Failed to parse node ID '{node_id}' on _line {line_num}"
+                    "Failed to parse node ID '{node_id}' on line {linenum}"
                 ))
             })?;
             // Nodes will be added automatically when edges are added

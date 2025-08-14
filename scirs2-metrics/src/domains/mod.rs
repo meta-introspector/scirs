@@ -23,7 +23,7 @@
 //! ## Computer Vision Metrics
 //!
 //! ```
-//! use scirs2__metrics::domains::computer_vision::ObjectDetectionMetrics;
+//! use scirs2_metrics::domains::computer_vision::ObjectDetectionMetrics;
 //! use ndarray::array;
 //!
 //! let mut cv_metrics = ObjectDetectionMetrics::new();
@@ -49,7 +49,7 @@
 //! ## NLP Metrics
 //!
 //! ```
-//! use scirs2__metrics::domains::nlp::TextGenerationMetrics;
+//! use scirs2_metrics::domains::nlp::TextGenerationMetrics;
 //!
 //! let mut nlp_metrics = TextGenerationMetrics::new();
 //!

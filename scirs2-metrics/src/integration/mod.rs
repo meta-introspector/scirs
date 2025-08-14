@@ -18,7 +18,7 @@
 //! ```no_run
 //! # #[cfg(feature = "neural_common")]
 //! # {
-//! use scirs2__metrics::integration::neural::NeuralMetricAdapter;
+//! use scirs2_metrics::integration::neural::NeuralMetricAdapter;
 //! use ndarray::Array;
 //!
 //! // Create metric adapters for common metrics
@@ -68,7 +68,7 @@
 //! ```no_run
 //! # #[cfg(feature = "optim_integration")]
 //! # {
-//! use scirs2__metrics::integration::optim::{MetricOptimizer, MetricLRScheduler};
+//! use scirs2_metrics::integration::optim::{MetricOptimizer, MetricLRScheduler};
 //! use ndarray::Array1;
 //!
 //! // Create a metric optimizer for accuracy

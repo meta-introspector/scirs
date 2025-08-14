@@ -316,7 +316,7 @@ impl Default for QuantumConfig {
 impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsComputer<F> {
     /// Create new quantum metrics computer
     pub fn new(config: QuantumConfig) -> Result<Self> {
-        let _numqubits = confignum_qubits;
+        let _numqubits = config._numqubits;
 
         // Initialize quantum processor
         let quantum_processor = QuantumProcessor::new(_numqubits)?;
@@ -778,7 +778,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         let num_parameters = self.config.vqe_parameters.ansatz_depth * matrixsize;
 
         let parameters = (0..num_parameters)
-            .map(|_| rng.gen_range(-PI..PI))
+            .map(|_| rng.random_range(-PI..PI))
             .collect();
 
         Ok(parameters)
@@ -862,8 +862,8 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
             params_plus[i] = original_param + epsilon;
             params_minus[i] = original_param - epsilon;
 
-            let energy_plus = self.evaluate_parameter_energy(&params_plus)?;
-            let energy_minus = self.evaluate_parameter_energy(&params_minus)?;
+            let energy_plus = self.evaluate_parameter_energy(&params_plus, matrix)?;
+            let energy_minus = self.evaluate_parameter_energy(&params_minus, matrix)?;
 
             // Compute gradient
             let gradient = (energy_plus - energy_minus).to_f64().unwrap_or(0.0) / (2.0 * epsilon);
@@ -1285,20 +1285,20 @@ impl<F: Float> QuantumProcessor<F> {
 
     fn apply_qft(&mut self, numqubits: usize) -> Result<()> {
         // Apply Quantum Fourier Transform
-        for i in 0.._numqubits {
+        for i in 0..numqubits {
             self.apply_hadamard(i)?;
-            for j in (i + 1).._numqubits {
+            for j in (i + 1)..numqubits {
                 let angle = PI / (2_f64.powi((j - i) as i32));
                 self.apply_controlled_phase(j, i, angle)?;
             }
         }
 
         // Reverse qubit order
-        for i in 0..(_numqubits / 2) {
-            self.apply_swap(i, _numqubits - 1 - i)?;
+        for i in 0..(numqubits / 2) {
+            self.apply_swap(i, numqubits - 1 - i)?;
         }
 
-        self.circuit_depth += _numqubits * (_numqubits + 1) / 2;
+        self.circuit_depth += numqubits * (numqubits + 1) / 2;
         Ok(())
     }
 

@@ -167,7 +167,7 @@ mod serde_duration {
     where
         D: Deserializer<'de>,
     {
-        let secs = u64::deserialize(_deserializer)?;
+        let secs = u64::deserialize(deserializer)?;
         Ok(Duration::from_secs(secs))
     }
 }
@@ -415,7 +415,7 @@ impl std::error::Error for PipelineError {}
 
 impl From<IoError> for PipelineError {
     fn from(error: IoError) -> Self {
-        PipelineError::IoError(_error)
+        PipelineError::IoError(error)
     }
 }
 
@@ -514,7 +514,7 @@ impl<I, O> Pipeline<I, O> {
 
     /// Load pipeline configuration from a file
     pub fn load_config(path: impl AsRef<Path>) -> Result<SerializedPipeline> {
-        let content = std::fs::read_to_string(_path).map_err(IoError::Io)?;
+        let content = std::fs::read_to_string(path).map_err(IoError::Io)?;
 
         serde_json::from_str(&content).map_err(|e| IoError::SerializationError(e.to_string()))
     }
@@ -636,7 +636,7 @@ impl PipelineOptimizer {
         let mut filters = Vec::new();
         let mut others = Vec::new();
 
-        for stage in _stages {
+        for stage in stages {
             match stage.stage_type().as_str() {
                 "filter" | "validation" => filters.push(stage),
                 _ => others.push(stage),

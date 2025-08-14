@@ -85,7 +85,7 @@ impl SpikingNeuron {
     }
 
     /// Update neuron state for one time step
-    pub fn update(&mut self, dt: f64, external_current: f64, currenttime: f64) -> Option<f64> {
+    pub fn update(&mut self, dt: f64, external_current: f64, current_time: f64) -> Option<f64> {
         // Check if in refractory period
         if let Some(last_spike) = self.last_spike_time {
             if (current_time - last_spike) < self.refractory_period {
@@ -111,7 +111,7 @@ impl SpikingNeuron {
         // Check for spike
         if self.membrane_potential >= self.threshold {
             self.fire_spike();
-            Some(0.0) // Return spike _time (relative to _current time)
+            Some(0.0) // Return spike time (relative to current time)
         } else {
             None
         }
@@ -149,7 +149,7 @@ impl Synapse {
     }
 
     /// Compute synaptic current
-    pub fn compute_current(&self, prespike: bool) -> f64 {
+    pub fn compute_current(&self, pre_spike: bool) -> f64 {
         if pre_spike {
             self.weight * self.facilitation * self.depression
         } else {
@@ -158,7 +158,7 @@ impl Synapse {
     }
 
     /// Update short-term plasticity
-    pub fn update_stp(&mut self, dt: f64, prespike: bool) {
+    pub fn update_stp(&mut self, dt: f64, pre_spike: bool) {
         let tau_facilitation = 0.050; // 50ms
         let tau_depression = 0.100; // 100ms
 
@@ -173,7 +173,7 @@ impl Synapse {
     }
 
     /// Update STDP traces
-    pub fn update_stdp_traces(&mut self, dt: f64, pre_spike: bool, postspike: bool) {
+    pub fn update_stdp_traces(&mut self, dt: f64, pre_spike: bool, post_spike: bool) {
         let tau_stdp = 0.020; // 20ms STDP time constant
 
         // Decay traces
@@ -190,7 +190,7 @@ impl Synapse {
     }
 
     /// Apply STDP weight update
-    pub fn apply_stdp(&mut self, learning_rate: f64, pre_spike: bool, postspike: bool) {
+    pub fn apply_stdp(&mut self, learning_rate: f64, pre_spike: bool, post_spike: bool) {
         let mut weight_change = 0.0;
 
         if pre_spike && self.post_trace > 0.0 {
@@ -210,10 +210,10 @@ impl Synapse {
 
 impl SpikingNeuralNetwork {
     /// Create a new spiking neural network
-    pub fn new(_config: NeuromorphicConfig, _numparameters: usize) -> Self {
-        let mut neurons = Vec::with_capacity(_config.num_neurons);
-        for _ in 0.._config.num_neurons {
-            neurons.push(SpikingNeuron::new(&_config));
+    pub fn new(config: NeuromorphicConfig, num_parameters: usize) -> Self {
+        let mut neurons = Vec::with_capacity(config.num_neurons);
+        for _ in 0..config.num_neurons {
+            neurons.push(SpikingNeuron::new(&config));
         }
 
         // Create random connectivity
@@ -221,8 +221,8 @@ impl SpikingNeuralNetwork {
         let connection_probability = 0.1; // 10% connection probability
         let mut rng = rand::rng();
 
-        for i in 0.._config.num_neurons {
-            for j in 0.._config.num_neurons {
+        for i in 0..config.num_neurons {
+            for j in 0..config.num_neurons {
                 if i != j && rng.gen::<f64>() < connection_probability {
                     let weight = (rng.gen::<f64>() - 0.5) * 0.2;
                     let delay = rng.gen::<f64>() * 0.005; // 0-5ms delay
@@ -233,7 +233,7 @@ impl SpikingNeuralNetwork {
 
         let num_neurons = config.num_neurons;
         Self {
-            config: config,
+            config,
             neurons,
             synapses,
             current_time: 0.0,
@@ -260,7 +260,7 @@ impl SpikingNeuralNetwork {
     }
 
     /// Decode parameters from population activity
-    pub fn decode_parameters(&self, numparameters: usize) -> Array1<f64> {
+    pub fn decode_parameters(&self, num_parameters: usize) -> Array1<f64> {
         let mut decoded = Array1::zeros(num_parameters);
         let neurons_per_param = self.config.num_neurons / num_parameters;
 
@@ -283,7 +283,7 @@ impl SpikingNeuralNetwork {
     }
 
     /// Simulate one time step
-    pub fn simulate_step(&mut self, objectivefeedback: f64) -> Result<Vec<usize>> {
+    pub fn simulate_step(&mut self, objective_feedback: f64) -> Result<Vec<usize>> {
         let mut spiked_neurons = Vec::new();
 
         // Collect inputs for all neurons first to avoid borrow checker issues
@@ -336,14 +336,14 @@ impl SpikingNeuralNetwork {
     }
 
     /// Compute synaptic input for a neuron
-    fn compute_synaptic_input(&self, targetneuron: usize) -> f64 {
+    fn compute_synaptic_input(&self, target_neuron: usize) -> f64 {
         let mut total_input = 0.0;
 
         // Check all neurons for connections to target
         for source_neuron in 0..self.config.num_neurons {
             for synapse in &self.synapses[source_neuron] {
                 if synapse.target == target_neuron {
-                    // Check if source _neuron spiked recently (within delay)
+                    // Check if source neuron spiked recently (within delay)
                     if let Some(last_spike) = self.neurons[source_neuron].last_spike_time {
                         let time_since_spike = self.current_time - last_spike;
                         if time_since_spike >= synapse.delay
@@ -360,18 +360,18 @@ impl SpikingNeuralNetwork {
     }
 
     /// Compute objective-based feedback input
-    fn compute_feedback_input(&self, neuron_idx: usize, objectivefeedback: f64) -> f64 {
-        // Simple _feedback scheme: better objective values give positive input
+    fn compute_feedback_input(&self, neuron_idx: usize, objective_feedback: f64) -> f64 {
+        // Simple feedback scheme: better objective values give positive input
         let feedback_strength = 1.0;
         let normalized_feedback = -objective_feedback; // Assume minimization
 
-        // Different neurons get different phases of _feedback
+        // Different neurons get different phases of feedback
         let phase = neuron_idx as f64 / self.config.num_neurons as f64 * 2.0 * std::f64::consts::PI;
         feedback_strength * normalized_feedback * (phase.sin() + 1.0) * 0.5
     }
 
     /// Update synaptic plasticity
-    fn update_synapses(&mut self, spikedneurons: &[usize]) -> Result<()> {
+    fn update_synapses(&mut self, spiked_neurons: &[usize]) -> Result<()> {
         for source_neuron in 0..self.config.num_neurons {
             let source_spiked = spiked_neurons.contains(&source_neuron);
 
@@ -405,7 +405,7 @@ impl SpikingNeuralNetwork {
     }
 
     /// Get firing rates over recent window
-    pub fn get_firing_rates(&self, windowduration: f64) -> Array1<f64> {
+    pub fn get_firing_rates(&self, window_duration: f64) -> Array1<f64> {
         let mut rates = Array1::zeros(self.config.num_neurons);
         let start_time = self.current_time - window_duration;
 

@@ -471,10 +471,10 @@ enum NotificationChannel {
 impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
     /// Create a new advanced-adaptive streaming optimizer
     pub fn new(_initialparameters: Array1<f64>, objective: T, config: StreamingConfig) -> Self {
-        let param_size = initial_parameters.len();
+        let param_size = _initialparameters.len();
 
         Self {
-            parameters: initial_parameters,
+            parameters: _initialparameters,
             objective,
             config,
             stats: StreamingStats::default(),
@@ -498,14 +498,14 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
         // 2. Neuromorphic spike-based learning
         let neuromorphic_update = self.neuromorphic_learner.process_spike_update(
             &self.parameters,
-            data_point,
+            datapoint,
             &temporal_context,
         )?;
 
         // 3. Quantum-inspired variational optimization
         let quantum_update = self.quantum_variational.variational_update(
             &self.parameters,
-            data_point,
+            datapoint,
             &temporal_context,
         )?;
 
@@ -533,12 +533,12 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
         )?;
 
         // 8. Apply update with advanced regularization
-        self.apply_advanced_regularized_update(&fused_update, data_point)?;
+        self.apply_advanced_regularized_update(&fused_update, datapoint)?;
 
         // 9. Update performance tracking and anomaly detection
         self.performance_tracker.update_metrics(
             &self.parameters,
-            data_point,
+            datapoint,
             start_time.elapsed(),
         )?;
 
@@ -639,12 +639,12 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
         let base_lr = self.config.learning_rate;
 
         // Gradient-based adaptation
-        let gradient = self.objective.gradient(&self.parameters.view(), data_point);
+        let gradient = self.objective.gradient(&self.parameters.view(), datapoint);
         let gradient_norm = gradient.mapv(|x| x * x).sum().sqrt();
 
         // Curvature-based adaptation
         let curvature_factor =
-            if let Some(hessian) = self.objective.hessian(&self.parameters.view(), data_point) {
+            if let Some(hessian) = T::hessian(&self.parameters.view(), datapoint) {
                 let eigenvalues = self.approximate_eigenvalues(&hessian);
                 let condition_number = eigenvalues
                     .iter()
@@ -786,12 +786,12 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for AdvancedAdaptiveStrea
         let old_parameters = self.parameters.clone();
 
         // Advanced-adaptive update
-        self.advanced_adaptive_update(data_point)?;
+        self.advanced_adaptive_update(datapoint)?;
 
         // Update statistics
         self.stats.points_processed += 1;
         self.stats.updates_performed += 1;
-        let loss = self.objective.evaluate(&self.parameters.view(), data_point);
+        let loss = self.objective.evaluate(&self.parameters.view(), datapoint);
         self.stats.current_loss = loss;
         self.stats.average_loss = utils::ewma_update(
             self.stats.average_loss,
@@ -884,17 +884,17 @@ impl MultiScaleTemporalMemory {
 impl NeuromorphicLearningSystem {
     fn new(paramsize: usize) -> Self {
         Self {
-            spike_trains: vec![VecDeque::with_capacity(100); param_size],
-            synaptic_weights: Array2::eye(param_size),
-            membrane_potentials: Array1::zeros(param_size),
-            adaptation_thresholds: Array1::ones(param_size),
+            spike_trains: vec![VecDeque::with_capacity(100); paramsize],
+            synaptic_weights: Array2::eye(paramsize),
+            membrane_potentials: Array1::zeros(paramsize),
+            adaptation_thresholds: Array1::ones(paramsize),
             stdp_rates: STDPRates {
                 ltp_rate: 0.01,
                 ltd_rate: 0.005,
                 temporal_window: Duration::from_millis(20),
                 decay_constant: 0.95,
             },
-            homeostatic_scaling: Array1::ones(param_size),
+            homeostatic_scaling: Array1::ones(paramsize),
         }
     }
 
@@ -912,10 +912,10 @@ impl NeuromorphicLearningSystem {
 impl QuantumInspiredVariational {
     fn new(_paramsize: usize) -> Self {
         Self {
-            quantum_state: Array1::ones(_param_size) / (_param_size as f64).sqrt(),
-            variational_params: Array1::zeros(_param_size),
-            entanglement_matrix: Array2::eye(_param_size),
-            measurement_operators: vec![Array2::eye(_param_size)],
+            quantum_state: Array1::ones(_paramsize) / (_paramsize as f64).sqrt(),
+            variational_params: Array1::zeros(_paramsize),
+            entanglement_matrix: Array2::eye(_paramsize),
+            measurement_operators: vec![Array2::eye(_paramsize)],
             noise_model: QuantumNoiseModel {
                 decoherence_rate: 0.01,
                 thermal_noise: 0.001,
@@ -970,8 +970,8 @@ impl MetaLearningSelector {
 impl FederatedLearningCoordinator {
     fn new(_paramsize: usize) -> Self {
         Self {
-            local_model: Array1::zeros(_param_size),
-            global_model: Array1::zeros(_param_size),
+            local_model: Array1::zeros(_paramsize),
+            global_model: Array1::zeros(_paramsize),
             peer_models: HashMap::new(),
             communication_budget: 100,
             privacy_params: DifferentialPrivacyParams {
