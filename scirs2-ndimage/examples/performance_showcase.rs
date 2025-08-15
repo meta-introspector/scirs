@@ -4,7 +4,7 @@
 //! SIMD acceleration, parallel processing, and optimized algorithms.
 
 use ndarray::Array2;
-use scirs2__ndimage::filters::{filter_functions, generic_filter, BorderMode};
+use scirs2_ndimage::filters::{filter_functions, generic_filter, BorderMode};
 use std::time::Instant;
 
 #[allow(dead_code)]

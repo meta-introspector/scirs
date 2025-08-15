@@ -549,7 +549,8 @@ pub fn gaussian_breakpoints(_alphabetsize: usize) -> Vec<f64> {
         5 => vec![-0.84, -0.25, 0.25, 0.84],
         6 => vec![-0.97, -0.43, 0.0, 0.43, 0.97],
         7 => vec![-1.07, -0.57, -0.18, 0.18, 0.57, 1.07],
-        8 => vec![-1.15, -0.67, -0.32, 0.0, 0.32, 0.67, 1.15]_ => {
+        8 => vec![-1.15, -0.67, -0.32, 0.0, 0.32, 0.67, 1.15],
+        _ => {
             // For larger alphabets, use normal distribution inverse CDF
             let mut breakpoints = Vec::new();
             for i in 1.._alphabet_size {

@@ -3,7 +3,7 @@
 use ndarray::{s, Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use rand::{rngs::StdRng, Rng, RngCore, SeedableRng};
-use rand__distr::{Distribution, Normal};
+use rand_distr::{Distribution, Normal};
 use std::fmt::Debug;
 use std::str::FromStr;
 

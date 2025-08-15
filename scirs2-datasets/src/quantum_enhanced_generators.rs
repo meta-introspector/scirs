@@ -6,7 +6,7 @@
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{rngs::StdRng, thread_rng, Rng, SeedableRng};
 use std::f64::consts::PI;
 
 /// Quantum-enhanced dataset generator using quantum-inspired algorithms
@@ -62,7 +62,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut thread_rng()),
         };
 
         // Initialize quantum state vectors for each sample
@@ -111,7 +111,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut thread_rng()),
         };
 
         let mut data = Array2::zeros((n_samples, n_features));
@@ -165,7 +165,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut thread_rng()),
         };
 
         let mut data = Array2::zeros((n_samples, n_features));

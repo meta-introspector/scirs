@@ -677,7 +677,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiTimelineProcessor<F> {
     /// Create new multi-timeline processor
     pub fn new(numdimensions: usize) -> Self {
         let mut temporal_dimensions = Vec::new();
-        
+
         for i in 0..num_dimensions {
             let dimension = TemporalDimension {
                 dimension_id: i,
@@ -702,44 +702,48 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiTimelineProcessor<F> {
         }
 
         // Synchronize timelines
-        let synchronized_data = self.timeline_synchronizer.synchronize_timelines(temporal_data)?;
-        
+        let synchronized_data = self
+            .timeline_synchronizer
+            .synchronize_timelines(temporal_data)?;
+
         // Analyze causal structure
-        let causal_analysis = self.causal_structure_analyzer.analyze_causality(&synchronized_data)?;
-        
+        let causal_analysis = self
+            .causal_structure_analyzer
+            .analyze_causality(&synchronized_data)?;
+
         // Integrate temporal dimensions
         let integrated_result = self.integrate_temporal_dimensions(&causal_analysis)?;
-        
+
         Ok(integrated_result)
     }
 
     /// Integrate data across temporal dimensions
     fn integrate_temporal_dimensions(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut integrated = data.clone();
-        
+
         // Apply temporal dimension processing
         for dimension in &self.temporal_dimensions {
             integrated = dimension.process_temporal_data(&integrated)?;
         }
-        
+
         Ok(integrated)
     }
 
     /// Detect temporal anomalies
     pub fn detect_temporal_anomalies(&self, data: &Array1<F>) -> Result<Vec<F>> {
         let mut anomalies = Vec::new();
-        
+
         for (i, &value) in data.iter().enumerate() {
             // Simple anomaly detection based on statistical deviation
             let expected_value = F::from_f64(0.5).unwrap(); // Placeholder
             let deviation = (value - expected_value).abs();
             let threshold = F::from_f64(2.0).unwrap();
-            
+
             if deviation > threshold {
                 anomalies.push(F::from_usize(i).unwrap());
             }
         }
-        
+
         Ok(anomalies)
     }
 }
@@ -748,19 +752,19 @@ impl<F: Float + Debug + Clone + FromPrimitive> TemporalDimension<F> {
     /// Process data through this temporal dimension
     pub fn process_temporal_data(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut processed = data.clone();
-        
+
         // Apply causal direction filtering
         match self.causal_direction {
             CausalDirection::Forward => {
                 // Forward temporal processing
                 for i in 1..processed.len() {
-                    processed[i] = processed[i] + processed[i-1] * F::from_f64(0.1).unwrap();
+                    processed[i] = processed[i] + processed[i - 1] * F::from_f64(0.1).unwrap();
                 }
             }
             CausalDirection::Backward => {
                 // Backward temporal processing
-                for i in (0..processed.len()-1).rev() {
-                    processed[i] = processed[i] + processed[i+1] * F::from_f64(0.1).unwrap();
+                for i in (0..processed.len() - 1).rev() {
+                    processed[i] = processed[i] + processed[i + 1] * F::from_f64(0.1).unwrap();
                 }
             }
             CausalDirection::Bidirectional => {
@@ -775,7 +779,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TemporalDimension<F> {
                 // No temporal coupling
             }
         }
-        
+
         Ok(processed)
     }
 
@@ -783,7 +787,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TemporalDimension<F> {
     fn process_forward(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut forward = data.clone();
         for i in 1..forward.len() {
-            forward[i] = forward[i] + forward[i-1] * F::from_f64(0.05).unwrap();
+            forward[i] = forward[i] + forward[i - 1] * F::from_f64(0.05).unwrap();
         }
         Ok(forward)
     }
@@ -791,8 +795,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> TemporalDimension<F> {
     /// Process data in backward direction
     fn process_backward(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut backward = data.clone();
-        for i in (0..backward.len()-1).rev() {
-            backward[i] = backward[i] + backward[i+1] * F::from_f64(0.05).unwrap();
+        for i in (0..backward.len() - 1).rev() {
+            backward[i] = backward[i] + backward[i + 1] * F::from_f64(0.05).unwrap();
         }
         Ok(backward)
     }
@@ -815,15 +819,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
         }
 
         match self.synchronization_protocol {
-            SynchronizationProtocol::GlobalClock => {
-                self.global_clock_sync(timelines)
-            }
-            SynchronizationProtocol::LocalCausal => {
-                self.local_causal_sync(timelines)
-            }
-            SynchronizationProtocol::QuantumEntangled => {
-                self.quantum_entangled_sync(timelines)
-            }
+            SynchronizationProtocol::GlobalClock => self.global_clock_sync(timelines),
+            SynchronizationProtocol::LocalCausal => self.local_causal_sync(timelines),
+            SynchronizationProtocol::QuantumEntangled => self.quantum_entangled_sync(timelines),
             SynchronizationProtocol::ConsciousnessGuided => {
                 self.consciousness_guided_sync(timelines)
             }
@@ -835,7 +833,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
         // Find minimum length across all timelines
         let min_len = timelines.iter().map(|t| t.len()).min().unwrap_or(0);
         let mut synchronized = Array1::zeros(min_len);
-        
+
         // Average across timelines
         for i in 0..min_len {
             let mut sum = F::zero();
@@ -846,7 +844,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
             }
             synchronized[i] = sum / F::from_usize(timelines.len()).unwrap();
         }
-        
+
         Ok(synchronized)
     }
 
@@ -855,11 +853,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
         // Apply causal ordering constraints
         let min_len = timelines.iter().map(|t| t.len()).min().unwrap_or(0);
         let mut synchronized = Array1::zeros(min_len);
-        
+
         for i in 0..min_len {
             let mut weighted_sum = F::zero();
             let mut total_weight = F::zero();
-            
+
             for (j, timeline) in timelines.iter().enumerate() {
                 if i < timeline.len() {
                     // Weight by causal relevance (simplified)
@@ -868,12 +866,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
                     total_weight = total_weight + causal_weight;
                 }
             }
-            
+
             if total_weight > F::zero() {
                 synchronized[i] = weighted_sum / total_weight;
             }
         }
-        
+
         Ok(synchronized)
     }
 
@@ -882,23 +880,24 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
         // Apply quantum entanglement principles
         let min_len = timelines.iter().map(|t| t.len()).min().unwrap_or(0);
         let mut synchronized = Array1::zeros(min_len);
-        
+
         for i in 0..min_len {
             // Quantum superposition of timeline states
             let mut entangled_state = F::zero();
             for timeline in timelines {
                 if i < timeline.len() {
                     // Apply quantum phase factors
-                    let phase_factor = F::from_f64((i as f64 * std::f64::consts::PI / 4.0).cos()).unwrap();
+                    let phase_factor =
+                        F::from_f64((i as f64 * std::f64::consts::PI / 4.0).cos()).unwrap();
                     entangled_state = entangled_state + timeline[i] * phase_factor;
                 }
             }
-            
+
             // Normalize by square root of number of timelines (quantum normalization)
             let normalization = F::from_usize(timelines.len()).unwrap().sqrt();
             synchronized[i] = entangled_state / normalization;
         }
-        
+
         Ok(synchronized)
     }
 
@@ -907,12 +906,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
         // Apply consciousness principles for synchronization
         let min_len = timelines.iter().map(|t| t.len()).min().unwrap_or(0);
         let mut synchronized = Array1::zeros(min_len);
-        
+
         for i in 0..min_len {
             // Consciousness-weighted integration
             let mut consciousness_sum = F::zero();
             let mut consciousness_weight_total = F::zero();
-            
+
             for timeline in timelines {
                 if i < timeline.len() {
                     // Consciousness weight based on timeline coherence
@@ -921,12 +920,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
                     consciousness_weight_total = consciousness_weight_total + coherence;
                 }
             }
-            
+
             if consciousness_weight_total > F::zero() {
                 synchronized[i] = consciousness_sum / consciousness_weight_total;
             }
         }
-        
+
         Ok(synchronized)
     }
 
@@ -937,8 +936,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
         }
 
         // Calculate coherence as inverse of variance
-        let mean = timeline.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(timeline.len()).unwrap();
-        let variance = timeline.iter()
+        let mean = timeline.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from_usize(timeline.len()).unwrap();
+        let variance = timeline
+            .iter()
             .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
             / F::from_usize(timeline.len()).unwrap();
 
@@ -961,20 +962,20 @@ impl<F: Float + Debug + Clone + FromPrimitive> CausalStructureAnalyzer<F> {
     pub fn analyze_causality(&mut self, data: &Array1<F>) -> Result<Array1<F>> {
         // Build causal graph from data
         self.causal_graph.build_from_data(data)?;
-        
+
         // Compute intervention effects
         self.compute_intervention_effects(data)?;
-        
+
         // Apply counterfactual reasoning
         let counterfactual_result = self.counterfactual_reasoning.reason_about_data(data)?;
-        
+
         Ok(counterfactual_result)
     }
 
     /// Compute effects of hypothetical interventions
     fn compute_intervention_effects(&mut self, data: &Array1<F>) -> Result<()> {
         self.intervention_effects.clear();
-        
+
         // Compute intervention effects for each node
         for (i, _) in data.iter().enumerate() {
             let intervention_effect = InterventionEffect {
@@ -985,7 +986,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> CausalStructureAnalyzer<F> {
             };
             self.intervention_effects.push(intervention_effect);
         }
-        
+
         Ok(())
     }
 
@@ -1023,7 +1024,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> CausalGraph<F> {
             };
             self.nodes.push(node);
         }
-        
+
         // Create edges based on temporal ordering and correlation
         self.edges.clear();
         for i in 0..data.len().saturating_sub(1) {
@@ -1036,7 +1037,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> CausalGraph<F> {
             };
             self.edges.push(edge);
         }
-        
+
         Ok(())
     }
 
@@ -1045,7 +1046,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> CausalGraph<F> {
         // Simplified correlation calculation
         let diff = (value1 - value2).abs();
         let max_val = value1.max(value2);
-        
+
         if max_val > F::zero() {
             Ok(F::from_f64(1.0).unwrap() - diff / max_val)
         } else {
@@ -1066,7 +1067,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> CounterfactualReasoning<F> {
     /// Reason about counterfactual scenarios
     pub fn reason_about_data(&mut self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut counterfactual_result = data.clone();
-        
+
         // Apply counterfactual transformations
         for (i, value) in counterfactual_result.iter_mut().enumerate() {
             // Generate counterfactual query
@@ -1077,12 +1078,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> CounterfactualReasoning<F> {
                 counterfactual_probability: F::from_f64(0.5).unwrap(),
             };
             self.counterfactual_queries.push(query);
-            
+
             // Apply counterfactual reasoning
             let counterfactual_adjustment = self.reasoning_engine.compute_counterfactual(*value)?;
             *value = *value + counterfactual_adjustment;
         }
-        
+
         Ok(counterfactual_result)
     }
 }
@@ -1102,7 +1103,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> ReasoningEngine<F> {
         match self.reasoning_type {
             ReasoningType::Counterfactual => {
                 // Simple counterfactual adjustment
-                let adjustment = observed_value * F::from_f64(0.1).unwrap() * self.inference_strength;
+                let adjustment =
+                    observed_value * F::from_f64(0.1).unwrap() * self.inference_strength;
                 Ok(adjustment)
             }
             _ => Ok(F::zero()),
@@ -1116,7 +1118,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> TemporalParadoxResolver<F> {
         TemporalParadoxResolver {
             paradox_detection: ParadoxDetection::new(),
             resolution_strategies: vec![
-                ResolutionStrategy::new("self_consistency".to_string(), ResolutionMethod::SelfConsistency),
+                ResolutionStrategy::new(
+                    "self_consistency".to_string(),
+                    ResolutionMethod::SelfConsistency,
+                ),
                 ResolutionStrategy::new("many_worlds".to_string(), ResolutionMethod::ManyWorlds),
             ],
             consistency_maintenance: ConsistencyMaintenance::new(),
@@ -1127,20 +1132,22 @@ impl<F: Float + Debug + Clone + FromPrimitive> TemporalParadoxResolver<F> {
     pub fn resolve_paradoxes(&mut self, temporaldata: &Array1<F>) -> Result<Array1<F>> {
         // Detect paradoxes
         let paradoxes = self.paradox_detection.detect_paradoxes(temporal_data)?;
-        
+
         if paradoxes.is_empty() {
             return Ok(temporal_data.clone());
         }
-        
+
         // Apply resolution strategies
         let mut resolved_data = temporal_data.clone();
         for strategy in &self.resolution_strategies {
             resolved_data = strategy.apply_resolution(&resolved_data)?;
         }
-        
+
         // Maintain consistency
-        resolved_data = self.consistency_maintenance.maintain_consistency(&resolved_data)?;
-        
+        resolved_data = self
+            .consistency_maintenance
+            .maintain_consistency(&resolved_data)?;
+
         Ok(resolved_data)
     }
 }
@@ -1155,13 +1162,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> ParadoxDetection<F> {
                 ParadoxType::Information,
                 ParadoxType::Causal,
             ],
-            detection_algorithms: vec![
-                DetectionAlgorithm {
-                    algorithm_name: "causal_loop_detector".to_string(),
-                    detection_sensitivity: F::from_f64(0.9).unwrap(),
-                    false_positive_rate: F::from_f64(0.05).unwrap(),
-                },
-            ],
+            detection_algorithms: vec![DetectionAlgorithm {
+                algorithm_name: "causal_loop_detector".to_string(),
+                detection_sensitivity: F::from_f64(0.9).unwrap(),
+                false_positive_rate: F::from_f64(0.05).unwrap(),
+            }],
             severity_assessment: SeverityAssessment::new(),
         }
     }
@@ -1169,15 +1174,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> ParadoxDetection<F> {
     /// Detect paradoxes in temporal data
     pub fn detect_paradoxes(&mut self, data: &Array1<F>) -> Result<Vec<usize>> {
         let mut detected_paradoxes = Vec::new();
-        
+
         // Simple paradox detection based on causal violations
         for i in 1..data.len() {
             // Check for causal violations (effect before cause)
-            if data[i] > data[i-1] * F::from_f64(2.0).unwrap() {
+            if data[i] > data[i - 1] * F::from_f64(2.0).unwrap() {
                 detected_paradoxes.push(i);
             }
         }
-        
+
         Ok(detected_paradoxes)
     }
 }
@@ -1186,13 +1191,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> SeverityAssessment<F> {
     /// Create new severity assessment system
     pub fn new() -> Self {
         SeverityAssessment {
-            severity_metrics: vec![
-                SeverityMetric {
-                    metric_name: "temporal_disruption".to_string(),
-                    severity_score: F::from_f64(0.5).unwrap(),
-                    confidence: F::from_f64(0.8).unwrap(),
-                },
-            ],
+            severity_metrics: vec![SeverityMetric {
+                metric_name: "temporal_disruption".to_string(),
+                severity_score: F::from_f64(0.5).unwrap(),
+                confidence: F::from_f64(0.8).unwrap(),
+            }],
             impact_analysis: ImpactAnalysis {
                 temporal_impact: F::from_f64(0.3).unwrap(),
                 causal_impact: F::from_f64(0.4).unwrap(),
@@ -1216,43 +1219,35 @@ impl<F: Float + Debug + Clone + FromPrimitive> ResolutionStrategy<F> {
     /// Apply resolution strategy to data
     pub fn apply_resolution(&self, data: &Array1<F>) -> Result<Array1<F>> {
         match self.resolution_method {
-            ResolutionMethod::SelfConsistency => {
-                self.apply_self_consistency(data)
-            }
-            ResolutionMethod::ManyWorlds => {
-                self.apply_many_worlds(data)
-            }
-            ResolutionMethod::QuantumSuperposition => {
-                self.apply_quantum_superposition(data)
-            }
-            ResolutionMethod::NovikOffPrinciple => {
-                self.apply_novikov_principle(data)
-            }
+            ResolutionMethod::SelfConsistency => self.apply_self_consistency(data),
+            ResolutionMethod::ManyWorlds => self.apply_many_worlds(data),
+            ResolutionMethod::QuantumSuperposition => self.apply_quantum_superposition(data),
+            ResolutionMethod::NovikOffPrinciple => self.apply_novikov_principle(data),
         }
     }
 
     /// Apply self-consistency principle
     fn apply_self_consistency(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut consistent_data = data.clone();
-        
+
         // Enforce self-consistency through iterative adjustment
         for iteration in 0..10 {
             let mut adjusted = false;
-            
+
             for i in 1..consistent_data.len() {
                 // Check consistency constraint
-                if consistent_data[i] < consistent_data[i-1] {
+                if consistent_data[i] < consistent_data[i - 1] {
                     // Adjust to maintain consistency
-                    consistent_data[i] = consistent_data[i-1] * F::from_f64(1.01).unwrap();
+                    consistent_data[i] = consistent_data[i - 1] * F::from_f64(1.01).unwrap();
                     adjusted = true;
                 }
             }
-            
+
             if !adjusted {
                 break;
             }
         }
-        
+
         Ok(consistent_data)
     }
 
@@ -1260,32 +1255,32 @@ impl<F: Float + Debug + Clone + FromPrimitive> ResolutionStrategy<F> {
     fn apply_many_worlds(&self, data: &Array1<F>) -> Result<Array1<F>> {
         // Create superposition of possible worlds
         let mut many_worlds_data = data.clone();
-        
+
         for value in many_worlds_data.iter_mut() {
             // Superposition of multiple world states
             let world_1 = *value;
             let world_2 = *value * F::from_f64(1.1).unwrap();
             let world_3 = *value * F::from_f64(0.9).unwrap();
-            
+
             // Probabilistic combination
             *value = (world_1 + world_2 + world_3) / F::from_f64(3.0).unwrap();
         }
-        
+
         Ok(many_worlds_data)
     }
 
     /// Apply quantum superposition
     fn apply_quantum_superposition(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut superposition_data = data.clone();
-        
+
         for (i, value) in superposition_data.iter_mut().enumerate() {
             // Quantum phase modulation
             let phase = F::from_f64(i as f64 * std::f64::consts::PI / 4.0).unwrap();
             let amplitude = F::from_f64(0.8).unwrap();
-            
+
             *value = *value * amplitude * phase.cos();
         }
-        
+
         Ok(superposition_data)
     }
 
@@ -1293,18 +1288,18 @@ impl<F: Float + Debug + Clone + FromPrimitive> ResolutionStrategy<F> {
     fn apply_novikov_principle(&self, data: &Array1<F>) -> Result<Array1<F>> {
         // Ensure causal consistency through the Novikov principle
         let mut novikov_data = data.clone();
-        
+
         // Iteratively adjust to prevent paradoxes
         for _ in 0..5 {
             for i in 1..novikov_data.len() {
                 // Ensure causal ordering
-                if novikov_data[i] > novikov_data[i-1] * F::from_f64(1.5).unwrap() {
+                if novikov_data[i] > novikov_data[i - 1] * F::from_f64(1.5).unwrap() {
                     // Reduce to maintain causal consistency
-                    novikov_data[i] = novikov_data[i-1] * F::from_f64(1.2).unwrap();
+                    novikov_data[i] = novikov_data[i - 1] * F::from_f64(1.2).unwrap();
                 }
             }
         }
-        
+
         Ok(novikov_data)
     }
 }
@@ -1313,27 +1308,23 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsistencyMaintenance<F> {
     /// Create new consistency maintenance system
     pub fn new() -> Self {
         ConsistencyMaintenance {
-            consistency_checks: vec![
-                ConsistencyCheck {
-                    check_name: "causal_ordering".to_string(),
-                    consistency_level: F::from_f64(0.9).unwrap(),
-                    violation_tolerance: F::from_f64(0.1).unwrap(),
-                },
-            ],
-            repair_mechanisms: vec![
-                RepairMechanism {
-                    mechanism_name: "gradient_smoothing".to_string(),
-                    repair_strength: F::from_f64(0.8).unwrap(),
-                    side_effects: F::from_f64(0.1).unwrap(),
-                },
-            ],
+            consistency_checks: vec![ConsistencyCheck {
+                check_name: "causal_ordering".to_string(),
+                consistency_level: F::from_f64(0.9).unwrap(),
+                violation_tolerance: F::from_f64(0.1).unwrap(),
+            }],
+            repair_mechanisms: vec![RepairMechanism {
+                mechanism_name: "gradient_smoothing".to_string(),
+                repair_strength: F::from_f64(0.8).unwrap(),
+                side_effects: F::from_f64(0.1).unwrap(),
+            }],
         }
     }
 
     /// Maintain consistency in temporal data
     pub fn maintain_consistency(&mut self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut consistent_data = data.clone();
-        
+
         // Apply consistency checks
         for check in &self.consistency_checks {
             if !self.check_consistency(&consistent_data, check)? {
@@ -1343,7 +1334,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsistencyMaintenance<F> {
                 }
             }
         }
-        
+
         Ok(consistent_data)
     }
 
@@ -1353,8 +1344,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsistencyMaintenance<F> {
             "causal_ordering" => {
                 // Check causal ordering consistency
                 for i in 1..data.len() {
-                    let ratio = data[i] / data[i-1];
-                    if ratio > F::from_f64(2.0).unwrap() {  // Arbitrary threshold
+                    let ratio = data[i] / data[i - 1];
+                    if ratio > F::from_f64(2.0).unwrap() {
+                        // Arbitrary threshold
                         return Ok(false);
                     }
                 }
@@ -1371,20 +1363,22 @@ impl<F: Float + Debug + Clone + FromPrimitive> RepairMechanism<F> {
         match self.mechanism_name.as_str() {
             "gradient_smoothing" => {
                 let mut repaired_data = data.clone();
-                
+
                 // Apply gradient smoothing
-                for i in 1..repaired_data.len()-1 {
-                    let gradient_left = repaired_data[i] - repaired_data[i-1];
-                    let gradient_right = repaired_data[i+1] - repaired_data[i];
-                    
+                for i in 1..repaired_data.len() - 1 {
+                    let gradient_left = repaired_data[i] - repaired_data[i - 1];
+                    let gradient_right = repaired_data[i + 1] - repaired_data[i];
+
                     // Smooth large gradient changes
                     if (gradient_right - gradient_left).abs() > F::from_f64(1.0).unwrap() {
-                        let smoothed_value = (repaired_data[i-1] + repaired_data[i+1]) / F::from_f64(2.0).unwrap();
-                        repaired_data[i] = repaired_data[i] * (F::from_f64(1.0).unwrap() - self.repair_strength) 
+                        let smoothed_value = (repaired_data[i - 1] + repaired_data[i + 1])
+                            / F::from_f64(2.0).unwrap();
+                        repaired_data[i] = repaired_data[i]
+                            * (F::from_f64(1.0).unwrap() - self.repair_strength)
                             + smoothed_value * self.repair_strength;
                     }
                 }
-                
+
                 Ok(repaired_data)
             }
             _ => Ok(data.clone()),
@@ -1406,13 +1400,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> SpacetimeMapper<F> {
     pub fn map_to_spacetime(&self, data: &Array1<F>) -> Result<Array1<F>> {
         // Apply spacetime transformation
         let mut spacetime_data = data.clone();
-        
+
         // Apply metric tensor transformation
         spacetime_data = self.metric_tensor.transform(&spacetime_data)?;
-        
+
         // Apply dimensional analysis
-        spacetime_data = self.dimensional_analysis.analyze_dimensions(&spacetime_data)?;
-        
+        spacetime_data = self
+            .dimensional_analysis
+            .analyze_dimensions(&spacetime_data)?;
+
         Ok(spacetime_data)
     }
 }
@@ -1443,11 +1439,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> DimensionalAnalysis<F> {
     /// Analyze dimensional structure of data
     pub fn analyze_dimensions(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut dimensional_data = data.clone();
-        
+
         // Apply dimensional scaling
-        let dimension_factor = F::from_usize(self.spatial_dimensions + self.temporal_dimensions).unwrap();
+        let dimension_factor =
+            F::from_usize(self.spatial_dimensions + self.temporal_dimensions).unwrap();
         dimensional_data.mapv_inplace(|x| x / dimension_factor.sqrt());
-        
+
         Ok(dimensional_data)
     }
 }
@@ -1457,10 +1454,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetricTensor<F> {
     pub fn new() -> Self {
         // 4x4 Minkowski metric tensor
         let mut tensor_components = vec![vec![F::zero(); 4]; 4];
-        tensor_components[0][0] = F::from_f64(1.0).unwrap();   // time-time
-        tensor_components[1][1] = F::from_f64(-1.0).unwrap();  // x-x
-        tensor_components[2][2] = F::from_f64(-1.0).unwrap();  // y-y
-        tensor_components[3][3] = F::from_f64(-1.0).unwrap();  // z-z
+        tensor_components[0][0] = F::from_f64(1.0).unwrap(); // time-time
+        tensor_components[1][1] = F::from_f64(-1.0).unwrap(); // x-x
+        tensor_components[2][2] = F::from_f64(-1.0).unwrap(); // y-y
+        tensor_components[3][3] = F::from_f64(-1.0).unwrap(); // z-z
 
         MetricTensor {
             tensor_components,
@@ -1473,7 +1470,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetricTensor<F> {
     /// Transform data using metric tensor
     pub fn transform(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut transformed_data = data.clone();
-        
+
         // Apply metric transformation (simplified)
         for (i, value) in transformed_data.iter_mut().enumerate() {
             let metric_component = if i < self.tensor_components.len() {
@@ -1481,10 +1478,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetricTensor<F> {
             } else {
                 F::from_f64(1.0).unwrap()
             };
-            
+
             *value = *value * metric_component;
         }
-        
+
         Ok(transformed_data)
     }
 }

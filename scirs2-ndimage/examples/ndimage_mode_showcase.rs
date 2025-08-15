@@ -6,7 +6,7 @@
 //! choice for high-performance scientific computing.
 
 use ndarray::{Array, Array2, Array3, Ix2, Ix3};
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     api_compatibility_verification::{ApiCompatibilityTester, CompatibilityConfig},
     backend::{auto_backend, Backend, BackendConfig},
     comprehensive_scipy_validation::{SciPyValidationSuite, ValidationConfig},
@@ -57,12 +57,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("2. ENHANCED SIMD OPTIMIZATIONS");
     println!("=====================================");
 
-    let large_image = Array2::<f32>::zeros((2048, 2048));
+    let largeimage = Array2::<f32>::zeros((2048, 2048));
     let edge_kernel = array![[-1.0, -1.0, -1.0], [-1.0, 8.0, -1.0], [-1.0, -1.0, -1.0]];
 
     let start = Instant::now();
     let _edges =
-        advanced_simd_convolution_2d(large_image.view(), edge_kernel.view(), BorderMode::Reflect)?;
+        advanced_simd_convolution_2d(largeimage.view(), edge_kernel.view(), BorderMode::Reflect)?;
     let simd_time = start.elapsed();
 
     println!("✓ Advanced-SIMD edge detection completed");
@@ -212,7 +212,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("==========================================");
 
     // Simulate a complex medical imaging pipeline
-    let medical_image = Array3::<f32>::fromshape_fn((512, 512, 64), |(i, j, k)| {
+    let medicalimage = Array3::<f32>::fromshape_fn((512, 512, 64), |(i, j, k)| {
         // Synthetic medical image with structures
         let x = i as f32 / 512.0;
         let y = j as f32 / 512.0;
@@ -230,7 +230,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Step 1: Denoise with bilateral filter
     let denoised = bilateral_filter(
-        medical_image.view(),
+        medicalimage.view(),
         2.0, // spatial sigma
         0.1, // intensity sigma
         BorderMode::Reflect,

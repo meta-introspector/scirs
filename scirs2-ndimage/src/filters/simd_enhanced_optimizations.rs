@@ -235,7 +235,7 @@ where
 /// Computes spatial moments up to specified order using vectorized operations
 /// for efficient shape analysis and feature extraction.
 #[allow(dead_code)]
-pub fn simd_image_moments<T>(_input: ArrayView2<T>, maxorder: usize) -> NdimageResult<Array<T, Ix2>>
+pub fn simdimage_moments<T>(_input: ArrayView2<T>, maxorder: usize) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
 {
@@ -677,10 +677,10 @@ mod tests {
     }
 
     #[test]
-    fn test_simd_image_moments() {
+    fn test_simdimage_moments() {
         let input = array![[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
 
-        let result = simd_image_moments(input.view(), 2);
+        let result = simdimage_moments(input.view(), 2);
         assert!(result.is_ok());
 
         let moments = result.unwrap();

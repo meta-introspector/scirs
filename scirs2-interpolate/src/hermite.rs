@@ -316,16 +316,16 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - The points at which to evaluate the spline
+    /// * `xnew` - The points at which to evaluate the spline
     ///
     /// # Returns
     ///
     /// A `Result` containing the interpolated values at the given points.
     pub fn evaluate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
-        let n = x_new.len();
+        let n = xnew.len();
         let mut result = Array1::zeros(n);
 
-        for (i, &xi) in x_new.iter().enumerate() {
+        for (i, &xi) in xnew.iter().enumerate() {
             result[i] = self.evaluate_single(xi)?;
         }
 
@@ -337,17 +337,17 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
         let n = self.x.len();
 
         // Handle extrapolation
-        if x_val < self.x[0] || x_val > self.x[n - 1] {
+        if xval < self.x[0] || xval > self.x[n - 1] {
             match self.extrapolate {
                 ExtrapolateMode::Extrapolate => {
                     // Allow extrapolation - use nearest segment
-                    let idx = if x_val < self.x[0] { 0 } else { n - 2 };
-                    return self.evaluate_segment(idx, x_val);
+                    let idx = if xval < self.x[0] { 0 } else { n - 2 };
+                    return self.evaluate_segment(idx, xval);
                 }
                 ExtrapolateMode::Error => {
                     return Err(InterpolateError::OutOfBounds(format!(
                         "x value {} is outside the interpolation range [{}, {}]",
-                        x_val,
+                        xval,
                         self.x[0],
                         self.x[n - 1]
                     )));
@@ -359,21 +359,21 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
             }
         }
 
-        // Find the segment containing x_val
+        // Find the segment containing xval
         let mut idx = 0;
         for i in 0..n - 1 {
-            if x_val >= self.x[i] && x_val <= self.x[i + 1] {
+            if xval >= self.x[i] && xval <= self.x[i + 1] {
                 idx = i;
                 break;
             }
         }
 
-        self.evaluate_segment(idx, x_val)
+        self.evaluate_segment(idx, xval)
     }
 
     /// Evaluate the spline on a specific segment.
     fn evaluate_segment(&self, idx: usize, xval: T) -> InterpolateResult<T> {
-        let dx = x_val - self.x[idx];
+        let dx = xval - self.x[idx];
 
         // Use the coefficient representation
         let a = self.coeffs[[idx, 0]];
@@ -391,7 +391,7 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
     /// # Arguments
     ///
     /// * `deriv_order` - The order of the derivative (1 for first derivative, 2 for second, etc.)
-    /// * `x_new` - The points at which to evaluate the derivative
+    /// * `xnew` - The points at which to evaluate the derivative
     ///
     /// # Returns
     ///
@@ -399,25 +399,25 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
     pub fn derivative(
         &self,
         deriv_order: usize,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
         if deriv_order == 0 {
-            return self.evaluate(x_new);
+            return self.evaluate(xnew);
         }
 
         // For cubic Hermite splines, derivatives above 3 are zero
         // For quintic Hermite splines, derivatives above 5 are zero
-        let max_deriv = if self._order == 3 { 3 } else { 5 };
+        let max_deriv = if self.order == 3 { 3 } else { 5 };
 
         if deriv_order > max_deriv {
             // Return zeros for higher derivatives that are known to be zero
-            return Ok(Array1::zeros(x_new.len()));
+            return Ok(Array1::zeros(xnew.len()));
         }
 
-        let n = x_new.len();
+        let n = xnew.len();
         let mut result = Array1::zeros(n);
 
-        for (i, &xi) in x_new.iter().enumerate() {
+        for (i, &xi) in xnew.iter().enumerate() {
             result[i] = self.derivative_single(deriv_order, xi)?;
         }
 
@@ -429,17 +429,17 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
         let n = self.x.len();
 
         // Handle derivatives for extrapolation
-        if x_val < self.x[0] || x_val > self.x[n - 1] {
+        if xval < self.x[0] || xval > self.x[n - 1] {
             match self.extrapolate {
                 ExtrapolateMode::Extrapolate => {
                     // Allow extrapolation - use nearest segment
-                    let idx = if x_val < self.x[0] { 0 } else { n - 2 };
-                    return self.derivative_segment(deriv_order, idx, x_val);
+                    let idx = if xval < self.x[0] { 0 } else { n - 2 };
+                    return self.derivative_segment(deriv_order, idx, xval);
                 }
                 ExtrapolateMode::Error => {
                     return Err(InterpolateError::OutOfBounds(format!(
                         "x value {} is outside the interpolation range [{}, {}]",
-                        x_val,
+                        xval,
                         self.x[0],
                         self.x[n - 1]
                     )));
@@ -451,21 +451,21 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
             }
         }
 
-        // Find the segment containing x_val
+        // Find the segment containing xval
         let mut idx = 0;
         for i in 0..n - 1 {
-            if x_val >= self.x[i] && x_val <= self.x[i + 1] {
+            if xval >= self.x[i] && xval <= self.x[i + 1] {
                 idx = i;
                 break;
             }
         }
 
-        self.derivative_segment(deriv_order, idx, x_val)
+        self.derivative_segment(deriv_order, idx, xval)
     }
 
     /// Calculate derivative of the spline on a specific segment.
     fn derivative_segment(&self, deriv_order: usize, idx: usize, xval: T) -> InterpolateResult<T> {
-        let dx = x_val - self.x[idx];
+        let dx = xval - self.x[idx];
 
         // Get the polynomial coefficients
         let a = self.coeffs[[idx, 0]];
@@ -748,10 +748,10 @@ mod tests {
         }
 
         // Test interpolation between data points
-        let x_new = Array::linspace(0.5, 9.5, 10);
-        let y_exact = x_new.mapv(|v| v.powi(2));
+        let xnew = Array::linspace(0.5, 9.5, 10);
+        let y_exact = xnew.mapv(|v| v.powi(2));
 
-        let y_interp = spline.evaluate(&x_new.view()).unwrap();
+        let y_interp = spline.evaluate(&xnew.view()).unwrap();
 
         // Since we provided exact derivatives, the interpolation should be very accurate
         for i in 0..y_interp.len() {
@@ -868,10 +868,10 @@ mod tests {
         }
 
         // Test interpolation between data points
-        let x_new = Array::linspace(0.5, 9.5, 10);
-        let y_exact = x_new.mapv(|v| v.powi(2));
+        let xnew = Array::linspace(0.5, 9.5, 10);
+        let y_exact = xnew.mapv(|v| v.powi(2));
 
-        let y_interp = spline.evaluate(&x_new.view()).unwrap();
+        let y_interp = spline.evaluate(&xnew.view()).unwrap();
 
         // Since we provided exact derivatives, the interpolation should be very accurate
         for i in 0..y_interp.len() {

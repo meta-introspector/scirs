@@ -425,7 +425,7 @@ impl SemanticFeatureExtractor {
     }
 
     /// Extract semantic features at multiple scales
-    pub fn extract_features<T>(
+    pub fn extractfeatures<T>(
         &mut self,
         image: &ArrayView2<T>,
         feature_types: &[&str],
@@ -438,16 +438,16 @@ impl SemanticFeatureExtractor {
         for &feature_type in feature_types {
             match feature_type {
                 "texture" => {
-                    let texture_features = self.extracttexture_features(image)?;
-                    results.insert("texture".to_string(), texture_features);
+                    let texturefeatures = self.extracttexturefeatures(image)?;
+                    results.insert("texture".to_string(), texturefeatures);
                 }
                 "shape" => {
-                    let shape_features = self.extractshape_features(image)?;
-                    results.insert("shape".to_string(), shape_features);
+                    let shapefeatures = self.extractshapefeatures(image)?;
+                    results.insert("shape".to_string(), shapefeatures);
                 }
                 "color" => {
-                    let color_features = self.extract_color_features(image)?;
-                    results.insert("color".to_string(), color_features);
+                    let colorfeatures = self.extract_colorfeatures(image)?;
+                    results.insert("color".to_string(), colorfeatures);
                 }
                 _ => {
                     return Err(NdimageError::InvalidInput(format!(
@@ -462,7 +462,7 @@ impl SemanticFeatureExtractor {
     }
 
     /// Extract texture features using Gabor-like filters
-    fn extracttexture_features<T>(&self, image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
+    fn extracttexturefeatures<T>(&self, image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
     where
         T: Float + FromPrimitive + Debug + Send + Sync + 'static,
     {
@@ -520,7 +520,7 @@ impl SemanticFeatureExtractor {
     }
 
     /// Extract shape features using morphological operations
-    fn extractshape_features<T>(&self, image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
+    fn extractshapefeatures<T>(&self, image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
     where
         T: Float + FromPrimitive + Debug + Send + Sync + 'static,
     {
@@ -560,7 +560,7 @@ impl SemanticFeatureExtractor {
     }
 
     /// Extract color-based features (for grayscale, extract intensity features)
-    fn extract_color_features<T>(&self, image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
+    fn extract_colorfeatures<T>(&self, image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
     where
         T: Float + FromPrimitive + Debug + Send + Sync + 'static,
     {
@@ -885,7 +885,7 @@ mod tests {
 
         let mut extractor = SemanticFeatureExtractor::new(None);
         let features = extractor
-            .extract_features(&image.view(), &["texture", "shape", "color"])
+            .extractfeatures(&image.view(), &["texture", "shape", "color"])
             .unwrap();
 
         assert_eq!(features.len(), 3);
@@ -893,10 +893,10 @@ mod tests {
         assert!(features.contains_key("shape"));
         assert!(features.contains_key("color"));
 
-        let texture_features = &features["texture"];
-        assert_eq!(texture_features.dim().0, 4);
-        assert_eq!(texture_features.dim().1, 4);
-        assert!(texture_features.dim().2 > 0);
+        let texturefeatures = &features["texture"];
+        assert_eq!(texturefeatures.dim().0, 4);
+        assert_eq!(texturefeatures.dim().1, 4);
+        assert!(texturefeatures.dim().2 > 0);
     }
 
     #[test]

@@ -158,7 +158,11 @@ pub mod builder_pattern {
             validation::validate_data_consistency(points, values)?;
             self.config_factory_pattern.validate()?;
 
-            Ok(I::from((points.view(), values.view(), self.config)))
+            Ok(I::from((
+                points.view(),
+                values.view(),
+                self.config_factory_pattern,
+            )))
         }
     }
 

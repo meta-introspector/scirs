@@ -595,7 +595,7 @@ impl ProductionValidator {
         F: crate::traits::InterpolationFloat,
     {
         let (x, y) = data;
-        let _spline = CubicSpline::new(&x.view(), &y.view())?;
+        let spline = CubicSpline::new(&x.view(), &y.view())?;
 
         // Test evaluation at a few points
         let test_x = F::from(5.0).unwrap();

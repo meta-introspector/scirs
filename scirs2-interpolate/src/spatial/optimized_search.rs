@@ -193,7 +193,7 @@ impl SimdDistanceOps {
     where
         F: Float + FromPrimitive + SimdUnifiedOps,
     {
-        _points
+        points
             .axis_iter(Axis(0))
             .map(|point| {
                 let point_slice = point.as_slice().unwrap();
@@ -208,7 +208,7 @@ impl SimdDistanceOps {
     where
         F: Float + FromPrimitive,
     {
-        _points
+        points
             .axis_iter(Axis(0))
             .map(|point| {
                 let point_slice = point.as_slice().unwrap();
@@ -269,7 +269,7 @@ pub struct ParallelQueryProcessor<F: Float> {
 #[cfg(feature = "parallel")]
 impl<F: Float + FromPrimitive + Send + Sync> ParallelQueryProcessor<F> {
     /// Create a new parallel query processor
-    pub fn new(_numworkers: Option<usize>) -> Self {
+    pub fn new(num_workers: Option<usize>) -> Self {
         use scirs2_core::parallel_ops::num_threads;
 
         Self {

@@ -5,10 +5,10 @@
 // cosine modulated filter banks, and IIR filter stabilization.
 
 use scirs2_signal::filter_banks::{
-use std::f64::consts::PI;
     CosineModulatedFilterBank, FilterBankType, FilterBankWindow, IirStabilizer, QmfBank,
     StabilizationMethod, WaveletFilterBank,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

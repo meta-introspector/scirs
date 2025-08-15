@@ -533,8 +533,7 @@ impl WrapperMethods {
                 Array2::fromshape_fn((test_indices.len(), features.ncols()), |(i, j)| {
                     features[[test_indices[i], j]]
                 });
-            let test_target =
-                Array1::fromshape_fn(test_indices.len(), |i| target[test_indices[i]]);
+            let test_target = Array1::fromshape_fn(test_indices.len(), |i| target[test_indices[i]]);
 
             // Fit on training and predict on test
             let coefficients = Self::fit_linear_regression(&train_features, &train_target)?;

@@ -671,35 +671,35 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - The x coordinate at which to evaluate the spline
+    /// * `xnew` - The x coordinate at which to evaluate the spline
     ///
     /// # Returns
     ///
-    /// The interpolated y value at `x_new`
+    /// The interpolated y value at `xnew`
     pub fn evaluate(&self, xnew: F) -> InterpolateResult<F> {
-        // Check if x_new is within the range
-        if x_new < self.x[0] || x_new > self.x[self.x.len() - 1] {
+        // Check if xnew is within the range
+        if xnew < self.x[0] || xnew > self.x[self.x.len() - 1] {
             return Err(InterpolateError::OutOfBounds(
-                "x_new is outside the interpolation range".to_string(),
+                "xnew is outside the interpolation range".to_string(),
             ));
         }
 
-        // Find the index of the segment containing x_new
+        // Find the index of the segment containing xnew
         let mut idx = 0;
         for i in 0..self.x.len() - 1 {
-            if x_new >= self.x[i] && x_new <= self.x[i + 1] {
+            if xnew >= self.x[i] && xnew <= self.x[i + 1] {
                 idx = i;
                 break;
             }
         }
 
-        // Special case: x_new is exactly the last point
-        if x_new == self.x[self.x.len() - 1] {
+        // Special case: xnew is exactly the last point
+        if xnew == self.x[self.x.len() - 1] {
             return Ok(self.y[self.x.len() - 1]);
         }
 
         // Evaluate the cubic polynomial
-        let dx = x_new - self.x[idx];
+        let dx = xnew - self.x[idx];
         let a = self.coeffs[[idx, 0]];
         let b = self.coeffs[[idx, 1]];
         let c = self.coeffs[[idx, 2]];
@@ -713,14 +713,14 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - The x coordinates at which to evaluate the spline
+    /// * `xnew` - The x coordinates at which to evaluate the spline
     ///
     /// # Returns
     ///
-    /// The interpolated y values at `x_new`
+    /// The interpolated y values at `xnew`
     pub fn evaluate_array(&self, xnew: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
-        let mut result = Array1::zeros(x_new.len());
-        for (i, &x) in x_new.iter().enumerate() {
+        let mut result = Array1::zeros(xnew.len());
+        for (i, &x) in xnew.iter().enumerate() {
             result[i] = self.evaluate(x)?;
         }
         Ok(result)
@@ -730,30 +730,30 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - The x coordinate at which to evaluate the derivative
+    /// * `xnew` - The x coordinate at which to evaluate the derivative
     /// * `order` - Order of derivative (1 = first derivative, 2 = second derivative)
     ///
     /// # Returns
     ///
-    /// The derivative at `x_new`
+    /// The derivative at `xnew`
     pub fn derivative(&self, xnew: F) -> InterpolateResult<F> {
-        self.derivative_n(x_new, 1)
+        self.derivative_n(xnew, 1)
     }
 
     /// Get the nth derivative of the spline at the given point
     ///
     /// # Arguments
     ///
-    /// * `x_new` - The x coordinate at which to evaluate the derivative
+    /// * `xnew` - The x coordinate at which to evaluate the derivative
     /// * `order` - Order of derivative (1 = first derivative, 2 = second derivative, etc.)
     ///
     /// # Returns
     ///
-    /// The nth derivative at `x_new`
+    /// The nth derivative at `xnew`
     pub fn derivative_n(&self, xnew: F, order: usize) -> InterpolateResult<F> {
         // Check order validity
         if order == 0 {
-            return self.evaluate(x_new);
+            return self.evaluate(xnew);
         }
 
         if order > 3 {
@@ -761,28 +761,28 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
             return Ok(F::zero());
         }
 
-        // Check if x_new is within the range
-        if x_new < self.x[0] || x_new > self.x[self.x.len() - 1] {
+        // Check if xnew is within the range
+        if xnew < self.x[0] || xnew > self.x[self.x.len() - 1] {
             return Err(InterpolateError::OutOfBounds(
-                "x_new is outside the interpolation range".to_string(),
+                "xnew is outside the interpolation range".to_string(),
             ));
         }
 
-        // Find the index of the segment containing x_new
+        // Find the index of the segment containing xnew
         let mut idx = 0;
         for i in 0..self.x.len() - 1 {
-            if x_new >= self.x[i] && x_new <= self.x[i + 1] {
+            if xnew >= self.x[i] && xnew <= self.x[i + 1] {
                 idx = i;
                 break;
             }
         }
 
-        // Special case: x_new is exactly the last point
-        if x_new == self.x[self.x.len() - 1] {
+        // Special case: xnew is exactly the last point
+        if xnew == self.x[self.x.len() - 1] {
             idx = self.x.len() - 2;
         }
 
-        let dx = x_new - self.x[idx];
+        let dx = xnew - self.x[idx];
         let b = self.coeffs[[idx, 1]];
         let c = self.coeffs[[idx, 2]];
         let d = self.coeffs[[idx, 3]];
@@ -833,7 +833,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - Array of points to evaluate derivatives at
+    /// * `xnew` - Array of points to evaluate derivatives at
     /// * `order` - Order of derivative (1, 2, or 3)
     ///
     /// # Returns
@@ -841,12 +841,12 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// Array of derivative values
     pub fn derivative_array(
         &self,
-        x_new: &ArrayView1<F>,
+        xnew: &ArrayView1<F>,
         order: usize,
     ) -> InterpolateResult<Array1<F>> {
-        let mut result = Array1::zeros(x_new.len());
+        let mut result = Array1::zeros(xnew.len());
 
-        for (i, &x) in x_new.iter().enumerate() {
+        for (i, &x) in xnew.iter().enumerate() {
             result[i] = self.derivative_n(x, order)?;
         }
 
@@ -906,7 +906,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
             if y_left * y_right < F::zero() {
                 // Use Newton's method with bisection fallback
                 if let Some(root) =
-                    self.find_root_in_segment(segment, x_left, x_right, tolerance, max_iterations)?
+                    self.find_root_in_segment(segment, x_left, x_right, tolerance, maxiterations)?
                 {
                     roots.push(root);
                 }
@@ -994,21 +994,21 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
 
     /// Evaluate with linear extrapolation (helper for SciPy compatibility)
     fn evaluate_with_extrapolation(&self, xnew: F) -> InterpolateResult<F> {
-        if x_new >= self.x[0] && x_new <= self.x[self.x.len() - 1] {
-            return self.evaluate(x_new);
+        if xnew >= self.x[0] && xnew <= self.x[self.x.len() - 1] {
+            return self.evaluate(xnew);
         }
 
         // Linear extrapolation using endpoint derivatives
-        if x_new < self.x[0] {
+        if xnew < self.x[0] {
             let y0 = self.y[0];
             let dy0 = self.derivative_n(self.x[0], 1)?;
-            let dx = x_new - self.x[0];
+            let dx = xnew - self.x[0];
             Ok(y0 + dy0 * dx)
         } else {
             let n = self.x.len() - 1;
             let yn = self.y[n];
             let dyn_val = self.derivative_n(self.x[n], 1)?;
-            let dx = x_new - self.x[n];
+            let dx = xnew - self.x[n];
             Ok(yn + dyn_val * dx)
         }
     }
@@ -1427,10 +1427,10 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
                     max_iterations,
                 );
             }
-            let x_new = x - y / dy;
+            let xnew = x - y / dy;
 
             // If Newton step goes outside interval, use bisection
-            if x_new < x_left || x_new > x_right {
+            if xnew < x_left || xnew > x_right {
                 return self.bisection_root_find(
                     segment,
                     x_left,
@@ -1440,11 +1440,11 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
                 );
             }
 
-            if (x_new - x).abs() < tolerance {
-                return Ok(Some(x_new));
+            if (xnew - x).abs() < tolerance {
+                return Ok(Some(xnew));
             }
 
-            x = x_new;
+            x = xnew;
         }
 
         Ok(None) // Convergence failed
@@ -1527,9 +1527,9 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
                     max_iterations,
                 );
             }
-            let x_new = x - dy / d2y;
+            let xnew = x - dy / d2y;
 
-            if x_new < x_left || x_new > x_right {
+            if xnew < x_left || xnew > x_right {
                 return self.bisection_derivative_root_find(
                     segment,
                     x_left,
@@ -1539,11 +1539,11 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
                 );
             }
 
-            if (x_new - x).abs() < tolerance {
-                return Ok(Some(x_new));
+            if (xnew - x).abs() < tolerance {
+                return Ok(Some(xnew));
             }
 
-            x = x_new;
+            x = xnew;
         }
 
         Ok(None)
@@ -1708,7 +1708,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
         // = a*(x-x_i) + b*(x-x_i)^2/2 + c*(x-x_i)^3/3 + d*(x-x_i)^4/4
 
         let dx_start = x_start - x_i;
-        let dx_end = x_end - x_i;
+        let dx_end = xend - x_i;
 
         let two = F::from_f64(2.0).ok_or_else(|| {
             InterpolateError::ComputationError(
@@ -1751,18 +1751,18 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - The x coordinate at which to evaluate
+    /// * `xnew` - The x coordinate at which to evaluate
     /// * `max_order` - Maximum order of derivative to compute (0 to 3)
     ///
     /// # Returns
     ///
     /// Array containing [f(x), f'(x), f''(x), ...] up to the requested order
-    pub fn derivatives_all(&self, x_new: F, maxorder: usize) -> InterpolateResult<Array1<F>> {
-        let _order = max_order.min(3);
+    pub fn derivatives_all(&self, xnew: F, maxorder: usize) -> InterpolateResult<Array1<F>> {
+        let _order = maxorder.min(3);
         let mut result = Array1::zeros(_order + 1);
 
         for i in 0..=_order {
-            result[i] = self.derivative_n(x_new, i)?;
+            result[i] = self.derivative_n(xnew, i)?;
         }
 
         Ok(result)
@@ -2041,7 +2041,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - Point to evaluate at
+    /// * `xnew` - Point to evaluate at
     /// * `order` - Derivative order
     /// * `extrapolate` - Whether to extrapolate beyond domain
     ///
@@ -2050,31 +2050,31 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// The derivative value, potentially extrapolated
     pub fn derivative_with_extrapolation(
         &self,
-        x_new: F,
+        xnew: F,
         order: usize,
         extrapolate: bool,
     ) -> InterpolateResult<F> {
         if !extrapolate {
-            return self.derivative_n(x_new, order);
+            return self.derivative_n(xnew, order);
         }
 
         // Handle extrapolation
         let x_min = self.x[0];
         let x_max = self.x[self.x.len() - 1];
 
-        if x_new < x_min {
+        if xnew < x_min {
             // Linear extrapolation using the first segment
             let segment_idx = 0;
-            let dx = x_new - self.x[segment_idx];
+            let dx = xnew - self.x[segment_idx];
             self.derivative_segment_extrapolated(segment_idx, dx, order)
-        } else if x_new > x_max {
+        } else if xnew > x_max {
             // Linear extrapolation using the last segment
             let segment_idx = self.coeffs.nrows() - 1;
-            let dx = x_new - self.x[segment_idx];
+            let dx = xnew - self.x[segment_idx];
             self.derivative_segment_extrapolated(segment_idx, dx, order)
         } else {
             // Within domain, use regular evaluation
-            self.derivative_n(x_new, order)
+            self.derivative_n(xnew, order)
         }
     }
 
@@ -2182,10 +2182,10 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
 
     /// Evaluate spline at multiple points with bounds checking
     pub fn evaluate_array_checked(&self, xnew: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
-        let mut result = Array1::zeros(x_new.len());
+        let mut result = Array1::zeros(xnew.len());
         let (x_min, x_max) = self.x_bounds();
 
-        for (i, &x) in x_new.iter().enumerate() {
+        for (i, &x) in xnew.iter().enumerate() {
             if x < x_min || x > x_max {
                 return Err(InterpolateError::OutOfBounds(format!(
                     "x value {} is outside domain [{}, {}]",
@@ -2201,13 +2201,13 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// Evaluate derivative at multiple points with bounds checking
     pub fn derivative_array_checked(
         &self,
-        x_new: &ArrayView1<F>,
+        xnew: &ArrayView1<F>,
         order: usize,
     ) -> InterpolateResult<Array1<F>> {
-        let mut result = Array1::zeros(x_new.len());
+        let mut result = Array1::zeros(xnew.len());
         let (x_min, x_max) = self.x_bounds();
 
-        for (i, &x) in x_new.iter().enumerate() {
+        for (i, &x) in xnew.iter().enumerate() {
             if x < x_min || x > x_max {
                 return Err(InterpolateError::OutOfBounds(format!(
                     "x value {} is outside domain [{}, {}]",
@@ -2262,7 +2262,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
         for &start in &start_points {
             let start_f = F::from_f64(start).unwrap_or_default();
             if let Ok(Some(root)) =
-                self.newton_raphson_cubic(a, b, c, d, start_f, tolerance_max_iterations)
+                self.newton_raphson_cubic(a, b, c, d, start_f, tolerance, _max_iterations)
             {
                 // Check if this root is already found
                 let mut is_new_root = true;
@@ -2308,13 +2308,13 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
                 return Ok(None); // Derivative too small
             }
 
-            let x_new = x - f_val / df_val;
+            let xnew = x - f_val / df_val;
 
-            if (x_new - x).abs() < tolerance {
-                return Ok(Some(x_new));
+            if (xnew - x).abs() < tolerance {
+                return Ok(Some(xnew));
             }
 
-            x = x_new;
+            x = xnew;
         }
 
         Ok(None)
@@ -2323,7 +2323,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// Find roots related to derivative discontinuities
     fn find_derivative_discontinuity_roots(
         &self,
-        tolerance: F_max,
+        tolerance: F,
         iterations: usize,
     ) -> InterpolateResult<Vec<F>> {
         let mut discontinuity_roots = Vec::new();
@@ -3237,7 +3237,7 @@ fn integrate_segment<F: crate::traits::InterpolationFloat>(
 /// Check if a root is far enough from existing roots
 #[allow(dead_code)]
 fn root_far_enough<F: Float>(roots: &[F], candidate: F, tolerance: F) -> bool {
-    for &existing_root in _roots {
+    for &existing_root in roots {
         if (candidate - existing_root).abs() < tolerance {
             return false;
         }
@@ -3295,12 +3295,12 @@ pub fn make_interp_spline<F: InterpolationFloat>(
         "not-a-knot" => CubicSpline::new_not_a_knot(x, y),
         "clamped" => {
             if let Some(_params) = bc_params {
-                if params.len() != 2 {
+                if _params.len() != 2 {
                     return Err(InterpolateError::invalid_input(
                         "clamped boundary conditions require 2 parameters: [first_deriv_start, first_deriv_end]".to_string(),
                     ));
                 }
-                CubicSpline::new_clamped(x, y, params[0], params[1])
+                CubicSpline::new_clamped(x, y, _params[0], _params[1])
             } else {
                 Err(InterpolateError::invalid_input(
                     "clamped boundary conditions require bc_params: [first_deriv_start, first_deriv_end]".to_string(),
@@ -3323,17 +3323,17 @@ where
 {
     fn derivative(
         &self,
-        query_points: &ArrayView2<F>,
+        querypoints: &ArrayView2<F>,
         order: usize,
     ) -> crate::InterpolateResult<Vec<F>> {
-        if query_points.ncols() != 1 {
+        if querypoints.ncols() != 1 {
             return Err(crate::InterpolateError::invalid_input(
                 "CubicSpline only supports 1D interpolation",
             ));
         }
 
-        let mut results = Vec::with_capacity(query_points.nrows());
-        for row in query_points.outer_iter() {
+        let mut results = Vec::with_capacity(querypoints.nrows());
+        for row in querypoints.outer_iter() {
             let x = row[0];
             let deriv = self.derivative_n(x, order)?;
             results.push(deriv);
@@ -3446,14 +3446,14 @@ where
     F: crate::traits::InterpolationFloat,
 {
     fn evaluate(&self, querypoints: &ArrayView2<F>) -> crate::InterpolateResult<Vec<F>> {
-        if query_points.ncols() != 1 {
+        if querypoints.ncols() != 1 {
             return Err(crate::InterpolateError::invalid_input(
                 "CubicSpline only supports 1D interpolation",
             ));
         }
 
-        let mut results = Vec::with_capacity(query_points.nrows());
-        for row in query_points.outer_iter() {
+        let mut results = Vec::with_capacity(querypoints.nrows());
+        for row in querypoints.outer_iter() {
             let x = row[0];
             let value = self.evaluate(x)?;
             results.push(value);
@@ -3503,11 +3503,11 @@ where
 /// let cs = cubic_spline_scipy(&x.view(), &y.view(), "not-a-knot", None, true).unwrap();
 ///
 /// // Evaluate at points
-/// let x_new = array![0.5, 1.5, 2.5];
-/// let y_new = cs.call_scipy(&x_new.view(), 0, true).unwrap();
+/// let xnew = array![0.5, 1.5, 2.5];
+/// let y_new = cs.call_scipy(&xnew.view(), 0, true).unwrap();
 ///
 /// // Compute derivatives
-/// let dy = cs.call_scipy(&x_new.view(), 1, true).unwrap();
+/// let dy = cs.call_scipy(&xnew.view(), 1, true).unwrap();
 ///
 /// // Integrate over interval
 /// let integral = cs.integrate_scipy(0.0, 3.0).unwrap();
@@ -3695,8 +3695,8 @@ mod tests {
 
         let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
 
-        let x_new = array![0.5, 1.0, 1.5, 2.0, 2.5];
-        let y_new = spline.evaluate_array(&x_new.view()).unwrap();
+        let xnew = array![0.5, 1.0, 1.5, 2.0, 2.5];
+        let y_new = spline.evaluate_array(&xnew.view()).unwrap();
 
         assert_eq!(y_new.len(), 5);
         assert_relative_eq!(y_new[1], 1.0); // Exact at knot point

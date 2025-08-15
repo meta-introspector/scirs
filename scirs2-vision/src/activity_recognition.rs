@@ -950,7 +950,7 @@ impl ActivityRecognitionEngine {
         activitycounts
             .iter()
             .max_by_key(|(_, &count)| count)
-            .map(|(activity_)| activity_.clone())
+            .map(|(activity_, _)| activity_.clone())
             .unwrap_or_else(|| "unknown".to_string())
     }
 
@@ -1041,7 +1041,7 @@ pub struct ActivityPrediction {
 impl ActionDetector {
     fn new(name: &str) -> Self {
         Self {
-            _name: name.to_string(),
+            name: name.to_string(),
             action_types: vec![
                 "walking".to_string(),
                 "sitting".to_string(),
@@ -1444,7 +1444,7 @@ pub fn monitor_activities_realtime(
 
     // Apply temporal smoothing if _history is available
     if let Some(_history) = activity_history {
-        result = apply_temporal_smoothing(_history)?;
+        result = apply_temporal_smoothing(result, _history)?;
     }
 
     Ok(result)
@@ -1472,7 +1472,7 @@ impl ActivityRecognitionEngine {
         current_frame: &ArrayView3<f32>,
         previous_frame: &Array3<f32>,
     ) -> Result<Array3<f32>> {
-        let (height, width) = current_frame.dim();
+        let (height, width, _) = current_frame.dim();
         let mut flow = Array3::zeros((height, width, 2));
 
         // Simple optical flow computation using _frame difference
@@ -1654,7 +1654,7 @@ impl TemporalActivityModeler {
         activitycounts
             .iter()
             .max_by_key(|(_, &count)| count)
-            .map(|(activity_)| activity_.clone())
+            .map(|(activity_, _)| activity_.clone())
             .unwrap_or_else(|| "unknown".to_string())
     }
 

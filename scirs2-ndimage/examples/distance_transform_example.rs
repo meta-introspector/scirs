@@ -5,7 +5,7 @@
 //! each foreground pixel to the nearest background pixel in a binary image.
 
 use ndarray::{Array2, IxDyn};
-use scirs2__ndimage::morphology::{
+use scirs2_ndimage::morphology::{
     distance_transform_bf, distance_transform_cdt, distance_transform_edt,
 };
 

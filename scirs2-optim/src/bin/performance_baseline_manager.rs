@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
 use std::process;
 use uuid::Uuid;
 
@@ -268,7 +267,7 @@ fn handle_create_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
     }
 
     // Load performance results
-    let results = load_performance_results(results_file)?;
+    let results = loadperformance_results(results_file)?;
 
     // Create baseline directory if it doesn't exist
     fs::create_dir_all(baseline_dir).map_err(|e| {
@@ -279,12 +278,12 @@ fn handle_create_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
     let baseline = create_baseline_from_results(&results, features, commit_hash, branch)?;
 
     // Save baseline
-    let baseline_path = PathBuf::from(baseline_dir).join(format!("baseline_{}.json", features));
-    save_baseline(&baseline, &baseline_path)?;
+    let baselinepath = PathBuf::from(baseline_dir).join(format!("baseline_{}.json", features));
+    save_baseline(&baseline, &baselinepath)?;
 
     if verbose {
         println!("✅ Baseline created successfully");
-        println!("📄 Saved to: {}", baseline_path.display());
+        println!("📄 Saved to: {}", baselinepath.display());
         println!("📊 Summary:");
         println!(
             "  Total Benchmarks: {}",
@@ -296,7 +295,7 @@ fn handle_create_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
             baseline.statistical_summary.quality_score
         );
     } else {
-        println!("✅ Baseline created: {}", baseline_path.display());
+        println!("✅ Baseline created: {}", baselinepath.display());
     }
 
     Ok(())
@@ -321,11 +320,11 @@ fn handle_update_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
         println!("  Merge Strategy: {}", merge_strategy);
     }
 
-    let baseline_path = PathBuf::from(baseline_dir).join(format!("baseline_{}.json", features));
+    let baselinepath = PathBuf::from(baseline_dir).join(format!("baseline_{}.json", features));
 
     // Load existing baseline if it exists
-    let existing_baseline = if baseline_path.exists() {
-        Some(load_baseline(&baseline_path)?)
+    let existing_baseline = if baselinepath.exists() {
+        Some(load_baseline(&baselinepath)?)
     } else {
         if verbose {
             println!("⚠️  No existing baseline found, creating new one");
@@ -334,7 +333,7 @@ fn handle_update_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
     };
 
     // Load new performance results
-    let results = load_performance_results(results_file)?;
+    let results = loadperformance_results(results_file)?;
 
     // Create updated baseline
     let updated_baseline = if let Some(existing) = existing_baseline {
@@ -351,11 +350,11 @@ fn handle_update_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
     };
 
     // Save updated baseline
-    save_baseline(&updated_baseline, &baseline_path)?;
+    save_baseline(&updated_baseline, &baselinepath)?;
 
     if verbose {
         println!("✅ Baseline updated successfully");
-        println!("📄 Saved to: {}", baseline_path.display());
+        println!("📄 Saved to: {}", baselinepath.display());
         println!("📊 Summary:");
         println!(
             "  Total Benchmarks: {}",
@@ -367,7 +366,7 @@ fn handle_update_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
             updated_baseline.statistical_summary.quality_score
         );
     } else {
-        println!("✅ Baseline updated: {}", baseline_path.display());
+        println!("✅ Baseline updated: {}", baselinepath.display());
     }
 
     Ok(())
@@ -378,20 +377,20 @@ fn handle_validate_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
     let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
     let features = matches.get_one::<String>("features").unwrap();
 
-    let baseline_path = PathBuf::from(baseline_dir).join(format!("baseline_{}.json", features));
+    let baselinepath = PathBuf::from(baseline_dir).join(format!("baseline_{}.json", features));
 
-    if !baseline_path.exists() {
+    if !baselinepath.exists() {
         return Err(OptimError::ConfigurationError(format!(
             "Baseline file not found: {}",
-            baseline_path.display()
+            baselinepath.display()
         )));
     }
 
     if verbose {
-        println!("🔍 Validating baseline: {}", baseline_path.display());
+        println!("🔍 Validating baseline: {}", baselinepath.display());
     }
 
-    let baseline = load_baseline(&baseline_path)?;
+    let baseline = load_baseline(&baselinepath)?;
     let validation_result = validate_baseline(&baseline)?;
 
     if verbose {
@@ -455,15 +454,15 @@ fn handle_list_baselines(matches: &ArgMatches, verbose: bool) -> Result<()> {
     }
 
     println!("Available baselines:");
-    for (i, file_path) in baseline_files.iter().enumerate() {
-        let baseline = load_baseline(file_path)?;
+    for (i, filepath) in baseline_files.iter().enumerate() {
+        let baseline = load_baseline(filepath)?;
 
         if verbose {
             println!(
                 "{}. {} ({})",
                 i + 1,
                 baseline.metadata.features,
-                file_path.display()
+                filepath.display()
             );
             println!("   Created: {}", baseline.metadata.created_at);
             println!("   Branch: {}", baseline.metadata.branch);
@@ -495,16 +494,16 @@ fn handle_show_baseline_info(matches: &ArgMatches, verbose: bool) -> Result<()> 
     let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
     let features = matches.get_one::<String>("features").unwrap();
 
-    let baseline_path = PathBuf::from(baseline_dir).join(format!("baseline_{}.json", features));
+    let baselinepath = PathBuf::from(baseline_dir).join(format!("baseline_{}.json", features));
 
-    if !baseline_path.exists() {
+    if !baselinepath.exists() {
         return Err(OptimError::ConfigurationError(format!(
             "Baseline file not found: {}",
-            baseline_path.display()
+            baselinepath.display()
         )));
     }
 
-    let baseline = load_baseline(&baseline_path)?;
+    let baseline = load_baseline(&baselinepath)?;
 
     println!("📊 Baseline Information: {}", features);
     println!("=====================================");
@@ -568,8 +567,8 @@ fn handle_show_baseline_info(matches: &ArgMatches, verbose: bool) -> Result<()> 
 }
 
 #[allow(dead_code)]
-fn load_performance_results(path: &str) -> Result<serde_json::Value> {
-    let content = fs::read_to_string(_path)
+fn loadperformance_results(path: &str) -> Result<serde_json::Value> {
+    let content = fs::read_to_string(path)
         .map_err(|e| OptimError::ResourceError(format!("Failed to read results file: {}", e)))?;
 
     serde_json::from_str(&content)
@@ -578,7 +577,7 @@ fn load_performance_results(path: &str) -> Result<serde_json::Value> {
 
 #[allow(dead_code)]
 fn load_baseline(path: &PathBuf) -> Result<BaselineMetrics> {
-    let content = fs::read_to_string(_path)
+    let content = fs::read_to_string(path)
         .map_err(|e| OptimError::ResourceError(format!("Failed to read baseline file: {}", e)))?;
 
     serde_json::from_str(&content)
@@ -607,8 +606,8 @@ fn create_baseline_from_results(
 
     // Extract metrics from results
     if let Some(current_results) = results.get("current_results").and_then(|v| v.as_object()) {
-        for (metric_name, metric_data) in current_results {
-            if let Some(value) = extract_numeric_value(metric_data) {
+        for (metric_name, metricdata) in current_results {
+            if let Some(value) = extract_numeric_value(metricdata) {
                 let metric_value = MetricValue {
                     mean: value,
                     std_dev: 0.0, // Initial baseline has no variance
@@ -667,8 +666,8 @@ fn merge_baseline_with_results(
 
     // Extract new metrics from results
     if let Some(current_results) = results.get("current_results").and_then(|v| v.as_object()) {
-        for (metric_name, metric_data) in current_results {
-            if let Some(new_value) = extract_numeric_value(metric_data) {
+        for (metric_name, metricdata) in current_results {
+            if let Some(new_value) = extract_numeric_value(metricdata) {
                 if let Some(existing_metric) = updated_metrics.get_mut(metric_name) {
                     // Update existing metric
                     match merge_strategy {
@@ -835,15 +834,15 @@ fn validate_baseline(baseline: &BaselineMetrics) -> Result<bool> {
 
 #[allow(dead_code)]
 fn find_baseline_files(_baselinedir: &str) -> Result<Vec<PathBuf>> {
-    let dir_path = PathBuf::from(_baseline_dir);
+    let dirpath = PathBuf::from(_baseline_dir);
 
-    if !dir_path.exists() {
+    if !dirpath.exists() {
         return Ok(vec![]);
     }
 
     let mut baseline_files = Vec::new();
 
-    for entry in fs::read_dir(&dir_path)
+    for entry in fs::read_dir(&dirpath)
         .map_err(|e| OptimError::ResourceError(format!("Failed to read directory: {}", e)))?
     {
         let entry = entry.map_err(|e| {

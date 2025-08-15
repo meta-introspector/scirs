@@ -2,7 +2,7 @@
 
 use ndarray::{s, Array1, Array2, ScalarOperand};
 use num_traits::{Float, FromPrimitive, NumCast};
-use scirs2__linalg::{inv, solve};
+use scirs2_linalg::{inv, solve};
 use std::fmt::Debug;
 
 use crate::error::{Result, TimeSeriesError};

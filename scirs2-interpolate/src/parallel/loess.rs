@@ -64,12 +64,12 @@ use crate::spatial::kdtree::KdTree;
 ///
 /// // Create test points
 /// let test_x = Array1::<f64>::linspace(0.0, 10.0, 50);
-/// let test_points = test_x.clone().insert_axis(ndarray::Axis(1));
+/// let testpoints = test_x.clone().insert_axis(ndarray::Axis(1));
 ///
 /// // Parallel evaluation
 /// let parallel_config = ParallelConfig::new();
 /// let results = parallel_loess.fit_multiple_parallel(
-///     &test_points.view(),
+///     &testpoints.view(),
 ///     &parallel_config
 /// ).unwrap();
 /// # }
@@ -97,8 +97,8 @@ where
     ///
     /// # Arguments
     ///
-    /// * `points` - Point coordinates with shape (n_points, n_dims)
-    /// * `values` - Values at each point with shape (n_points,)
+    /// * `points` - Point coordinates with shape (npoints, n_dims)
+    /// * `values` - Values at each point with shape (npoints,)
     /// * `bandwidth` - Bandwidth parameter controlling locality
     ///
     /// # Returns
@@ -106,14 +106,15 @@ where
     /// A new ParallelLocalPolynomialRegression model
     pub fn new(points: Array2<F>, values: Array1<F>, bandwidth: F) -> InterpolateResult<Self> {
         // Create standard LOESS model
-        let loess = LocalPolynomialRegression::new(_points.clone(), values, bandwidth)?;
+        let loess = LocalPolynomialRegression::new(points.clone(), values, bandwidth)?;
 
         // Create KD-tree for efficient neighbor searching
-        let kdtree = KdTree::new(_points)?;
+        let kdtree = KdTree::new(points)?;
 
         Ok(Self {
             loess,
-            kdtree_phantom: PhantomData,
+            kdtree,
+            _phantom: PhantomData,
         })
     }
 
@@ -121,8 +122,8 @@ where
     ///
     /// # Arguments
     ///
-    /// * `points` - Point coordinates with shape (n_points, n_dims)
-    /// * `values` - Values at each point with shape (n_points,)
+    /// * `points` - Point coordinates with shape (npoints, n_dims)
+    /// * `values` - Values at each point with shape (npoints,)
     /// * `config` - Configuration for the regression
     ///
     /// # Returns
@@ -141,7 +142,8 @@ where
 
         Ok(Self {
             loess,
-            kdtree_phantom: PhantomData,
+            kdtree,
+            _phantom: PhantomData,
         })
     }
 
@@ -166,7 +168,7 @@ where
     ///
     /// # Arguments
     ///
-    /// * `points` - Query points with shape (n_points, n_dims)
+    /// * `points` - Query points with shape (npoints, n_dims)
     /// * `config` - Parallel execution configuration
     ///
     /// # Returns
@@ -188,7 +190,7 @@ where
     ///
     /// # Arguments
     ///
-    /// * `points` - Query points with shape (n_points, n_dims)
+    /// * `points` - Query points with shape (npoints, n_dims)
     /// * `config` - Parallel execution configuration
     ///
     /// # Returns
@@ -206,7 +208,7 @@ where
             ));
         }
 
-        let n_points = points.shape()[0];
+        let npoints = points.shape()[0];
         let values = self.loess.values();
 
         // Estimate the cost of each evaluation
@@ -217,10 +219,10 @@ where
         };
 
         // Determine chunk size
-        let chunk_size = estimate_chunk_size(n_points, cost_factor, config);
+        let chunk_size = estimate_chunk_size(npoints, cost_factor, config);
 
         // Maximum number of neighbors to consider
-        let max_points = self.loess.config().max_points.unwrap_or(50);
+        let maxpoints = self.loess.config().max_points.unwrap_or(50);
 
         // Clone required data for thread safety (wrapped in Arc for efficient sharing)
         let values_arc = Arc::new(values.clone());
@@ -245,7 +247,7 @@ where
 
                     // Find nearest neighbors using KD-tree
                     let neighbors =
-                        match self.kdtree.k_nearest_neighbors(&query.to_vec(), max_points) {
+                        match self.kdtree.k_nearest_neighbors(&query.to_vec(), maxpoints) {
                             Ok(n) => n,
                             Err(_) => {
                                 // Fallback to mean if neighbor search fails
@@ -266,12 +268,12 @@ where
 
                     // Extract local data
                     let n_local = neighbors.len();
-                    let mut local_points = Array2::zeros((n_local, query.len()));
+                    let mut localpoints = Array2::zeros((n_local, query.len()));
                     let mut local_values = Array1::zeros(n_local);
                     let mut weights = Array1::zeros(n_local);
 
                     for (j, &(idx, dist)) in neighbors.iter().enumerate() {
-                        local_points
+                        localpoints
                             .slice_mut(ndarray::s![j, ..])
                             .assign(&points_ref.slice(ndarray::s![idx, ..]));
                         local_values[j] = values_ref[idx];
@@ -282,7 +284,7 @@ where
 
                     // Fit local polynomial
                     match fit_local_polynomial(
-                        &local_points.view(),
+                        &localpoints.view(),
                         &local_values,
                         &query,
                         &weights,
@@ -337,7 +339,7 @@ where
 /// Apply weight function to a normalized distance
 #[allow(dead_code)]
 fn apply_weight<F: Float + FromPrimitive>(r: F, weightfn: WeightFunction) -> F {
-    match weight_fn {
+    match weightfn {
         WeightFunction::Gaussian => (-r * r).exp(),
         WeightFunction::WendlandC2 => {
             if r < F::one() {
@@ -372,7 +374,7 @@ fn apply_weight<F: Float + FromPrimitive>(r: F, weightfn: WeightFunction) -> F {
 ///
 /// # Arguments
 ///
-/// * `local_points` - Local points used for the fit
+/// * `localpoints` - Local points used for the fit
 /// * `local_values` - Values at local points
 /// * `query` - Query point
 /// * `weights` - Weights for each local point
@@ -383,14 +385,14 @@ fn apply_weight<F: Float + FromPrimitive>(r: F, weightfn: WeightFunction) -> F {
 /// The fitted value at the query point
 #[allow(dead_code)]
 fn fit_local_polynomial<F: Float + FromPrimitive + 'static>(
-    local_points: &ArrayView2<F>,
+    localpoints: &ArrayView2<F>,
     local_values: &Array1<F>,
     query: &ArrayView1<F>,
     weights: &Array1<F>,
     basis: PolynomialBasis,
 ) -> InterpolateResult<F> {
-    let n_points = local_points.shape()[0];
-    let n_dims = local_points.shape()[1];
+    let npoints = localpoints.shape()[0];
+    let n_dims = localpoints.shape()[1];
 
     // Determine number of basis functions
     let n_basis = match basis {
@@ -400,10 +402,10 @@ fn fit_local_polynomial<F: Float + FromPrimitive + 'static>(
     };
 
     // Create basis functions
-    let mut basis_matrix = Array2::zeros((n_points, n_basis));
+    let mut basis_matrix = Array2::zeros((npoints, n_basis));
 
-    for i in 0..n_points {
-        let point = local_points.row(i);
+    for i in 0..npoints {
+        let point = localpoints.row(i);
         let mut col = 0;
 
         // Constant term
@@ -432,10 +434,10 @@ fn fit_local_polynomial<F: Float + FromPrimitive + 'static>(
     }
 
     // Apply weights
-    let mut w_basis = Array2::zeros((n_points, n_basis));
-    let mut w_values = Array1::zeros(n_points);
+    let mut w_basis = Array2::zeros((npoints, n_basis));
+    let mut w_values = Array1::zeros(npoints);
 
-    for i in 0..n_points {
+    for i in 0..npoints {
         let sqrt_w = weights[i].sqrt();
         for j in 0..n_basis {
             w_basis[[i, j]] = basis_matrix[[i, j]] * sqrt_w;
@@ -483,8 +485,8 @@ fn fit_local_polynomial<F: Float + FromPrimitive + 'static>(
 ///
 /// # Arguments
 ///
-/// * `points` - Point coordinates with shape (n_points, n_dims)
-/// * `values` - Values at each point with shape (n_points,)
+/// * `points` - Point coordinates with shape (npoints, n_dims)
+/// * `values` - Values at each point with shape (npoints,)
 /// * `bandwidth` - Bandwidth parameter controlling locality
 ///
 /// # Returns
@@ -508,8 +510,8 @@ where
 ///
 /// # Arguments
 ///
-/// * `points` - Point coordinates with shape (n_points, n_dims)
-/// * `values` - Values at each point with shape (n_points,)
+/// * `points` - Point coordinates with shape (npoints, n_dims)
+/// * `values` - Values at each point with shape (npoints,)
 /// * `bandwidth` - Bandwidth parameter controlling locality
 /// * `confidence_level` - Confidence level for intervals (e.g., 0.95)
 ///
@@ -568,19 +570,19 @@ mod tests {
 
         // Test points
         let test_x = Array1::linspace(1.0, 9.0, 10);
-        let test_points = test_x.clone().insert_axis(Axis(1));
+        let testpoints = test_x.clone().insert_axis(Axis(1));
 
         // Sequential evaluation (extract just the values)
         let mut sequential_values = Array1::zeros(10);
         for i in 0..10 {
-            let result = sequential_loess.fit_at_point(&test_points.row(i)).unwrap();
+            let result = sequential_loess.fit_at_point(&testpoints.row(i)).unwrap();
             sequential_values[i] = result.value;
         }
 
         // Parallel evaluation
         let config = ParallelConfig::new();
         let parallel_values = parallel_loess
-            .fit_multiple_parallel(&test_points.view(), &config)
+            .fit_multiple_parallel(&testpoints.view(), &config)
             .unwrap();
 
         // With PartialOrd, the sequential and parallel implementations may give different results
@@ -598,9 +600,9 @@ mod tests {
     #[test]
     fn test_parallel_loess_with_different_thread_counts() {
         // Create a larger dataset
-        let n_points = 100;
-        let x = Array1::linspace(0.0, 10.0, n_points);
-        let mut y = Array1::zeros(n_points);
+        let npoints = 100;
+        let x = Array1::linspace(0.0, 10.0, npoints);
+        let mut y = Array1::zeros(npoints);
 
         for (i, &x_val) in x.iter().enumerate() {
             // y = x^2 with some noise
@@ -622,7 +624,7 @@ mod tests {
 
         // Create test points
         let test_x = Array1::linspace(1.0, 9.0, 20);
-        let test_points = test_x.clone().insert_axis(Axis(1));
+        let testpoints = test_x.clone().insert_axis(Axis(1));
 
         // Test with different thread counts
         let configs = vec![
@@ -635,7 +637,7 @@ mod tests {
 
         for config in &configs {
             let result = parallel_loess
-                .fit_multiple_parallel(&test_points.view(), config)
+                .fit_multiple_parallel(&testpoints.view(), config)
                 .unwrap();
             results.push(result);
         }

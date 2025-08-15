@@ -238,7 +238,7 @@ pub struct QuantumUncertaintyProcessor<F: Float + Debug> {
 
 /// Quantum measurement effects processor
 #[allow(dead_code)]
-#[derive(Debug, Clone)]  
+#[derive(Debug, Clone)]
 pub struct QuantumMeasurementEffects<F: Float + Debug> {
     measurement_operators: Vec<Vec<Complex<F>>>,
     collapse_probabilities: Vec<F>,
@@ -314,19 +314,21 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
     pub fn process_quantum(&mut self, data: &Array1<F>) -> Result<Array1<F>> {
         // 1. Quantum Fourier Transform for frequency domain analysis
         let qft_result = self.quantum_fourier_transform(data)?;
-        
+
         // 2. Quantum Principal Component Analysis for dimensionality reduction
         let qpca_result = self.quantum_pca(&qft_result)?;
-        
+
         // 3. Quantum entanglement optimization for correlation discovery
         let entanglement_result = self.quantum_entanglement_analysis(&qpca_result)?;
-        
+
         // 4. Quantum error correction to maintain coherence
-        let corrected_result = self.error_correction.apply_correction(&entanglement_result)?;
-        
+        let corrected_result = self
+            .error_correction
+            .apply_correction(&entanglement_result)?;
+
         // 5. Quantum superposition enhancement for multi-state processing
         let enhanced_result = self.quantum_superposition_enhancement(&corrected_result)?;
-        
+
         Ok(enhanced_result)
     }
 
@@ -334,13 +336,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
     fn quantum_fourier_transform(&self, data: &Array1<F>) -> Result<Array1<F>> {
         // Simplified QFT implementation
         let mut result = data.clone();
-        
+
         // Apply quantum phase rotations
         for i in 0..result.len() {
-            let phase_factor = F::from_f64(2.0 * std::f64::consts::PI * i as f64 / result.len() as f64).unwrap();
+            let phase_factor =
+                F::from_f64(2.0 * std::f64::consts::PI * i as f64 / result.len() as f64).unwrap();
             result[i] = result[i] * phase_factor.cos();
         }
-        
+
         Ok(result)
     }
 
@@ -348,7 +351,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
     fn quantum_pca(&self, data: &Array1<F>) -> Result<Array1<F>> {
         // Simplified quantum PCA
         let mut result = data.clone();
-        
+
         // Apply quantum dimensionality reduction
         for i in 0..result.len() {
             // Quantum enhancement: exploit superposition for parallel computation
@@ -359,14 +362,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
             };
             result[i] = result[i] * quantum_weight;
         }
-        
+
         Ok(result)
     }
 
     /// Quantum entanglement analysis for correlation discovery
     fn quantum_entanglement_analysis(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut result = data.clone();
-        
+
         // Apply quantum entanglement correlations
         for i in 0..result.len().saturating_sub(1) {
             // Entanglement correlation between adjacent elements
@@ -374,21 +377,21 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
             let correlation = result[i] * result[i + 1] * entanglement_factor;
             result[i] = result[i] + correlation;
         }
-        
+
         Ok(result)
     }
 
     /// Quantum superposition enhancement for multi-state processing
     fn quantum_superposition_enhancement(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut result = data.clone();
-        
+
         // Apply quantum superposition principles
         for i in 0..result.len() {
             // Quantum interference effects
             let superposition_amplitude = F::from_f64(0.8).unwrap();
             result[i] = result[i] * superposition_amplitude;
         }
-        
+
         Ok(result)
     }
 }
@@ -421,31 +424,31 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicInterface<F> {
     /// Convert quantum state to neuromorphic spike patterns
     pub fn quantum_to_neuromorphic(&self, quantumdata: &Array1<Complex<F>>) -> Result<Array1<F>> {
         // 1. Quantum-spike correlation analysis
-        let mut spike_pattern = Array1::zeros(quantum_data.len());
-        
-        for (i, &quantum_state) in quantum_data.iter().enumerate() {
+        let mut spike_pattern = Array1::zeros(quantumdata.len());
+
+        for (i, &quantum_state) in quantumdata.iter().enumerate() {
             // Convert complex quantum amplitude to spike probability
             let amplitude = quantum_state.norm();
             let phase = quantum_state.arg();
-            
+
             // Quantum-biological correlation factor
             let correlation_factor = F::from_f64(0.7).unwrap();
-            
+
             // Generate spike probability based on quantum state
             let spike_probability = amplitude * correlation_factor;
-            
+
             // Quantum superposition-based fusion
             spike_pattern[i] = spike_probability * F::from_f64(phase.cos()).unwrap();
         }
-        
+
         Ok(spike_pattern)
     }
 
     /// Convert neuromorphic spikes to quantum states
     pub fn neuromorphic_to_quantum(&self, spikedata: &Array1<F>) -> Result<Array1<Complex<F>>> {
-        let mut quantum_states = Array1::zeros(spike_data.len());
-        
-        for (i, &spike_value) in spike_data.iter().enumerate() {
+        let mut quantum_states = Array1::zeros(spikedata.len());
+
+        for (i, &spike_value) in spikedata.iter().enumerate() {
             // Convert spike to quantum amplitude and phase
             let amplitude = spike_value.abs();
             let phase = if spike_value >= F::zero() {
@@ -453,20 +456,20 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicInterface<F> {
             } else {
                 F::from_f64(std::f64::consts::PI).unwrap()
             };
-            
+
             // Quantum-modulated spike generation
             let quantum_amplitude = amplitude * F::from_f64(0.8).unwrap();
-            
+
             // Quantum interference effects on spike timing
             let quantum_phase = phase + F::from_f64(std::f64::consts::PI / 4.0).unwrap();
-            
+
             // Create complex quantum state
             quantum_states[i] = Complex::new(
                 quantum_amplitude * quantum_phase.cos(),
-                quantum_amplitude * quantum_phase.sin()
+                quantum_amplitude * quantum_phase.sin(),
             );
         }
-        
+
         Ok(quantum_states)
     }
 
@@ -475,18 +478,20 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicInterface<F> {
         if data.is_empty() {
             return Ok(F::zero());
         }
-        
+
         // Quantum uncertainty calculation
-        let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(data.len()).unwrap();
-        let variance = data.iter()
+        let mean =
+            data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(data.len()).unwrap();
+        let variance = data
+            .iter()
             .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
             / F::from_usize(data.len()).unwrap();
-        
+
         // Quantum confidence based on uncertainty principle
         let uncertainty = variance.sqrt();
         let max_confidence = F::from_f64(1.0).unwrap();
         let confidence = max_confidence / (F::from_f64(1.0).unwrap() + uncertainty);
-        
+
         Ok(confidence)
     }
 }
@@ -554,32 +559,35 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicCore<F> {
     pub fn process_fusion(&mut self, data: &Array1<F>) -> Result<Array1<F>> {
         // 1. Quantum processing phase
         let quantum_result = self.quantum_unit.process_quantum(data)?;
-        
+
         // 2. Convert quantum result to neuromorphic input
-        let quantum_complex: Array1<Complex<F>> = quantum_result.mapv(|x| Complex::new(x, F::zero()));
-        let neuromorphic_input = self.fusion_interface.quantum_to_neuromorphic(&quantum_complex)?;
-        
+        let quantum_complex: Array1<Complex<F>> =
+            quantum_result.mapv(|x| Complex::new(x, F::zero()));
+        let neuromorphic_input = self
+            .fusion_interface
+            .quantum_to_neuromorphic(&quantum_complex)?;
+
         // 3. Neuromorphic processing phase
         let neuromorphic_result = self.neuromorphic_unit.process_spikes(&neuromorphic_input)?;
-        
+
         // 4. Fusion and optimization
         let fusion_result = self.fuse_results(&quantum_result, &neuromorphic_result)?;
-        
+
         Ok(fusion_result)
     }
 
     /// Fuse quantum and neuromorphic results
     fn fuse_results(&self, quantum: &Array1<F>, neuromorphic: &Array1<F>) -> Result<Array1<F>> {
         let mut result = Array1::zeros(quantum.len().min(neuromorphic.len()));
-        
+
         for i in 0..result.len() {
             // Weighted fusion of quantum and neuromorphic results
             let quantum_weight = F::from_f64(0.6).unwrap();
             let neuromorphic_weight = F::from_f64(0.4).unwrap();
-            
+
             result[i] = quantum[i] * quantum_weight + neuromorphic[i] * neuromorphic_weight;
         }
-        
+
         Ok(result)
     }
 }

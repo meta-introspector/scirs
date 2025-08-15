@@ -1404,7 +1404,7 @@ let result = linear_interpolate(&x.view(), &y.view(), &x_new.view())?;
         let missing_error_docs = self
             .analysis_results
             .iter()
-            .flat_map(|r| &r._issues)
+            .flat_map(|r| &r.issues)
             .filter(|i| matches!(i.category, DocumentationIssueCategory::MissingErrorDocs))
             .count();
 

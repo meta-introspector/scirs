@@ -54,7 +54,8 @@ impl Default for MemoryConfig {
 /// Buffer pool for reusing allocated arrays
 pub struct BufferPool<T, D> {
     buffers: Vec<Array<T, D>>,
-    max_buffers: usize, _phantom: PhantomData<T>,
+    max_buffers: usize,
+    _phantom: PhantomData<T>,
 }
 
 impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> BufferPool<T, D> {
@@ -117,7 +118,8 @@ where
 
 /// Memory-efficient wrapper for array operations
 pub struct MemoryEfficientOp<T, D> {
-    config: MemoryConfig, phantom: PhantomData<(T, D)>,
+    config: MemoryConfig,
+    phantom: PhantomData<(T, D)>,
 }
 
 impl<
@@ -279,7 +281,8 @@ impl<
 /// Memory-efficient array slicing that avoids copies when possible
 #[allow(dead_code)]
 pub fn slice_efficiently<'a, T, D, S>(
-    array: &'a ArrayBase<S, D>, _slice_info: &[std::ops::Range<usize>],
+    array: &'a ArrayBase<S, D>,
+    _slice_info: &[std::ops::Range<usize>],
 ) -> ArrayView<'a, T, D>
 where
     T: Float + std::ops::AddAssign + std::ops::DivAssign + 'static,

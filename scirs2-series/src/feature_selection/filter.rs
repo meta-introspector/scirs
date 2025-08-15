@@ -491,7 +491,8 @@ impl FilterMethods {
         match _alpha {
             a if a <= 0.01 => 6.635 + 10.0 / (n as f64),
             a if a <= 0.05 => 3.841 + 5.0 / (n as f64),
-            a if a <= 0.10 => 2.706 + 3.0 / (n as f64, _ => 1.0,
+            a if a <= 0.10 => 2.706 + 3.0 / (n as f64),
+            _ => 1.0,
         }
     }
 }

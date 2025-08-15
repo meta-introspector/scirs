@@ -67,7 +67,7 @@ pub struct BootstrapInterpolator<T: Float> {
 
 impl<T: Float + FromPrimitive + Debug + Display + std::iter::Sum> BootstrapInterpolator<T> {
     /// Create a new bootstrap interpolator
-    pub fn new<F>(_config: BootstrapConfig, interpolatorfactory: F) -> Self
+    pub fn new<F>(config: BootstrapConfig, interpolator_factory: F) -> Self
     where
         F: Fn(&ArrayView1<T>, &ArrayView1<T>) -> InterpolateResult<Box<dyn Fn(T) -> T>> + 'static,
     {
@@ -82,7 +82,7 @@ impl<T: Float + FromPrimitive + Debug + Display + std::iter::Sum> BootstrapInter
         &self,
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<BootstrapResult<T>> {
         if x.len() != y.len() {
             return Err(InterpolateError::DimensionMismatch(
@@ -91,7 +91,7 @@ impl<T: Float + FromPrimitive + Debug + Display + std::iter::Sum> BootstrapInter
         }
 
         let n = x.len();
-        let m = x_new.len();
+        let m = xnew.len();
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
@@ -114,10 +114,10 @@ impl<T: Float + FromPrimitive + Debug + Display + std::iter::Sum> BootstrapInter
 
             // Create interpolator for this bootstrap sample
             let interpolator =
-                (self.interpolator_factory)(&x_resampled.view()..&y_resampled.view())?;
+                (self.interpolator_factory)(&x_resampled.view(), &y_resampled.view())?;
 
             // Evaluate at _new points
-            for (j, &x_val) in x_new.iter().enumerate() {
+            for (j, &x_val) in xnew.iter().enumerate() {
                 bootstrap_results[[i, j]] = interpolator(x_val);
             }
         }
@@ -199,7 +199,7 @@ impl<T: Float + FromPrimitive> Default for BayesianConfig<T> {
 impl<T: Float + FromPrimitive> BayesianConfig<T> {
     /// Set the RBF kernel length scale parameter
     pub fn with_length_scale(mut self, lengthscale: T) -> Self {
-        self.length_scale = length_scale;
+        self.length_scale = lengthscale;
         self
     }
 
@@ -217,7 +217,7 @@ impl<T: Float + FromPrimitive> BayesianConfig<T> {
 
     /// Set the number of posterior samples
     pub fn with_n_posterior_samples(mut self, nsamples: usize) -> Self {
-        self.n_posterior_samples = n_samples;
+        self.n_posterior_samples = nsamples;
         self
     }
 }
@@ -266,7 +266,7 @@ impl<
     /// Get posterior mean at given points using proper Gaussian process regression
     pub fn posterior_mean(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         let n = self.x_obs.len();
-        let m = x_new.len();
+        let m = xnew.len();
 
         if n == 0 {
             return Err(InterpolateError::invalid_input(
@@ -310,7 +310,7 @@ impl<
         let mut k_star_x = Array2::<T>::zeros((m, n));
         for i in 0..m {
             for j in 0..n {
-                let dist_sq = (x_new[i] - self.x_obs[j]).powi(2);
+                let dist_sq = (xnew[i] - self.x_obs[j]).powi(2);
                 k_star_x[[i, j]] = self.config.prior_variance
                     * (-dist_sq / (T::from(2.0).unwrap() * length_scale.powi(2))).exp();
             }
@@ -324,7 +324,7 @@ impl<
                 sum = sum + k_star_x[[i, j]] * weights[j];
             }
             // Add prior mean
-            mean[i] = (self.config.prior_mean)(x_new[i]) + sum;
+            mean[i] = (self.config.prior_mean)(xnew[i]) + sum;
         }
 
         Ok(mean)
@@ -353,18 +353,18 @@ impl<
     /// Draw samples from the posterior distribution
     pub fn posterior_samples(
         &self,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
         n_samples: usize,
     ) -> InterpolateResult<Array2<T>> {
-        let mean = self.posterior_mean(x_new)?;
-        let m = x_new.len();
+        let mean = self.posterior_mean(xnew)?;
+        let m = xnew.len();
 
         // For computational efficiency, we use a simplified approach that captures
         // the main posterior uncertainty while avoiding expensive matrix operations.
         // A full implementation would compute the posterior covariance matrix:
         // Σ* = K(X*, X*) - K(X*, X)[K(X, X) + σ²I]^(-1)K(X, X*)
 
-        let mut _samples = Array2::zeros((n_samples, m));
+        let mut samples = Array2::zeros((n_samples, m));
         let mut rng = rand::rng();
 
         // Compute approximate posterior variance at each point
@@ -375,7 +375,7 @@ impl<
             let mut total_influence = T::zero();
 
             for i in 0..self.x_obs.len() {
-                let dist_sq = (x_new[j] - self.x_obs[i]).powi(2);
+                let dist_sq = (xnew[j] - self.x_obs[i]).powi(2);
                 let influence = (-dist_sq / (T::from(2.0).unwrap() * length_scale.powi(2))).exp();
                 total_influence = total_influence + influence;
                 reduction_factor = reduction_factor + influence * influence;
@@ -402,7 +402,7 @@ impl<
             }
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 }
 
@@ -422,7 +422,7 @@ where
 {
     /// Create a new quantile interpolator
     pub fn new(quantile: T, bandwidth: T) -> InterpolateResult<Self> {
-        if _quantile <= T::zero() || _quantile >= T::one() {
+        if quantile <= T::zero() || quantile >= T::one() {
             return Err(InterpolateError::InvalidValue(
                 "Quantile must be between 0 and 1".to_string(),
             ));
@@ -439,7 +439,7 @@ where
         &self,
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
         if x.len() != y.len() {
             return Err(InterpolateError::DimensionMismatch(
@@ -448,12 +448,12 @@ where
         }
 
         let n = x.len();
-        let m = x_new.len();
+        let m = xnew.len();
         let mut result = Array1::zeros(m);
 
         // Local quantile regression
         for j in 0..m {
-            let x_target = x_new[j];
+            let x_target = xnew[j];
 
             // Compute weights based on distance
             let mut weights = Vec::with_capacity(n);
@@ -479,7 +479,7 @@ where
                     .iter()
                     .enumerate()
                     .min_by_key(|(_, &xi)| ((xi - x_target).abs().to_f64().unwrap() * 1e6) as i64)
-                    .map(|(i_)| i)
+                    .map(|(i_, _)| i_)
                     .unwrap();
                 result[j] = y[nearest_idx];
             } else {
@@ -519,7 +519,7 @@ impl<T: Float + FromPrimitive + Debug + Display> RobustInterpolator<T> {
     /// Create a new robust interpolator using M-estimation
     pub fn new(_tuningconstant: T) -> Self {
         Self {
-            tuning_constant,
+            tuning_constant: _tuningconstant,
             max_iterations: 100,
             tolerance: T::from(1e-6).unwrap(),
         }
@@ -530,15 +530,15 @@ impl<T: Float + FromPrimitive + Debug + Display> RobustInterpolator<T> {
         &self,
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
         // Use local polynomial regression with robust weights
         let n = x.len();
-        let m = x_new.len();
+        let m = xnew.len();
         let mut result = Array1::zeros(m);
 
         for j in 0..m {
-            let x_target = x_new[j];
+            let x_target = xnew[j];
 
             // Initial weights (uniform)
             let mut weights = vec![T::one(); n];
@@ -613,7 +613,7 @@ pub struct StochasticInterpolator<T: Float> {
 
 impl<T: Float + FromPrimitive + Debug + Display> StochasticInterpolator<T> {
     /// Create a new stochastic interpolator
-    pub fn new(_correlation_length: T, field_variance: T, nrealizations: usize) -> Self {
+    pub fn new(correlation_length: T, field_variance: T, n_realizations: usize) -> Self {
         Self {
             correlation_length,
             field_variance,
@@ -626,10 +626,10 @@ impl<T: Float + FromPrimitive + Debug + Display> StochasticInterpolator<T> {
         &self,
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<Array2<T>> {
         let n = x.len();
-        let m = x_new.len();
+        let m = xnew.len();
         let mut realizations = Array2::zeros((self.n_realizations, m));
 
         let mut rng = rand::rng();
@@ -637,7 +637,7 @@ impl<T: Float + FromPrimitive + Debug + Display> StochasticInterpolator<T> {
         for r in 0..self.n_realizations {
             // Generate a realization using conditional simulation
             for j in 0..m {
-                let x_target = x_new[j];
+                let x_target = xnew[j];
 
                 // Kriging interpolation with added noise
                 let mut weighted_sum = T::zero();
@@ -674,9 +674,9 @@ impl<T: Float + FromPrimitive + Debug + Display> StochasticInterpolator<T> {
         &self,
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-        let realizations = self.interpolate_realizations(x, y, x_new)?;
+        let realizations = self.interpolate_realizations(x, y, xnew)?;
 
         let mean = realizations.mean_axis(Axis(0)).unwrap();
         let variance = realizations.var_axis(Axis(0), T::from(1.0).unwrap());
@@ -697,23 +697,23 @@ pub fn make_bootstrap_linear_interpolator<
         // Create a simple linear interpolator
         let x_owned = x.to_owned();
         let y_owned = y.to_owned();
-        Ok(Box::new(move |x_new| {
+        Ok(Box::new(move |xnew| {
             // Simple linear interpolation
-            if x_new <= x_owned[0] {
+            if xnew <= x_owned[0] {
                 y_owned[0]
-            } else if x_new >= x_owned[x_owned.len() - 1] {
+            } else if xnew >= x_owned[x_owned.len() - 1] {
                 y_owned[y_owned.len() - 1]
             } else {
                 // Find surrounding points
                 let mut i = 0;
                 for j in 1..x_owned.len() {
-                    if x_new <= x_owned[j] {
+                    if xnew <= x_owned[j] {
                         i = j - 1;
                         break;
                     }
                 }
 
-                let alpha = (x_new - x_owned[i]) / (x_owned[i + 1] - x_owned[i]);
+                let alpha = (xnew - x_owned[i]) / (x_owned[i + 1] - x_owned[i]);
                 y_owned[i] * (T::one() - alpha) + y_owned[i + 1] * alpha
             }
         }))
@@ -783,13 +783,13 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
             Array1::from_vec(vec![weight])
         } else {
             let mut new_weights = self.weights.to_vec();
-            newweights.push(weight);
+            new_weights.push(weight);
             Array1::from_vec(new_weights)
         };
 
-        self.methods.push(Box::new(|x, y, x_new| {
-            let mut result = Array1::zeros(x_new.len());
-            for (i, &x_val) in x_new.iter().enumerate() {
+        self.methods.push(Box::new(|x, y, xnew| {
+            let mut result = Array1::zeros(xnew.len());
+            for (i, &x_val) in xnew.iter().enumerate() {
                 // Linear interpolation
                 if x_val <= x[0] {
                     result[i] = y[0];
@@ -817,11 +817,11 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
             Array1::from_vec(vec![weight])
         } else {
             let mut new_weights = self.weights.to_vec();
-            newweights.push(weight);
+            new_weights.push(weight);
             Array1::from_vec(new_weights)
         };
 
-        self.methods.push(Box::new(|x, y, x_new| {
+        self.methods.push(Box::new(|x, y, xnew| {
             // Cubic spline interpolation using natural boundary conditions
             use crate::spline::CubicSpline;
 
@@ -836,8 +836,8 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
             let spline = CubicSpline::new(x, y)?;
 
             // Evaluate at all query points
-            let mut result = Array1::zeros(x_new.len());
-            for (i, &x_val) in x_new.iter().enumerate() {
+            let mut result = Array1::zeros(xnew.len());
+            for (i, &x_val) in xnew.iter().enumerate() {
                 // Handle extrapolation by clamping to boundary values
                 if x_val < x[0] {
                     result[i] = y[0];
@@ -858,7 +858,7 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
         &self,
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
         if self.methods.is_empty() {
             return Err(InterpolateError::InvalidState(
@@ -866,14 +866,14 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
             ));
         }
 
-        let mut weighted_results = Array1::zeros(x_new.len());
+        let mut weighted_results = Array1::zeros(xnew.len());
         let mut total_weight = T::zero();
 
         for (i, method) in self.methods.iter().enumerate() {
-            let result = method(x, y, x_new)?;
+            let result = method(x, y, xnew)?;
             let weight = self.weights[i];
 
-            for j in 0..x_new.len() {
+            for j in 0..xnew.len() {
                 weighted_results[j] = weighted_results[j] + weight * result[j];
             }
             total_weight = total_weight + weight;
@@ -894,7 +894,7 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
         &self,
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
         if self.methods.is_empty() {
             return Err(InterpolateError::InvalidState(
@@ -906,17 +906,17 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
 
         // Collect results from all methods
         for method in self.methods.iter() {
-            let result = method(x, y, x_new)?;
+            let result = method(x, y, xnew)?;
             all_results.push(result);
         }
 
         // Compute weighted mean
-        let mut weighted_mean = Array1::zeros(x_new.len());
+        let mut weighted_mean = Array1::zeros(xnew.len());
         let mut total_weight = T::zero();
 
         for (i, result) in all_results.iter().enumerate() {
             let weight = self.weights[i];
-            for j in 0..x_new.len() {
+            for j in 0..xnew.len() {
                 weighted_mean[j] = weighted_mean[j] + weight * result[j];
             }
             total_weight = total_weight + weight;
@@ -929,11 +929,11 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
         }
 
         // Compute weighted variance
-        let mut variance = Array1::zeros(x_new.len());
+        let mut variance = Array1::zeros(xnew.len());
         if all_results.len() > 1 {
             for (i, result) in all_results.iter().enumerate() {
                 let weight = self.weights[i];
-                for j in 0..x_new.len() {
+                for j in 0..xnew.len() {
                     let diff = result[j] - weighted_mean[j];
                     variance[j] = variance[j] + weight * diff * diff;
                 }
@@ -971,7 +971,7 @@ impl CrossValidationUncertainty {
     /// Create a new cross-validation uncertainty estimator
     pub fn new(_kfolds: usize) -> Self {
         Self {
-            k_folds,
+            k_folds: _kfolds,
             seed: None,
         }
     }
@@ -987,7 +987,7 @@ impl CrossValidationUncertainty {
         &self,
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
         interpolator_factory: F,
     ) -> InterpolateResult<(Array1<T>, Array1<T>)>
     where
@@ -995,14 +995,14 @@ impl CrossValidationUncertainty {
         F: Fn(&ArrayView1<T>, &ArrayView1<T>, &ArrayView1<T>) -> InterpolateResult<Array1<T>>,
     {
         let n = x.len();
-        let _m = x_new.len();
+        let _m = xnew.len();
 
         if self.k_folds == 0 || self.k_folds >= n {
             // Leave-one-out cross-validation
-            self.leave_one_out_uncertainty(x, y, x_new, interpolator_factory)
+            self.leave_one_out_uncertainty(x, y, xnew, interpolator_factory)
         } else {
             // K-fold cross-validation
-            self.k_fold_uncertainty(x, y, x_new, interpolator_factory)
+            self.k_fold_uncertainty(x, y, xnew, interpolator_factory)
         }
     }
 
@@ -1010,7 +1010,7 @@ impl CrossValidationUncertainty {
         &self,
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
         interpolator_factory: F,
     ) -> InterpolateResult<(Array1<T>, Array1<T>)>
     where
@@ -1018,7 +1018,7 @@ impl CrossValidationUncertainty {
         F: Fn(&ArrayView1<T>, &ArrayView1<T>, &ArrayView1<T>) -> InterpolateResult<Array1<T>>,
     {
         let n = x.len();
-        let m = x_new.len();
+        let m = xnew.len();
         let mut predictions = Array2::zeros((n, m));
 
         // Leave-one-out cross-validation
@@ -1038,7 +1038,7 @@ impl CrossValidationUncertainty {
             let y_train_array = Array1::from_vec(y_train);
 
             // Train on reduced dataset and predict
-            let pred = interpolator_factory(&x_train_array.view(), &y_train_array.view(), x_new)?;
+            let pred = interpolator_factory(&x_train_array.view(), &y_train_array.view(), xnew)?;
             for j in 0..m {
                 predictions[[i, j]] = pred[j];
             }
@@ -1067,7 +1067,7 @@ impl CrossValidationUncertainty {
         &self,
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
         interpolator_factory: F,
     ) -> InterpolateResult<(Array1<T>, Array1<T>)>
     where
@@ -1075,7 +1075,7 @@ impl CrossValidationUncertainty {
         F: Fn(&ArrayView1<T>, &ArrayView1<T>, &ArrayView1<T>) -> InterpolateResult<Array1<T>>,
     {
         let n = x.len();
-        let m = x_new.len();
+        let m = xnew.len();
         let fold_size = n / self.k_folds;
         let mut predictions = Vec::new();
 
@@ -1118,7 +1118,7 @@ impl CrossValidationUncertainty {
             let y_train_array = Array1::from_vec(y_train);
 
             // Train and predict
-            let pred = interpolator_factory(&x_train_array.view(), &y_train_array.view(), x_new)?;
+            let pred = interpolator_factory(&x_train_array.view(), &y_train_array.view(), xnew)?;
             predictions.push(pred);
         }
 
@@ -1261,9 +1261,9 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum> Isotoni
 
     /// Interpolate at new points
     pub fn interpolate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
-        let mut result = Array1::zeros(x_new.len());
+        let mut result = Array1::zeros(xnew.len());
 
-        for (i, &x) in x_new.iter().enumerate() {
+        for (i, &x) in xnew.iter().enumerate() {
             // Find position in sorted data
             let idx = match self
                 .x_data
@@ -1390,9 +1390,9 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy> KDEInterpolator<T> {
 
     /// Interpolate at new points using KDE
     pub fn interpolate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
-        let mut result = Array1::zeros(x_new.len());
+        let mut result = Array1::zeros(xnew.len());
 
-        for (i, &x) in x_new.iter().enumerate() {
+        for (i, &x) in xnew.iter().enumerate() {
             let mut weighted_sum = T::zero();
             let mut weight_sum = T::zero();
 
@@ -1511,9 +1511,9 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum>
 
     /// Interpolate using empirical Bayes shrinkage
     pub fn interpolate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
-        let mut result = Array1::zeros(x_new.len());
+        let mut result = Array1::zeros(xnew.len());
 
-        for (i, &x) in x_new.iter().enumerate() {
+        for (i, &x) in xnew.iter().enumerate() {
             // Find nearest neighbors for local estimation
             let mut distances: Vec<(T, usize)> = self
                 .x_data
@@ -1618,7 +1618,8 @@ pub fn make_auto_kde_interpolator<
         variance.sqrt()
     };
 
-    let bandwidth = x_std * n.powf(-T::from(0.2).unwrap()); // n^(-1/5), KDEInterpolator::new(x, y, bandwidth, KDEKernel::Gaussian)
+    let bandwidth = x_std * n.powf(-T::from(0.2).unwrap()); // n^(-1/5)
+    KDEInterpolator::new(x, y, bandwidth, KDEKernel::Gaussian)
 }
 
 /// Convenience function to create an empirical Bayes interpolator

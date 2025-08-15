@@ -9,7 +9,7 @@
 //! - Scalability analysis across different image sizes
 
 use ndarray::{Array2, ArrayView2};
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     error::NdimageResult,
     profiling::{
         disable_profiling, enable_memory_profiling, enable_profiling, get_memory_report,
@@ -20,13 +20,13 @@ use std::time::{Duration, Instant};
 
 // Import both standard and advanced SIMD functions for comparison
 #[cfg(feature = "simd")]
-use scirs2__ndimage::filters::{
+use scirs2_ndimage::filters::{
     advanced_simd_advanced_edge_detection, advanced_simd_multi_scale_lbp,
     advanced_simd_wavelet_pyramid, laplace, sobel, WaveletType,
 };
 
 #[cfg(feature = "simd")]
-use scirs2__ndimage::features::{canny, sobel_edges};
+use scirs2_ndimage::features::{canny, sobel_edges};
 
 /// Benchmark configuration
 #[derive(Clone, Debug)]
@@ -72,7 +72,7 @@ struct BenchmarkResult {
 }
 
 impl BenchmarkResult {
-    fn new(_operation_name: String, imagesize: (usize, usize), durations: &[Duration]) -> Self {
+    fn new(_operation_name: String, image_size: (usize, usize), durations: &[Duration]) -> Self {
         let mean_duration = Duration::from_nanos(
             (durations.iter().map(|d| d.as_nanos()).sum::<u128>() / durations.len() as u128) as u64,
         );
@@ -153,26 +153,26 @@ fn main() -> NdimageResult<()> {
         );
 
         // Create test image with interesting patterns
-        let test_image = create_benchmark_image(image_size.0, image_size.1);
+        let testimage = create_benchmarkimage(image_size.0, image_size.1);
 
         // 1. Wavelet pyramid benchmarks
         #[cfg(feature = "simd")]
         {
-            let wavelet_results = benchmark_wavelet_pyramid(&test_image, &config)?;
+            let wavelet_results = benchmark_wavelet_pyramid(&testimage, &config)?;
             all_results.extend(wavelet_results);
         }
 
         // 2. Local Binary Pattern benchmarks
         #[cfg(feature = "simd")]
         {
-            let lbp_results = benchmark_lbp(&test_image, &config)?;
+            let lbp_results = benchmark_lbp(&testimage, &config)?;
             all_results.extend(lbp_results);
         }
 
         // 3. Edge detection benchmarks
         #[cfg(feature = "simd")]
         {
-            let edge_results = benchmark_edge_detection(&test_image, &config)?;
+            let edge_results = benchmark_edge_detection(&testimage, &config)?;
             all_results.extend(edge_results);
         }
 
@@ -204,7 +204,7 @@ fn main() -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn create_benchmark_image(height: usize, width: usize) -> Array2<f64> {
+fn create_benchmarkimage(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -362,7 +362,7 @@ fn benchmark_edge_detection(
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
 fn benchmark_standard_sobel(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
-    sobel(&_image.view(), None, None, None)
+    sobel(&image.view(), None, None, None)
 }
 
 #[cfg(feature = "simd")]

@@ -7,7 +7,6 @@ use clap::{Arg, ArgMatches, Command};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::time::{Duration, SystemTime};
@@ -110,28 +109,28 @@ fn main() {
 /// Run the complete security audit process
 #[allow(dead_code)]
 fn run_security_audit(matches: &ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
-    let project_path = Path::new(_matches.get_one::<String>("project-path").unwrap());
+    let projectpath = Path::new(matches.get_one::<String>("project-path").unwrap());
     let verbose = matches.get_flag("verbose");
 
     if verbose {
         println!(
             "🔍 Starting security audit for project: {}",
-            project_path.display()
+            projectpath.display()
         );
     }
 
     // Initialize audit configuration
-    let config = build_audit_config(_matches)?;
+    let config = build_audit_config(matches)?;
 
     // Create security auditor
     let mut auditor = SecurityAuditor::new(config);
 
     // Run comprehensive security audit
-    let audit_result = auditor.run_comprehensive_audit(project_path)?;
+    let audit_result = auditor.run_comprehensive_audit(projectpath)?;
 
     // Generate and output report
     let format = matches.get_one::<String>("format").unwrap();
-    let report = generate_audit_report(&audit_result, format)?;
+    let report = generate_auditreport(&audit_result, format)?;
 
     // Output the report
     if let Some(output_file) = matches.get_one::<String>("output") {
@@ -171,7 +170,7 @@ fn build_audit_config(matches: &ArgMatches) -> Result<AuditConfig, Box<dyn std::
         scan_secrets: all_scans || matches.get_flag("scan-secrets"),
         scan_code: all_scans || matches.get_flag("scan-code"),
         check_licenses: all_scans || matches.get_flag("check-licenses"),
-        min_severity: parse_severity(_matches.get, _one::<String>("severity").unwrap())?,
+        min_severity: parse_severity(matches.get_one::<String>("severity").unwrap())?,
         excluded_patterns,
         verbose: matches.get_flag("verbose"),
     })
@@ -226,7 +225,7 @@ pub enum Severity {
 #[derive(Debug, Serialize, Deserialize)]
 struct AuditResult {
     timestamp: SystemTime,
-    project_path: PathBuf,
+    projectpath: PathBuf,
     duration: Duration,
     overall_score: f64,
     dependency_results: DependencyAuditResult,
@@ -284,7 +283,7 @@ impl SecurityAuditor {
     /// Run comprehensive security audit
     fn run_comprehensive_audit(
         &mut self,
-        project_path: &Path,
+        projectpath: &Path,
     ) -> Result<AuditResult, Box<dyn std::error::Error>> {
         let start_time = SystemTime::now();
 
@@ -303,7 +302,7 @@ impl SecurityAuditor {
             if self.config.verbose {
                 println!("📦 Scanning dependencies for vulnerabilities...");
             }
-            dependency_results = self.dependency_scanner.scan_dependencies(project_path)?;
+            dependency_results = self.dependency_scanner.scan_dependencies(projectpath)?;
         }
 
         // Detect secrets
@@ -313,7 +312,7 @@ impl SecurityAuditor {
             }
             secret_results = self
                 .secret_detector
-                .scan_secrets(project_path, &self.config.excluded_patterns)?;
+                .scan_secrets(projectpath, &self.config.excluded_patterns)?;
         }
 
         // Analyze code
@@ -323,7 +322,7 @@ impl SecurityAuditor {
             }
             code_results = self
                 .code_analyzer
-                .analyze_code(project_path, &self.config.excluded_patterns)?;
+                .analyze_code(projectpath, &self.config.excluded_patterns)?;
         }
 
         // Check licenses
@@ -331,7 +330,7 @@ impl SecurityAuditor {
             if self.config.verbose {
                 println!("📄 Checking license compliance...");
             }
-            license_results = self.license_checker.check_licenses(project_path)?;
+            license_results = self.license_checker.check_licenses(projectpath)?;
         }
 
         let duration = start_time.elapsed().unwrap_or(Duration::from_secs(0));
@@ -362,7 +361,7 @@ impl SecurityAuditor {
 
         Ok(AuditResult {
             timestamp: start_time,
-            project_path: project_path.to_path_buf(),
+            projectpath: projectpath.to_path_buf(),
             duration,
             overall_score,
             dependency_results,
@@ -582,15 +581,15 @@ impl DependencyScanner {
 
     fn scan_dependencies(
         &self,
-        project_path: &Path,
+        projectpath: &Path,
     ) -> Result<DependencyAuditResult, Box<dyn std::error::Error>> {
-        let cargo_toml_path = project_path.join("Cargo.toml");
+        let cargo_tomlpath = projectpath.join("Cargo.toml");
 
-        if !cargo_toml_path.exists() {
+        if !cargo_tomlpath.exists() {
             return Ok(DependencyAuditResult::default());
         }
 
-        let cargo_content = fs::read_to_string(&cargo_toml_path)?;
+        let cargo_content = fs::read_to_string(&cargo_tomlpath)?;
         let dependencies = self.parse_dependencies(&cargo_content)?;
 
         // Simulate vulnerability database lookup
@@ -608,6 +607,7 @@ impl DependencyScanner {
                 Severity::High => high_vulnerabilities += 1,
                 Severity::Medium => medium_vulnerabilities += 1,
                 Severity::Low => low_vulnerabilities += 1,
+                Severity::Info => {} // Info severity doesn't count towards vulnerabilities
             }
         }
 
@@ -801,23 +801,23 @@ impl SecretDetector {
 
     fn scan_secrets(
         &self,
-        project_path: &Path,
+        projectpath: &Path,
         excluded_patterns: &[String],
     ) -> Result<SecretAuditResult, Box<dyn std::error::Error>> {
         let mut secrets = Vec::new();
         let mut files_scanned = 0;
 
         // Get Rust source files
-        let rust_files = self.find_rust_files(project_path, excluded_patterns)?;
+        let rust_files = self.find_rust_files(projectpath, excluded_patterns)?;
 
-        for file_path in rust_files {
+        for filepath in rust_files {
             files_scanned += 1;
-            let content = fs::read_to_string(&file_path)?;
+            let content = fs::read_to_string(&filepath)?;
 
             for (line_num, line) in content.lines().enumerate() {
                 if let Some(secret) = self.detect_secret_in_line(line) {
                     secrets.push(DetectedSecret {
-                        file: file_path.clone(),
+                        file: filepath.clone(),
                         line: line_num + 1,
                         secret_type: secret.0,
                         description: secret.1,
@@ -835,12 +835,12 @@ impl SecretDetector {
 
     fn find_rust_files(
         &self,
-        project_path: &Path,
+        projectpath: &Path,
         excluded_patterns: &[String],
     ) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
         let mut rust_files = Vec::new();
 
-        self.scan_directory_recursive(project_path, &mut rust_files, excluded_patterns)?;
+        self.scan_directory_recursive(projectpath, &mut rust_files, excluded_patterns)?;
 
         Ok(rust_files)
     }
@@ -962,21 +962,21 @@ impl CodeAnalyzer {
 
     fn analyze_code(
         &self,
-        project_path: &Path,
+        projectpath: &Path,
         excluded_patterns: &[String],
     ) -> Result<CodeAuditResult, Box<dyn std::error::Error>> {
         let mut issues = Vec::new();
         let mut files_analyzed = 0;
         let mut lines_analyzed = 0;
 
-        let rust_files = self.find_rust_files(project_path, excluded_patterns)?;
+        let rust_files = self.find_rust_files(projectpath, excluded_patterns)?;
 
-        for file_path in rust_files {
+        for filepath in rust_files {
             files_analyzed += 1;
-            let content = fs::read_to_string(&file_path)?;
+            let content = fs::read_to_string(&filepath)?;
             lines_analyzed += content.lines().count();
 
-            let file_issues = self.analyze_file(&file_path, &content)?;
+            let file_issues = self.analyze_file(&filepath, &content)?;
             issues.extend(file_issues);
         }
 
@@ -1010,11 +1010,11 @@ impl CodeAnalyzer {
 
     fn find_rust_files(
         &self,
-        project_path: &Path,
+        projectpath: &Path,
         excluded_patterns: &[String],
     ) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
         let mut rust_files = Vec::new();
-        self.scan_directory_recursive(project_path, &mut rust_files, excluded_patterns)?;
+        self.scan_directory_recursive(projectpath, &mut rust_files, excluded_patterns)?;
         Ok(rust_files)
     }
 
@@ -1053,7 +1053,7 @@ impl CodeAnalyzer {
 
     fn analyze_file(
         &self,
-        file_path: &Path,
+        filepath: &Path,
         content: &str,
     ) -> Result<Vec<CodeIssue>, Box<dyn std::error::Error>> {
         let mut issues = Vec::new();
@@ -1062,7 +1062,7 @@ impl CodeAnalyzer {
             // Check for unsafe code blocks
             if line.trim().starts_with("unsafe") {
                 issues.push(CodeIssue {
-                    file: file_path.to_path_buf(),
+                    file: filepath.to_path_buf(),
                     line: line_num + 1,
                     issue_type: "unsafe_code".to_string(),
                     severity: Severity::Medium,
@@ -1074,7 +1074,7 @@ impl CodeAnalyzer {
             // Check for potential panic conditions
             if line.contains("unwrap()") || line.contains("expect(") {
                 issues.push(CodeIssue {
-                    file: file_path.to_path_buf(),
+                    file: filepath.to_path_buf(),
                     line: line_num + 1,
                     issue_type: "panic_risk".to_string(),
                     severity: Severity::Low,
@@ -1087,7 +1087,7 @@ impl CodeAnalyzer {
             // Check for TODO/FIXME comments
             if line.contains("TODO") || line.contains("FIXME") {
                 issues.push(CodeIssue {
-                    file: file_path.to_path_buf(),
+                    file: filepath.to_path_buf(),
                     line: line_num + 1,
                     issue_type: "todo_fixme".to_string(),
                     severity: Severity::Info,
@@ -1099,7 +1099,7 @@ impl CodeAnalyzer {
             // Check for deprecated crypto
             if line.contains("md5") || line.contains("sha1") {
                 issues.push(CodeIssue {
-                    file: file_path.to_path_buf(),
+                    file: filepath.to_path_buf(),
                     line: line_num + 1,
                     issue_type: "weak_crypto".to_string(),
                     severity: Severity::High,
@@ -1140,11 +1140,11 @@ impl LicenseChecker {
 
     fn check_licenses(
         &self,
-        project_path: &Path,
+        projectpath: &Path,
     ) -> Result<LicenseAuditResult, Box<dyn std::error::Error>> {
-        let cargo_lock_path = project_path.join("Cargo.lock");
+        let cargo_lockpath = projectpath.join("Cargo.lock");
 
-        if !cargo_lock_path.exists() {
+        if !cargo_lockpath.exists() {
             return Ok(LicenseAuditResult::default());
         }
 
@@ -1169,22 +1169,22 @@ impl LicenseChecker {
 
 /// Generate audit report in specified format
 #[allow(dead_code)]
-fn generate_audit_report(
+fn generate_auditreport(
     audit_result: &AuditResult,
     format: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     match format {
         "json" => Ok(serde_json::to_string_pretty(audit_result)?),
         "yaml" => Ok(serde_yaml::to_string(audit_result)?),
-        "markdown" => generate_markdown_report(audit_result),
-        "html" => generate_html_report(audit_result),
+        "markdown" => generate_markdownreport(audit_result),
+        "html" => generate_htmlreport(audit_result),
         _ => Err(format!("Unsupported format: {format}").into()),
     }
 }
 
 /// Generate markdown report
 #[allow(dead_code)]
-fn generate_markdown_report(
+fn generate_markdownreport(
     audit_result: &AuditResult,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut report = String::new();
@@ -1193,7 +1193,7 @@ fn generate_markdown_report(
 
     report.push_str(&format!(
         "**Project**: {}\n",
-        audit_result.project_path.display()
+        audit_result.projectpath.display()
     ));
     report.push_str(&format!("**Audit Date**: {:?}\n", audit_result.timestamp));
     report.push_str(&format!(
@@ -1304,7 +1304,7 @@ fn generate_markdown_report(
 
 /// Generate HTML report
 #[allow(dead_code)]
-fn generate_html_report(_auditresult: &AuditResult) -> Result<String, Box<dyn std::error::Error>> {
+fn generate_htmlreport(_auditresult: &AuditResult) -> Result<String, Box<dyn std::error::Error>> {
     let mut html = String::new();
 
     html.push_str("<!DOCTYPE html>\n<html>\n<head>\n");
@@ -1325,7 +1325,7 @@ fn generate_html_report(_auditresult: &AuditResult) -> Result<String, Box<dyn st
     html.push_str("<div class=\"summary\">\n");
     html.push_str(&format!(
         "<p><strong>Project:</strong> {}</p>\n",
-        audit_result.project_path.display()
+        audit_result.projectpath.display()
     ));
     html.push_str(&format!(
         "<p><strong>Overall Score:</strong> {:.1}/100</p>\n",

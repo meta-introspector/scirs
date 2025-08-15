@@ -53,7 +53,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Basic 2D erosion
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__ndimage::morphology::binary_erosion;
+/// use scirs2_ndimage::morphology::binary_erosion;
 ///
 /// // Create a simple 3x3 array filled with true values
 /// let input = Array2::from_elem((3, 3), true);
@@ -68,7 +68,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Custom structuring element
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::morphology::binary_erosion;
+/// use scirs2_ndimage::morphology::binary_erosion;
 ///
 /// let input = array![
 ///     [true,  true,  true,  true,  true],
@@ -92,7 +92,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Multiple iterations for heavy erosion
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__ndimage::morphology::binary_erosion;
+/// use scirs2_ndimage::morphology::binary_erosion;
 ///
 /// // Create a larger filled region
 /// let input = Array2::from_elem((10, 10), true);
@@ -107,7 +107,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Using a mask to limit erosion area
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::morphology::binary_erosion;
+/// use scirs2_ndimage::morphology::binary_erosion;
 ///
 /// let input = Array2::from_elem((5, 5), true);
 ///
@@ -127,7 +127,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## 1D signal processing
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__ndimage::morphology::binary_erosion;
+/// use scirs2_ndimage::morphology::binary_erosion;
 ///
 /// let signal = Array1::from_vec(vec![false, true, true, true, false]);
 /// let eroded = binary_erosion(&signal, None, None, None, None, None, None).unwrap();
@@ -537,7 +537,8 @@ fn binary_erosion_dyn(
     iterations: Option<usize>,
     mask: Option<&Array<bool, IxDyn>>,
     border_value: Option<bool>,
-    origin: Option<&[isize]>, _brute_force: Option<bool>,
+    origin: Option<&[isize]>,
+    _brute_force: Option<bool>,
 ) -> NdimageResult<Array<bool, IxDyn>> {
     let iterations = iterations.unwrap_or(1);
     let border = border_value.unwrap_or(false);
@@ -1070,7 +1071,8 @@ fn binary_dilation_dyn(
     iterations: Option<usize>,
     mask: Option<&Array<bool, IxDyn>>,
     border_value: Option<bool>,
-    origin: Option<&[isize]>, _brute_force: Option<bool>,
+    origin: Option<&[isize]>,
+    _brute_force: Option<bool>,
 ) -> NdimageResult<Array<bool, IxDyn>> {
     let iterations = iterations.unwrap_or(1);
     let border = border_value.unwrap_or(false);
@@ -1290,7 +1292,9 @@ where
 /// * `Result<Array<bool, D>>` - Array with filled holes
 #[allow(dead_code)]
 pub fn binary_fill_holes<D>(
-    input: &Array<bool, D>, _structure: Option<&Array<bool, D>>, _origin: Option<&[isize]>,
+    input: &Array<bool, D>,
+    _structure: Option<&Array<bool, D>>,
+    _origin: Option<&[isize]>,
 ) -> NdimageResult<Array<bool, D>>
 where
     D: Dimension + 'static,
@@ -1324,7 +1328,7 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__ndimage::morphology::binary_hit_or_miss;
+/// use scirs2_ndimage::morphology::binary_hit_or_miss;
 ///
 /// // Create a binary image with a specific pattern
 /// let mut input = Array2::from_elem((5, 5), false);
@@ -1401,7 +1405,13 @@ where
 /// Apply binary hit-or-miss transform to a 1D array
 #[allow(dead_code)]
 fn binary_hit_or_miss_1d<D>(
-    input: &Array<bool, ndarray::Ix1>, _structure1: Option<&Array<bool, D>>, _structure2: Option<&Array<bool, D>>, _mask: Option<&Array<bool, D>>, _border_value: Option<bool>, _origin1: Option<&[isize]>, _origin2: Option<&[isize]>,
+    input: &Array<bool, ndarray::Ix1>,
+    _structure1: Option<&Array<bool, D>>,
+    _structure2: Option<&Array<bool, D>>,
+    _mask: Option<&Array<bool, D>>,
+    _border_value: Option<bool>,
+    _origin1: Option<&[isize]>,
+    _origin2: Option<&[isize]>,
 ) -> NdimageResult<Array<bool, ndarray::Ix1>>
 where
     D: Dimension + 'static,

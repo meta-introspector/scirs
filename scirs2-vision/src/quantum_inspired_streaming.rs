@@ -324,7 +324,7 @@ impl QuantumHamiltonian {
         let mut rng = rand::rng();
         for stagename in _stagenames {
             stage_energies.insert(stagename.clone(), rng.gen_range(0.1..2.0));
-            external_fields.insert(stagename.clone()..0.0);
+            external_fields.insert(stagename.clone(), 0.0);
         }
 
         let n_stages = _stagenames.len();
@@ -523,7 +523,7 @@ impl QuantumAnnealingStage {
         Self {
             temperature: 100.0,
             cooling_rate: 0.99,
-            _parameters: _initialparameters,
+            parameters: _initialparameters,
             best_parameters,
             best_cost: f64::INFINITY,
             step_counter: 0,
@@ -532,7 +532,7 @@ impl QuantumAnnealingStage {
 
     /// Perform one annealing step
     pub fn anneal_step(&mut self, costfunction: impl Fn(&HashMap<String, f64>) -> f64) -> f64 {
-        let current_cost = cost_function(&self.parameters);
+        let current_cost = costfunction(&self.parameters);
 
         // Generate neighbor solution
         let mut neighbor_params = self.parameters.clone();
@@ -542,10 +542,10 @@ impl QuantumAnnealingStage {
         if let Some((_param_name, param_value)) = param_entries.choose_mut(&mut rng) {
             let perturbation = rng.gen_range(-0.1..0.1) * self.temperature / 100.0;
             **param_value += perturbation;
-            **param_value = param_value.clamp(0.0..1.0); // Keep in valid range
+            **param_value = param_value.clamp(0.0, 1.0); // Keep in valid range
         }
 
-        let neighbor_cost = cost_function(&neighbor_params);
+        let neighbor_cost = costfunction(&neighbor_params);
         let delta_cost = neighbor_cost - current_cost;
 
         // Accept or reject based on quantum annealing probability
@@ -646,16 +646,32 @@ impl QuantumEntanglementStage {
 
         // Extract basic statistical features
         let mean = frame.data.mean().unwrap_or(0.0) as f64;
-        let variance = frame.data.variance() as f64;
+        let variance = {
+            let variance_f32 = frame
+                .data
+                .iter()
+                .map(|&x| (x - mean as f32).powi(2))
+                .sum::<f32>()
+                / frame.data.len() as f32;
+            variance_f32 as f64
+        };
         features.push(mean);
         features.push(variance);
 
         // Extract gradient-based features
-        if let Ok((_grad_x_grad_y, magnitude)) =
+        if let Ok((_grad_x, _grad_y, magnitude)) =
             crate::simd_ops::simd_sobel_gradients(&frame.data.view())
         {
             let grad_mean = magnitude.mean().unwrap_or(0.0) as f64;
-            let grad_variance = magnitude.variance() as f64;
+            let grad_variance = {
+                let mag_mean = magnitude.mean().unwrap_or(0.0);
+                let variance_f32 = magnitude
+                    .iter()
+                    .map(|&x| (x - mag_mean).powi(2))
+                    .sum::<f32>()
+                    / magnitude.len() as f32;
+                variance_f32 as f64
+            };
             features.push(grad_mean);
             features.push(grad_variance);
         } else {

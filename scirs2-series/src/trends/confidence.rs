@@ -222,7 +222,8 @@ where
     let critical_value = match options.level {
         0.90 => 1.645,
         0.95 => 1.96,
-        0.99 => 2.576_ => {
+        0.99 => 2.576,
+        _ => {
             // Approximate normal quantile for arbitrary confidence level
             let p = (F::one() + F::from_f64(options.level).unwrap()) / F::from_f64(2.0).unwrap();
             normal_quantile(p.to_f64().unwrap())?
@@ -277,7 +278,8 @@ where
     let critical_value = match options.level {
         0.90 => 1.645,
         0.95 => 1.96,
-        0.99 => 2.576_ => {
+        0.99 => 2.576,
+        _ => {
             // Approximate normal quantile for arbitrary confidence level
             let p = (F::one() + F::from_f64(options.level).unwrap()) / F::from_f64(2.0).unwrap();
             normal_quantile(p.to_f64().unwrap())?

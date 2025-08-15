@@ -281,13 +281,13 @@ impl CudaContext {
         let max_threads_per_block = match compute_capability {
             (8_) => 1024, // Ampere
             (7_) => 1024, // Turing/Volta
-            _ => 512,       // Older architectures
+            _ => 512,     // Older architectures
         };
 
         let max_shared_memory = match compute_capability {
-            (8_) => 99328, // Ampere: 96KB + 3KB
+            (8_) => 99328,   // Ampere: 96KB + 3KB
             (7, 5) => 65536, // Turing: 64KB
-            (7_) => 49152, // Volta: 48KB
+            (7_) => 49152,   // Volta: 48KB
             _ => 32768,      // Older: 32KB
         };
 
@@ -1127,7 +1127,7 @@ mod tests {
 
     #[test]
     #[ignore] // Ignore by default as it requires CUDA
-    fn test_cuda_context_creation() {
+    fn test_cudacontext_creation() {
         let context = CudaContext::new(None);
         assert!(context.is_ok());
 

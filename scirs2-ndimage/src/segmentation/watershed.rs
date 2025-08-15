@@ -70,7 +70,7 @@ impl<T: PartialOrd> Ord for PriorityPoint<T> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__ndimage::segmentation::watershed;
+/// use scirs2_ndimage::segmentation::watershed;
 ///
 /// let image = array![
 ///     [0.5, 0.6, 0.7],
@@ -156,8 +156,7 @@ where
         }
 
         // Determine the label for this point
-        if let Some((most_common_label_)) = neighbor_labels.iter().max_by_key(|&(_, count)| count)
-        {
+        if let Some((most_common_label_)) = neighbor_labels.iter().max_by_key(|&(_, count)| count) {
             output[[r, c]] = *most_common_label;
 
             // Add new neighbors to the queue
@@ -282,7 +281,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__ndimage::segmentation::marker_watershed;
+/// use scirs2_ndimage::segmentation::marker_watershed;
 ///
 /// let image = array![
 ///     [0.5, 0.5, 0.5],

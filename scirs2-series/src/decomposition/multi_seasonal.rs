@@ -385,7 +385,8 @@ where
 #[allow(dead_code)]
 fn calculate_seasonal_strength<F>(
     ts: &Array1<F>,
-    period: usize, model: &DecompositionModel,
+    period: usize,
+    model: &DecompositionModel,
 ) -> Result<f64>
 where
     F: Float + FromPrimitive + Debug,
@@ -449,7 +450,8 @@ where
 #[allow(dead_code)]
 fn extract_multi_seasonal_trend<F>(
     ts: &Array1<F>,
-    periods: &[usize], _config: &MultiSeasonalConfig,
+    periods: &[usize],
+    _config: &MultiSeasonalConfig,
 ) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,

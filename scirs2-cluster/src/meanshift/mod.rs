@@ -9,7 +9,7 @@ use crate::error::ClusteringError;
 use scirs2__spatial::distance::EuclideanDistance;
 use scirs2__spatial::kdtree::KDTree;
 use scirs2_core::validation::{
-    check_array_finite, check_positive, clustering::validate_clustering_data,
+    check_positive, checkarray_finite, clustering::validate_clustering_data,
     parameters::check_unit_interval,
 };
 
@@ -127,7 +127,7 @@ pub fn estimate_bandwidth<T: Float + Display + FromPrimitive + Send + Sync + 'st
     _random_state: Option<u64>,
 ) -> Result<T, ClusteringError> {
     // Check that all data is finite
-    check_array_finite(data, "data")?;
+    checkarray_finite(data, "data")?;
 
     let quantile = quantile.unwrap_or_else(|| T::from(0.3).unwrap());
     let _quantile = check_unit_interval(quantile, "quantile", "estimate_bandwidth")?;
@@ -616,7 +616,7 @@ impl<
         })?;
 
         // Check that all data is finite
-        check_array_finite(data, "prediction data")?;
+        checkarray_finite(data, "prediction data")?;
 
         let n_samples = data.nrows();
         let mut labels = Array1::zeros(n_samples);

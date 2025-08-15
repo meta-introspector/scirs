@@ -50,7 +50,7 @@ use crate::error::{ClusteringError, Result};
 use crate::quantum__clustering::{QAOAConfig, VQEConfig};
 use crate::vq::euclidean_distance;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 use std::time::Instant;
@@ -1651,7 +1651,7 @@ impl ContinualAdaptationEngine {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct MAMLParameters {
     pub inner_learning_rate: f64,
     pub outer_learning_rate: f64,

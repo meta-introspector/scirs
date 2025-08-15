@@ -158,7 +158,7 @@ impl<
             bspline_extrapolate,
         )?;
 
-        let _levels = vec![initial_spline];
+        let levels = vec![initial_spline];
 
         Ok(Self {
             x: x_owned,
@@ -177,7 +177,7 @@ impl<
     /// # Arguments
     ///
     /// * `criterion` - The criterion to use for refinement decisions
-    /// * `max_new_knots` - Maximum number of new knots to add in this refinement step
+    /// * `maxnew_knots` - Maximum number of new knots to add in this refinement step
     ///
     /// # Returns
     ///
@@ -186,7 +186,7 @@ impl<
     pub fn refine(
         &mut self,
         criterion: RefinementCriterion,
-        max_new_knots: usize,
+        maxnew_knots: usize,
     ) -> InterpolateResult<bool> {
         // Check if we've reached the maximum refinement level
         if self.active_level >= self.max_levels - 1 {
@@ -208,7 +208,7 @@ impl<
         }
 
         // Limit the number of new _knots to add
-        let n_add = std::cmp::min(candidates.len(), max_new_knots);
+        let n_add = std::cmp::min(candidates.len(), maxnew_knots);
         let candidates = candidates.into_iter().take(n_add).collect::<Vec<_>>();
 
         // Get current _knots and add new ones
@@ -404,7 +404,7 @@ impl<
     ///
     /// # Arguments
     ///
-    /// * `x_new` - The points at which to evaluate the spline
+    /// * `xnew` - The points at which to evaluate the spline
     ///
     /// # Returns
     ///
@@ -418,11 +418,11 @@ impl<
 
         // Use the current active (finest) level B-spline
         // Calculate values for each point individually since BSpline::evaluate works on single points
-        let n_points = x_new.len();
+        let n_points = xnew.len();
         let mut result = Array1::zeros(n_points);
 
         for i in 0..n_points {
-            result[i] = self.levels[self.active_level].evaluate(x_new[i])?;
+            result[i] = self.levels[self.active_level].evaluate(xnew[i])?;
         }
 
         Ok(result)
@@ -433,7 +433,7 @@ impl<
     /// # Arguments
     ///
     /// * `deriv_order` - The order of the derivative (1 for first derivative, 2 for second, etc.)
-    /// * `x_new` - The points at which to evaluate the derivative
+    /// * `xnew` - The points at which to evaluate the derivative
     ///
     /// # Returns
     ///
@@ -441,7 +441,7 @@ impl<
     pub fn derivative(
         &self,
         deriv_order: usize,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
         if self.levels.is_empty() {
             return Err(InterpolateError::InvalidState(
@@ -451,11 +451,11 @@ impl<
 
         // Use the current active (finest) level B-spline
         // Calculate derivatives for each point individually since BSpline::derivative only works for single points
-        let n_points = x_new.len();
+        let n_points = xnew.len();
         let mut result = Array1::zeros(n_points);
 
         for i in 0..n_points {
-            result[i] = self.levels[self.active_level].derivative(x_new[i], deriv_order)?;
+            result[i] = self.levels[self.active_level].derivative(xnew[i], deriv_order)?;
         }
 
         Ok(result)

@@ -114,29 +114,29 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - The x coordinate at which to evaluate the interpolation
+    /// * `xnew` - The x coordinate at which to evaluate the interpolation
     ///
     /// # Returns
     ///
-    /// The interpolated y value at `x_new`
+    /// The interpolated y value at `xnew`
     ///
     /// # Errors
     ///
-    /// Returns an error if `x_new` is outside the interpolation range and
+    /// Returns an error if `xnew` is outside the interpolation range and
     /// extrapolation is disabled.
     pub fn evaluate(&self, xnew: F) -> InterpolateResult<F> {
         // Check if we're extrapolating
-        let is_extrapolating = x_new < self.x[0] || x_new > self.x[self.x.len() - 1];
+        let is_extrapolating = xnew < self.x[0] || xnew > self.x[self.x.len() - 1];
         if is_extrapolating && !self.extrapolate {
             return Err(InterpolateError::OutOfBounds(
-                "x_new is outside the interpolation range".to_string(),
+                "xnew is outside the interpolation range".to_string(),
             ));
         }
 
-        // Find index of segment containing x_new
+        // Find index of segment containing xnew
         let mut idx = 0;
         for i in 0..self.x.len() - 1 {
-            if x_new >= self.x[i] && x_new <= self.x[i + 1] {
+            if xnew >= self.x[i] && xnew <= self.x[i + 1] {
                 idx = i;
                 break;
             }
@@ -144,7 +144,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
 
         // Handle extrapolation case
         if is_extrapolating {
-            if x_new < self.x[0] {
+            if xnew < self.x[0] {
                 // Extrapolate below the data range using the first segment
                 idx = 0;
             } else {
@@ -153,9 +153,9 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
             }
         }
 
-        // Special case: x_new is exactly at a knot point
+        // Special case: xnew is exactly at a knot point
         for i in 0..self.x.len() {
-            if x_new == self.x[i] {
+            if xnew == self.x[i] {
                 return Ok(self.y[i]);
             }
         }
@@ -170,7 +170,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
 
         // Normalized position within the interval [x1, x2]
         let h = x2 - x1;
-        let t = (x_new - x1) / h;
+        let t = (xnew - x1) / h;
 
         // Compute Hermite basis functions
         let h00 = Self::h00(t);
@@ -188,19 +188,19 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - The x coordinates at which to evaluate the interpolation
+    /// * `xnew` - The x coordinates at which to evaluate the interpolation
     ///
     /// # Returns
     ///
-    /// The interpolated y values at `x_new`
+    /// The interpolated y values at `xnew`
     ///
     /// # Errors
     ///
-    /// Returns an error if any point in `x_new` is outside the interpolation range
+    /// Returns an error if any point in `xnew` is outside the interpolation range
     /// and extrapolation is disabled.
     pub fn evaluate_array(&self, xnew: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
-        let mut result = Array1::zeros(x_new.len());
-        for (i, &x) in x_new.iter().enumerate() {
+        let mut result = Array1::zeros(xnew.len());
+        for (i, &x) in xnew.iter().enumerate() {
             result[i] = self.evaluate(x)?;
         }
         Ok(result)
@@ -250,7 +250,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
         let two = F::from_f64(2.0).unwrap();
         let three = F::from_f64(3.0).unwrap();
 
-        let d = ((two * _h0 + h1) * m0 - _h0 * m1) / (_h0 + h1);
+        let d = ((two * h0 + h1) * m0 - h0 * m1) / (h0 + h1);
 
         // Try to preserve shape
         let sign_d = if d >= F::zero() { F::one() } else { -F::one() };
@@ -360,7 +360,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
 ///
 /// * `x` - The x coordinates (must be sorted in ascending order)
 /// * `y` - The y coordinates
-/// * `x_new` - The points at which to interpolate
+/// * `xnew` - The points at which to interpolate
 /// * `extrapolate` - Whether to extrapolate beyond the data range
 ///
 /// # Returns
@@ -375,19 +375,19 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
 ///
 /// let x = array![0.0f64, 1.0, 2.0, 3.0];
 /// let y = array![0.0f64, 1.0, 4.0, 9.0];
-/// let x_new = array![0.5f64, 1.5, 2.5];
+/// let xnew = array![0.5f64, 1.5, 2.5];
 ///
-/// let y_interp = pchip_interpolate(&x.view(), &y.view(), &x_new.view(), true).unwrap();
+/// let y_interp = pchip_interpolate(&x.view(), &y.view(), &xnew.view(), true).unwrap();
 /// ```
 #[allow(dead_code)]
 pub fn pchip_interpolate<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
-    x_new: &ArrayView1<F>,
+    xnew: &ArrayView1<F>,
     extrapolate: bool,
 ) -> InterpolateResult<Array1<F>> {
-    let interp = PchipInterpolator::_new(x, y, extrapolate)?;
-    interp.evaluate_array(x_new)
+    let interp = PchipInterpolator::new(x, y, extrapolate)?;
+    interp.evaluate_array(xnew)
 }
 
 #[cfg(test)]
@@ -467,9 +467,9 @@ mod tests {
     fn test_pchip_interpolate_function() {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
-        let x_new = array![0.5, 1.5, 2.5];
+        let xnew = array![0.5, 1.5, 2.5];
 
-        let y_interp = pchip_interpolate(&x.view(), &y.view(), &x_new.view(), false).unwrap();
+        let y_interp = pchip_interpolate(&x.view(), &y.view(), &xnew.view(), false).unwrap();
 
         // Test that the function returns the expected number of points
         assert_eq!(y_interp.len(), 3);

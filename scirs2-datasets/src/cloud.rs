@@ -754,7 +754,7 @@ impl CloudClient {
 
 /// Helper function to format Azure timestamp in RFC2822 format
 #[allow(dead_code)]
-fn format_azure_timestamp(_unixtimestamp: u64) -> String {
+fn format_azure_timestamp(unix_timestamp: u64) -> String {
     // This is a simplified _timestamp formatter
     // In production, you'd use chrono or time crate for proper RFC2822 formatting
     let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -764,13 +764,13 @@ fn format_azure_timestamp(_unixtimestamp: u64) -> String {
 
     // Simple calculation - not accounting for leap years, etc.
     // This is just for demonstration
-    let day_of_week = ((_unix_timestamp / 86400) + 4) % 7; // Unix epoch was Thursday
-    let day = ((_unix_timestamp / 86400) % 365) % 31 + 1;
-    let month = ((_unix_timestamp / 86400) % 365) % 12;
-    let year = 1970 + (_unix_timestamp / 86400) / 365;
-    let hour = (_unix_timestamp % 86400) / 3600;
-    let minute = (_unix_timestamp % 3600) / 60;
-    let second = _unix_timestamp % 60;
+    let day_of_week = ((unix_timestamp / 86400) + 4) % 7; // Unix epoch was Thursday
+    let day = ((unix_timestamp / 86400) % 365) % 31 + 1;
+    let month = ((unix_timestamp / 86400) % 365) % 12;
+    let year = 1970 + (unix_timestamp / 86400) / 365;
+    let hour = (unix_timestamp % 86400) / 3600;
+    let minute = (unix_timestamp % 3600) / 60;
+    let second = unix_timestamp % 60;
 
     format!(
         "{}, {:02} {} {} {:02}:{:02}:{:02} GMT",

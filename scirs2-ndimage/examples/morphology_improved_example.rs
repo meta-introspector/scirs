@@ -4,11 +4,11 @@
 //! handle dimensionality issues.
 
 use ndarray::{s, Array2, Array3};
-use scirs2__ndimage::morphology::simple_morph::{
+use scirs2_ndimage::morphology::simple_morph::{
     binary_closing_2d, binary_dilation_2d, binary_erosion_2d, binary_opening_2d, black_tophat_2d,
     grey_dilation_2d, grey_erosion_2d, morphological_gradient_2d, white_tophat_2d,
 };
-use scirs2__ndimage::morphology::{generate_binary_structure, Connectivity};
+use scirs2_ndimage::morphology::{generate_binary_structure, Connectivity};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -110,7 +110,7 @@ where
     where
         S: Data<Elem = F>,
     {
-        Self::with_leaf_size(_points, 10)
+        Self::with_leaf_size(points, 10)
     }
 
     /// Create a new KD-tree with a specified leaf size
@@ -131,7 +131,7 @@ where
         S: Data<Elem = F>,
     {
         // Convert to owned Array2 if it's not already
-        let _points = points.to_owned();
+        let points = _points.to_owned();
         if points.is_empty() {
             return Err(InterpolateError::InvalidValue(
                 "Points array cannot be empty".to_string(),
@@ -421,13 +421,13 @@ where
         let node = &self.nodes[node_idx];
 
         // Calculate distance to the current node's point
-        let point_idx = node._idx;
+        let point_idx = node.idx;
         let point = self.points.row(point_idx);
         let _dist = self.distance(&point.to_vec(), query);
 
         // Update best distance if this point is closer
         if _dist < *best_dist {
-            *best_dist = dist;
+            *best_dist = _dist;
             *best_idx = point_idx;
         }
 
@@ -475,7 +475,7 @@ where
         let node = &self.nodes[node_idx];
 
         // Calculate distance to the current node's point
-        let point_idx = node._idx;
+        let point_idx = node.idx;
         let point = self.points.row(point_idx);
         let dist = self.distance(&point.to_vec(), query);
 
@@ -494,7 +494,7 @@ where
 
         // Get the current farthest distance in our k-nearest set
         let farthest_dist = match heap.peek() {
-            Some(&(dist_)) => dist.into_inner(),
+            Some(&(dist_, _)) => dist_.into_inner(),
             None => F::infinity(),
         };
 
@@ -536,7 +536,7 @@ where
         let node = &self.nodes[node_idx];
 
         // Calculate distance to the current node's point
-        let point_idx = node._idx;
+        let point_idx = node.idx;
         let point = self.points.row(point_idx);
         let dist = self.distance(&point.to_vec(), query);
 
@@ -836,7 +836,7 @@ where
         let node = &self.nodes[node_idx];
 
         // Calculate distance to the current node's point
-        let point_idx = node._idx;
+        let point_idx = node.idx;
         let point = self.points.row(point_idx);
         let dist = self.distance(&point.to_vec(), query);
 
@@ -851,8 +851,8 @@ where
 
             // Update search _radius to the farthest point in current k-nearest set
             if heap.len() == k {
-                if let Some(&(max_dist_)) = heap.peek() {
-                    *search_radius = max_dist.into_inner();
+                if let Some(&(max_dist_, _)) = heap.peek() {
+                    *search_radius = max_dist_.into_inner();
                 }
             }
         }
@@ -867,7 +867,7 @@ where
             *search_radius
         } else {
             match heap.peek() {
-                Some(&(dist_)) => dist.into_inner(),
+                Some(&(dist_, _)) => dist_.into_inner(),
                 None => *search_radius,
             }
         };
@@ -925,7 +925,7 @@ where
         let neighbors = self.k_nearest_neighbors(query_slice, k)?;
 
         // Extract indices
-        let indices = neighbors.iter().map(|(idx_)| *idx).collect::<Vec<_>>();
+        let indices = neighbors.iter().map(|(idx_, _)| *idx_).collect::<Vec<_>>();
         Ok(Array1::from(indices))
     }
 }
@@ -933,7 +933,7 @@ where
 /// QuckSelect algorithm to find the k-th smallest element by a key function
 /// This modifies the slice to partition it
 #[allow(dead_code)]
-fn quickselect_by_key<T, F, K>(_items: &mut [T], k: usize, keyfn: F)
+fn quickselect_by_key<T, F, K>(items: &mut [T], k: usize, keyfn: F)
 where
     F: Fn(&T) -> K,
     K: PartialOrd,
@@ -951,7 +951,7 @@ where
     // Partition around the pivot
     let mut store_idx = 0;
     for i in 0..len - 1 {
-        if keyfn(&_items[i]) <= keyfn(&_items[len - 1]) {
+        if keyfn(&items[i]) <= keyfn(&items[len - 1]) {
             items.swap(i, store_idx);
             store_idx += 1;
         }
@@ -1005,11 +1005,11 @@ mod tests {
 
         // Test near matches
         let query = vec![0.6, 0.6];
-        let (idx_) = kdtree.nearest_neighbor(&query).unwrap();
+        let (idx, _) = kdtree.nearest_neighbor(&query).unwrap();
         assert_eq!(idx, 4); // Should be closest to (0.5, 0.5)
 
         let query = vec![0.9, 0.1];
-        let (idx_) = kdtree.nearest_neighbor(&query).unwrap();
+        let (idx, _) = kdtree.nearest_neighbor(&query).unwrap();
         assert_eq!(idx, 1); // Should be closest to (1.0, 0.0)
     }
 

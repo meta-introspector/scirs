@@ -83,7 +83,7 @@ impl Default for MultiScaleConfig {
 #[allow(dead_code)]
 pub fn image_quality_assessment<T>(
     reference: &ArrayView2<T>,
-    test_image: &ArrayView2<T>,
+    testimage: &ArrayView2<T>,
 ) -> NdimageResult<ImageQualityMetrics<T>>
 where
     T: Float
@@ -97,22 +97,22 @@ where
         + std::ops::AddAssign
         + std::ops::DivAssign,
 {
-    if reference.dim() != test_image.dim() {
+    if reference.dim() != testimage.dim() {
         return Err(NdimageError::DimensionError(
             "Reference and test images must have the same dimensions".into(),
         ));
     }
 
-    let mse = mean_squared_error(reference, test_image);
+    let mse = mean_squared_error(reference, testimage);
     let rmse = mse.sqrt();
-    let mae = mean_absolute_error(reference, test_image);
-    let psnr = peak_signal_to_noise_ratio(reference, test_image)?;
-    let ssim = structural_similarity_index(reference, test_image)?;
+    let mae = mean_absolute_error(reference, testimage);
+    let psnr = peak_signal_to_noise_ratio(reference, testimage)?;
+    let ssim = structural_similarity_index(reference, testimage)?;
     let snr = signal_to_noise_ratio(reference)?;
     let cnr = contrast_to_noise_ratio(reference)?;
-    let entropy = image_entropy(test_image)?;
-    let sharpness = image_sharpness(test_image)?;
-    let local_variance = compute_local_variance(test_image, 3)?;
+    let entropy = image_entropy(testimage)?;
+    let sharpness = image_sharpness(testimage)?;
+    let local_variance = compute_local_variance(testimage, 3)?;
 
     Ok(ImageQualityMetrics {
         psnr,
@@ -132,12 +132,12 @@ where
 #[allow(dead_code)]
 pub fn peak_signal_to_noise_ratio<T>(
     reference: &ArrayView2<T>,
-    test_image: &ArrayView2<T>,
+    testimage: &ArrayView2<T>,
 ) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
-    let mse = mean_squared_error(reference, test_image);
+    let mse = mean_squared_error(reference, testimage);
 
     if mse <= T::zero() {
         return Ok(T::infinity()); // Perfect match
@@ -146,7 +146,7 @@ where
     // Find the maximum possible pixel value
     let max_val = reference
         .iter()
-        .chain(test_image.iter())
+        .chain(testimage.iter())
         .cloned()
         .fold(T::zero(), |acc, x| acc.max(x.abs()));
 
@@ -165,7 +165,7 @@ where
 #[allow(dead_code)]
 pub fn structural_similarity_index<T>(
     reference: &ArrayView2<T>,
-    test_image: &ArrayView2<T>,
+    testimage: &ArrayView2<T>,
 ) -> NdimageResult<T>
 where
     T: Float
@@ -186,7 +186,7 @@ where
 
     // Compute means directly (simplified SSIM without Gaussian filtering)
     let mu1 = reference.sum() / safe_usize_to_float(reference.len())?;
-    let mu2 = test_image.sum() / safe_usize_to_float(test_image.len())?;
+    let mu2 = testimage.sum() / safe_usize_to_float(testimage.len())?;
 
     // Compute variances and covariance
     let mu1_sq = mu1 * mu1;
@@ -196,10 +196,10 @@ where
     let ref_var =
         reference.mapv(|x| (x - mu1) * (x - mu1)).sum() / safe_usize_to_float(reference.len())?;
     let test_var =
-        test_image.mapv(|x| (x - mu2) * (x - mu2)).sum() / safe_usize_to_float(test_image.len())?;
+        testimage.mapv(|x| (x - mu2) * (x - mu2)).sum() / safe_usize_to_float(testimage.len())?;
 
     let covar = Zip::from(reference)
-        .and(test_image)
+        .and(testimage)
         .fold(T::zero(), |acc, &r, &t| acc + (r - mu1) * (t - mu2))
         / safe_usize_to_float(reference.len())?;
 
@@ -222,7 +222,7 @@ where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let diff_sq: T = Zip::from(_reference)
-        .and(test_image)
+        .and(testimage)
         .fold(T::zero(), |acc, &r, &t| {
             let diff = r - t;
             acc + diff * diff
@@ -238,7 +238,7 @@ where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let abs_diff: T = Zip::from(_reference)
-        .and(test_image)
+        .and(testimage)
         .fold(T::zero(), |acc, &r, &t| acc + (r - t).abs());
 
     abs_diff / safe_usize_to_float(_reference.len()).unwrap_or(T::one())
@@ -251,7 +251,7 @@ where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let mean_val = image.mean().unwrap_or(T::zero());
-    let variance = _image
+    let variance = image
         .mapv(|x| (x - mean_val) * (x - mean_val))
         .mean()
         .unwrap_or(T::zero());
@@ -279,7 +279,7 @@ where
     let min_val = image.iter().cloned().fold(T::infinity(), T::min);
 
     let contrast = max_val - min_val;
-    let noise_std = _image
+    let noise_std = image
         .mapv(|x| (x - mean_val) * (x - mean_val))
         .mean()
         .unwrap_or(T::zero())
@@ -305,7 +305,7 @@ where
     let max_val = image.iter().cloned().fold(T::neg_infinity(), T::max);
 
     if max_val <= min_val {
-        return Ok(T::zero()); // Constant _image has zero entropy
+        return Ok(T::zero()); // Constant image has zero entropy
     }
 
     // Create histogram
@@ -320,7 +320,7 @@ where
     }
 
     // Compute entropy
-    let total_pixels: T = safe_usize_to_float(_image.len())?;
+    let total_pixels: T = safe_usize_to_float(image.len())?;
     let mut entropy = T::zero();
 
     for &count in &histogram {
@@ -348,7 +348,7 @@ where
         + std::ops::DivAssign,
 {
     // Apply Laplacian filter to detect edges
-    let laplacian_kernel = Array2::fromshape_vec(
+    let laplacian_kernel = Array2::from_shape_vec(
         (3, 3),
         vec![
             T::zero(),
@@ -365,7 +365,7 @@ where
     .map_err(|_| NdimageError::ComputationError("Failed to create Laplacian kernel".into()))?;
 
     let filtered = crate::filters::convolve(
-        &_image.to_owned(),
+        &image.to_owned(),
         &laplacian_kernel,
         Some(BorderMode::Reflect),
     )?;
@@ -380,7 +380,7 @@ where
 
 /// Compute local variance in a sliding window
 #[allow(dead_code)]
-pub fn compute_local_variance<T>(_image: &ArrayView2<T>, windowsize: usize) -> NdimageResult<T>
+pub fn compute_local_variance<T>(image: &ArrayView2<T>, windowsize: usize) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
@@ -447,23 +447,23 @@ where
     let window = window_size.unwrap_or(7);
 
     // Gray-Level Co-occurrence Matrix (GLCM) features
-    let glcm_features = compute_glcm_features(image, window)?;
+    let glcmfeatures = compute_glcmfeatures(image, window)?;
 
     // Local Binary Pattern analysis
     let lbp_uniformity = compute_lbp_uniformity(image)?;
 
     // Gabor filter responses
-    let (gabor_mean, gabor_std) = compute_gabortexture_features(image)?;
+    let (gabor_mean, gabor_std) = compute_gabortexturefeatures(image)?;
 
     // Fractal dimension estimation
     let fractal_dimension = estimate_fractal_dimension(image)?;
 
     Ok(TextureMetrics {
-        glcm_contrast: glcm_features.0,
-        glcm_dissimilarity: glcm_features.1,
-        glcm_homogeneity: glcm_features.2,
-        glcm_energy: glcm_features.3,
-        glcm_correlation: glcm_features.4,
+        glcm_contrast: glcmfeatures.0,
+        glcm_dissimilarity: glcmfeatures.1,
+        glcm_homogeneity: glcmfeatures.2,
+        glcm_energy: glcmfeatures.3,
+        glcm_correlation: glcmfeatures.4,
         lbp_uniformity,
         gabor_mean,
         gabor_std,
@@ -473,8 +473,9 @@ where
 
 /// Compute Gray-Level Co-occurrence Matrix features
 #[allow(dead_code)]
-fn compute_glcm_features<T>(
-    image: &ArrayView2<T>, _window_size: usize,
+fn compute_glcmfeatures<T>(
+    image: &ArrayView2<T>,
+    _window_size: usize,
 ) -> NdimageResult<(T, T, T, T, T)>
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
@@ -573,7 +574,7 @@ where
 
 /// Compute Gabor filter texture features
 #[allow(dead_code)]
-fn compute_gabortexture_features<T>(image: &ArrayView2<T>) -> NdimageResult<(T, T)>
+fn compute_gabortexturefeatures<T>(image: &ArrayView2<T>) -> NdimageResult<(T, T)>
 where
     T: Float
         + FromPrimitive
@@ -605,7 +606,7 @@ where
             aspect_ratio: None,
         };
 
-        let response = crate::filters::advanced::gabor_filter(&_image.view(), &params, None, None)?;
+        let response = crate::filters::advanced::gabor_filter(&image.view(), &params, None, None)?;
         all_responses.extend(response.iter().cloned());
     }
 
@@ -641,8 +642,8 @@ where
         + std::ops::AddAssign
         + std::ops::DivAssign,
 {
-    // Convert to binary edge _image for fractal analysis
-    let edges = sobel(&_image.to_owned(), 0, None)?;
+    // Convert to binary edge image for fractal analysis
+    let edges = sobel(&image.to_owned(), 0, None)?;
     let threshold = (edges.sum() / safe_usize_to_float(edges.len())?)
         * crate::utils::safe_f64_to_float::<T>(2.0)?;
 
@@ -713,9 +714,9 @@ where
 #[allow(dead_code)]
 pub fn image_quality_assessment_simd_f32(
     reference: &ArrayView2<f32>,
-    test_image: &ArrayView2<f32>,
+    testimage: &ArrayView2<f32>,
 ) -> NdimageResult<ImageQualityMetrics<f32>> {
-    if reference.dim() != test_image.dim() {
+    if reference.dim() != testimage.dim() {
         return Err(NdimageError::DimensionError(
             "Reference and test images must have the same dimensions".into(),
         ));
@@ -733,7 +734,7 @@ pub fn image_quality_assessment_simd_f32(
     for i in 0..height {
         for j in 0..width {
             let ref_val = reference[[i, j]];
-            let test_val = test_image[[i, j]];
+            let test_val = testimage[[i, j]];
             let diff = ref_val - test_val;
 
             mse_sum += diff * diff;
@@ -754,14 +755,14 @@ pub fn image_quality_assessment_simd_f32(
     };
 
     // SIMD-optimized SSIM calculation
-    let ssim = compute_ssim_simd_f32(reference, test_image)?;
+    let ssim = compute_ssim_simd_f32(reference, testimage)?;
 
     // Other metrics using regular implementation for now
     let snr = signal_to_noise_ratio(reference)?;
     let cnr = contrast_to_noise_ratio(reference)?;
-    let entropy = image_entropy(test_image)?;
-    let sharpness = image_sharpness(test_image)?;
-    let local_variance = compute_local_variance(test_image, 3)?;
+    let entropy = image_entropy(testimage)?;
+    let sharpness = image_sharpness(testimage)?;
+    let local_variance = compute_local_variance(testimage, 3)?;
 
     Ok(ImageQualityMetrics {
         psnr,
@@ -782,7 +783,7 @@ pub fn image_quality_assessment_simd_f32(
 #[allow(dead_code)]
 fn compute_ssim_simd_f32(
     reference: &ArrayView2<f32>,
-    test_image: &ArrayView2<f32>,
+    testimage: &ArrayView2<f32>,
 ) -> NdimageResult<f32> {
     // SSIM constants
     let c1 = 0.01f32 * 0.01f32;
@@ -798,7 +799,7 @@ fn compute_ssim_simd_f32(
     for &ref_val in reference.iter() {
         ref_sum += ref_val;
     }
-    for &test_val in test_image.iter() {
+    for &test_val in testimage.iter() {
         test_sum += test_val;
     }
 
@@ -817,7 +818,7 @@ fn compute_ssim_simd_f32(
     for i in 0..height {
         for j in 0..width {
             let ref_val = reference[[i, j]];
-            let test_val = test_image[[i, j]];
+            let test_val = testimage[[i, j]];
 
             let ref_diff = ref_val - mu1;
             let test_diff = test_val - mu2;
@@ -910,7 +911,7 @@ where
     const BINS: usize = 256;
 
     // Find min and max values in parallel
-    let (min_val, max_val) = _image
+    let (min_val, max_val) = image
         .iter()
         .parallel_fold(
             || (T::infinity(), T::neg_infinity()),
@@ -929,7 +930,7 @@ where
     let range = max_val - min_val;
     let bin_size = range / safe_usize_to_float(BINS)?;
 
-    let histogram = _image
+    let histogram = image
         .iter()
         .parallel_map(|&pixel| {
             let normalized = (pixel - min_val) / bin_size;
@@ -953,7 +954,7 @@ where
         );
 
     // Compute entropy
-    let total_pixels = safe_usize_to_float(_image.len())?;
+    let total_pixels = safe_usize_to_float(image.len())?;
     let entropy = histogram
         .iter()
         .filter(|&&count| count > 0)
@@ -969,8 +970,8 @@ where
 /// High-performance batch quality assessment for multiple image pairs
 #[allow(dead_code)]
 pub fn batch_quality_assessment<T>(
-    reference_images: &[ArrayView2<T>],
-    test_images: &[ArrayView2<T>],
+    referenceimages: &[ArrayView2<T>],
+    testimages: &[ArrayView2<T>],
 ) -> NdimageResult<Vec<ImageQualityMetrics<T>>>
 where
     T: Float
@@ -984,29 +985,29 @@ where
         + std::ops::AddAssign
         + std::ops::DivAssign,
 {
-    if reference_images.len() != test_images.len() {
+    if referenceimages.len() != testimages.len() {
         return Err(NdimageError::InvalidInput(
-            "Number of reference and test _images must match".into(),
+            "Number of reference and test images must match".into(),
         ));
     }
 
-    let mut results = Vec::with_capacity(reference_images.len());
+    let mut results = Vec::with_capacity(referenceimages.len());
 
-    // Process _images in parallel if the parallel feature is enabled
+    // Process images in parallel if the parallel feature is enabled
     #[cfg(feature = "parallel")]
     {
         use scirs2_core::parallel_ops::*;
 
-        results = reference_images
+        results = referenceimages
             .iter()
-            .zip(test_images.iter())
+            .zip(testimages.iter())
             .parallel_map(|(ref_img, test_img)| image_quality_assessment(ref_img, test_img))
             .collect::<Result<Vec<_>>>()?;
     }
 
     #[cfg(not(feature = "parallel"))]
     {
-        for (ref_img, test_img) in reference_images.iter().zip(test_images.iter()) {
+        for (ref_img, test_img) in referenceimages.iter().zip(testimages.iter()) {
             let metrics = image_quality_assessment(ref_img, test_img)?;
             results.push(metrics);
         }
@@ -1147,17 +1148,17 @@ where
         + std::ops::DivAssign,
 {
     let mut results = Vec::with_capacity(config.num_scales);
-    let mut current_image = image.to_owned();
+    let mut currentimage = image.to_owned();
 
     for scale in 0..config.num_scales {
-        let (height, width) = current_image.dim();
+        let (height, width) = currentimage.dim();
 
         if height < config.min_size || width < config.min_size {
             break;
         }
 
         // Analyze current scale
-        let metrics = image_quality_assessment(&current_image.view(), &current_image.view())?;
+        let metrics = image_quality_assessment(&currentimage.view(), &currentimage.view())?;
         results.push(metrics);
 
         // Downsample for next scale
@@ -1176,11 +1177,11 @@ where
                     let src_i = (i as f64 * config.scale_factor) as usize;
                     let src_j = (j as f64 * config.scale_factor) as usize;
                     if src_i < height && src_j < width {
-                        downsampled[[i, j]] = current_image[[src_i, src_j]];
+                        downsampled[[i, j]] = currentimage[[src_i, src_j]];
                     }
                 }
             }
-            current_image = downsampled;
+            currentimage = downsampled;
         }
     }
 
@@ -1202,7 +1203,7 @@ mod tests {
     }
 
     #[test]
-    fn test_image_entropy() {
+    fn testimage_entropy() {
         let uniform_img = array![[1.0, 1.0], [1.0, 1.0]];
         let varied_img = array![[0.0, 1.0], [0.5, 0.8]];
 
@@ -1215,7 +1216,7 @@ mod tests {
     }
 
     #[test]
-    fn test_image_sharpness() {
+    fn testimage_sharpness() {
         let sharp_img = array![[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]];
 
         let sharpness = image_sharpness(&sharp_img.view())

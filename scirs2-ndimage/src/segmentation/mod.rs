@@ -16,11 +16,11 @@ pub use self::thresholding::{
 pub use self::watershed::{marker_watershed, watershed};
 
 // Advanced segmentation algorithms
-pub use self::active__contours::{
+pub use self::active_contours::{
     active_contour, create_circle_contour, create_ellipse_contour, mask_to_contour, smooth_contour,
     ActiveContourParams,
 };
-pub use self::chan__vese::{
+pub use self::chan_vese::{
     chan_vese, chan_vese_multiphase, checkerboard_level_set, mask_to_level_set, ChanVeseParams,
 };
-pub use self::graph__cuts::{graph_cuts, GraphCutsParams, InteractiveGraphCuts};
+pub use self::graph_cuts::{graph_cuts, GraphCutsParams, InteractiveGraphCuts};

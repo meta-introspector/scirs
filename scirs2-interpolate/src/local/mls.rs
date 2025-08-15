@@ -184,7 +184,7 @@ where
     ///
     /// Self for method chaining
     pub fn with_max_points(mut self, maxpoints: usize) -> Self {
-        self.max_points = Some(max_points);
+        self.max_points = Some(maxpoints);
         self
     }
 
@@ -325,7 +325,7 @@ where
             indices = distances
                 .iter()
                 .take(min_points)
-                .map(|&(idx_)| idx)
+                .map(|&(idx, _)| idx)
                 .collect();
             dist_values = distances
                 .iter()

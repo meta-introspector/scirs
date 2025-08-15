@@ -4,9 +4,9 @@
 // separation methods for signal analysis and processing.
 
 use scirs2_signal::separation::{
-use std::f64::consts::PI;
     harmonic_percussive_separation, multiband_separation, HarmonicPercussiveConfig, MultibandConfig,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -123,7 +123,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let advanced_config = MultibandConfig {
         filter_order: 8, // Higher order for steeper rolloff
         overlap: 0.05,   // Less overlap between bands
-        filter_type: scirs2, _signal: filter::FilterType::Lowpass, // Will be overridden per band
+        filter_type: scirs2,
+        _signal: filter::FilterType::Lowpass, // Will be overridden per band
     };
 
     // More detailed frequency separation for audio analysis

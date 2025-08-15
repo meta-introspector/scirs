@@ -5,7 +5,7 @@
 
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::{Float, FromPrimitive, NumCast};
-use scirs2__linalg::solve;
+use scirs2_linalg::solve;
 use std::fmt::Debug;
 
 use super::common::box_cox_transform;
@@ -265,7 +265,7 @@ where
     let variance = ts.var(F::zero());
     let mean = ts.mean().unwrap_or(F::zero());
 
-    if variance > F::zero() && mean >, F::zero() {
+    if variance > F::zero() && mean > F::zero() {
         // Use coefficient of variation to guide lambda selection
         let cv = variance.sqrt() / mean;
         if cv.to_f64().unwrap_or(1.0) > 0.3 {

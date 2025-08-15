@@ -38,7 +38,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Basic 2D rotation
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::interpolation::{affine_transform, InterpolationOrder};
+/// use scirs2_ndimage::interpolation::{affine_transform, InterpolationOrder};
 /// use std::f64::consts::PI;
 ///
 /// // Create a simple test image
@@ -69,7 +69,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Scaling and translation combined
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::interpolation::affine_transform;
+/// use scirs2_ndimage::interpolation::affine_transform;
 ///
 /// let input = Array2::fromshape_fn((10, 10), |(i, j)| (i + j) as f64);
 ///
@@ -91,9 +91,9 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Shearing transformation
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::interpolation::affine_transform;
+/// use scirs2_ndimage::interpolation::affine_transform;
 ///
-/// let square_image = Array2::fromshape_fn((20, 20), |(i, j)| {
+/// let squareimage = Array2::fromshape_fn((20, 20), |(i, j)| {
 ///     if i >= 5 && i < 15 && j >= 5 && j < 15 { 1.0 } else { 0.0 }
 /// });
 ///
@@ -104,7 +104,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ];
 ///
 /// let sheared = affine_transform(
-///     &square_image,
+///     &squareimage,
 ///     &shear_matrix,
 ///     None, None, None, None, None, None
 /// ).unwrap();
@@ -113,7 +113,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Image rectification with different output size
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::interpolation::{affine_transform, BoundaryMode};
+/// use scirs2_ndimage::interpolation::{affine_transform, BoundaryMode};
 ///
 /// let distorted = Array2::fromshape_fn((30, 40), |(i, j)| {
 ///     ((i as f64 / 5.0).sin() * (j as f64 / 5.0).cos()).abs()
@@ -144,7 +144,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## 3D volume transformation
 /// ```
 /// use ndarray::{Array3, Array2};
-/// use scirs2__ndimage::interpolation::affine_transform;
+/// use scirs2_ndimage::interpolation::affine_transform;
 ///
 /// let volume = Array3::fromshape_fn((20, 20, 20), |(i, j, k)| {
 ///     ((i + j + k) as f64) / 60.0
@@ -333,7 +333,8 @@ where
 /// * `Result<Array<T, D>>` - Transformed array
 #[allow(dead_code)]
 pub fn geometric_transform<T, D, F>(
-    input: &Array<T, D>, _mapping: F,
+    input: &Array<T, D>,
+    _mapping: F,
     outputshape: Option<&[usize]>,
     order: Option<InterpolationOrder>,
     mode: Option<BoundaryMode>,

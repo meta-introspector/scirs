@@ -1,5 +1,5 @@
 use ndarray::Array2;
-use scirs2__ndimage::morphology::{
+use scirs2_ndimage::morphology::{
     binary_closing, binary_dilation, binary_erosion, binary_opening, generate_binary_structure,
     Connectivity,
 };
@@ -51,48 +51,48 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_binary_image(&closed);
 
     // Create another example with small isolated objects
-    let mut sparse_image = Array2::from_elem((7, 7), false);
+    let mut sparseimage = Array2::from_elem((7, 7), false);
 
     // Place a few small objects and one larger object
-    sparse_image[[1, 1]] = true; // Single pixel (should be removed by opening)
+    sparseimage[[1, 1]] = true; // Single pixel (should be removed by opening)
 
     // Small 2x2 object (may be removed by opening depending on structure)
-    sparse_image[[3, 1]] = true;
-    sparse_image[[3, 2]] = true;
-    sparse_image[[4, 1]] = true;
-    sparse_image[[4, 2]] = true;
+    sparseimage[[3, 1]] = true;
+    sparseimage[[3, 2]] = true;
+    sparseimage[[4, 1]] = true;
+    sparseimage[[4, 2]] = true;
 
     // Larger object
     for i in 2..6 {
         for j in 4..7 {
-            sparse_image[[i, j]] = true;
+            sparseimage[[i, j]] = true;
         }
     }
 
     println!("\n\nSecond example with isolated objects:");
-    print_binary_image(&sparse_image);
+    print_binary_image(&sparseimage);
 
     // Use opening to remove small objects
-    let opened_sparse = binary_opening(&sparse_image, None, Some(1), None, None, None, None)?;
+    let opened_sparse = binary_opening(&sparseimage, None, Some(1), None, None, None, None)?;
     println!("\nAfter opening (small objects removed):");
     print_binary_image(&opened_sparse);
 
     // Create a third example with gaps in objects
-    let mut gapped_image = Array2::from_elem((7, 7), false);
+    let mut gappedimage = Array2::from_elem((7, 7), false);
 
     // Create a line with a gap
     for i in 1..6 {
         if i != 3 {
             // Gap at position 3
-            gapped_image[[i, 3]] = true;
+            gappedimage[[i, 3]] = true;
         }
     }
 
     println!("\n\nThird example with a gap in a line:");
-    print_binary_image(&gapped_image);
+    print_binary_image(&gappedimage);
 
     // Use closing to bridge the gap
-    let closed_gapped = binary_closing(&gapped_image, None, Some(1), None, None, None, None)?;
+    let closed_gapped = binary_closing(&gappedimage, None, Some(1), None, None, None, None)?;
     println!("\nAfter closing (gap should be bridged):");
     print_binary_image(&closed_gapped);
 
@@ -102,8 +102,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 // Helper function to print a binary image in a readable format
 #[allow(dead_code)]
 fn print_binary_image(image: &Array2<bool>) {
-    for i in 0.._image.shape()[0] {
-        for j in 0.._image.shape()[1] {
+    for i in 0..image.shape()[0] {
+        for j in 0..image.shape()[1] {
             print!("{}", if image[[i, j]] { "■ " } else { "□ " });
         }
         println!();

@@ -400,7 +400,7 @@ pub use metrics::ensemble::{
 };
 
 // Re-export information-theoretic methods
-pub use metrics::information__theory::{
+pub use metrics::information_theoretic::{
     information_cluster_quality, jensen_shannon_divergence, variation_of_information,
 };
 
@@ -581,12 +581,11 @@ pub use plotting::{launch_interactive_visualization, InteractiveClusteringApp};
 
 // Re-export distributed clustering capabilities
 pub use distributed::{
-    ConvergenceMetrics, DataPartition, DistributedConfig, DistributedHierarchical,
-    DistributedKMeans, LinkageMethod, LocalDendrogram, PartitioningStrategy, WorkerStatistics,
+    DataPartition, DistributedKMeans, DistributedKMeansConfig, PartitioningStrategy, WorkerStatus,
 };
 
-// Re-export distributed utilities
-pub use distributed::utils::{estimate_optimal_workers, generate_large_dataset};
+// Re-export distributed utilities - not available in current implementation
+// pub use distributed::utils::{estimate_optimal_workers, generate_large_dataset};
 pub use vq::*;
 
 // GPU acceleration re-exports (when GPU feature is enabled)

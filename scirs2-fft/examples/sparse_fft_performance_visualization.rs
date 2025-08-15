@@ -258,7 +258,7 @@ fn benchmark_accuracy() {
 
             // Calculate accuracy (how many true frequencies were found)
             let mut found_count = 0;
-            for &true_freq in frequencies.iter().map(|(f| f) {
+            for &true_freq in frequencies.iter().map(|(f, _)| f) {
                 for &found_freq in &result.indices {
                     // Consider frequencies within a small tolerance as matches
                     let tolerance = 2;

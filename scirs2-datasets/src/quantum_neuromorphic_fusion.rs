@@ -10,7 +10,7 @@ use crate::neuromorphic_data_processor::NeuromorphicProcessor;
 use crate::quantum_enhanced_generators::QuantumDatasetGenerator;
 use crate::utils::Dataset;
 use ndarray::{s, Array1, Array2, Array3};
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{rngs::StdRng, thread_rng, Rng, SeedableRng};
 use statrs::statistics::Statistics;
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
@@ -166,7 +166,7 @@ impl QuantumNeuromorphicFusion {
 
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut thread_rng()),
         };
 
         // Initialize quantum-biological hybrid network
@@ -293,7 +293,7 @@ impl QuantumNeuromorphicFusion {
 
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut thread_rng()),
         };
 
         // Initialize quantum-biological network for transformation

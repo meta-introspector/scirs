@@ -302,7 +302,8 @@ where
 {
     fn process_chunk(
         &mut self,
-        chunk: ArrayView<T, D>, _position: &ChunkPosition,
+        chunk: ArrayView<T, D>,
+        _position: &ChunkPosition,
     ) -> NdimageResult<Array<T, D>> {
         // Apply Gaussian filter to the chunk
         // This is a placeholder - actual implementation would call the gaussian filter
@@ -452,7 +453,8 @@ mod tests {
     impl<T: Clone + Zero, D: Dimension> ChunkProcessor<T, D> for IdentityProcessor {
         fn process_chunk(
             &mut self,
-            chunk: ArrayView<T, D>, _position: &ChunkPosition,
+            chunk: ArrayView<T, D>,
+            _position: &ChunkPosition,
         ) -> NdimageResult<Array<T, D>> {
             Ok(chunk.to_owned())
         }

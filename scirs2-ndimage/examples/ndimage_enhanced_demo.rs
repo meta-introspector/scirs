@@ -13,7 +13,7 @@
 use ndarray::{Array2, ArrayView2};
 use std::time::Instant;
 
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     enhanced_validation::{
         validated_advanced_processing, ComprehensiveValidator, ValidationConfig,
     },
@@ -35,7 +35,7 @@ pub fn enhanced_advanced_demo() -> NdimageResult<()> {
         min_quality_threshold: 0.90,
         monitor_memory: true,
         validate_quantum_coherence: true,
-        validate_consciousness_state: true,
+        validate_consciousnessstate: true,
     };
 
     let mut validator = ComprehensiveValidator::with_config(validation_config);
@@ -103,16 +103,16 @@ pub fn enhanced_advanced_demo() -> NdimageResult<()> {
 fn create_test_dataset() -> Vec<(String, Array2<f64>)> {
     vec![
         ("Small Uniform", Array2::ones((32, 32))),
-        ("Medium Random", create_random_image(64, 64)),
-        ("Large Structured", create_structured_image(128, 128)),
-        ("High Frequency", create_high_frequency_image(96, 96)),
-        ("Edge Cases", create_edge_case_image(48, 48)),
+        ("Medium Random", create_randomimage(64, 64)),
+        ("Large Structured", create_structuredimage(128, 128)),
+        ("High Frequency", create_high_frequencyimage(96, 96)),
+        ("Edge Cases", create_edge_caseimage(48, 48)),
     ]
 }
 
 /// Create random test image
 #[allow(dead_code)]
-fn create_random_image(height: usize, width: usize) -> Array2<f64> {
+fn create_randomimage(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
     for y in 0.._height {
         for x in 0..width {
@@ -126,7 +126,7 @@ fn create_random_image(height: usize, width: usize) -> Array2<f64> {
 
 /// Create structured test image with multiple patterns
 #[allow(dead_code)]
-fn create_structured_image(height: usize, width: usize) -> Array2<f64> {
+fn create_structuredimage(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -153,7 +153,7 @@ fn create_structured_image(height: usize, width: usize) -> Array2<f64> {
 
 /// Create high frequency test image
 #[allow(dead_code)]
-fn create_high_frequency_image(height: usize, width: usize) -> Array2<f64> {
+fn create_high_frequencyimage(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -175,7 +175,7 @@ fn create_high_frequency_image(height: usize, width: usize) -> Array2<f64> {
 
 /// Create edge case test image (extreme values, discontinuities)
 #[allow(dead_code)]
-fn create_edge_case_image(height: usize, width: usize) -> Array2<f64> {
+fn create_edge_caseimage(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -202,7 +202,7 @@ fn create_edge_case_image(height: usize, width: usize) -> Array2<f64> {
 /// Create enhanced Advanced configuration
 #[allow(dead_code)]
 fn create_enhanced_config() -> AdvancedConfig {
-    use scirs2__ndimage::{
+    use scirs2_ndimage::{
         neuromorphic_computing::NeuromorphicConfig, quantum_inspired::QuantumConfig,
         quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
     };
@@ -289,15 +289,15 @@ fn run_stress_tests(validator: &mut ComprehensiveValidator) -> NdimageResult<()>
     let stress_configs = vec![
         ("Low intensity", create_low_intensity_config()),
         ("High intensity", create_high_intensity_config()),
-        ("Maximum features", create_maximum_features_config()),
+        ("Maximum features", create_maximumfeatures_config()),
     ];
 
-    let stress_image = create_structured_image(64, 64);
+    let stressimage = create_structuredimage(64, 64);
 
     for (name, config) in stress_configs {
         println!("  🔥 {}", name);
 
-        match validated_advanced_processing(stress_image.view(), &config, None, validator) {
+        match validated_advanced_processing(stressimage.view(), &config, None, validator) {
             Ok((__, report)) => {
                 println!(
                     "    ✓ Quality: {:.3}, Speed: {:.0} pixels/sec",
@@ -333,7 +333,7 @@ fn create_high_intensity_config() -> AdvancedConfig {
 }
 
 #[allow(dead_code)]
-fn create_maximum_features_config() -> AdvancedConfig {
+fn create_maximumfeatures_config() -> AdvancedConfig {
     let mut config = create_enhanced_config();
     config.consciousness_depth = 8;
     config.advanced_dimensions = 16;
@@ -364,12 +364,12 @@ mod tests {
 
     #[test]
     fn test_enhanced_validation() -> NdimageResult<()> {
-        let test_image = create_random_image(16, 16);
+        let testimage = create_randomimage(16, 16);
         let config = create_enhanced_config();
         let mut validator = ComprehensiveValidator::new();
 
-        let (output_state, report) =
-            validated_advanced_processing(test_image.view(), &config, None, &mut validator)?;
+        let (outputstate, report) =
+            validated_advanced_processing(testimage.view(), &config, None, &mut validator)?;
 
         assert_eq!(output.dim(), (16, 16));
         assert!(report.quality_score >= 0.0 && report.quality_score <= 1.0);
@@ -380,7 +380,7 @@ mod tests {
 
     #[test]
     fn test_stress_configurations() -> NdimageResult<()> {
-        let test_image = create_structured_image(8, 8);
+        let testimage = create_structuredimage(8, 8);
         let mut validator = ComprehensiveValidator::new();
 
         let configs = vec![
@@ -390,7 +390,7 @@ mod tests {
 
         for config in configs {
             let result =
-                validated_advanced_processing(test_image.view(), &config, None, &mut validator);
+                validated_advanced_processing(testimage.view(), &config, None, &mut validator);
             assert!(result.is_ok());
         }
 

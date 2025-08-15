@@ -460,7 +460,7 @@ impl DatasetExplorer {
         })
     }
 
-    fn percentile(_sortedvalues: &[f64], p: f64) -> Option<f64> {
+    fn percentile(sorted_values: &[f64], p: f64) -> Option<f64> {
         if sorted_values.is_empty() {
             return None;
         }
@@ -672,7 +672,7 @@ impl DatasetExplorer {
     }
 
     fn assess_quality(
-        self_dataset: &Dataset,
+        selfdataset: &Dataset,
         statistics: &FeatureStatistics,
         missing_data: &MissingDataAnalysis,
     ) -> Result<QualityAssessment> {
@@ -1181,13 +1181,13 @@ pub mod convenience {
     /// Quick dataset summary with default configuration
     pub fn quick_summary(dataset: &Dataset) -> Result<DatasetSummary> {
         let explorer = DatasetExplorer::default_config();
-        explorer.summarize(_dataset)
+        explorer.summarize(dataset)
     }
 
     /// Display basic dataset information
     pub fn info(dataset: &Dataset) -> Result<()> {
         let explorer = DatasetExplorer::default_config();
-        let summary = explorer.summarize(_dataset)?;
+        let summary = explorer.summarize(dataset)?;
         explorer.display_basic_info(&summary.info);
         Ok(())
     }
@@ -1200,7 +1200,7 @@ pub mod convenience {
         };
 
         let explorer = DatasetExplorer::new(config);
-        explorer.interactive_explore(_dataset)
+        explorer.interactive_explore(dataset)
     }
 
     /// Export dataset summary to file
@@ -1212,7 +1212,7 @@ pub mod convenience {
         let output_format = config.output_format;
 
         let explorer = DatasetExplorer::new(config);
-        let summary = explorer.summarize(_dataset)?;
+        let summary = explorer.summarize(dataset)?;
 
         let content = match output_format {
             OutputFormat::Json => serde_json::to_string_pretty(&summary)
@@ -1236,7 +1236,7 @@ mod tests {
     use crate::generators::make_classification;
 
     #[test]
-    fn test_dataset_explorer_creation() {
+    fn testdataset_explorer_creation() {
         let explorer = DatasetExplorer::default_config();
         assert_eq!(explorer.config.precision, 3);
         assert!(explorer.config.show_detailed_stats);

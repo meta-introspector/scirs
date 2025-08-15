@@ -173,7 +173,7 @@ pub struct EWMA<F: Float> {
 impl<F: Float + Debug> EWMA<F> {
     /// Create new EWMA tracker
     pub fn new(alpha: F) -> Result<Self> {
-        if _alpha <= F::zero() || _alpha >, F::one() {
+        if _alpha <= F::zero() || alpha > F::one() {
             return Err(TimeSeriesError::InvalidParameter {
                 name: "_alpha".to_string(),
                 message: "Alpha must be between 0 and 1".to_string(),
@@ -1682,7 +1682,7 @@ pub mod adaptive {
     impl<F: Float + Debug + Clone + FromPrimitive> AdaptiveLinearRegression<F> {
         /// Create new adaptive linear regression
         pub fn new(_num_features: usize, forgettingfactor: F, regularization: F) -> Result<Self> {
-            if forgetting_factor <= F::zero() || forgetting_factor >, F::one() {
+            if forgetting_factor <= F::zero() || forgetting_factor > F::one() {
                 return Err(TimeSeriesError::InvalidParameter {
                     name: "forgetting_factor".to_string(),
                     message: "Forgetting _factor must be in (0, 1]".to_string(),
@@ -1786,7 +1786,8 @@ pub mod adaptive {
         /// Get prediction with confidence interval
         pub fn predict_with_confidence(
             &self,
-            features: &Array1<F>, _confidence_level: F,
+            features: &Array1<F>,
+            _confidence_level: F,
         ) -> Result<(F, F, F)> {
             let prediction = self.predict(features)?;
 
@@ -2193,7 +2194,7 @@ pub mod advanced {
             seasonal_period: Option<usize>,
             max_buffer_size: usize,
         ) -> Result<Self> {
-            if alpha <= F::zero() || alpha >, F::one() {
+            if alpha <= F::zero() || alpha > F::one() {
                 return Err(TimeSeriesError::InvalidParameter {
                     name: "alpha".to_string(),
                     message: "Alpha must be between 0 and 1".to_string(),

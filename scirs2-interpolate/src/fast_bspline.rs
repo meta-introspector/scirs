@@ -75,10 +75,10 @@ where
     ///
     /// A new fast evaluator optimized for the given spline
     pub fn new(spline: &BSpline<T>) -> Self {
-        let knot_diffs = Self::precompute_knot_differences(_spline);
+        let knot_diffs = Self::precompute_knot_differences(spline);
 
         Self {
-            _spline: Arc::new(_spline.clone()),
+            spline: Arc::new(spline.clone()),
             knot_diffs,
             cache: None,
             chunk_size: 64, // Default chunk size for vectorized operations
@@ -97,10 +97,10 @@ where
     ///
     /// A new fast evaluator optimized for the given spline
     pub fn from_owned(spline: BSpline<T>) -> Self {
-        let knot_diffs = Self::precompute_knot_differences(&_spline);
+        let knot_diffs = Self::precompute_knot_differences(&spline);
 
         Self {
-            _spline: Arc::new(_spline),
+            spline: Arc::new(spline),
             knot_diffs,
             cache: None,
             chunk_size: 64, // Default chunk size for vectorized operations
@@ -120,7 +120,7 @@ where
     ///
     /// A new fast evaluator optimized for the given spline
     pub fn from_arc(spline: Arc<BSpline<T>>) -> Self {
-        let knot_diffs = Self::precompute_knot_differences(&_spline);
+        let knot_diffs = Self::precompute_knot_differences(&spline);
 
         Self {
             spline,
@@ -141,10 +141,10 @@ where
     ///
     /// A new fast evaluator with caching enabled
     pub fn with_cache(spline: &BSpline<T>, cache: BSplineCache<T>) -> Self {
-        let knot_diffs = Self::precompute_knot_differences(_spline);
+        let knot_diffs = Self::precompute_knot_differences(spline);
 
         Self {
-            _spline: Arc::new(_spline.clone()),
+            spline: Arc::new(spline.clone()),
             knot_diffs,
             cache: Some(RefCell::new(cache)),
             chunk_size: 64,
@@ -307,14 +307,14 @@ where
     ///
     /// Array of spline values at the given points
     pub fn evaluate_array_fast(&self, xvals: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
-        let mut results = Array1::zeros(x_vals.len());
+        let mut results = Array1::zeros(xvals.len());
 
         // Process in chunks for better cache locality
-        for chunk_start in (0..x_vals.len()).step_by(self.chunk_size) {
-            let chunk_end = (chunk_start + self.chunk_size).min(x_vals.len());
+        for chunk_start in (0..xvals.len()).step_by(self.chunk_size) {
+            let chunk_end = (chunk_start + self.chunk_size).min(xvals.len());
 
             for i in chunk_start..chunk_end {
-                results[i] = self.evaluate_fast(x_vals[i])?;
+                results[i] = self.evaluate_fast(xvals[i])?;
             }
         }
 
@@ -498,10 +498,10 @@ where
     ///
     /// Array of derivative values [f(x), f'(x), f''(x), ..., f^(max_order)(x)]
     pub fn derivatives_fast(&self, x: T, maxorder: usize) -> InterpolateResult<Array1<T>> {
-        let mut results = Array1::zeros(max_order + 1);
+        let mut results = Array1::zeros(maxorder + 1);
 
-        for _order in 0..=max_order {
-            results[_order] = self.derivative_fast(x_order)?;
+        for _order in 0..=maxorder {
+            results[_order] = self.derivative_fast(x, _order)?;
         }
 
         Ok(results)
@@ -562,23 +562,23 @@ where
     pub fn evaluate_batch_cached(&self, xvals: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         if self.cache.is_none() {
             // Fall back to standard vectorized evaluation if no cache
-            return self.evaluate_array_fast(x_vals);
+            return self.evaluate_array_fast(xvals);
         }
 
-        let mut results = Array1::zeros(x_vals.len());
+        let mut results = Array1::zeros(xvals.len());
 
         // Pre-warm cache with a sampling of evaluation points
-        let sample_size = (x_vals.len() / 10).max(1).min(10);
-        for i in (0..x_vals.len()).step_by(x_vals.len() / sample_size) {
-            let _ = self.evaluate_fast(x_vals[i]);
+        let sample_size = (xvals.len() / 10).max(1).min(10);
+        for i in (0..xvals.len()).step_by(xvals.len() / sample_size) {
+            let _ = self.evaluate_fast(xvals[i]);
         }
 
         // Process in chunks with better cache utilization
-        for chunk_start in (0..x_vals.len()).step_by(self.chunk_size) {
-            let chunk_end = (chunk_start + self.chunk_size).min(x_vals.len());
+        for chunk_start in (0..xvals.len()).step_by(self.chunk_size) {
+            let chunk_end = (chunk_start + self.chunk_size).min(xvals.len());
 
             for i in chunk_start..chunk_end {
-                results[i] = self.evaluate_fast(x_vals[i])?;
+                results[i] = self.evaluate_fast(xvals[i])?;
             }
         }
 
@@ -600,17 +600,17 @@ where
 
             if hit_ratio > 0.8 {
                 // High hit ratio - can use larger chunks
-                self.chunk_size = (problem_size / 16).max(128).min(1024);
+                self.chunk_size = (problemsize / 16).max(128).min(1024);
             } else if hit_ratio > 0.5 {
                 // Medium hit ratio - use moderate chunks
-                self.chunk_size = (problem_size / 32).max(64).min(512);
+                self.chunk_size = (problemsize / 32).max(64).min(512);
             } else {
                 // Low hit ratio - use smaller chunks for better locality
-                self.chunk_size = (problem_size / 64).max(32).min(256);
+                self.chunk_size = (problemsize / 64).max(32).min(256);
             }
         } else {
             // No cache - optimize for memory bandwidth
-            self.chunk_size = (problem_size / 20).max(64).min(512);
+            self.chunk_size = (problemsize / 20).max(64).min(512);
         }
     }
 
@@ -667,7 +667,7 @@ pub fn make_fast_bspline_evaluator<T>(spline: &BSpline<T>) -> FastBSplineEvaluat
 where
     T: InterpolationFloat + Copy,
 {
-    FastBSplineEvaluator::new(_spline)
+    FastBSplineEvaluator::new(spline)
 }
 
 /// Create a fast B-spline evaluator by taking ownership (zero-copy)
@@ -686,7 +686,7 @@ pub fn make_fast_bspline_evaluator_owned<T>(spline: BSpline<T>) -> FastBSplineEv
 where
     T: InterpolationFloat + Copy,
 {
-    FastBSplineEvaluator::from_owned(_spline)
+    FastBSplineEvaluator::from_owned(spline)
 }
 
 /// Create a fast B-spline evaluator with caching enabled
@@ -743,7 +743,7 @@ where
     ///
     /// A new tensor product evaluator
     pub fn new(splines: &[BSpline<T>], coefficients: Array1<T>, shape: Vec<usize>) -> Self {
-        let evaluators = _splines
+        let evaluators = splines
             .iter()
             .map(|spline| FastBSplineEvaluator::new(spline))
             .collect();
@@ -782,7 +782,7 @@ where
 
             // Compute multi-index from linear index
             let mut remaining_idx = i;
-            for (dim_evaluator) in self.evaluators.iter().enumerate() {
+            for (dim, _dim_evaluator) in self.evaluators.iter().enumerate() {
                 let _dim_idx = remaining_idx % self.shape[dim];
                 remaining_idx /= self.shape[dim];
 

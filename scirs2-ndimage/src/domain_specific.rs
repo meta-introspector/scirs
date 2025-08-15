@@ -394,14 +394,14 @@ pub mod satellite {
 
     /// Pan-sharpening: merge high-resolution panchromatic with low-resolution multispectral
     pub fn pan_sharpen<T>(
-        pan_image: &ArrayView2<T>,
+        panimage: &ArrayView2<T>,
         multi_spectral: &ArrayView3<T>,
         method: PanSharpenMethod,
     ) -> NdimageResult<Array3<T>>
     where
         T: Float + FromPrimitive + Debug + Send + Sync + 'static,
     {
-        let (pan_h, pan_w) = pan_image.dim();
+        let (pan_h, pan_w) = panimage.dim();
         let (ms_h, ms_w, num_bands) = multi_spectral.dim();
 
         // Compute scale factor
@@ -442,7 +442,7 @@ pub mod satellite {
                 for i in 0..pan_h {
                     for j in 0..pan_w {
                         let ratio = if intensity[[i, j]] > safe_f64_to_float::<T>(1e-10)? {
-                            pan_image[[i, j]] / intensity[[i, j]]
+                            panimage[[i, j]] / intensity[[i, j]]
                         } else {
                             T::one()
                         };
@@ -489,7 +489,7 @@ pub mod satellite {
                         for j in 0..pan_w {
                             if sum_upsampled[[i, j]] > safe_f64_to_float::<T>(1e-10)? {
                                 sharpened[[i, j, band]] =
-                                    upsampled[[i, j]] * pan_image[[i, j]] / sum_upsampled[[i, j]];
+                                    upsampled[[i, j]] * panimage[[i, j]] / sum_upsampled[[i, j]];
                             } else {
                                 sharpened[[i, j, band]] = upsampled[[i, j]];
                             }

@@ -4,10 +4,10 @@
 //! enabling browser-based time series analysis with full performance and feature parity.
 
 #[cfg(feature = "wasm")]
-use wasm__bindgen::prelude::*;
+use wasm_bindgen::prelude::*;
 
 #[cfg(feature = "wasm")]
-use web__sys::console;
+use web_sys::console;
 
 #[cfg(feature = "wasm")]
 use serde::{Deserialize, Serialize};
@@ -361,7 +361,9 @@ impl WasmNeuralForecaster {
     /// Create a new neural forecaster
     #[wasm_bindgen(constructor)]
     pub fn new(
-        _input_size: usize, _hidden_size: usize_output, _size: usize,
+        _input_size: usize,
+        _hidden_size: usize_output,
+        _size: usize,
     ) -> WasmNeuralForecaster {
         WasmNeuralForecaster {
             forecaster: Some(Box::new(crate::forecasting::neural::LSTMForecaster::new(
@@ -374,7 +376,9 @@ impl WasmNeuralForecaster {
     #[wasm_bindgen]
     pub fn train(
         &mut self,
-        data: &TimeSeriesData, epochs: usize, _learning_rate: f64,
+        data: &TimeSeriesData,
+        epochs: usize,
+        _learning_rate: f64,
     ) -> std::result::Result<(), JsValue> {
         if let Some(forecaster) = &mut self.forecaster {
             let arr = Array1::from_vec(data.values.clone());
@@ -513,7 +517,8 @@ impl WasmAutoARIMA {
         let (model, params) = js_result!(crate::arima_models::auto_arima(&arr, &options))?;
 
         let config = ArimaConfig {
-            _p: params.pdq.0, d: params.pdq.1,
+            _p: params.pdq.0,
+            d: params.pdq.1,
             _q: params.pdq.2,
             seasonal_p: params.seasonal_pdq.0,
             seasonal_d: params.seasonal_pdq.1,

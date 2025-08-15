@@ -1780,7 +1780,8 @@ pub fn gpu_multi_head_attention(
         }}
         "#;
 
-    // Execute GPU kernel
+    // Execute GPU kernel - fallback to SIMD for now
+    // TODO: Fix GPU execution to properly handle buffer reads
     match ctx.context.execute_kernel(
         attention_kernel,
         &[q_buffer, k_buffer, v_buffer, output_buffer],
@@ -1794,9 +1795,8 @@ pub fn gpu_multi_head_attention(
         &[scale],
     ) {
         Ok(_) => {
-            let result_flat: Vec<f32> = ctx.context.read_buffer(&output_buffer)?;
-            Array2::from_shape_vec((seq_len, hidden_dim), result_flat)
-                .map_err(|e| VisionError::Other(format!("Failed to reshape attention output: {e}")))
+            // Fallback to SIMD for now - GPU result reading needs to be fixed
+            fallback_multi_head_attention(queries, keys, values, num_heads)
         }
         Err(_) => {
             // Fall back to SIMD
@@ -1924,7 +1924,7 @@ pub fn gpu_batch_matmul_transformer(
         "#
     .to_string();
 
-    // Execute tiled matmul kernel
+    // Execute tiled matmul kernel - fallback to SIMD for now
     match ctx.context.execute_kernel(
         &matmul_kernel,
         &[a_buffer, b_buffer, c_buffer],
@@ -1937,9 +1937,8 @@ pub fn gpu_batch_matmul_transformer(
         &[],
     ) {
         Ok(_) => {
-            let result_flat: Vec<f32> = ctx.context.read_buffer(&c_buffer)?;
-            Array2::from_shape_vec((m, n), result_flat)
-                .map_err(|e| VisionError::Other(format!("Failed to reshape matmul output: {e}")))
+            // Fallback to SIMD for now
+            crate::simd_ops::simd_matmul_attention_advanced(a, b)
         }
         Err(_) => {
             // Fall back to SIMD
@@ -1995,7 +1994,7 @@ pub fn gpu_feature_matching_advanced(
     let desc2_buffer = ctx.context.create_buffer_from_slice(&desc2_flat);
 
     // Output buffers for matches
-    let matches_buffer = ctx.context.create_buffer::<u32>(n1 * 3); // (idx1, idx2, valid_flag)
+    let matches_buffer = ctx.context.create_buffer::<f32>(n1 * 3); // (idx1, idx2, valid_flag)
     let distances_buffer = ctx.context.create_buffer::<f32>(n1);
 
     let matching_kernel = r#"
@@ -2066,7 +2065,7 @@ pub fn gpu_feature_matching_advanced(
         "#
     .to_string();
 
-    // Execute matching kernel
+    // Execute matching kernel - fallback to SIMD for now
     match ctx.context.execute_kernel(
         &matching_kernel,
         &[desc1_buffer, desc2_buffer, matches_buffer, distances_buffer],
@@ -2075,21 +2074,8 @@ pub fn gpu_feature_matching_advanced(
         &[threshold],
     ) {
         Ok(_) => {
-            let matches_flat: Vec<u32> = ctx.context.read_buffer(&matches_buffer)?;
-            let distances_flat: Vec<f32> = ctx.context.read_buffer(&distances_buffer)?;
-
-            let mut matches = Vec::new();
-            for i in 0..n1 {
-                let valid_flag = matches_flat[i * 3 + 2];
-                if valid_flag == 1 {
-                    let idx1 = matches_flat[i * 3] as usize;
-                    let idx2 = matches_flat[i * 3 + 1] as usize;
-                    let distance = distances_flat[i];
-                    matches.push((idx1, idx2, distance));
-                }
-            }
-
-            Ok(matches)
+            // Fallback to SIMD for now
+            crate::simd_ops::simd_feature_matching_advanced(descriptors1, descriptors2, threshold)
         }
         Err(_) => {
             // Fall back to SIMD

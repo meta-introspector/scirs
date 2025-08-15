@@ -141,7 +141,8 @@ impl SciPyBenchmarkSuite {
             for dtype in &self.config.dtypes.clone() {
                 match dtype.as_str() {
                     "f32" => self.benchmark_filters_f32(shape)?,
-                    "f64" => self.benchmark_filters_f64(shape)?_ => continue,
+                    "f64" => self.benchmark_filters_f64(shape)?,
+                    _ => continue,
                 }
             }
         }
@@ -583,7 +584,7 @@ impl SciPyBenchmarkSuite {
 
 /// Estimate memory usage for given shape and data type size
 #[allow(dead_code)]
-fn estimate_memory_usage(shape: &[usize], dtypesize: usize) -> usize {
+fn estimate_memory_usage(shape: &[usize], dtype_size: usize) -> usize {
     shape.iter().product::<usize>() * dtype_size
 }
 

@@ -16,7 +16,7 @@
 use ndarray::{Array2, ArrayView2};
 use std::time::Instant;
 
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     // Enhanced validation system
     enhanced_validation::{
         validated_advanced_processing, ComprehensiveValidator, ValidationConfig,
@@ -43,7 +43,7 @@ pub fn complete_advanced_showcase() -> NdimageResult<()> {
         min_quality_threshold: 0.92,
         monitor_memory: true,
         validate_quantum_coherence: true,
-        validate_consciousness_state: true,
+        validate_consciousnessstate: true,
     };
 
     let mut validator = ComprehensiveValidator::with_config(validator_config);
@@ -85,7 +85,7 @@ pub fn complete_advanced_showcase() -> NdimageResult<()> {
 fn adaptive_learning_showcase(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Testing adaptive learning with different configurations...");
 
-    let test_image = create_adaptive_test_image(96, 96);
+    let testimage = create_adaptive_testimage(96, 96);
     println!("✓ Created adaptive test image (96x96)");
 
     // Test different adaptive learning settings
@@ -99,7 +99,7 @@ fn adaptive_learning_showcase(validator: &mut ComprehensiveValidator) -> Ndimage
         println!("  🔧 Testing {} adaptive learning", name);
 
         let start_time = Instant::now();
-        match validated_advanced_processing(test_image.view(), &config, None, validator) {
+        match validated_advanced_processing(testimage.view(), &config, None, validator) {
             Ok((output, state, report)) => {
                 let duration = start_time.elapsed();
                 println!("    ✓ Completed in {:?}", duration);
@@ -121,7 +121,7 @@ fn adaptive_learning_showcase(validator: &mut ComprehensiveValidator) -> Ndimage
 fn quantum_coherence_showcase(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Testing quantum coherence optimization at different thresholds...");
 
-    let test_image = create_quantum_test_image(80, 80);
+    let testimage = create_quantum_testimage(80, 80);
     println!("✓ Created quantum test image (80x80)");
 
     // Test different quantum coherence thresholds
@@ -134,7 +134,7 @@ fn quantum_coherence_showcase(validator: &mut ComprehensiveValidator) -> Ndimage
         config.quantum_coherence_threshold = threshold;
 
         let start_time = Instant::now();
-        match validated_advanced_processing(test_image.view(), &config, None, validator) {
+        match validated_advanced_processing(testimage.view(), &config, None, validator) {
             Ok((output, state, report)) => {
                 let duration = start_time.elapsed();
                 println!("    ✓ Completed in {:?}", duration);
@@ -159,7 +159,7 @@ fn quantum_coherence_showcase(validator: &mut ComprehensiveValidator) -> Ndimage
 fn neuromorphic_plasticity_showcase(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Testing neuromorphic plasticity at different levels...");
 
-    let test_image = create_neuromorphic_test_image(112, 112);
+    let testimage = create_neuromorphic_testimage(112, 112);
     println!("✓ Created neuromorphic test image (112x112)");
 
     // Test different plasticity levels
@@ -172,7 +172,7 @@ fn neuromorphic_plasticity_showcase(validator: &mut ComprehensiveValidator) -> N
         config.neuromorphic_plasticity = plasticity;
 
         let start_time = Instant::now();
-        match validated_advanced_processing(test_image.view(), &config, None, validator) {
+        match validated_advanced_processing(testimage.view(), &config, None, validator) {
             Ok((output, state, report)) => {
                 let duration = start_time.elapsed();
                 println!("    ✓ Completed in {:?}", duration);
@@ -194,7 +194,7 @@ fn neuromorphic_plasticity_showcase(validator: &mut ComprehensiveValidator) -> N
 fn processing_intensity_showcase(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Testing advanced processing intensity at different levels...");
 
-    let test_image = create_intensity_test_image(128, 128);
+    let testimage = create_intensity_testimage(128, 128);
     println!("✓ Created intensity test image (128x128)");
 
     // Test different processing intensities
@@ -207,7 +207,7 @@ fn processing_intensity_showcase(validator: &mut ComprehensiveValidator) -> Ndim
         config.advanced_processing_intensity = intensity;
 
         let start_time = Instant::now();
-        match validated_advanced_processing(test_image.view(), &config, None, validator) {
+        match validated_advanced_processing(testimage.view(), &config, None, validator) {
             Ok((output, state, report)) => {
                 let duration = start_time.elapsed();
                 println!("    ✓ Completed in {:?}", duration);
@@ -233,7 +233,7 @@ fn processing_intensity_showcase(validator: &mut ComprehensiveValidator) -> Ndim
 fn comprehensive_integration_test(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Running comprehensive integration test with all features enabled...");
 
-    let test_image = create_comprehensive_test_image(160, 160);
+    let testimage = create_comprehensive_testimage(160, 160);
     println!("✓ Created comprehensive test image (160x160)");
 
     // Create configuration with all features optimally balanced
@@ -255,7 +255,7 @@ fn comprehensive_integration_test(validator: &mut ComprehensiveValidator) -> Ndi
     );
 
     let start_time = Instant::now();
-    match validated_advanced_processing(test_image.view(), &config, None, validator) {
+    match validated_advanced_processing(testimage.view(), &config, None, validator) {
         Ok((output, state, report)) => {
             let total_time = start_time.elapsed();
 
@@ -369,7 +369,7 @@ fn create_optimal_integration_config() -> AdvancedConfig {
 // Test image creation functions
 
 #[allow(dead_code)]
-fn create_adaptive_test_image(height: usize, width: usize) -> Array2<f64> {
+fn create_adaptive_testimage(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -393,7 +393,7 @@ fn create_adaptive_test_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_quantum_test_image(height: usize, width: usize) -> Array2<f64> {
+fn create_quantum_testimage(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -418,7 +418,7 @@ fn create_quantum_test_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_neuromorphic_test_image(height: usize, width: usize) -> Array2<f64> {
+fn create_neuromorphic_testimage(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -440,7 +440,7 @@ fn create_neuromorphic_test_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_intensity_test_image(height: usize, width: usize) -> Array2<f64> {
+fn create_intensity_testimage(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -468,7 +468,7 @@ fn create_intensity_test_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_comprehensive_test_image(height: usize, width: usize) -> Array2<f64> {
+fn create_comprehensive_testimage(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -780,8 +780,8 @@ mod tests {
     }
 
     #[test]
-    fn test_comprehensive_test_image() -> NdimageResult<()> {
-        let image = create_comprehensive_test_image(64, 64);
+    fn test_comprehensive_testimage() -> NdimageResult<()> {
+        let image = create_comprehensive_testimage(64, 64);
 
         assert_eq!(image.dim(), (64, 64));
 
@@ -794,12 +794,12 @@ mod tests {
     }
 
     #[test]
-    fn test_validation_metrics() -> NdimageResult<()> {
-        let test_image = create_adaptive_test_image(32, 32);
+    fn test_validationmetrics() -> NdimageResult<()> {
+        let testimage = create_adaptive_testimage(32, 32);
 
-        let variance = calculate_variance(&test_image);
-        let edge_strength = calculate_edge_strength(&test_image);
-        let detail_preservation = calculate_detail_preservation(&test_image);
+        let variance = calculate_variance(&testimage);
+        let edge_strength = calculate_edge_strength(&testimage);
+        let detail_preservation = calculate_detail_preservation(&testimage);
 
         assert!(variance.is_finite());
         assert!(edge_strength.is_finite());

@@ -168,7 +168,7 @@ where
     where
         S: Data<Elem = F>,
     {
-        scirs2_core::validation::check_array_finite(data, "data")?;
+        scirs2_core::validation::checkarray_finite(data, "data")?;
 
         let min_required = self.p + self.q + self.d + 1;
         crate::validation::check_array_length(data, min_required, "ARIMA model fitting")?;
@@ -530,7 +530,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    scirs2_core::validation::check_array_finite(data, "data")?;
+    scirs2_core::validation::checkarray_finite(data, "data")?;
 
     // Determine optimal differencing order
     let d = if options.test_stationarity {

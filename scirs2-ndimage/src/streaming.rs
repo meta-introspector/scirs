@@ -78,7 +78,8 @@ pub struct OverlapInfo {
 
 /// Streaming processor for large arrays
 pub struct StreamProcessor<T> {
-    config: StreamConfig, phantom: std::marker::PhantomData<T>,
+    config: StreamConfig,
+    phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> StreamProcessor<T>
@@ -280,14 +281,15 @@ where
 
         // Create array from buffer
         let chunkshape: Vec<_> = chunk_info.ranges.iter().map(|r| r.end - r.start).collect();
-        Ok(Array::fromshape_vec(IxDyn(&chunkshape), buffer)?)
+        Ok(Array::from_shape_vec(IxDyn(&chunkshape), buffer)?)
     }
 
     /// Write a chunk to a file
     fn write_chunk(
         &self,
         file: &mut BufWriter<File>,
-        chunk: &ArrayView<T, IxDyn>, _chunk_info: &ChunkInfo,
+        chunk: &ArrayView<T, IxDyn>,
+        _chunk_info: &ChunkInfo,
     ) -> NdimageResult<()> {
         let element_size = std::mem::size_of::<T>();
 
@@ -570,7 +572,8 @@ mod tests {
 pub struct AdaptiveStreamProcessor<T> {
     base_config: StreamConfig,
     performance_monitor: PerformanceMonitor,
-    memory_manager: MemoryManager, _phantom: std::marker::PhantomData<T>,
+    memory_manager: MemoryManager,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> AdaptiveStreamProcessor<T>
@@ -581,7 +584,8 @@ where
         Self {
             base_config,
             performance_monitor: PerformanceMonitor::new(),
-            memory_manager: MemoryManager::new(), _phantom: std::marker::PhantomData,
+            memory_manager: MemoryManager::new(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -788,7 +792,7 @@ where
         use crate::_backend::GpuContext;
 
         // Initialize GPU context
-        let gpu_context = GpuContext::new()?;
+        let gpucontext = GpuContext::new()?;
 
         // Get required overlap
         let required_overlap = op.required_overlap();
@@ -844,7 +848,7 @@ where
             }
 
             // Process chunk on GPU
-            let chunk_result = op.apply_chunk_gpu(&chunk_view, &gpu_context)?;
+            let chunk_result = op.apply_chunk_gpu(&chunk_view, &gpucontext)?;
 
             // Handle overlapping regions using proper overlap merging
             if overlap.iter().any(|&x| x > 0) {
@@ -1031,7 +1035,7 @@ where
     fn apply_chunk_gpu(
         &self,
         chunk: &ArrayView<T, D>,
-        gpu_context: &GpuContext,
+        gpucontext: &GpuContext,
     ) -> NdimageResult<Array<T, D>>;
 
     /// Check if chunk size is suitable for GPU processing
@@ -1045,7 +1049,7 @@ where
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
 pub struct GpuContext {
-    // GPU-specific _context information
+    // GPU-specific context information
     device_id: u32,
     memory_pool: Option<*mut u8>,
 }
@@ -1092,7 +1096,7 @@ where
 {
     // Open input file with appropriate compression decompression
     let input_file = File::open(input_path)
-        .map_err(|e| NdimageError::IoError(format!("Failed to open input file: {}", e)))?;
+        .map_err(|e| NdimageError::ComputationError(format!("Failed to open input file: {}", e)))?;
 
     let mut input_reader: Box<dyn Read> = match compression {
         CompressionType::None => Box::new(BufReader::new(input_file)),
@@ -1112,7 +1116,7 @@ where
             {
                 use lz4::Decoder;
                 Box::new(BufReader::new(Decoder::new(input_file).map_err(|e| {
-                    NdimageError::IoError(format!("Failed to create LZ4 decoder: {}", e))
+                    NdimageError::ComputationError(format!("Failed to create LZ4 decoder: {}", e))
                 })?))
             }
             #[cfg(not(feature = "compression"))]
@@ -1125,7 +1129,7 @@ where
             {
                 use zstd::stream::read::Decoder;
                 Box::new(BufReader::new(Decoder::new(input_file).map_err(|e| {
-                    NdimageError::IoError(format!("Failed to create Zstd decoder: {}", e))
+                    NdimageError::ComputationError(format!("Failed to create Zstd decoder: {}", e))
                 })?))
             }
             #[cfg(not(feature = "compression"))]
@@ -1136,8 +1140,9 @@ where
     };
 
     // Create output file with appropriate compression
-    let output_file = File::create(output_path)
-        .map_err(|e| NdimageError::IoError(format!("Failed to create output file: {}", e)))?;
+    let output_file = File::create(output_path).map_err(|e| {
+        NdimageError::ComputationError(format!("Failed to create output file: {}", e))
+    })?;
 
     let mut output_writer: Box<dyn Write> = match compression {
         CompressionType::None => Box::new(BufWriter::new(output_file)),
@@ -1162,7 +1167,10 @@ where
                 use lz4::EncoderBuilder;
                 Box::new(BufWriter::new(
                     EncoderBuilder::new().build(output_file).map_err(|e| {
-                        NdimageError::IoError(format!("Failed to create LZ4 encoder: {}", e))
+                        NdimageError::ComputationError(format!(
+                            "Failed to create LZ4 encoder: {}",
+                            e
+                        ))
                     })?,
                 ))
             }
@@ -1176,7 +1184,12 @@ where
             {
                 use zstd::stream::write::Encoder;
                 Box::new(BufWriter::new(Encoder::new(output_file, 0).map_err(
-                    |e| NdimageError::IoError(format!("Failed to create Zstd encoder: {}", e)),
+                    |e| {
+                        NdimageError::ComputationError(format!(
+                            "Failed to create Zstd encoder: {}",
+                            e
+                        ))
+                    },
                 )?))
             }
             #[cfg(not(feature = "compression"))]
@@ -1200,7 +1213,7 @@ where
         let mut chunk_data = vec![0u8; chunk_size * element_size];
         input_reader
             .read_exact(&mut chunk_data)
-            .map_err(|e| NdimageError::IoError(format!("Failed to read chunk: {}", e)))?;
+            .map_err(|e| NdimageError::ComputationError(format!("Failed to read chunk: {}", e)))?;
 
         // Convert bytes to typed data (this is a simplified approach)
         // In a real implementation, you would:
@@ -1211,7 +1224,7 @@ where
         // For now, just pass through the data (placeholder for actual processing)
         output_writer
             .write_all(&chunk_data)
-            .map_err(|e| NdimageError::IoError(format!("Failed to write chunk: {}", e)))?;
+            .map_err(|e| NdimageError::ComputationError(format!("Failed to write chunk: {}", e)))?;
 
         elements_processed += chunk_size;
     }
@@ -1219,7 +1232,7 @@ where
     // Ensure all data is written
     output_writer
         .flush()
-        .map_err(|e| NdimageError::IoError(format!("Failed to flush output: {}", e)))?;
+        .map_err(|e| NdimageError::ComputationError(format!("Failed to flush output: {}", e)))?;
 
     Ok(())
 }

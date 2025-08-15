@@ -35,7 +35,7 @@ fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::filters::{sobel, BorderMode};
+/// use scirs2_ndimage::filters::{sobel, BorderMode};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0],
@@ -127,7 +127,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::filters::{laplace, BorderMode};
+/// use scirs2_ndimage::filters::{laplace, BorderMode};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0],
@@ -210,7 +210,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::filters::{prewitt, BorderMode};
+/// use scirs2_ndimage::filters::{prewitt, BorderMode};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0],
@@ -304,7 +304,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::filters::{roberts, BorderMode};
+/// use scirs2_ndimage::filters::{roberts, BorderMode};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0],
@@ -406,7 +406,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::filters::{gradient_magnitude, BorderMode};
+/// use scirs2_ndimage::filters::{gradient_magnitude, BorderMode};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0],
@@ -1026,7 +1026,7 @@ mod tests {
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::filters::{scharr, BorderMode};
+/// use scirs2_ndimage::filters::{scharr, BorderMode};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0],

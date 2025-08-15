@@ -479,8 +479,8 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
     }
 
     fn predict_batch(&mut self, xvalues: &[T]) -> InterpolateResult<Vec<T>> {
-        let mut results = Vec::with_capacity(x_values.len());
-        for &x in x_values {
+        let mut results = Vec::with_capacity(xvalues.len());
+        for &x in xvalues {
             results.push(self.predict(x)?);
         }
         Ok(results)
@@ -558,7 +558,7 @@ pub struct StreamingRBFInterpolator<T: Float + Debug + FromPrimitive> {
 
 impl<T: Float + Debug + FromPrimitive + Zero> StreamingRBFInterpolator<T> {
     /// Create a new streaming RBF interpolator
-    pub fn new(_config: StreamingConfig, kernelwidth: T) -> Self {
+    pub fn new(config: StreamingConfig, kernel_width: T) -> Self {
         Self {
             config,
             points: VecDeque::new(),
@@ -734,8 +734,8 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
     }
 
     fn predict_batch(&mut self, xvalues: &[T]) -> InterpolateResult<Vec<T>> {
-        let mut results = Vec::with_capacity(x_values.len());
-        for &x in x_values {
+        let mut results = Vec::with_capacity(xvalues.len());
+        for &x in xvalues {
             results.push(self.predict(x)?);
         }
         Ok(results)
@@ -793,7 +793,7 @@ pub fn make_streaming_rbf_interpolator<T: Float + Debug + FromPrimitive + Zero>(
     config: Option<StreamingConfig>,
     kernel_width: Option<T>,
 ) -> StreamingRBFInterpolator<T> {
-    let _width = kernel_width.unwrap_or_else(|| T::from_f64(1.0).unwrap());
+    let width = kernel_width.unwrap_or_else(|| T::from_f64(1.0).unwrap());
     StreamingRBFInterpolator::new(config.unwrap_or_default(), width)
 }
 
@@ -870,8 +870,8 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
     }
 
     fn predict_batch(&mut self, xvalues: &[T]) -> InterpolateResult<Vec<T>> {
-        let mut results = Vec::with_capacity(x_values.len());
-        for &x in x_values {
+        let mut results = Vec::with_capacity(xvalues.len());
+        for &x in xvalues {
             results.push(self.predict(x)?);
         }
         Ok(results)

@@ -207,7 +207,7 @@ pub use self::morphology::{
 };
 
 // Memory management exports
-pub use self::memory__management::{
+pub use self::memory_management::{
     check_memory_limit, create_output_array, estimate_memory_usage, BufferPool, InPlaceOp,
     MemoryConfig, MemoryEfficientOp, MemoryStrategy,
 };
@@ -232,7 +232,7 @@ pub use self::streaming::{
 };
 
 // Domain-specific imaging exports
-pub use self::domain__specific::{
+pub use self::domain_specific::{
     medical::{
         detect_lung_nodules, enhance_bone_structure, frangi_vesselness, Nodule,
         VesselEnhancementParams,
@@ -263,32 +263,32 @@ pub use self::analysis::image_entropy_parallel;
 
 // Visualization module exports
 pub use self::visualization::{
-    create_colormap, create_image_montage, generate_report, plot_contour, plot_heatmap,
+    create_colormap, createimage_montage, generate_report, plot_contour, plot_heatmap,
     plot_histogram, plot_profile, plot_statistical_comparison, plot_surface, visualize_gradient,
     ColorMap, PlotConfig, ReportConfig, ReportFormat,
 };
 
 // SciPy performance comparison exports
-pub use self::scipy_performance__comparison::{
+pub use self::scipy_performance_comparison::{
     calculate_accuracy_metrics, validate_api_compatibility, AccuracyResult, BenchmarkConfig,
     CompatibilityResult, PerformanceResult, SciPyBenchmarkSuite,
 };
 
 // API compatibility verification exports
-pub use self::api_compatibility__verification::{
+pub use self::api_compatibility_verification::{
     ApiCompatibilityResult, ApiCompatibilityTester, CompatibilityConfig, ParameterTest,
 };
 
 // Comprehensive SciPy validation exports
-pub use self::comprehensive_scipy__validation::{
+pub use self::comprehensive_scipy_validation::{
     SciPyValidationSuite, ValidationConfig as SciPyValidationConfig, ValidationResult,
 };
 
 // Comprehensive examples exports
-pub use self::comprehensive__examples::{validate_all_examples, ExampleTutorial, TutorialStep};
+pub use self::comprehensive_examples::{validate_all_examples, ExampleTutorial, TutorialStep};
 
 // Quantum-inspired processing exports
-pub use self::quantum__inspired::{
+pub use self::quantum_inspired::{
     quantum_amplitude_amplification, quantum_annealing_segmentation,
     quantum_entanglement_correlation, quantum_error_correction, quantum_fourier_enhancement,
     quantum_machine_learning_classifier, quantum_superposition_filter,
@@ -297,14 +297,14 @@ pub use self::quantum__inspired::{
 };
 
 // Neuromorphic computing exports
-pub use self::neuromorphic__computing::{
-    event_driven_processing, homeostatic_adaptive_filter, liquid_state_machine,
+pub use self::neuromorphic_computing::{
+    event_driven_processing, homeostatic_adaptive_filter, liquidstate_machine,
     spiking_neural_network_filter, stdp_unsupervised_learning, temporal_coding_feature_extraction,
     Event, NeuromorphicConfig, PlasticSynapse, SpikingNeuron,
 };
 
 // Advanced fusion core exports
-pub use self::advanced_fusion__algorithms::{
+pub use self::advanced_fusion_algorithms::{
     enhanced_meta_learning_with_temporal_fusion, enhanced_quantum_consciousness_evolution,
     fusion_processing, quantum_aware_resource_scheduling_optimization, AdaptiveMemoryConsolidation,
     AdvancedConfig, AdvancedState, CoherenceStrategy, ConsciousnessComplexity, ConsciousnessState,
@@ -314,7 +314,7 @@ pub use self::advanced_fusion__algorithms::{
 };
 
 // Enhanced validation exports
-pub use self::comprehensive__validation::{
+pub use self::comprehensive_validation::{
     validated_advanced_processing, ComprehensiveValidator, PerformanceBenchmark,
     PerformanceSummary, ValidationConfig, ValidationError, ValidationReport,
 };

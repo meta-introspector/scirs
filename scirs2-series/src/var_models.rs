@@ -61,7 +61,7 @@ where
     where
         S: Data<Elem = F>,
     {
-        scirs2_core::validation::check_array_finite(data, "data")?;
+        scirs2_core::validation::checkarray_finite(data, "data")?;
 
         let (t, k) = data.dim();
         if k != self.n_vars {
@@ -370,7 +370,7 @@ where
     where
         S: Data<Elem = F>,
     {
-        scirs2_core::validation::check_array_finite(data, "data")?;
+        scirs2_core::validation::checkarray_finite(data, "data")?;
 
         // Placeholder implementation
         // Would implement full Johansen procedure

@@ -896,14 +896,16 @@ impl VisualReasoningEngine {
     }
 
     fn estimate_overall_confidence(
-        self_steps: &[ReasoningStep],
+        &self,
+        steps: &[ReasoningStep],
         _evidence: &[Evidence],
     ) -> Result<f32> {
         Ok(0.75) // Placeholder
     }
 
     fn quantify_uncertainty(
-        self_answer: &ReasoningAnswer,
+        &self,
+        answer: &ReasoningAnswer,
         _evidence: &[Evidence],
     ) -> Result<UncertaintyQuantification> {
         Ok(UncertaintyQuantification {
@@ -915,7 +917,8 @@ impl VisualReasoningEngine {
     }
 
     fn extract_temporal_patterns(
-        self_sequence: &[SceneAnalysisResult],
+        &self,
+        sequence: &[SceneAnalysisResult],
     ) -> Result<TemporalPatterns> {
         Ok(TemporalPatterns {
             patterns: Vec::new(),
@@ -957,7 +960,8 @@ impl VisualReasoningEngine {
     }
 
     fn predict_future_events(
-        self_scene: &SceneAnalysisResult,
+        &self,
+        scene: &SceneAnalysisResult,
         _context: &[SceneAnalysisResult],
     ) -> Result<String> {
         Ok("Based on temporal patterns, the _scene is likely to remain stable".to_string())
@@ -1083,14 +1087,14 @@ impl CausalInferenceModule {
         }
     }
 
-    fn build_causal_graph(selfpatterns: &TemporalPatterns) -> Result<CausalGraph> {
+    fn build_causal_graph(&self, patterns: &TemporalPatterns) -> Result<CausalGraph> {
         Ok(CausalGraph {
             nodes: Vec::new(),
             edges: Vec::new(),
         })
     }
 
-    fn infer_effects(self_graph: &CausalGraph, query: &str) -> Result<Vec<CausalEffect>> {
+    fn infer_effects(&self, graph: &CausalGraph, query: &str) -> Result<Vec<CausalEffect>> {
         Ok(Vec::new())
     }
 }
@@ -1119,7 +1123,8 @@ impl AnalogicalReasoningEngine {
     }
 
     fn find_analogy(
-        self_source: &SceneAnalysisResult,
+        &self,
+        source: &SceneAnalysisResult,
         _target: &SceneAnalysisResult,
     ) -> Result<AnalogyResult> {
         Ok(AnalogyResult {
@@ -1157,7 +1162,7 @@ impl AbstractConceptRecognizer {
         }
     }
 
-    fn recognize_concepts(selfscene: &SceneAnalysisResult) -> Result<Vec<AbstractConcept>> {
+    fn recognize_concepts(&self, scene: &SceneAnalysisResult) -> Result<Vec<AbstractConcept>> {
         Ok(Vec::new())
     }
 }

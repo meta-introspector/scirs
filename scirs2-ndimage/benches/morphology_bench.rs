@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array2, Array3};
-use scirs2__ndimage::morphology::{
+use scirs2_ndimage::morphology::{
     binary_dilation,
     binary_dilation_2d_optimized,
     binary_erosion,

@@ -81,13 +81,13 @@ impl ParallelConfig {
 
     /// Set the number of worker threads
     pub fn with_workers(mut self, nworkers: usize) -> Self {
-        self.n_workers = Some(n_workers);
+        self.n_workers = Some(nworkers);
         self
     }
 
     /// Set the chunk size for parallel iterators
     pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
-        self.chunk_size = Some(chunk_size);
+        self.chunk_size = Some(chunksize);
         self
     }
 
@@ -102,14 +102,14 @@ impl ParallelConfig {
     /// Get the chunk size to use for a given total size
     pub fn get_chunk_size(&self, totalsize: usize) -> usize {
         match self.chunk_size {
-            Some(_size) => size,
+            Some(_size) => _size,
             None => {
                 // Choose a reasonable chunk _size based on total _size
                 // This is a heuristic and might need tuning for different workloads
                 let n_cpus = num_cpus::get();
                 let min_chunks_per_cpu = 4; // Ensure at least 4 chunks per CPU for load balancing
 
-                std::cmp::max(1, total_size / (n_cpus * min_chunks_per_cpu))
+                std::cmp::max(1, totalsize / (n_cpus * min_chunks_per_cpu))
             }
         }
     }
@@ -167,16 +167,16 @@ pub trait ParallelPredict<F: Float> {
 /// # Arguments
 ///
 /// * `total_size` - Total number of items to process
-/// * `cost_factor` - Relative computational cost per item (higher = more expensive)
+/// * `costfactor` - Relative computational cost per item (higher = more expensive)
 /// * `config` - Parallel configuration
 ///
 /// # Returns
 ///
 /// The recommended chunk size
 #[allow(dead_code)]
-pub fn estimate_chunk_size(_total_size: usize, costfactor: f64, config: &ParallelConfig) -> usize {
+pub fn estimate_chunk_size(total_size: usize, costfactor: f64, config: &ParallelConfig) -> usize {
     // If chunk _size is explicitly specified, use that
-    if let Some(_size) = config.chunk_size {
+    if let Some(size) = config.chunk_size {
         return size;
     }
 
@@ -187,10 +187,10 @@ pub fn estimate_chunk_size(_total_size: usize, costfactor: f64, config: &Paralle
     };
 
     // Base estimate on desired chunks per CPU
-    let desired_chunks_per_cpu = if cost_factor > 10.0 {
+    let desired_chunks_per_cpu = if costfactor > 10.0 {
         // Expensive operations - fewer, larger chunks
         2
-    } else if cost_factor > 1.0 {
+    } else if costfactor > 1.0 {
         // Moderately expensive - balanced
         4
     } else {
@@ -201,7 +201,7 @@ pub fn estimate_chunk_size(_total_size: usize, costfactor: f64, config: &Paralle
     let base_chunk_size = std::cmp::max(1, total_size / (n_cpus * desired_chunks_per_cpu));
 
     // Apply cost _factor adjustment
-    let adjusted_size = (base_chunk_size as f64 * cost_factor.sqrt()).ceil() as usize;
+    let adjusted_size = (base_chunk_size as f64 * costfactor.sqrt()).ceil() as usize;
 
     // Ensure a reasonable bound
     std::cmp::min(total_size, std::cmp::max(1, adjusted_size))
@@ -221,12 +221,12 @@ pub fn estimate_chunk_size(_total_size: usize, costfactor: f64, config: &Paralle
 ///
 /// Vector of (start, end) index pairs for each partition
 #[allow(dead_code)]
-pub fn create_index_ranges(_total_size: usize, nparts: usize) -> Vec<(usize, usize)> {
-    if _total_size == 0 || n_parts == 0 {
+pub fn create_index_ranges(total_size: usize, nparts: usize) -> Vec<(usize, usize)> {
+    if total_size == 0 || nparts == 0 {
         return Vec::new();
     }
 
-    let n_parts = std::cmp::min(n_parts, total_size);
+    let n_parts = std::cmp::min(nparts, total_size);
     let mut ranges = Vec::with_capacity(n_parts);
 
     let chunk_size = total_size / n_parts;

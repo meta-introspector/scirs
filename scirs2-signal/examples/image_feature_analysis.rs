@@ -405,7 +405,7 @@ fn texture_based_segmentation() {
         // Assign patches to nearest cluster
         let mut cluster_assignments = vec![0; patch_features.len()];
 
-        for (i..(_, features)) in patch_features.iter().enumerate() {
+        for (i, (_, features)) in patch_features.iter().enumerate() {
             let mut min_dist = f64::MAX;
             let mut best_cluster = 0;
 
@@ -497,20 +497,8 @@ fn texture_based_segmentation() {
                 let mut min_dist = f64::MAX;
                 let mut best_cluster = 0;
 
-                for ((center_i, center_j)_, cluster) in patch_features
-                    .iter()
-                    .enumerate()
-                    .map(|(idx, ((ci, cj)_))| ((*ci, *cj), idx))
-                    .map(|((ci, cj), idx)| {
-                        let _i = patch_features
-                            .iter()
-                            .enumerate()
-                            .filter(|(i_)| *i == idx)
-                            .map(|(_, ((__)_))| idx)
-                            .next()
-                            .unwrap();
-                        ((ci, cj), idx, segmentation[[ci, cj]])
-                    })
+                for (cluster, ((center_i, center_j), _features)) in
+                    patch_features.iter().enumerate()
                 {
                     let dist = ((i as isize - center_i as isize).pow(2)
                         + (j as isize - center_j as isize).pow(2))

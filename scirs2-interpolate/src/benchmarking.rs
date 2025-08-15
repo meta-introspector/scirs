@@ -1110,7 +1110,7 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
             "linear_1d" => crate::interp1d::linear_interpolate(&x.view(), &y.view(), &x_new.view()),
             "cubic_1d" => crate::interp1d::cubic_interpolate(&x.view(), &y.view(), &x_new.view()),
             "cubic_spline" => {
-                let spline = crate::spline::CubicSpline::_new(&x.view(), &y.view())?;
+                let spline = crate::spline::CubicSpline::new(&x.view(), &y.view())?;
                 spline.evaluate_array(&x_new.view())
             }
             _ => Err(crate::InterpolateError::NotImplemented(format!(
@@ -1129,7 +1129,7 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
         // Placeholder for 2D SciPy reference implementations
         match method {
             "rbf_gaussian" => {
-                let rbf = crate::advanced::rbf::RBFInterpolator::_new(
+                let rbf = crate::advanced::rbf::RBFInterpolator::new(
                     &x.view(),
                     &y.view(),
                     crate::advanced::rbf::RBFKernel::Gaussian,

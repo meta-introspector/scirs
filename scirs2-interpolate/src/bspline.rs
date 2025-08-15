@@ -81,9 +81,9 @@ impl WorkspaceMemoryStats {
 
     /// Update memory usage statistics
     pub fn update_memory_usage(&mut self, currentbytes: usize) {
-        self.current_memory_bytes = current_bytes;
-        if current_bytes > self.peak_memory_bytes {
-            self.peak_memory_bytes = current_bytes;
+        self.current_memory_bytes = currentbytes;
+        if currentbytes > self.peak_memory_bytes {
+            self.peak_memory_bytes = currentbytes;
         }
     }
 
@@ -109,11 +109,11 @@ where
 {
     /// Create a new workspace with initial capacity
     pub fn new(_maxdegree: usize) -> Self {
-        let initial_matrix_size = (_max_degree + 1).max(16); // Reasonable minimum
+        let initial_matrix_size = (_maxdegree + 1).max(16); // Reasonable minimum
         Self {
-            coeffs: RefCell::new(Array1::zeros(_max_degree + 1)),
-            poly_buf: RefCell::new(Array1::zeros(_max_degree + 1)),
-            basis_buf: RefCell::new(Array1::zeros(_max_degree + 1)),
+            coeffs: RefCell::new(Array1::zeros(_maxdegree + 1)),
+            poly_buf: RefCell::new(Array1::zeros(_maxdegree + 1)),
+            basis_buf: RefCell::new(Array1::zeros(_maxdegree + 1)),
             matrix_buf: RefCell::new(Array2::zeros((initial_matrix_size, initial_matrix_size))),
             memory_stats: RefCell::new(WorkspaceMemoryStats::default()),
         }
@@ -121,7 +121,7 @@ where
 
     /// Create a workspace optimized for large problems
     pub fn new_large_problem(_max_degree: usize, estimated_matrixsize: usize) -> Self {
-        let buffer_size = estimated_matrix_size.max(_max_degree + 1);
+        let buffer_size = estimated_matrixsize.max(_max_degree + 1);
         Self {
             coeffs: RefCell::new(Array1::zeros(buffer_size)),
             poly_buf: RefCell::new(Array1::zeros(buffer_size)),
@@ -183,7 +183,7 @@ where
 
     /// Get a view of the coefficient buffer (resized if needed)
     pub fn get_coeff_buffer(&self, minsize: usize) -> std::cell::Ref<Array1<T>> {
-        self.ensure_capacity(min_size.saturating_sub(1));
+        self.ensure_capacity(minsize.saturating_sub(1));
 
         {
             let mut stats = self.memory_stats.borrow_mut();
@@ -195,7 +195,7 @@ where
 
     /// Get a mutable view of the coefficient buffer (resized if needed)
     pub fn get_coeff_buffer_mut(&self, minsize: usize) -> std::cell::RefMut<Array1<T>> {
-        self.ensure_capacity(min_size.saturating_sub(1));
+        self.ensure_capacity(minsize.saturating_sub(1));
 
         {
             let mut stats = self.memory_stats.borrow_mut();
@@ -1261,7 +1261,7 @@ where
         for _order in 0..=effective_max_order {
             let values = derivative_splines[_order].evaluate_batch_fast(xs)?;
             for (i, &value) in values.iter().enumerate() {
-                result[[i_order]] = value;
+                result[[i, _order]] = value;
             }
         }
 
@@ -1960,11 +1960,11 @@ where
 
     /// Evaluate at multiple points with bounds checking (SciPy-compatible)
     pub fn evaluate_array_checked(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
-        let mut result = Array1::zeros(x_new.len());
+        let mut result = Array1::zeros(xnew.len());
         let t_min = self.t[0];
         let t_max = self.t[self.t.len() - 1];
 
-        for (i, &x) in x_new.iter().enumerate() {
+        for (i, &x) in xnew.iter().enumerate() {
             if x < t_min || x > t_max {
                 return Err(InterpolateError::OutOfBounds(format!(
                     "x value {} is outside domain [{}, {}]",
@@ -2048,14 +2048,14 @@ where
         + crate::traits::InterpolationFloat,
 {
     fn evaluate(&self, querypoints: &ArrayView2<T>) -> crate::InterpolateResult<Vec<T>> {
-        if query_points.ncols() != 1 {
+        if querypoints.ncols() != 1 {
             return Err(crate::InterpolateError::invalid_input(
                 "BSpline only supports 1D interpolation",
             ));
         }
 
-        let mut results = Vec::with_capacity(query_points.nrows());
-        for row in query_points.outer_iter() {
+        let mut results = Vec::with_capacity(querypoints.nrows());
+        for row in querypoints.outer_iter() {
             let x = row[0];
             let value = self.evaluate(x)?;
             results.push(value);

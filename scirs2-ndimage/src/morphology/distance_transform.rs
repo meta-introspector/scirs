@@ -506,7 +506,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::{Array2, array, IxDyn};
-/// use scirs2__ndimage::morphology::distance_transform_edt;
+/// use scirs2_ndimage::morphology::distance_transform_edt;
 ///
 /// let input = array![[false, true, true, true, true],
 ///                    [false, false, true, true, true],
@@ -587,7 +587,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::{Array2, array, IxDyn};
-/// use scirs2__ndimage::morphology::distance_transform_cdt;
+/// use scirs2_ndimage::morphology::distance_transform_cdt;
 ///
 /// let input = array![[false, true, true, true, true],
 ///                    [false, false, true, true, true],
@@ -750,7 +750,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::{Array2, array, IxDyn};
-/// use scirs2__ndimage::morphology::distance_transform_bf;
+/// use scirs2_ndimage::morphology::distance_transform_bf;
 ///
 /// let input = array![[false, true, true, true, true],
 ///                    [false, false, true, true, true],
@@ -1051,17 +1051,15 @@ mod tests {
             .into_dimensionality::<IxDyn>()
             .expect("into_dimensionality should succeed for test");
 
-        let (euclidean_option_) =
-            distance_transform_bf(&input_dyn, "euclidean", None, true, false)
-                .expect("Distance transform should succeed");
+        let (euclidean_option_) = distance_transform_bf(&input_dyn, "euclidean", None, true, false)
+            .expect("Distance transform should succeed");
         let euclidean = euclidean_option
             .expect("Expected euclidean distances")
             .into_dimensionality::<ndarray::Ix2>()
             .expect("Failed to convert back to Ix2");
 
-        let (cityblock_option_) =
-            distance_transform_bf(&input_dyn, "cityblock", None, true, false)
-                .expect("Distance transform should succeed");
+        let (cityblock_option_) = distance_transform_bf(&input_dyn, "cityblock", None, true, false)
+            .expect("Distance transform should succeed");
         let cityblock = cityblock_option
             .expect("Expected cityblock distances")
             .into_dimensionality::<ndarray::Ix2>()

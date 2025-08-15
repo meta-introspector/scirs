@@ -5,7 +5,7 @@
 //! domain-specific imaging applications.
 
 use ndarray::{Array, Array1, Array2, Array3, ArrayView2, Axis, Ix2, Ix3};
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     analysis::{
         compute_local_variance, image_entropy, structural_similarity_index, texture_analysis,
         ImageQualityMetrics, TextureMetrics,
@@ -31,7 +31,7 @@ use scirs2__ndimage::{
     },
     streaming::{stream_process_file, StreamConfig},
     visualization::{
-        create_image_montage, generate_report, plot_statistical_comparison, ReportConfig,
+        createimage_montage, generate_report, plot_statistical_comparison, ReportConfig,
         ReportFormat,
     },
     BorderMode, BoundaryMode, InterpolationOrder,
@@ -98,26 +98,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("2. MICROSCOPY IMAGE ANALYSIS");
     println!("=============================");
 
-    let microscopy_image = generate_synthetic_microscopy_image();
+    let microscopyimage = generate_synthetic_microscopyimage();
 
     // Cell segmentation
     let cells = segment_cells(
-        microscopy_image.view(),
+        microscopyimage.view(),
         None, // Use default parameters
     )?;
 
     // Nuclei detection
     let nuclei = detect_nuclei(
-        microscopy_image.view(),
+        microscopyimage.view(),
         5.0,   // min_area
         100.0, // max_area
         0.7,   // circularity_threshold
     )?;
 
     // Colocalization analysis
-    let channel1 = microscopy_image.slice(s![.., .., 0]).to_owned();
-    let channel2 = microscopy_image.slice(s![.., .., 1]).to_owned();
-    let coloc_metrics = colocalization_analysis(
+    let channel1 = microscopyimage.slice(s![.., .., 0]).to_owned();
+    let channel2 = microscopyimage.slice(s![.., .., 1]).to_owned();
+    let colocmetrics = colocalization_analysis(
         channel1.view(),
         channel2.view(),
         None, // Use default parameters
@@ -128,32 +128,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - Nuclei detected: {} nuclei found", nuclei.len());
     println!(
         "  - Colocalization coefficient: {:.3}",
-        coloc_metrics.manders_m1
+        colocmetrics.manders_m1
     );
-    println!("  - Pearson correlation: {:.3}", coloc_metrics.pearson_r);
+    println!("  - Pearson correlation: {:.3}", colocmetrics.pearson_r);
     println!();
 
     // 3. Satellite Image Processing
     println!("3. SATELLITE IMAGE PROCESSING");
     println!("==============================");
 
-    let satellite_image = generate_synthetic_satellite_image();
+    let satelliteimage = generate_synthetic_satelliteimage();
 
     // NDVI computation (vegetation index)
-    let nir_band = satellite_image.slice(s![.., .., 3]).to_owned(); // Near-infrared
-    let red_band = satellite_image.slice(s![.., .., 0]).to_owned(); // Red
+    let nir_band = satelliteimage.slice(s![.., .., 3]).to_owned(); // Near-infrared
+    let red_band = satelliteimage.slice(s![.., .., 0]).to_owned(); // Red
     let ndvi = compute_ndvi(nir_band.view(), red_band.view())?;
 
     // Water body detection
     let water_mask = detect_water_bodies(
-        satellite_image.view(),
+        satelliteimage.view(),
         0.1, // ndwi_threshold
         500, // min_area
     )?;
 
     // Pan-sharpening for enhanced resolution
-    let panchromatic = satellite_image.slice(s![.., .., 4]).to_owned();
-    let multispectral = satellite_image.slice(s![.., .., 0..3]).to_owned();
+    let panchromatic = satelliteimage.slice(s![.., .., 4]).to_owned();
+    let multispectral = satelliteimage.slice(s![.., .., 0..3]).to_owned();
     let sharpened = pan_sharpen(
         panchromatic.view(),
         multispectral.view(),
@@ -178,18 +178,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("4. ADVANCED FEATURE DETECTION");
     println!("==============================");
 
-    let feature_image = generate_feature_rich_image();
+    let featureimage = generate_feature_richimage();
 
     // Multi-scale corner detection
     let harris_corners = harris_corners(
-        feature_image.view(),
+        featureimage.view(),
         2.0,  // sigma
         0.04, // k parameter
         0.1,  // threshold
     )?;
 
     let fast_corners = fast_corners(
-        feature_image.view(),
+        featureimage.view(),
         9,    // circle_radius
         0.1,  // threshold
         true, // non_maximum_suppression
@@ -197,7 +197,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Advanced edge detection
     let edges = canny(
-        feature_image.view(),
+        featureimage.view(),
         1.0,   // sigma
         0.1,   // low_threshold
         0.2,   // high_threshold
@@ -206,10 +206,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Machine learning-based detection
     let ml_detector = LearnedEdgeDetector::new(Default::default())?;
-    let ml_edges = ml_detector.detect_edges(feature_image.view())?;
+    let ml_edges = ml_detector.detect_edges(featureimage.view())?;
 
     let object_proposals = ObjectProposalGenerator::new(Default::default())?;
-    let proposals = object_proposals.generate_proposals(feature_image.view())?;
+    let proposals = object_proposals.generate_proposals(featureimage.view())?;
 
     println!("✓ Advanced feature detection completed");
     println!(
@@ -220,7 +220,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - Canny edges: Edge map computed");
     println!(
         "  - ML edge detection: {} edge features",
-        count_ml_features(&ml_edges)
+        count_mlfeatures(&ml_edges)
     );
     println!("  - Object proposals: {} regions proposed", proposals.len());
     println!();
@@ -229,7 +229,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("5. ADVANCED SEGMENTATION TECHNIQUES");
     println!("====================================");
 
-    let segmentation_image = generate_segmentation_test_image();
+    let segmentationimage = generate_segmentation_testimage();
 
     // Graph cuts segmentation
     let graph_cuts_params = GraphCutsParams {
@@ -239,7 +239,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         tolerance: 1e-6,
     };
     let graph_cuts_result = graph_cuts(
-        segmentation_image.view(),
+        segmentationimage.view(),
         None, // seeds will be auto-generated
         graph_cuts_params,
     )?;
@@ -254,27 +254,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         tolerance: 1e-3,
     };
     let chan_vese_result = chan_vese(
-        segmentation_image.view(),
+        segmentationimage.view(),
         None, // initial level set will be auto-generated
         chan_vese_params,
     )?;
 
     // Active contour segmentation
     let initial_contour = create_circular_contour(
-        segmentation_image.shape()[0] / 2,
-        segmentation_image.shape()[1] / 2,
+        segmentationimage.shape()[0] / 2,
+        segmentationimage.shape()[1] / 2,
         50.0,
         100,
     );
     let active_contour_result = active_contour(
-        segmentation_image.view(),
+        segmentationimage.view(),
         initial_contour.view(),
         Default::default(),
     )?;
 
     // Watershed segmentation
     let watershed_result = watershed(
-        segmentation_image.view(),
+        segmentationimage.view(),
         None, // markers will be auto-generated
         None, // default connectivity
     )?;
@@ -302,11 +302,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("6. ADVANCED FILTERING AND ENHANCEMENT");
     println!("======================================");
 
-    let noisy_image = generate_noisy_image();
+    let noisyimage = generate_noisyimage();
 
     // Non-local means denoising
     let nlm_denoised = non_local_means(
-        noisy_image.view(),
+        noisyimage.view(),
         7,   // patch_size
         21,  // search_window
         0.1, // h parameter
@@ -315,7 +315,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Anisotropic diffusion
     let aniso_diffused = anisotropic_diffusion(
-        noisy_image.view(),
+        noisyimage.view(),
         10,   // iterations
         0.25, // kappa
         0.1,  // gamma
@@ -324,7 +324,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Wavelet denoising
     let wavelet_denoised = wavelet_denoise(
-        noisy_image.view(),
+        noisyimage.view(),
         scirs2_ndimage::filters::WaveletFamily::Daubechies,
         4,      // wavelet_order
         0.1,    // threshold
@@ -333,7 +333,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Gabor filter bank
     let gabor_responses = gabor_filter_bank(
-        noisy_image.view(),
+        noisyimage.view(),
         &[0.1, 0.2, 0.3],                           // frequencies
         &[0.0, PI / 4.0, PI / 2.0, 3.0 * PI / 4.0], // orientations
         2.0,                                        // sigma_x
@@ -354,11 +354,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("7. TEXTURE AND STATISTICAL ANALYSIS");
     println!("====================================");
 
-    let texture_image = generatetexture_image();
+    let textureimage = generatetextureimage();
 
     // Comprehensive texture analysis
-    let texture_metrics = texture_analysis(
-        texture_image.view(),
+    let texturemetrics = texture_analysis(
+        textureimage.view(),
         Some(16),                                         // gray_levels
         Some(1.0),                                        // distance
         Some(&[0.0, PI / 4.0, PI / 2.0, 3.0 * PI / 4.0]), // angles
@@ -366,25 +366,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Local variance computation
     let local_variance = compute_local_variance(
-        texture_image.view(),
+        textureimage.view(),
         7, // window_size
     )?;
 
     // Image entropy
-    let entropy = image_entropy(texture_image.view(), None)?;
+    let entropy = image_entropy(textureimage.view(), None)?;
 
     // Image quality assessment
-    let quality_metrics = ImageQualityMetrics::compute(
-        texture_image.view(),
+    let qualitymetrics = ImageQualityMetrics::compute(
+        textureimage.view(),
         None, // reference image
     )?;
 
     println!("✓ Texture and statistical analysis completed");
-    println!("  - GLCM contrast: {:.3}", texture_metrics.contrast);
-    println!("  - GLCM homogeneity: {:.3}", texture_metrics.homogeneity);
-    println!("  - GLCM energy: {:.3}", texture_metrics.energy);
+    println!("  - GLCM contrast: {:.3}", texturemetrics.contrast);
+    println!("  - GLCM homogeneity: {:.3}", texturemetrics.homogeneity);
+    println!("  - GLCM energy: {:.3}", texturemetrics.energy);
     println!("  - Image entropy: {:.3} bits", entropy);
-    println!("  - Image sharpness: {:.3}", quality_metrics.sharpness);
+    println!("  - Image sharpness: {:.3}", qualitymetrics.sharpness);
     println!(
         "  - Mean local variance: {:.3}",
         local_variance.mean().unwrap_or(0.0)
@@ -418,20 +418,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("9. PERFORMANCE AND QUALITY ASSESSMENT");
     println!("======================================");
 
-    let reference_image = generate_reference_image();
-    let test_image = add_degradation(&reference_image);
+    let referenceimage = generate_referenceimage();
+    let testimage = add_degradation(&referenceimage);
 
     // Structural similarity assessment
     let ssim = structural_similarity_index(
-        reference_image.view(),
-        test_image.view(),
+        referenceimage.view(),
+        testimage.view(),
         None, // default window
         None, // default constants
     )?;
 
     // Generate comprehensive report
     let report_config = ReportConfig {
-        include_images: true,
+        includeimages: true,
         include_statistics: true,
         include_plots: true,
         format: ReportFormat::Html,
@@ -512,7 +512,7 @@ fn generate_synthetic_medical_volume() -> Array3<f32> {
 }
 
 #[allow(dead_code)]
-fn generate_synthetic_microscopy_image() -> Array3<f32> {
+fn generate_synthetic_microscopyimage() -> Array3<f32> {
     Array3::fromshape_fn((256, 256, 3), |(i, j_channel)| {
         let x = i as f32 / 256.0;
         let y = j as f32 / 256.0;
@@ -527,7 +527,7 @@ fn generate_synthetic_microscopy_image() -> Array3<f32> {
 }
 
 #[allow(dead_code)]
-fn generate_synthetic_satellite_image() -> Array3<f32> {
+fn generate_synthetic_satelliteimage() -> Array3<f32> {
     Array3::fromshape_fn((512, 512, 5), |(i, j, band)| {
         let x = i as f32 / 512.0;
         let y = j as f32 / 512.0;
@@ -544,7 +544,7 @@ fn generate_synthetic_satellite_image() -> Array3<f32> {
 }
 
 #[allow(dead_code)]
-fn generate_feature_rich_image() -> Array2<f32> {
+fn generate_feature_richimage() -> Array2<f32> {
     Array2::fromshape_fn((256, 256), |(i, j)| {
         let x = i as f32 / 256.0;
         let y = j as f32 / 256.0;
@@ -567,7 +567,7 @@ fn generate_feature_rich_image() -> Array2<f32> {
 }
 
 #[allow(dead_code)]
-fn generate_segmentation_test_image() -> Array2<f32> {
+fn generate_segmentation_testimage() -> Array2<f32> {
     Array2::fromshape_fn((128, 128), |(i, j)| {
         let x = i as f32 / 128.0 - 0.5;
         let y = j as f32 / 128.0 - 0.5;
@@ -585,7 +585,7 @@ fn generate_segmentation_test_image() -> Array2<f32> {
 }
 
 #[allow(dead_code)]
-fn generate_noisy_image() -> Array2<f32> {
+fn generate_noisyimage() -> Array2<f32> {
     Array2::fromshape_fn((128, 128), |(i, j)| {
         let x = i as f32 / 128.0;
         let y = j as f32 / 128.0;
@@ -598,7 +598,7 @@ fn generate_noisy_image() -> Array2<f32> {
 }
 
 #[allow(dead_code)]
-fn generatetexture_image() -> Array2<f32> {
+fn generatetextureimage() -> Array2<f32> {
     Array2::fromshape_fn((128, 128), |(i, j)| {
         let x = i as f32;
         let y = j as f32;
@@ -613,7 +613,7 @@ fn generatetexture_image() -> Array2<f32> {
 }
 
 #[allow(dead_code)]
-fn generate_reference_image() -> Array2<f32> {
+fn generate_referenceimage() -> Array2<f32> {
     Array2::fromshape_fn((64, 64), |(i, j)| {
         let x = i as f32 / 64.0;
         let y = j as f32 / 64.0;
@@ -655,7 +655,7 @@ fn count_water_regions(mask: &Array2<u8>) -> usize {
 }
 
 #[allow(dead_code)]
-fn count_ml_features(edges: &Array2<f32>) -> usize {
+fn count_mlfeatures(edges: &Array2<f32>) -> usize {
     edges.iter().filter(|&&x| x > 0.1).count()
 }
 

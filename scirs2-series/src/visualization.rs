@@ -292,7 +292,7 @@ impl TimeSeriesPlot {
     /// Create a new time series plot
     pub fn new(title: &str) -> Self {
         Self {
-            _title: title.to_string(),
+            title: title.to_string(),
             x_label: "Time".to_string(),
             y_label: "Value".to_string(),
             series: Vec::new(),
@@ -916,7 +916,7 @@ impl Dashboard {
     /// Create a new dashboard
     pub fn new(title: &str) -> Self {
         Self {
-            _title: title.to_string(),
+            title: title.to_string(),
             plots: Vec::new(),
             layout: DashboardLayout::default(),
         }

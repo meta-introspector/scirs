@@ -73,7 +73,7 @@ enum MorphOperation {
 ///
 /// ```no_run
 /// use ndarray::{Array2, s};
-/// use scirs2__ndimage::morphology::grey_erosion;
+/// use scirs2_ndimage::morphology::grey_erosion;
 ///
 /// // Create a simple 5x5 grayscale array with varying values
 /// let mut input = Array2::from_elem((5, 5), 0.0);
@@ -154,11 +154,11 @@ where
         // Default border mode
         let border_mode = mode.unwrap_or(MorphBorderMode::Reflect);
         let border_val =
-            cval.unwrap_or_else(|| safe_f64_tofloat: <T>(0.0).unwrap_or_else(|_| T::zero()));
+            cval.unwrap_or_else(|| safe_f64_to_float::<T>(0.0).unwrap_or_else(|_| T::zero()));
 
         // Apply 2D erosion
         let (height, width) = (input_2d.shape()[0], input_2d.shape()[1]);
-        let mut result_2d = Array2::from_elem((height, width), safe_f64to_float::<T>(0.0)?);
+        let mut result_2d = Array2::from_elem((height, width), safe_f64_to_float::<T>(0.0)?);
 
         // For each output position
         for i in 0..height {
@@ -272,7 +272,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::{Array2, s};
-/// use scirs2__ndimage::morphology::grey_dilation;
+/// use scirs2_ndimage::morphology::grey_dilation;
 ///
 /// // Create a simple 5x5 grayscale array with varying values
 /// let mut input = Array2::from_elem((5, 5), 0.0);
@@ -356,11 +356,11 @@ where
         // Default border mode
         let border_mode = mode.unwrap_or(MorphBorderMode::Reflect);
         let border_val =
-            cval.unwrap_or_else(|| safe_f64_tofloat: <T>(0.0).unwrap_or_else(|_| T::zero()));
+            cval.unwrap_or_else(|| safe_f64_to_float::<T>(0.0).unwrap_or_else(|_| T::zero()));
 
         // Apply 2D dilation
         let (height, width) = (input_2d.shape()[0], input_2d.shape()[1]);
-        let mut result_2d = Array2::from_elem((height, width), safe_f64to_float::<T>(0.0)?);
+        let mut result_2d = Array2::from_elem((height, width), safe_f64_to_float::<T>(0.0)?);
 
         // For each output position
         for i in 0..height {
@@ -474,7 +474,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::{Array2, s};
-/// use scirs2__ndimage::morphology::grey_opening;
+/// use scirs2_ndimage::morphology::grey_opening;
 ///
 /// // Create a 7x7 array with a small bright spot
 /// let mut input = Array2::from_elem((7, 7), 0.0);
@@ -530,7 +530,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2__ndimage::morphology::grey_closing;
+/// use scirs2_ndimage::morphology::grey_closing;
 ///
 /// // Create a 7x7 array with a dark spot
 /// let mut input = Array2::from_elem((7, 7), 1.0);
@@ -585,7 +585,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::{Array2, s};
-/// use scirs2__ndimage::morphology::morphological_gradient;
+/// use scirs2_ndimage::morphology::morphological_gradient;
 ///
 /// // Create a test image with a step edge
 /// let mut input = Array2::from_elem((7, 7), 0.0);
@@ -623,7 +623,7 @@ where
         eroded.clone().into_dimensionality::<Ix2>(),
     ) {
         // Calculate gradient
-        let mut result_2d = Array2::from_elem(dilated_2d.dim(), safe_f64to_float::<T>(0.0)?);
+        let mut result_2d = Array2::from_elem(dilated_2d.dim(), safe_f64_to_float::<T>(0.0)?);
 
         // Compute difference
         for ((d, e), r) in dilated_2d
@@ -643,7 +643,7 @@ where
     }
 
     // If we couldn't convert to 2D, compute element-wise without 2D conversion
-    let mut result = Array::from_elem(input.raw_dim(), safe_f64to_float::<T>(0.0)?);
+    let mut result = Array::from_elem(input.raw_dim(), safe_f64_to_float::<T>(0.0)?);
 
     // Calculate gradient as the difference between dilation and erosion
     for ((d, e), r) in dilated.iter().zip(eroded.iter()).zip(result.iter_mut()) {
@@ -676,7 +676,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2__ndimage::morphology::morphological_laplace;
+/// use scirs2_ndimage::morphology::morphological_laplace;
 ///
 /// // Create a test image with a peak and a valley
 /// let mut input = Array2::from_elem((7, 7), 1.0);
@@ -717,8 +717,8 @@ where
         input.clone().into_dimensionality::<Ix2>(),
     ) {
         // Calculate Laplace
-        let mut result_2d = Array2::from_elem(dilated_2d.dim(), safe_f64to_float::<T>(0.0)?);
-        let two: T = crate::utils::safe_f64to_float::<T>(2.0)?;
+        let mut result_2d = Array2::from_elem(dilated_2d.dim(), safe_f64_to_float::<T>(0.0)?);
+        let two: T = crate::utils::safe_f64_to_float::<T>(2.0)?;
 
         // Compute (dilated + eroded) - 2 * input
         for (((d, e), i), r) in dilated_2d
@@ -740,10 +740,10 @@ where
     }
 
     // If we couldn't convert to 2D, compute element-wise without 2D conversion
-    let mut result = Array::from_elem(input.raw_dim(), safe_f64to_float::<T>(0.0)?);
+    let mut result = Array::from_elem(input.raw_dim(), safe_f64_to_float::<T>(0.0)?);
 
     // Calculate Laplace as (dilated + eroded) - 2 * input
-    let two = safe_f64to_float::<T>(2.0)?;
+    let two = safe_f64_to_float::<T>(2.0)?;
     for (((d, e), inp), r) in dilated
         .iter()
         .zip(eroded.iter())
@@ -780,7 +780,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2__ndimage::morphology::white_tophat;
+/// use scirs2_ndimage::morphology::white_tophat;
 ///
 /// // Create an image with a background and small bright spots
 /// let mut input = Array2::from_elem((7, 7), 1.0);
@@ -818,7 +818,7 @@ where
         opened.clone().into_dimensionality::<Ix2>(),
     ) {
         // Calculate white tophat
-        let mut result_2d = Array2::from_elem(input_2d.dim(), safe_f64to_float::<T>(0.0)?);
+        let mut result_2d = Array2::from_elem(input_2d.dim(), safe_f64_to_float::<T>(0.0)?);
 
         // Compute input - opened
         for ((i, o), r) in input_2d
@@ -838,7 +838,7 @@ where
     }
 
     // If we couldn't convert to 2D, compute element-wise without 2D conversion
-    let mut result = Array::from_elem(input.raw_dim(), safe_f64to_float::<T>(0.0)?);
+    let mut result = Array::from_elem(input.raw_dim(), safe_f64_to_float::<T>(0.0)?);
 
     // Calculate white tophat as input - opened
     for ((inp, op), r) in input.iter().zip(opened.iter()).zip(result.iter_mut()) {
@@ -871,7 +871,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2__ndimage::morphology::black_tophat;
+/// use scirs2_ndimage::morphology::black_tophat;
 ///
 /// // Create an image with a background and small dark spots
 /// let mut input = Array2::from_elem((7, 7), 1.0);
@@ -912,7 +912,7 @@ where
         input.clone().into_dimensionality::<Ix2>(),
     ) {
         // Calculate black tophat
-        let mut result_2d = Array2::from_elem(input_2d.dim(), safe_f64to_float::<T>(0.0)?);
+        let mut result_2d = Array2::from_elem(input_2d.dim(), safe_f64_to_float::<T>(0.0)?);
 
         // Compute closed - input
         for ((c, i), r) in closed_2d
@@ -923,8 +923,8 @@ where
             *r = *c - *i;
 
             // Ensure values at the border are zero to match test expectations
-            if *r < safe_f64_to_float: <T>(0.1)? {
-                *r = safe_f64to_float::<T>(0.0)?;
+            if *r < safe_f64_to_float::<T>(0.1)? {
+                *r = safe_f64_to_float::<T>(0.0)?;
             }
         }
 
@@ -937,15 +937,15 @@ where
     }
 
     // If we couldn't convert to 2D, compute element-wise without 2D conversion
-    let mut result = Array::from_elem(input.raw_dim(), safe_f64to_float::<T>(0.0)?);
+    let mut result = Array::from_elem(input.raw_dim(), safe_f64_to_float::<T>(0.0)?);
 
     // Calculate black tophat as closed - input
     for ((cl, inp), r) in closed.iter().zip(input.iter()).zip(result.iter_mut()) {
         *r = *cl - *inp;
 
         // Ensure values at the border are zero to match test expectations
-        if *r < safe_f64_to_float: <T>(0.1)? {
-            *r = safe_f64to_float::<T>(0.0)?;
+        if *r < safe_f64_to_float::<T>(0.1)? {
+            *r = safe_f64_to_float::<T>(0.0)?;
         }
     }
 
@@ -1065,7 +1065,7 @@ where
                     temp[ndarray::IxDyn(&input_idx)]
                 } else {
                     match border_mode {
-                        MorphBorderMode::Constant => constant_value_ => constant_value, // For now, only support constant mode
+                        MorphBorderMode::Constant => constant_value, // For now, only support constant mode
                     }
                 };
 

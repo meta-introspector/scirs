@@ -727,7 +727,7 @@ where
         }
 
         // Eliminate below
-        for i in (k + 1), n {
+        for i in (k + 1)..n {
             let factor = a_lu[[i, k]] / a_lu[[k, k]];
             a_lu[[i, k]] = factor; // Store multiplier
 

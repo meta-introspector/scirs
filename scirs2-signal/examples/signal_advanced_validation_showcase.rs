@@ -17,9 +17,9 @@ use scirs2_signal::lombscargle_enhanced_validation::{
     validate_edge_cases_comprehensive, validate_numerical_robustness_extreme,
 };
 use scirs2_signal::multitaper::{
-use std::f64::consts::PI;
     validate_numerical_precision_enhanced, validate_parameter_consistency, TestSignalConfig,
 };
+use std::f64::consts::PI;
 
 /// Demonstrate enhanced multitaper validation features
 #[allow(dead_code)]

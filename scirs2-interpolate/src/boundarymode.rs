@@ -120,7 +120,7 @@ impl<T: Float + std::fmt::Display> BoundaryParameters<T> {
     /// A reference to the modified parameters
     pub fn with_values(mut self, lower_value: T, uppervalue: T) -> Self {
         self.lower_value = Some(lower_value);
-        self.upper_value = Some(upper_value);
+        self.upper_value = Some(uppervalue);
         self
     }
 
@@ -136,7 +136,7 @@ impl<T: Float + std::fmt::Display> BoundaryParameters<T> {
     /// A reference to the modified parameters
     pub fn with_derivatives(mut self, lower_derivative: T, upperderivative: T) -> Self {
         self.lower_derivative = Some(lower_derivative);
-        self.upper_derivative = Some(upper_derivative);
+        self.upper_derivative = Some(upperderivative);
         self
     }
 
@@ -216,7 +216,7 @@ impl<T: Float + std::fmt::Display> BoundaryParameters<T> {
                     Ok(BoundaryResult::DirectValue(lower_val + gradient_t * dx))
                 } else if let (Some(vals), Some(_points)) = (values, domain_points) {
                     // Find the value at the lower boundary
-                    let idx = self.find_nearest_point_index(self.lower_bound, points)?;
+                    let idx = self.find_nearest_point_index(self.lower_bound, _points)?;
                     let lower_val = vals[idx];
                     Ok(BoundaryResult::DirectValue(lower_val + gradient_t * dx))
                 } else {
@@ -269,7 +269,7 @@ impl<T: Float + std::fmt::Display> BoundaryParameters<T> {
 
                 if let (Some(vals), Some(_points)) = (values, domain_points) {
                     // Find the value at the mapped point
-                    let mapped_index = self.find_nearest_point_index(x_mapped_points)?;
+                    let mapped_index = self.find_nearest_point_index(x_mapped, _points)?;
                     let mapped_value = vals[mapped_index];
 
                     // Negate the value for antisymmetric reflection
@@ -333,7 +333,7 @@ impl<T: Float + std::fmt::Display> BoundaryParameters<T> {
                     Ok(BoundaryResult::DirectValue(upper_val + gradient_t * dx))
                 } else if let (Some(vals), Some(_points)) = (values, domain_points) {
                     // Find the value at the upper boundary
-                    let idx = self.find_nearest_point_index(self.upper_bound, points)?;
+                    let idx = self.find_nearest_point_index(self.upper_bound, _points)?;
                     let upper_val = vals[idx];
                     Ok(BoundaryResult::DirectValue(upper_val + gradient_t * dx))
                 } else {
@@ -386,7 +386,7 @@ impl<T: Float + std::fmt::Display> BoundaryParameters<T> {
 
                 if let (Some(vals), Some(_points)) = (values, domain_points) {
                     // Find the value at the mapped point
-                    let mapped_index = self.find_nearest_point_index(x_mapped_points)?;
+                    let mapped_index = self.find_nearest_point_index(x_mapped, _points)?;
                     let mapped_value = vals[mapped_index];
 
                     // Negate the value for antisymmetric reflection

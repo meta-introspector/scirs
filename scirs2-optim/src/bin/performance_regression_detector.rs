@@ -12,7 +12,6 @@ use scirs2_optim::benchmarking::performance_regression_detector::{
 use scirs2_optim::error::{OptimError, Result};
 use serde_json;
 use std::fs;
-use std::path::PathBuf;
 use std::process;
 
 #[allow(dead_code)]
@@ -104,7 +103,7 @@ fn main() {
     // Parse command line arguments
     let benchmark_results = matches.get_one::<String>("benchmark-results").unwrap();
     let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
-    let output_report = matches.get_one::<String>("output-report").unwrap();
+    let outputreport = matches.get_one::<String>("output-report").unwrap();
     let confidence_threshold: f64 = matches
         .get_one::<String>("confidence-threshold")
         .unwrap()
@@ -180,7 +179,7 @@ fn main() {
             generate_reports: true,
             report_format: scirs2,
             _optim: benchmarking::performance_regression_detector::ReportFormat::Json,
-            report_path: PathBuf::from(output_report),
+            report_path: PathBuf::from(outputreport),
             webhook_urls: vec![],
             slack_config: None,
             email_config: None,
@@ -191,7 +190,7 @@ fn main() {
         println!("🔍 Performance Regression Detection Configuration:");
         println!("  Benchmark Results: {benchmark_results}");
         println!("  Baseline Directory: {baseline_dir}");
-        println!("  Output Report: {output_report}");
+        println!("  Output Report: {outputreport}");
         println!("  Confidence Threshold: {confidence_threshold:.2}");
         println!(
             "  Degradation Threshold: {:.1}%",
@@ -208,7 +207,7 @@ fn main() {
     match run_regression_detection(
         benchmark_results,
         baseline_dir,
-        output_report,
+        outputreport,
         features,
         config,
         verbose,
@@ -236,7 +235,7 @@ fn main() {
 fn run_regression_detection(
     benchmark_results: &str,
     baseline_dir: &str,
-    output_report: &str,
+    outputreport: &str,
     features: &str,
     config: RegressionConfig,
     verbose: bool,
@@ -246,7 +245,7 @@ fn run_regression_detection(
     }
 
     // Load benchmark _results
-    let benchmark_data = load_benchmark_results(benchmark_results)?;
+    let benchmarkdata = load_benchmark_results(benchmark_results)?;
 
     if verbose {
         println!("📈 Initializing regression detector...");
@@ -256,13 +255,13 @@ fn run_regression_detection(
     let mut detector = PerformanceRegressionDetector::new(config)?;
 
     // Load baseline data
-    let baseline_path = PathBuf::from(baseline_dir).join(format!("baseline_{features}.json"));
-    if baseline_path.exists() {
+    let baselinepath = PathBuf::from(baseline_dir).join(format!("baseline_{features}.json"));
+    if baselinepath.exists() {
         if verbose {
-            println!("📋 Loading baseline data from: {}", baseline_path.display());
+            println!("📋 Loading baseline data from: {}", baselinepath.display());
         }
         // Load baseline from file (simplified implementation)
-        let _baseline_content = fs::read_to_string(&baseline_path)
+        let _baseline_content = fs::read_to_string(&baselinepath)
             .map_err(|e| OptimError::ResourceError(format!("Failed to read baseline: {e}")))?;
         // For now, we'll skip the baseline loading and use current data as baseline
     } else {
@@ -272,7 +271,7 @@ fn run_regression_detection(
     }
 
     // Convert benchmark data to measurements
-    let measurements = convert_benchmark_data_to_measurements(&benchmark_data, features)?;
+    let measurements = convert_benchmarkdata_to_measurements(&benchmarkdata, features)?;
 
     // Add measurements to detector
     for measurement in measurements {
@@ -290,20 +289,20 @@ fn run_regression_detection(
         println!("📝 Generating regression report...");
     }
 
-    // Generate CI/CD _report
-    let _report = detector.export_for_ci_cd()?;
+    // Generate CI/CD report
+    let report = detector.export_for_ci_cd()?;
 
-    // Save _report
-    let output_path = PathBuf::from(output_report);
-    let output_dir = output_path.parent().unwrap();
+    // Save report
+    let outputpath = PathBuf::from(outputreport);
+    let output_dir = outputpath.parent().unwrap();
     fs::create_dir_all(output_dir).map_err(|e| {
         OptimError::ResourceError(format!("Failed to create output directory: {e}"))
     })?;
 
-    let report_json = serde_json::to_string_pretty(&_report)
+    let report_json = serde_json::to_string_pretty(&report)
         .map_err(|e| OptimError::OptimizationError(format!("Failed to serialize report: {e}")))?;
 
-    fs::write(output_report, report_json)
+    fs::write(outputreport, report_json)
         .map_err(|e| OptimError::ResourceError(format!("Failed to write report: {e}")))?;
 
     // Check if regressions were detected
@@ -335,7 +334,7 @@ fn run_regression_detection(
             }
         );
         println!();
-        println!("📄 Report saved to: {output_report}");
+        println!("📄 Report saved to: {outputreport}");
     }
 
     Ok(has_regressions)
@@ -343,7 +342,7 @@ fn run_regression_detection(
 
 #[allow(dead_code)]
 fn load_benchmark_results(path: &str) -> Result<serde_json::Value> {
-    let content = fs::read_to_string(_path)
+    let content = fs::read_to_string(path)
         .map_err(|e| OptimError::ResourceError(format!("Failed to read benchmark results: {e}")))?;
 
     let data: serde_json::Value = serde_json::from_str(&content).map_err(|e| {
@@ -354,7 +353,7 @@ fn load_benchmark_results(path: &str) -> Result<serde_json::Value> {
 }
 
 #[allow(dead_code)]
-fn convert_benchmark_data_to_measurements(
+fn convert_benchmarkdata_to_measurements(
     data: &serde_json::Value,
     _features: &str,
 ) -> Result<Vec<PerformanceMeasurement>> {

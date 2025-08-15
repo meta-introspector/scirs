@@ -283,7 +283,7 @@ where
 #[allow(dead_code)]
 fn compute_k_constant<T: Float>(image: &ArrayView2<T>) -> f64 {
     // K should be larger than any possible sum of edge weights
-    let max_val = _image
+    let max_val = image
         .iter()
         .map(|&v| v.to_f64().unwrap_or(0.0))
         .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
@@ -369,7 +369,8 @@ fn get_neighbors(connectivity: u8) -> Vec<(i32, i32)> {
             (1, -1),
             (-1, 1),
             (-1, -1),
-        ]_ => vec![(0, 1), (1, 0), (0, -1), (-1, 0)], // Default to 4-_connectivity
+        ],
+        _ => vec![(0, 1), (1, 0), (0, -1), (-1, 0)], // Default to 4-_connectivity
     }
 }
 

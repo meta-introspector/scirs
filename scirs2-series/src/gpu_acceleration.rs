@@ -1117,7 +1117,8 @@ pub mod convolution {
     #[derive(Debug)]
     pub struct GpuConvolution<F: Float + Debug> {
         #[allow(dead_code)]
-        config: GpuConfig, phantom: std::marker::PhantomData<F>,
+        config: GpuConfig,
+        phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + Debug + Clone> GpuConvolution<F> {
@@ -1308,7 +1309,8 @@ pub mod blas {
     #[derive(Debug)]
     pub struct GpuBLAS<F: Float + Debug> {
         #[allow(dead_code)]
-        config: GpuConfig, phantom: std::marker::PhantomData<F>,
+        config: GpuConfig,
+        phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + Debug + Clone> GpuBLAS<F> {
@@ -1542,7 +1544,7 @@ pub mod blas {
         device_capabilities: GpuCapabilities,
     }
 
-    impl<F: Float + Debug + Clone + num_traits::Zero + num, _traits::One> TensorCoresBLAS<F> {
+    impl<F: Float + Debug + Clone + num_traits::Zero + num_traits::One> TensorCoresBLAS<F> {
         /// Create new tensor cores BLAS processor
         pub fn new(_config: GpuConfig, devicecapabilities: GpuCapabilities) -> Result<Self> {
             let base_blas = GpuBLAS::new(_config.clone());
@@ -1943,7 +1945,8 @@ pub mod algorithms {
             Ok(Self {
                 config,
                 device_manager,
-                stream_handles: Vec::new(), _phantom: std::marker::PhantomData,
+                stream_handles: Vec::new(),
+                _phantom: std::marker::PhantomData,
             })
         }
 
@@ -2010,7 +2013,8 @@ pub mod algorithms {
             &self,
             batch: &[Array1<F>],
             forecast_steps: usize,
-            method: &ForecastMethod_stream, id: usize,
+            method: &ForecastMethod_stream,
+            id: usize,
         ) -> Result<Vec<Array1<F>>> {
             // Advanced parallel processing using GPU-optimized algorithms
             match method {

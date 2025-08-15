@@ -598,8 +598,8 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
                         // Line 1: mp_k + t * perpendicular(n_k)
                         // Line 2: mp_l + s * perpendicular(n_l)
 
-                        let p_n_k = Array1::from_vec(vec![n_k[1], -n_k[0]]); // Perpendicular to n_k
-                        let p_n_l = Array1::from_vec(vec![n_l[1], -n_l[0]]); // Perpendicular to n_l
+                        let p_n_k = Array1::from_vec(vec![n_k_[1], -n_k_[0]]); // Perpendicular to n_k
+                        let p_n_l = Array1::from_vec(vec![n_l_[1], -n_l_[0]]); // Perpendicular to n_l
 
                         // Check if lines are parallel
                         let det = p_n_k[0] * p_n_l[1] - p_n_k[1] * p_n_l[0];
@@ -623,7 +623,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
                     for (edge_start, edge_end) in &domain_edges {
                         if let Ok(intersection) = line_segment_intersection(
                             mp_k,
-                            &Array1::from_vec(vec![mp_k[0] + n_k[1], mp_k[1] - n_k[0]]),
+                            &Array1::from_vec(vec![mp_k[0] + n_k_[1], mp_k[1] - n_k_[0]]),
                             edge_start,
                             edge_end,
                         ) {

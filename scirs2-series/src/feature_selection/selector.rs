@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use super::embedded::EmbeddedMethods;
 use super::filter::FilterMethods;
-use super::time__series::TimeSeriesMethods;
+use super::time_series::TimeSeriesMethods;
 use super::wrapper::WrapperMethods;
 use super::{FeatureSelectionConfig, FeatureSelectionResult};
 use crate::error::{Result, TimeSeriesError};

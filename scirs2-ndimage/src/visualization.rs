@@ -90,7 +90,7 @@ pub struct ReportConfig {
     /// Include detailed statistics
     pub include_statistics: bool,
     /// Include quality metrics
-    pub include_quality_metrics: bool,
+    pub include_qualitymetrics: bool,
     /// Include texture analysis
     pub includetexture_analysis: bool,
     /// Include histograms
@@ -114,7 +114,7 @@ impl Default for ReportConfig {
             title: "Image Analysis Report".to_string(),
             author: "SciRS2 Image Analysis".to_string(),
             include_statistics: true,
-            include_quality_metrics: true,
+            include_qualitymetrics: true,
             includetexture_analysis: true,
             include_histograms: true,
             include_profiles: true,
@@ -193,7 +193,7 @@ where
     // Create histogram bins
     let mut histogram = vec![0usize; config.num_bins];
     let range = max_val - min_val;
-    let bin_size = range / safe_usize_to_float(config.num_bins)?;
+    let bin_size = range / safe_usize_to_float::<T>(config.num_bins)?;
 
     for &value in data.iter() {
         let normalized = (value - min_val) / bin_size;
@@ -213,7 +213,7 @@ where
 
             for (i, &count) in histogram.iter().enumerate() {
                 let height_percent = (count as f64 / max_count as f64) * 100.0;
-                let bin_start = min_val + safe_usize_to_float(i)? * bin_size;
+                let bin_start = min_val + safe_usize_to_float::<T>(i)? * bin_size;
                 let bin_end = bin_start + bin_size;
 
                 writeln!(
@@ -240,8 +240,8 @@ where
 
             for (i, &count) in histogram.iter().enumerate() {
                 let bar_length = (count as f64 / max_count as f64 * 50.0) as usize;
-                let bin_center =
-                    min_val + (safe_usize_to_float(i)? + safe_f64to_float::<T>(0.5)?) * bin_size;
+                let bin_center = min_val
+                    + (safe_usize_to_float::<T>(i)? + safe_f64_to_float::<T>(0.5)?) * bin_size;
 
                 writeln!(
                     &mut plot,
@@ -263,8 +263,8 @@ where
 
             for (i, &count) in histogram.iter().enumerate() {
                 let bar_length = (count as f64 / max_count as f64 * 50.0) as usize;
-                let bin_center =
-                    min_val + (safe_usize_to_float(i)? + safe_f64to_float::<T>(0.5)?) * bin_size;
+                let bin_center = min_val
+                    + (safe_usize_to_float::<T>(i)? + safe_f64_to_float::<T>(0.5)?) * bin_size;
 
                 writeln!(
                     &mut plot,
@@ -325,12 +325,12 @@ where
             let x_range = x_max - x_min;
             let y_range = y_max - y_min;
 
-            if x_range > T::zero() && y_range >, T::zero() {
+            if x_range > T::zero() && y_range > T::zero() {
                 let mut path_data = String::new();
 
                 for (i, (&x, &y)) in x_data.iter().zip(y_data.iter()).enumerate() {
                     let px = ((x - x_min) / x_range * safe_usize_to_float(config.width - 100)?
-                        + safe_f64to_float::<T>(50.0)?)
+                        + safe_f64_to_float::<T>(50.0)?)
                     .to_f64()
                     .unwrap_or(0.0);
                     let py = (config.height as f64 - 50.0)
@@ -536,8 +536,8 @@ where
 #[allow(dead_code)]
 pub fn generate_report<T>(
     image: &ArrayView2<T>,
-    quality_metrics: Option<&ImageQualityMetrics<T>>,
-    texture_metrics: Option<&TextureMetrics<T>>,
+    qualitymetrics: Option<&ImageQualityMetrics<T>>,
+    texturemetrics: Option<&TextureMetrics<T>>,
     config: &ReportConfig,
 ) -> NdimageResult<String>
 where
@@ -592,24 +592,24 @@ where
 
     // Basic image information
     let (height, width) = image.dim();
-    add_image_info(&mut report, width, height, config.format)?;
+    addimage_info(&mut report, width, height, config.format)?;
 
     // Basic statistics
     if config.include_statistics {
         add_basic_statistics(&mut report, image, config.format)?;
     }
 
-    // Quality _metrics
-    if config.include_quality_metrics {
-        if let Some(_metrics) = quality_metrics {
-            add_quality_metrics(&mut report, metrics, config.format)?;
+    // Quality metrics
+    if config.include_qualitymetrics {
+        if let Some(metrics) = qualitymetrics {
+            add_qualitymetrics(&mut report, metrics, config.format)?;
         }
     }
 
     // Texture analysis
     if config.includetexture_analysis {
-        if let Some(_metrics) = texture_metrics {
-            addtexture_metrics(&mut report, metrics, config.format)?;
+        if let Some(metrics) = texturemetrics {
+            addtexturemetrics(&mut report, metrics, config.format)?;
         }
     }
 
@@ -622,7 +622,7 @@ where
 }
 
 #[allow(dead_code)]
-fn add_image_info(
+fn addimage_info(
     report: &mut String,
     width: usize,
     height: usize,
@@ -812,7 +812,7 @@ where
 }
 
 #[allow(dead_code)]
-fn add_quality_metrics<T>(
+fn add_qualitymetrics<T>(
     report: &mut String,
     metrics: &ImageQualityMetrics<T>,
     format: ReportFormat,
@@ -934,7 +934,7 @@ where
 }
 
 #[allow(dead_code)]
-fn addtexture_metrics<T>(
+fn addtexturemetrics<T>(
     report: &mut String,
     metrics: &TextureMetrics<T>,
     format: ReportFormat,
@@ -1260,7 +1260,8 @@ where
                         2..=3 => '.',
                         4..=5 => ':',
                         6..=7 => '+',
-                        8..=9 => '*'_ => '#',
+                        8..=9 => '*',
+                        _ => '#',
                     };
                     write!(&mut plot, "{}", char)?;
                 }
@@ -1318,7 +1319,7 @@ where
     let mut _levels = Vec::new();
     for i in 0..num_levels {
         let t = i as f64 / (num_levels - 1) as f64;
-        let level = min_val + (max_val - min_val) * safe_f64to_float::<T>(t)?;
+        let level = min_val + (max_val - min_val) * safe_f64_to_float::<T>(t)?;
         levels.push(level);
     }
 
@@ -1346,7 +1347,7 @@ where
                 for i in 0..height - 1 {
                     for j in 0..width - 1 {
                         let val = data[[i, j]];
-                        let threshold = (max_val - min_val) * safe_f64to_float::<T>(0.02)?; // 2% tolerance
+                        let threshold = (max_val - min_val) * safe_f64_to_float::<T>(0.02)?; // 2% tolerance
 
                         if (val - level).abs() < threshold {
                             let x = (j as f64 / width as f64) * config.width as f64;
@@ -1514,7 +1515,8 @@ where
                         5 => '+',
                         6 => '*',
                         7 => '#',
-                        8 => '@'_ => '█',
+                        8 => '@',
+                        _ => '█',
                     };
                     write!(&mut plot, "{}", char)?;
                 }
@@ -1542,7 +1544,7 @@ where
 
 /// Create an image montage/grid from multiple 2D arrays
 #[allow(dead_code)]
-pub fn create_image_montage<T>(
+pub fn createimage_montage<T>(
     images: &[ArrayView2<T>],
     grid_cols: usize,
     config: &PlotConfig,
@@ -1896,8 +1898,8 @@ pub mod export {
     /// Generate and save a comprehensive analysis report
     pub fn export_analysis_report<T>(
         image: &ArrayView2<T>,
-        quality_metrics: Option<&crate::analysis::ImageQualityMetrics<T>>,
-        texture_metrics: Option<&crate::analysis::TextureMetrics<T>>,
+        qualitymetrics: Option<&crate::analysis::ImageQualityMetrics<T>>,
+        texturemetrics: Option<&crate::analysis::TextureMetrics<T>>,
         output_path: &str,
         format: ReportFormat,
     ) -> NdimageResult<()>
@@ -1911,7 +1913,7 @@ pub mod export {
             ..ReportConfig::default()
         };
 
-        let report = generate_report(image, quality_metrics, texture_metrics, &config)?;
+        let report = generate_report(image, qualitymetrics, texturemetrics, &config)?;
 
         let export_config = ExportConfig {
             output_path: output_path.to_string(),

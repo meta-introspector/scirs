@@ -105,7 +105,7 @@ impl Profiler {
 
     /// Generate a performance report
     pub fn report(&self) -> PerformanceReport {
-        PerformanceReport::from_metrics(&self.metrics)
+        PerformanceReport::frommetrics(&self.metrics)
     }
 
     /// Track memory allocation
@@ -154,14 +154,14 @@ pub struct MemoryStats {
 }
 
 impl PerformanceReport {
-    fn from_metrics(metrics: &[OperationMetrics]) -> Self {
+    fn frommetrics(metrics: &[OperationMetrics]) -> Self {
         let total_time = metrics.iter().map(|m| m.duration).sum();
 
-        // Group _metrics by operation name
+        // Group metrics by operation name
         let mut op_groups: HashMap<String, Vec<&OperationMetrics>> = HashMap::new();
         let mut backend_usage: HashMap<String, usize> = HashMap::new();
 
-        for metric in _metrics {
+        for metric in metrics {
             op_groups
                 .entry(metric.name.clone())
                 .or_default()
@@ -213,7 +213,7 @@ impl PerformanceReport {
         // Compute memory statistics
         let total_allocated: usize = metrics.iter().map(|m| m.memory_allocated).sum();
         let total_deallocated: usize = metrics.iter().map(|m| m.memory_deallocated).sum();
-        let peak_usage = _metrics
+        let peak_usage = metrics
             .iter()
             .scan(0isize, |acc, m| {
                 *acc += m.memory_allocated as isize - m.memory_deallocated as isize;
@@ -601,7 +601,10 @@ impl BenchmarkComparison {
             .unwrap_or(0);
 
         let fastest = variants[fastest_idx]._name.clone();
-        let baseline = variants.first().map(|v| v._name.clone()).unwrap_or_default();
+        let baseline = variants
+            .first()
+            .map(|v| v._name.clone())
+            .unwrap_or_default();
 
         // Calculate speedups relative to baseline
         let baseline_time = variants[0].median.as_nanos() as f64;
@@ -910,7 +913,8 @@ impl OptimizationAdvisor {
         match max_difficulty {
             1 => ImplementationDifficulty::Easy,
             2 => ImplementationDifficulty::Moderate,
-            3 => ImplementationDifficulty::Hard_ => ImplementationDifficulty::Expert,
+            3 => ImplementationDifficulty::Hard,
+            _ => ImplementationDifficulty::Expert,
         }
     }
 }

@@ -1,7 +1,7 @@
 //! Example demonstrating streaming operations for large images
 
 use ndarray::{Array2, ArrayView2};
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     filters::fourier::{fourier_gaussian_file, fourier_uniform_file},
     stream_process_file, StreamConfig, StreamableOp, StreamingGaussianFilter,
 };
@@ -11,10 +11,10 @@ use std::path::Path;
 #[allow(dead_code)]
 fn main() {
     // Example 1: Process a large image file with streaming Gaussian filter
-    process_large_image_gaussian();
+    process_largeimage_gaussian();
 
     // Example 2: Process with Fourier domain filters
-    process_large_image_fourier();
+    process_largeimage_fourier();
 
     // Example 3: Custom streaming operation
     process_with_custom_op();
@@ -22,7 +22,7 @@ fn main() {
 
 /// Process a large image with streaming Gaussian filter
 #[allow(dead_code)]
-fn process_large_image_gaussian() {
+fn process_largeimage_gaussian() {
     println!("Processing large image with streaming Gaussian filter...");
 
     // Configure streaming with 256MB chunks
@@ -39,8 +39,8 @@ fn process_large_image_gaussian() {
 
     // Process a hypothetical large image file
     // In a real scenario, these would be actual file paths
-    let input_path = Path::new("large_image_10gb.raw");
-    let output_path = Path::new("large_image_filtered.raw");
+    let input_path = Path::new("largeimage_10gb.raw");
+    let output_path = Path::new("largeimage_filtered.raw");
     let shape = &[50000, 50000]; // 50k x 50k image
 
     // This would process the image in chunks without loading it all into memory
@@ -56,7 +56,7 @@ fn process_large_image_gaussian() {
 
 /// Process with Fourier domain filters
 #[allow(dead_code)]
-fn process_large_image_fourier() {
+fn process_largeimage_fourier() {
     println!("\nProcessing with Fourier domain filters...");
 
     let config = StreamConfig {
@@ -65,8 +65,8 @@ fn process_large_image_fourier() {
         ..Default::default()
     };
 
-    let input_path = Path::new("large_image.raw");
-    let output_path = Path::new("large_image_fourier_gaussian.raw");
+    let input_path = Path::new("largeimage.raw");
+    let output_path = Path::new("largeimage_fourier_gaussian.raw");
     let shape = &[30000, 30000];
     let sigma = &[10.0, 10.0];
 
@@ -130,7 +130,7 @@ fn process_with_custom_op() {
 mod tests {
     use super::*;
     use ndarray::arr2;
-    use scirs2__ndimage::StreamProcessor;
+    use scirs2_ndimage::StreamProcessor;
 
     #[test]
     fn test_streaming_small_array() {

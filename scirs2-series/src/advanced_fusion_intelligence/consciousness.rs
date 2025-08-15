@@ -378,42 +378,44 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousAttentionSystem<F> {
     /// Focus attention on specific input
     pub fn focus_attention(&mut self, input: &Array1<F>, focustarget: &[F]) -> Result<Array1<F>> {
         let mut attention_output = input.clone();
-        
+
         // Apply attention mechanisms
         for mechanism in &mut self.attention_mechanisms {
-            attention_output = mechanism.apply_attention(&attention_output, focus_target)?;
+            attention_output = mechanism.apply_attention(&attention_output, focustarget)?;
         }
-        
+
         // Modulate by focus strength
         attention_output.mapv_inplace(|x| x * self.focus_strength);
-        
+
         // Update awareness level based on attention coherence
         self.update_awareness_level(&attention_output)?;
-        
+
         Ok(attention_output)
     }
 
     /// Update awareness level based on attention coherence
     fn update_awareness_level(&mut self, attentionoutput: &Array1<F>) -> Result<()> {
-        if attention_output.is_empty() {
+        if attentionoutput.is_empty() {
             return Ok(());
         }
 
         // Calculate attention coherence
-        let mean = attention_output.iter().fold(F::zero(), |acc, &x| acc + x) 
-            / F::from_usize(attention_output.len()).unwrap();
-        
-        let variance = attention_output.iter()
+        let mean = attentionoutput.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from_usize(attentionoutput.len()).unwrap();
+
+        let variance = attentionoutput
+            .iter()
             .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
-            / F::from_usize(attention_output.len()).unwrap();
-        
+            / F::from_usize(attentionoutput.len()).unwrap();
+
         // Higher coherence (lower variance) increases awareness
         let coherence = F::from_f64(1.0).unwrap() / (F::from_f64(1.0).unwrap() + variance);
-        
+
         // Update awareness level with exponential moving average
         let alpha = F::from_f64(0.1).unwrap();
-        self.awareness_level = (F::from_f64(1.0).unwrap() - alpha) * self.awareness_level + alpha * coherence;
-        
+        self.awareness_level =
+            (F::from_f64(1.0).unwrap() - alpha) * self.awareness_level + alpha * coherence;
+
         Ok(())
     }
 
@@ -422,7 +424,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousAttentionSystem<F> {
         let mut metrics = HashMap::new();
         metrics.insert("focus_strength".to_string(), self.focus_strength);
         metrics.insert("awareness_level".to_string(), self.awareness_level);
-        metrics.insert("meta_awareness".to_string(), self.metacognitive_controller.meta_awareness);
+        metrics.insert(
+            "meta_awareness".to_string(),
+            self.metacognitive_controller.meta_awareness,
+        );
         metrics
     }
 }
@@ -431,7 +436,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
     /// Create new attention mechanism
     pub fn new(mechanismtype: AttentionType) -> Self {
         AttentionMechanism {
-            mechanism_type,
+            mechanism_type: mechanismtype,
             salience_map: vec![F::from_f64(1.0).unwrap(); 100], // Default salience map
             focus_window: FocusWindow::new(),
         }
@@ -440,25 +445,25 @@ impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
     /// Apply attention to input
     pub fn apply_attention(&mut self, input: &Array1<F>, focustarget: &[F]) -> Result<Array1<F>> {
         let mut output = input.clone();
-        
+
         match self.mechanism_type {
             AttentionType::BottomUp => {
                 self.apply_bottom_up_attention(&mut output)?;
             }
             AttentionType::TopDown => {
-                self.apply_top_down_attention(&mut output, focus_target)?;
+                self.apply_top_down_attention(&mut output, focustarget)?;
             }
             AttentionType::Executive => {
                 self.apply_executive_attention(&mut output)?;
             }
             AttentionType::Orienting => {
-                self.apply_orienting_attention(&mut output, focus_target)?;
+                self.apply_orienting_attention(&mut output, focustarget)?;
             }
             AttentionType::Alerting => {
                 self.apply_alerting_attention(&mut output)?;
             }
         }
-        
+
         Ok(output)
     }
 
@@ -473,14 +478,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
 
     /// Apply top-down attention based on goals
     fn apply_top_down_attention(&mut self, input: &mut Array1<F>, focustarget: &[F]) -> Result<()> {
-        if focus_target.is_empty() {
+        if focustarget.is_empty() {
             return Ok(());
         }
 
         // Apply goal-directed attention modulation
         for (i, value) in input.iter_mut().enumerate() {
-            let target_idx = i % focus_target.len();
-            let attention_weight = focus_target[target_idx].abs();
+            let target_idx = i % focustarget.len();
+            let attention_weight = focustarget[target_idx].abs();
             *value = *value * attention_weight;
         }
         Ok(())
@@ -490,7 +495,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
     fn apply_executive_attention(&mut self, input: &mut Array1<F>) -> Result<()> {
         // Apply executive control through selective enhancement
         let threshold = F::from_f64(0.5).unwrap();
-        
+
         for value in input.iter_mut() {
             if value.abs() > threshold {
                 *value = *value * F::from_f64(1.2).unwrap(); // Enhance above-threshold values
@@ -502,15 +507,19 @@ impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
     }
 
     /// Apply orienting attention for spatial focus
-    fn apply_orienting_attention(&mut self, input: &mut Array1<F>, focustarget: &[F]) -> Result<()> {
-        if focus_target.is_empty() || input.is_empty() {
+    fn apply_orienting_attention(
+        &mut self,
+        input: &mut Array1<F>,
+        focustarget: &[F],
+    ) -> Result<()> {
+        if focustarget.is_empty() || input.is_empty() {
             return Ok(());
         }
 
         // Create spatial attention map based on focus window
-        let center_idx = focus_target.len() / 2;
+        let center_idx = focustarget.len() / 2;
         let radius = self.focus_window.radius.to_usize().unwrap_or(10);
-        
+
         for (i, value) in input.iter_mut().enumerate() {
             let distance = (i as i32 - center_idx as i32).abs() as usize;
             let attention_weight = if distance <= radius {
@@ -567,23 +576,28 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetacognitiveController<F> {
     }
 
     /// Monitor and control cognitive processes
-    pub fn monitor_and_control(&mut self, cognitivestate: &HashMap<String, F>) -> Result<Vec<String>> {
+    pub fn monitor_and_control(
+        &mut self,
+        cognitivestate: &HashMap<String, F>,
+    ) -> Result<Vec<String>> {
         // Monitor current performance
-        let monitoring_results = self.monitoring_system.monitor_performance(cognitive_state)?;
-        
+        let monitoring_results = self
+            .monitoring_system
+            .monitor_performance(cognitive_state)?;
+
         // Select appropriate control strategies
         let mut applied_strategies = Vec::new();
-        
+
         for strategy in &mut self.control_strategies {
             if strategy.should_activate(&monitoring_results)? {
                 let strategy_result = strategy.apply_control(cognitive_state)?;
                 applied_strategies.push(strategy_result);
             }
         }
-        
+
         // Update meta-awareness based on monitoring results
         self.update_meta_awareness(&monitoring_results)?;
-        
+
         Ok(applied_strategies)
     }
 
@@ -591,7 +605,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetacognitiveController<F> {
     fn update_meta_awareness(&mut self, monitoringresults: &HashMap<String, F>) -> Result<()> {
         if let Some(&performance_score) = monitoring_results.get("overall_performance") {
             let alpha = F::from_f64(0.1).unwrap();
-            self.meta_awareness = (F::from_f64(1.0).unwrap() - alpha) * self.meta_awareness + alpha * performance_score;
+            self.meta_awareness = (F::from_f64(1.0).unwrap() - alpha) * self.meta_awareness
+                + alpha * performance_score;
         }
         Ok(())
     }
@@ -612,28 +627,33 @@ impl<F: Float + Debug + Clone + FromPrimitive> MonitoringSystem<F> {
     }
 
     /// Monitor performance across various metrics
-    pub fn monitor_performance(&mut self, cognitivestate: &HashMap<String, F>) -> Result<HashMap<String, F>> {
+    pub fn monitor_performance(
+        &mut self,
+        cognitivestate: &HashMap<String, F>,
+    ) -> Result<HashMap<String, F>> {
         let mut results = HashMap::new();
-        
+
         // Update and collect performance metrics
         for monitor in &mut self.performance_monitors {
             let metric_value = monitor.update_and_assess(cognitive_state)?;
             results.insert(format!("{:?}", monitor.metric_type), metric_value);
         }
-        
+
         // Detect errors
         let error_results = self.error_detection.detect_errors(cognitive_state)?;
         results.extend(error_results);
-        
+
         // Assess confidence
-        let confidence_results = self.confidence_assessment.assess_confidence(cognitive_state)?;
+        let confidence_results = self
+            .confidence_assessment
+            .assess_confidence(cognitive_state)?;
         results.extend(confidence_results);
-        
+
         // Calculate overall performance
-        let overall_performance = results.values()
-            .fold(F::zero(), |acc, &x| acc + x) / F::from_usize(results.len()).unwrap();
+        let overall_performance = results.values().fold(F::zero(), |acc, &x| acc + x)
+            / F::from_usize(results.len()).unwrap();
         results.insert("overall_performance".to_string(), overall_performance);
-        
+
         Ok(results)
     }
 }
@@ -656,11 +676,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> PerformanceMonitor<F> {
         if let Some(&state_value) = cognitive_state.get(&metric_key) {
             self.current_value = state_value;
         }
-        
+
         // Assess performance relative to target
         let performance_ratio = self.current_value / self.target_value;
         let performance_score = performance_ratio.min(F::from_f64(1.0).unwrap());
-        
+
         Ok(performance_score)
     }
 }
@@ -682,14 +702,20 @@ impl<F: Float + Debug + Clone + FromPrimitive> ErrorDetectionSystem<F> {
     }
 
     /// Detect errors in cognitive state
-    pub fn detect_errors(&mut self, cognitivestate: &HashMap<String, F>) -> Result<HashMap<String, F>> {
+    pub fn detect_errors(
+        &mut self,
+        cognitivestate: &HashMap<String, F>,
+    ) -> Result<HashMap<String, F>> {
         let mut error_results = HashMap::new();
-        
+
         for detector in &self.error_detectors {
             let error_detected = detector.detect_error(cognitive_state)?;
-            error_results.insert(format!("{:?}_error", detector.detector_type), error_detected);
+            error_results.insert(
+                format!("{:?}_error", detector.detector_type),
+                error_detected,
+            );
         }
-        
+
         Ok(error_results)
     }
 }
@@ -708,26 +734,30 @@ impl<F: Float + Debug + Clone + FromPrimitive> ErrorDetector<F> {
     pub fn detect_error(&self, cognitivestate: &HashMap<String, F>) -> Result<F> {
         // Simplified error detection based on threshold
         let error_indicator = match self.detector_type {
-            ErrorType::ProcessingError => {
-                cognitive_state.get("processing_quality").copied().unwrap_or(F::from_f64(1.0).unwrap())
-            }
-            ErrorType::MemoryError => {
-                cognitive_state.get("memory_coherence").copied().unwrap_or(F::from_f64(1.0).unwrap())
-            }
-            ErrorType::AttentionError => {
-                cognitive_state.get("attention_stability").copied().unwrap_or(F::from_f64(1.0).unwrap())
-            }
-            ErrorType::ConsciousnessError => {
-                cognitive_state.get("consciousness_level").copied().unwrap_or(F::from_f64(1.0).unwrap())
-            }
+            ErrorType::ProcessingError => cognitive_state
+                .get("processing_quality")
+                .copied()
+                .unwrap_or(F::from_f64(1.0).unwrap()),
+            ErrorType::MemoryError => cognitive_state
+                .get("memory_coherence")
+                .copied()
+                .unwrap_or(F::from_f64(1.0).unwrap()),
+            ErrorType::AttentionError => cognitive_state
+                .get("attention_stability")
+                .copied()
+                .unwrap_or(F::from_f64(1.0).unwrap()),
+            ErrorType::ConsciousnessError => cognitive_state
+                .get("consciousness_level")
+                .copied()
+                .unwrap_or(F::from_f64(1.0).unwrap()),
         };
-        
+
         let error_level = if error_indicator < self.detection_threshold {
             (self.detection_threshold - error_indicator) * self.sensitivity
         } else {
             F::zero()
         };
-        
+
         Ok(error_level)
     }
 }
@@ -756,19 +786,24 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConfidenceAssessment<F> {
     }
 
     /// Assess confidence in cognitive state
-    pub fn assess_confidence(&mut self, cognitivestate: &HashMap<String, F>) -> Result<HashMap<String, F>> {
+    pub fn assess_confidence(
+        &mut self,
+        cognitivestate: &HashMap<String, F>,
+    ) -> Result<HashMap<String, F>> {
         let mut confidence_results = HashMap::new();
-        
+
         // Update confidence metrics
         for metric in &mut self.confidence_metrics {
             let confidence_value = metric.update_confidence(cognitive_state)?;
             confidence_results.insert(metric.metric_name.clone(), confidence_value);
         }
-        
+
         // Update uncertainty estimation
-        let uncertainty_results = self.uncertainty_estimation.estimate_uncertainty(cognitive_state)?;
+        let uncertainty_results = self
+            .uncertainty_estimation
+            .estimate_uncertainty(cognitive_state)?;
         confidence_results.extend(uncertainty_results);
-        
+
         Ok(confidence_results)
     }
 }
@@ -788,10 +823,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConfidenceMetric<F> {
         // Update confidence based on relevant state variables
         if let Some(&state_value) = cognitive_state.get(&self.metric_name) {
             let alpha = F::from_f64(0.1).unwrap();
-            self.confidence_value = (F::from_f64(1.0).unwrap() - alpha) * self.confidence_value 
-                + alpha * state_value;
+            self.confidence_value =
+                (F::from_f64(1.0).unwrap() - alpha) * self.confidence_value + alpha * state_value;
         }
-        
+
         Ok(self.confidence_value * self.reliability_score)
     }
 }
@@ -807,15 +842,24 @@ impl<F: Float + Debug + Clone + FromPrimitive> UncertaintyEstimation<F> {
     }
 
     /// Estimate uncertainty in cognitive state
-    pub fn estimate_uncertainty(&mut self, _cognitivestate: &HashMap<String, F>) -> Result<HashMap<String, F>> {
+    pub fn estimate_uncertainty(
+        &mut self,
+        _cognitivestate: &HashMap<String, F>,
+    ) -> Result<HashMap<String, F>> {
         // Update total uncertainty
         self.total_uncertainty = self.epistemic_uncertainty + self.aleatoric_uncertainty;
-        
+
         let mut results = HashMap::new();
-        results.insert("epistemic_uncertainty".to_string(), self.epistemic_uncertainty);
-        results.insert("aleatoric_uncertainty".to_string(), self.aleatoric_uncertainty);
+        results.insert(
+            "epistemic_uncertainty".to_string(),
+            self.epistemic_uncertainty,
+        );
+        results.insert(
+            "aleatoric_uncertainty".to_string(),
+            self.aleatoric_uncertainty,
+        );
         results.insert("total_uncertainty".to_string(), self.total_uncertainty);
-        
+
         Ok(results)
     }
 }
@@ -833,14 +877,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> ControlStrategy<F> {
     /// Check if strategy should be activated
     pub fn should_activate(&self, monitoringresults: &HashMap<String, F>) -> Result<bool> {
         let activation_threshold = F::from_f64(0.6).unwrap();
-        
+
         let relevant_metric = match self.strategy_type {
             StrategyType::ResourceAllocation => "efficiency",
             StrategyType::AttentionControl => "attention_stability",
             StrategyType::LearningAdjustment => "accuracy",
             StrategyType::ConsciousnessModulation => "consciousness_level",
         };
-        
+
         if let Some(&metric_value) = monitoring_results.get(relevant_metric) {
             Ok(metric_value < activation_threshold)
         } else {
@@ -856,7 +900,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ControlStrategy<F> {
             StrategyType::LearningAdjustment => "Modified learning rates",
             StrategyType::ConsciousnessModulation => "Modulated consciousness level",
         };
-        
+
         Ok(strategy_description.to_string())
     }
 }
@@ -877,29 +921,36 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousnessSimulator<F> {
     pub fn simulate_consciousness(&mut self, input: &Array1<F>) -> Result<ConsciousnessState<F>> {
         // Process through attention system
         let attended_input = self.attention_system.focus_attention(input, &[])?;
-        
+
         // Update working memory
         self.working_memory.update_memory(&attended_input)?;
-        
+
         // Update global workspace
-        self.global_workspace.integrate_information(&attended_input)?;
-        
+        self.global_workspace
+            .integrate_information(&attended_input)?;
+
         // Update self-awareness
         self.self_awareness.update_awareness(&attended_input)?;
-        
+
         // Calculate overall consciousness level
         self.update_consciousness_level()?;
-        
+
         // Create consciousness state
         let state = ConsciousnessState {
             consciousness_level: self.consciousness_level,
             attention_strength: self.attention_system.focus_strength,
-            memory_load: F::from_usize(self.working_memory.memory_buffers.len()).unwrap() 
+            memory_load: F::from_usize(self.working_memory.memory_buffers.len()).unwrap()
                 / F::from_usize(self.working_memory.capacity).unwrap(),
-            self_awareness: self.self_awareness.meta_consciousness.consciousness_of_consciousness,
-            metacognitive_control: self.attention_system.metacognitive_controller.meta_awareness,
+            self_awareness: self
+                .self_awareness
+                .meta_consciousness
+                .consciousness_of_consciousness,
+            metacognitive_control: self
+                .attention_system
+                .metacognitive_controller
+                .meta_awareness,
         };
-        
+
         Ok(state)
     }
 
@@ -909,15 +960,21 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousnessSimulator<F> {
         let memory_weight = F::from_f64(0.2).unwrap();
         let workspace_weight = F::from_f64(0.3).unwrap();
         let awareness_weight = F::from_f64(0.2).unwrap();
-        
+
         let attention_contribution = self.attention_system.awareness_level * attention_weight;
         let memory_contribution = F::from_f64(0.8).unwrap() * memory_weight; // Placeholder
         let workspace_contribution = self.global_workspace.consciousness_level * workspace_weight;
-        let awareness_contribution = self.self_awareness.meta_consciousness.consciousness_of_consciousness * awareness_weight;
-        
-        self.consciousness_level = attention_contribution + memory_contribution 
-            + workspace_contribution + awareness_contribution;
-        
+        let awareness_contribution = self
+            .self_awareness
+            .meta_consciousness
+            .consciousness_of_consciousness
+            * awareness_weight;
+
+        self.consciousness_level = attention_contribution
+            + memory_contribution
+            + workspace_contribution
+            + awareness_contribution;
+
         Ok(())
     }
 }
@@ -946,20 +1003,24 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousWorkingMemory<F> {
             self.memory_buffers.push(new_buffer);
         } else {
             // Replace least active buffer
-            if let Some(min_buffer) = self.memory_buffers.iter_mut()
-                .min_by(|a, b| a.activation_level.partial_cmp(&b.activation_level).unwrap()) {
+            if let Some(min_buffer) = self
+                .memory_buffers
+                .iter_mut()
+                .min_by(|a, b| a.activation_level.partial_cmp(&b.activation_level).unwrap())
+            {
                 min_buffer.content = input.to_vec();
                 min_buffer.activation_level = F::from_f64(1.0).unwrap();
                 min_buffer.age = F::zero();
             }
         }
-        
+
         // Apply decay to all buffers
         for buffer in &mut self.memory_buffers {
-            buffer.activation_level = buffer.activation_level * (F::from_f64(1.0).unwrap() - self.decay_rate);
+            buffer.activation_level =
+                buffer.activation_level * (F::from_f64(1.0).unwrap() - self.decay_rate);
             buffer.age = buffer.age + F::from_f64(1.0).unwrap();
         }
-        
+
         Ok(())
     }
 }
@@ -984,14 +1045,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> GlobalWorkspace<F> {
             consciousness_access: true,
             source_module: "input".to_string(),
         };
-        
+
         self.workspace_memory.push(workspace_item);
-        
+
         // Update consciousness level based on integration
         let integration_factor = F::from_f64(0.1).unwrap();
         self.consciousness_level = self.consciousness_level + integration_factor;
         self.consciousness_level = self.consciousness_level.min(F::from_f64(1.0).unwrap());
-        
+
         Ok(())
     }
 }
@@ -1013,15 +1074,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> SelfAwarenessModule<F> {
     pub fn update_awareness(&mut self, input: &Array1<F>) -> Result<()> {
         // Update self-model
         self.self_model.update_self_representation()?;
-        
+
         // Apply introspection mechanisms
         for mechanism in &mut self.introspection_mechanisms {
             mechanism.apply_introspection()?;
         }
-        
+
         // Update meta-consciousness
         self.meta_consciousness.update_recursive_awareness()?;
-        
+
         Ok(())
     }
 }
@@ -1041,7 +1102,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> SelfModel<F> {
     pub fn update_self_representation(&mut self) -> Result<()> {
         // Simple self-representation update
         for repr in &mut self.self_representation {
-            let update = F::from_f64(0.01).unwrap() * (F::from_f64(rand::random::<f64>()).unwrap() - F::from_f64(0.5).unwrap());
+            let update = F::from_f64(0.01).unwrap()
+                * (F::from_f64(rand::random::<f64>()).unwrap() - F::from_f64(0.5).unwrap());
             *repr = *repr + update;
         }
         Ok(())
@@ -1092,9 +1154,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaConsciousness<F> {
     pub fn update_recursive_awareness(&mut self) -> Result<()> {
         // Update consciousness of consciousness
         let awareness_increment = F::from_f64(0.01).unwrap();
-        self.consciousness_of_consciousness = (self.consciousness_of_consciousness + awareness_increment)
+        self.consciousness_of_consciousness = (self.consciousness_of_consciousness
+            + awareness_increment)
             .min(F::from_f64(1.0).unwrap());
-        
+
         Ok(())
     }
 }

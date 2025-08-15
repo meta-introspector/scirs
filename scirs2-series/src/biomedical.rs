@@ -7,8 +7,8 @@
 use crate::error::{Result, TimeSeriesError};
 use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::validation::check_positive;
-use std::collections::HashMap;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 /// Heart rate variability analysis methods
 #[derive(Debug, Clone)]
@@ -447,7 +447,9 @@ impl EEGAnalysis {
     /// Calculate band power for a frequency range
     fn calculate_band_power(
         &self,
-        signal: &ArrayView1<f64>, _low_freq: f64, _high_freq: f64,
+        signal: &ArrayView1<f64>,
+        _low_freq: f64,
+        _high_freq: f64,
     ) -> Result<f64> {
         // Simplified power calculation using variance as proxy
         // In real implementation, would use FFT and integrate power spectrum

@@ -155,13 +155,13 @@ where
 
     /// Make predictions at new points
     pub fn predict(&self, xtest: &ArrayView2<F>) -> InterpolateResult<(Array1<F>, Array1<F>)> {
-        let n_test = x_test.nrows();
+        let n_test = xtest.nrows();
 
         // Compute kernel matrices
         let k_uu =
             self.compute_kernel_matrix(&self.inducing_points.view(), &self.inducing_points.view())?;
-        let k_su = self.compute_kernel_matrix(x_test, &self.inducing_points.view())?;
-        let k_ss_diag = self.compute_kernel_diagonal(x_test)?;
+        let k_su = self.compute_kernel_matrix(xtest, &self.inducing_points.view())?;
+        let k_ss_diag = self.compute_kernel_diagonal(xtest)?;
 
         // Add jitter
         let mut k_uu_jitter = k_uu.clone();
@@ -206,8 +206,8 @@ where
 
         for i in 0..n1 {
             for j in 0..n2 {
-                let dist_sq = self.squared_distance(&x1.row(i), &x2.row(j))?;
-                k[[i, j]] = self.kernel_function(dist_sq);
+                let distsq = self.squared_distance(&x1.row(i), &x2.row(j))?;
+                k[[i, j]] = self.kernel_function(distsq);
             }
         }
 
@@ -234,39 +234,39 @@ where
             ));
         }
 
-        let mut dist_sq = F::zero();
+        let mut distsq = F::zero();
         for i in 0..x1.len() {
             let diff = x1[i] - x2[i];
             let scaled_diff = diff / self.kernel_params.length_scales[i];
-            dist_sq += scaled_diff * scaled_diff;
+            distsq += scaled_diff * scaled_diff;
         }
 
-        Ok(dist_sq)
+        Ok(distsq)
     }
 
     /// Evaluate kernel function
     fn kernel_function(&self, distsq: F) -> F {
         match self.kernel_params.kernel_type {
             KernelType::RBF => {
-                self.kernel_params.signal_variance * (-F::from_f64(0.5).unwrap() * dist_sq).exp()
+                self.kernel_params.signal_variance * (-F::from_f64(0.5).unwrap() * distsq).exp()
             }
             KernelType::Matern32 => {
-                let dist = dist_sq.sqrt();
+                let dist = distsq.sqrt();
                 let sqrt3 = F::from_f64(3.0_f64.sqrt()).unwrap();
                 let term = sqrt3 * dist;
                 self.kernel_params.signal_variance * (F::one() + term) * (-term).exp()
             }
             KernelType::Matern52 => {
-                let dist = dist_sq.sqrt();
+                let dist = distsq.sqrt();
                 let sqrt5 = F::from_f64(5.0_f64.sqrt()).unwrap();
                 let term = sqrt5 * dist;
-                let term2 = F::from_f64(5.0).unwrap() * dist_sq / F::from_f64(3.0).unwrap();
+                let term2 = F::from_f64(5.0).unwrap() * distsq / F::from_f64(3.0).unwrap();
                 self.kernel_params.signal_variance * (F::one() + term + term2) * (-term).exp()
             }
             KernelType::RationalQuadratic => {
                 let alpha = F::from_f64(1.0).unwrap(); // Scale mixture parameter
                 self.kernel_params.signal_variance
-                    * (F::one() + dist_sq / (F::from_f64(2.0).unwrap() * alpha)).powf(-alpha)
+                    * (F::one() + distsq / (F::from_f64(2.0).unwrap() * alpha)).powf(-alpha)
             }
         }
     }
@@ -472,14 +472,14 @@ where
         // Create knot vector (simplified)
         let x_min = x.fold(F::infinity(), |a, &b| a.min(b));
         let x_max = x.fold(F::neg_infinity(), |a, &b| a.max(b));
-        let mut _knots = Array1::zeros(n_knots);
+        let mut knots = Array1::zeros(n_knots);
         for i in 0..n_knots {
             let t = F::from_usize(i).unwrap() / F::from_usize(n_knots - 1).unwrap();
             knots[i] = x_min + t * (x_max - x_min);
         }
 
         // Build design matrix (B-spline basis - simplified)
-        let design_matrix = Self::build_bspline_matrix(x, &_knots)?;
+        let design_matrix = Self::build_bspline_matrix(x, &knots)?;
 
         // Add smoothing penalty matrix
         let penalty_matrix = Self::build_penalty_matrix(n_knots)?;
@@ -574,10 +574,10 @@ where
 
     /// Build penalty matrix for smoothing
     fn build_penalty_matrix(_nknots: usize) -> InterpolateResult<Array2<F>> {
-        let mut penalty = Array2::zeros((_n_knots, n_knots));
+        let mut penalty = Array2::zeros((_nknots, _nknots));
 
         // Second-order difference penalty (simplified)
-        for i in 2.._n_knots {
+        for i in 2.._nknots {
             penalty[[i - 2, i - 2]] += F::one();
             penalty[[i - 2, i - 1]] -= F::from_f64(2.0).unwrap();
             penalty[[i - 2, i]] += F::one();
@@ -785,7 +785,7 @@ where
         let x_boot = Array1::from_iter(indices.iter().map(|&i| x[i]));
         let y_boot = Array1::from_iter(indices.iter().map(|&i| y[i]));
 
-        Ok((x_boot..y_boot))
+        Ok((x_boot, y_boot))
     }
 
     /// Block bootstrap for time series data
@@ -820,7 +820,7 @@ where
         x_boot.truncate(n);
         y_boot.truncate(n);
 
-        Ok((Array1::from(x_boot)..Array1::from(y_boot)))
+        Ok((Array1::from(x_boot), Array1::from(y_boot)))
     }
 
     /// Residual bootstrap for regression models
@@ -851,7 +851,7 @@ where
         // Create new bootstrap sample
         let y_boot = y_fitted + resampled_residuals;
 
-        Ok((x.to_owned()..y_boot))
+        Ok((x.to_owned(), y_boot))
     }
 
     /// Wild bootstrap for heteroskedastic errors
@@ -920,8 +920,8 @@ mod tests {
         assert!(result.is_ok());
 
         // Make predictions
-        let x_test = Array2::from_shape_vec((3, 1), vec![0.5, 1.5, 2.5]).unwrap();
-        let (mean, variance) = sparse_gp.predict(&x_test.view()).unwrap();
+        let xtest = Array2::from_shape_vec((3, 1), vec![0.5, 1.5, 2.5]).unwrap();
+        let (mean, variance) = sparse_gp.predict(&xtest.view()).unwrap();
 
         // Check that predictions are reasonable
         assert_eq!(mean.len(), 3);
@@ -1172,7 +1172,7 @@ where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
 {
     /// Create a new BCa bootstrap
-    pub fn new(_n_bootstrap: usize, confidencelevel: F, seed: Option<u64>) -> Self {
+    pub fn new(n_bootstrap: usize, confidence_level: F, seed: Option<u64>) -> Self {
         Self {
             n_bootstrap,
             confidence_level,

@@ -13,6 +13,7 @@ use crate::gpu::GpuBackend as LocalGpuBackend;
 // #[cfg(feature = "parallel")]
 // use scirs2_core::parallel_ops::*;
 use rand::seq::SliceRandom;
+use rand::thread_rng;
 use std::f64::consts::PI;
 
 /// Generate a random classification dataset with clusters
@@ -24,7 +25,7 @@ pub fn make_classification(
     n_classes: usize,
     n_clusters_per_class: usize,
     n_informative: usize,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     // Validate input parameters
     if n_samples == 0 {
@@ -63,10 +64,10 @@ pub fn make_classification(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -158,7 +159,7 @@ pub fn make_regression(
     n_features: usize,
     n_informative: usize,
     noise: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     // Validate input parameters
     if n_samples == 0 {
@@ -191,10 +192,10 @@ pub fn make_regression(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -258,7 +259,7 @@ pub fn make_time_series(
     trend: bool,
     seasonality: bool,
     noise: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     // Validate input parameters
     if n_samples == 0 {
@@ -279,10 +280,10 @@ pub fn make_time_series(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -326,7 +327,7 @@ pub fn make_time_series(
                 value += normal.sample(&mut rng) * noise;
             }
 
-            data[[i..feature]] = value;
+            data[[i, feature]] = value;
         }
     }
 
@@ -359,7 +360,7 @@ pub fn make_blobs(
     n_features: usize,
     centers: usize,
     cluster_std: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     // Validate input parameters
     if n_samples == 0 {
@@ -386,10 +387,10 @@ pub fn make_blobs(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -456,7 +457,7 @@ pub fn make_spirals(
     n_samples: usize,
     n_spirals: usize,
     noise: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     // Validate input parameters
     if n_samples == 0 {
@@ -477,10 +478,10 @@ pub fn make_spirals(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -540,11 +541,11 @@ pub fn make_spirals(
 
 /// Generate a moons dataset for non-linear classification
 #[allow(dead_code)]
-pub fn make_moons(_n_samples: usize, noise: f64, randomseed: Option<u64>) -> Result<Dataset> {
+pub fn make_moons(n_samples: usize, noise: f64, randomseed: Option<u64>) -> Result<Dataset> {
     // Validate input parameters
-    if _n_samples == 0 {
+    if n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
-            "_n_samples must be > 0".to_string(),
+            "n_samples must be > 0".to_string(),
         ));
     }
 
@@ -554,10 +555,10 @@ pub fn make_moons(_n_samples: usize, noise: f64, randomseed: Option<u64>) -> Res
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -630,7 +631,7 @@ pub fn make_circles(
     n_samples: usize,
     factor: f64,
     noise: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     // Validate input parameters
     if n_samples == 0 {
@@ -651,10 +652,10 @@ pub fn make_circles(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -724,11 +725,11 @@ pub fn make_circles(
 
 /// Generate a Swiss roll dataset for dimensionality reduction
 #[allow(dead_code)]
-pub fn make_swiss_roll(_n_samples: usize, noise: f64, randomseed: Option<u64>) -> Result<Dataset> {
+pub fn make_swiss_roll(n_samples: usize, noise: f64, randomseed: Option<u64>) -> Result<Dataset> {
     // Validate input parameters
-    if _n_samples == 0 {
+    if n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
-            "_n_samples must be > 0".to_string(),
+            "n_samples must be > 0".to_string(),
         ));
     }
 
@@ -738,10 +739,10 @@ pub fn make_swiss_roll(_n_samples: usize, noise: f64, randomseed: Option<u64>) -
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -799,7 +800,7 @@ pub fn make_anisotropic_blobs(
     centers: usize,
     cluster_std: f64,
     anisotropy_factor: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     // Validate input parameters
     if n_samples == 0 {
@@ -832,10 +833,10 @@ pub fn make_anisotropic_blobs(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -931,7 +932,7 @@ pub fn make_hierarchical_clusters(
     n_sub_clusters: usize,
     main_cluster_std: f64,
     sub_cluster_std: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     // Validate input parameters
     if n_samples == 0 {
@@ -970,10 +971,10 @@ pub fn make_hierarchical_clusters(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1086,7 +1087,7 @@ pub fn inject_missing_data(
     data: &mut Array2<f64>,
     missing_rate: f64,
     pattern: MissingPattern,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Array2<bool>> {
     // Validate input parameters
     if !(0.0..=1.0).contains(&missing_rate) {
@@ -1095,10 +1096,10 @@ pub fn inject_missing_data(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1112,7 +1113,7 @@ pub fn inject_missing_data(
             for i in 0..n_samples {
                 for j in 0..n_features {
                     if rng.gen_range(0.0f64..1.0) < missing_rate {
-                        missing_mask[[i..j]] = true;
+                        missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
                 }
@@ -1128,7 +1129,7 @@ pub fn inject_missing_data(
                 for j in 1..n_features {
                     // Skip first feature
                     if rng.gen_range(0.0f64..1.0) < adjusted_rate {
-                        missing_mask[[i..j]] = true;
+                        missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
                 }
@@ -1143,7 +1144,7 @@ pub fn inject_missing_data(
                     let adjusted_rate = missing_rate * normalized_val.clamp(0.1, 3.0);
 
                     if rng.gen_range(0.0f64..1.0) < adjusted_rate {
-                        missing_mask[[i..j]] = true;
+                        missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
                 }
@@ -1160,7 +1161,7 @@ pub fn inject_missing_data(
 
                 for i in start_row..n_samples.min(start_row + block_size) {
                     for j in start_col..n_features.min(start_col + block_size) {
-                        missing_mask[[i..j]] = true;
+                        missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
                 }
@@ -1178,7 +1179,7 @@ pub fn inject_outliers(
     outlier_rate: f64,
     outlier_type: OutlierType,
     outlier_strength: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Array1<bool>> {
     // Validate input parameters
     if !(0.0..=1.0).contains(&outlier_rate) {
@@ -1193,10 +1194,10 @@ pub fn inject_outliers(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1238,7 +1239,7 @@ pub fn inject_outliers(
                     } else {
                         1.0
                     };
-                    data[[outlier_idx..j]] =
+                    data[[outlier_idx, j]] =
                         feature_means[j] + direction * outlier_strength * feature_stds[j];
                 }
             }
@@ -1261,7 +1262,7 @@ pub fn inject_outliers(
                     } else {
                         1.0
                     };
-                    data[[outlier_idx..j]] =
+                    data[[outlier_idx, j]] =
                         feature_means[j] + direction * outlier_strength * feature_stds[j];
                 }
             }
@@ -1291,7 +1292,7 @@ pub fn inject_outliers(
 
                     for j in 0..n_features {
                         let noise = rng.gen_range(-0.5f64..0.5f64) * feature_stds[j];
-                        data[[outlier_idx..j]] = outlier_center[j] + noise;
+                        data[[outlier_idx, j]] = outlier_center[j] + noise;
                     }
                 }
             }
@@ -1306,12 +1307,12 @@ pub fn inject_outliers(
 pub fn add_time_series_noise(
     data: &mut Array2<f64>,
     noise_types: &[(&str, f64)], // (noise_type, strength)
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<()> {
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1342,7 +1343,7 @@ pub fn add_time_series_noise(
                         1.0
                     };
 
-                    data[[spike_idx..feature_idx]] += direction * spike_magnitude;
+                    data[[spike_idx, feature_idx]] += direction * spike_magnitude;
                 }
             }
             "drift" => {
@@ -1405,7 +1406,7 @@ pub fn make_corrupted_dataset(
     outlier_rate: f64,
     outlier_type: OutlierType,
     outlier_strength: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     // Validate inputs
     if !(0.0..=1.0).contains(&missing_rate) {
@@ -1429,7 +1430,7 @@ pub fn make_corrupted_dataset(
         &mut corrupted_data,
         missing_rate,
         missing_pattern,
-        random_seed,
+        randomseed,
     )?;
 
     // Apply outliers
@@ -1438,7 +1439,7 @@ pub fn make_corrupted_dataset(
         outlier_rate,
         outlier_type,
         outlier_strength,
-        random_seed,
+        randomseed,
     )?;
 
     // Create new _dataset with corruption metadata
@@ -1541,18 +1542,18 @@ pub fn make_classification_gpu(
     n_classes: usize,
     n_clusters_per_class: usize,
     n_informative: usize,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
     gpu_config: GpuConfig,
 ) -> Result<Dataset> {
     // Check if GPU is available and requested
-    if gpu_config.use_gpu && gpu_is_available() {
+    if gpuconfig.use_gpu && gpu_is_available() {
         make_classification_gpu_impl(
             n_samples,
             n_features,
             n_classes,
             n_clusters_per_class,
             n_informative,
-            random_seed,
+            randomseed,
             gpu_config,
         )
     } else {
@@ -1563,7 +1564,7 @@ pub fn make_classification_gpu(
             n_classes,
             n_clusters_per_class,
             n_informative,
-            random_seed,
+            randomseed,
         )
     }
 }
@@ -1576,7 +1577,7 @@ fn make_classification_gpu_impl(
     n_classes: usize,
     n_clusters_per_class: usize,
     n_informative: usize,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
     gpu_config: GpuConfig,
 ) -> Result<Dataset> {
     // Input validation
@@ -1601,18 +1602,18 @@ fn make_classification_gpu_impl(
     // Create GPU context
     let gpu_context = GpuContext::new(crate::gpu::GpuConfig {
         backend: crate::gpu::GpuBackend::Cuda {
-            device_id: gpu_config.device_id as u32,
+            device_id: gpuconfig.device_id as u32,
         },
         memory: crate::gpu::GpuMemoryConfig::default(),
         threads_per_block: 256,
-        enable_double_precision: !gpu_config.use_single_precision,
+        enable_double_precision: !gpuconfig.use_single_precision,
         use_fast_math: false,
-        random_seed: None,
+        randomseed: None,
     })
     .map_err(|e| DatasetsError::Other(format!("Failed to create GPU context: {e}")))?;
 
     // Generate data in chunks to avoid memory issues
-    let chunk_size = std::cmp::min(gpu_config.chunk_size, n_samples);
+    let chunk_size = std::cmp::min(gpuconfig.chunk_size, n_samples);
     let num_chunks = n_samples.div_ceil(chunk_size);
 
     let mut all_data = Vec::new();
@@ -1631,8 +1632,8 @@ fn make_classification_gpu_impl(
             n_classes,
             n_clusters_per_class,
             n_informative,
-            random_seed.map(|s| s + chunk_idx as u64),
-            gpu_config.use_single_precision,
+            randomseed.map(|s| s + chunk_idx as u64),
+            gpuconfig.use_single_precision,
         )?;
 
         all_data.extend(chunk_data);
@@ -1672,13 +1673,13 @@ fn generate_classification_chunk_gpu(
     n_classes: usize,
     n_clusters_per_class: usize,
     n_informative: usize,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
     _use_single_precision: bool,
 ) -> Result<(Vec<f64>, Vec<f64>)> {
     // For now, implement using GPU matrix operations
     // In a real implementation, this would use custom GPU kernels
 
-    let _seed = random_seed.unwrap_or(42);
+    let _seed = randomseed.unwrap_or(42);
     let mut rng = StdRng::seed_from_u64(_seed);
 
     // Generate centroids
@@ -1835,22 +1836,22 @@ pub fn make_regression_gpu(
     n_features: usize,
     n_informative: usize,
     noise: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
     gpu_config: GpuConfig,
 ) -> Result<Dataset> {
     // Check if GPU is available and requested
-    if gpu_config.use_gpu && gpu_is_available() {
+    if gpuconfig.use_gpu && gpu_is_available() {
         make_regression_gpu_impl(
             n_samples,
             n_features,
             n_informative,
             noise,
-            random_seed,
+            randomseed,
             gpu_config,
         )
     } else {
         // Fallback to CPU implementation
-        make_regression(n_samples, n_features, n_informative, noise, random_seed)
+        make_regression(n_samples, n_features, n_informative, noise, randomseed)
     }
 }
 
@@ -1861,7 +1862,7 @@ fn make_regression_gpu_impl(
     n_features: usize,
     n_informative: usize,
     noise: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
     gpu_config: GpuConfig,
 ) -> Result<Dataset> {
     // Input validation
@@ -1880,17 +1881,17 @@ fn make_regression_gpu_impl(
     // Create GPU context
     let gpu_context = GpuContext::new(crate::gpu::GpuConfig {
         backend: crate::gpu::GpuBackend::Cuda {
-            device_id: gpu_config.device_id as u32,
+            device_id: gpuconfig.device_id as u32,
         },
         memory: crate::gpu::GpuMemoryConfig::default(),
         threads_per_block: 256,
-        enable_double_precision: !gpu_config.use_single_precision,
+        enable_double_precision: !gpuconfig.use_single_precision,
         use_fast_math: false,
-        random_seed: None,
+        randomseed: None,
     })
     .map_err(|e| DatasetsError::Other(format!("Failed to create GPU context: {e}")))?;
 
-    let _seed = random_seed.unwrap_or(42);
+    let _seed = randomseed.unwrap_or(42);
     let mut rng = StdRng::seed_from_u64(_seed);
 
     // Generate coefficient matrix on GPU
@@ -1900,7 +1901,7 @@ fn make_regression_gpu_impl(
     }
 
     // Generate data matrix in chunks
-    let chunk_size = std::cmp::min(gpu_config.chunk_size..n_samples);
+    let chunk_size = std::cmp::min(gpuconfig.chunk_size..n_samples);
     let num_chunks = n_samples.div_ceil(chunk_size);
 
     let mut all_data = Vec::new();
@@ -1919,7 +1920,7 @@ fn make_regression_gpu_impl(
             n_informative,
             &coefficients,
             noise,
-            random_seed.map(|s| s + chunk_idx as u64),
+            randomseed.map(|s| s + chunk_idx as u64),
         )?;
 
         all_data.extend(chunk_data);
@@ -1956,9 +1957,9 @@ fn generate_regression_chunk_gpu(
     n_informative: usize,
     coefficients: &[f64],
     noise: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<(Vec<f64>, Vec<f64>)> {
-    let _seed = random_seed.unwrap_or(42);
+    let _seed = randomseed.unwrap_or(42);
     let mut rng = StdRng::seed_from_u64(_seed);
 
     // Generate random data matrix
@@ -2056,22 +2057,22 @@ pub fn make_blobs_gpu(
     n_features: usize,
     n_centers: usize,
     cluster_std: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
     gpu_config: GpuConfig,
 ) -> Result<Dataset> {
     // Check if GPU is available and requested
-    if gpu_config.use_gpu && gpu_is_available() {
+    if gpuconfig.use_gpu && gpu_is_available() {
         make_blobs_gpu_impl(
             n_samples,
             n_features,
             n_centers,
             cluster_std,
-            random_seed,
+            randomseed,
             gpu_config,
         )
     } else {
         // Fallback to CPU implementation
-        make_blobs(n_samples, n_features, n_centers, cluster_std, random_seed)
+        make_blobs(n_samples, n_features, n_centers, cluster_std, randomseed)
     }
 }
 
@@ -2082,7 +2083,7 @@ fn make_blobs_gpu_impl(
     n_features: usize,
     n_centers: usize,
     cluster_std: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
     gpu_config: GpuConfig,
 ) -> Result<Dataset> {
     // Input validation
@@ -2101,17 +2102,17 @@ fn make_blobs_gpu_impl(
     // Create GPU context
     let gpu_context = GpuContext::new(crate::gpu::GpuConfig {
         backend: crate::gpu::GpuBackend::Cuda {
-            device_id: gpu_config.device_id as u32,
+            device_id: gpuconfig.device_id as u32,
         },
         memory: crate::gpu::GpuMemoryConfig::default(),
         threads_per_block: 256,
-        enable_double_precision: !gpu_config.use_single_precision,
+        enable_double_precision: !gpuconfig.use_single_precision,
         use_fast_math: false,
-        random_seed: None,
+        randomseed: None,
     })
     .map_err(|e| DatasetsError::Other(format!("Failed to create GPU context: {e}")))?;
 
-    let _seed = random_seed.unwrap_or(42);
+    let _seed = randomseed.unwrap_or(42);
     let mut rng = StdRng::seed_from_u64(_seed);
 
     // Generate cluster _centers
@@ -2383,7 +2384,7 @@ pub fn benchmark_gpu_vs_cpu(
             2,
             n_features,
             Some(42),
-            gpu_config.clone(),
+            gpuconfig.clone(),
         )?;
     }
     let gpu_time = gpu_start.elapsed().as_secs_f64() / iterations as f64;
@@ -2395,10 +2396,10 @@ pub fn benchmark_gpu_vs_cpu(
 
 /// Generate a dataset with an S-curve manifold embedded in 3D space
 #[allow(dead_code)]
-pub fn make_s_curve(_n_samples: usize, noise: f64, randomseed: Option<u64>) -> Result<Dataset> {
-    if _n_samples == 0 {
+pub fn make_s_curve(n_samples: usize, noise: f64, randomseed: Option<u64>) -> Result<Dataset> {
+    if n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
-            "_n_samples must be > 0".to_string(),
+            "n_samples must be > 0".to_string(),
         ));
     }
 
@@ -2408,10 +2409,10 @@ pub fn make_s_curve(_n_samples: usize, noise: f64, randomseed: Option<u64>) -> R
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2448,7 +2449,7 @@ pub fn make_swiss_roll_advanced(
     n_samples: usize,
     noise: f64,
     hole: bool,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     if n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
@@ -2462,10 +2463,10 @@ pub fn make_swiss_roll_advanced(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2518,7 +2519,7 @@ pub fn make_swiss_roll_advanced(
 pub fn make_severed_sphere(
     n_samples: usize,
     noise: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     if n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
@@ -2532,10 +2533,10 @@ pub fn make_severed_sphere(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2578,10 +2579,10 @@ pub fn make_severed_sphere(
 
 /// Generate a dataset from a twin peaks manifold (two connected peaks)
 #[allow(dead_code)]
-pub fn make_twin_peaks(_n_samples: usize, noise: f64, randomseed: Option<u64>) -> Result<Dataset> {
-    if _n_samples == 0 {
+pub fn make_twin_peaks(n_samples: usize, noise: f64, randomseed: Option<u64>) -> Result<Dataset> {
+    if n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
-            "_n_samples must be > 0".to_string(),
+            "n_samples must be > 0".to_string(),
         ));
     }
 
@@ -2591,10 +2592,10 @@ pub fn make_twin_peaks(_n_samples: usize, noise: f64, randomseed: Option<u64>) -
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2643,7 +2644,7 @@ pub fn make_helix(
     n_samples: usize,
     n_turns: f64,
     noise: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     if n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
@@ -2663,10 +2664,10 @@ pub fn make_helix(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2702,7 +2703,7 @@ pub fn make_helix(
 pub fn make_intersecting_manifolds(
     n_samples: usize,
     noise: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     if n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
@@ -2716,10 +2717,10 @@ pub fn make_intersecting_manifolds(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2777,7 +2778,7 @@ pub fn make_torus(
     major_radius: f64,
     minor_radius: f64,
     noise: f64,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Dataset> {
     if n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
@@ -2803,10 +2804,10 @@ pub fn make_torus(
         ));
     }
 
-    let mut rng = match random_seed {
+    let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2852,7 +2853,7 @@ pub struct ManifoldConfig {
     /// Noise level
     pub noise: f64,
     /// Random seed
-    pub random_seed: Option<u64>,
+    pub randomseed: Option<u64>,
     /// Manifold-specific parameters
     pub parameters: std::collections::HashMap<String, f64>,
 }
@@ -2893,7 +2894,7 @@ impl Default for ManifoldConfig {
             manifold_type: ManifoldType::SCurve,
             n_samples: 1000,
             noise: 0.1,
-            random_seed: None,
+            randomseed: None,
             parameters: std::collections::HashMap::new(),
         }
     }
@@ -2922,7 +2923,7 @@ impl ManifoldConfig {
 
     /// Set random seed
     pub fn with_seed(mut self, seed: u64) -> Self {
-        self.random_seed = Some(seed);
+        self.randomseed = Some(seed);
         self
     }
 
@@ -2937,21 +2938,21 @@ impl ManifoldConfig {
 #[allow(dead_code)]
 pub fn make_manifold(config: ManifoldConfig) -> Result<Dataset> {
     match config.manifold_type {
-        ManifoldType::SCurve => make_s_curve(_config.n_samples, config.noise, config.random_seed),
+        ManifoldType::SCurve => make_s_curve(config.n_samples, config.noise, config.randomseed),
         ManifoldType::SwissRoll { hole } => {
-            make_swiss_roll_advanced(_config.n_samples, config.noise, hole, config.random_seed)
+            make_swiss_roll_advanced(config.n_samples, config.noise, hole, config.randomseed)
         }
         ManifoldType::SeveredSphere => {
-            make_severed_sphere(_config.n_samples, config.noise, config.random_seed)
+            make_severed_sphere(config.n_samples, config.noise, config.randomseed)
         }
         ManifoldType::TwinPeaks => {
-            make_twin_peaks(_config.n_samples, config.noise, config.random_seed)
+            make_twin_peaks(config.n_samples, config.noise, config.randomseed)
         }
         ManifoldType::Helix { n_turns } => {
-            make_helix(config.n_samples, n_turns, config.noise, config.random_seed)
+            make_helix(config.n_samples, n_turns, config.noise, config.randomseed)
         }
         ManifoldType::IntersectingManifolds => {
-            make_intersecting_manifolds(_config.n_samples, config.noise, config.random_seed)
+            make_intersecting_manifolds(config.n_samples, config.noise, config.randomseed)
         }
         ManifoldType::Torus {
             major_radius,
@@ -2961,7 +2962,7 @@ pub fn make_manifold(config: ManifoldConfig) -> Result<Dataset> {
             major_radius,
             minor_radius,
             config.noise,
-            config.random_seed,
+            config.randomseed,
         ),
     }
 }

@@ -19,7 +19,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// # Examples
 ///
 /// ```
-/// use scirs2__ndimage::morphology::{generate_binary_structure, Connectivity};
+/// use scirs2_ndimage::morphology::{generate_binary_structure, Connectivity};
 ///
 /// // Create a 2D structure with face connectivity (4-connectivity in 2D)
 /// let structure = generate_binary_structure(2, Connectivity::Face).unwrap();

@@ -397,7 +397,7 @@ where
             ));
         }
 
-        let (mean_,) = self.predict_with_uncertainty(xnew)?;
+        let (mean_, _) = self.predict_with_uncertainty(xnew)?;
         Ok(mean_)
     }
 

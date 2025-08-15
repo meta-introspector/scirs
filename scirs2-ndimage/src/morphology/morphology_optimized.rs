@@ -899,7 +899,7 @@ where
         current = grey_erosion_2d_optimized(&current, Some(struct_elem), Some(1), None, None)?;
 
         // Constrain by mask (pointwise maximum)
-        for ((c, m)_p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
+        for ((c, m), p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
             *c = (*c).max(*m);
         }
 
@@ -967,7 +967,7 @@ where
         current = grey_dilation_2d_optimized(&current, Some(struct_elem), Some(1), None, None)?;
 
         // Constrain by mask (pointwise minimum)
-        for ((c, m)_p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
+        for ((c, m), p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
             *c = (*c).min(*m);
         }
 

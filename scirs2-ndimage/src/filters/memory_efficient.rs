@@ -14,7 +14,8 @@ use crate::filters::{median_filter, uniform_filter, BorderMode};
 /// Chunk processor for uniform filtering
 pub struct UniformChunkProcessor<T> {
     size: Vec<usize>,
-    border_mode: BorderMode, _marker: std::marker::PhantomData<T>,
+    border_mode: BorderMode,
+    _marker: std::marker::PhantomData<T>,
 }
 
 impl<T> UniformChunkProcessor<T> {
@@ -43,7 +44,8 @@ where
 {
     fn process_chunk(
         &mut self,
-        chunk: ArrayView<T, D>, _position: &ChunkPosition,
+        chunk: ArrayView<T, D>,
+        _position: &ChunkPosition,
     ) -> NdimageResult<Array<T, D>> {
         uniform_filter(&chunk.to_owned(), &self.size, Some(self.border_mode), None)
     }
@@ -66,7 +68,8 @@ where
 /// Chunk processor for median filtering
 pub struct MedianChunkProcessor<T> {
     size: Vec<usize>,
-    border_mode: BorderMode, _marker: std::marker::PhantomData<T>,
+    border_mode: BorderMode,
+    _marker: std::marker::PhantomData<T>,
 }
 
 impl<T> MedianChunkProcessor<T> {
@@ -85,7 +88,8 @@ where
 {
     fn process_chunk(
         &mut self,
-        chunk: ArrayView<T, D>, _position: &ChunkPosition,
+        chunk: ArrayView<T, D>,
+        _position: &ChunkPosition,
     ) -> NdimageResult<Array<T, D>> {
         median_filter(&chunk.to_owned(), &self.size, Some(self.border_mode))
     }

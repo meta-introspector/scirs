@@ -167,22 +167,22 @@ impl CacheStats {
 
     /// Update memory usage statistics
     pub fn update_memory_usage(&mut self, currentbytes: usize) {
-        self.memory_usage_bytes = current_bytes;
-        if current_bytes > self.peak_memory_bytes {
-            self.peak_memory_bytes = current_bytes;
+        self.memory_usage_bytes = currentbytes;
+        if currentbytes > self.peak_memory_bytes {
+            self.peak_memory_bytes = currentbytes;
         }
     }
 
     /// Update access frequency for adaptive sizing
     pub fn update_access_frequency(&mut self, new_accesscount: usize) {
         let alpha = 0.1; // Exponential smoothing factor
-        let new_freq = new_access_count as f64;
+        let new_freq = new_accesscount as f64;
         self.avg_access_frequency = alpha * new_freq + (1.0 - alpha) * self.avg_access_frequency;
     }
 
     /// Check if cleanup is needed based on time threshold
     pub fn needs_cleanup(&self, thresholdsecs: u64) -> bool {
-        self.last_cleanup_time.elapsed().as_secs() >= threshold_secs
+        self.last_cleanup_time.elapsed().as_secs() >= thresholdsecs
     }
 
     /// Reset all statistics
@@ -283,17 +283,17 @@ impl<T> CacheEntry<T> {
     fn new(_value: T, insertiontime: usize) -> Self {
         let memory_size = std::mem::size_of::<T>() + std::mem::size_of::<Self>();
         Self {
-            value,
-            last_access: insertion_time,
+            value: _value,
+            last_access: insertiontime,
             access_count: 1,
-            insertion_time,
+            insertion_time: insertiontime,
             memory_size,
         }
     }
 
     /// Update access statistics
     fn update_access(&mut self, currenttime: usize) {
-        self.last_access = current_time;
+        self.last_access = currenttime;
         self.access_count += 1;
     }
 
@@ -310,7 +310,7 @@ impl<T> CacheEntry<T> {
             }
             EvictionPolicy::Adaptive => {
                 // Combine recency and frequency with memory size consideration
-                let recency = (current_time - self.last_access) as f64;
+                let recency = (currenttime - self.last_access) as f64;
                 let frequency = self.access_count as f64;
                 let memory_factor = self.memory_size as f64;
 
@@ -524,12 +524,12 @@ impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
         entries.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Remove entries until we're under the target
-        for (key_, memory_size) in entries {
+        for (key_, _, memory_size) in entries {
             if current_memory <= target_size {
                 break;
             }
 
-            self.basis_cache.remove(&key);
+            self.basis_cache.remove(&key_);
             current_memory = current_memory.saturating_sub(memory_size);
 
             if self.config.track_stats {
@@ -574,7 +574,7 @@ impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
         entries.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Remove the lowest priority entries
-        for (key_) in entries.into_iter().take(remove_count) {
+        for (key, _) in entries.into_iter().take(remove_count) {
             self.basis_cache.remove(&key);
             if self.config.track_stats {
                 self.stats.evictions += 1;

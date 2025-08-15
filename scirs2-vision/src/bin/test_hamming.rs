@@ -1,4 +1,4 @@
-use scirs2__vision::feature::brief::hamming_distance;
+use scirs2_vision::feature::brief::hamming_distance;
 
 #[allow(dead_code)]
 fn main() {

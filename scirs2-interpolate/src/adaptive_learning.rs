@@ -908,7 +908,7 @@ mod tests {
         assert!(!candidates.is_empty());
 
         // At least one candidate should be near the sharp feature (around x=5)
-        let near_feature = "candidates".iter().any(|c| (c.location - 5.0).abs() < 2.0);
+        let near_feature = candidates.iter().any(|c| (c.location - 5.0).abs() < 2.0);
         assert!(near_feature);
     }
 

@@ -192,7 +192,14 @@ pub fn statistical_features(data: &Array2<f64>) -> Result<Array2<f64>> {
             let feature_values = data.column(feature_idx);
 
             // Calculate basic statistics
-            let mean = feature_values.mean().unwrap_or(0.0);
+            let mean = {
+                let val = feature_values.mean();
+                if val.is_nan() {
+                    0.0
+                } else {
+                    val
+                }
+            };
             let std = feature_values.std(0.0);
             let min_val = feature_values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
             let max_val = feature_values
@@ -513,7 +520,7 @@ mod tests {
     fn test_calculate_skewness() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let view = data.view();
-        let mean = view.mean().unwrap();
+        let mean = view.mean();
         let std = view.std(0.0);
 
         let skewness = calculate_skewness(&view, mean, std);
@@ -525,7 +532,7 @@ mod tests {
     fn test_calculate_kurtosis() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let view = data.view();
-        let mean = view.mean().unwrap();
+        let mean = view.mean();
         let std = view.std(0.0);
 
         let kurtosis = calculate_kurtosis(&view, mean, std);

@@ -296,43 +296,45 @@ where
 
     for k in 0..num_phases {
         // Initialize with different patterns
-        let phi =
-            match k {
-                0 => {
-                    // Vertical division
-                    Array2::fromshape_fn(
-                        (height, width),
-                        |(_, j)| {
-                            if j < width / 2 {
-                                10.0
-                            } else {
-                                -10.0
-                            }
-                        },
-                    )
-                }
-                1 => {
-                    // Horizontal division
-                    Array2::fromshape_fn((height, width), |(i_)| {
+        let phi = match k {
+            0 => {
+                // Vertical division
+                Array2::fromshape_fn(
+                    (height, width),
+                    |(_, j)| {
+                        if j < width / 2 {
+                            10.0
+                        } else {
+                            -10.0
+                        }
+                    },
+                )
+            }
+            1 => {
+                // Horizontal division
+                Array2::fromshape_fn(
+                    (height, width),
+                    |(i_)| {
                         if i < height / 2 {
                             10.0
                         } else {
                             -10.0
                         }
-                    })
-                }
-                2 => {
-                    // Diagonal division
-                    Array2::fromshape_fn((height, width), |(i, j)| {
-                        if i + j < (height + width) / 2 {
-                            10.0
-                        } else {
-                            -10.0
-                        }
-                    })
-                }
-                _ => unreachable!(),
-            };
+                    },
+                )
+            }
+            2 => {
+                // Diagonal division
+                Array2::fromshape_fn((height, width), |(i, j)| {
+                    if i + j < (height + width) / 2 {
+                        10.0
+                    } else {
+                        -10.0
+                    }
+                })
+            }
+            _ => unreachable!(),
+        };
 
         phi_list.push(phi);
     }

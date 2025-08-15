@@ -107,7 +107,8 @@ where
 
         Ok(Self {
             mls,
-            kdtree_phantom: PhantomData,
+            kdtree,
+            _phantom: PhantomData,
         })
     }
 
@@ -121,7 +122,7 @@ where
     ///
     /// Self for method chaining
     pub fn with_max_points(mut self, maxpoints: usize) -> Self {
-        self.mls = self.mls.with_max_points(max_points);
+        self.mls = self.mls.with_max_points(maxpoints);
         self
     }
 
@@ -302,7 +303,7 @@ where
 /// Apply weight function to a normalized distance
 #[allow(dead_code)]
 fn apply_weight<F: Float + FromPrimitive>(r: F, weightfn: WeightFunction) -> F {
-    match weight_fn {
+    match weightfn {
         WeightFunction::Gaussian => (-r * r).exp(),
         WeightFunction::WendlandC2 => {
             if r < F::one() {

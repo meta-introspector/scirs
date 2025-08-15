@@ -219,7 +219,8 @@ mod simple_nn {
         match activation {
             "tanh" => arr.mapv(tanh),
             "sigmoid" => arr.mapv(sigmoid),
-            "relu" => arr.mapv(relu, _ => arr.clone(),
+            "relu" => arr.mapv(relu),
+            _ => arr.clone(),
         }
     }
 }
@@ -462,7 +463,8 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for LSTMForecaster<F>
         let z_score = match confidence_level {
             c if c >= 0.99 => F::from(2.576).unwrap(),
             c if c >= 0.95 => F::from(1.96).unwrap(),
-            c if c >= 0.90 => F::from(1.645).unwrap(, _ => F::from(1.0).unwrap(),
+            c if c >= 0.90 => F::from(1.645).unwrap(),
+            _ => F::from(1.0).unwrap(),
         };
 
         let margin = uncertainty * z_score;
@@ -685,7 +687,8 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for TransformerForeca
         let z_score = match confidence_level {
             c if c >= 0.99 => F::from(2.576).unwrap(),
             c if c >= 0.95 => F::from(1.96).unwrap(),
-            c if c >= 0.90 => F::from(1.645).unwrap(, _ => F::from(1.0).unwrap(),
+            c if c >= 0.90 => F::from(1.645).unwrap(),
+            _ => F::from(1.0).unwrap(),
         };
 
         let margin = uncertainty * z_score;
@@ -985,7 +988,8 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for NBeatsForecaster<
         let z_score = match confidence_level {
             c if c >= 0.99 => F::from(2.576).unwrap(),
             c if c >= 0.95 => F::from(1.96).unwrap(),
-            c if c >= 0.90 => F::from(1.645).unwrap(, _ => F::from(1.0).unwrap(),
+            c if c >= 0.90 => F::from(1.645).unwrap(),
+            _ => F::from(1.0).unwrap(),
         };
 
         let margin = uncertainty * z_score;
@@ -1872,7 +1876,9 @@ pub mod advanced {
 
         /// Update parameters (simplified gradient descent)
         fn update_parameters(
-            &mut self_input: &Array1<F>, _target: &Array1<F>, _prediction: &Array1<F>,
+            &mut self_input: &Array1<F>,
+            _target: &Array1<F>,
+            _prediction: &Array1<F>,
         ) -> Result<()> {
             // Simplified parameter update
             // In practice, would compute gradients and update weights
@@ -1959,7 +1965,7 @@ pub mod advanced {
         trained: bool,
     }
 
-    impl<F: Float + Debug> + std::fmt::Debug for EnsembleNeuralForecaster<F> {
+    impl<F: Float + Debug> std::fmt::Debug for EnsembleNeuralForecaster<F> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             f.debug_struct("EnsembleNeuralForecaster")
                 .field("forecasters_count", &self.forecasters.len())
@@ -2664,7 +2670,8 @@ pub mod advanced {
             default: f64,
         ) -> F {
             match params.get(name) {
-                Some(ParameterValue::Float(f)) => *f_ => F::from(default).unwrap(),
+                Some(ParameterValue::Float(f)) => *f,
+                _ => F::from(default).unwrap(),
             }
         }
 
@@ -2676,7 +2683,8 @@ pub mod advanced {
             default: usize,
         ) -> usize {
             match params.get(name) {
-                Some(ParameterValue::Int(i)) => *i_ => default,
+                Some(ParameterValue::Int(i)) => *i,
+                _ => default,
             }
         }
 

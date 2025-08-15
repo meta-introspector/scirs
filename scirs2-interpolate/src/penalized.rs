@@ -319,7 +319,7 @@ where
         let coefficients = Self::solve_penalized_system(&penalized_system.view(), &bty.view())?;
 
         // Create the B-spline with the computed coefficients
-        let bspline = BSpline::new(_knots, &coefficients.view(), degree, extrapolate)?;
+        let bspline = BSpline::new(knots, &coefficients.view(), degree, extrapolate)?;
 
         Ok(PSpline {
             bspline,

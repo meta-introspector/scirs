@@ -1567,7 +1567,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
     /// Compute active ionic currents for a segment
     fn compute_active_currents(
         &self,
-        segment: &DendriticSegment<F>, _segment_id: usize,
+        segment: &DendriticSegment<F>,
+        _segment_id: usize,
     ) -> crate::error::Result<F> {
         let mut total_current = F::zero();
         let v = segment.voltage;
@@ -2375,7 +2376,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> PowerManager<F> {
     pub fn new(_numcores: usize) -> Self {
         Self {
             core_power: Array1::from_elem(_num_cores, F::from(0.1).unwrap()), // 0.1W per core
-            power_budget: F::from(10.0).unwrap(),                            // 10W total budget
+            power_budget: F::from(10.0).unwrap(),                             // 10W total budget
             voltage_scaling: Array1::from_elem(_num_cores, F::one()),
             clock_gating: Array1::from_elem(_num_cores, false),
             power_history: Vec::new(),

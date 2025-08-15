@@ -445,7 +445,7 @@ mod tests {
         assert_eq!(edges.dimensions(), (10, 10));
 
         // Compare with regular implementation
-        let (edges_regular_) = sobel_edges_oriented(&dynamic_img, 100.0, true).unwrap();
+        let (edges_regular_, _) = sobel_edges_oriented(&dynamic_img, 100.0, true).unwrap();
 
         // Results should be similar (allowing for minor numerical differences)
         assert_eq!(edges.dimensions(), edges_regular_.dimensions());

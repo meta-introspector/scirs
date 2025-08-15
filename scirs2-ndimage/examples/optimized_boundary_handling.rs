@@ -4,7 +4,7 @@
 //! filtering of large arrays.
 
 use ndarray::{arr2, Array2};
-use scirs2__ndimage::filters::{convolve, convolve_fast, convolve_optimized, BorderMode};
+use scirs2_ndimage::filters::{convolve, convolve_fast, convolve_optimized, BorderMode};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -91,7 +91,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a larger test array
     let large_size = 1000;
-    let large_image: Array2<f64> = Array2::ones((large_size, large_size));
+    let largeimage: Array2<f64> = Array2::ones((large_size, large_size));
 
     println!("Large image size: {}x{}", large_size, large_size);
     println!(
@@ -101,11 +101,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Time the operations
     let start = Instant::now();
-    let _ = convolve_fast(&large_image, &kernel, Some(BorderMode::Reflect), false)?;
+    let _ = convolve_fast(&largeimage, &kernel, Some(BorderMode::Reflect), false)?;
     let time_standard = start.elapsed();
 
     let start = Instant::now();
-    let _ = convolve_fast(&large_image, &kernel, Some(BorderMode::Reflect), true)?;
+    let _ = convolve_fast(&largeimage, &kernel, Some(BorderMode::Reflect), true)?;
     let time_optimized = start.elapsed();
 
     println!("\nStandard (with padding): {:?}", time_standard);

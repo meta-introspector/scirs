@@ -22,17 +22,17 @@ fn main() -> NdimageResult<()> {
 
     // Create sample data
     let image_size = 50;
-    let original_image = create_sample_image(image_size);
+    let originalimage = create_sampleimage(image_size);
 
     // Apply some processing
-    let smoothed_image = gaussian_filter(&original_image.view(), 2.0, None)?;
-    let noisy_image = add_noise(&original_image);
+    let smoothedimage = gaussian_filter(&originalimage.view(), 2.0, None)?;
+    let noisyimage = add_noise(&originalimage);
 
     println!("\n1. Creating Interactive Visualization");
     println!("   📊 Generating interactive HTML with controls...");
 
     let interactive_html = create_interactive_visualization(
-        &original_image.view(),
+        &originalimage.view(),
         "Interactive Image Analysis Dashboard",
     )?;
 
@@ -49,14 +49,13 @@ fn main() -> NdimageResult<()> {
     println!("\n2. Creating Image Comparison View");
     println!("   🔍 Generating side-by-side comparison...");
 
-    let comparison_images = vec![
-        ("Original", original_image.view()),
-        ("Gaussian Smoothed", smoothed_image.view()),
-        ("With Noise", noisy_image.view()),
+    let comparisonimages = vec![
+        ("Original", originalimage.view()),
+        ("Gaussian Smoothed", smoothedimage.view()),
+        ("With Noise", noisyimage.view()),
     ];
 
-    let comparison_html =
-        create_comparison_view(&comparison_images, "Image Processing Comparison")?;
+    let comparison_html = create_comparison_view(&comparisonimages, "Image Processing Comparison")?;
 
     let comparison_config = ExportConfig {
         output_path: "examples/outputs/image_comparison.html".to_string(),
@@ -80,7 +79,7 @@ fn main() -> NdimageResult<()> {
         ..PlotConfig::default()
     };
 
-    let heatmap_html = plot_heatmap(&original_image.view(), &heatmap_config)?;
+    let heatmap_html = plot_heatmap(&originalimage.view(), &heatmap_config)?;
     let heatmap_export = ExportConfig {
         output_path: "examples/outputs/heatmap_visualization.html".to_string(),
         ..ExportConfig::default()
@@ -98,7 +97,7 @@ fn main() -> NdimageResult<()> {
         ..PlotConfig::default()
     };
 
-    let surface_html = plot_surface(&original_image.view(), &surface_config)?;
+    let surface_html = plot_surface(&originalimage.view(), &surface_config)?;
     let surface_export = ExportConfig {
         output_path: "examples/outputs/surface_visualization.html".to_string(),
         ..ExportConfig::default()
@@ -110,7 +109,7 @@ fn main() -> NdimageResult<()> {
     );
 
     // Histogram of flattened data
-    let flat_data = original_image.iter().cloned().collect::<Vec<_>>();
+    let flat_data = originalimage.iter().cloned().collect::<Vec<_>>();
     let flat_array = ndarray::Array1::from_vec(flat_data);
 
     let histogram_config = PlotConfig {
@@ -150,7 +149,7 @@ fn main() -> NdimageResult<()> {
             ..PlotConfig::default()
         };
 
-        let colormap_html = plot_heatmap(&original_image.view(), &config)?;
+        let colormap_html = plot_heatmap(&originalimage.view(), &config)?;
         let colormap_export = ExportConfig {
             output_path: format!("examples/outputs/colormap_{}.html", name),
             ..ExportConfig::default()
@@ -164,7 +163,7 @@ fn main() -> NdimageResult<()> {
     println!("   Open the HTML files in a web browser to view interactive visualizations");
 
     // Print summary statistics
-    let stats = compute_image_stats(&original_image.view());
+    let stats = computeimage_stats(&originalimage.view());
     println!("\n📊 Sample Data Statistics:");
     println!("   Dimensions: {}×{}", image_size, image_size);
     println!("   Mean: {:.4}", stats.mean);
@@ -175,7 +174,7 @@ fn main() -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn create_sample_image(size: usize) -> Array2<f64> {
+fn create_sampleimage(size: usize) -> Array2<f64> {
     Array2::fromshape_fn((_size, size), |(i, j)| {
         let x = i as f64 / _size as f64;
         let y = j as f64 / _size as f64;
@@ -203,7 +202,7 @@ struct ImageStats {
 }
 
 #[allow(dead_code)]
-fn compute_image_stats(image: &ArrayView2<f64>) -> ImageStats {
+fn computeimage_stats(image: &ArrayView2<f64>) -> ImageStats {
     let mean = image.mean().unwrap_or(0.0);
     let min = image.iter().cloned().fold(f64::INFINITY, f64::min);
     let max = image.iter().cloned().fold(f64::NEG_INFINITY, f64::max);

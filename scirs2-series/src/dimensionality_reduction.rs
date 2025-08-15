@@ -927,7 +927,8 @@ where
 #[allow(dead_code)]
 fn apply_smoothness_regularization<F>(
     coefficients: &Array2<F>,
-    lambda: f64, _basis_evaluation: &Array2<F>,
+    lambda: f64,
+    _basis_evaluation: &Array2<F>,
 ) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + ScalarOperand + 'static,
@@ -947,7 +948,8 @@ where
 
 #[allow(dead_code)]
 fn compute_smoothness_measures<F>(
-    components: &Array2<F>, _basis_evaluation: &Array2<F>,
+    components: &Array2<F>,
+    _basis_evaluation: &Array2<F>,
 ) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -1256,7 +1258,8 @@ fn apply_sax(
 
 #[allow(dead_code)]
 fn apply_apca(
-    _time_series: &Array1<f64>, _config: &SymbolicApproximationConfig,
+    _time_series: &Array1<f64>,
+    _config: &SymbolicApproximationConfig,
 ) -> Result<SymbolicApproximationResult> {
     // Placeholder for APCA implementation
     Err(TimeSeriesError::NotImplemented(
@@ -1266,7 +1269,8 @@ fn apply_apca(
 
 #[allow(dead_code)]
 fn apply_pla(
-    _time_series: &Array1<f64>, _config: &SymbolicApproximationConfig,
+    _time_series: &Array1<f64>,
+    _config: &SymbolicApproximationConfig,
 ) -> Result<SymbolicApproximationResult> {
     // Placeholder for PLA implementation
     Err(TimeSeriesError::NotImplemented(
@@ -1276,7 +1280,8 @@ fn apply_pla(
 
 #[allow(dead_code)]
 fn apply_persist(
-    _time_series: &Array1<f64>, _config: &SymbolicApproximationConfig,
+    _time_series: &Array1<f64>,
+    _config: &SymbolicApproximationConfig,
 ) -> Result<SymbolicApproximationResult> {
     // Placeholder for Persist implementation
     Err(TimeSeriesError::NotImplemented(
@@ -1364,7 +1369,10 @@ fn paa_to_symbols(_paavalues: &Array1<f64>, breakpoints: &Array1<f64>) -> Result
 
 #[allow(dead_code)]
 fn reconstruct_from_sax(
-    _symbolic_sequence: &[char], _breakpoints: &Array1<f64>, _original_length: usize, _n_segments: usize,
+    _symbolic_sequence: &[char],
+    _breakpoints: &Array1<f64>,
+    _original_length: usize,
+    _n_segments: usize,
 ) -> Result<Array1<f64>> {
     // Placeholder for SAX reconstruction
     Err(TimeSeriesError::NotImplemented(

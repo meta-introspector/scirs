@@ -88,7 +88,7 @@ pub struct MemoryTracker {
     /// Peak memory usage
     peak_usage: usize,
     /// Memory usage history (timestamp, usage)
-    usage_history: VecDeque<(Instant, usize)>,
+    usagehistory: VecDeque<(Instant, usize)>,
     /// Memory allocation tracking
     allocations: HashMap<String, usize>,
 }
@@ -98,7 +98,7 @@ impl Default for MemoryTracker {
         Self {
             current_usage: 0,
             peak_usage: 0,
-            usage_history: VecDeque::new(),
+            usagehistory: VecDeque::new(),
             allocations: HashMap::new(),
         }
     }
@@ -107,9 +107,9 @@ impl Default for MemoryTracker {
 #[derive(Debug)]
 pub struct MetricsAggregator {
     /// Aggregated performance metrics by operation type
-    operation_metrics: HashMap<String, AggregatedMetrics>,
+    operationmetrics: HashMap<String, AggregatedMetrics>,
     /// System-wide performance indicators
-    system_metrics: SystemMetrics,
+    systemmetrics: SystemMetrics,
     /// Performance trends
     trends: PerformanceTrends,
 }
@@ -169,7 +169,7 @@ pub struct OptimizationEngine {
     /// Optimization recommendations
     recommendations: Vec<OptimizationRecommendation>,
     /// Historical optimization impact
-    optimization_history: Vec<OptimizationImpact>,
+    optimizationhistory: Vec<OptimizationImpact>,
 }
 
 #[derive(Debug, Clone)]
@@ -231,9 +231,9 @@ pub struct OptimizationImpact {
     /// Optimization applied
     pub optimization: String,
     /// Performance before optimization
-    pub before_metrics: AggregatedMetrics,
+    pub beforemetrics: AggregatedMetrics,
     /// Performance after optimization
-    pub after_metrics: AggregatedMetrics,
+    pub aftermetrics: AggregatedMetrics,
     /// Actual improvement achieved
     pub improvement_achieved: f64,
     /// Timestamp when optimization was applied
@@ -288,7 +288,7 @@ impl PerformanceProfiler {
                 {
                     let records = timing_records.read().unwrap();
                     let mut aggregator = metrics_aggregator.lock().unwrap();
-                    aggregator.update_metrics(&records);
+                    aggregator.updatemetrics(&records);
                 }
 
                 thread::sleep(reporting_interval);
@@ -320,7 +320,7 @@ impl PerformanceProfiler {
         let timing = OperationTiming {
             _name: operation_name.to_string(),
             input_dimensions: input.shape().to_vec(),
-            data_type: std::any::type, _name::<T>().to_string(),
+            data_type: std::any::type_name::<T>().to_string(),
             execution_time,
             memory_allocated,
             memory_peak: self.memory_tracker.lock().unwrap().peak_usage,
@@ -352,8 +352,8 @@ impl PerformanceProfiler {
         let memory_tracker = self.memory_tracker.lock().unwrap();
 
         PerformanceReport {
-            operation_metrics: aggregator.operation_metrics.clone(),
-            system_metrics: aggregator.system_metrics.clone(),
+            operationmetrics: aggregator.operationmetrics.clone(),
+            systemmetrics: aggregator.systemmetrics.clone(),
             trends: aggregator.trends.clone(),
             bottlenecks: optimizer.bottlenecks.clone(),
             recommendations: optimizer.recommendations.clone(),
@@ -442,7 +442,8 @@ impl PerformanceProfiler {
         match operation_name {
             _name if name.contains("simd") => 0.85,
             _name if name.contains("convolution") => 0.70,
-            _name if name.contains("filter") => 0.60_ => 0.30,
+            _name if name.contains("filter") => 0.60,
+            _ => 0.30,
         }
     }
 
@@ -463,8 +464,8 @@ impl PerformanceProfiler {
 impl MetricsAggregator {
     fn new() -> Self {
         Self {
-            operation_metrics: HashMap::new(),
-            system_metrics: SystemMetrics {
+            operationmetrics: HashMap::new(),
+            systemmetrics: SystemMetrics {
                 total_operations: 0,
                 total_execution_time: Duration::ZERO,
                 total_memory_allocated: 0,
@@ -480,18 +481,18 @@ impl MetricsAggregator {
         }
     }
 
-    fn update_metrics(&mut self, records: &HashMap<String, Vec<OperationTiming>>) {
+    fn updatemetrics(&mut self, records: &HashMap<String, Vec<OperationTiming>>) {
         for (operation_name, timings) in records {
-            let metrics = self.calculate_aggregated_metrics(timings);
-            self.operation_metrics
+            let metrics = self.calculate_aggregatedmetrics(timings);
+            self.operationmetrics
                 .insert(operation_name.clone(), metrics);
         }
 
-        self.update_system_metrics(records);
+        self.update_systemmetrics(records);
         self.update_trends(records);
     }
 
-    fn calculate_aggregated_metrics(&self, timings: &[OperationTiming]) -> AggregatedMetrics {
+    fn calculate_aggregatedmetrics(&self, timings: &[OperationTiming]) -> AggregatedMetrics {
         if timings.is_empty() {
             return AggregatedMetrics {
                 operation_count: 0,
@@ -547,16 +548,16 @@ impl MetricsAggregator {
         }
     }
 
-    fn update_system_metrics(&mut self, records: &HashMap<String, Vec<OperationTiming>>) {
+    fn update_systemmetrics(&mut self, records: &HashMap<String, Vec<OperationTiming>>) {
         let total_operations: usize = records.values().map(|v| v.len()).sum();
         let total_execution_time: Duration =
             records.values().flatten().map(|t| t.execution_time).sum();
         let total_memory_allocated: usize =
             records.values().flatten().map(|t| t.memory_allocated).sum();
 
-        self.system_metrics.total_operations = total_operations;
-        self.system_metrics.total_execution_time = total_execution_time;
-        self.system_metrics.total_memory_allocated = total_memory_allocated;
+        self.systemmetrics.total_operations = total_operations;
+        self.systemmetrics.total_execution_time = total_execution_time;
+        self.systemmetrics.total_memory_allocated = total_memory_allocated;
     }
 
     fn update_trends(&mut selfrecords: &HashMap<String, Vec<OperationTiming>>) {
@@ -574,7 +575,7 @@ impl OptimizationEngine {
         Self {
             bottlenecks: Vec::new(),
             recommendations: Vec::new(),
-            optimization_history: Vec::new(),
+            optimizationhistory: Vec::new(),
         }
     }
 }
@@ -585,22 +586,21 @@ impl MemoryTracker {
         self.peak_usage = self.peak_usage.max(usage);
 
         let now = Instant::now();
-        self.usage_history.push_back((now, usage));
+        self.usagehistory.push_back((now, usage));
 
         // Keep only recent history (last hour)
         let cutoff = now - Duration::from_secs(3600);
         while self
-            .usage_history
+            .usagehistory
             .front()
             .map_or(false, |&(time_)| time < cutoff)
         {
-            self.usage_history.pop_front();
+            self.usagehistory.pop_front();
         }
     }
 
     fn get_statistics(&self) -> MemoryStatistics {
-        let recent_usages: Vec<usize> =
-            self.usage_history.iter().map(|(_, usage)| *usage).collect();
+        let recent_usages: Vec<usize> = self.usagehistory.iter().map(|(_, usage)| *usage).collect();
         let avg_usage = if recent_usages.is_empty() {
             0
         } else {
@@ -621,9 +621,9 @@ impl MemoryTracker {
 #[derive(Debug, Clone)]
 pub struct PerformanceReport {
     /// Per-operation performance metrics
-    pub operation_metrics: HashMap<String, AggregatedMetrics>,
+    pub operationmetrics: HashMap<String, AggregatedMetrics>,
     /// System-wide performance metrics
-    pub system_metrics: SystemMetrics,
+    pub systemmetrics: SystemMetrics,
     /// Performance trends
     pub trends: PerformanceTrends,
     /// Identified performance bottlenecks
@@ -681,14 +681,14 @@ impl PerformanceReport {
         println!("Generated at: {:?}", self.timestamp);
 
         println!("\n--- System Metrics ---");
-        println!("Total Operations: {}", self.system_metrics.total_operations);
+        println!("Total Operations: {}", self.systemmetrics.total_operations);
         println!(
             "Total Execution Time: {:.3}s",
-            self.system_metrics.total_execution_time.as_secs_f64()
+            self.systemmetrics.total_execution_time.as_secs_f64()
         );
         println!(
             "Total Memory Allocated: {:.2} MB",
-            self.system_metrics.total_memory_allocated as f64 / (1024.0 * 1024.0)
+            self.systemmetrics.total_memory_allocated as f64 / (1024.0 * 1024.0)
         );
 
         println!("\n--- Memory Statistics ---");
@@ -706,7 +706,7 @@ impl PerformanceReport {
         );
 
         println!("\n--- Top Operations by Time ---");
-        let mut operations: Vec<_> = self.operation_metrics.iter().collect();
+        let mut operations: Vec<_> = self.operationmetrics.iter().collect();
         operations.sort_by(|a, b| b.1.avg_execution_time.cmp(&a.1.avg_execution_time));
 
         for (name, metrics) in operations.iter().take(5) {
@@ -820,7 +820,7 @@ mod tests {
         let profiler = PerformanceProfiler::new(ProfilerConfig::default());
         let report = profiler.generate_performance_report();
 
-        assert!(report.operation_metrics.is_empty()); // No operations recorded yet
-        assert_eq!(report.system_metrics.total_operations, 0);
+        assert!(report.operationmetrics.is_empty()); // No operations recorded yet
+        assert_eq!(report.systemmetrics.total_operations, 0);
     }
 }

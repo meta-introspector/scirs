@@ -3,10 +3,10 @@ use std::fs::File;
 use std::io::Write;
 
 use scirs2_signal::higher_order::{
-use std::f64::consts::PI;
     biamplitude, bicoherence, bispectrum, cumulative_bispectrum, detect_phase_coupling,
     skewness_spectrum, trispectrum,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {
@@ -34,8 +34,7 @@ fn main() {
 
     // Demonstrate bispectrum on uncoupled signal
     println!("\n2. Computing bispectrum of signal without phase coupling...");
-    let (bis_uncoupled__) =
-        bispectrum(&signal_no_coupling, nfft, Some("hann"), None, fs).unwrap();
+    let (bis_uncoupled__) = bispectrum(&signal_no_coupling, nfft, Some("hann"), None, fs).unwrap();
 
     save_matrix_to_csv(
         "bispectrum_uncoupled.csv",
@@ -166,7 +165,8 @@ fn generate_phase_coupled_signal() -> Array1<f64> {
     let noise_level = 0.1;
     let mut rng = rand::rng();
     let noise = Array1::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..);
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..,
+    );
 
     signal + noise
 }
@@ -197,7 +197,8 @@ fn generate_uncoupled_signal() -> Array1<f64> {
     // Add some noise
     let noise_level = 0.1;
     let noise = Array1::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..);
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..,
+    );
 
     signal + noise
 }
@@ -226,7 +227,8 @@ fn generate_phase_coupled_signal_with_angle(angle: f64) -> Array1<f64> {
     let noise_level = 0.1;
     let mut rng = rand::rng();
     let noise = Array1::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..);
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..,
+    );
 
     signal + noise
 }

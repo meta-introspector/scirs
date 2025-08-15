@@ -94,7 +94,7 @@ pub struct MissingFeature {
 #[derive(Debug, Clone)]
 pub struct ParameterDifference {
     /// Function name
-    pub function_name: String,
+    pub functionname: String,
     /// Parameter name
     pub parameter_name: String,
     /// SciPy parameter type/description
@@ -507,7 +507,7 @@ impl SciPyCompatibilityChecker {
     // Helper methods
 
     fn check_function_coverage(&self, functionname: &str) -> FunctionCoverage {
-        match function_name {
+        match functionname {
             "interp1d" | "CubicSpline" | "BSpline" | "griddata" | "RBFInterpolator" => {
                 FunctionCoverage::Complete
             }
@@ -518,9 +518,9 @@ impl SciPyCompatibilityChecker {
 
     fn check_parameter_compatibility(&self, functionname: &str) -> ParameterCompatibilityLevel {
         // Simplified implementation - in practice would check actual signatures
-        match function_name {
+        match functionname {
             "CubicSpline" => ParameterCompatibilityLevel::Compatible(vec![ParameterDifference {
-                function_name: function_name.to_string(),
+                functionname: functionname.to_string(),
                 parameter_name: "bc_type".to_string(),
                 scipy_param: "str or 2-tuple, optional".to_string(),
                 scirs2_param: "SplineBoundaryCondition enum".to_string(),
@@ -552,8 +552,8 @@ impl SciPyCompatibilityChecker {
             Ok(relative_error)
         } else {
             Err(BehaviorTestFailure {
-                test_name: test_case.name.clone(),
-                input_description: test_case.description.clone(),
+                test_name: testcase.name.clone(),
+                input_description: testcase.description.clone(),
                 expected_result: "scipy_result".to_string(),
                 actual_result: "scirs2_result".to_string(),
                 relative_error,

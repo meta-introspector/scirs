@@ -66,7 +66,8 @@ fn generate_sinusoid_signal() -> Array1<f64> {
     let noise_level = 0.2;
     let mut rng = rand::rng();
     let noise = Array1::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..);
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..,
+    );
 
     &sinusoid1 + &sinusoid2 + &noise
 }
@@ -109,7 +110,7 @@ fn generate_ar_signal() -> Array1<f64> {
 
 /// Analyzes a signal using different AR estimation methods
 #[allow(dead_code)]
-fn analyze_with_ar_methods(signal: &Array1<f64>..fs: f64) {
+fn analyze_with_ar_methods(signal: &Array1<f64>, fs: f64) {
     let ar_order = 20; // Higher order to capture peaks well
 
     // Apply different AR estimation methods
@@ -235,8 +236,15 @@ fn analyze_with_different_orders(signal: &Array1<f64>, fs: f64) {
 #[allow(dead_code)]
 fn compare_with_periodogram(signal: &Array1<f64>, fs: f64) {
     // Compute periodogram (non-parametric)
-    let (pxx_periodogram, f_periodogram) =
-        periodogram(_signal.as_slice().unwrap(), Some(fs), None, None, None, None).unwrap();
+    let (pxx_periodogram, f_periodogram) = periodogram(
+        _signal.as_slice().unwrap(),
+        Some(fs),
+        None,
+        None,
+        None,
+        None,
+    )
+    .unwrap();
 
     // Convert to dB
     let pxx_db = pxx_periodogram
@@ -448,9 +456,15 @@ fn demonstrate_order_selection(signal: &Array1<f64>, fs: f64) {
                     let psd_db = psd.mapv(|x| 10.0 * (x).log10());
 
                     // Compute periodogram for comparison
-                    let (pxx_periodogram_f_periodogram) =
-                        periodogram(_signal.as_slice().unwrap(), Some(fs), None, None, None, None)
-                            .unwrap();
+                    let (pxx_periodogram_f_periodogram) = periodogram(
+                        _signal.as_slice().unwrap(),
+                        Some(fs),
+                        None,
+                        None,
+                        None,
+                        None,
+                    )
+                    .unwrap();
                     let pxx_db: Vec<f64> = pxx_periodogram[..(nfft / 2 + 1)]
                         .iter()
                         .map(|x| 10.0 * (x).log10())

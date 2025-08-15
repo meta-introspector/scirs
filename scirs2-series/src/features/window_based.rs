@@ -1069,7 +1069,7 @@ where
     let mut bearish_crossovers = 0;
 
     for i in 1..histogram.len() {
-        if histogram[i - 1] <= F::zero() && histogram[i] >, F::zero() {
+        if histogram[i - 1] <= F::zero() && histogram[i] > F::zero() {
             bullish_crossovers += 1;
         } else if histogram[i - 1] >= F::zero() && histogram[i] < F::zero() {
             bearish_crossovers += 1;

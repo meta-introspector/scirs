@@ -559,7 +559,7 @@ impl SceneUnderstandingEngine {
         // Apply reasoning rules
         for rule in &self.reasoning_engine.rules {
             if let Some(result) =
-                self.apply_reasoning_rule(rule, objects, relationships, scene_class)?
+                self.apply_reasoning_rule(rule, objects, relationships, scene_class, scene_class)?
             {
                 results.push(result);
             }
@@ -569,50 +569,54 @@ impl SceneUnderstandingEngine {
     }
 
     /// Helper methods (placeholder implementations for compilation)
-    fn segment_at_scale(self_image: &ArrayView3<f32>, scale: f32) -> Result<Array2<u32>> {
+    fn segment_at_scale(&self, image: &ArrayView3<f32>, scale: f32) -> Result<Array2<u32>> {
         Ok(Array2::zeros((100, 100))) // Placeholder
     }
 
-    fn merge_segmentation_results(self_base: &mut Array2<u32>, new: &Array2<u32>) -> Result<()> {
+    fn merge_segmentation_results(&self, base: &mut Array2<u32>, new: &Array2<u32>) -> Result<()> {
         Ok(()) // Placeholder
     }
 
-    fn enforce_spatial_consistency(selfsegmentation: &mut Array2<u32>) -> Result<()> {
+    fn enforce_spatial_consistency(&self, segmentation: &mut Array2<u32>) -> Result<()> {
         Ok(()) // Placeholder
     }
 
     fn extract_object_features(
-        self_image: &ArrayView3<f32>,
+        &self,
+        image: &ArrayView3<f32>,
         _bbox: &(f32, f32, f32, f32),
     ) -> Result<Array2<f32>> {
         Ok(Array2::zeros((1, 256))) // Placeholder
     }
 
     fn compute_object_mask(
-        self_image: &ArrayView3<f32>,
+        &self,
+        image: &ArrayView3<f32>,
         _detection: &DetectionResult,
     ) -> Result<Array2<bool>> {
         Ok(Array2::from_elem((50, 50), false)) // Placeholder
     }
 
     fn analyze_object_attributes(
-        self_image: &ArrayView3<f32>,
+        &self,
+        image: &ArrayView3<f32>,
         _detection: &DetectionResult,
         features: &Array2<f32>,
     ) -> Result<HashMap<String, f32>> {
         Ok(HashMap::new()) // Placeholder
     }
 
-    fn extract_global_features(selfimage: &ArrayView3<f32>) -> Result<Array2<f32>> {
+    fn extract_global_features(&self, image: &ArrayView3<f32>) -> Result<Array2<f32>> {
         Ok(Array2::zeros((1, 512))) // Placeholder
     }
 
-    fn analyze_object_composition(selfobjects: &[DetectedObject]) -> Result<Array2<f32>> {
+    fn analyze_object_composition(&self, objects: &[DetectedObject]) -> Result<Array2<f32>> {
         Ok(Array2::zeros((1, 128))) // Placeholder
     }
 
     fn combine_scene_features(
-        self_global: &Array2<f32>,
+        &self,
+        global: &Array2<f32>,
         _composition: &Array2<f32>,
     ) -> Result<Array2<f32>> {
         Ok(Array2::zeros((1, 640))) // Placeholder
@@ -647,7 +651,7 @@ impl SceneUnderstandingEngine {
         })
     }
 
-    fn enforce_temporal_consistency(selfresults: &mut [SceneAnalysisResult]) -> Result<()> {
+    fn enforce_temporal_consistency(&mut self, results: &mut [SceneAnalysisResult]) -> Result<()> {
         Ok(()) // Placeholder
     }
 }
@@ -671,7 +675,7 @@ impl ObjectDetector {
         }
     }
 
-    fn detect_multi_scale(selfimage: &ArrayView3<f32>) -> Result<Vec<DetectionResult>> {
+    fn detect_multi_scale(&self, image: &ArrayView3<f32>) -> Result<Vec<DetectionResult>> {
         Ok(Vec::new()) // Placeholder
     }
 }
@@ -690,7 +694,8 @@ impl SpatialRelationshipAnalyzer {
     }
 
     fn analyze_pair(
-        self_obj1: &DetectedObject,
+        &self,
+        obj1: &DetectedObject,
         _obj2: &DetectedObject,
         id1: usize,
         _id2: usize,

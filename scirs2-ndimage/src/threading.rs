@@ -209,7 +209,7 @@ impl<T: Send> WorkStealingQueue<T> {
             .map(|_| Arc::new(Mutex::new(Vec::new())))
             .collect();
 
-        Self { _queues: _queues }
+        Self { _queues }
     }
 
     /// Push work to a specific queue

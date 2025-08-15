@@ -35,7 +35,14 @@ pub fn normalize(data: &mut Array2<f64>) {
         let mut column = data.column_mut(j);
 
         // Calculate mean and std
-        let mean = column.mean().unwrap_or(0.0);
+        let mean = {
+            let val = column.mean();
+            if val.is_nan() {
+                0.0
+            } else {
+                val
+            }
+        };
         let std = column.std(0.0);
 
         // Avoid division by zero
@@ -186,7 +193,14 @@ impl StatsExt for ndarray::ArrayView1<'_, f64> {
         }
 
         let n = self.len() as f64;
-        let mean = self.mean().unwrap_or(0.0);
+        let mean = {
+            let val = self.mean();
+            if val.is_nan() {
+                0.0
+            } else {
+                val
+            }
+        };
 
         let mut sum_sq = 0.0;
         for &x in self.iter() {
@@ -216,7 +230,7 @@ mod tests {
         // Check that each column has approximately zero mean
         for j in 0..data.ncols() {
             let column = data.column(j);
-            let mean = column.mean().unwrap();
+            let mean = column.mean();
             assert!(mean.abs() < 1e-10);
         }
     }
@@ -352,7 +366,7 @@ mod tests {
         let view = data.view();
 
         // Test mean calculation
-        let mean = view.mean().unwrap();
+        let mean = view.mean();
         assert!((mean - 3.0_f64).abs() < 1e-10);
 
         // Test standard deviation calculation
@@ -371,8 +385,8 @@ mod tests {
         let data: Array1<f64> = array![];
         let view = data.view();
 
-        // Mean of empty array should be None
-        assert!(view.mean().is_none());
+        // Mean of empty array should be NaN
+        assert!(view.mean().is_nan());
 
         // Standard deviation of empty array should be 0
         assert_eq!(view.standard_deviation(0.0), 0.0);

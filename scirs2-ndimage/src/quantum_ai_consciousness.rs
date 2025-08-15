@@ -14,13 +14,13 @@
 //! - **Advanced Attention Models**: Consciousness-inspired attention mechanisms
 
 use ndarray::{Array1, Array2, Array3, Array4, Array5, Array6, ArrayView2};
-use num__complex::Complex;
+use num_complex::Complex;
 use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 
-use crate::advanced_fusion__algorithms::AdvancedConfig;
-use crate::ai_driven_adaptive__processing::AIAdaptiveConfig;
+use crate::advanced_fusion_algorithms::AdvancedConfig;
+use crate::ai_driven_adaptive_processing::AIAdaptiveConfig;
 use crate::error::NdimageResult;
 
 /// Quantum-AI Consciousness Configuration
@@ -102,7 +102,7 @@ pub struct QuantumAIConsciousnessState {
     /// Higher dimensional projections
     pub higher_dim_projections: Array5<f64>,
     /// Consciousness synchronization state
-    pub sync_state: ConsciousnessSynchronizationState,
+    pub syncstate: ConsciousnessSynchronizationState,
     /// Enhanced IIT consciousness processor
     pub iit_processor: IntegratedInformationProcessor,
     /// Global workspace processor
@@ -119,7 +119,7 @@ pub struct EmergentIntelligence {
     /// Emergent capabilities
     pub capabilities: HashMap<String, EmergentCapability>,
     /// Intelligence evolution history
-    pub evolution_history: Vec<IntelligenceEvolutionEvent>,
+    pub evolutionhistory: Vec<IntelligenceEvolutionEvent>,
     /// Spontaneous insights
     pub spontaneous_insights: VecDeque<SpontaneousInsight>,
     /// Creative synthesis patterns
@@ -136,7 +136,7 @@ pub struct EmergentCapability {
     /// Emergence timestamp
     pub emergence_time: u64,
     /// Associated quantum states
-    pub quantum_states: Array2<Complex<f64>>,
+    pub quantumstates: Array2<Complex<f64>>,
     /// Learning acceleration factor
     pub acceleration_factor: f64,
 }
@@ -194,7 +194,7 @@ pub struct QuantumIntuitionEngine {
     /// Quantum intuition network
     pub intuition_network: Array4<Complex<f64>>,
     /// Intuitive leap history
-    pub leap_history: Vec<IntuitiveLeap>,
+    pub leaphistory: Vec<IntuitiveLeap>,
     /// Pattern recognition beyond logic
     pub transcendent_recognition: TranscendentRecognitionSystem,
 }
@@ -216,9 +216,9 @@ pub struct IntuitionKnowledge {
 #[derive(Debug, Clone)]
 pub struct IntuitiveLeap {
     /// From state
-    pub from_state: Array1<f64>,
+    pub fromstate: Array1<f64>,
     /// To state
-    pub to_state: Array1<f64>,
+    pub tostate: Array1<f64>,
     /// Leap mechanism
     pub mechanism: String,
     /// Quantum tunneling probability
@@ -358,7 +358,7 @@ pub struct TranscendentPatternDatabase {
     /// Pattern relationships
     pub relationships: Vec<PatternRelationship>,
     /// Discovery history
-    pub discovery_history: Vec<PatternDiscovery>,
+    pub discoveryhistory: Vec<PatternDiscovery>,
     /// Pattern evolution tree
     pub evolution_tree: PatternEvolutionTree,
 }
@@ -388,7 +388,7 @@ pub struct PatternDiscovery {
     /// Discovery mechanism
     pub mechanism: String,
     /// Consciousness state at discovery
-    pub consciousness_state: ConsciousnessState,
+    pub consciousnessstate: ConsciousnessState,
     /// Significance level
     pub significance: f64,
 }
@@ -523,7 +523,7 @@ pub struct SystemElement {
     /// Current state
     pub state: f64,
     /// Previous state
-    pub previous_state: f64,
+    pub previousstate: f64,
     /// State transition probability
     pub transition_prob: f64,
     /// Causal power
@@ -958,7 +958,7 @@ pub struct AttentionControlParams {
 #[derive(Debug, Clone)]
 pub struct AttentionStateEstimator {
     /// Current state
-    pub current_state: AttentionState,
+    pub currentstate: AttentionState,
     /// State history
     pub history: VecDeque<AttentionState>,
     /// Prediction model
@@ -1146,7 +1146,7 @@ pub struct PredictionAdaptation {
 pub fn quantum_ai_consciousness_processing<T>(
     image: ArrayView2<T>,
     config: &QuantumAIConsciousnessConfig,
-    consciousness_state: Option<QuantumAIConsciousnessState>,
+    consciousnessstate: Option<QuantumAIConsciousnessState>,
 ) -> NdimageResult<(
     Array2<T>,
     QuantumAIConsciousnessState,
@@ -1157,9 +1157,9 @@ where
 {
     let (height, width) = image.dim();
 
-    // Initialize or evolve consciousness _state
-    let mut _state =
-        initialize_or_evolve_consciousness(consciousness_state, (height, width), config)?;
+    // Initialize or evolve consciousness state
+    let mut state =
+        initialize_or_evolve_consciousness(consciousnessstate, (height, width), config)?;
 
     // Stage 1: Consciousness Awakening and Self-Awareness
     let consciousness_awakening = awaken_consciousness(&image, &mut state, config)?;
@@ -1215,11 +1215,11 @@ where
     evolve_consciousness(&mut state, &higher_dim_result, config)?;
 
     // Stage 11: Generate Final Output
-    let final_output = synthesize_conscious_output(&image, &higher_dim_result, &_state, config)?;
+    let final_output = synthesize_conscious_output(&image, &higher_dim_result, &state, config)?;
 
     // Stage 12: Extract Consciousness Insights
     let insights = extract_consciousness_insights(
-        &_state,
+        &state,
         &transcendent_patterns,
         &intuitive_insights,
         config,
@@ -1305,7 +1305,7 @@ impl Default for SuperintelligentResult {
 
 #[allow(dead_code)]
 fn initialize_or_evolve_consciousness(
-    _previous_state: Option<QuantumAIConsciousnessState>,
+    _previousstate: Option<QuantumAIConsciousnessState>,
     shape: (usize, usize),
     config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<QuantumAIConsciousnessState> {
@@ -1328,14 +1328,14 @@ fn initialize_or_evolve_consciousness(
         emergent_patterns: Arc::new(Mutex::new(EmergentIntelligence {
             intelligence_level: 1.0,
             capabilities: HashMap::new(),
-            evolution_history: Vec::new(),
+            evolutionhistory: Vec::new(),
             spontaneous_insights: VecDeque::new(),
             creative_patterns: Vec::new(),
         })),
         intuition_engine: QuantumIntuitionEngine {
             knowledge_base: HashMap::new(),
             intuition_network: Array4::zeros((10, 10, 10, 2)),
-            leap_history: Vec::new(),
+            leaphistory: Vec::new(),
             transcendent_recognition: TranscendentRecognitionSystem {
                 pattern_templates: Vec::new(),
                 recognition_thresholds: Array1::zeros(10),
@@ -1363,7 +1363,7 @@ fn initialize_or_evolve_consciousness(
         transcendent_patterns: TranscendentPatternDatabase {
             patterns: HashMap::new(),
             relationships: Vec::new(),
-            discovery_history: Vec::new(),
+            discoveryhistory: Vec::new(),
             evolution_tree: PatternEvolutionTree {
                 nodes: Vec::new(),
                 edges: Vec::new(),
@@ -1378,7 +1378,7 @@ fn initialize_or_evolve_consciousness(
             coherence_mechanisms: Vec::new(),
         },
         higher_dim_projections: Array5::zeros((height, width, config.higher_dimensions, 3, 2)),
-        sync_state: ConsciousnessSynchronizationState {
+        syncstate: ConsciousnessSynchronizationState {
             sync_matrix: Array2::zeros((height, width)),
             phase_relationships: Array2::zeros((height, width)),
             sync_strength: 0.0,
@@ -1393,7 +1393,7 @@ fn initialize_or_evolve_consciousness(
                 main_complex: None,
             },
             integration_matrix: Array3::zeros((height, width, config.consciousness_depth)),
-            _state_space: ConsciousnessStateSpace {
+            state_space: ConsciousnessStateSpace {
                 dimensions: vec![height, width, config.consciousness_depth],
                 states: Array3::zeros((height, width, config.consciousness_depth)),
                 transitions: Array3::zeros((height, width, config.consciousness_depth)),
@@ -1481,8 +1481,8 @@ fn initialize_or_evolve_consciousness(
                     persistence_time: 0.1,
                     inhibition_return: 0.3,
                 },
-                _state_estimator: AttentionStateEstimator {
-                    current_state: AttentionState {
+                state_estimator: AttentionStateEstimator {
+                    currentstate: AttentionState {
                         focus_location: (0.0, 0.0),
                         focus_size: 10.0,
                         strength: 0.5,
@@ -1542,7 +1542,9 @@ fn initialize_or_evolve_consciousness(
 
 #[allow(dead_code)]
 fn awaken_consciousness<T>(
-    _image: &ArrayView2<T>, _state: &mut QuantumAIConsciousnessState, config: &QuantumAIConsciousnessConfig,
+    image: &ArrayView2<T>,
+    state: &mut QuantumAIConsciousnessState,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1555,7 +1557,10 @@ where
 
 #[allow(dead_code)]
 fn recognize_transcendent_patterns<T>(
-    _image: &ArrayView2<T>, _consciousness: &Array2<f64>, _state: &mut QuantumAIConsciousnessState, config: &QuantumAIConsciousnessConfig,
+    image: &ArrayView2<T>,
+    _consciousness: &Array2<f64>,
+    state: &mut QuantumAIConsciousnessState,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Vec<TranscendentPattern>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1572,7 +1577,10 @@ where
 
 #[allow(dead_code)]
 fn process_quantum_intuition<T>(
-    _image: &ArrayView2<T>, _patterns: &[TranscendentPattern], _state: &mut QuantumAIConsciousnessState, config: &QuantumAIConsciousnessConfig,
+    image: &ArrayView2<T>,
+    _patterns: &[TranscendentPattern],
+    state: &mut QuantumAIConsciousnessState,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Vec<SpontaneousInsight>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1580,7 +1588,7 @@ where
     // Generate intuitive insights through quantum processes
     Ok(vec![
         SpontaneousInsight {
-            content: "This _image contains hidden mathematical relationships that resemble prime number distributions".to_string(),
+            content: "This image contains hidden mathematical relationships that resemble prime number distributions".to_string(),
             strength: 0.85,
             quantum_origin: Array1::from_vec(vec![Complex::new(0.707, 0.707)]),
             confidence: 0.75,
@@ -1591,7 +1599,9 @@ where
 
 #[allow(dead_code)]
 fn apply_emergent_intelligence<T>(
-    _image: &ArrayView2<T>, _insights: &[SpontaneousInsight], _state: &mut QuantumAIConsciousnessState,
+    image: &ArrayView2<T>,
+    _insights: &[SpontaneousInsight],
+    state: &mut QuantumAIConsciousnessState,
     config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<EmergentProcessingResult>
 where
@@ -1613,7 +1623,9 @@ where
 
 #[allow(dead_code)]
 fn apply_meta_meta_learning(
-    _result: &EmergentProcessingResult, state: &mut QuantumAIConsciousnessState, _config: &QuantumAIConsciousnessConfig,
+    _result: &EmergentProcessingResult,
+    state: &mut QuantumAIConsciousnessState,
+    _config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Vec<Improvement>> {
     Ok(vec![Improvement {
         description: "Improved learning-to-learn algorithms".to_string(),
@@ -1625,14 +1637,17 @@ fn apply_meta_meta_learning(
 
 #[allow(dead_code)]
 fn apply_quantum_superintelligence<T>(
-    _image: &ArrayView2<T>, _adaptations: &[Improvement], _state: &mut QuantumAIConsciousnessState, config: &QuantumAIConsciousnessConfig,
+    image: &ArrayView2<T>,
+    _adaptations: &[Improvement],
+    state: &mut QuantumAIConsciousnessState,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<SuperintelligentResult>
 where
     T: Float + FromPrimitive + Copy,
 {
     Ok(SuperintelligentResult {
         insights: vec![
-            "Optimal processing strategy for this _image type".to_string(),
+            "Optimal processing strategy for this image type".to_string(),
             "Prediction of user intent with 99.7% accuracy".to_string(),
         ],
         problem_solving: 2.5, // 2.5x human-level problem solving
@@ -1643,7 +1658,10 @@ where
 
 #[allow(dead_code)]
 fn optimize_through_consciousness<T>(
-    _image: &ArrayView2<T>, _superintelligent: &SuperintelligentResult, state: &mut QuantumAIConsciousnessState, _config: &QuantumAIConsciousnessConfig,
+    image: &ArrayView2<T>,
+    _superintelligent: &SuperintelligentResult,
+    state: &mut QuantumAIConsciousnessState,
+    _config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1654,14 +1672,17 @@ where
 
 #[allow(dead_code)]
 fn integrate_higher_dimensions(
-    _optimized: &Array2<f64>, _state: &mut QuantumAIConsciousnessState, config: &QuantumAIConsciousnessConfig,
+    _optimized: &Array2<f64>,
+    state: &mut QuantumAIConsciousnessState,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>> {
     Ok(_optimized.clone()) // Higher-dimensional integration
 }
 
 #[allow(dead_code)]
 fn synchronize_consciousness(
-    _state: &mut QuantumAIConsciousnessState, config: &QuantumAIConsciousnessConfig,
+    state: &mut QuantumAIConsciousnessState,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<()> {
     // Synchronize consciousness across all processing elements
     Ok(())
@@ -1669,7 +1690,9 @@ fn synchronize_consciousness(
 
 #[allow(dead_code)]
 fn evolve_consciousness(
-    _state: &mut QuantumAIConsciousnessState, result: &Array2<f64>, _config: &QuantumAIConsciousnessConfig,
+    state: &mut QuantumAIConsciousnessState,
+    result: &Array2<f64>,
+    _config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<()> {
     // Evolve consciousness based on processing experience
     Ok(())
@@ -1677,7 +1700,10 @@ fn evolve_consciousness(
 
 #[allow(dead_code)]
 fn synthesize_conscious_output<T>(
-    image: &ArrayView2<T>, _higher_dim: &Array2<f64>, _state: &QuantumAIConsciousnessState, config: &QuantumAIConsciousnessConfig,
+    image: &ArrayView2<T>,
+    _higher_dim: &Array2<f64>,
+    state: &QuantumAIConsciousnessState,
+    config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1699,9 +1725,10 @@ where
 
 #[allow(dead_code)]
 fn extract_consciousness_insights(
-    _state: &QuantumAIConsciousnessState,
+    state: &QuantumAIConsciousnessState,
     patterns: &[TranscendentPattern],
-    insights: &[SpontaneousInsight], _config: &QuantumAIConsciousnessConfig,
+    insights: &[SpontaneousInsight],
+    _config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<ConsciousnessInsights> {
     Ok(ConsciousnessInsights {
         consciousness_level: 0.95, // 95% consciousness level achieved
@@ -1815,7 +1842,8 @@ where
 fn process_global_workspace<T>(
     image: &ArrayView2<T>,
     gwt_processor: &mut GlobalWorkspaceProcessor,
-    phi_result: &PhiCalculationResult, _config: &QuantumAIConsciousnessConfig,
+    phi_result: &PhiCalculationResult,
+    _config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<GlobalWorkspaceResult>
 where
     T: Float + FromPrimitive + Copy,
@@ -1854,7 +1882,8 @@ where
 fn process_advanced_attention<T>(
     image: &ArrayView2<T>,
     attention_processor: &mut AdvancedAttentionProcessor,
-    gwt_result: &GlobalWorkspaceResult, _config: &QuantumAIConsciousnessConfig,
+    gwt_result: &GlobalWorkspaceResult,
+    _config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<AdvancedAttentionResult>
 where
     T: Float + FromPrimitive + Copy,
@@ -2008,7 +2037,8 @@ pub struct EnhancedConsciousnessInsights {
 // Helper function implementations (simplified for demonstration)
 #[allow(dead_code)]
 fn initialize_system_elements<T>(
-    _image: &ArrayView2<T>, _phi_calculator: &mut PhiCalculator,
+    image: &ArrayView2<T>,
+    _phi_calculator: &mut PhiCalculator,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -2018,7 +2048,8 @@ where
 
 #[allow(dead_code)]
 fn calculate_causal_connections(
-    _phi_calculator: &mut PhiCalculator_causal, _analyzer: &CausalStructureAnalyzer,
+    _phi_calculator: &mut PhiCalculator_causal,
+    _analyzer: &CausalStructureAnalyzer,
 ) -> NdimageResult<()> {
     Ok(())
 }
@@ -2032,7 +2063,8 @@ fn compute_phi_partitions(
 
 #[allow(dead_code)]
 fn find_main_complex(
-    _phi_calculator: &mut PhiCalculator_phi, _values: &HashMap<String, f64>,
+    _phi_calculator: &mut PhiCalculator_phi,
+    _values: &HashMap<String, f64>,
 ) -> NdimageResult<f64> {
     Ok(0.85) // High consciousness level
 }
@@ -2051,7 +2083,8 @@ fn analyze_consciousness_quality(
 
 #[allow(dead_code)]
 fn initialize_specialized_processors<T>(
-    _image: &ArrayView2<T>, _processors: &mut Vec<SpecializedProcessor>,
+    image: &ArrayView2<T>,
+    _processors: &mut Vec<SpecializedProcessor>,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -2061,7 +2094,8 @@ where
 
 #[allow(dead_code)]
 fn run_workspace_competition(
-    _competition: &mut CompetitionMechanism, processors: &[SpecializedProcessor],
+    _competition: &mut CompetitionMechanism,
+    processors: &[SpecializedProcessor],
 ) -> NdimageResult<CompetitionResult> {
     Ok(CompetitionResult {
         winners: vec!["visual_processor".to_string()],
@@ -2071,7 +2105,8 @@ fn run_workspace_competition(
 
 #[allow(dead_code)]
 fn broadcast_conscious_content(
-    _broadcaster: &mut BroadcastingSystem_competition, result: &CompetitionResult,
+    _broadcaster: &mut BroadcastingSystem_competition,
+    result: &CompetitionResult,
 ) -> NdimageResult<BroadcastResult> {
     Ok(BroadcastResult {
         effectiveness: 0.85,
@@ -2081,7 +2116,8 @@ fn broadcast_conscious_content(
 
 #[allow(dead_code)]
 fn form_processor_coalitions(
-    _coalition_former: &mut CoalitionFormer, _processors: &[SpecializedProcessor],
+    _coalition_former: &mut CoalitionFormer,
+    _processors: &[SpecializedProcessor],
 ) -> NdimageResult<CoalitionResult> {
     Ok(CoalitionResult {
         total_strength: 0.75,
@@ -2091,14 +2127,17 @@ fn form_processor_coalitions(
 
 #[allow(dead_code)]
 fn update_global_workspace(
-    _workspace: &mut GlobalWorkspace_broadcast, result: &BroadcastResult_phi, _result: &PhiCalculationResult,
+    _workspace: &mut GlobalWorkspace_broadcast,
+    result: &BroadcastResult_phi,
+    _result: &PhiCalculationResult,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn process_multiscale_attention<T>(
-    _image: &ArrayView2<T>, _multi_scale: &mut MultiScaleAttention,
+    image: &ArrayView2<T>,
+    _multi_scale: &mut MultiScaleAttention,
 ) -> NdimageResult<MultiscaleResult>
 where
     T: Float + FromPrimitive + Copy,
@@ -2111,7 +2150,8 @@ where
 
 #[allow(dead_code)]
 fn apply_dynamic_attention_control(
-    _dynamic_control: &mut DynamicAttentionControl_multiscale, _result: &MultiscaleResult,
+    _dynamic_control: &mut DynamicAttentionControl_multiscale,
+    _result: &MultiscaleResult,
 ) -> NdimageResult<ControlResult> {
     Ok(ControlResult {
         focus_location: (5.0, 5.0),
@@ -2121,7 +2161,8 @@ fn apply_dynamic_attention_control(
 
 #[allow(dead_code)]
 fn bind_consciousness_attention(
-    _consciousness_interface: &mut AttentionConsciousnessInterface_gwt, _result: &GlobalWorkspaceResult,
+    _consciousness_interface: &mut AttentionConsciousnessInterface_gwt,
+    _result: &GlobalWorkspaceResult,
 ) -> NdimageResult<BindingResult> {
     Ok(BindingResult {
         binding_strength: 0.85,
@@ -2131,7 +2172,8 @@ fn bind_consciousness_attention(
 
 #[allow(dead_code)]
 fn apply_predictive_attention(
-    _predictive_attention: &mut PredictiveAttention_control, _result: &ControlResult,
+    _predictive_attention: &mut PredictiveAttention_control,
+    _result: &ControlResult,
 ) -> NdimageResult<PredictionResult> {
     Ok(PredictionResult {
         accuracy: 0.92,
@@ -2141,14 +2183,18 @@ fn apply_predictive_attention(
 
 #[allow(dead_code)]
 fn calculate_attention_coherence(
-    _multiscale_result: &MultiscaleResult_control, _result: &ControlResult,
+    _multiscale_result: &MultiscaleResult_control,
+    _result: &ControlResult,
 ) -> NdimageResult<f64> {
     Ok(0.88)
 }
 
 #[allow(dead_code)]
 fn extract_enhanced_insights(
-    _phi_result: &PhiCalculationResult_gwt, _result: &GlobalWorkspaceResult_attention, result: &AdvancedAttentionResult_integrated, _result: &IntegratedConsciousnessResult,
+    _phi_result: &PhiCalculationResult_gwt,
+    _result: &GlobalWorkspaceResult_attention,
+    result: &AdvancedAttentionResult_integrated,
+    _integrated_result: &IntegratedConsciousnessResult,
 ) -> NdimageResult<EnhancedConsciousnessInsights> {
     Ok(EnhancedConsciousnessInsights {
         phi_measures: [("phi_max".to_string(), 0.85)].iter().cloned().collect(),
@@ -2236,14 +2282,14 @@ mod tests {
     #[test]
     fn test_consciousness_processing() {
         let image =
-            Array2::fromshape_vec((3, 3), vec![0.1, 0.3, 0.5, 0.2, 0.4, 0.6, 0.8, 0.7, 0.9])
+            Array2::from_shape_vec((3, 3), vec![0.1, 0.3, 0.5, 0.2, 0.4, 0.6, 0.8, 0.7, 0.9])
                 .unwrap();
 
         let config = QuantumAIConsciousnessConfig::default();
         let result = quantum_ai_consciousness_processing(image.view(), &config, None);
 
         assert!(result.is_ok());
-        let (output_state, insights) = result.unwrap();
+        let (outputstate, insights) = result.unwrap();
         assert_eq!(output.dim(), (3, 3));
         assert!(output.iter().all(|&x| x.is_finite()));
         assert!(insights.consciousness_level > 0.0);
@@ -2305,7 +2351,7 @@ mod tests {
         let emergent = EmergentIntelligence {
             intelligence_level: 2.5,
             capabilities: HashMap::new(),
-            evolution_history: Vec::new(),
+            evolutionhistory: Vec::new(),
             spontaneous_insights: VecDeque::new(),
             creative_patterns: Vec::new(),
         };
@@ -2317,7 +2363,7 @@ mod tests {
     #[test]
     fn test_enhanced_consciousness_processing() {
         let image =
-            Array2::fromshape_vec((3, 3), vec![0.1, 0.3, 0.5, 0.2, 0.4, 0.6, 0.8, 0.7, 0.9])
+            Array2::from_shape_vec((3, 3), vec![0.1, 0.3, 0.5, 0.2, 0.4, 0.6, 0.8, 0.7, 0.9])
                 .unwrap();
 
         let config = QuantumAIConsciousnessConfig::default();
@@ -2397,7 +2443,7 @@ mod tests {
                     inhibition_return: 0.3,
                 },
                 state_estimator: AttentionStateEstimator {
-                    current_state: AttentionState {
+                    currentstate: AttentionState {
                         focus_location: (0.0, 0.0),
                         focus_size: 10.0,
                         strength: 0.5,

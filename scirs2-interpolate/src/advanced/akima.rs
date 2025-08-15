@@ -286,7 +286,7 @@ pub fn akima_interpolate<F: crate::traits::InterpolationFloat>(
     y: &ArrayView1<F>,
     xnew: &ArrayView1<F>,
 ) -> InterpolateResult<Array1<F>> {
-    let spline = AkimaSpline::_new(x, y)?;
+    let spline = AkimaSpline::new(x, y)?;
     spline.evaluate_array(xnew)
 }
 

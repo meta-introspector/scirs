@@ -18,7 +18,7 @@ pub use common::*;
 
 // Re-export decomposition methods
 pub use exponential::*;
-pub use multi__seasonal::*;
+pub use multi_seasonal::*;
 pub use robust::*;
 pub use seasonal::*;
 pub use ssa::*;

@@ -958,13 +958,16 @@ impl VisualSLAMSystem {
     }
 
     // Helper methods (placeholder implementations)
-    fn adapt_processing_parameters(selfbudget: f64) -> Result<()> {
+    fn adapt_processing_parameters(&mut self, budget: f64) -> Result<()> {
         // Adapt feature extraction, tracking, and optimization parameters
         // based on available computational _budget
         Ok(())
     }
 
-    fn compute_trajectory_metrics(self_trajectory: &CameraTrajectory) -> Result<TrajectoryMetrics> {
+    fn compute_trajectory_metrics(
+        &mut self,
+        trajectory: &CameraTrajectory,
+    ) -> Result<TrajectoryMetrics> {
         // Compute various _trajectory quality metrics
         Ok(TrajectoryMetrics {
             smoothness_score: 0.85,
@@ -1083,11 +1086,11 @@ impl CameraPoseEstimator {
         }
     }
 
-    fn initialize(selfcalibration: &Array2<f64>) -> Result<()> {
+    fn initialize(&mut self, calibration: &Array2<f64>) -> Result<()> {
         Ok(())
     }
 
-    fn estimate_pose(self_features: &[Feature2D], timestamp: f64) -> Result<CameraPose> {
+    fn estimate_pose(&self, features: &[Feature2D], timestamp: f64) -> Result<CameraPose> {
         Ok(CameraPose {
             position: Array1::zeros(3),
             rotation: Array1::from_vec(vec![1.0, 0.0, 0.0, 0.0]), // Identity quaternion
@@ -1130,11 +1133,11 @@ impl Map3DBuilder {
         }
     }
 
-    fn initialize(selfframe: &ArrayView3<f32>) -> Result<()> {
+    fn initialize(&mut self, frame: &ArrayView3<f32>) -> Result<()> {
         Ok(())
     }
 
-    fn update_map(self_features: &[Feature2D], pose: &CameraPose) -> Result<Map3D> {
+    fn update_map(&mut self, features: &[Feature2D], pose: &CameraPose) -> Result<Map3D> {
         Ok(Map3D {
             landmarks: Vec::new(),
             structure: MapStructure {
@@ -1187,7 +1190,8 @@ impl LoopClosureDetector {
     }
 
     fn detect_closures(
-        self_features: &[Feature2D],
+        &self,
+        features: &[Feature2D],
         _pose: &CameraPose,
     ) -> Result<Vec<LoopClosure>> {
         Ok(Vec::new()) // Placeholder
@@ -1213,12 +1217,13 @@ impl BundleAdjustmentOptimizer {
         }
     }
 
-    fn optimize_map(self_map: &Map3D, closures: &[LoopClosure]) -> Result<()> {
+    fn optimize_map(&mut self, map: &Map3D, closures: &[LoopClosure]) -> Result<()> {
         Ok(())
     }
 
     fn global_optimization(
-        self_trajectory: &CameraTrajectory,
+        &self,
+        trajectory: &CameraTrajectory,
         _closures: &[LoopClosure],
     ) -> Result<Map3D> {
         Ok(Map3D {
@@ -1267,11 +1272,11 @@ impl AdvancedFeatureTracker {
         }
     }
 
-    fn initialize(selfframe: &ArrayView3<f32>) -> Result<()> {
+    fn initialize(&mut self, frame: &ArrayView3<f32>) -> Result<()> {
         Ok(())
     }
 
-    fn extract_and_track_features(selfframe: &ArrayView3<f32>) -> Result<Vec<Feature2D>> {
+    fn extract_and_track_features(&self, frame: &ArrayView3<f32>) -> Result<Vec<Feature2D>> {
         Ok(Vec::new()) // Placeholder
     }
 }
@@ -1300,7 +1305,8 @@ impl SemanticMapper {
     }
 
     fn update_semantic_map(
-        self_scene: &SceneAnalysisResult,
+        &mut self,
+        scene: &SceneAnalysisResult,
         _pose: &CameraPose,
     ) -> Result<SemanticMap> {
         Ok(SemanticMap {

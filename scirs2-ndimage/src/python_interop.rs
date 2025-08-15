@@ -382,19 +382,19 @@ fn median_filter(
 #[allow(dead_code)]
 fn scirs2_ndimage(py: Python, m: &PyModule) -> PyResult<()> {
     // Filters submodule
-    let filters_module = PyModule::new(_py, "filters")?;
+    let filters_module = PyModule::new(py, "filters")?;
     filters_module.add_function(wrap_pyfunction!(gaussian_filter, filters_module)?)?;
     filters_module.add_function(wrap_pyfunction!(median_filter, filters_module)?)?;
     m.add_submodule(filters_module)?;
     
     // Morphology submodule
-    let morphology_module = PyModule::new(_py, "morphology")?;
+    let morphology_module = PyModule::new(py, "morphology")?;
     morphology_module.add_function(wrap_pyfunction!(binary_erosion, morphology_module)?)?;
     morphology_module.add_function(wrap_pyfunction!(binary_dilation, morphology_module)?)?;
     m.add_submodule(morphology_module)?;
     
     // Measurements submodule
-    let measurements_module = PyModule::new(_py, "measurements")?;
+    let measurements_module = PyModule::new(py, "measurements")?;
     measurements_module.add_function(wrap_pyfunction!(label, measurements_module)?)?;
     measurements_module.add_function(wrap_pyfunction!(center_of_mass, measurements_module)?)?;
     m.add_submodule(measurements_module)?;
@@ -608,7 +608,7 @@ mod tests {
             contiguous: true,
         };
 
-        let result = array_conversion::validate_array, _compatibility::<f64>(&info);
+        let result = array_conversion::validate_array_compatibility::<f64>(&info);
         assert!(result.is_ok());
     }
 
@@ -621,7 +621,7 @@ mod tests {
             contiguous: true,
         };
 
-        let result = array_conversion::validate_array, _compatibility::<f64>(&info);
+        let result = array_conversion::validate_array_compatibility::<f64>(&info);
         assert!(result.is_err());
     }
 

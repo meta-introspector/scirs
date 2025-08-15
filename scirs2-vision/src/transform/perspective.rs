@@ -1562,7 +1562,7 @@ fn find_corner_points_simd(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
         corners = corner_curvatures
             .into_iter()
             .take(4)
-            .map(|(i_)| corners[i_])
+            .map(|(i_, _)| corners[i_])
             .collect();
     }
 
@@ -1756,7 +1756,7 @@ fn order_quad_points_simd(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
         .collect();
 
     angles.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-    let sorted_points: Vec<(f64, f64)> = angles.iter().map(|(i_)| points[*i_]).collect();
+    let sorted_points: Vec<(f64, f64)> = angles.iter().map(|(i_, _)| points[*i_]).collect();
 
     // Find the top-left point (minimum x + y) using SIMD
     let sums = f64::simd_add(
@@ -1768,7 +1768,7 @@ fn order_quad_points_simd(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
         .iter()
         .enumerate()
         .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i_)
+        .map(|(i_, _)| i_)
         .unwrap_or(0);
 
     // Reorder to start from top-left and go clockwise

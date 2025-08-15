@@ -44,7 +44,7 @@ fn generate_offsets(offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[i
 /// ## 1D Array
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__ndimage::extrema;
+/// use scirs2_ndimage::extrema;
 ///
 /// let data = array![1.0, 3.0, 2.0, 5.0, 1.5];
 /// let (min, max, min_loc, max_loc) = extrema(&data).unwrap();
@@ -58,7 +58,7 @@ fn generate_offsets(offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[i
 /// ## 2D Array
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__ndimage::extrema;
+/// use scirs2_ndimage::extrema;
 ///
 /// let data = array![[1.0, 8.0, 3.0],
 ///                   [4.0, 0.5, 6.0],
@@ -74,7 +74,7 @@ fn generate_offsets(offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[i
 /// ## 3D Array
 /// ```rust
 /// use ndarray::Array3;
-/// use scirs2__ndimage::extrema;
+/// use scirs2_ndimage::extrema;
 ///
 /// let mut data = Array3::<f64>::zeros((2, 2, 2));
 /// data[[0, 0, 0]] = -5.0;  // Minimum
@@ -187,7 +187,7 @@ where
 /// ## 1D Array - Finding Peaks and Valleys
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__ndimage::local_extrema;
+/// use scirs2_ndimage::local_extrema;
 ///
 /// // Signal with peaks and valleys
 /// let signal = array![1.0, 3.0, 2.0, 5.0, 1.0, 4.0, 0.5];
@@ -200,7 +200,7 @@ where
 /// ## 2D Array - Finding Local Extrema in Images
 /// ```rust
 /// use ndarray::array;  
-/// use scirs2__ndimage::local_extrema;
+/// use scirs2_ndimage::local_extrema;
 ///
 /// let image = array![[1.0, 2.0, 1.0],
 ///                    [2.0, 5.0, 2.0],  // Peak at center
@@ -214,9 +214,9 @@ where
 /// ## Custom Neighborhood Size
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::local_extrema;
+/// use scirs2_ndimage::local_extrema;
 ///
-/// let data = Array2::<f64>::fromshape_vec((5, 5), (0..25).map(|x| x as f64).collect()).unwrap();
+/// let data = Array2::<f64>::from_shape_vec((5, 5), (0..25).map(|x| x as f64).collect()).unwrap();
 ///
 /// // Use 5x5 neighborhood
 /// let (minima, maxima) = local_extrema(&data, Some(&[5, 5]), Some("both")).unwrap();
@@ -403,7 +403,7 @@ where
 /// ## Basic Peak Prominence
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__ndimage::peak_prominences;
+/// use scirs2_ndimage::peak_prominences;
 ///
 /// // Signal with peaks of different prominence
 /// let signal = array![0.0, 1.0, 0.5, 3.0, 0.2, 2.0, 0.1];
@@ -416,7 +416,7 @@ where
 /// ## Finding Significant Peaks
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2__ndimage::peak_prominences;
+/// use scirs2_ndimage::peak_prominences;
 ///
 /// // Create a signal with noise and clear peaks
 /// let mut signal = Array1::<f64>::zeros(100);
@@ -438,7 +438,7 @@ where
 /// ## Workflow with Peak Detection
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__ndimage::{local_extrema, peak_prominences};
+/// use scirs2_ndimage::{local_extrema, peak_prominences};
 ///
 /// let signal = array![0.0, 2.0, 1.0, 4.0, 0.5, 3.0, 0.2];
 ///
@@ -489,7 +489,8 @@ where
 #[allow(dead_code)]
 pub fn peak_prominences<T>(
     input: &Array<T, ndarray::Ix1>,
-    peaks: &[usize], _wlen: Option<usize>,
+    peaks: &[usize],
+    _wlen: Option<usize>,
 ) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
@@ -551,7 +552,7 @@ pub type PeakWidthsResult<T> = (Vec<T>, Vec<T>, Vec<T>, Vec<T>);
 /// ## Full Width at Half Maximum (FWHM)
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2__ndimage::peak_widths;
+/// use scirs2_ndimage::peak_widths;
 ///
 /// // Gaussian-like peak
 /// let signal = Array1::from_vec(vec![0.0, 0.5, 1.0, 0.5, 0.0]);
@@ -567,7 +568,7 @@ pub type PeakWidthsResult<T> = (Vec<T>, Vec<T>, Vec<T>, Vec<T>);
 /// ## Multiple Peaks with Different Widths  
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__ndimage::peak_widths;
+/// use scirs2_ndimage::peak_widths;
 ///
 /// // Signal with narrow and wide peaks
 /// let signal = array![0.0, 0.2, 1.0, 0.2, 0.0, 0.1, 0.3, 0.8, 0.3, 0.1, 0.0];
@@ -583,7 +584,7 @@ pub type PeakWidthsResult<T> = (Vec<T>, Vec<T>, Vec<T>, Vec<T>);
 /// ## Custom Height Measurements
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__ndimage::peak_widths;
+/// use scirs2_ndimage::peak_widths;
 ///
 /// let signal = array![0.0, 1.0, 2.0, 3.0, 2.0, 1.0, 0.0];
 /// let peaks = vec![3];
@@ -601,7 +602,7 @@ pub type PeakWidthsResult<T> = (Vec<T>, Vec<T>, Vec<T>, Vec<T>);
 /// ## Peak Characterization Workflow
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2__ndimage::{local_extrema, peak_widths, peak_prominences};
+/// use scirs2_ndimage::{local_extrema, peak_widths, peak_prominences};
 ///
 /// // Generate test signal
 /// let signal = Array1::<f64>::fromshape_fn(50, |i| {

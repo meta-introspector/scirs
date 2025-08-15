@@ -84,8 +84,8 @@ impl Default for EdgeDetectionConfig {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__ndimage::features::{edge_detector, EdgeDetectionConfig, EdgeDetectionAlgorithm, GradientMethod};
-/// use scirs2__ndimage::filters::BorderMode;
+/// use scirs2_ndimage::features::{edge_detector, EdgeDetectionConfig, EdgeDetectionAlgorithm, GradientMethod};
+/// use scirs2_ndimage::filters::BorderMode;
 ///
 /// // Use a larger test image to avoid overflow issues in doctests
 /// let image = array![
@@ -185,7 +185,7 @@ pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Ar
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__ndimage::features::{canny, GradientMethod};
+/// use scirs2_ndimage::features::{canny, GradientMethod};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -486,8 +486,8 @@ fn is_connected_to_strong_edge(row: usize, col: usize, edges: &Array<f32, Ix2>) 
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__ndimage::features::laplacian_edges;
-/// use scirs2__ndimage::filters::BorderMode;
+/// use scirs2_ndimage::features::laplacian_edges;
+/// use scirs2_ndimage::filters::BorderMode;
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -603,8 +603,8 @@ fn laplacian_edges_impl(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__ndimage::features::{gradient_edges, GradientMethod};
-/// use scirs2__ndimage::filters::BorderMode;
+/// use scirs2_ndimage::features::{gradient_edges, GradientMethod};
+/// use scirs2_ndimage::filters::BorderMode;
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -689,7 +689,7 @@ fn gradient_edges_impl(
 /// * Result containing the magnitude of edges
 #[allow(dead_code)]
 pub fn sobel_edges(image: &ArrayD<f32>) -> NdimageResult<ArrayD<f32>> {
-    edge_detector_simple(_image, Some(GradientMethod::Sobel), None)
+    edge_detector_simple(image, Some(GradientMethod::Sobel), None)
 }
 
 /// Enhanced edge detector (compatible with previous API)
@@ -711,7 +711,7 @@ pub fn sobel_edges(image: &ArrayD<f32>) -> NdimageResult<ArrayD<f32>> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__ndimage::features::{edge_detector_simple, GradientMethod};
+/// use scirs2_ndimage::features::{edge_detector_simple, GradientMethod};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -872,7 +872,7 @@ mod tests {
         );
 
         // Scharr should detect better gradient responses for diagonal edges
-        let diagonal_image = array![
+        let diagonalimage = array![
             [1.0, 0.0, 0.0, 0.0, 0.0],
             [0.0, 1.0, 0.0, 0.0, 0.0],
             [0.0, 0.0, 1.0, 0.0, 0.0],
@@ -880,9 +880,9 @@ mod tests {
             [0.0, 0.0, 0.0, 0.0, 1.0],
         ];
 
-        let diag_sobel = gradient_edges(&diagonal_image, Some(GradientMethod::Sobel), None, None)
+        let diag_sobel = gradient_edges(&diagonalimage, Some(GradientMethod::Sobel), None, None)
             .expect("gradient_edges with Sobel should succeed for diagonal test");
-        let diag_scharr = gradient_edges(&diagonal_image, Some(GradientMethod::Scharr), None, None)
+        let diag_scharr = gradient_edges(&diagonalimage, Some(GradientMethod::Scharr), None, None)
             .expect("gradient_edges with Scharr should succeed for diagonal test");
 
         // Calculate the maximum magnitude for each

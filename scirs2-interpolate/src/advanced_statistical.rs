@@ -722,7 +722,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
             min_points_per_segment,
             breakpoint_penalty: breakpointpenalty,
             breakpoints: None,
-            _segment_coefficients: None,
+            segment_coefficients: None,
             fitted: false,
         }
     }

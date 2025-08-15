@@ -132,7 +132,7 @@ struct AllocationEvent {
     event_type: EventType,
 
     /// Size in bytes
-    size_bytes: usize,
+    sizebytes: usize,
 
     /// Category of memory (e.g., "distance_matrix", "cache", "coefficients")
     #[allow(dead_code)]
@@ -219,7 +219,7 @@ impl Default for MemoryPerformanceMetrics {
 #[derive(Debug, Clone)]
 pub struct MemoryReport {
     /// Monitor name
-    pub monitor_name: String,
+    pub monitorname: String,
 
     /// Current memory usage by category
     pub current_allocations: HashMap<String, usize>,
@@ -291,9 +291,9 @@ pub enum PerformanceGrade {
 impl MemoryMonitor {
     /// Create a new memory monitor
     pub fn new(name: impl Into<String>) -> Self {
-        let _name = name.into();
+        let name = name.into();
         let monitor = Self {
-            _name: name.clone(),
+            name: name.clone(),
             allocations: HashMap::new(),
             allocation_history: VecDeque::new(),
             peak_memory_bytes: 0,
@@ -305,7 +305,7 @@ impl MemoryMonitor {
         };
 
         // Register with global monitor
-        register_monitor(&_name, monitor.clone());
+        register_monitor(&name, monitor.clone());
         monitor
     }
 
@@ -319,8 +319,8 @@ impl MemoryMonitor {
         let now = Instant::now();
 
         // Update current allocations
-        *self.allocations.entry(category.clone()).or_insert(0) += size_bytes;
-        self.current_memory_bytes += size_bytes;
+        *self.allocations.entry(category.clone()).or_insert(0) += sizebytes;
+        self.current_memory_bytes += sizebytes;
 
         // Update peak usage
         if self.current_memory_bytes > self.peak_memory_bytes {
@@ -330,7 +330,7 @@ impl MemoryMonitor {
         // Record allocation event
         let event = AllocationEvent {
             event_type: EventType::Allocation,
-            size_bytes,
+            sizebytes,
             category: category.clone(),
             timestamp: now,
         };
@@ -346,14 +346,14 @@ impl MemoryMonitor {
         self.leak_stats.total_allocations += 1;
         self.leak_stats.long_lived_allocations.insert(
             format!("{}_{}", category, self.leak_stats.total_allocations),
-            (size_bytes, now),
+            (sizebytes, now),
         );
 
         // Update performance metrics
         self.update_performance_metrics();
 
         // Update global stats
-        update_global_stats(size_bytes, true);
+        update_global_stats(sizebytes, true);
     }
 
     /// Track a memory deallocation
@@ -367,18 +367,18 @@ impl MemoryMonitor {
 
         // Update current allocations
         if let Some(current) = self.allocations.get_mut(&category) {
-            *current = current.saturating_sub(size_bytes);
+            *current = current.saturating_sub(sizebytes);
             if *current == 0 {
                 self.allocations.remove(&category);
             }
         }
 
-        self.current_memory_bytes = self.current_memory_bytes.saturating_sub(size_bytes);
+        self.current_memory_bytes = self.current_memory_bytes.saturating_sub(sizebytes);
 
         // Record deallocation event
         let event = AllocationEvent {
             event_type: EventType::Deallocation,
-            size_bytes,
+            sizebytes,
             category: category.clone(),
             timestamp: now,
         };
@@ -391,13 +391,13 @@ impl MemoryMonitor {
         // Remove from long-lived allocations (simplified - would need better matching in production)
         self.leak_stats
             .long_lived_allocations
-            .retain(|k_| !k.starts_with(&category));
+            .retain(|k, _| !k.starts_with(&category));
 
         // Update performance metrics
         self.update_performance_metrics();
 
         // Update global stats
-        update_global_stats(size_bytes, false);
+        update_global_stats(sizebytes, false);
     }
 
     /// Generate a comprehensive memory report
@@ -407,7 +407,7 @@ impl MemoryMonitor {
         let recommendations = self.generate_recommendations(&leak_indicators, &performance_summary);
 
         MemoryReport {
-            monitor_name: self.name.clone(),
+            monitorname: self.name.clone(),
             current_allocations: self.allocations.clone(),
             peak_memory_bytes: self.peak_memory_bytes,
             total_allocated_bytes: self.calculate_total_allocated(),
@@ -434,14 +434,14 @@ impl MemoryMonitor {
             .filter(|(_, timestamp)| {
                 now.duration_since(*timestamp) > self.leak_stats.leak_detection_threshold
             })
-            .map(|(size_)| size)
+            .map(|(size, _)| *size)
             .sum();
 
         // Identify suspicious categories (categories with consistently growing memory)
         let suspicious_categories: Vec<String> = self.allocations
             .iter()
             .filter(|(_, &size)| size > 1024 * 1024) // More than 1MB
-            .map(|(cat_)| cat.clone())
+            .map(|(cat, _)| cat.clone())
             .collect();
 
         let has_potential_leaks =
@@ -573,7 +573,7 @@ impl MemoryMonitor {
                 .allocation_history
                 .iter()
                 .filter(|e| e.event_type == EventType::Allocation)
-                .map(|e| e.size_bytes)
+                .map(|e| e.sizebytes)
                 .sum();
             self.perf_metrics.avg_allocation_size =
                 total_size as f64 / self.leak_stats.total_allocations as f64;
@@ -590,7 +590,7 @@ impl MemoryMonitor {
         self.allocation_history
             .iter()
             .filter(|e| e.event_type == EventType::Allocation)
-            .map(|e| e.size_bytes)
+            .map(|e| e.sizebytes)
             .sum()
     }
 
@@ -636,7 +636,7 @@ impl MemoryReport {
     pub fn summary(&self) -> String {
         format!(
             "Memory Report for '{}': Current: {} KB, Peak: {} KB, Grade: {:?}, Leaks: {}",
-            self.monitor_name,
+            self.monitorname,
             self.current_allocations.values().sum::<usize>() / 1024,
             self.peak_memory_bytes / 1024,
             self.performance_summary.overall_grade,
@@ -680,7 +680,7 @@ fn register_monitor(name: &str, monitor: MemoryMonitor) {
             if global.enabled && global.monitors.len() < global.max_monitors {
                 global
                     .monitors
-                    .insert(_name.to_string(), Arc::new(Mutex::new(monitor)));
+                    .insert(name.to_string(), Arc::new(Mutex::new(monitor)));
                 global.global_stats.active_interpolators = global.monitors.len();
             }
         }
@@ -689,11 +689,11 @@ fn register_monitor(name: &str, monitor: MemoryMonitor) {
 
 /// Update global memory statistics
 #[allow(dead_code)]
-fn update_global_stats(_size_bytes: usize, isallocation: bool) {
+fn update_global_stats(sizebytes: usize, isallocation: bool) {
     if let Some(global_monitor) = GLOBAL_MONITOR.get() {
         if let Ok(mut global) = global_monitor.lock() {
-            if is_allocation {
-                global.global_stats.total_allocated_bytes += size_bytes;
+            if isallocation {
+                global.global_stats.total_allocated_bytes += sizebytes;
                 global.global_stats.total_allocations += 1;
 
                 if global.global_stats.total_allocated_bytes > global.global_stats.peak_total_bytes
@@ -705,7 +705,7 @@ fn update_global_stats(_size_bytes: usize, isallocation: bool) {
                 global.global_stats.total_allocated_bytes = global
                     .global_stats
                     .total_allocated_bytes
-                    .saturating_sub(size_bytes);
+                    .saturating_sub(sizebytes);
                 global.global_stats.total_deallocations += 1;
             }
         }
@@ -730,7 +730,7 @@ pub fn get_monitor_report(name: &str) -> Option<MemoryReport> {
             global_monitor
                 .lock()
                 .ok()
-                .and_then(|global| global.monitors.get(_name).cloned())
+                .and_then(|global| global.monitors.get(name).cloned())
         })
         .and_then(|monitor| monitor.lock().ok().map(|m| m.generate_report()))
 }
@@ -805,7 +805,7 @@ pub struct AllocationSpike {
     pub duration: Duration,
 
     /// Stress condition that caused the spike
-    pub stress_condition: String,
+    pub stresscondition: String,
 }
 
 /// Memory snapshot during stress testing
@@ -824,7 +824,7 @@ pub struct MemorySnapshot {
     pub system_pressure: f64,
 
     /// Active stress conditions
-    pub active_stress_conditions: Vec<String>,
+    pub active_stressconditions: Vec<String>,
 }
 
 /// System memory pressure indicators
@@ -893,7 +893,7 @@ impl StressMemoryProfiler {
     /// Create a new stress memory profiler
     pub fn new(name: impl Into<String>, config: Option<StressProfilingConfig>) -> Self {
         Self {
-            base_monitor: MemoryMonitor::new(_name),
+            base_monitor: MemoryMonitor::new(name),
             stress_metrics: StressMemoryMetrics {
                 max_growth_rate: 0.0,
                 allocation_spikes: Vec::new(),
@@ -910,10 +910,10 @@ impl StressMemoryProfiler {
 
     /// Start profiling under specific stress condition
     pub fn start_stress_profiling(&mut self, stresscondition: &str) {
-        println!("Starting stress memory profiling for: {}", stress_condition);
+        println!("Starting stress memory profiling for: {}", stresscondition);
 
         // Take initial snapshot
-        self.take_memory_snapshot(vec![stress_condition.to_string()]);
+        self.take_memory_snapshot(vec![stresscondition.to_string()]);
 
         // Update system pressure indicators
         self.update_system_pressure();
@@ -922,28 +922,28 @@ impl StressMemoryProfiler {
     /// Track memory allocation during stress test
     pub fn track_stress_allocation(
         &mut self,
-        size_bytes: usize,
+        sizebytes: usize,
         category: impl Into<String>,
-        stress_condition: &str,
+        stresscondition: &str,
     ) {
         let category = category.into();
 
         // Track with base monitor
-        self.base_monitor.track_allocation(size_bytes, &category);
+        self.base_monitor.track_allocation(sizebytes, &category);
 
         // Check for allocation spike
-        if size_bytes >= self.stress_config.spike_threshold {
+        if sizebytes >= self.stress_config.spike_threshold {
             self.stress_metrics.allocation_spikes.push(AllocationSpike {
                 timestamp: Instant::now(),
-                spike_size: size_bytes,
+                spike_size: sizebytes,
                 duration: Duration::from_millis(0), // Would measure actual duration
-                stress_condition: stress_condition.to_string(),
+                stresscondition: stresscondition.to_string(),
             });
         }
 
         // Take periodic snapshots
         if self.should_take_snapshot() {
-            self.take_memory_snapshot(vec![stress_condition.to_string()]);
+            self.take_memory_snapshot(vec![stresscondition.to_string()]);
         }
 
         // Update growth rate
@@ -952,7 +952,7 @@ impl StressMemoryProfiler {
 
     /// Track memory deallocation during stress test
     pub fn track_stress_deallocation(&mut self, sizebytes: usize, category: impl Into<String>) {
-        self.base_monitor.track_deallocation(size_bytes, category);
+        self.base_monitor.track_deallocation(sizebytes, category);
 
         // Update stress metrics
         self.update_growth_rate();
@@ -965,7 +965,7 @@ impl StressMemoryProfiler {
             total_memory: self.base_monitor.current_memory_bytes,
             category_breakdown: self.base_monitor.allocations.clone(),
             system_pressure: self.calculate_system_pressure(),
-            active_stress_conditions,
+            active_stressconditions,
         };
 
         self.stress_history.push_back(snapshot);
@@ -1086,7 +1086,7 @@ impl StressMemoryProfiler {
         let _recovery_start_memory = self.base_monitor.current_memory_bytes;
 
         // Monitor memory for recovery (simplified - would need async monitoring in practice)
-        let recovery_time = Instant::now().duration_since(stress_end_time);
+        let recovery_time = Instant::now().duration_since(stress_endtime);
         self.stress_metrics.recovery_time_seconds = recovery_time.as_secs_f64();
 
         println!(
@@ -1363,7 +1363,7 @@ pub enum StressPerformanceGrade {
 /// Create a stress memory profiler for testing
 #[allow(dead_code)]
 pub fn create_stress_profiler(name: impl Into<String>) -> StressMemoryProfiler {
-    StressMemoryProfiler::new(_name, None)
+    StressMemoryProfiler::new(name, None)
 }
 
 /// Create a stress memory profiler with custom configuration

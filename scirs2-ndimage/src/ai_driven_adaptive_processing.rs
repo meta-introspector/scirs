@@ -15,7 +15,7 @@ use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
-use crate::advanced_fusion__algorithms::AdvancedConfig;
+use crate::advanced_fusion_algorithms::AdvancedConfig;
 use crate::error::{NdimageError, NdimageResult};
 use crate::utils::safe_usize_to_float;
 
@@ -98,13 +98,13 @@ pub struct AIProcessingState {
     /// Learned processing strategies
     pub processing_strategies: HashMap<ImagePattern, ProcessingStrategy>,
     /// Performance history
-    pub performance_history: VecDeque<f64>,
+    pub performancehistory: VecDeque<f64>,
     /// Multi-modal knowledge base
     pub knowledge_base: MultiModalKnowledgeBase,
     /// Current processing context
-    pub current_context: ProcessingContext,
+    pub currentcontext: ProcessingContext,
     /// Continual learning state
-    pub continual_learning_state: ContinualLearningState,
+    pub continual_learningstate: ContinualLearningState,
     /// Explainability tracking
     pub explanation_tracker: ExplanationTracker,
     /// Transfer learning models
@@ -122,16 +122,16 @@ pub struct AIProcessingState {
     /// Strategy performance tracking
     pub strategy_performance: HashMap<String, f64>,
     /// Pattern processing history
-    pub pattern_history: VecDeque<ImagePattern>,
+    pub patternhistory: VecDeque<ImagePattern>,
     /// Learned feature representations
-    pub learned_features: HashMap<String, Array1<f64>>,
+    pub learnedfeatures: HashMap<String, Array1<f64>>,
 }
 
 /// Processing Experience (for reinforcement learning)
 #[derive(Debug, Clone)]
 pub struct ProcessingExperience {
     /// Input image characteristics
-    pub input_features: Array1<f64>,
+    pub inputfeatures: Array1<f64>,
     /// Processing action taken
     pub action: ProcessingAction,
     /// Quality reward achieved
@@ -139,7 +139,7 @@ pub struct ProcessingExperience {
     /// Performance metrics
     pub performance: PerformanceMetrics,
     /// Next state features
-    pub next_features: Array1<f64>,
+    pub nextfeatures: Array1<f64>,
     /// Context information
     pub context: String,
 }
@@ -154,7 +154,7 @@ pub struct ImagePattern {
     /// Noise level
     pub noise_level: NoiseLevel,
     /// Dominant features
-    pub dominant_features: Vec<FeatureType>,
+    pub dominantfeatures: Vec<FeatureType>,
 }
 
 /// Pattern Types
@@ -314,7 +314,7 @@ pub struct PerformanceRecord {
     /// Applied strategy
     pub strategy_used: ProcessingStrategy,
     /// Achieved metrics
-    pub achieved_metrics: PerformanceMetrics,
+    pub achievedmetrics: PerformanceMetrics,
     /// Context information
     pub context: String,
 }
@@ -360,7 +360,7 @@ pub struct TemporalKnowledge {
 #[derive(Debug, Clone)]
 pub struct ContextualKnowledge {
     /// Context descriptors
-    pub context_features: Array1<f64>,
+    pub contextfeatures: Array1<f64>,
     /// Contextual preferences
     pub preferences: HashMap<String, f64>,
     /// Adaptation strategies
@@ -418,7 +418,7 @@ pub struct ContinualLearningState {
     /// Meta-learning parameters
     pub meta_learning_params: Array1<f64>,
     /// Adaptation history
-    pub adaptation_history: Vec<AdaptationRecord>,
+    pub adaptationhistory: Vec<AdaptationRecord>,
 }
 
 /// Task Knowledge
@@ -512,7 +512,7 @@ pub struct TransferLearningModel {
     /// Target domains
     pub target_domains: Vec<String>,
     /// Transferable features
-    pub transferable_features: Array2<f64>,
+    pub transferablefeatures: Array2<f64>,
     /// Transfer efficiency
     pub transfer_efficiency: f64,
 }
@@ -575,18 +575,18 @@ pub struct AdaptationStrategy {
 pub fn ai_driven_adaptive_processing<T>(
     image: ArrayView2<T>,
     config: &AIAdaptiveConfig,
-    ai_state: Option<AIProcessingState>,
+    aistate: Option<AIProcessingState>,
 ) -> NdimageResult<(Array2<T>, AIProcessingState, ProcessingExplanation)>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
 
-    // Initialize or update AI processing _state
-    let mut _state = initialize_or_update_ai_state(ai_state, (height, width), config)?;
+    // Initialize or update AI processing state
+    let mut state = initialize_or_update_aistate(aistate, (height, width), config)?;
 
     // Stage 1: Image Pattern Recognition and Analysis
-    let image_pattern = recognize_image_pattern(&image, &mut state, config)?;
+    let image_pattern = recognizeimage_pattern(&image, &mut state, config)?;
 
     // Stage 2: Context-Aware Processing Strategy Selection
     let processing_strategy = select_optimal_strategy(&image_pattern, &mut state, config)?;
@@ -603,7 +603,7 @@ where
     };
 
     // Stage 5: Execute Adaptive Processing Pipeline
-    let (processed_image, execution_metrics) = execute_adaptive_pipeline(
+    let (processedimage, executionmetrics) = execute_adaptive_pipeline(
         &image,
         &enhanced_strategy,
         &predictive_adjustments,
@@ -614,8 +614,8 @@ where
     // Stage 6: Performance Evaluation and Learning
     let performance_evaluation = evaluate_performance(
         &image,
-        &processed_image,
-        &execution_metrics,
+        &processedimage,
+        &executionmetrics,
         &enhanced_strategy,
         config,
     )?;
@@ -647,7 +647,7 @@ where
         generate_processing_explanation(
             &enhanced_strategy,
             &performance_evaluation,
-            &_state,
+            &state,
             config,
         )?
     } else {
@@ -655,9 +655,9 @@ where
     };
 
     // Stage 12: Resource Optimization Learning
-    optimize_resource_learning(&mut state, &execution_metrics, config)?;
+    optimize_resource_learning(&mut state, &executionmetrics, config)?;
 
-    Ok((processed_image, state, explanation))
+    Ok((processedimage, state, explanation))
 }
 
 /// Processing Explanation
@@ -706,22 +706,24 @@ pub struct TradeOffExplanation {
 // Implementation of helper functions (simplified for brevity)
 
 #[allow(dead_code)]
-fn initialize_or_update_ai_state(
-    _previous_state: Option<AIProcessingState>, shape: (usize, usize), _config: &AIAdaptiveConfig,
+fn initialize_or_update_aistate(
+    _previousstate: Option<AIProcessingState>,
+    shape: (usize, usize),
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<AIProcessingState> {
-    // Initialize AI processing _state
+    // Initialize AI processing state
     Ok(AIProcessingState {
         decision_network: Array3::zeros((10, 10, 5)),
         experience_buffer: VecDeque::new(),
         processing_strategies: HashMap::new(),
-        performance_history: VecDeque::new(),
+        performancehistory: VecDeque::new(),
         knowledge_base: MultiModalKnowledgeBase {
             visual_patterns: HashMap::new(),
             temporal_patterns: HashMap::new(),
             contextual_knowledge: HashMap::new(),
             cross_modal_associations: Vec::new(),
         },
-        current_context: ProcessingContext {
+        currentcontext: ProcessingContext {
             image_type: PatternType::Unknown,
             user_preferences: HashMap::new(),
             available_resources: ResourceAvailability {
@@ -733,7 +735,7 @@ fn initialize_or_update_ai_state(
             time_constraints: None,
             quality_requirements: None,
         },
-        continual_learning_state: ContinualLearningState {
+        continual_learningstate: ContinualLearningState {
             task_knowledge: Vec::new(),
             forgetting_prevention: ForgettingPreventionState {
                 ewc_parameters: Array1::zeros(100),
@@ -741,7 +743,7 @@ fn initialize_or_update_ai_state(
                 replay_buffer: VecDeque::new(),
             },
             meta_learning_params: Array1::zeros(50),
-            adaptation_history: Vec::new(),
+            adaptationhistory: Vec::new(),
         },
         explanation_tracker: ExplanationTracker {
             decision_explanations: Vec::new(),
@@ -759,13 +761,13 @@ fn initialize_or_update_ai_state(
         pattern_strategy_mapping: HashMap::new(),
         algorithm_usage_count: HashMap::new(),
         strategy_performance: HashMap::new(),
-        pattern_history: VecDeque::new(),
-        learned_features: HashMap::new(),
+        patternhistory: VecDeque::new(),
+        learnedfeatures: HashMap::new(),
     })
 }
 
 #[allow(dead_code)]
-fn recognize_image_pattern<T>(
+fn recognizeimage_pattern<T>(
     image: &ArrayView2<T>,
     state: &mut AIProcessingState,
     config: &AIAdaptiveConfig,
@@ -815,32 +817,32 @@ where
 
     // Update AI state with extracted features
     state
-        .learned_features
-        .insert("current_features".to_string(), features.clone());
+        .learnedfeatures
+        .insert("currentfeatures".to_string(), features.clone());
 
     // Create preliminary pattern for history (will be updated after full classification)
     let preliminary_pattern = ImagePattern {
         pattern_type: PatternType::Unknown,
         complexity: ComplexityLevel::Medium,
         noise_level: NoiseLevel::Medium,
-        dominant_features: vec![FeatureType::Edges],
+        dominantfeatures: vec![FeatureType::Edges],
     };
-    state.pattern_history.push_back(preliminary_pattern);
-    if state.pattern_history.len() > 100 {
-        state.pattern_history.pop_front();
+    state.patternhistory.push_back(preliminary_pattern);
+    if state.patternhistory.len() > 100 {
+        state.patternhistory.pop_front();
     }
 
     // AI-based pattern classification using learned knowledge
     let pattern_type = classify_pattern_type(&features, &state.neural_network);
     let complexity = assess_complexity(&features, image_size);
     let noise_classification = classify_noise_level(noise_level);
-    let dominant_features = identify_dominant_features(&features);
+    let dominantfeatures = identify_dominantfeatures(&features);
 
     Ok(ImagePattern {
         pattern_type,
         complexity,
         noise_level: noise_classification,
-        dominant_features,
+        dominantfeatures,
     })
 }
 
@@ -1076,8 +1078,8 @@ where
 }
 
 #[allow(dead_code)]
-fn classify_pattern_type(_features: &Array1<f64>, _neuralnetwork: &NeuralModel) -> PatternType {
-    // AI-based classification using extracted _features
+fn classify_pattern_type(features: &Array1<f64>, _neuralnetwork: &NeuralModel) -> PatternType {
+    // AI-based classification using extracted features
     let edge_density = features[1];
     let texture_energy = features[2];
     let high_freq_content = features[3];
@@ -1098,7 +1100,7 @@ fn classify_pattern_type(_features: &Array1<f64>, _neuralnetwork: &NeuralModel) 
 }
 
 #[allow(dead_code)]
-fn assess_complexity(_features: &Array1<f64>, imagesize: usize) -> ComplexityLevel {
+fn assess_complexity(features: &Array1<f64>, image_size: usize) -> ComplexityLevel {
     let variance = features[0];
     let edge_density = features[1];
     let texture_energy = features[2];
@@ -1120,8 +1122,8 @@ fn assess_complexity(_features: &Array1<f64>, imagesize: usize) -> ComplexityLev
 }
 
 #[allow(dead_code)]
-fn classify_noise_level(_noiseestimate: f64) -> NoiseLevel {
-    if _noise_estimate > 0.5 {
+fn classify_noise_level(noise_estimate: f64) -> NoiseLevel {
+    if noise_estimate > 0.5 {
         NoiseLevel::High
     } else if noise_estimate > 0.2 {
         NoiseLevel::Medium
@@ -1131,35 +1133,35 @@ fn classify_noise_level(_noiseestimate: f64) -> NoiseLevel {
 }
 
 #[allow(dead_code)]
-fn identify_dominant_features(features: &Array1<f64>) -> Vec<FeatureType> {
-    let mut dominant_features = Vec::new();
+fn identify_dominantfeatures(features: &Array1<f64>) -> Vec<FeatureType> {
+    let mut dominantfeatures = Vec::new();
 
     if features[1] > 0.3 {
         // edge_density
-        dominant_features.push(FeatureType::Edges);
+        dominantfeatures.push(FeatureType::Edges);
     }
     if features[2] > 0.4 {
         // texture_energy
-        dominant_features.push(FeatureType::Textures);
+        dominantfeatures.push(FeatureType::Textures);
     }
     if features[4] > 0.3 {
         // gradient_strength
-        dominant_features.push(FeatureType::Gradients);
+        dominantfeatures.push(FeatureType::Gradients);
     }
     if features[5] > 0.7 {
         // homogeneity
-        dominant_features.push(FeatureType::Regions);
+        dominantfeatures.push(FeatureType::Regions);
     }
     if features[6] > 0.6 {
         // symmetry_score
-        dominant_features.push(FeatureType::Shapes);
+        dominantfeatures.push(FeatureType::Shapes);
     }
 
-    if dominant_features.is_empty() {
-        dominant_features.push(FeatureType::Textures);
+    if dominantfeatures.is_empty() {
+        dominantfeatures.push(FeatureType::Textures);
     }
 
-    dominant_features
+    dominantfeatures
 }
 
 #[allow(dead_code)]
@@ -1232,6 +1234,43 @@ fn analyze_pattern_for_strategy(pattern: &ImagePattern) -> HashMap<String, f64> 
             weights.insert("morphology".to_string(), 0.8);
             weights.insert("segmentation".to_string(), 0.7);
         }
+        PatternType::Satellite => {
+            weights.insert("feature_extraction".to_string(), 0.9);
+            weights.insert("edge_detection".to_string(), 0.8);
+            weights.insert("segmentation".to_string(), 0.8);
+        }
+        PatternType::Scientific => {
+            weights.insert("noise_reduction".to_string(), 0.9);
+            weights.insert("feature_extraction".to_string(), 0.8);
+            weights.insert("edge_detection".to_string(), 0.7);
+        }
+        PatternType::Artistic => {
+            weights.insert("bilateral_filter".to_string(), 0.8);
+            weights.insert("adaptive_smoothing".to_string(), 0.7);
+            weights.insert("feature_extraction".to_string(), 0.6);
+        }
+        PatternType::Document => {
+            weights.insert("edge_detection".to_string(), 0.95);
+            weights.insert("segmentation".to_string(), 0.8);
+            weights.insert("morphology".to_string(), 0.6);
+        }
+        PatternType::Face => {
+            weights.insert("bilateral_filter".to_string(), 0.9);
+            weights.insert("feature_extraction".to_string(), 0.8);
+            weights.insert("edge_detection".to_string(), 0.7);
+        }
+        PatternType::Object => {
+            weights.insert("edge_detection".to_string(), 0.9);
+            weights.insert("segmentation".to_string(), 0.8);
+            weights.insert("feature_extraction".to_string(), 0.7);
+        }
+        PatternType::Unknown => {
+            // Default balanced weights for unknown patterns
+            weights.insert("bilateral_filter".to_string(), 0.6);
+            weights.insert("edge_detection".to_string(), 0.6);
+            weights.insert("feature_extraction".to_string(), 0.5);
+            weights.insert("noise_reduction".to_string(), 0.5);
+        }
     }
 
     // Complexity level affects processing intensity
@@ -1239,13 +1278,16 @@ fn analyze_pattern_for_strategy(pattern: &ImagePattern) -> HashMap<String, f64> 
         ComplexityLevel::Low => 0.7,
         ComplexityLevel::Medium => 1.0,
         ComplexityLevel::High => 1.3,
+        ComplexityLevel::Advanced => 1.5,
     };
 
     // Noise level influences denoising algorithms
     let noise_factor = match pattern.noise_level {
+        NoiseLevel::Clean => 0.1,
         NoiseLevel::Low => 0.3,
         NoiseLevel::Medium => 0.7,
         NoiseLevel::High => 1.2,
+        NoiseLevel::Extreme => 1.5,
     };
 
     // Adjust weights based on noise requirements
@@ -1262,7 +1304,7 @@ fn analyze_pattern_for_strategy(pattern: &ImagePattern) -> HashMap<String, f64> 
     }
 
     // Dominant features influence algorithm selection
-    for feature in &_pattern.dominant_features {
+    for feature in &pattern.dominantfeatures {
         match feature {
             FeatureType::Edges => {
                 weights.insert(
@@ -1310,6 +1352,30 @@ fn analyze_pattern_for_strategy(pattern: &ImagePattern) -> HashMap<String, f64> 
                     weights.get("segmentation").unwrap_or(&0.0) + 0.2,
                 );
             }
+            FeatureType::Colors => {
+                weights.insert(
+                    "color_analysis".to_string(),
+                    weights.get("color_analysis").unwrap_or(&0.0) + 0.3,
+                );
+            }
+            FeatureType::Patterns => {
+                weights.insert(
+                    "pattern_recognition".to_string(),
+                    weights.get("pattern_recognition").unwrap_or(&0.0) + 0.3,
+                );
+            }
+            FeatureType::Symmetry => {
+                weights.insert(
+                    "symmetry_detection".to_string(),
+                    weights.get("symmetry_detection").unwrap_or(&0.0) + 0.3,
+                );
+            }
+            FeatureType::Frequency => {
+                weights.insert(
+                    "frequency_analysis".to_string(),
+                    weights.get("frequency_analysis").unwrap_or(&0.0) + 0.3,
+                );
+            }
         }
     }
 
@@ -1318,7 +1384,8 @@ fn analyze_pattern_for_strategy(pattern: &ImagePattern) -> HashMap<String, f64> 
 
 #[allow(dead_code)]
 fn calculate_performance_weights(
-    state: &AIProcessingState, config: &AIAdaptiveConfig,
+    state: &AIProcessingState,
+    config: &AIAdaptiveConfig,
 ) -> HashMap<String, f64> {
     let mut weights = HashMap::new();
 
@@ -1328,9 +1395,9 @@ fn calculate_performance_weights(
     }
 
     // Analyze performance history to identify successful patterns
-    if !state.performance_history.is_empty() {
+    if !state.performancehistory.is_empty() {
         let avg_performance: f64 =
-            state.performance_history.iter().sum::<f64>() / state.performance_history.len() as f64;
+            state.performancehistory.iter().sum::<f64>() / state.performancehistory.len() as f64;
         let performance_factor = (avg_performance / 10.0).min(2.0).max(0.5); // Normalize to reasonable range
 
         // Boost confidence in algorithms if recent performance is good
@@ -1359,7 +1426,7 @@ fn calculate_performance_weights(
 fn apply_optimization_target_weights(target: &OptimizationTarget) -> HashMap<String, f64> {
     let mut weights = HashMap::new();
 
-    match _target {
+    match target {
         OptimizationTarget::Speed => {
             // Prefer fast algorithms
             weights.insert("gaussian_filter".to_string(), 0.9);
@@ -1394,6 +1461,29 @@ fn apply_optimization_target_weights(target: &OptimizationTarget) -> HashMap<Str
             weights.insert("bilateral_filter".to_string(), 0.4); // Energy intensive
             weights.insert("feature_extraction".to_string(), 0.5);
         }
+        OptimizationTarget::MemoryEfficient => {
+            // Prefer memory-efficient algorithms
+            weights.insert("gaussian_filter".to_string(), 0.7);
+            weights.insert("edge_detection".to_string(), 0.8);
+            weights.insert("simple_threshold".to_string(), 0.9);
+            weights.insert("bilateral_filter".to_string(), 0.3); // Memory intensive
+            weights.insert("morphology".to_string(), 0.7);
+        }
+        OptimizationTarget::UserCustom(custom_weights) => {
+            // Use user-provided weights
+            for (i, &weight) in custom_weights.iter().enumerate() {
+                match i {
+                    0 => weights.insert("gaussian_filter".to_string(), weight),
+                    1 => weights.insert("edge_detection".to_string(), weight),
+                    2 => weights.insert("bilateral_filter".to_string(), weight),
+                    3 => weights.insert("noise_reduction".to_string(), weight),
+                    4 => weights.insert("feature_extraction".to_string(), weight),
+                    5 => weights.insert("segmentation".to_string(), weight),
+                    6 => weights.insert("morphology".to_string(), weight),
+                    _ => None,
+                };
+            }
+        }
     }
 
     weights
@@ -1407,7 +1497,7 @@ fn generate_candidate_strategies(
     let mut strategies = Vec::new();
 
     // Strategy 1: Edge-focused processing
-    if pattern.dominant_features.contains(&FeatureType::Edges) {
+    if pattern.dominantfeatures.contains(&FeatureType::Edges) {
         strategies.push(ProcessingStrategy {
             algorithm_sequence: vec![
                 AlgorithmStep {
@@ -1438,7 +1528,7 @@ fn generate_candidate_strategies(
     }
 
     // Strategy 2: Texture-focused processing
-    if pattern.dominant_features.contains(&FeatureType::Textures) {
+    if pattern.dominantfeatures.contains(&FeatureType::Textures) {
         strategies.push(ProcessingStrategy {
             algorithm_sequence: vec![
                 AlgorithmStep {
@@ -1481,7 +1571,7 @@ fn generate_candidate_strategies(
     }
 
     // Strategy 3: Region-focused processing
-    if pattern.dominant_features.contains(&FeatureType::Regions) {
+    if pattern.dominantfeatures.contains(&FeatureType::Regions) {
         strategies.push(ProcessingStrategy {
             algorithm_sequence: vec![
                 AlgorithmStep {
@@ -1671,9 +1761,9 @@ fn score_strategies(
                 AlgorithmType::CustomAI => "custom_ai",
             };
 
-            let pattern_score = patternweights.get(algorithm_name).unwrap_or(&0.5);
-            let performance_score = performanceweights.get(algorithm_name).unwrap_or(&0.5);
-            let target_score = targetweights.get(algorithm_name).unwrap_or(&0.5);
+            let pattern_score = pattern_weights.get(algorithm_name).unwrap_or(&0.5);
+            let performance_score = performance_weights.get(algorithm_name).unwrap_or(&0.5);
+            let target_score = target_weights.get(algorithm_name).unwrap_or(&0.5);
 
             // Weighted combination of scores
             let algorithm_score =
@@ -1784,14 +1874,19 @@ fn update_strategy_selection_learning(
 
 #[allow(dead_code)]
 fn integrate_multimodal_knowledge(
-    strategy: ProcessingStrategy, pattern: &ImagePattern, _state: &mut AIProcessingState, config: &AIAdaptiveConfig,
+    strategy: ProcessingStrategy,
+    pattern: &ImagePattern,
+    state: &mut AIProcessingState,
+    config: &AIAdaptiveConfig,
 ) -> NdimageResult<ProcessingStrategy> {
     Ok(strategy)
 }
 
 #[allow(dead_code)]
 fn apply_predictive_processing(
-    _strategy: &ProcessingStrategy, state: &mut AIProcessingState, _config: &AIAdaptiveConfig,
+    _strategy: &ProcessingStrategy,
+    state: &mut AIProcessingState,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<HashMap<String, f64>> {
     Ok(HashMap::new())
 }
@@ -1809,7 +1904,7 @@ where
 {
     let start_time = std::time::Instant::now();
     let (height, width) = image.dim();
-    let mut current_image = image.to_owned();
+    let mut currentimage = image.to_owned();
     let mut total_memory_used = 0.0;
     let mut quality_score = 1.0;
 
@@ -1821,41 +1916,41 @@ where
         let step_adjustments = get_algorithm_adjustments(&algorithm.algorithm, adjustments);
 
         // Execute the algorithm with adaptive parameters
-        let (processed_image, step_quality) = match &algorithm.algorithm {
+        let (processedimage, step_quality) = match &algorithm.algorithm {
             AlgorithmType::GaussianFilter => {
-                apply_adaptive_gaussian_filter(&current_image.view(), &step_adjustments, config)?
+                apply_adaptive_gaussian_filter(&currentimage.view(), &step_adjustments, config)?
             }
             AlgorithmType::EdgeDetection => {
-                apply_intelligent_edge_detection(&current_image.view(), &step_adjustments, config)?
+                apply_intelligent_edge_detection(&currentimage.view(), &step_adjustments, config)?
             }
             AlgorithmType::MedianFilter => {
-                apply_ai_enhanced_median_filter(&current_image.view(), &step_adjustments, config)?
+                apply_ai_enhanced_median_filter(&currentimage.view(), &step_adjustments, config)?
             }
             AlgorithmType::BilateralFilter => {
-                apply_smart_bilateral_filter(&current_image.view(), &step_adjustments, config)?
+                apply_smart_bilateral_filter(&currentimage.view(), &step_adjustments, config)?
             }
             AlgorithmType::MorphologyOperation => {
-                apply_adaptive_morphology(&current_image.view(), &step_adjustments, config)?
+                apply_adaptive_morphology(&currentimage.view(), &step_adjustments, config)?
             }
             AlgorithmType::QuantumProcessing => {
-                apply_quantum_processing(&current_image.view(), &step_adjustments, config)?
+                apply_quantum_processing(&currentimage.view(), &step_adjustments, config)?
             }
             AlgorithmType::NeuromorphicProcessing => {
-                apply_neuromorphic_processing(&current_image.view(), &step_adjustments, config)?
+                apply_neuromorphic_processing(&currentimage.view(), &step_adjustments, config)?
             }
             AlgorithmType::ConsciousnessSimulation => {
-                apply_consciousness_simulation(&current_image.view(), &step_adjustments, config)?
+                apply_consciousness_simulation(&currentimage.view(), &step_adjustments, config)?
             }
             AlgorithmType::AdvancedFusion => {
-                apply_advanced_fusion(&current_image.view(), &step_adjustments, config)?
+                apply_advanced_fusion(&currentimage.view(), &step_adjustments, config)?
             }
             AlgorithmType::CustomAI => {
-                apply_custom_ai(&current_image.view(), &step_adjustments, config)?
+                apply_custom_ai(&currentimage.view(), &step_adjustments, config)?
             }
         };
 
         // Update image for next step
-        current_image = processed_image;
+        currentimage = processedimage;
         quality_score *= step_quality;
 
         // Calculate memory usage for this step
@@ -1899,7 +1994,7 @@ where
     // Update AI state with overall pipeline performance for learning
     update_pipeline_performance(state, strategy, &metrics, config);
 
-    Ok((current_image, metrics))
+    Ok((currentimage, metrics))
 }
 
 // Helper functions for algorithm execution
@@ -1911,7 +2006,7 @@ fn get_algorithm_adjustments(
     let algorithm_name = format!("{:?}", algorithm);
     adjustments
         .iter()
-        .filter(|(key_)| key.starts_with(&algorithm_name))
+        .filter(|(key_)| key_.starts_with(&algorithm_name))
         .map(|(key, &value)| (key.clone(), value))
         .collect()
 }
@@ -1919,7 +2014,8 @@ fn get_algorithm_adjustments(
 #[allow(dead_code)]
 fn apply_adaptive_gaussian_filter<T>(
     image: &ArrayView2<T>,
-    adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+    adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy,
@@ -1982,7 +2078,8 @@ where
 #[allow(dead_code)]
 fn apply_intelligent_edge_detection<T>(
     image: &ArrayView2<T>,
-    adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+    adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy,
@@ -2029,7 +2126,8 @@ where
 #[allow(dead_code)]
 fn apply_ai_enhanced_median_filter<T>(
     image: &ArrayView2<T>,
-    adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+    adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy,
@@ -2079,7 +2177,9 @@ where
 
 #[allow(dead_code)]
 fn apply_smart_bilateral_filter<T>(
-    image: &ArrayView2<T>, _adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+    image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy,
@@ -2122,8 +2222,10 @@ where
 }
 
 #[allow(dead_code)]
-fn apply_context_aware_noise_reduction<T>(
-    image: &ArrayView2<T>, _adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+fn applycontext_aware_noise_reduction<T>(
+    image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy,
@@ -2165,7 +2267,9 @@ where
 
 #[allow(dead_code)]
 fn apply_adaptive_morphology<T>(
-    image: &ArrayView2<T>, _adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+    image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy,
@@ -2196,7 +2300,9 @@ where
 
 #[allow(dead_code)]
 fn apply_intelligent_segmentation<T>(
-    image: &ArrayView2<T>, _adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+    image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy,
@@ -2215,7 +2321,9 @@ where
 
 #[allow(dead_code)]
 fn apply_ai_feature_extraction<T>(
-    image: &ArrayView2<T>, _adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+    image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy,
@@ -2247,9 +2355,9 @@ fn update_algorithm_performance(
 ) {
     // Update performance history for learning
     let performance_score = quality / (duration / 1000.0).max(0.001); // Quality per second
-    state.performance_history.push_back(performance_score);
-    if state.performance_history.len() > 1000 {
-        state.performance_history.pop_front();
+    state.performancehistory.push_back(performance_score);
+    if state.performancehistory.len() > 1000 {
+        state.performancehistory.pop_front();
     }
 }
 
@@ -2257,7 +2365,8 @@ fn update_algorithm_performance(
 fn calculate_energy_consumption(
     duration_ms: f64,
     memory_mb: f64,
-    algorithm_count: usize, _config: &AIAdaptiveConfig,
+    algorithm_count: usize,
+    _config: &AIAdaptiveConfig,
 ) -> f64 {
     // Estimate energy consumption based on processing characteristics
     let base_power = 10.0; // Base power consumption (watts)
@@ -2291,6 +2400,16 @@ fn calculate_user_satisfaction(
             let efficiency_score = quality * (speed_pps / 1000000.0).min(1.0);
             0.6 * quality + 0.4 * efficiency_score
         }
+        OptimizationTarget::MemoryEfficient => {
+            let speed_score = (speed_pps / 1000000.0).min(1.0);
+            0.7 * quality + 0.3 * speed_score
+        }
+        OptimizationTarget::UserCustom(weights) => {
+            let speed_score = (speed_pps / 1000000.0).min(1.0);
+            let quality_weight = weights.get(0).unwrap_or(&0.5);
+            let speed_weight = weights.get(1).unwrap_or(&0.5);
+            quality_weight * quality + speed_weight * speed_score
+        }
     }
 }
 
@@ -2298,7 +2417,8 @@ fn calculate_user_satisfaction(
 fn update_pipeline_performance(
     state: &mut AIProcessingState,
     strategy: &ProcessingStrategy,
-    metrics: &PerformanceMetrics, config: &AIAdaptiveConfig,
+    metrics: &PerformanceMetrics,
+    config: &AIAdaptiveConfig,
 ) {
     // Update AI state with pipeline performance for continual learning
     let overall_score = metrics.quality * metrics.speed / 1000.0;
@@ -2330,7 +2450,11 @@ fn update_pipeline_performance(
 
 #[allow(dead_code)]
 fn evaluate_performance<T>(
-    _original: &ArrayView2<T>, _processed: &Array2<T>, _metrics: &PerformanceMetrics, strategy: &ProcessingStrategy, _config: &AIAdaptiveConfig,
+    _original: &ArrayView2<T>,
+    _processed: &Array2<T>,
+    metrics: &PerformanceMetrics,
+    strategy: &ProcessingStrategy,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<PerformanceRecord>
 where
     T: Float + FromPrimitive + Copy,
@@ -2338,46 +2462,61 @@ where
     Ok(PerformanceRecord {
         timestamp: 0,
         input_characteristics: Array1::zeros(10),
-        _strategy_used: strategy.clone(),
-        achieved_metrics: metrics.clone(),
+        strategy_used: strategy.clone(),
+        achievedmetrics: metrics.clone(),
         context: "evaluation".to_string(),
     })
 }
 
 #[allow(dead_code)]
 fn update_continual_learning(
-    _state: &mut AIProcessingState, performance: &PerformanceRecord, _config: &AIAdaptiveConfig,
+    state: &mut AIProcessingState,
+    performance: &PerformanceRecord,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_experience_replay(
-    _state: &mut AIProcessingState, pattern: &ImagePattern, _strategy: &ProcessingStrategy, performance: &PerformanceRecord, _config: &AIAdaptiveConfig,
+    state: &mut AIProcessingState,
+    pattern: &ImagePattern,
+    _strategy: &ProcessingStrategy,
+    performance: &PerformanceRecord,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_transfer_learning(
-    _state: &mut AIProcessingState, pattern: &ImagePattern, _strategy: &ProcessingStrategy, config: &AIAdaptiveConfig,
+    state: &mut AIProcessingState,
+    pattern: &ImagePattern,
+    _strategy: &ProcessingStrategy,
+    config: &AIAdaptiveConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_few_shot_learning(
-    _state: &mut AIProcessingState, pattern: &ImagePattern, _strategy: &ProcessingStrategy, config: &AIAdaptiveConfig,
+    state: &mut AIProcessingState,
+    pattern: &ImagePattern,
+    _strategy: &ProcessingStrategy,
+    config: &AIAdaptiveConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn generate_processing_explanation(
-    _strategy: &ProcessingStrategy, performance: &PerformanceRecord, _state: &AIProcessingState, config: &AIAdaptiveConfig,
+    _strategy: &ProcessingStrategy,
+    performance: &PerformanceRecord,
+    state: &AIProcessingState,
+    config: &AIAdaptiveConfig,
 ) -> NdimageResult<ProcessingExplanation> {
     Ok(ProcessingExplanation {
-        _strategy_explanation: "Applied AI-optimized processing _strategy based on learned patterns"
+        strategy_explanation: "Applied AI-optimized processing _strategy based on learned patterns"
             .to_string(),
         step_explanations: vec![
             "Applied Gaussian filtering for noise reduction".to_string(),
@@ -2408,7 +2547,9 @@ fn generate_processing_explanation(
 
 #[allow(dead_code)]
 fn optimize_resource_learning(
-    _state: &mut AIProcessingState, metrics: &PerformanceMetrics, _config: &AIAdaptiveConfig,
+    state: &mut AIProcessingState,
+    metrics: &PerformanceMetrics,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
@@ -2434,28 +2575,28 @@ mod tests {
     #[test]
     fn test_ai_driven_adaptive_processing() {
         let image =
-            Array2::fromshape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
 
         let config = AIAdaptiveConfig::default();
         let result = ai_driven_adaptive_processing(image.view(), &config, None);
 
         assert!(result.is_ok());
-        let (output_state, explanation) = result.unwrap();
+        let (outputstate, explanation) = result.unwrap();
         assert_eq!(output.dim(), (4, 4));
         assert!(output.iter().all(|&x| x.is_finite()));
         assert!(!explanation.strategy_explanation.is_empty());
     }
 
     #[test]
-    fn test_image_pattern_recognition() {
+    fn testimage_pattern_recognition() {
         let image =
-            Array2::fromshape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.3, 0.7, 0.2, 0.8, 0.4, 0.6])
+            Array2::from_shape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.3, 0.7, 0.2, 0.8, 0.4, 0.6])
                 .unwrap();
 
         let config = AIAdaptiveConfig::default();
-        let mut state = initialize_or_update_ai_state(None, (3, 3), &config).unwrap();
+        let mut state = initialize_or_update_aistate(None, (3, 3), &config).unwrap();
 
-        let result = recognize_image_pattern(&image.view(), &mut state, &config);
+        let result = recognizeimage_pattern(&image.view(), &mut state, &config);
         assert!(result.is_ok());
 
         let pattern = result.unwrap();
@@ -2468,11 +2609,11 @@ mod tests {
             pattern_type: PatternType::Natural,
             complexity: ComplexityLevel::Medium,
             noise_level: NoiseLevel::Low,
-            dominant_features: vec![FeatureType::Edges],
+            dominantfeatures: vec![FeatureType::Edges],
         };
 
         let config = AIAdaptiveConfig::default();
-        let mut state = initialize_or_update_ai_state(None, (3, 3), &config).unwrap();
+        let mut state = initialize_or_update_aistate(None, (3, 3), &config).unwrap();
 
         let result = select_optimal_strategy(&pattern, &mut state, &config);
         assert!(result.is_ok());
@@ -2483,7 +2624,7 @@ mod tests {
     }
 
     #[test]
-    fn test_performance_metrics() {
+    fn test_performancemetrics() {
         let metrics = PerformanceMetrics {
             speed: 1000.0,
             quality: 0.85,
@@ -2522,7 +2663,9 @@ mod tests {
 // Missing function implementations - placeholders for now
 #[allow(dead_code)]
 fn apply_quantum_processing<T>(
-    _image: &ArrayView2<T>, _adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+    image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy + Clone,
@@ -2534,7 +2677,9 @@ where
 
 #[allow(dead_code)]
 fn apply_neuromorphic_processing<T>(
-    _image: &ArrayView2<T>, _adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+    image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy + Clone,
@@ -2546,7 +2691,9 @@ where
 
 #[allow(dead_code)]
 fn apply_consciousness_simulation<T>(
-    _image: &ArrayView2<T>, _adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+    image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy + Clone,
@@ -2558,7 +2705,9 @@ where
 
 #[allow(dead_code)]
 fn apply_advanced_fusion<T>(
-    _image: &ArrayView2<T>, _adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+    image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy + Clone,
@@ -2570,7 +2719,9 @@ where
 
 #[allow(dead_code)]
 fn apply_custom_ai<T>(
-    _image: &ArrayView2<T>, _adjustments: &HashMap<String, f64>, _config: &AIAdaptiveConfig,
+    image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
 ) -> NdimageResult<(Array2<T>, f64)>
 where
     T: Float + FromPrimitive + Copy + Clone,

@@ -2,9 +2,9 @@ use std::fs::File;
 use std::io::Write;
 
 use scirs2_signal::cqt::{
-use std::f64::consts::PI;
     chromagram, constant_q_transform, cqt_magnitude, inverse_constant_q_transform, CqtConfig,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

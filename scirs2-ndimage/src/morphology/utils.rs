@@ -22,7 +22,9 @@ use crate::error::{NdimageError, NdimageResult};
 #[allow(dead_code)]
 pub fn pad_array<T, D>(
     input: &Array<T, D>,
-    pad_width: &[(usize, usize)], _mode: &MorphBorderMode_constant, value: T,
+    pad_width: &[(usize, usize)],
+    _mode: &MorphBorderMode_constant,
+    value: T,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,

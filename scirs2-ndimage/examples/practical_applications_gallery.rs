@@ -36,7 +36,7 @@
 //! - Materials science imaging
 
 use ndarray::{s, Array2, Array3, ArrayView2};
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     domain_specific::*, error::NdimageResult, features::*, filters::*, interpolation::*,
     measurements::*, morphology::*, segmentation::*,
 };
@@ -169,10 +169,10 @@ fn medical_imaging_applications() -> NdimageResult<()> {
     println!("Goal: Automatically count cells in microscopy images");
     println!();
 
-    let microscopy_image = create_microscopy_simulation(300, 300);
+    let microscopyimage = create_microscopy_simulation(300, 300);
 
     println!("Step 1: Cell nuclei detection using adaptive thresholding");
-    let nuclei_mask = otsu_threshold(&microscopy_image.view())?;
+    let nuclei_mask = otsu_threshold(&microscopyimage.view())?;
 
     println!("Step 2: Watershed segmentation to separate touching cells");
     let distance_transform = {
@@ -184,11 +184,11 @@ fn medical_imaging_applications() -> NdimageResult<()> {
     };
 
     let markers = create_watershed_markers(&distance_transform, 3.0);
-    let segmented_cells = watershed(&microscopy_image.view(), &markers.view(), None, None)?;
+    let segmented_cells = watershed(&microscopyimage.view(), &markers.view(), None, None)?;
 
     println!("Step 3: Cell analysis and filtering");
     let cell_properties =
-        region_properties(&segmented_cells.view(), Some(&microscopy_image.view()))?;
+        region_properties(&segmented_cells.view(), Some(&microscopyimage.view()))?;
 
     let valid_cells: Vec<_> = cell_properties.iter()
         .filter(|prop| prop.area > 50.0 && prop.area < 2000.0)  // Size filter
@@ -208,7 +208,7 @@ fn medical_imaging_applications() -> NdimageResult<()> {
     );
     println!(
         "   Cell density: {:.3} cells per 1000 pixels²",
-        valid_cells.len() as f64 / (microscopy_image.len() as f64 / 1000.0)
+        valid_cells.len() as f64 / (microscopyimage.len() as f64 / 1000.0)
     );
     println!("Use case: Drug testing, disease progression monitoring");
 
@@ -224,11 +224,11 @@ fn industrial_inspection_applications() -> NdimageResult<()> {
     println!("Goal: Detect scratches, dents, and other surface defects");
     println!();
 
-    let surface_image = create_surface_inspection_simulation(400, 400);
+    let surfaceimage = create_surface_inspection_simulation(400, 400);
 
     println!("Step 1: Background subtraction to normalize lighting");
-    let background = gaussian_filter(&surface_image, &[20.0, 20.0], None, None, None)?;
-    let normalized = &surface_image - &background;
+    let background = gaussian_filter(&surfaceimage, &[20.0, 20.0], None, None, None)?;
+    let normalized = &surfaceimage - &background;
 
     println!("Step 2: Defect detection using multiple filters");
 
@@ -244,8 +244,8 @@ fn industrial_inspection_applications() -> NdimageResult<()> {
     let (scratch_labels, num_scratches) = label(&scratch_candidates.view(), None)?;
     let (spot_labels, num_spots) = label(&spot_candidates.view(), None)?;
 
-    let scratch_props = region_properties(&scratch_labels.view(), Some(&surface_image.view()))?;
-    let spot_props = region_properties(&spot_labels.view(), Some(&surface_image.view()))?;
+    let scratch_props = region_properties(&scratch_labels.view(), Some(&surfaceimage.view()))?;
+    let spot_props = region_properties(&spot_labels.view(), Some(&surfaceimage.view()))?;
 
     // Classify defects by aspect ratio
     let linear_defects: Vec<_> = scratch_props
@@ -276,7 +276,7 @@ fn industrial_inspection_applications() -> NdimageResult<()> {
     );
     println!(
         "   Total surface area analyzed: {} pixels",
-        surface_image.len()
+        surfaceimage.len()
     );
     println!("Use case: Manufacturing quality control, automotive inspection");
     println!();
@@ -286,16 +286,16 @@ fn industrial_inspection_applications() -> NdimageResult<()> {
     println!("Goal: Measure part dimensions for quality control");
     println!();
 
-    let part_image = create_part_measurement_simulation(300, 400);
+    let partimage = create_part_measurement_simulation(300, 400);
 
     println!("Step 1: Edge detection for precise boundary finding");
-    let edges = canny(part_image.view(), 1.0, 0.2, 0.5, None)?;
+    let edges = canny(partimage.view(), 1.0, 0.2, 0.5, None)?;
 
     println!("Step 2: Find part boundaries");
-    let part_mask = threshold_binary(&part_image.view(), 0.5)?;
+    let part_mask = threshold_binary(&partimage.view(), 0.5)?;
     let part_properties = {
         let (labeled_) = label(&part_mask.view(), None)?;
-        let props = region_properties(&labeled.view(), Some(&part_image.view()))?;
+        let props = region_properties(&labeled.view(), Some(&partimage.view()))?;
         props
             .into_iter()
             .max_by(|a, b| a.area.partial_cmp(&b.area).unwrap())
@@ -331,13 +331,13 @@ fn industrial_inspection_applications() -> NdimageResult<()> {
     println!("Goal: Inspect printed circuit boards for defects");
     println!();
 
-    let pcb_image = create_pcb_simulation(500, 500);
+    let pcbimage = create_pcb_simulation(500, 500);
 
     println!("Step 1: Component detection using template matching");
-    let components = detect_pcb_components(&pcb_image)?;
+    let components = detect_pcb_components(&pcbimage)?;
 
     println!("Step 2: Trace inspection using edge detection");
-    let traces = detect_pcb_traces(&pcb_image)?;
+    let traces = detect_pcb_traces(&pcbimage)?;
 
     println!("Step 3: Defect detection - missing components, broken traces");
     let defects = analyze_pcb_defects(&components, &traces)?;
@@ -401,10 +401,10 @@ fn remote_sensing_applications() -> NdimageResult<()> {
     println!("Goal: Map water bodies for flood monitoring and resource management");
     println!();
 
-    let multispectral_image = create_multispectral_simulation(300, 300);
+    let multispectralimage = create_multispectral_simulation(300, 300);
 
     println!("Step 1: Water detection using spectral indices");
-    let water_mask = satellite::detect_water_bodies(&multispectral_image.view(), 0.0)?;
+    let water_mask = satellite::detect_water_bodies(&multispectralimage.view(), 0.0)?;
 
     println!("Step 2: Morphological processing to clean water mask");
     let structure = generate_binary_structure(2, 1)?;
@@ -419,14 +419,14 @@ fn remote_sensing_applications() -> NdimageResult<()> {
     println!("Step 3: Water body analysis");
     let (labeled_water, num_water_bodies) = label(&cleaned_water.view(), None)?;
     let water_properties =
-        region_properties(&labeled_water.view(), Some(&multispectral_image.view()))?;
+        region_properties(&labeled_water.view(), Some(&multispectralimage.view()))?;
 
     let large_water_bodies: Vec<_> = water_properties.iter()
         .filter(|prop| prop.area > 500.0)  // Filter small water bodies
         .collect();
 
     let total_water_area: f64 = water_properties.iter().map(|prop| prop.area).sum();
-    let water_coverage = total_water_area / multispectral_image.len() as f64 * 100.0;
+    let water_coverage = total_water_area / multispectralimage.len() as f64 * 100.0;
 
     println!("Results: Water body detection:");
     println!("   Total water bodies detected: {}", num_water_bodies);
@@ -447,13 +447,13 @@ fn remote_sensing_applications() -> NdimageResult<()> {
     println!("Goal: Detect and mask clouds for clear earth observation");
     println!();
 
-    let cloudy_image = create_cloudy_satellite_simulation(350, 350);
+    let cloudyimage = create_cloudy_satellite_simulation(350, 350);
 
     println!("Step 1: Cloud detection using brightness and texture");
-    let cloud_mask = satellite::detect_clouds(&cloudy_image.view(), 0.7)?;
+    let cloud_mask = satellite::detect_clouds(&cloudyimage.view(), 0.7)?;
 
     println!("Step 2: Cloud shadow detection");
-    let cloud_shadows = detect_cloud_shadows(&cloudy_image, &cloud_mask)?;
+    let cloud_shadows = detect_cloud_shadows(&cloudyimage, &cloud_mask)?;
 
     println!("Step 3: Clear area identification");
     let total_obscured = &cloud_mask | &cloud_shadows;
@@ -490,18 +490,18 @@ fn computer_vision_applications() -> NdimageResult<()> {
     println!("Goal: Detect and track objects in video sequences");
     println!();
 
-    let scene_image = create_scene_simulation(400, 300);
+    let sceneimage = create_scene_simulation(400, 300);
 
     println!("Step 1: Background subtraction");
-    let background_model = gaussian_filter(&scene_image, &[5.0, 5.0], None, None, None)?;
-    let foreground = (&scene_image - &background_model).mapv(|x| x.abs());
+    let background_model = gaussian_filter(&sceneimage, &[5.0, 5.0], None, None, None)?;
+    let foreground = (&sceneimage - &background_model).mapv(|x| x.abs());
 
     println!("Step 2: Object detection using adaptive thresholding");
     let object_mask = adaptive_threshold(&foreground.view(), 11, AdaptiveMethod::Mean, 0.1)?;
 
     println!("Step 3: Object tracking and analysis");
     let (labeled_objects, num_objects) = label(&object_mask.view(), None)?;
-    let object_properties = region_properties(&labeled_objects.view(), Some(&scene_image.view()))?;
+    let object_properties = region_properties(&labeled_objects.view(), Some(&sceneimage.view()))?;
 
     let moving_objects: Vec<_> = object_properties.iter()
         .filter(|prop| prop.area > 100.0 && prop.area < 10000.0)  // Size filter
@@ -528,10 +528,10 @@ fn computer_vision_applications() -> NdimageResult<()> {
     println!("Goal: Extract text regions and analyze document layout");
     println!();
 
-    let document_image = create_document_simulation(600, 400);
+    let documentimage = create_document_simulation(600, 400);
 
     println!("Step 1: Text region detection using edge density");
-    let edges = sobel(&document_image.view(), None, None, None)?;
+    let edges = sobel(&documentimage.view(), None, None, None)?;
     let edge_density = compute_local_edge_density(&edges, 20)?;
     let text_candidates = threshold_binary(&edge_density.view(), 0.3)?;
 
@@ -539,7 +539,7 @@ fn computer_vision_applications() -> NdimageResult<()> {
     let text_lines = segmenttext_lines(&text_candidates)?;
 
     println!("Step 3: Document structure analysis");
-    let layout_analysis = analyze_document_layout(&text_lines, &document_image)?;
+    let layout_analysis = analyze_document_layout(&text_lines, &documentimage)?;
 
     println!("Results: Document, analysis: ");
     println!("   Text lines detected: {}", layout_analysis.numtext_lines);
@@ -563,16 +563,16 @@ fn computer_vision_applications() -> NdimageResult<()> {
     println!("Goal: Detect faces in natural images");
     println!();
 
-    let portrait_image = create_portrait_simulation(300, 400);
+    let portraitimage = create_portrait_simulation(300, 400);
 
     println!("Step 1: Skin tone detection");
-    let skin_mask = detect_skin_regions(&portrait_image)?;
+    let skin_mask = detect_skin_regions(&portraitimage)?;
 
     println!("Step 2: Face candidate detection using Viola-Jones-like features");
-    let face_candidates = detect_face_candidates(&portrait_image, &skin_mask)?;
+    let face_candidates = detect_face_candidates(&portraitimage, &skin_mask)?;
 
     println!("Step 3: Face validation using geometric constraints");
-    let validated_faces = validate_face_candidates(&face_candidates, &portrait_image)?;
+    let validated_faces = validate_face_candidates(&face_candidates, &portraitimage)?;
 
     println!("Results: Face, detection: ");
     println!("   Face candidates: {}", face_candidates.num_candidates);
@@ -601,10 +601,10 @@ fn scientific_imaging_applications() -> NdimageResult<()> {
     println!("Goal: Analyze particle size distribution in electron microscopy");
     println!();
 
-    let sem_image = create_particle_simulation(512, 512);
+    let semimage = create_particle_simulation(512, 512);
 
     println!("Step 1: Particle segmentation using adaptive thresholding");
-    let particle_mask = otsu_threshold(&sem_image.view())?;
+    let particle_mask = otsu_threshold(&semimage.view())?;
 
     println!("Step 2: Watershed segmentation to separate touching particles");
     let distance_transform = {
@@ -619,11 +619,11 @@ fn scientific_imaging_applications() -> NdimageResult<()> {
     };
 
     let markers = create_watershed_markers(&distance_transform, 2.0);
-    let segmented_particles = watershed(&sem_image.view(), &markers.view(), None, None)?;
+    let segmented_particles = watershed(&semimage.view(), &markers.view(), None, None)?;
 
     println!("Step 3: Particle size analysis");
     let particle_properties =
-        region_properties(&segmented_particles.view(), Some(&sem_image.view()))?;
+        region_properties(&segmented_particles.view(), Some(&semimage.view()))?;
 
     let valid_particles: Vec<_> = particle_properties.iter()
         .filter(|prop| prop.area > 50.0)  // Minimum size filter
@@ -657,14 +657,14 @@ fn scientific_imaging_applications() -> NdimageResult<()> {
     println!("Goal: Detect and catalog stars in astronomical images");
     println!();
 
-    let astronomy_image = create_astronomy_simulation(400, 400);
+    let astronomyimage = create_astronomy_simulation(400, 400);
 
     println!("Step 1: Star detection using local maxima");
-    let smoothed = gaussian_filter(&astronomy_image, &[1.0, 1.0], None, None, None)?;
+    let smoothed = gaussian_filter(&astronomyimage, &[1.0, 1.0], None, None, None)?;
     let star_candidates = detect_local_maxima(&smoothed, 5.0)?;
 
     println!("Step 2: Star photometry and classification");
-    let star_catalog = perform_star_photometry(&astronomy_image, &star_candidates)?;
+    let star_catalog = perform_star_photometry(&astronomyimage, &star_candidates)?;
 
     println!("Step 3: Catalog generation");
     let bright_stars: Vec<_> = star_catalog
@@ -698,13 +698,13 @@ fn scientific_imaging_applications() -> NdimageResult<()> {
     println!("Goal: Analyze crystal defects in materials science");
     println!();
 
-    let crystal_image = create_crystal_simulation(300, 300);
+    let crystalimage = create_crystal_simulation(300, 300);
 
     println!("Step 1: Lattice detection using FFT");
-    let lattice_info = detect_crystal_lattice(&crystal_image)?;
+    let lattice_info = detect_crystal_lattice(&crystalimage)?;
 
     println!("Step 2: Defect detection using template matching");
-    let defects = detect_crystal_defects(&crystal_image, &lattice_info)?;
+    let defects = detect_crystal_defects(&crystalimage, &lattice_info)?;
 
     println!("Step 3: Defect classification");
     let point_defects = defects
@@ -728,7 +728,7 @@ fn scientific_imaging_applications() -> NdimageResult<()> {
     println!("   Planar defects: {}", planar_defects);
     println!(
         "   Defect density: {:.3} per 1000 pixels²",
-        defects.len() as f64 / (crystal_image.len() as f64 / 1000.0)
+        defects.len() as f64 / (crystalimage.len() as f64 / 1000.0)
     );
     println!("Use case: Materials science, semiconductor manufacturing");
 
@@ -842,9 +842,9 @@ fn create_medical_scan_simulation(height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn enhance_medical_contrast(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
-    let stats = compute_image_stats(_image);
+    let stats = computeimage_stats(image);
     let mean = stats.2;
-    Ok(_image.mapv(|x| ((x - mean) * 1.5 + mean).clamp(0.0, 1.0)))
+    Ok(image.mapv(|x| ((x - mean) * 1.5 + mean).clamp(0.0, 1.0)))
 }
 
 #[allow(dead_code)]
@@ -1083,12 +1083,9 @@ fn create_cloudy_satellite_simulation(height: usize, width: usize) -> Array2<f64
 }
 
 #[allow(dead_code)]
-fn detect_cloud_shadows(
-    _image: &Array2<f64>,
-    cloud_mask: &Array2<u8>,
-) -> NdimageResult<Array2<u8>> {
+fn detect_cloud_shadows(image: &Array2<f64>, cloud_mask: &Array2<u8>) -> NdimageResult<Array2<u8>> {
     // Simplified shadow detection
-    Ok(Array2::zeros(_image.dim()))
+    Ok(Array2::zeros(image.dim()))
 }
 
 #[allow(dead_code)]
@@ -1199,7 +1196,7 @@ fn create_portrait_simulation(height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn detect_skin_regions(image: &Array2<f64>) -> NdimageResult<Array2<u8>> {
-    Ok(_image.mapv(|x| if x > 0.5 && x < 0.8 { 1u8 } else { 0u8 }))
+    Ok(image.mapv(|x| if x > 0.5 && x < 0.8 { 1u8 } else { 0u8 }))
 }
 
 #[allow(dead_code)]
@@ -1280,7 +1277,7 @@ fn create_astronomy_simulation(height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn detect_local_maxima(image: &Array2<f64>, threshold: f64) -> NdimageResult<Array2<u8>> {
-    Ok(_image.mapv(|x| if x > threshold { 1u8 } else { 0u8 }))
+    Ok(image.mapv(|x| if x > threshold { 1u8 } else { 0u8 }))
 }
 
 #[allow(dead_code)]
@@ -1371,7 +1368,7 @@ fn create_watershed_markers(_distancemap: &Array2<f64>, threshold: f64) -> Array
 }
 
 #[allow(dead_code)]
-fn compute_image_stats(image: &Array2<f64>) -> (f64, f64, f64) {
+fn computeimage_stats(image: &Array2<f64>) -> (f64, f64, f64) {
     let min = image.fold(f64::INFINITY, |acc, &x| acc.min(x));
     let max = image.fold(f64::NEG_INFINITY, |acc, &x| acc.max(x));
     let mean = image.sum() / image.len() as f64;

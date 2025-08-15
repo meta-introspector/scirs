@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array2, Array3};
-use scirs2__ndimage::interpolation::{
+use scirs2_ndimage::interpolation::{
     affine_transform, map_coordinates, rotate, shift, zoom, InterpolationOrder,
 };
 use std::time::Duration;
@@ -42,17 +42,17 @@ fn bench_affine_transform(c: &mut Criterion) {
 
     // Identity matrix (no transformation)
     let identity_matrix =
-        Array2::fromshape_vec((2, 3), vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0]).unwrap();
+        Array2::from_shape_vec((2, 3), vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0]).unwrap();
 
     // Rotation matrix (45 degrees)
     let angle = std::f64::consts::PI / 4.0;
     let cos_a = angle.cos();
     let sin_a = angle.sin();
     let rotation_matrix =
-        Array2::fromshape_vec((2, 3), vec![cos_a, -sin_a, 0.0, sin_a, cos_a, 0.0]).unwrap();
+        Array2::from_shape_vec((2, 3), vec![cos_a, -sin_a, 0.0, sin_a, cos_a, 0.0]).unwrap();
 
     // Scale matrix (2x zoom)
-    let scale_matrix = Array2::fromshape_vec((2, 3), vec![2.0, 0.0, 0.0, 0.0, 2.0, 0.0]).unwrap();
+    let scale_matrix = Array2::from_shape_vec((2, 3), vec![2.0, 0.0, 0.0, 0.0, 2.0, 0.0]).unwrap();
 
     group.bench_function("identity", |b| {
         b.iter(|| {

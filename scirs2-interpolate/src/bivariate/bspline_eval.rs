@@ -235,12 +235,12 @@ pub fn evaluate_bispline<F: crate::traits::InterpolationFloat>(
     ky: usize,
 ) -> F {
     // Find spans
-    let span_x = find_span(_x, knots_x, kx);
-    let span_y = find_span(_y, knots_y, ky);
+    let span_x = find_span(x, knots_x, kx);
+    let span_y = find_span(y, knots_y, ky);
 
     // Compute basis functions in each direction
-    let basis_x = basis_funs(_x, span_x, knots_x, kx);
-    let basis_y = basis_funs(_y, span_y, knots_y, ky);
+    let basis_x = basis_funs(x, span_x, knots_x, kx);
+    let basis_y = basis_funs(y, span_y, knots_y, ky);
 
     // Number of control points in each direction
     #[allow(unused_variables)]
@@ -294,7 +294,7 @@ pub fn evaluate_bispline_derivative<F: crate::traits::InterpolationFloat>(
 ) -> F {
     // Special case for zero derivatives
     if dx == 0 && dy == 0 {
-        return evaluate_bispline(_x, y, knots_x, knots_y, coeffs, kx, ky);
+        return evaluate_bispline(x, y, knots_x, knots_y, coeffs, kx, ky);
     }
 
     // Check if the requested derivative order is valid
@@ -303,12 +303,12 @@ pub fn evaluate_bispline_derivative<F: crate::traits::InterpolationFloat>(
     }
 
     // Find spans
-    let span_x = find_span(_x, knots_x, kx);
-    let span_y = find_span(_y, knots_y, ky);
+    let span_x = find_span(x, knots_x, kx);
+    let span_y = find_span(y, knots_y, ky);
 
     // Compute derivatives of basis functions
-    let derivs_x = basis_funs_derivatives(_x, span_x, knots_x, kx, dx);
-    let derivs_y = basis_funs_derivatives(_y, span_y, knots_y, ky, dy);
+    let derivs_x = basis_funs_derivatives(x, span_x, knots_x, kx, dx);
+    let derivs_y = basis_funs_derivatives(y, span_y, knots_y, ky, dy);
 
     // Number of control points in each direction
     #[allow(unused_variables)]

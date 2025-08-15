@@ -211,7 +211,7 @@ where
     let q_t = safe_usize_to_float(q)?;
     let spacing_sq = spacing * spacing;
 
-    let two = safe_f64to_float::<T>(2.0)?;
+    let two = safe_f64_to_float::<T>(2.0)?;
     Ok(((q_t * q_t - p_t * p_t) * spacing_sq + f[q] - f[p]) / (two * (q_t - p_t) * spacing_sq))
 }
 
@@ -305,7 +305,7 @@ where
                                     let dist = (dx * dx + dy * dy).sqrt();
 
                                     let tolerance =
-                                        safe_f64to_float::<T>(0.1).unwrap_or_else(|_| T::one());
+                                        safe_f64_to_float::<T>(0.1).unwrap_or_else(|_| T::one());
                                     if (dist - target_dist).abs() < tolerance {
                                         indices[[0, i, j]] = ni;
                                         indices[[1, i, j]] = nj;

@@ -35,7 +35,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 /// ## Basic usage with 2D arrays
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::measurements::sum_labels;
+/// use scirs2_ndimage::measurements::sum_labels;
 ///
 /// // Create input image and corresponding labels
 /// let image = array![
@@ -59,7 +59,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 /// ## Computing specific region sums
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::measurements::sum_labels;
+/// use scirs2_ndimage::measurements::sum_labels;
 ///
 /// let values = array![
 ///     [10.0, 20.0, 30.0],
@@ -80,10 +80,10 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 /// ## Processing segmented image data
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::sum_labels;
+/// use scirs2_ndimage::measurements::sum_labels;
 ///
 /// // Simulate segmented image with intensity values
-/// let intensity_image = Array2::fromshape_fn((100, 100), |(i, j)| {
+/// let intensityimage = Array2::fromshape_fn((100, 100), |(i, j)| {
 ///     ((i + j) as f64).sin().abs() * 255.0
 /// });
 ///
@@ -92,7 +92,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 ///     ((i / 10) * 10 + (j / 10)) + 1  // Create grid-like segments
 /// });
 ///
-/// let total_intensities = sum_labels(&intensity_image, &segmentation, None).unwrap();
+/// let total_intensities = sum_labels(&intensityimage, &segmentation, None).unwrap();
 /// // Each element contains total intensity for that segment
 /// ```
 #[allow(dead_code)]
@@ -178,7 +178,7 @@ where
 /// ## Basic mean calculation for segmented image
 /// ```rust
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::measurements::mean_labels;
+/// use scirs2_ndimage::measurements::mean_labels;
 ///
 /// // Image with different intensity regions
 /// let image = array![
@@ -202,7 +202,7 @@ where
 /// ## Region-based intensity analysis
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::mean_labels;
+/// use scirs2_ndimage::measurements::mean_labels;
 ///
 /// // Simulate medical image with different tissue types
 /// let intensity_map = Array2::fromshape_fn((50, 50), |(i, j)| {
@@ -231,7 +231,7 @@ where
 /// ## Quality control: analyzing specific regions only
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__ndimage::measurements::mean_labels;
+/// use scirs2_ndimage::measurements::mean_labels;
 ///
 /// let values = array![
 ///     [1.0, 2.0, 3.0, 4.0],
@@ -254,10 +254,10 @@ where
 /// ## Workflow: segmentation → feature extraction
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::mean_labels;
+/// use scirs2_ndimage::measurements::mean_labels;
 ///
 /// // Simulate workflow after watershed segmentation
-/// let original_image = Array2::<f64>::fromshape_fn((20, 20), |(i, j)| {
+/// let originalimage = Array2::<f64>::fromshape_fn((20, 20), |(i, j)| {
 ///     ((i as f64 - 10.0).powi(2) + (j as f64 - 10.0).powi(2)).sqrt()
 /// });
 ///
@@ -269,10 +269,10 @@ where
 /// });
 ///
 /// // Extract mean intensity for each segment
-/// let segment_features = mean_labels(&original_image, &segmentation_result, None).unwrap();
+/// let segmentfeatures = mean_labels(&originalimage, &segmentation_result, None).unwrap();
 ///
 /// // Filter segments by mean intensity threshold
-/// let bright_segments: Vec<usize> = segment_features.iter()
+/// let bright_segments: Vec<usize> = segmentfeatures.iter()
 ///     .enumerate()
 ///     .filter(|(_, &mean)| mean > 10.0)
 ///     .map(|(i_)| i + 1)  // Convert to 1-based labeling
@@ -376,7 +376,7 @@ where
 /// ## Basic variance calculation
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::measurements::variance_labels;
+/// use scirs2_ndimage::measurements::variance_labels;
 ///
 /// let values = array![
 ///     [1.0, 2.0, 10.0],
@@ -514,7 +514,7 @@ where
 /// ## Basic region size measurement
 /// ```rust
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::measurements::count_labels;
+/// use scirs2_ndimage::measurements::count_labels;
 ///
 /// let segmentation = array![
 ///     [1, 1, 2, 2],
@@ -533,7 +533,7 @@ where
 /// ## Object size filtering workflow
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::count_labels;
+/// use scirs2_ndimage::measurements::count_labels;
 ///
 /// // Simulate segmented image with objects of various sizes
 /// let labels = Array2::fromshape_fn((100, 100), |(i, j)| {
@@ -562,7 +562,7 @@ where
 /// ## Cell counting and size analysis
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__ndimage::measurements::count_labels;
+/// use scirs2_ndimage::measurements::count_labels;
 ///
 /// // Simulated cell segmentation result
 /// let cell_labels = array![
@@ -598,7 +598,7 @@ where
 /// ## Quality control: count specific regions only
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__ndimage::measurements::count_labels;
+/// use scirs2_ndimage::measurements::count_labels;
 ///
 /// let labels = array![
 ///     [1, 2, 3, 4, 5],
@@ -618,7 +618,7 @@ where
 /// ## Segmentation validation workflow
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::count_labels;
+/// use scirs2_ndimage::measurements::count_labels;
 ///
 /// // After watershed or other segmentation algorithm
 /// let segmentation_result = Array2::fromshape_fn((50, 50), |(i, j)| {
@@ -756,7 +756,7 @@ where
 /// ## Basic histogram of entire image
 /// ```rust
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::measurements::histogram;
+/// use scirs2_ndimage::measurements::histogram;
 ///
 /// let image = array![
 ///     [0.0, 0.5, 1.0],
@@ -776,7 +776,7 @@ where
 /// ## Histogram of specific regions only
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__ndimage::measurements::histogram;
+/// use scirs2_ndimage::measurements::histogram;
 ///
 /// let intensities = array![
 ///     [10.0, 20.0, 100.0, 110.0],
@@ -802,10 +802,10 @@ where
 /// ## Texture analysis workflow
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::histogram;
+/// use scirs2_ndimage::measurements::histogram;
 ///
 /// // Simulate textured image regions
-/// let texture_image = Array2::fromshape_fn((50, 50), |(i, j)| {
+/// let textureimage = Array2::fromshape_fn((50, 50), |(i, j)| {
 ///     let noise = ((i * 7 + j * 11) % 100) as f64 / 100.0;
 ///     match (i / 25, j / 25) {
 ///         (0, 0) => 0.2 + 0.1 * noise,  // Low intensity, low variation
@@ -826,7 +826,7 @@ where
 ///
 /// // Analyze histogram characteristics of each texture region
 /// for region_id in 1..=4 {
-///     let (hist_) = histogram(&texture_image, 0.0, 1.0, 10,
+///     let (hist_) = histogram(&textureimage, 0.0, 1.0, 10,
 ///                               Some(&texture_labels), Some(&[region_id])).unwrap();
 ///     
 ///     // Calculate histogram statistics
@@ -849,10 +849,10 @@ where
 /// ## Medical image intensity analysis
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::histogram;
+/// use scirs2_ndimage::measurements::histogram;
 ///
 /// // Simulate medical image with different tissue types
-/// let medical_image = Array2::fromshape_fn((100, 100), |(i, j)| {
+/// let medicalimage = Array2::fromshape_fn((100, 100), |(i, j)| {
 ///     match (i / 33, j / 33) {
 ///         (0_) => 50.0 + (i % 10) as f64,   // Tissue A: 50-60 range
 ///         (1_) => 150.0 + (j % 15) as f64,  // Tissue B: 150-165 range
@@ -870,7 +870,7 @@ where
 ///
 /// // Analyze intensity distribution for each tissue type
 /// for tissue_type in 1..=3 {
-///     let (tissue_hist, bin_edges) = histogram(&medical_image, 0.0, 200.0, 20,
+///     let (tissue_hist, bin_edges) = histogram(&medicalimage, 0.0, 200.0, 20,
 ///                                              Some(&tissue_segmentation),
 ///                                              Some(&[tissue_type])).unwrap();
 ///     
@@ -889,7 +889,7 @@ where
 /// ## Quality control: histogram-based thresholding
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::histogram;
+/// use scirs2_ndimage::measurements::histogram;
 ///
 /// let image = Array2::fromshape_fn((50, 50), |(i, j)| {
 ///     if (i - 25).pow(2) + (j - 25).pow(2) < 400 {
@@ -945,7 +945,8 @@ pub fn histogram<T, D>(
     min: T,
     max: T,
     bins: usize,
-    labels: Option<&Array<usize, D>>, _index: Option<&[usize]>,
+    labels: Option<&Array<usize, D>>,
+    _index: Option<&[usize]>,
 ) -> NdimageResult<(Array1<usize>, Array1<T>)>
 where
     T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,

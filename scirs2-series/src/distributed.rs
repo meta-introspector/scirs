@@ -232,7 +232,7 @@ pub enum NodeStatus {
 
 /// Distributed time series processor
 pub struct DistributedProcessor<
-    F: Float + Debug + Clone + num_traits::FromPrimitive + num, _traits::Zero + ndarray::ScalarOperand,
+    F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + ndarray::ScalarOperand,
 > {
     /// Cluster configuration
     config: ClusterConfig,
@@ -275,7 +275,7 @@ impl<
         let mut nodes = HashMap::new();
 
         // Initialize node information
-        for address in &_config.nodes {
+        for address in &config.nodes {
             nodes.insert(
                 address.clone(),
                 NodeInfo {
@@ -329,7 +329,8 @@ impl<
     pub fn distributed_forecast(
         &mut self,
         data: &Array1<F>,
-        horizon: usize, method: &str,
+        horizon: usize,
+        method: &str,
     ) -> Result<Array1<F>> {
         // Split data into chunks for parallel processing
         let chunk_size = self
@@ -430,7 +431,7 @@ impl<
                 info.status == NodeStatus::Available
                     && info.running_tasks < self.config.max_concurrent_tasks
             })
-            .map(|(address_)| address)
+            .map(|(address)| address)
             .collect();
 
         if available_nodes.is_empty() {
@@ -526,7 +527,8 @@ impl<
             TaskType::Forecasting => self.simulate_forecasting_task(task)?,
             TaskType::FeatureExtraction => self.simulate_feature_extraction_task(task)?,
             TaskType::AnomalyDetection => self.simulate_anomaly_detection_task(task)?,
-            TaskType::Decomposition => self.simulate_decomposition_task(task)?_ => {
+            TaskType::Decomposition => self.simulate_decomposition_task(task)?,
+            _ => {
                 // Generic processing
                 task.input_data.clone()
             }
@@ -821,7 +823,7 @@ pub struct ClusterStatus {
 /// Convenience functions for common distributed operations
 #[allow(dead_code)]
 pub fn distributed_moving_average<
-    F: Float + Debug + Clone + num_traits::FromPrimitive + num, _traits::Zero + ndarray::ScalarOperand,
+    F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + ndarray::ScalarOperand,
 >(
     processor: &mut DistributedProcessor<F>,
     data: &Array1<F>,

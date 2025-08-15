@@ -841,7 +841,8 @@ where
             (F::from(0.01).unwrap(), F::from(-3.96).unwrap()),
             (F::from(0.05).unwrap(), F::from(-3.41).unwrap()),
             (F::from(0.10).unwrap(), F::from(-3.13).unwrap()),
-        ]_ => vec![
+        ],
+        _ => vec![
             (F::from(0.01).unwrap(), F::from(-3.43).unwrap()),
             (F::from(0.05).unwrap(), F::from(-2.86).unwrap()),
             (F::from(0.10).unwrap(), F::from(-2.57).unwrap()),
@@ -851,7 +852,7 @@ where
 
 /// Approximate p-value for ADF test (simplified)
 #[allow(dead_code)]
-fn approximate_adf_p_value<F>(_t_stat: F_regression, type: &str) -> F
+fn approximate_adf_p_value<F>(_t_stat: F_regression, test_type: &str) -> F
 where
     F: Float + FromPrimitive,
 {

@@ -323,15 +323,15 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
             });
         }
 
-        let mean_return = self.returns.mean().unwrap();
-        let excess_return = mean_return - risk_free_rate;
+        let meanreturn = self.returns.mean().unwrap();
+        let excessreturn = meanreturn - risk_free_rate;
         let volatility = self.volatility()?;
 
         if volatility == F::zero() {
             return Ok(F::zero());
         }
 
-        Ok(excess_return / volatility)
+        Ok(excessreturn / volatility)
     }
 
     /// Calculate Sortino Ratio
@@ -344,8 +344,8 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
             });
         }
 
-        let mean_return = self.returns.mean().unwrap();
-        let excess_return = mean_return - risk_free_rate;
+        let meanreturn = self.returns.mean().unwrap();
+        let excessreturn = meanreturn - risk_free_rate;
 
         // Calculate downside deviation
         let negative_returns: Vec<F> = self
@@ -368,7 +368,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
             return Ok(F::zero());
         }
 
-        Ok(excess_return / downside_deviation)
+        Ok(excessreturn / downside_deviation)
     }
 
     /// Calculate volatility (standard deviation of returns)
@@ -390,14 +390,14 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
 
     /// Calculate Calmar Ratio (annual return / maximum drawdown)
     pub fn calmar_ratio(&self, periods_peryear: F) -> Result<F> {
-        let annual_return = self.returns.mean().unwrap() * periods_per_year;
+        let annualreturn = self.returns.mean().unwrap() * periods_per_year;
         let max_dd = self.maximum_drawdown()?;
 
         if max_dd == F::zero() {
             return Ok(F::zero());
         }
 
-        Ok(annual_return / max_dd)
+        Ok(annualreturn / max_dd)
     }
 }
 
@@ -477,8 +477,8 @@ impl HFTIndicators {
     }
 
     /// Order Book Imbalance
-    pub fn order_book_imbalance<F: Float>(_bid, volume: F, askvolume: F) -> F {
-        let total_volume = _bid_volume + ask_volume;
+    pub fn order_book_imbalance<F: Float>(bid_volume: F, ask_volume: F) -> F {
+        let total_volume = bid_volume + ask_volume;
         if total_volume == F::zero() {
             return F::zero();
         }
@@ -555,9 +555,7 @@ impl BlackScholes {
                     theta: 0.0,
                     vega: 0.0,
                     rho: 0.0,
-                }, _ => Err(TimeSeriesError::NotImplemented(
-                    "Only European options supported".to_string(),
-                )),
+                }),
             };
         }
 
@@ -612,7 +610,11 @@ impl BlackScholes {
 
         let rho = match contract.option_type {
             OptionType::Call => k * t * discount_factor * nd2 / 100.0, // Per 1% rate change
-            OptionType::Put => -k * t * discount_factor * n_minus_d2 / 100.0_ => 0.0,
+            OptionType::Put => -k * t * discount_factor * n_minus_d2 / 100.0,
+            OptionType::AmericanCall => k * t * discount_factor * nd2 / 100.0, // Similar to European call
+            OptionType::AmericanPut => -k * t * discount_factor * n_minus_d2 / 100.0, // Similar to European put
+            OptionType::Barrier { .. } => k * t * discount_factor * nd2 / 100.0 * 0.8, // Reduced sensitivity due to barrier
+            OptionType::Asian { .. } => k * t * discount_factor * nd2 / 100.0 * 0.9, // Reduced sensitivity due to averaging
         };
 
         Ok(OptionPrice {

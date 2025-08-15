@@ -1217,7 +1217,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
         let panic_tests = self
             .results
             .iter()
-            .filter(|r| r._issues.iter().any(|i| i.description.contains("panic")))
+            .filter(|r| r.issues.iter().any(|i| i.description.contains("panic")))
             .count();
 
         if panic_tests > 0 {
@@ -1231,7 +1231,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
             .results
             .iter()
             .filter(|r| {
-                r._issues
+                r.issues
                     .iter()
                     .any(|i| i.production_impact == ProductionImpact::SeverePerformance)
             })
@@ -1262,7 +1262,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
     /// Helper methods
     fn estimate_memory_usage(&self, datasize: usize) -> u64 {
         // Rough estimate: each T takes ~8 bytes, plus overhead
-        (data_size * std::mem::size_of::<f64>() * 3) as u64
+        (datasize * std::mem::size_of::<f64>() * 3) as u64
     }
 
     fn get_current_memory_usage(&self) -> u64 {

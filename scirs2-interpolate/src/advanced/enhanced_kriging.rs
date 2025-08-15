@@ -535,7 +535,8 @@ where
         Ok(EnhancedKriging {
             points,
             values,
-            anisotropic_cov_trend_fn: self._trend_fn,
+            anisotropic_cov,
+            _trend_fn: self._trend_fn,
             cov_matrix,
             cholesky_factor: Some(cholesky_factor),
             weights,
@@ -1174,14 +1175,14 @@ where
     /// Prediction results with enhanced Bayesian information
     pub fn predict(&self, querypoints: &ArrayView2<F>) -> InterpolateResult<PredictionResult<F>> {
         // Check dimensions
-        if querypoints.shape()[1] != self._points.shape()[1] {
+        if querypoints.shape()[1] != self.points.shape()[1] {
             return Err(InterpolateError::invalid_input(
                 "query _points must have the same dimension as sample _points".to_string(),
             ));
         }
 
         let n_query = querypoints.shape()[0];
-        let n_points = self._points.shape()[0];
+        let n_points = self.points.shape()[0];
 
         let mut values = Array1::zeros(n_query);
         let mut variances = Array1::zeros(n_query);
@@ -1192,7 +1193,7 @@ where
             // Compute covariance vector k* between query point and training _points
             let mut k_star = Array1::zeros(n_points);
             for j in 0..n_points {
-                let sample_point = self._points.slice(ndarray::s![j, ..]);
+                let sample_point = self.points.slice(ndarray::s![j, ..]);
                 let dist = EnhancedKrigingBuilder::compute_anisotropic_distance(
                     &query_point,
                     &sample_point,
@@ -1313,7 +1314,7 @@ where
 
         // Compute log marginal likelihood (simplified)
         let log_marginal_likelihood = F::from_f64(-0.5).unwrap()
-            * F::from_usize(self._points.shape()[0]).unwrap()
+            * F::from_usize(self.points.shape()[0]).unwrap()
             * F::from_f64(2.0 * std::f64::consts::PI).unwrap().ln();
 
         Ok(BayesianPredictionResult {

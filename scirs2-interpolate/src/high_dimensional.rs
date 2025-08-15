@@ -297,7 +297,7 @@ where
 
     /// Set the spatial index type
     pub fn with_spatial_index(mut self, indextype: SpatialIndexType) -> Self {
-        self.spatial_index_type = index_type;
+        self.spatial_index_type = indextype;
         self
     }
 
@@ -723,7 +723,11 @@ where
     }
 
     /// Perform local interpolation using neighbors
-    fn interpolate_local(self_query: &Array1<F>, neighbors: &[(usize, F)]) -> InterpolateResult<F> {
+    fn interpolate_local(
+        &self,
+        self_query: &Array1<F>,
+        neighbors: &[(usize, F)],
+    ) -> InterpolateResult<F> {
         if neighbors.is_empty() {
             return Err(InterpolateError::ComputationError(
                 "No neighbors found for interpolation".to_string(),
@@ -761,7 +765,7 @@ where
                 let mut sum = F::zero();
                 let count = F::from_usize(neighbors.len()).unwrap();
 
-                for &(idx_) in neighbors {
+                for &(idx, _) in neighbors {
                     sum += self.values[idx];
                 }
 
@@ -1234,7 +1238,7 @@ mod tests {
 
         // Test PCA
         let pca_interp = HighDimensionalInterpolator::<f64>::builder()
-            .with_dimension_reduction(DimensionReductionMethod::PCA { targetdims: 2 })
+            .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 2 })
             .build(&points.view(), &values.view())
             .unwrap();
 
@@ -1242,7 +1246,7 @@ mod tests {
 
         // Test Random Projection
         let rp_interp = HighDimensionalInterpolator::builder()
-            .with_dimension_reduction(DimensionReductionMethod::RandomProjection { targetdims: 2 })
+            .with_dimension_reduction(DimensionReductionMethod::RandomProjection { target_dims: 2 })
             .build(&points.view(), &values.view())
             .unwrap();
 

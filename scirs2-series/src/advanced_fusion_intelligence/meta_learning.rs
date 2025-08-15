@@ -204,7 +204,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
             return Ok(());
         }
 
-        let performance_mean = performance_data.iter().fold(F::zero(), |acc, &x| acc + x) 
+        let performance_mean = performance_data.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from_usize(performance_data.len()).unwrap();
 
         // Simple gradient approximation
@@ -219,7 +219,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
     fn evolutionary_optimization(&mut self, _performancedata: &Array1<F>) -> Result<()> {
         // Simple mutation-based evolution
         for param in &mut self.model_parameters {
-            let mutation = F::from_f64(0.01).unwrap() * (F::from_f64(rand::random::<f64>()).unwrap() - F::from_f64(0.5).unwrap());
+            let mutation = F::from_f64(0.01).unwrap()
+                * (F::from_f64(rand::random::<f64>()).unwrap() - F::from_f64(0.5).unwrap());
             *param = *param + mutation;
         }
         Ok(())
@@ -233,15 +234,17 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
         }
 
         let performance_variance = {
-            let mean = performance_data.iter().fold(F::zero(), |acc, &x| acc + x) 
+            let mean = performance_data.iter().fold(F::zero(), |acc, &x| acc + x)
                 / F::from_usize(performance_data.len()).unwrap();
-            performance_data.iter()
+            performance_data
+                .iter()
                 .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
                 / F::from_usize(performance_data.len()).unwrap()
         };
 
-        let uncertainty_factor = F::from_f64(1.0).unwrap() / (F::from_f64(1.0).unwrap() + performance_variance);
-        
+        let uncertainty_factor =
+            F::from_f64(1.0).unwrap() / (F::from_f64(1.0).unwrap() + performance_variance);
+
         for param in &mut self.model_parameters {
             *param = *param * uncertainty_factor;
         }
@@ -255,7 +258,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
         }
 
         // Simple Q-learning inspired update
-        let reward = performance_data.iter().fold(F::zero(), |acc, &x| acc + x) 
+        let reward = performance_data.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from_usize(performance_data.len()).unwrap();
 
         let learning_rate = F::from_f64(0.1).unwrap();
@@ -283,32 +286,39 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningStrategyLibrary<F> {
     }
 
     /// Select best strategy based on performance history
-    pub fn select_best_strategy(&self, taskcharacteristics: &Array1<F>) -> Option<&LearningStrategy<F>> {
+    pub fn select_best_strategy(
+        &self,
+        taskcharacteristics: &Array1<F>,
+    ) -> Option<&LearningStrategy<F>> {
         if self.strategies.is_empty() {
             return None;
         }
 
         // Find strategy with highest applicability score for given task
-        self.strategies.iter()
-            .max_by(|a, b| a.applicability_score.partial_cmp(&b.applicability_score).unwrap())
+        self.strategies.iter().max_by(|a, b| {
+            a.applicability_score
+                .partial_cmp(&b.applicability_score)
+                .unwrap()
+        })
     }
 
     /// Update strategy performance
     pub fn update_performance(&mut self, strategyname: &str, performance: F) {
-        self.performance_history.insert(strategy_name.to_string(), performance);
+        self.performance_history
+            .insert(strategy_name.to_string(), performance);
     }
 
     /// Recommend strategy adaptation
     pub fn recommend_adaptation(&self, currentperformance: F) -> Vec<String> {
         let mut recommendations = Vec::new();
-        
+
         let performance_threshold = F::from_f64(0.7).unwrap();
         if current_performance < performance_threshold {
             recommendations.push("Consider increasing learning rate".to_string());
             recommendations.push("Try different optimization strategy".to_string());
             recommendations.push("Add regularization".to_string());
         }
-        
+
         recommendations
     }
 }
@@ -337,25 +347,19 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningEvaluationSystem<F> {
 
         for metric in &self.evaluation_metrics {
             let score = match metric {
-                EvaluationMetric::Accuracy => {
-                    self.calculate_accuracy(predictions, ground_truth)?
-                }
+                EvaluationMetric::Accuracy => self.calculate_accuracy(predictions, ground_truth)?,
                 EvaluationMetric::Speed => {
                     // Placeholder for speed measurement
                     F::from_f64(0.8).unwrap()
                 }
-                EvaluationMetric::Efficiency => {
-                    self.calculate_efficiency(predictions)?
-                }
-                EvaluationMetric::Robustness => {
-                    self.calculate_robustness(predictions)?
-                }
+                EvaluationMetric::Efficiency => self.calculate_efficiency(predictions)?,
+                EvaluationMetric::Robustness => self.calculate_robustness(predictions)?,
                 EvaluationMetric::Interpretability => {
                     // Placeholder for interpretability measurement
                     F::from_f64(0.6).unwrap()
                 }
             };
-            
+
             results.insert(format!("{:?}", metric), score);
         }
 
@@ -372,9 +376,17 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningEvaluationSystem<F> {
         let threshold = F::from_f64(0.5).unwrap();
 
         for (pred, truth) in predictions.iter().zip(ground_truth.iter()) {
-            let pred_binary = if *pred > threshold { F::from_f64(1.0).unwrap() } else { F::zero() };
-            let truth_binary = if *truth > threshold { F::from_f64(1.0).unwrap() } else { F::zero() };
-            
+            let pred_binary = if *pred > threshold {
+                F::from_f64(1.0).unwrap()
+            } else {
+                F::zero()
+            };
+            let truth_binary = if *truth > threshold {
+                F::from_f64(1.0).unwrap()
+            } else {
+                F::zero()
+            };
+
             if (pred_binary - truth_binary).abs() < F::from_f64(0.1).unwrap() {
                 correct += 1;
             }
@@ -393,7 +405,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningEvaluationSystem<F> {
         // Simple efficiency based on prediction confidence
         let confidence_sum = predictions.iter().fold(F::zero(), |acc, &x| acc + x.abs());
         let efficiency = confidence_sum / F::from_usize(predictions.len()).unwrap();
-        
+
         Ok(efficiency)
     }
 
@@ -404,8 +416,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningEvaluationSystem<F> {
         }
 
         // Robustness based on prediction stability
-        let mean = predictions.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(predictions.len()).unwrap();
-        let variance = predictions.iter()
+        let mean = predictions.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from_usize(predictions.len()).unwrap();
+        let variance = predictions
+            .iter()
             .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
             / F::from_usize(predictions.len()).unwrap();
 
@@ -442,13 +456,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaAdaptationMechanism<F> {
                 let triggered = match condition.comparison {
                     ComparisonDirection::GreaterThan => metric_value > condition.threshold,
                     ComparisonDirection::LessThan => metric_value < condition.threshold,
-                    ComparisonDirection::EqualTo => (metric_value - condition.threshold).abs() < F::from_f64(0.01).unwrap(),
+                    ComparisonDirection::EqualTo => {
+                        (metric_value - condition.threshold).abs() < F::from_f64(0.01).unwrap()
+                    }
                     ComparisonDirection::WithinRange => {
                         let range = F::from_f64(0.1).unwrap();
                         (metric_value - condition.threshold).abs() <= range
                     }
                 };
-                
+
                 if triggered {
                     return true;
                 }
@@ -465,10 +481,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaAdaptationMechanism<F> {
             for rule in &self.adaptation_rules {
                 // Simple rule application - in practice would be more sophisticated
                 applied_actions.push(rule.action.clone());
-                
+
                 // Update adaptation history
                 let history_key = format!("rule_{}", rule.rule_id);
-                let history_entry = self.adaptation_history
+                let history_entry = self
+                    .adaptation_history
                     .entry(history_key)
                     .or_insert_with(Vec::new);
                 history_entry.push(rule.priority);
@@ -513,10 +530,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> KnowledgeTransferSystem<F> {
                 // Create adapted knowledge item for target task
                 let mut adapted_item = item.clone();
                 adapted_item.source_task = target_task.to_string();
-                
+
                 // Adjust applicability based on task similarity
-                adapted_item.applicability_score = adapted_item.applicability_score * task_similarity * self.transfer_efficiency;
-                
+                adapted_item.applicability_score =
+                    adapted_item.applicability_score * task_similarity * self.transfer_efficiency;
+
                 // Apply transfer mechanism adaptations
                 for mechanism in &self.transfer_mechanisms {
                     match mechanism {
@@ -528,14 +546,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> KnowledgeTransferSystem<F> {
                         }
                         TransferMechanism::FeatureTransfer => {
                             // Feature-based adaptation
-                            adapted_item.applicability_score = adapted_item.applicability_score * F::from_f64(0.9).unwrap();
+                            adapted_item.applicability_score =
+                                adapted_item.applicability_score * F::from_f64(0.9).unwrap();
                         }
                         _ => {
                             // Other transfer mechanisms
                         }
                     }
                 }
-                
+
                 transferred_knowledge.push(adapted_item);
             }
         }
@@ -554,15 +573,18 @@ impl<F: Float + Debug + Clone + FromPrimitive> KnowledgeTransferSystem<F> {
         }
 
         // Cosine similarity
-        let dot_product = task1_features.iter()
+        let dot_product = task1_features
+            .iter()
             .zip(task2_features.iter())
             .fold(F::zero(), |acc, (&a, &b)| acc + a * b);
 
-        let norm1 = task1_features.iter()
+        let norm1 = task1_features
+            .iter()
             .fold(F::zero(), |acc, &x| acc + x * x)
             .sqrt();
 
-        let norm2 = task2_features.iter()
+        let norm2 = task2_features
+            .iter()
             .fold(F::zero(), |acc, &x| acc + x * x)
             .sqrt();
 

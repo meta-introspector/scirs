@@ -59,7 +59,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    scirs2_core::validation::check_array_finite(data, "data")?;
+    scirs2_core::validation::checkarray_finite(data, "data")?;
 
     if data.len() < 10 {
         return Err(TimeSeriesError::InvalidInput(
@@ -160,7 +160,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    scirs2_core::validation::check_array_finite(data, "data")?;
+    scirs2_core::validation::checkarray_finite(data, "data")?;
 
     let n = data.len();
     if n < 10 {
@@ -243,7 +243,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    scirs2_core::validation::check_array_finite(data, "data")?;
+    scirs2_core::validation::checkarray_finite(data, "data")?;
 
     let n = data.len();
     if n < 10 {

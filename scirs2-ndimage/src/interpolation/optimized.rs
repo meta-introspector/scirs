@@ -43,9 +43,9 @@ fn safe_to_isize<T: Float>(value: T) -> NdimageResult<isize> {
 /// Helper function for safe i32 conversion
 #[allow(dead_code)]
 fn safe_to_i32<T: Float>(value: T) -> NdimageResult<i32> {
-    _value
-        .to_i32()
-        .ok_or_else(|| NdimageError::ComputationError("Failed to convert _value to i32".to_string()))
+    _value.to_i32().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert _value to i32".to_string())
+    })
 }
 
 /// Helper function for safe usize to float conversion

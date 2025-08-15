@@ -1715,7 +1715,7 @@ pub mod volatility {
         let mut count = 0;
 
         for i in sampling_frequency..prices.len() {
-            let log_return = (prices[i] / prices[i - sampling_frequency]).ln();
+            let logreturn = (prices[i] / prices[i - sampling_frequency]).ln();
             squared_returns = squared_returns + log_return.powi(2);
             count += 1;
         }
@@ -1813,9 +1813,9 @@ pub mod risk {
         }
 
         // Calculate annualized return
-        let total_return = (prices[prices.len() - 1] / prices[0]) - F::one();
+        let totalreturn = (prices[prices.len() - 1] / prices[0]) - F::one();
         let years = F::from(returns.len()).unwrap() / F::from(periods_per_year).unwrap();
-        let annualized_return = (F::one() + total_return).powf(F::one() / years) - F::one();
+        let annualizedreturn = (F::one() + total_return).powf(F::one() / years) - F::one();
 
         // Calculate maximum drawdown
         let mdd = max_drawdown(prices)?;
@@ -1823,7 +1823,7 @@ pub mod risk {
         if mdd == F::zero() {
             Ok(F::infinity())
         } else {
-            Ok(annualized_return / mdd)
+            Ok(annualizedreturn / mdd)
         }
     }
 
@@ -2017,9 +2017,9 @@ pub mod risk {
 
         // Calculate annualized excess return
         let annualized_rf = risk_free_rate / F::from(periods_per_year).unwrap();
-        let mean_return = returns.sum() / F::from(_returns.len()).unwrap();
-        let excess_return = mean_return - annualized_rf;
-        let annualized_excess = excess_return * F::from(periods_per_year).unwrap();
+        let meanreturn = returns.sum() / F::from(_returns.len()).unwrap();
+        let excessreturn = meanreturn - annualized_rf;
+        let annualized_excess = excessreturn * F::from(periods_per_year).unwrap();
 
         Ok(annualized_excess / portfolio_beta)
     }
@@ -2114,15 +2114,15 @@ pub mod risk {
             let z = (-F::from(2.0).unwrap() * u1.ln()).sqrt()
                 * (F::from(2.0 * std::f64::consts::PI).unwrap() * u2).cos();
 
-            let simulated_return = mean + std_dev * z;
+            let simulatedreturn = mean + std_dev * z;
 
             // Calculate portfolio value change over horizon
-            let mut portfolio_return = F::one();
+            let mut portfolioreturn = F::one();
             for _ in 0..horizon {
-                portfolio_return = portfolio_return * (F::one() + simulated_return);
+                portfolioreturn = portfolioreturn * (F::one() + simulated_return);
             }
 
-            simulated_returns.push(portfolio_return - F::one());
+            simulated_returns.push(portfolioreturn - F::one());
         }
 
         // Sort returns and find VaR
@@ -2259,14 +2259,14 @@ pub mod portfolio {
         }
 
         // Total return
-        let total_return = (prices[prices.len() - 1] / prices[0]) - F::one();
+        let totalreturn = (prices[prices.len() - 1] / prices[0]) - F::one();
 
         // Annualized return
         let years = F::from(returns.len()).unwrap() / F::from(periods_per_year).unwrap();
-        let annualized_return = (F::one() + total_return).powf(F::one() / years) - F::one();
+        let annualizedreturn = (F::one() + total_return).powf(F::one() / years) - F::one();
 
         // Volatility (annualized)
-        let mean_return = returns.sum() / F::from(returns.len()).unwrap();
+        let meanreturn = returns.sum() / F::from(returns.len()).unwrap();
         let variance =
             returns.mapv(|r| (r - mean_return).powi(2)).sum() / F::from(returns.len() - 1).unwrap();
         let volatility = variance.sqrt() * F::from(periods_per_year).unwrap().sqrt();
@@ -2301,7 +2301,7 @@ pub mod portfolio {
         let n = expected_returns.len();
 
         if covariance_matrix.nrows() != n || covariance_matrix.ncols() != n {
-            _return Err(TimeSeriesError::DimensionMismatch {
+            return Err(TimeSeriesError::DimensionMismatch {
                 expected: n,
                 actual: covariance_matrix.nrows(),
             });
@@ -2315,22 +2315,22 @@ pub mod portfolio {
 
         // Simple iterative adjustment toward target _return
         for _ in 0..100 {
-            let current_return = weights
+            let currentreturn = weights
                 .iter()
                 .zip(expected_returns.iter())
                 .map(|(&w, &r)| w * r)
                 .fold(F::zero(), |acc, x| acc + x);
 
-            let return_diff = target_return - current_return;
+            let return_diff = targetreturn - current_return;
 
             if return_diff.abs() < F::from(1e-6).unwrap() {
                 break;
             }
 
-            // Adjust weights toward higher/lower _return assets
+            // Adjust weights toward higher/lower return assets
             for i in 0..n {
                 let adjustment = return_diff * F::from(0.01).unwrap();
-                if expected_returns[i] > current_return {
+                if expected_returns[i] > currentreturn {
                     weights[i] = weights[i] + adjustment;
                 } else {
                     weights[i] = weights[i] - adjustment;
@@ -2445,7 +2445,7 @@ pub mod portfolio {
         let horizon_std = portfolio_return_std * horizon_scaling;
 
         // Calculate VaR
-        let var_return = horizon_mean + z_score * horizon_std;
+        let varreturn = horizon_mean + z_score * horizon_std;
         let var_amount = portfolio_value * var_return.abs();
 
         Ok(var_amount)
@@ -2513,7 +2513,7 @@ pub mod portfolio {
 #[cfg(test)]
 mod tests {
     use super::risk::*;
-    use super::technical__indicators::*;
+    use super::technical_indicators::*;
     use super::volatility::*;
     use super::{black_scholes, Distribution, EgarchModel, GarchConfig, GarchModel, MeanModel};
     use crate::error::TimeSeriesError;
@@ -3479,11 +3479,11 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
 
         // GJR-GARCH variance recursion
         for i in 1..n {
-            let lagged_return = centered_returns[i - 1];
+            let laggedreturn = centered_returns[i - 1];
             let lagged_variance = conditional_variance[i - 1];
 
             // Indicator function for negative returns
-            let negative_indicator = if lagged_return < F::zero() {
+            let negative_indicator = if laggedreturn < F::zero() {
                 F::one()
             } else {
                 F::zero()
@@ -3673,12 +3673,12 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
 
         // APARCH standard deviation recursion
         for i in 1..n {
-            let lagged_return = centered_returns[i - 1];
+            let laggedreturn = centered_returns[i - 1];
             let lagged_std = conditional_std[i - 1];
 
             // APARCH innovation term
             let abs_innovation = lagged_return.abs();
-            let sign_adjustment = if lagged_return < F::zero() {
+            let sign_adjustment = if laggedreturn < F::zero() {
                 abs_innovation - gamma * lagged_return
             } else {
                 abs_innovation + gamma * lagged_return
@@ -4201,7 +4201,7 @@ pub mod advanced_technical_indicators {
             typical_prices[i] = (high[i] + low[i] + close[i]) / three;
         }
 
-        use crate::financial::technical__indicators::sma;
+        use crate::financial::technical_indicators::sma;
         let sma_tp = sma(&typical_prices, period)?;
         let mut cci = Array1::zeros(sma_tp.len());
         let constant = F::from(0.015).unwrap();
@@ -4277,7 +4277,7 @@ pub mod advanced_technical_indicators {
 
         for i in 0..mfi.len() {
             let slice = money_flows.slice(s![i..i + period]);
-            let positive_flow: F = slice.iter().filter(|&&x| x >, F::zero()).cloned().sum();
+            let positive_flow: F = slice.iter().filter(|&&x| x > F::zero()).cloned().sum();
             let negative_flow: F = slice.iter().filter(|&&x| x < F::zero()).map(|&x| -x).sum();
 
             if negative_flow > F::zero() {
@@ -4539,7 +4539,7 @@ pub mod advanced_technical_indicators {
         let fast_alpha = F::from(2.0).unwrap() / F::from(fast_period + 1).unwrap();
         let slow_alpha = F::from(2.0).unwrap() / F::from(slow_period + 1).unwrap();
 
-        use crate::financial::technical__indicators::ema;
+        use crate::financial::technical_indicators::ema;
         let fast_ema = ema(&ad_line, fast_alpha)?;
         let slow_ema = ema(&ad_line, slow_alpha)?;
 
@@ -4741,7 +4741,7 @@ pub mod risk_metrics {
         let risk_free_rate = F::from(config.risk_free_rate).unwrap();
 
         // Basic statistics
-        let mean_return = returns.sum() / F::from(n).unwrap();
+        let meanreturn = returns.sum() / F::from(n).unwrap();
         let variance = returns
             .iter()
             .map(|&r| (r - mean_return).powi(2))
@@ -4782,9 +4782,9 @@ pub mod risk_metrics {
         let max_drawdown = calculate_max_drawdown(&cumulative_returns);
 
         // Sharpe Ratio
-        let excess_return = mean_return * trading_days - risk_free_rate;
+        let excessreturn = meanreturn * trading_days - risk_free_rate;
         let sharpe_ratio = if volatility > F::zero() {
-            excess_return / volatility
+            excessreturn / volatility
         } else {
             F::zero()
         };
@@ -4799,15 +4799,15 @@ pub mod risk_metrics {
 
         // Sortino Ratio
         let sortino_ratio = if downside_deviation > F::zero() {
-            excess_return / downside_deviation
+            excessreturn / downside_deviation
         } else {
             F::zero()
         };
 
         // Calmar Ratio
-        let annualized_return = mean_return * trading_days;
+        let annualizedreturn = meanreturn * trading_days;
         let calmar_ratio = if max_drawdown > F::zero() {
-            annualized_return / max_drawdown
+            annualizedreturn / max_drawdown
         } else {
             F::zero()
         };
@@ -4815,7 +4815,7 @@ pub mod risk_metrics {
         // Information Ratio (assuming benchmark return is risk-free rate)
         let tracking_error = std_dev * trading_days.sqrt();
         let information_ratio = if tracking_error > F::zero() {
-            excess_return / tracking_error
+            excessreturn / tracking_error
         } else {
             F::zero()
         };
@@ -4935,7 +4935,7 @@ pub mod risk_metrics {
 
             // Box-Muller transformation
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-            let simulated_return = mean + std_dev * F::from(z).unwrap();
+            let simulatedreturn = mean + std_dev * F::from(z).unwrap();
             simulated_returns.push(simulated_return);
         }
 
@@ -4980,7 +4980,7 @@ pub mod risk_metrics {
     }
 
     /// Calculate maximum drawdown from cumulative returns
-    fn calculate_max_drawdown<F: Float + Clone>(_cumulative, returns: &Array1<F>) -> F {
+    fn calculate_max_drawdown<F: Float + Clone>(cumulative_returns: &Array1<F>) -> F {
         let mut max_drawdown = F::zero();
         let mut peak = cumulative_returns[0];
 
@@ -5015,7 +5015,7 @@ pub mod risk_metrics {
     }
 
     /// Calculate Pain Index (average drawdown)
-    fn calculate_pain_index<F: Float + Clone>(_cumulative, returns: &Array1<F>) -> F {
+    fn calculate_pain_index<F: Float + Clone>(cumulative_returns: &Array1<F>) -> F {
         let mut peak = cumulative_returns[0];
         let mut total_drawdown = F::zero();
         let n = cumulative_returns.len();
@@ -5032,7 +5032,7 @@ pub mod risk_metrics {
     }
 
     /// Calculate Ulcer Index (RMS of drawdowns)
-    fn calculate_ulcer_index<F: Float + Clone>(_cumulative, returns: &Array1<F>) -> F {
+    fn calculate_ulcer_index<F: Float + Clone>(cumulative_returns: &Array1<F>) -> F {
         let mut peak = cumulative_returns[0];
         let mut sum_squared_drawdowns = F::zero();
         let n = cumulative_returns.len();
@@ -5104,11 +5104,11 @@ pub mod risk_metrics {
         }
 
         let n = F::from(_returns.len()).unwrap();
-        let mean_return = returns.sum() / n;
-        let annualized_return = mean_return * F::from(trading_days_per_year).unwrap();
-        let excess_return = annualized_return - risk_free_rate;
+        let meanreturn = returns.sum() / n;
+        let annualizedreturn = meanreturn * F::from(trading_days_per_year).unwrap();
+        let excessreturn = annualizedreturn - risk_free_rate;
 
-        Ok(excess_return / beta)
+        Ok(excessreturn / beta)
     }
 
     /// Jensen's Alpha calculation
@@ -5121,13 +5121,13 @@ pub mod risk_metrics {
         let beta = calculate_beta(_returns, benchmark_returns)?;
 
         let n = F::from(_returns.len()).unwrap();
-        let mean_asset_return = returns.sum() / n;
-        let mean_benchmark_return = benchmark_returns.sum() / n;
+        let mean_assetreturn = returns.sum() / n;
+        let mean_benchmarkreturn = benchmark_returns.sum() / n;
 
-        let annualized_asset = mean_asset_return * F::from(trading_days_per_year).unwrap();
-        let annualized_benchmark = mean_benchmark_return * F::from(trading_days_per_year).unwrap();
+        let annualized_asset = mean_assetreturn * F::from(trading_days_per_year).unwrap();
+        let annualized_benchmark = mean_benchmarkreturn * F::from(trading_days_per_year).unwrap();
 
-        let expected_return = risk_free_rate + beta * (annualized_benchmark - risk_free_rate);
+        let expectedreturn = risk_free_rate + beta * (annualized_benchmark - risk_free_rate);
         Ok(annualized_asset - expected_return)
     }
 

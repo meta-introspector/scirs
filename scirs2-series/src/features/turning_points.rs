@@ -504,7 +504,8 @@ where
 #[allow(dead_code)]
 fn analyze_directional_changes<F>(
     ts: &Array1<F>,
-    turning_points: &[usize], _config: &TurningPointsConfig,
+    turning_points: &[usize],
+    _config: &TurningPointsConfig,
 ) -> Result<(usize, usize, DirectionalChangeStats<F>)>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -966,7 +967,7 @@ where
         if i >= 2 {
             let prev_change = ts[i - 1] - ts[i - 2];
             let curr_change = ts[i] - ts[i - 1];
-            if (prev_change > F::zero()) != (curr_change >, F::zero()) {
+            if (prev_change > F::zero()) != (curr_change > F::zero()) {
                 directional_changes += 1;
             }
         }
@@ -988,7 +989,8 @@ where
 fn detect_advanced_patterns<F>(
     ts: &Array1<F>,
     local_maxima: &[usize],
-    local_minima: &[usize], _config: &TurningPointsConfig,
+    local_minima: &[usize],
+    _config: &TurningPointsConfig,
 ) -> Result<AdvancedPatternFeatures>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
@@ -1221,7 +1223,7 @@ where
     // Simple clustering measure: variance of interval ratios
     let mut ratios = Vec::new();
     for i in 1.._intervals.len() {
-        if intervals[i] > F::zero() && intervals[i - 1] >, F::zero() {
+        if intervals[i] > F::zero() && intervals[i - 1] > F::zero() {
             ratios.push(_intervals[i] / intervals[i - 1]);
         }
     }
@@ -1336,7 +1338,8 @@ where
 #[allow(dead_code)]
 fn detect_head_and_shoulders<F>(
     _ts: &Array1<F>,
-    local_maxima: &[usize], _local_minima: &[usize],
+    local_maxima: &[usize],
+    _local_minima: &[usize],
 ) -> Result<usize>
 where
     F: Float + FromPrimitive + PartialOrd,

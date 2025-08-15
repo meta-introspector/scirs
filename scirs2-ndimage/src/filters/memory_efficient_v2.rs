@@ -11,12 +11,12 @@ use scirs2_core::error::CoreResult;
 use scirs2_core::memory_efficient::AdaptiveChunking;
 use scirs2_core::memory_efficient::MemoryMappedArray;
 
-use crate::chunked__v2::ChunkConfigV2;
+use crate::chunked_v2::ChunkConfigV2;
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{
     bilateral_filter, gaussian_filter, median_filter, uniform_filter, BorderMode,
 };
-use crate::mmap__io::create_temp_mmap;
+use crate::mmap_io::create_temp_mmap;
 
 /// Advanced configuration for memory-efficient filtering
 #[derive(Debug, Clone)]
@@ -78,7 +78,7 @@ where
     // Process chunks
     let chunk_results = input_mmap.process_chunks(strategy.clone(), |chunk_data, chunk_idx| {
         // Create ArrayView from chunk data
-        let chunk_array = Array::fromshape_vec(chunk_data.len(), chunk_data.to_vec()).unwrap();
+        let chunk_array = Array::from_shape_vec(chunk_data.len(), chunk_data.to_vec()).unwrap();
 
         let chunk_view = chunk_array.view().into_dyn();
 
@@ -184,7 +184,7 @@ where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension + 'static,
 {
-    use crate::chunked__v2::process_chunked_v2;
+    use crate::chunked_v2::process_chunked_v2;
 
     let sigma_vec = sigma.to_vec();
     let border_mode = BorderMode::Reflect;
@@ -302,7 +302,9 @@ where
 /// Apply 1D convolution along a specific axis
 #[allow(dead_code)]
 fn convolve_1d_along_axis<T, D>(
-    input: &Array<T, D>, _kernel: &Array<T, Ix1>, _axis: usize,
+    input: &Array<T, D>,
+    _kernel: &Array<T, Ix1>,
+    _axis: usize,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync,
@@ -331,7 +333,7 @@ where
 
     if input_size > config.target_memory_usage / 2 {
         // Use chunked processing
-        use crate::chunked__v2::process_chunked_v2;
+        use crate::chunked_v2::process_chunked_v2;
 
         let op = move |chunk: &ArrayView<T, IxDyn>| -> CoreResult<Array<T, IxDyn>> {
             let chunk_2d = chunk.to_owned().into_dimensionality::<Ix2>().map_err(|_| {

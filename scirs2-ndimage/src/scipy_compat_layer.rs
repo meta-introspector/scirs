@@ -40,7 +40,8 @@ pub mod scipy_ndimage {
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
             "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest_ => BorderMode::Reflect, // Default fallback
+            "nearest" => BorderMode::Nearest,
+            _ => BorderMode::Reflect, // Default fallback
         };
 
         // For now, handle 2D case (can be extended to n-dimensional)
@@ -90,7 +91,8 @@ pub mod scipy_ndimage {
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
             "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest_ => BorderMode::Reflect,
+            "nearest" => BorderMode::Nearest,
+            _ => BorderMode::Reflect,
         };
 
         if D::NDIM == Some(2) {
@@ -136,7 +138,8 @@ pub mod scipy_ndimage {
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
             "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest_ => BorderMode::Reflect,
+            "nearest" => BorderMode::Nearest,
+            _ => BorderMode::Reflect,
         };
 
         if D::NDIM == Some(2) {
@@ -181,7 +184,8 @@ pub mod scipy_ndimage {
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
             "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest_ => BorderMode::Reflect,
+            "nearest" => BorderMode::Nearest,
+            _ => BorderMode::Reflect,
         };
 
         if D::NDIM == Some(2) {
@@ -305,7 +309,8 @@ pub mod scipy_ndimage {
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
             "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest_ => BorderMode::Reflect,
+            "nearest" => BorderMode::Nearest,
+            _ => BorderMode::Reflect,
         };
 
         if D::NDIM == Some(2) {
@@ -359,7 +364,8 @@ pub mod scipy_ndimage {
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
             "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest_ => BorderMode::Reflect,
+            "nearest" => BorderMode::Nearest,
+            _ => BorderMode::Reflect,
         };
 
         if D::NDIM == Some(2) {
@@ -512,12 +518,12 @@ pub mod migration_utils {
         }
 
         /// Get mapping for a specific parameter
-        pub fn get_mapping(&self, scipyparam: &str) -> Option<&ParameterMapping> {
+        pub fn get_mapping(&self, scipy_param: &str) -> Option<&ParameterMapping> {
             self.mappings.get(scipy_param)
         }
 
         /// Generate migration code suggestions
-        pub fn generate_migration_code(&self, function_name: &str, scipycall: &str) -> String {
+        pub fn generate_migration_code(&self, function_name: &str, scipy_call: &str) -> String {
             format!(
                 "// Original SciPy code:\n// {}\n\n// Migrated scirs2-ndimage code:\n{}",
                 scipy_call,
@@ -525,17 +531,17 @@ pub mod migration_utils {
             )
         }
 
-        fn convert_scipy_call(&self, function_name: &str, _scipycall: &str) -> String {
+        fn convert_scipy_call(&self, function_name: &str, scipy_call: &str) -> String {
             // Simple pattern matching for common cases
             match function_name {
                 "gaussian_filter" => {
-                    "use scirs2__ndimage::filters::gaussian_filter;\nlet result = gaussian_filter(input.view(), sigma, Some(BorderMode::Reflect), None)?;".to_string()
+                    "use scirs2_ndimage::filters::gaussian_filter;\nlet result = gaussian_filter(input.view(), sigma, Some(BorderMode::Reflect), None)?;".to_string()
                 }
                 "median_filter" => {
-                    "use scirs2__ndimage::filters::median_filter;\nlet result = median_filter(input.view(), &[size, size], Some(BorderMode::Reflect))?;".to_string()
+                    "use scirs2_ndimage::filters::median_filter;\nlet result = median_filter(input.view(), &[size, size], Some(BorderMode::Reflect))?;".to_string()
                 }
                 "sobel" => {
-                    "use scirs2__ndimage::filters::sobel;\nlet result = sobel(input.view(), axis, Some(BorderMode::Reflect))?;".to_string()
+                    "use scirs2_ndimage::filters::sobel;\nlet result = sobel(input.view(), axis, Some(BorderMode::Reflect))?;".to_string()
                 }
                 _ => {
                     format!("// No automatic conversion available for {}", function_name)
@@ -565,19 +571,19 @@ pub mod migration_utils {
 
     impl CodeConverter {
         /// Convert SciPy import statements
-        pub fn convert_imports(_scipyimports: &str) -> String {
-            _scipy_imports
+        pub fn convert_imports(scipy_imports: &str) -> String {
+            scipy_imports
                 .replace(
                     "from scipy import ndimage",
-                    "use scirs2__ndimage::{filters, morphology, measurements, interpolation};",
+                    "use scirs2_ndimage::{filters, morphology, measurements, interpolation};",
                 )
                 .replace("import scipy.ndimage", "use scirs2_ndimage as ndimage;")
                 .replace("scipy.ndimage.", "ndimage::")
         }
 
         /// Convert function calls with parameter mapping
-        pub fn convert_function_call(_functionname: &str, parameters: &str) -> String {
-            match _function_name {
+        pub fn convert_function_call(function_name: &str, parameters: &str) -> String {
+            match function_name {
                 "gaussian_filter" => {
                     format!(
                         "gaussian_filter({}, Some(BorderMode::Reflect), None)",

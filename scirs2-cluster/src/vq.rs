@@ -55,7 +55,7 @@ pub use kmeans::{
     KMeansOptions,
 };
 pub use kmeans2::{kmeans2, kmeans2_str, MinitMethod, MissingMethod};
-pub use minibatch__kmeans::*;
+pub use minibatch_kmeans::*;
 pub use parallel__kmeans::{parallel_kmeans, ParallelKMeansOptions};
 pub use simd__kmeans::{kmeans_plus_plus_simd, kmeans_simd, mini_batch_kmeans_simd};
 pub use simd__optimizations::{

@@ -189,7 +189,7 @@ impl PlasticSynapse {
     /// Create a new plastic synapse
     pub fn new(pre_id: usize, post_id: usize, initialweight: f64) -> Self {
         Self {
-            _weight: initialweight,
+            weight: initialweight,
             pre_neuron_id: pre_id,
             post_neuron_id: post_id,
             last_pre_spike: None,
@@ -288,7 +288,7 @@ impl SpikingNeuralNetwork {
 
                     // Create synapse
                     let weight = rng.gen_range(0.1..0.8);
-                    synapses.push(PlasticSynapse::new(i..j, weight));
+                    synapses.push(PlasticSynapse::new(i, j, weight));
                 }
             }
             connectivity.insert(i, connections);
@@ -525,7 +525,7 @@ impl NeuromorphicEdgeDetector {
                 let network_output = self.snn.process_input(&spike_input);
 
                 // Extract edge strength from network activity
-                let edge_strength = network_output.mean().unwrap_or(0.0) as f32;
+                let edge_strength = network_output.mean() as f32;
                 edge_map[[y, x]] = edge_strength;
             }
         }
@@ -1063,7 +1063,9 @@ impl AdaptiveNeuromorphicPipeline {
     /// Estimate processing accuracy (simplified)
     fn estimate_accuracy(&self, frame: &Frame) -> f32 {
         // Simple heuristic based on information content
-        let variance = frame.data.variance();
+        let mean = frame.data.mean().unwrap_or(0.0);
+        let variance =
+            frame.data.iter().map(|&x| (x - mean).powi(2)).sum::<f32>() / frame.data.len() as f32;
         let edge_density =
             frame.data.iter().filter(|&&x| x > 0.1).count() as f32 / frame.data.len() as f32;
 
@@ -1277,7 +1279,7 @@ mod tests {
         };
 
         let frame2 = Frame {
-            data: Array2::from_shape_fn((10, 10), |(y_x)| if y == 5 { 1.0 } else { 0.0 }),
+            data: Array2::from_shape_fn((10, 10), |(_x, y)| if y == 5 { 1.0 } else { 0.0 }),
             timestamp: Instant::now(),
             index: 1,
             metadata: None,

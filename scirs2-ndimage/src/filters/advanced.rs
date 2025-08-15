@@ -24,9 +24,9 @@ fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 /// Helper function for safe f64 conversion
 #[allow(dead_code)]
 fn safe_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
-    _value
-        .to_f64()
-        .ok_or_else(|| NdimageError::ComputationError("Failed to convert _value to f64".to_string()))
+    _value.to_f64().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert _value to f64".to_string())
+    })
 }
 
 /// Helper function for safe isize conversion to float
@@ -102,8 +102,8 @@ where
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::filters::advanced::{gabor_filter, GaborParams};
-/// use scirs2__ndimage::filters::BorderMode;
+/// use scirs2_ndimage::filters::advanced::{gabor_filter, GaborParams};
+/// use scirs2_ndimage::filters::BorderMode;
 ///
 /// let image = Array2::from_elem((64, 64), 0.5);
 /// let params = GaborParams {
@@ -907,7 +907,7 @@ where
             .unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::one()));
 
     for _ in 0..num_iterations {
-        let mut new_image = image.clone();
+        let mut newimage = image.clone();
 
         for i in 1..height - 1 {
             for j in 1..width - 1 {
@@ -926,11 +926,11 @@ where
                 // Update pixel value
                 let update =
                     gamma_quarter * (c_n * grad_n + c_s * grad_s + c_e * grad_e + c_w * grad_w);
-                new_image[[i, j]] = image[[i, j]] + update;
+                newimage[[i, j]] = image[[i, j]] + update;
             }
         }
 
-        image = new_image;
+        image = newimage;
     }
 
     Ok(image)
@@ -1140,8 +1140,8 @@ where
     let mut image = input.to_owned();
 
     for _ in 0..num_iterations {
-        let new_image = shock_filter_iteration(&image.view(), dt, sigma)?;
-        image = new_image;
+        let newimage = shock_filter_iteration(&image.view(), dt, sigma)?;
+        image = newimage;
     }
 
     Ok(image)
@@ -1250,8 +1250,8 @@ where
     image = crate::filters::gaussian_filter(image, sigma, None, None)?;
 
     for _ in 0..num_iterations {
-        let new_image = ced_iteration(&image.view(), alpha, c)?;
-        image = new_image;
+        let newimage = ced_iteration(&image.view(), alpha, c)?;
+        image = newimage;
     }
 
     Ok(image)

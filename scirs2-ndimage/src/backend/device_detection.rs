@@ -767,7 +767,7 @@ impl MemoryManager {
 
     /// Check if allocation is possible
     pub fn can_allocate(&self, backend: super::Backend, deviceid: usize, size: usize) -> bool {
-        let key = (backend, device_id);
+        let key = (backend, deviceid);
         let current_usage = self.memory_usage.get(&key).unwrap_or(&0);
         let limit = self.memory_limits.get(&key).unwrap_or(&usize::MAX);
 
@@ -795,7 +795,7 @@ impl MemoryManager {
 
     /// Track memory deallocation
     pub fn deallocate(&mut self, backend: super::Backend, deviceid: usize, size: usize) {
-        let key = (backend, device_id);
+        let key = (backend, deviceid);
 
         if let Some(usage) = self.memory_usage.get_mut(&key) {
             *usage = usage.saturating_sub(size);
@@ -804,12 +804,12 @@ impl MemoryManager {
 
     /// Set memory limit for a device
     pub fn set_memory_limit(&mut self, backend: super::Backend, deviceid: usize, limit: usize) {
-        self.memory_limits.insert((backend, device_id), limit);
+        self.memory_limits.insert((backend, deviceid), limit);
     }
 
     /// Get current memory usage
     pub fn get_memory_usage(&self, backend: super::Backend, deviceid: usize) -> usize {
-        let key = (backend, device_id);
+        let key = (backend, deviceid);
         *self.memory_usage.get(&key).unwrap_or(&0)
     }
 }

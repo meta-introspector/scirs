@@ -640,7 +640,7 @@ where
     where
         S: Data<Elem = F>,
     {
-        scirs2_core::validation::check_array_finite(data, "data")?;
+        scirs2_core::validation::checkarray_finite(data, "data")?;
 
         let em_params = EMParameters::default();
         self.fit_with_em(data, &em_params)
@@ -926,7 +926,8 @@ where
 
         Ok(Self {
             _level: Some(level_transition),
-            trend: None, seasonal: Some(seasonal_transition),
+            trend: None,
+            seasonal: Some(seasonal_transition),
             observation,
         })
     }
@@ -980,7 +981,7 @@ where
     where
         S: Data<Elem = F>,
     {
-        scirs2_core::validation::check_array_finite(data, "data")?;
+        scirs2_core::validation::checkarray_finite(data, "data")?;
 
         let em_params = EMParameters::default();
         self.fit_with_em(data, &em_params)

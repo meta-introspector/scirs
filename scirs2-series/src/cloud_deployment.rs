@@ -715,7 +715,10 @@ impl CloudDeploymentOrchestrator {
         self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
-        println!("🔍 Executing decomposition _job on {}", instance.instance_id);
+        println!(
+            "🔍 Executing decomposition _job on {}",
+            instance.instance_id
+        );
         std::thread::sleep(Duration::from_millis(100));
         Ok(())
     }
@@ -849,19 +852,22 @@ impl CloudDeploymentOrchestrator {
                 "t3.micro" => 0.0104,
                 "t3.small" => 0.0208,
                 "c5.large" => 0.085,
-                "c5.xlarge" => 0.17_ => 0.1,
+                "c5.xlarge" => 0.17,
+                _ => 0.10, // Default cost for unknown instance types
             },
             CloudPlatform::GCP => match self.config.resources.instance_type.as_str() {
                 "e2-micro" => 0.006,
                 "e2-small" => 0.012,
                 "n1-standard-1" => 0.0475,
-                "n1-standard-2" => 0.095_ => 0.08,
+                "n1-standard-2" => 0.095,
+                _ => 0.08, // Default cost for unknown instance types
             },
             CloudPlatform::Azure => match self.config.resources.instance_type.as_str() {
                 "B1s" => 0.0052,
                 "B2s" => 0.0208,
                 "D2s_v3" => 0.096,
-                "D4s_v3" => 0.192_ => 0.09,
+                "D4s_v3" => 0.192,
+                _ => 0.10, // Default cost for unknown instance types
             },
         }
     }

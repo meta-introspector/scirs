@@ -11,7 +11,7 @@
 //! - Performance profiling and monitoring
 
 use ndarray::{Array2, Array3};
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     adaptive_advanced_optimizer::*, error::Result, fusion_core::*, gpu_operations::*,
     performance_profiler::*,
 };
@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     let mut optimizer = AdaptiveAdvancedOptimizer::new(AdaptiveOptimizerConfig::default())?;
 
     // Create test data with various characteristics
-    let test_images = create_test_datasets();
+    let testimages = create_test_datasets();
 
     // 2. Demonstrate Quantum Consciousness Evolution
     println!("\n2️⃣ Quantum Consciousness Evolution System...");
@@ -36,7 +36,7 @@ fn main() -> Result<()> {
     consciousness_config.set_consciousness_depth(8);
     consciousness_config.set_coherence_quality(0.95);
 
-    for (name, image) in &test_images {
+    for (name, image) in &testimages {
         println!(
             "   Processing {}: {}×{} array",
             name,
@@ -75,7 +75,7 @@ fn main() -> Result<()> {
     let mut meta_learning = EnhancedMetaLearningSystem::new();
 
     // Simulate learning from multiple image processing tasks
-    for (name, image) in &test_images {
+    for (name, image) in &testimages {
         println!("   Learning from {}: adaptation phase", name);
 
         let start_time = Instant::now();
@@ -119,7 +119,7 @@ fn main() -> Result<()> {
     let mut resource_scheduler = QuantumAwareResourceScheduler::new();
 
     // Process multiple tasks with intelligent resource allocation
-    for (name, image) in &test_images {
+    for (name, image) in &testimages {
         println!("   Scheduling resources for {}", name);
 
         let workload = WorkloadCharacteristics {
@@ -159,13 +159,13 @@ fn main() -> Result<()> {
     profiler.start_monitoring(1000.0); // 1kHz sampling rate
 
     // Run various operations while profiling
-    let large_image = Array2::from_elem((1000, 1000), 0.5f64);
+    let largeimage = Array2::from_elem((1000, 1000), 0.5f64);
 
     profiler.start_operation("large_scale_processing");
     let start_time = Instant::now();
 
     // Simulate complex processing
-    let processed = fusion_processing(&large_image.view(), &AdvancedConfig::default())?;
+    let processed = fusion_processing(&largeimage.view(), &AdvancedConfig::default())?;
 
     let processing_time = start_time.elapsed();
     profiler.end_operation("large_scale_processing");
@@ -190,9 +190,9 @@ fn main() -> Result<()> {
     if let Ok(gpu_manager) = GpuOperationsManager::new() {
         println!("   GPU acceleration available!");
 
-        let medium_image = Array2::from_elem((500, 500), 1.0f64);
+        let mediumimage = Array2::from_elem((500, 500), 1.0f64);
 
-        match gpu_manager.gpu_gaussian_filter(&medium_image.view(), 2.0) {
+        match gpu_manager.gpu_gaussian_filter(&mediumimage.view(), 2.0) {
             Ok(gpu_result) => {
                 println!("   ✓ GPU Gaussian filter completed successfully");
                 println!("   ✓ Output shape: {:?}", gpu_result.shape());
@@ -204,7 +204,7 @@ fn main() -> Result<()> {
 
         // Test GPU convolution
         let kernel = Array2::from_elem((5, 5), 0.04f64); // 5x5 normalized kernel
-        match gpu_manager.gpu_convolution(&medium_image.view(), &kernel.view()) {
+        match gpu_manager.gpu_convolution(&mediumimage.view(), &kernel.view()) {
             Ok(conv_result) => {
                 println!("   ✓ GPU convolution completed successfully");
                 println!("   ✓ Output shape: {:?}", conv_result.shape());

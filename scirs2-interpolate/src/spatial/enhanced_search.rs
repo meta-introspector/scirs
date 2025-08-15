@@ -195,7 +195,7 @@ impl QueryKey {
     fn from_coords<F: Float + FromPrimitive>(coords: &[F], k: usize, radius: Option<F>) -> Self {
         const QUANTIZATION_FACTOR: f64 = 1000.0;
 
-        let quantized_coords: Vec<i64> = _coords
+        let quantized_coords: Vec<i64> = coords
             .iter()
             .map(|&x| (x.to_f64().unwrap_or(0.0) * QUANTIZATION_FACTOR).round() as i64)
             .collect();
@@ -204,7 +204,7 @@ impl QueryKey {
             radius.map(|r| (r.to_f64().unwrap_or(0.0) * QUANTIZATION_FACTOR).round() as i64);
 
         Self {
-            _coords: quantized_coords,
+            coords: quantized_coords,
             k,
             radius: quantized_radius,
         }
@@ -282,8 +282,8 @@ where
     }
 
     /// Choose the best index type based on data characteristics
-    fn choose_index_type(_n_points: usize, ndims: usize, config: &SearchConfig) -> IndexType {
-        if config.approximation_factor > 1.0 && _n_points > 10000 {
+    fn choose_index_type(n_points: usize, n_dims: usize, config: &SearchConfig) -> IndexType {
+        if config.approximation_factor > 1.0 && n_points > 10000 {
             // Use LSH for large datasets with approximate search
             IndexType::LSH
         } else if n_dims <= 10 && n_points > 100 {
@@ -300,7 +300,7 @@ where
 
     /// Build the spatial index
     fn build_index(&mut self, indextype: IndexType) -> InterpolateResult<()> {
-        match index_type {
+        match indextype {
             IndexType::KdTree => {
                 self.kdtree = Some(KdTreeIndex::new(&self.points)?);
             }
@@ -702,12 +702,13 @@ impl<F: Float + FromPrimitive> KdTreeIndex<F> {
 
         // Build the tree recursively
         let mut nodes = Vec::new();
-        let root = Self::build_tree_recursive(_points, &mut indices, 0, dimensions, &mut nodes)?;
+        let root = Self::build_tree_recursive(points, &mut indices, 0, dimensions, &mut nodes)?;
 
         Ok(Self {
             nodes,
             root,
-            dimensions_points: points.to_owned(),
+            dimensions,
+            points: points.to_owned(),
         })
     }
 
@@ -978,12 +979,13 @@ impl<F: Float + FromPrimitive> BallTreeIndex<F> {
 
         // Build the tree recursively
         let mut nodes = Vec::new();
-        let root = Self::build_tree_recursive(_points, &mut indices, dimensions, &mut nodes)?;
+        let root = Self::build_tree_recursive(points, &mut indices, dimensions, &mut nodes)?;
 
         Ok(Self {
             nodes,
             root,
-            dimensions_points: points.to_owned(),
+            dimensions,
+            points: points.to_owned(),
         })
     }
 
@@ -1306,7 +1308,7 @@ impl<F: Float + FromPrimitive> LSHIndex<F> {
 
     /// Compute hash key for a point using a specific table's projection
     fn compute_hash(&self, point: &ArrayView1<F>, tableidx: usize) -> InterpolateResult<u64> {
-        let projection = &self.projections[table_idx];
+        let projection = &self.projections[tableidx];
         let mut hash_key = 0u64;
 
         for hash_func_idx in 0..self.hash_functions_per_table {
@@ -1924,8 +1926,8 @@ mod tests {
         // Sort both results by index to compare (since ties might be ordered differently)
         let mut kdtree_sorted = kdtree_neighbors.clone();
         let mut balltree_sorted = balltree_neighbors.clone();
-        kdtree_sorted.sort_by_key(|&(idx_)| idx);
-        balltree_sorted.sort_by_key(|&(idx_)| idx);
+        kdtree_sorted.sort_by_key(|&(idx, _)| idx);
+        balltree_sorted.sort_by_key(|&(idx, _)| idx);
 
         // Check that the same points are found (distances should be very close)
         for i in 0..k {

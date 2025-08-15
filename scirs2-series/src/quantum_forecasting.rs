@@ -12,7 +12,7 @@
 //! - **Quantum-Inspired Optimization**: Quantum annealing for hyperparameter tuning
 
 use ndarray::{Array1, Array2, Array3};
-use num__complex::Complex;
+use num_complex::Complex;
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -892,7 +892,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
 
             let activation = match layer_idx % 3 {
                 0 => QuantumActivation::QuantumReLU,
-                1 => QuantumActivation::QuantumSigmoid_ => QuantumActivation::QuantumTanh,
+                1 => QuantumActivation::QuantumSigmoid,
+                _ => QuantumActivation::QuantumTanh,
             };
 
             layers.push(QuantumLayer {
@@ -1045,7 +1046,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
 
     /// Update parameters using quantum-inspired optimization
     fn update_parameters_quantum_inspired(
-        &mut self, _training_data: &[(Array1<F>, Array1<F>)],
+        &mut self,
+        _training_data: &[(Array1<F>, Array1<F>)],
         learning_rate: F,
         iteration: usize,
     ) -> Result<()> {
@@ -1328,7 +1330,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
         let objective = |weights: &Array1<F>| -> F {
             // Normalize weights
             let weight_sum: F = weights.iter().cloned().sum();
-            let normalized_weights: Array1<F> = if weight_sum >, F::zero() {
+            let normalized_weights: Array1<F> = if weight_sum > F::zero() {
                 weights.mapv(|w| w / weight_sum)
             } else {
                 Array1::from_elem(num_models, F::one() / F::from(num_models).unwrap())

@@ -70,7 +70,7 @@ where
     /// let y = array![0.0, 1.0];
     ///
     /// // Define function z = x + y on the grid
-    /// let z = Array2::fromshape_fn((2, 3), |(i, j)| {
+    /// let z = Array2::from_shape_fn((2, 3), |(i, j)| {
     ///     y[i] + x[j]
     /// });
     ///
@@ -129,11 +129,11 @@ where
     /// # Arguments
     ///
     /// * `x_new` - X coordinate for evaluation
-    /// * `y_new` - Y coordinate for evaluation
+    /// * `ynew` - Y coordinate for evaluation
     ///
     /// # Returns
     ///
-    /// Interpolated value at (x_new, y_new)
+    /// Interpolated value at (x_new, ynew)
     ///
     /// # Examples
     ///
@@ -143,7 +143,7 @@ where
     ///
     /// let x = array![0.0, 1.0, 2.0];
     /// let y = array![0.0, 1.0];
-    /// let z = Array2::fromshape_fn((2, 3), |(i, j)| {
+    /// let z = Array2::from_shape_fn((2, 3), |(i, j)| {
     ///     y[i] + x[j] // z = x + y
     /// });
     ///
@@ -156,9 +156,9 @@ where
     /// ```
     pub fn evaluate(&self, x_new: F, ynew: F) -> InterpolateResult<F> {
         match self.kind {
-            Interp2dKind::Linear => self.evaluate_linear(x_new, y_new),
-            Interp2dKind::Cubic => self.evaluate_cubic(x_new, y_new),
-            Interp2dKind::Quintic => self.evaluate_quintic(x_new, y_new),
+            Interp2dKind::Linear => self.evaluate_linear(x_new, ynew),
+            Interp2dKind::Cubic => self.evaluate_cubic(x_new, ynew),
+            Interp2dKind::Quintic => self.evaluate_quintic(x_new, ynew),
         }
     }
 
@@ -167,7 +167,7 @@ where
     /// # Arguments
     ///
     /// * `x_new` - X coordinates for evaluation
-    /// * `y_new` - Y coordinates for evaluation (must have same length as x_new)
+    /// * `ynew` - Y coordinates for evaluation (must have same length as x_new)
     ///
     /// # Returns
     ///
@@ -175,19 +175,19 @@ where
     pub fn evaluate_array(
         &self,
         x_new: &ArrayView1<F>,
-        y_new: &ArrayView1<F>,
+        ynew: &ArrayView1<F>,
     ) -> InterpolateResult<Array1<F>> {
-        if x_new.len() != y_new.len() {
+        if x_new.len() != ynew.len() {
             return Err(InterpolateError::shape_mismatch(
                 format!("x_new.len() = {}", x_new.len()),
-                format!("y_new.len() = {}", y_new.len()),
+                format!("ynew.len() = {}", ynew.len()),
                 "interp2d coordinate arrays",
             ));
         }
 
         let mut result = Array1::zeros(x_new.len());
         for i in 0..x_new.len() {
-            result[i] = self.evaluate(x_new[i], y_new[i])?;
+            result[i] = self.evaluate(x_new[i], ynew[i])?;
         }
         Ok(result)
     }
@@ -197,19 +197,19 @@ where
     /// # Arguments
     ///
     /// * `x_new` - X coordinates for output grid
-    /// * `y_new` - Y coordinates for output grid
+    /// * `ynew` - Y coordinates for output grid
     ///
     /// # Returns
     ///
-    /// 2D array with shape (len(y_new), len(x_new))
+    /// 2D array with shape (len(ynew), len(x_new))
     pub fn evaluate_grid(
         &self,
         x_new: &ArrayView1<F>,
-        y_new: &ArrayView1<F>,
+        ynew: &ArrayView1<F>,
     ) -> InterpolateResult<Array2<F>> {
-        let mut result = Array2::zeros((y_new.len(), x_new.len()));
+        let mut result = Array2::zeros((ynew.len(), x_new.len()));
 
-        for (i, &y_val) in y_new.iter().enumerate() {
+        for (i, &y_val) in ynew.iter().enumerate() {
             for (j, &x_val) in x_new.iter().enumerate() {
                 result[[i, j]] = self.evaluate(x_val, y_val)?;
             }
@@ -221,13 +221,13 @@ where
     /// Linear interpolation implementation
     fn evaluate_linear(&self, x_new: F, ynew: F) -> InterpolateResult<F> {
         // Find y index and interpolate along x for neighboring y values
-        let y_idx = find_interval(&self.y.view(), y_new);
+        let y_idx = find_interval(&self.y.view(), ynew);
 
-        let result = if y_idx == 0 && y_new < self.y[0] {
+        let result = if y_idx == 0 && ynew < self.y[0] {
             // Extrapolate below
             let row = self.z.slice(ndarray::s![0, ..]);
             linear_interpolate(&self.x.view(), &row, &Array1::from_vec(vec![x_new]).view())?[0]
-        } else if y_idx >= self.y.len() - 1 && y_new > self.y[self.y.len() - 1] {
+        } else if y_idx >= self.y.len() - 1 && ynew > self.y[self.y.len() - 1] {
             // Extrapolate above
             let row = self.z.slice(ndarray::s![self.y.len() - 1, ..]);
             linear_interpolate(&self.x.view(), &row, &Array1::from_vec(vec![x_new]).view())?[0]
@@ -253,7 +253,7 @@ where
             if (y1 - y0).abs() < F::epsilon() {
                 val0
             } else {
-                let t = (y_new - y0) / (y1 - y0);
+                let t = (ynew - y0) / (y1 - y0);
                 val0 + t * (val1 - val0)
             }
         };
@@ -268,13 +268,13 @@ where
 
         for (i, &_y_val) in self.y.iter().enumerate() {
             let row = self.z.slice(ndarray::s![i, ..]);
-            let spline = CubicSpline::_new(&self.x.view(), &row)?;
+            let spline = CubicSpline::new(&self.x.view(), &row)?;
             values_at_x[i] = spline.evaluate(x_new)?;
         }
 
         // Create cubic spline along y direction
-        let y_spline = CubicSpline::_new(&self.y.view(), &values_at_x.view())?;
-        y_spline.evaluate(y_new)
+        let y_spline = CubicSpline::new(&self.y.view(), &values_at_x.view())?;
+        y_spline.evaluate(ynew)
     }
 
     fn evaluate_quintic(&self, x_new: F, ynew: F) -> InterpolateResult<F> {
@@ -293,7 +293,7 @@ where
         }
 
         // For now, fall back to cubic with validation for sufficient points
-        self.evaluate_cubic(x_new, y_new)
+        self.evaluate_cubic(x_new, ynew)
     }
 }
 
@@ -339,7 +339,7 @@ fn find_interval<F: PartialOrd>(arr: &ArrayView1<F>, value: F) -> usize {
 ///
 /// let x = array![0.0, 1.0, 2.0];
 /// let y = array![0.0, 1.0];
-/// let z = Array2::fromshape_fn((2, 3), |(i, j)| {
+/// let z = Array2::from_shape_fn((2, 3), |(i, j)| {
 ///     y[i] * x[j] // z = x * y
 /// });
 ///
@@ -371,7 +371,7 @@ mod tests {
         // Create a simple 2x3 grid where z = x + y
         let x = array![0.0, 1.0, 2.0];
         let y = array![0.0, 1.0];
-        let z = Array2::fromshape_fn((2, 3), |(i, j)| y[i] + x[j]);
+        let z = Array2::from_shape_fn((2, 3), |(i, j)| y[i] + x[j]);
 
         let interp = Interp2d::new(&x.view(), &y.view(), &z.view(), Interp2dKind::Linear)?;
 
@@ -393,7 +393,7 @@ mod tests {
         // Create a 4x4 grid for cubic interpolation
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 2.0, 3.0];
-        let z = Array2::fromshape_fn((4, 4), |(i, j)| {
+        let z = Array2::from_shape_fn((4, 4), |(i, j)| {
             let x_val = x[j];
             let y_val = y[i];
             x_val * x_val + y_val * y_val // z = x² + y²
@@ -417,14 +417,14 @@ mod tests {
     fn test_grid_evaluation() -> InterpolateResult<()> {
         let x = array![0.0, 1.0];
         let y = array![0.0, 1.0];
-        let z = Array2::fromshape_fn((2, 2), |(i, j)| y[i] + x[j]);
+        let z = Array2::from_shape_fn((2, 2), |(i, j)| y[i] + x[j]);
 
         let interp = Interp2d::new(&x.view(), &y.view(), &z.view(), Interp2dKind::Linear)?;
 
         let x_new = array![0.0, 0.5, 1.0];
-        let y_new = array![0.0, 0.5, 1.0];
+        let ynew = array![0.0, 0.5, 1.0];
 
-        let result = interp.evaluate_grid(&x_new.view(), &y_new.view())?;
+        let result = interp.evaluate_grid(&x_new.view(), &ynew.view())?;
 
         assert_eq!(result.shape(), &[3, 3]);
         assert_abs_diff_eq!(result[[0, 0]], 0.0, epsilon = 1e-10); // (0,0)

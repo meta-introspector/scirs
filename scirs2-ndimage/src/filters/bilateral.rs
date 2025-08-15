@@ -972,7 +972,7 @@ impl Default for MultiScaleBilateralConfig {
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::filters::{multi_scale_bilateral_filter, MultiScaleBilateralConfig};
+/// use scirs2_ndimage::filters::{multi_scale_bilateral_filter, MultiScaleBilateralConfig};
 ///
 /// let image = Array2::from_elem((64, 64), 1.0);
 /// let config = MultiScaleBilateralConfig::default();
@@ -1015,8 +1015,8 @@ where
     // Create image pyramid
     let mut pyramid = vec![input.clone()];
     for level in 1..config.levels {
-        let prev_image = &pyramid[level - 1];
-        let downsampled = downsample_image(prev_image, config.downsample_factor)?;
+        let previmage = &pyramid[level - 1];
+        let downsampled = downsampleimage(previmage, config.downsample_factor)?;
         pyramid.push(downsampled);
     }
 
@@ -1033,7 +1033,7 @@ where
     // Reconstruct from pyramid
     let mut result = filtered_pyramid.pop().unwrap();
     for level in (0..config.levels - 1).rev() {
-        result = upsample_image(&result, &filtered_pyramid[level])?;
+        result = upsampleimage(&result, &filtered_pyramid[level])?;
 
         // Blend with original level
         let alpha = safe_f64_to_float::<T>(0.7)?; // Blend factor
@@ -1064,7 +1064,7 @@ where
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::filters::{adaptive_bilateral_filter, BorderMode};
+/// use scirs2_ndimage::filters::{adaptive_bilateral_filter, BorderMode};
 ///
 /// let image = Array2::from_elem((32, 32), 1.0);
 /// let result = adaptive_bilateral_filter(&image, 1.0, 1.0, 0.5, Some(BorderMode::Reflect)).unwrap();
@@ -1291,7 +1291,7 @@ where
 
 /// Downsample an image by the given factor
 #[allow(dead_code)]
-fn downsample_image<T, D>(input: &Array<T, D>, factor: f64) -> NdimageResult<Array<T, D>>
+fn downsampleimage<T, D>(input: &Array<T, D>, factor: f64) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
     D: Dimension,
@@ -1342,7 +1342,7 @@ where
 
 /// Upsample an image to match the target shape
 #[allow(dead_code)]
-fn upsample_image<T, D>(input: &Array<T, D>, target: &Array<T, D>) -> NdimageResult<Array<T, D>>
+fn upsampleimage<T, D>(input: &Array<T, D>, target: &Array<T, D>) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
     D: Dimension,

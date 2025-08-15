@@ -8,7 +8,7 @@
 //! - Integration with other scirs2 modules
 
 use ndarray::{Array2, Array3, ArrayView2, Axis};
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     backend::*, domain_specific::*, error::NdimageResult, features::*, filters::*,
     interpolation::*, measurements::*, morphology::*, segmentation::*, streaming::*,
     visualization::*,
@@ -19,49 +19,49 @@ fn main() -> NdimageResult<()> {
     println!("=== Comprehensive scirs2-ndimage Documentation & Examples ===\n");
 
     // Create various test images for different examples
-    let test_image_2d = create_test_image_2d(128, 128);
-    let test_image_3d = create_test_image_3d(64, 64, 32);
-    let noisy_image = add_noise(&test_image_2d, 0.1);
-    let edge_image = create_edge_test_image(64, 64);
+    let testimage_2d = create_testimage_2d(128, 128);
+    let testimage_3d = create_testimage_3d(64, 64, 32);
+    let noisyimage = add_noise(&testimage_2d, 0.1);
+    let edgeimage = create_edge_testimage(64, 64);
 
     // 1. Filtering Operations
     println!("--- 1. FILTERING OPERATIONS ---\n");
-    demonstrate_filtering(&test_image_2d, &noisy_image)?;
+    demonstrate_filtering(&testimage_2d, &noisyimage)?;
 
     // 2. Feature Detection
     println!("\n--- 2. FEATURE DETECTION ---\n");
-    demonstrate_feature_detection(&edge_image)?;
+    demonstrate_feature_detection(&edgeimage)?;
 
     // 3. Morphological Operations
     println!("\n--- 3. MORPHOLOGICAL OPERATIONS ---\n");
-    demonstrate_morphology(&test_image_2d)?;
+    demonstrate_morphology(&testimage_2d)?;
 
     // 4. Interpolation and Transformations
     println!("\n--- 4. INTERPOLATION & TRANSFORMATIONS ---\n");
-    demonstrate_interpolation(&test_image_2d)?;
+    demonstrate_interpolation(&testimage_2d)?;
 
     // 5. Measurements and Analysis
     println!("\n--- 5. MEASUREMENTS & ANALYSIS ---\n");
-    demonstrate_measurements(&test_image_2d)?;
+    demonstrate_measurements(&testimage_2d)?;
 
     // 6. Segmentation
     println!("\n--- 6. SEGMENTATION ---\n");
-    demonstrate_segmentation(&test_image_2d)?;
+    demonstrate_segmentation(&testimage_2d)?;
 
     // 7. Domain-Specific Functions
     println!("\n--- 7. DOMAIN-SPECIFIC FUNCTIONS ---\n");
-    demonstrate_domain_specific(&test_image_2d)?;
+    demonstrate_domain_specific(&testimage_2d)?;
 
     // 8. Advanced SIMD Extensions
     #[cfg(feature = "simd")]
     {
         println!("\n--- 8. ADVANCED SIMD EXTENSIONS ---\n");
-        demonstrate_advanced_simd(&test_image_2d)?;
+        demonstrate_advanced_simd(&testimage_2d)?;
     }
 
     // 9. Backend and Performance
     println!("\n--- 9. BACKEND & PERFORMANCE OPTIMIZATION ---\n");
-    demonstrate_backends(&test_image_2d)?;
+    demonstrate_backends(&testimage_2d)?;
 
     // 10. Streaming for Large Data
     println!("\n--- 10. STREAMING FOR LARGE DATASETS ---\n");
@@ -69,11 +69,11 @@ fn main() -> NdimageResult<()> {
 
     // 11. Memory Management
     println!("\n--- 11. MEMORY MANAGEMENT ---\n");
-    demonstrate_memory_management(&test_image_2d)?;
+    demonstrate_memory_management(&testimage_2d)?;
 
     // 12. Visualization
     println!("\n--- 12. VISUALIZATION ---\n");
-    demonstrate_visualization(&test_image_2d)?;
+    demonstrate_visualization(&testimage_2d)?;
 
     // 13. Best Practices and Tips
     println!("\n--- 13. BEST PRACTICES & OPTIMIZATION TIPS ---\n");
@@ -86,7 +86,7 @@ fn main() -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn create_test_image_2d(height: usize, width: usize) -> Array2<f64> {
+fn create_testimage_2d(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -101,7 +101,7 @@ fn create_test_image_2d(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_test_image_3d(height: usize, width: usize, depth: usize) -> Array3<f64> {
+fn create_testimage_3d(height: usize, width: usize, depth: usize) -> Array3<f64> {
     Array3::fromshape_fn((_height, width, depth), |(i, j, k)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -115,9 +115,9 @@ fn create_test_image_3d(height: usize, width: usize, depth: usize) -> Array3<f64
 }
 
 #[allow(dead_code)]
-fn add_noise(_image: &Array2<f64>, noiselevel: f64) -> Array2<f64> {
-    _image
-        + &Array2::fromshape_fn(_image.dim(), |(i, j)| {
+fn add_noise(image: &Array2<f64>, noiselevel: f64) -> Array2<f64> {
+    image
+        + &Array2::fromshape_fn(image.dim(), |(i, j)| {
             let noise = if (i * 7 + j * 11) % 13 == 0 {
                 noise_level
             } else {
@@ -132,7 +132,7 @@ fn add_noise(_image: &Array2<f64>, noiselevel: f64) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_edge_test_image(height: usize, width: usize) -> Array2<f64> {
+fn create_edge_testimage(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         // Create step edges and lines
         if i > _height / 2 && i < _height / 2 + 5 {
@@ -152,12 +152,12 @@ fn create_edge_test_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_filtering(_image: &Array2<f64>, noisyimage: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_filtering(image: &Array2<f64>, noisyimage: &Array2<f64>) -> NdimageResult<()> {
     println!("🔍 Filtering Operations");
 
     // 1. Basic filters
     println!("  • Gaussian filtering (noise reduction):");
-    let gaussian = gaussian_filter(_image, &[2.0, 2.0], None, None, None)?;
+    let gaussian = gaussian_filter(image, &[2.0, 2.0], None, None, None)?;
     println!(
         "    Input: {}x{}, Output: {}x{}",
         image.nrows(),
@@ -168,25 +168,25 @@ fn demonstrate_filtering(_image: &Array2<f64>, noisyimage: &Array2<f64>) -> Ndim
 
     // 2. Edge detection filters
     println!("  • Edge detection filters:");
-    let sobel_result = sobel(&_image.view(), None, None, None)?;
-    let laplace_result = laplace(&_image.view(), None, None)?;
+    let sobel_result = sobel(&image.view(), None, None, None)?;
+    let laplace_result = laplace(&image.view(), None, None)?;
     println!("    Sobel edges detected, Laplacian computed");
 
     // 3. Rank filters
     println!("  • Rank filters (noise removal):");
-    let median = median_filter(&noisy_image.view(), None, None, None)?;
-    let max_filter = maximum_filter(&_image.view(), None, None, None)?;
+    let median = median_filter(&noisyimage.view(), None, None, None)?;
+    let max_filter = maximum_filter(&image.view(), None, None, None)?;
     println!("    Median filter applied, maximum filter computed");
 
     // 4. Advanced filters
     println!("  • Advanced filters:");
-    let bilateral = bilateral_filter(_image.view(), 2.0, 0.1, Some(5))?;
+    let bilateral = bilateral_filter(image.view(), 2.0, 0.1, Some(5))?;
     println!("    Bilateral filter (edge-preserving smoothing) applied");
 
     // 5. Generic filters with custom functions
     println!("  • Generic filters with custom functions:");
     let custom_filter = generic_filter(
-        &_image.view(),
+        &image.view(),
         None,                        // use default 3x3 footprint
         filter__functions::variance, // use variance as the filter function
         None,                        // mode
@@ -205,14 +205,14 @@ fn demonstrate_feature_detection(image: &Array2<f64>) -> NdimageResult<()> {
 
     // 1. Edge detection
     println!("  • Edge detection methods:");
-    let canny_edges = canny(_image.view(), 1.0, 0.1, 0.3, None)?;
-    let sobel_edges = sobel_edges(_image.view(), None)?;
+    let canny_edges = canny(image.view(), 1.0, 0.1, 0.3, None)?;
+    let sobel_edges = sobel_edges(image.view(), None)?;
     println!("    Canny and Sobel edge detection completed");
 
     // 2. Corner detection
     println!("  • Corner detection:");
-    let harris_corners = harris_corners(_image.view(), 0.04, 3, 0.01, None)?;
-    let fast_corners = fast_corners(_image.view(), 9, 0.15, None)?;
+    let harris_corners = harris_corners(image.view(), 0.04, 3, 0.01, None)?;
+    let fast_corners = fast_corners(image.view(), 9, 0.15, None)?;
     println!("    Harris and FAST corner detection completed");
 
     #[cfg(feature = "simd")]
@@ -221,7 +221,7 @@ fn demonstrate_feature_detection(image: &Array2<f64>) -> NdimageResult<()> {
         println!("  • ML-based feature detection:");
         let ml_config = MLDetectorConfig::default();
         let learned_detector = LearnedEdgeDetector::new(ml_config)?;
-        let ml_edges = learned_detector.detect_edges(_image.view())?;
+        let ml_edges = learned_detector.detect_edges(image.view())?;
         println!("    ML-based edge detection completed");
     }
 
@@ -232,7 +232,7 @@ fn demonstrate_feature_detection(image: &Array2<f64>) -> NdimageResult<()> {
 fn demonstrate_morphology(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🔬 Morphological Operations");
 
-    // Create binary _image for morphology
+    // Create binary image for morphology
     let binary_image = image.mapv(|x| if x > 0.5 { 1u8 } else { 0u8 });
 
     // 1. Basic binary morphology
@@ -276,8 +276,8 @@ fn demonstrate_morphology(image: &Array2<f64>) -> NdimageResult<()> {
 
     // 3. Grayscale morphology
     println!("  • Grayscale morphology:");
-    let grey_eroded = grey_erosion(&_image.view(), None, None, None, None, None)?;
-    let grey_dilated = grey_dilation(&_image.view(), None, None, None, None, None)?;
+    let grey_eroded = grey_erosion(&image.view(), None, None, None, None, None)?;
+    let grey_dilated = grey_dilation(&image.view(), None, None, None, None, None)?;
     println!("    Grayscale erosion and dilation completed");
 
     // 4. Distance transforms
@@ -312,12 +312,12 @@ fn demonstrate_interpolation(image: &Array2<f64>) -> NdimageResult<()> {
 
     // 2. Rotation
     println!("  • Rotation transformation:");
-    let rotated = rotate(&_image.view(), 45.0, None, None, None, None, None)?;
+    let rotated = rotate(&image.view(), 45.0, None, None, None, None, None)?;
     println!("    45-degree rotation completed");
 
     // 3. Affine transformation
     println!("  • Affine transformation:");
-    let transform_matrix = Array2::fromshape_vec(
+    let transform_matrix = Array2::from_shape_vec(
         (2, 3),
         vec![
             1.2, 0.2, 10.0, // scale + shear + translation
@@ -325,7 +325,7 @@ fn demonstrate_interpolation(image: &Array2<f64>) -> NdimageResult<()> {
         ],
     )?;
     let transformed = affine_transform(
-        &_image.view(),
+        &image.view(),
         &transform_matrix.view(),
         InterpolationOrder::Linear,
         BoundaryMode::Constant,
@@ -337,13 +337,13 @@ fn demonstrate_interpolation(image: &Array2<f64>) -> NdimageResult<()> {
     println!("  • Coordinate mapping:");
     let coords = Array2::fromshape_fn((2, 100), |(axis, i)| {
         if axis == 0 {
-            (i as f64 / 99.0) * (_image.nrows() - 1) as f64
+            (i as f64 / 99.0) * (image.nrows() - 1) as f64
         } else {
-            (i as f64 / 99.0) * (_image.ncols() - 1) as f64
+            (i as f64 / 99.0) * (image.ncols() - 1) as f64
         }
     });
     let mapped_values = map_coordinates(
-        &_image.view(),
+        &image.view(),
         &coords.view(),
         InterpolationOrder::Linear,
         BoundaryMode::Reflect,
@@ -361,28 +361,28 @@ fn demonstrate_interpolation(image: &Array2<f64>) -> NdimageResult<()> {
 fn demonstrate_measurements(image: &Array2<f64>) -> NdimageResult<()> {
     println!("📊 Measurements & Analysis");
 
-    // Create labeled _image for region analysis
+    // Create labeled image for region analysis
     let binary = image.mapv(|x| if x > 0.6 { 1u32 } else { 0u32 });
     let labeled = label(&binary.view(), None)?;
 
     // 1. Basic measurements
     println!("  • Basic measurements:");
-    let com = center_of_mass(&_image.view(), Some(&labeled.1.view()), None)?;
+    let com = center_of_mass(&image.view(), Some(&labeled.1.view()), None)?;
     println!("    Center of mass: {:?}", com);
 
     // 2. Statistical measurements
     println!("  • Statistical measurements:");
-    let extrema_result = extrema(&_image.view(), Some(&labeled.1.view()), None)?;
+    let extrema_result = extrema(&image.view(), Some(&labeled.1.view()), None)?;
     println!("    Extrema found: {} regions", extrema_result.len());
 
     // 3. Moments analysis
     println!("  • Moments analysis:");
-    let moments_result = moments(&_image.view(), None, None)?;
-    println!("    Moments computed for _image");
+    let moments_result = moments(&image.view(), None, None)?;
+    println!("    Moments computed for image");
 
     // 4. Region properties
     println!("  • Region properties:");
-    let properties = region_properties(&labeled.1.view(), Some(&_image.view()))?;
+    let properties = region_properties(&labeled.1.view(), Some(&image.view()))?;
     println!("    Properties computed for {} regions", properties.len());
     for (i, prop) in properties.iter().take(3).enumerate() {
         println!(
@@ -400,14 +400,14 @@ fn demonstrate_segmentation(image: &Array2<f64>) -> NdimageResult<()> {
 
     // 1. Thresholding
     println!("  • Thresholding methods:");
-    let binary = threshold_binary(&_image.view(), 0.5)?;
-    let otsu = otsu_threshold(&_image.view())?;
-    let adaptive = adaptive_threshold(&_image.view(), 15, AdaptiveMethod::Mean, 0.1)?;
+    let binary = threshold_binary(&image.view(), 0.5)?;
+    let otsu = otsu_threshold(&image.view())?;
+    let adaptive = adaptive_threshold(&image.view(), 15, AdaptiveMethod::Mean, 0.1)?;
     println!("    Binary, Otsu, and adaptive thresholding completed");
 
     // 2. Watershed segmentation
     println!("  • Watershed segmentation:");
-    let markers = Array2::fromshape_fn(_image.dim(), |(i, j)| {
+    let markers = Array2::fromshape_fn(image.dim(), |(i, j)| {
         if i < 20 && j < 20 {
             1u32
         } else if i > image.nrows() - 20 && j > image.ncols() - 20 {
@@ -416,7 +416,7 @@ fn demonstrate_segmentation(image: &Array2<f64>) -> NdimageResult<()> {
             0u32
         }
     });
-    let watershed_result = watershed(&_image.view(), &markers.view(), None, None)?;
+    let watershed_result = watershed(&image.view(), &markers.view(), None, None)?;
     println!("    Watershed segmentation completed");
 
     #[cfg(feature = "simd")]
@@ -426,13 +426,13 @@ fn demonstrate_segmentation(image: &Array2<f64>) -> NdimageResult<()> {
 
         // Graph cuts
         let graph_cuts_params = GraphCutsParams::default();
-        let gc_result = graph_cuts(&_image.view(), &markers.view(), graph_cuts_params)?;
+        let gc_result = graph_cuts(&image.view(), &markers.view(), graph_cuts_params)?;
         println!("    Graph cuts segmentation completed");
 
         // Chan-Vese
-        let initial_contour = create_circle_contour((_image.nrows() / 2, image.ncols() / 2), 30.0);
+        let initial_contour = create_circle_contour((image.nrows() / 2, image.ncols() / 2), 30.0);
         let cv_params = ChanVeseParams::default();
-        let cv_result = chan_vese(&_image.view(), &initial_contour, cv_params)?;
+        let cv_result = chan_vese(&image.view(), &initial_contour, cv_params)?;
         println!("    Chan-Vese segmentation completed");
     }
 
@@ -445,25 +445,25 @@ fn demonstrate_domain_specific(image: &Array2<f64>) -> NdimageResult<()> {
 
     // 1. Medical imaging
     println!("  • Medical imaging functions:");
-    let vesselness = medical::frangi_vesselness(&_image.view(), None)?;
+    let vesselness = medical::frangi_vesselness(&image.view(), None)?;
     println!("    Frangi vesselness filter applied");
 
-    let enhanced_bone = medical::enhance_bone_structure(&_image.view(), 1.0, 2.0)?;
+    let enhanced_bone = medical::enhance_bone_structure(&image.view(), 1.0, 2.0)?;
     println!("    Bone structure enhancement completed");
 
     // 2. Satellite/remote sensing
     println!("  • Satellite/remote sensing:");
-    let fake_nir = _image + &Array2::ones(_image.dim()) * 0.3; // Simulate NIR band
-    let ndvi = satellite::compute_ndvi(&fake_nir.view(), &_image.view())?;
+    let fake_nir = image + &Array2::ones(image.dim()) * 0.3; // Simulate NIR band
+    let ndvi = satellite::compute_ndvi(&fake_nir.view(), &image.view())?;
     println!("    NDVI computation completed");
 
-    let water_mask = satellite::detect_water_bodies(&_image.view(), 0.3)?;
+    let water_mask = satellite::detect_water_bodies(&image.view(), 0.3)?;
     println!("    Water body detection completed");
 
     // 3. Microscopy
     println!("  • Microscopy functions:");
     let cell_params = microscopy::CellSegmentationParams::default();
-    let cells = microscopy::segment_cells(&_image.view(), cell_params)?;
+    let cells = microscopy::segment_cells(&image.view(), cell_params)?;
     println!("    Cell segmentation: {} cells detected", cells.len());
 
     Ok(())
@@ -476,7 +476,7 @@ fn demonstrate_advanced_simd(image: &Array2<f64>) -> NdimageResult<()> {
 
     // 1. Wavelet pyramid
     println!("  • Advanced-SIMD wavelet pyramid:");
-    let pyramid = advanced_simd_wavelet_pyramid(_image.view(), 3, WaveletType::Daubechies4)?;
+    let pyramid = advanced_simd_wavelet_pyramid(image.view(), 3, WaveletType::Daubechies4)?;
     println!(
         "    Wavelet pyramid: {} levels generated",
         pyramid.levels.len()
@@ -484,12 +484,12 @@ fn demonstrate_advanced_simd(image: &Array2<f64>) -> NdimageResult<()> {
 
     // 2. Local Binary Patterns
     println!("  • Advanced-SIMD multi-scale LBP:");
-    let lbp = advanced_simd_multi_scale_lbp(_image.view(), &[1, 2, 3], &[8, 16, 24])?;
+    let lbp = advanced_simd_multi_scale_lbp(image.view(), &[1, 2, 3], &[8, 16, 24])?;
     println!("    Multi-scale LBP texture analysis completed");
 
     // 3. Advanced edge detection
     println!("  • Advanced-SIMD advanced edge detection:");
-    let advanced_edges = advanced_simd_advanced_edge_detection(_image.view(), 1.0, 0.1, 0.3)?;
+    let advanced_edges = advanced_simd_advanced_edge_detection(image.view(), 1.0, 0.1, 0.3)?;
     println!("    Advanced edge detection with multi-directional gradients completed");
 
     Ok(())
@@ -510,7 +510,7 @@ fn demonstrate_backends(image: &Array2<f64>) -> NdimageResult<()> {
 
     // 2. Auto backend selection
     println!("  • Automatic backend selection:");
-    let auto_backend = auto_backend(&[_image.nrows(), image.ncols()])?;
+    let auto_backend = auto_backend(&[image.nrows(), image.ncols()])?;
     println!("    Auto-selected backend: {:?}", auto_backend);
 
     #[cfg(feature = "cuda")]
@@ -559,11 +559,11 @@ fn demonstrate_streaming() -> NdimageResult<()> {
 fn demonstrate_memory_management(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🧠 Memory Management");
 
-    use crate::memory__management::*;
+    use crate::memory_management::*;
 
     // 1. Memory estimation
     println!("  • Memory usage estimation:");
-    let memory_needed = estimate_memory_usage(&[_image.nrows(), image.ncols()], 8)?; // 8 bytes per f64
+    let memory_needed = estimate_memory_usage(&[image.nrows(), image.ncols()], 8)?; // 8 bytes per f64
     println!(
         "    Estimated memory for processing: {:.2} MB",
         memory_needed as f64 / 1_000_000.0
@@ -602,7 +602,7 @@ fn demonstrate_visualization(image: &Array2<f64>) -> NdimageResult<()> {
     // 2. Statistical plots
     println!("  • Statistical visualization:");
     let plot_config = PlotConfig::default();
-    let histogram_data = plot_histogram(&_image.view(), 50, plot_config.clone())?;
+    let histogram_data = plot_histogram(&image.view(), 50, plot_config.clone())?;
     println!("    Histogram data generated for 50 bins");
 
     // 3. Report generation

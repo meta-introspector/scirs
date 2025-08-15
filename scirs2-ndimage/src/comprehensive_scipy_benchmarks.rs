@@ -17,7 +17,7 @@ use crate::filters::BorderMode;
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{median_filter, uniform_filter};
-use crate::performance__profiler::{PerformanceProfiler, ProfilerConfig};
+use crate::performance_profiler::{PerformanceProfiler, ProfilerConfig};
 
 /// Comprehensive benchmark suite for comparing with SciPy
 pub struct SciPyBenchmarkSuite {
@@ -303,10 +303,10 @@ impl SciPyBenchmarkSuite {
         let input_data = self.generate_test_data::<T>(array_size, operation);
 
         // Benchmark scirs2-ndimage implementation
-        let scirs2_metrics = self.benchmark_scirs2_operation::<T>(operation, &input_data)?;
+        let scirs2metrics = self.benchmark_scirs2_operation::<T>(operation, &input_data)?;
 
         // Benchmark SciPy implementation (if enabled)
-        let scipy_metrics = if self.config.enable_scipy_comparison {
+        let scipymetrics = if self.config.enable_scipy_comparison {
             self.benchmark_scipy_operation::<T>(operation, &input_data)
                 .ok()
         } else {
@@ -314,19 +314,19 @@ impl SciPyBenchmarkSuite {
         };
 
         // Calculate performance ratio
-        let performance_ratio = if let Some(ref scipy_perf) = scipy_metrics {
-            Some(scipy_perf.avg_time.as_secs_f64() / scirs2_metrics.avg_time.as_secs_f64())
+        let performance_ratio = if let Some(ref scipy_perf) = scipymetrics {
+            Some(scipy_perf.avg_time.as_secs_f64() / scirs2metrics.avg_time.as_secs_f64())
         } else {
             None
         };
 
         // Memory comparison
         let memory_comparison = MemoryComparison {
-            scirs2_memory: scirs2_metrics.peak_memory,
-            scipy_memory: scipy_metrics.as_ref().map(|m| m.peak_memory),
-            efficiency_ratio: scipy_metrics.as_ref().map(|scipy_perf| {
-                scipy_perf.peak_memory as f64 / scirs2_metrics.peak_memory as f64
-            }),
+            scirs2_memory: scirs2metrics.peak_memory,
+            scipy_memory: scipymetrics.as_ref().map(|m| m.peak_memory),
+            efficiency_ratio: scipymetrics
+                .as_ref()
+                .map(|scipy_perf| scipy_perf.peak_memory as f64 / scirs2metrics.peak_memory as f64),
         };
 
         Ok(OperationBenchmarkResult {
@@ -337,8 +337,8 @@ impl SciPyBenchmarkSuite {
             } else {
                 DataType::F64
             },
-            scirs2_performance: scirs2_metrics,
-            scipy_performance: scipy_metrics,
+            scirs2_performance: scirs2metrics,
+            scipy_performance: scipymetrics,
             performance_ratio,
             memory_comparison,
         })
@@ -383,7 +383,7 @@ impl SciPyBenchmarkSuite {
             memory_usages.push(end_memory.saturating_sub(start_memory));
         }
 
-        Ok(self.calculate_performance_metrics(timings, memory_usages, input_data.len()))
+        Ok(self.calculate_performancemetrics(timings, memory_usages, input_data.len()))
     }
 
     fn execute_scirs2_operation<T>(
@@ -656,7 +656,7 @@ if __name__ == "__main__":
         data
     }
 
-    fn calculate_performance_metrics(
+    fn calculate_performancemetrics(
         &self,
         timings: Vec<Duration>,
         memory_usages: Vec<usize>,

@@ -27,7 +27,7 @@ use num_traits::{Float, NumAssign};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__ndimage::features::harris_corners;
+/// use scirs2_ndimage::features::harris_corners;
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -157,7 +157,7 @@ pub fn harris_corners(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__ndimage::features::fast_corners;
+/// use scirs2_ndimage::features::fast_corners;
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],

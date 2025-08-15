@@ -28,7 +28,7 @@
 //! - Quantum anomaly detection and optimization feedback
 
 use ndarray::{Array1, Array2, Array3, ArrayView2};
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     enhanced_meta_learning_with_temporal_fusion,
     // Latest Advanced enhancements
     enhanced_quantum_consciousness_evolution,
@@ -61,11 +61,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Create test dataset with complex patterns
-    let test_image = create_complex_test_image();
+    let testimage = create_complex_testimage();
     println!(
         "📸 Created test image: {}x{}",
-        test_image.nrows(),
-        test_image.ncols()
+        testimage.nrows(),
+        testimage.ncols()
     );
 
     // Initialize advanced Advanced configuration
@@ -87,17 +87,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Phase 1: Demonstrate Advanced Quantum Consciousness Evolution
-    demonstrate_consciousness_evolution(&test_image, &config, &mut consciousness_evolution)?;
+    demonstrate_consciousness_evolution(&testimage, &config, &mut consciousness_evolution)?;
 
     // Phase 2: Demonstrate Enhanced Meta-Learning with Temporal Fusion
-    demonstrate_enhanced_meta_learning(&test_image, &config, &mut meta_learning_system)?;
+    demonstrate_enhanced_meta_learning(&testimage, &config, &mut meta_learning_system)?;
 
     // Phase 3: Demonstrate Quantum Resource Scheduling Optimization
     demonstrate_quantum_resource_scheduling(&config, &mut resource_scheduler)?;
 
     // Phase 4: Integrated Advanced Fusion Processing
     demonstrate_integrated_advanced_processing(
-        &test_image,
+        &testimage,
         &config,
         &mut consciousness_evolution,
         &mut meta_learning_system,
@@ -132,16 +132,16 @@ fn demonstrate_consciousness_evolution(
     let start_time = Instant::now();
 
     // Create advanced-dimensional features for consciousness processing
-    let advanced_features = create_mock_advanced_features(image, config);
+    let advancedfeatures = create_mock_advancedfeatures(image, config);
 
     // Initialize Advanced state
-    let mut advanced_state = create_mock_advanced_state(image.dim(), config);
+    let mut advancedstate = create_mock_advancedstate(image.dim(), config);
 
     // Process through quantum consciousness _evolution
     let consciousness_output = enhanced_quantum_consciousness_evolution(
         image.view(),
-        &advanced_features,
-        &mut advanced_state,
+        &advancedfeatures,
+        &mut advancedstate,
         config,
         consciousness_evolution,
     )?;
@@ -151,9 +151,7 @@ fn demonstrate_consciousness_evolution(
     // Analyze consciousness _evolution results
     let avg_consciousness = consciousness_output.mean().unwrap_or(0.0);
     let consciousness_variance = consciousness_output.variance().mean().unwrap_or(0.0);
-    let emergence_strength = consciousness_evolution
-        .complexity_metrics
-        .emergence_strength;
+    let emergence_strength = consciousness_evolution.complexitymetrics.emergence_strength;
     let evolution_rate = consciousness_evolution.evolution_rate;
 
     println!("   📊 Consciousness Analysis Results:");
@@ -238,14 +236,14 @@ fn demonstrate_enhanced_meta_learning(
     let causal_response = create_mock_response(image.dim());
 
     // Initialize Advanced state
-    let mut advanced_state = create_mock_advanced_state(image.dim(), config);
+    let mut advancedstate = create_mock_advancedstate(image.dim(), config);
 
     // Process through enhanced meta-learning
     let meta_learning_output = enhanced_meta_learning_with_temporal_fusion(
         &consciousness_response,
         &neural_response,
         &causal_response,
-        &mut advanced_state,
+        &mut advancedstate,
         config,
         meta_learning_system,
         "image_processing_task",
@@ -300,8 +298,8 @@ fn demonstrate_enhanced_meta_learning(
             "      Level {}: abstraction={:.2}, learning_rate={:.4}, stability={:.3}",
             i,
             level.abstraction_degree,
-            level.performance_metrics.learning_rate,
-            level.performance_metrics.stability
+            level.performancemetrics.learning_rate,
+            level.performancemetrics.stability
         );
     }
 
@@ -321,14 +319,14 @@ fn demonstrate_quantum_resource_scheduling(
     let start_time = Instant::now();
 
     // Create mock Advanced state
-    let mut advanced_state = create_mock_advanced_state((256, 256), config);
+    let mut advancedstate = create_mock_advancedstate((256, 256), config);
 
     // Create workload characteristics
     let workload = create_mock_workload_characteristics();
 
     // Perform quantum resource scheduling optimization
     let scheduling_decision = quantum_aware_resource_scheduling_optimization(
-        &mut advanced_state,
+        &mut advancedstate,
         config,
         resource_scheduler,
         &workload,
@@ -339,8 +337,8 @@ fn demonstrate_quantum_resource_scheduling(
     // Analyze scheduling results
     let coherence_preservation = scheduling_decision.quantum_coherence_preservation;
     let performance_improvement = scheduling_decision.estimated_performance_improvement;
-    let quantum_speedup = scheduling_decision.performance_metrics.quantum_speedup;
-    let resource_efficiency = scheduling_decision.performance_metrics.resource_efficiency;
+    let quantum_speedup = scheduling_decision.performancemetrics.quantum_speedup;
+    let resource_efficiency = scheduling_decision.performancemetrics.resource_efficiency;
 
     println!("   📊 Resource Scheduling Analysis Results:");
     println!(
@@ -442,21 +440,21 @@ fn demonstrate_integrated_advanced_processing(
     let start_time = Instant::now();
 
     // Initialize Advanced state
-    let mut advanced_state = create_mock_advanced_state(image.dim(), config);
+    let mut advancedstate = create_mock_advancedstate(image.dim(), config);
 
     // Perform integrated Advanced fusion processing
-    let (processed_image, final_state) =
-        fusion_processing(image.view(), config, Some(advanced_state))?;
+    let (processedimage, finalstate) =
+        fusion_processing(image.view(), config, Some(advancedstate))?;
 
     let duration = start_time.elapsed();
 
     // Analyze integrated processing results
     let original_mean = image.mean().unwrap_or(0.0);
-    let processed_mean = processed_image.mean().unwrap_or(0.0);
+    let processed_mean = processedimage.mean().unwrap_or(0.0);
     let improvement_ratio = processed_mean / original_mean.max(1e-10);
 
-    let final_consciousness_level = final_state.efficiency_metrics.quality_efficiency;
-    let final_efficiency = final_state.efficiency_metrics.ops_per_second;
+    let final_consciousness_level = finalstate.efficiencymetrics.quality_efficiency;
+    let final_efficiency = finalstate.efficiencymetrics.ops_per_second;
 
     println!("   📊 Integrated Processing Results:");
     println!("      Original image mean: {:.4}", original_mean);
@@ -473,9 +471,7 @@ fn demonstrate_integrated_advanced_processing(
     println!("   🎯 System Convergence Metrics:");
     println!(
         "      Consciousness emergence: {:.4}",
-        consciousness_evolution
-            .complexity_metrics
-            .emergence_strength
+        consciousness_evolution.complexitymetrics.emergence_strength
     );
     println!("      Meta-learning adaptation: Active");
     println!(
@@ -538,7 +534,7 @@ fn analyze_advanced_performance(
 // Helper functions for creating mock data and configurations
 
 #[allow(dead_code)]
-fn create_complex_test_image() -> Array2<f64> {
+fn create_complex_testimage() -> Array2<f64> {
     let size = 128;
     let mut image = Array2::zeros((size, size));
 
@@ -580,7 +576,7 @@ fn create_advanced_advanced_config() -> AdvancedConfig {
             coherence_time: 100.0,
             quantum_bio_coupling: 0.5,
             decoherence_rate: 0.005,
-            quantum_states_per_neuron: 6,
+            quantumstates_per_neuron: 6,
             consolidation_cycles: 15,
             attention_threshold: 0.8,
         },
@@ -598,14 +594,14 @@ fn create_advanced_advanced_config() -> AdvancedConfig {
 }
 
 #[allow(dead_code)]
-fn create_mock_advanced_features(image: &Array2<f64>, config: &AdvancedConfig) -> Array3<f64> {
+fn create_mock_advancedfeatures(image: &Array2<f64>, config: &AdvancedConfig) -> Array3<f64> {
     // Simplified mock advanced-features for demonstration
     let (height, width) = image.dim();
     Array3::zeros((height, width, config.advanced_dimensions))
 }
 
 #[allow(dead_code)]
-fn create_mock_advanced_state(shape: (usize, usize), config: &AdvancedConfig) -> AdvancedState {
+fn create_mock_advancedstate(shape: (usize, usize), config: &AdvancedConfig) -> AdvancedState {
     // Create a simplified mock state for demonstration
     let mut state = AdvancedState {
         consciousness_amplitudes: Array3::zeros((shape.0, shape.1, config.consciousness_depth)),
@@ -626,17 +622,17 @@ fn create_mock_advanced_state(shape: (usize, usize), config: &AdvancedConfig) ->
         )),
         temporal_memory: std::collections::VecDeque::new(),
         causal_graph: std::collections::BTreeMap::new(),
-        advanced_features: Array3::zeros((shape.0, shape.1, config.advanced_dimensions)),
+        advancedfeatures: Array3::zeros((shape.0, shape.1, config.advanced_dimensions)),
         resource_allocation: scirs2,
         _ndimage: fusion,
         core: ResourceState {
-            cpu_allocation: vec![0.7; num, _cpus::get()],
+            cpu_allocation: vec![0.7; num_cpus::get()],
             memory_allocation: 0.6,
             gpu_allocation: Some(0.8),
             quantum_allocation: Some(0.5),
-            allocation_history: std::collections::VecDeque::new(),
+            allocationhistory: std::collections::VecDeque::new(),
         },
-        efficiency_metrics: scirs2,
+        efficiencymetrics: scirs2,
         _ndimage: fusion,
         core: EfficiencyMetrics {
             ops_per_second: 10000.0,
@@ -706,7 +702,7 @@ fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
 fn analyze_consciousness_insights(evolution: &QuantumConsciousnessEvolution) -> Vec<String> {
     let mut insights = Vec::new();
 
-    if evolution.complexity_metrics.emergence_strength > 0.7 {
+    if evolution.complexitymetrics.emergence_strength > 0.7 {
         insights.push(
             "High consciousness emergence detected - system showing advanced awareness".to_string(),
         );
@@ -718,7 +714,7 @@ fn analyze_consciousness_insights(evolution: &QuantumConsciousnessEvolution) -> 
         );
     }
 
-    if evolution.coherence_optimizer.performance_history.len() > 10 {
+    if evolution.coherence_optimizer.performancehistory.len() > 10 {
         insights.push(
             "Extensive coherence optimization history - system learning effectively".to_string(),
         );
@@ -726,7 +722,7 @@ fn analyze_consciousness_insights(evolution: &QuantumConsciousnessEvolution) -> 
 
     insights.push(format!(
         "Consciousness complexity: {:.3} (integrated information)",
-        evolution.complexity_metrics.integrated_information
+        evolution.complexitymetrics.integrated_information
     ));
 
     insights

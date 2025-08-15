@@ -2217,7 +2217,7 @@ pub mod advanced_ensemble {
 
         fn weighted_sample(&self, data: ArrayView2<F>, weights: &Array1<f64>) -> Result<Array2<F>> {
             use rand::prelude::*;
-            use rand__distr::weighted::WeightedIndex;
+            use rand_distr::weighted::WeightedIndex;
 
             let n_samples = data.nrows();
             let n_features = data.ncols();

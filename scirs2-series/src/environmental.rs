@@ -7,8 +7,8 @@
 use crate::error::{Result, TimeSeriesError};
 use ndarray::{Array1, Array2};
 use scirs2_core::validation::check_positive;
-use std::collections::HashMap;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 /// Climate data anomaly detection methods
 #[derive(Debug, Clone)]
@@ -514,7 +514,8 @@ impl ClimateIndices {
     /// Calculate Palmer Drought Severity Index (PDSI)
     pub fn palmer_drought_severity_index(
         precipitation: &Array1<f64>,
-        temperature: &Array1<f64>, _latitude: f64,
+        temperature: &Array1<f64>,
+        _latitude: f64,
     ) -> Result<Array1<f64>> {
         if precipitation.len() != temperature.len() {
             return Err(TimeSeriesError::InvalidInput(

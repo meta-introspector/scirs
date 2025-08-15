@@ -104,13 +104,13 @@ where
         // Parallel processing across batch
         let indices: Vec<usize> = (0..batch_size).collect();
 
-        let process_image = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
+        let processimage = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
             let img = batch.index_axis(Axis(0), idx).to_owned();
             convolve2d_optimized(&img, &kernel, mode, cval)
                 .map_err(|e| scirs2_core::CoreError::Parallel(e.to_string()))
         };
 
-        let results = parallel_map_result(&indices, process_image)?;
+        let results = parallel_map_result(&indices, processimage)?;
 
         // Combine results
         let mut output = Array3::zeros((batch_size, height, width));
@@ -165,13 +165,13 @@ where
         // Parallel processing
         let indices: Vec<usize> = (0..batch_size).collect();
 
-        let process_image = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
+        let processimage = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
             let img = batch.index_axis(Axis(0), idx).to_owned();
             crate::filters::median::median_filter(&img, size, Some(mode))
                 .map_err(|e| scirs2_core::CoreError::Parallel(e.to_string()))
         };
 
-        let results = parallel_map_result(&indices, process_image)?;
+        let results = parallel_map_result(&indices, processimage)?;
 
         // Combine results
         let mut output = Array3::zeros((batch_size, height, width));
@@ -262,13 +262,13 @@ where
         // Parallel processing
         let indices: Vec<usize> = (0..chunk_size).collect();
 
-        let process_image = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
+        let processimage = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
             let img = chunk.index_axis(Axis(0), idx).to_owned();
             convolve2d_optimized(&img, kernel, mode, cval)
                 .map_err(|e| scirs2_core::CoreError::Parallel(e.to_string()))
         };
 
-        let results = parallel_map_result(&indices, process_image)?;
+        let results = parallel_map_result(&indices, processimage)?;
 
         // Combine results
         let mut output = Array3::zeros((chunk_size, height, width));
@@ -335,12 +335,12 @@ where
         // Parallel processing
         let indices: Vec<usize> = (0..batch_size).collect();
 
-        let process_image = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
+        let processimage = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
             let img = batch.index_axis(Axis(0), idx).to_owned();
             process_fn(&img).map_err(|e| scirs2_core::CoreError::Parallel(e.to_string()))
         };
 
-        let results = parallel_map_result(&indices, process_image)?;
+        let results = parallel_map_result(&indices, processimage)?;
 
         // Combine results
         let mut output = Array3::zeros((batch_size, height, width));
@@ -387,12 +387,12 @@ where
         // Parallel processing
         let indices: Vec<usize> = (0..batch_size).collect();
 
-        let process_image = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
+        let processimage = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
             let img = batch.index_axis(Axis(0), idx).to_owned();
             filter_fn(&img).map_err(|e| scirs2_core::CoreError::Parallel(e.to_string()))
         };
 
-        let results = parallel_map_result(&indices, process_image)?;
+        let results = parallel_map_result(&indices, processimage)?;
 
         // Combine results
         let mut output = Array3::zeros((batch_size, height, width));
@@ -457,7 +457,7 @@ where
     let neg_two = safe_i32_to_float(-2)?;
     let two = safe_i32_to_float(2)?;
 
-    let kernel_x = Array2::fromshape_vec(
+    let kernel_x = Array2::from_shape_vec(
         (3, 3),
         vec![
             neg_one,
@@ -475,7 +475,7 @@ where
         NdimageError::ComputationError(format!("Failed to create Sobel X kernel: {}", e))
     })?;
 
-    let kernel_y = Array2::fromshape_vec(
+    let kernel_y = Array2::from_shape_vec(
         (3, 3),
         vec![
             neg_one,
@@ -531,7 +531,7 @@ mod tests {
     fn test_convolve_batch() {
         let batch = arr3(&[[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]]);
 
-        let kernel = Array2::fromshape_vec((2, 2), vec![1.0, 0.0, 0.0, 1.0])
+        let kernel = Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 0.0, 1.0])
             .expect("kernel creation should succeed");
 
         let config = BatchConfig {

@@ -13,8 +13,8 @@ pub mod kernels;
 #[cfg(feature = "cuda")]
 pub mod cuda;
 
-pub use device__detection::{DeviceCapability, DeviceManager, MemoryManager};
-pub use gpu_acceleration__framework::{
+pub use device_detection::{DeviceCapability, DeviceManager, MemoryManager};
+pub use gpu_acceleration_framework::{
     CompiledKernel, GpuAccelerationManager, GpuKernelCache, GpuMemoryPool, GpuPerformanceReport,
     KernelPerformanceStats, MemoryPoolConfig, MemoryPoolStatistics,
 };
@@ -103,7 +103,7 @@ where
 
     /// Check if this operation benefits from GPU acceleration
     fn benefits_from_gpu(&self, arraysize: usize) -> bool {
-        array_size > 50_000 // Default threshold
+        arraysize > 50_000 // Default threshold
     }
 }
 
@@ -111,13 +111,13 @@ where
 pub struct BackendExecutor {
     config: BackendConfig,
     #[cfg(feature = "gpu")]
-    gpu_context: Option<Arc<dyn GpuContext>>,
+    gpucontext: Option<Arc<dyn GpuContext>>,
 }
 
 impl BackendExecutor {
     pub fn new(config: BackendConfig) -> NdimageResult<Self> {
         #[cfg(feature = "gpu")]
-        let gpu_context = match config.backend {
+        let gpucontext = match config.backend {
             #[cfg(feature = "cuda")]
             Backend::Cuda => Some(Arc::new(CudaContext::new(_config.device_id)?)),
             #[cfg(feature = "opencl")]
@@ -130,7 +130,7 @@ impl BackendExecutor {
         Ok(Self {
             config,
             #[cfg(feature = "gpu")]
-            gpu_context,
+            gpucontext,
         })
     }
 
@@ -170,9 +170,9 @@ impl BackendExecutor {
         match self.config.backend {
             Backend::Auto => {
                 // Automatic selection based on heuristics
-                if array_size < self.config.gpu_threshold {
+                if arraysize < self.config.gpu_threshold {
                     Ok(Backend::Cpu)
-                } else if op.benefits_from_gpu(array_size) {
+                } else if op.benefits_from_gpu(arraysize) {
                     // Check available GPU backends
                     #[cfg(feature = "cuda")]
                     if self.is_cuda_available() {
@@ -246,7 +246,7 @@ impl<T: Float + FromPrimitive + Debug + Clone> GaussianFilterOp<T> {
 impl<T, D> BackendOp<T, D> for GaussianFilterOp<T>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     fn execute_cpu(&self, input: &ArrayView<T, D>) -> NdimageResult<Array<T, D>> {
         // Call the existing CPU implementation
@@ -287,7 +287,8 @@ where
 #[allow(dead_code)]
 fn cuda_gaussian_filter<T, D>(
     input: &ArrayView<T, D>,
-    sigma: &[T], _truncate: Option<T>,
+    sigma: &[T],
+    _truncate: Option<T>,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,

@@ -43,7 +43,7 @@
 //! - Troubleshooting tips
 
 use ndarray::{s, Array2, Array3, ArrayView2};
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     error::NdimageResult, features::*, filters::*, interpolation::*, measurements::*,
     morphology::*, segmentation::*,
 };
@@ -90,13 +90,13 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::filters::median_filter;");
+    println!("use scirs2_ndimage::filters::median_filter;");
     println!();
     println!("// Quick fix for light noise");
-    println!("let cleaned = median_filter(&noisy_image.view(), Some(&[3, 3]), None, None)?;");
+    println!("let cleaned = median_filter(&noisyimage.view(), Some(&[3, 3]), None, None)?;");
     println!();
     println!("// Stronger cleaning for heavy noise");
-    println!("let cleaned = median_filter(&noisy_image.view(), Some(&[5, 5]), None, None)?;");
+    println!("let cleaned = median_filter(&noisyimage.view(), Some(&[5, 5]), None, None)?;");
     println!("```");
     println!();
     println!("💡 Tips:");
@@ -112,16 +112,16 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::filters::gaussian_filter;");
+    println!("use scirs2_ndimage::filters::gaussian_filter;");
     println!();
     println!("// Light smoothing (preserves details)");
-    println!("let denoised = gaussian_filter(&noisy_image, &[0.8, 0.8], None, None, None)?;");
+    println!("let denoised = gaussian_filter(&noisyimage, &[0.8, 0.8], None, None, None)?;");
     println!();
     println!("// Medium smoothing");
-    println!("let denoised = gaussian_filter(&noisy_image, &[1.5, 1.5], None, None, None)?;");
+    println!("let denoised = gaussian_filter(&noisyimage, &[1.5, 1.5], None, None, None)?;");
     println!();
     println!("// Heavy smoothing (removes fine details)");
-    println!("let denoised = gaussian_filter(&noisy_image, &[3.0, 3.0], None, None, None)?;");
+    println!("let denoised = gaussian_filter(&noisyimage, &[3.0, 3.0], None, None, None)?;");
     println!("```");
     println!();
     println!("💡 Tips:");
@@ -137,21 +137,21 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::filters::bilateral_filter;");
+    println!("use scirs2_ndimage::filters::bilateral_filter;");
     println!();
     println!("// Balanced noise reduction and edge preservation");
     println!("let cleaned = bilateral_filter(");
-    println!("    noisy_image.view(),");
+    println!("    noisyimage.view(),");
     println!("    2.0,    // Spatial sigma (neighborhood size)");
     println!("    0.1,    // Intensity sigma (edge threshold)");
     println!("    Some(5) // Window size");
     println!(")?;");
     println!();
     println!("// For high-contrast images");
-    println!("let cleaned = bilateral_filter(noisy_image.view(), 1.5, 0.2, Some(5))?;");
+    println!("let cleaned = bilateral_filter(noisyimage.view(), 1.5, 0.2, Some(5))?;");
     println!();
     println!("// For low-contrast images");
-    println!("let cleaned = bilateral_filter(noisy_image.view(), 3.0, 0.05, Some(7))?;");
+    println!("let cleaned = bilateral_filter(noisyimage.view(), 3.0, 0.05, Some(7))?;");
     println!("```");
     println!();
     println!("💡 Tips:");
@@ -167,11 +167,11 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::morphology::{{binary_closing, generate_binary_structure}};");
+    println!("use scirs2_ndimage::morphology::{{binary_closing, generate_binary_structure}};");
     println!();
     println!("// For binary images - fill small holes");
     println!("let structure = generate_binary_structure(2, 1)?;  // 4-connected");
-    println!("let fixed = binary_closing(&broken_image.view(), Some(&structure.view()), None, None, None)?;");
+    println!("let fixed = binary_closing(&brokenimage.view(), Some(&structure.view()), None, None, None)?;");
     println!();
     println!("// For grayscale images - interpolate missing values");
     println!("let mask = missing_pixels_mask;  // 1 where pixels are missing");
@@ -197,10 +197,10 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
     println!("    image.mapv(|x| ((x - mean) * factor + mean).clamp(0.0, 1.0))");
     println!("}}");
     println!();
-    println!("let enhanced = enhance_contrast(&dull_image, 1.5);  // 50% more contrast");
+    println!("let enhanced = enhance_contrast(&dullimage, 1.5);  // 50% more contrast");
     println!();
     println!("// Histogram equalization using rank operations");
-    println!("use scirs2__ndimage::filters::rank_filter;");
+    println!("use scirs2_ndimage::filters::rank_filter;");
     println!(
         "let local_rank = rank_filter(&image.view(), None, 0.5, None, None)?;  // Local median"
     );
@@ -225,7 +225,7 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::{{features::canny, measurements::region_properties}};");
+    println!("use scirs2_ndimage::{{features::canny, measurements::region_properties}};");
     println!();
     println!("// Method 1: Edge-based circle detection");
     println!("let edges = canny(image.view(), 1.0, 0.1, 0.3, None)?;");
@@ -255,7 +255,7 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::{{segmentation::{{threshold_binary, otsu_threshold}}, morphology::label}};");
+    println!("use scirs2_ndimage::{{segmentation::{{threshold_binary, otsu_threshold}}, morphology::label}};");
     println!();
     println!("// Automatic thresholding");
     println!("let binary = otsu_threshold(&image.view())?;");
@@ -289,7 +289,7 @@ fn object_detection_recipes() -> NdimageResult<()> {
 
     println!("```rust");
     println!(
-        "use scirs2__ndimage::{{morphology::distance_transform_edt, segmentation::watershed}};"
+        "use scirs2_ndimage::{{morphology::distance_transform_edt, segmentation::watershed}};"
     );
     println!("use ndarray::IxDyn;");
     println!();
@@ -321,7 +321,7 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::features::harris_corners;");
+    println!("use scirs2_ndimage::features::harris_corners;");
     println!();
     println!("// Method 1: Corner-based detection");
     println!("let corners = harris_corners(image.view(), 0.04, 3, 0.01, None)?;");
@@ -360,10 +360,10 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::morphology::binary_hit_or_miss;");
+    println!("use scirs2_ndimage::morphology::binary_hit_or_miss;");
     println!();
     println!("// Create template for your target shape");
-    println!("let template = Array2::fromshape_vec((5, 5), vec![");
+    println!("let template = Array2::from_shape_vec((5, 5), vec![");
     println!("    0, 1, 1, 1, 0,");
     println!("    1, 1, 1, 1, 1,");
     println!("    1, 1, 0, 1, 1,  // Shape with hole in center");
@@ -400,7 +400,7 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::{{morphology::label, measurements::region_properties}};");
+    println!("use scirs2_ndimage::{{morphology::label, measurements::region_properties}};");
     println!();
     println!("// Label objects");
     println!("let binary = threshold_binary(&image.view(), 0.5)?;");
@@ -539,7 +539,7 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::filters::{{generic_filter, sobel}};");
+    println!("use scirs2_ndimage::filters::{{generic_filter, sobel}};");
     println!();
     println!("// Method 1: Local variance (texture roughness)");
     println!("let variance_filter = |window: &ArrayView2<f64>| -> f64 {{");
@@ -581,7 +581,7 @@ fn measurement_recipes() -> NdimageResult<()> {
 
     println!("```rust");
     println!("// Statistical comparison");
-    println!("fn compare_images(img1: &Array2<f64>, img2: &Array2<f64>) -> ImageComparison {{");
+    println!("fn compareimages(img1: &Array2<f64>, img2: &Array2<f64>) -> ImageComparison {{");
     println!("    assert_eq!(_img1.dim(), img2.dim(), \"Images must have same dimensions\");");
     println!("    ");
     println!("    // Mean Squared Error");
@@ -610,7 +610,7 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!("    ImageComparison {{ mse, mae, correlation }}");
     println!("}}");
     println!();
-    println!("let comparison = compare_images(&image1, &image2);");
+    println!("let comparison = compareimages(&image1, &image2);");
     println!("println!(\"MSE: {{:.6}} (lower = more similar)\", comparison.mse);");
     println!("println!(\"MAE: {{:.6}} (lower = more similar)\", comparison.mae);");
     println!("println!(\"Correlation: {{:.3}} (1.0 = identical, 0.0 = uncorrelated)\", comparison.correlation);");
@@ -636,7 +636,7 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::interpolation::{{rotate, InterpolationOrder, BoundaryMode}};");
+    println!("use scirs2_ndimage::interpolation::{{rotate, InterpolationOrder, BoundaryMode}};");
     println!();
     println!("// Basic rotation");
     println!("let rotated = rotate(");
@@ -686,7 +686,7 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::interpolation::{{zoom, InterpolationOrder, BoundaryMode}};");
+    println!("use scirs2_ndimage::interpolation::{{zoom, InterpolationOrder, BoundaryMode}};");
     println!();
     println!("// Uniform scaling (preserve aspect ratio)");
     println!("let scale_factor = 2.0;  // 2x larger");
@@ -730,16 +730,16 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::interpolation::{{affine_transform, InterpolationOrder, BoundaryMode}};");
+    println!("use scirs2_ndimage::interpolation::{{affine_transform, InterpolationOrder, BoundaryMode}};");
     println!();
     println!("// Simple affine correction (shear + scale)");
-    println!("let affine_matrix = Array2::fromshape_vec((2, 3), vec![");
+    println!("let affine_matrix = Array2::from_shape_vec((2, 3), vec![");
     println!("    1.0,  0.2,  0.0,   // Scale X + shear + translation X");
     println!("    -0.1, 1.0,  0.0,   // Shear + scale Y + translation Y");
     println!("])?;");
     println!();
     println!("let corrected = affine_transform(");
-    println!("    &distorted_image.view(),");
+    println!("    &distortedimage.view(),");
     println!("    &affine_matrix.view(),");
     println!("    InterpolationOrder::Linear,");
     println!("    BoundaryMode::Constant,");
@@ -752,7 +752,7 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!("let dst_corners = [(0.0, 0.0), (150.0, 0.0), (150.0, 100.0), (0.0, 100.0)];");
     println!();
     println!("// Calculate perspective transform matrix (simplified)");
-    println!("let perspective_corrected = apply_perspective_correction(&distorted_image, &src_corners, &dst_corners)?;");
+    println!("let perspective_corrected = apply_perspective_correction(&distortedimage, &src_corners, &dst_corners)?;");
     println!("```");
     println!();
     println!("💡 Tips:");
@@ -792,8 +792,8 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!("}}");
     println!();
     println!("// Apply registration");
-    println!("let (shift_y, shift_x) = find_translation(&reference_image, &moving_image);");
-    println!("let registered = shift(&moving_image.view(), &[shift_y, shift_x], ");
+    println!("let (shift_y, shift_x) = find_translation(&referenceimage, &movingimage);");
+    println!("let registered = shift(&movingimage.view(), &[shift_y, shift_x], ");
     println!(
         "                      InterpolationOrder::Linear, BoundaryMode::Constant, Some(0.0))?;"
     );
@@ -815,10 +815,10 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::filters::gaussian_filter;");
+    println!("use scirs2_ndimage::filters::gaussian_filter;");
     println!();
     println!("fn create_pyramid(image: &Array2<f64>, levels: usize) -> NdimageResult<Vec<Array2<f64>>> {{");
-    println!("    let mut pyramid = vec![_image.clone()];");
+    println!("    let mut pyramid = vec![image.clone()];");
     println!("    let mut current = image.clone();");
     println!("    ");
     println!("    for level in 1..levels {{");
@@ -873,31 +873,29 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!();
 
     println!("```rust");
-    println!("use scirs2__ndimage::filters::{{gaussian_filter, laplace}};");
+    println!("use scirs2_ndimage::filters::{{gaussian_filter, laplace}};");
     println!();
     println!("// Method 1: Unsharp masking");
     println!("fn unsharp_mask(image: &Array2<f64>, sigma: f64, strength: f64) -> NdimageResult<Array2<f64>> {{");
     println!("    // Create blurred version");
-    println!("    let blurred = gaussian_filter(_image, &[sigma, sigma], None, None, None)?;");
+    println!("    let blurred = gaussian_filter(image, &[sigma, sigma], None, None, None)?;");
     println!("    ");
     println!("    // Calculate mask (difference between original and blurred)");
-    println!("    let mask = _image - &blurred;");
+    println!("    let mask = image - &blurred;");
     println!("    ");
     println!("    // Add weighted mask back to original");
-    println!("    let sharpened = _image + &(&mask * strength);");
+    println!("    let sharpened = image + &(&mask * strength);");
     println!("    ");
     println!("    // Clamp values to valid range");
     println!("    Ok(sharpened.mapv(|x| x.clamp(0.0, 1.0)))");
     println!("}}");
     println!();
-    println!("let sharpened = unsharp_mask(&blurry_image, 1.0, 0.5)?;  // Moderate sharpening");
-    println!(
-        "let sharp_aggressive = unsharp_mask(&blurry_image, 0.5, 1.0)?;  // Strong sharpening"
-    );
+    println!("let sharpened = unsharp_mask(&blurryimage, 1.0, 0.5)?;  // Moderate sharpening");
+    println!("let sharp_aggressive = unsharp_mask(&blurryimage, 0.5, 1.0)?;  // Strong sharpening");
     println!();
     println!("// Method 2: Laplacian sharpening");
-    println!("let laplacian = laplace(&blurry_image.view(), None, None)?;");
-    println!("let sharpened_lap = &blurry_image - &(&laplacian * 0.3);");
+    println!("let laplacian = laplace(&blurryimage.view(), None, None)?;");
+    println!("let sharpened_lap = &blurryimage - &(&laplacian * 0.3);");
     println!("let sharpened_lap = sharpened_lap.mapv(|x| x.clamp(0.0, 1.0));");
     println!("```");
     println!();
@@ -916,22 +914,24 @@ fn enhancement_recipes() -> NdimageResult<()> {
 
     println!("```rust");
     println!("// Method 1: Rolling ball background subtraction");
-    println!("fn remove_background(_image: &Array2<f64>, backgroundsize: f64) -> NdimageResult<Array2<f64>> {{");
+    println!("fn remove_background(image: &Array2<f64>, backgroundsize: f64) -> NdimageResult<Array2<f64>> {{");
     println!("    // Estimate background with heavy smoothing");
-    println!("    let background = gaussian_filter(_image, &[background_size, background_size], None, None, None)?;");
+    println!("    let background = gaussian_filter(image, &[background_size, background_size], None, None, None)?;");
     println!("    ");
     println!("    // Subtract background");
-    println!("    let corrected = _image - &background;");
+    println!("    let corrected = image - &background;");
     println!("    ");
     println!("    // Add back mean intensity to maintain brightness");
     println!("    let mean_intensity = image.sum() / image.len() as f64;");
     println!("    Ok(corrected.mapv(|x| (x + mean_intensity).clamp(0.0, 1.0)))");
     println!("}}");
     println!();
-    println!("let corrected = remove_background(&uneven_image, 50.0)?;  // Remove large-scale variations");
+    println!(
+        "let corrected = remove_background(&unevenimage, 50.0)?;  // Remove large-scale variations"
+    );
     println!();
     println!("// Method 2: Top-hat filtering (remove bright background)");
-    println!("use scirs2__ndimage::morphology::{{white_tophat, generate_binary_structure}};");
+    println!("use scirs2_ndimage::morphology::{{white_tophat, generate_binary_structure}};");
     println!("let structure = generate_binary_structure(2, 1)?;");
     println!("let tophat = white_tophat(&image.view(), Some(&structure.view()), None)?;");
     println!();
@@ -991,7 +991,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("    }}");
     println!("}}");
     println!();
-    println!("let colored_image = apply_colormap(&data_image, \"jet\");");
+    println!("let coloredimage = apply_colormap(&dataimage, \"jet\");");
     println!("```");
     println!();
     println!("💡 Tips:");
@@ -1009,7 +1009,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
 
     println!("```rust");
     println!("// Simplified adaptive contrast enhancement");
-    println!("fn adaptive_contrast_enhancement(_image: &Array2<f64>, windowsize: usize) -> NdimageResult<Array2<f64>> {{");
+    println!("fn adaptive_contrast_enhancement(image: &Array2<f64>, windowsize: usize) -> NdimageResult<Array2<f64>> {{");
     println!("    let (height, width) = image.dim();");
     println!("    let mut enhanced = image.clone();");
     println!("    let half_window = window_size / 2;");
@@ -1041,7 +1041,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("    Ok(enhanced)");
     println!("}}");
     println!();
-    println!("let enhanced = adaptive_contrast_enhancement(&low_contrast_image, 15)?;");
+    println!("let enhanced = adaptive_contrast_enhancement(&low_contrastimage, 15)?;");
     println!("```");
     println!();
     println!("💡 Tips:");
@@ -1073,7 +1073,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("// Effect 2: Edge enhancement (cartoon-like)");
     println!("fn cartoon_effect(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {{");
     println!("    // Strong bilateral filter for flat regions");
-    println!("    let smooth = bilateral_filter(_image.view(), 5.0, 0.05, Some(9))?;");
+    println!("    let smooth = bilateral_filter(image.view(), 5.0, 0.05, Some(9))?;");
     println!("    ");
     println!("    // Detect edges");
     println!("    let edges = sobel(&smooth.view(), None, None, None)?;");
@@ -1085,10 +1085,10 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!();
     println!("// Effect 3: Pencil sketch");
     println!("fn pencil_sketch(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {{");
-    println!("    // Create inverted _image");
+    println!("    // Create inverted image");
     println!("    let inverted = image.mapv(|x| 1.0 - x);");
     println!("    ");
-    println!("    // Blur inverted _image");
+    println!("    // Blur inverted image");
     println!("    let blurred = gaussian_filter(&inverted, &[5.0, 5.0], None, None, None)?;");
     println!("    ");
     println!("    // Color dodge blend mode");
@@ -1098,7 +1098,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("        }})");
     println!("        .collect::<Vec<_>>();");
     println!("    ");
-    println!("    Ok(Array2::fromshape_vec(_image.dim(), sketch)?)");
+    println!("    Ok(Array2::from_shape_vec(image.dim(), sketch)?)");
     println!("}}");
     println!();
     println!("// Apply effects");
@@ -1142,7 +1142,7 @@ fn estimate_perimeter(prop: &crate::measurements::RegionProperties) -> f64 {
 
 #[allow(dead_code)]
 fn find_local_maxima(image: &Array2<f64>, threshold: f64) -> Array2<u32> {
-    let mut markers = Array2::zeros(_image.dim());
+    let mut markers = Array2::zeros(image.dim());
     let mut label = 1u32;
 
     let (height, width) = image.dim();

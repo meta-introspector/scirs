@@ -2,7 +2,7 @@
 
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::{Float, FromPrimitive, NumCast};
-use scirs2__linalg::{lowrank::randomized_svd, svd};
+use scirs2_linalg::{lowrank::randomized_svd, svd};
 use std::fmt::Debug;
 
 use super::common::DecompositionResult;

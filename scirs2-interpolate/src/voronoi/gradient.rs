@@ -75,7 +75,7 @@ impl<
         // Get the natural neighbor weights
         let neighbor_weights = self.voronoi_diagram().natural_neighbors(query)?;
 
-        if neighborweights.is_empty() {
+        if neighbor_weights.is_empty() {
             // If no natural neighbors found, use finite difference approximation
             return finite_difference_gradient(self, query);
         }
@@ -87,7 +87,7 @@ impl<
                 // value differences and point differences
                 let mut gradient = Array1::zeros(dim);
 
-                for (idx, weight) in neighborweights.iter() {
+                for (idx, weight) in neighbor_weights.iter() {
                     let neighbor_point = self.points.row(*idx);
                     let neighbor_value = self.values[*idx];
 
@@ -99,7 +99,7 @@ impl<
                 }
 
                 // Normalize the gradient if necessary
-                let weight_sum: F = neighborweights.values().sum();
+                let weight_sum: F = neighbor_weights.values().sum();
                 if weight_sum > F::zero() {
                     gradient = gradient / weight_sum;
                 }
@@ -116,7 +116,7 @@ impl<
                 // Compute a weighted average of finite differences
                 let mut total_weight = F::zero();
 
-                for (idx, weight) in neighborweights.iter() {
+                for (idx, weight) in neighbor_weights.iter() {
                     let neighbor_point = self.points.row(*idx);
                     let neighbor_value = self.values[*idx];
 

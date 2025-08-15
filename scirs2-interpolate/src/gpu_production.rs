@@ -313,16 +313,16 @@ impl ProductionGpuAccelerator {
 
         match strategy {
             ExecutionStrategy::SingleGpuBatch => {
-                self.execute_single_gpu_batch(_points, values, query_points, method)
+                self.execute_single_gpu_batch(points, values, query_points, method)
             }
             ExecutionStrategy::MultiGpuDistributed => {
-                self.execute_multi_gpu_distributed(_points, values, query_points, method)
+                self.execute_multi_gpu_distributed(points, values, query_points, method)
             }
             ExecutionStrategy::StreamingChunked => {
-                self.execute_streaming_chunked(_points, values, query_points, method)
+                self.execute_streaming_chunked(points, values, query_points, method)
             }
             ExecutionStrategy::CpuFallback => {
-                self.execute_cpu_fallback(_points, values, query_points, method)
+                self.execute_cpu_fallback(points, values, query_points, method)
             }
         }
     }
@@ -635,7 +635,7 @@ impl ProductionGpuAccelerator {
         let device = self
             .devices
             .iter()
-            .find(|d| d._id == device_id)
+            .find(|d| d.id == device_id)
             .ok_or_else(|| {
                 InterpolateError::InvalidValue(format!("Device {} not found", device_id))
             })?;
@@ -727,11 +727,11 @@ impl GpuMemoryPool {
     /// Create new memory pool for device
     fn new(_deviceid: usize, size: u64) -> InterpolateResult<Self> {
         Ok(Self {
-            device_id,
+            device_id: _deviceid,
             total_size: size,
             allocated_size: 0,
             free_blocks: vec![MemoryBlock {
-                _id: 0,
+                id: 0,
                 size,
                 offset: 0,
                 allocated_at: Instant::now(),
@@ -793,7 +793,7 @@ impl GpuMemoryPool {
     /// Deallocate memory block
     #[allow(dead_code)]
     fn deallocate(&mut self, blockid: u64) -> bool {
-        if let Some(block) = self.allocated_blocks.remove(&block_id) {
+        if let Some(block) = self.allocated_blocks.remove(&blockid) {
             self.allocated_size -= block.size;
             self.stats.total_deallocations += 1;
 
@@ -972,7 +972,7 @@ pub mod production_extensions {
         /// Create a new health monitor
         pub fn new(_checkinterval: Duration, thresholds: HealthThresholds) -> Self {
             Self {
-                check_interval,
+                check_interval: _checkinterval,
                 thresholds,
                 is_active: Arc::new(AtomicBool::new(false)),
                 health_history: Arc::new(Mutex::new(Vec::new())),
@@ -1127,7 +1127,7 @@ pub mod production_extensions {
         }
 
         /// Check for alert conditions
-        fn check_for_alerts(_health_result: &HealthCheckResult, thresholds: &HealthThresholds) {
+        fn check_for_alerts(health_result: &HealthCheckResult, thresholds: &HealthThresholds) {
             // Implementation would check for various alert conditions
             // and trigger appropriate alerts
             match health_result.status {
@@ -1170,8 +1170,8 @@ pub mod production_extensions {
         /// Create a new advanced memory manager
         pub fn new(_fragmentation_threshold: f32, autooptimize: bool) -> Self {
             Self {
-                fragmentation_threshold,
-                auto_optimize,
+                fragmentation_threshold: _fragmentation_threshold,
+                auto_optimize: autooptimize,
                 optimization_stats: MemoryOptimizationStats::default(),
             }
         }
@@ -1316,10 +1316,10 @@ pub mod production_extensions {
         /// Create a new dynamic load balancer
         pub fn new(_strategy: LoadBalancingStrategy, autoscaling: bool) -> Self {
             Self {
-                strategy,
+                strategy: _strategy,
                 device_performance_history: HashMap::new(),
-                auto_scaling,
-                _scaling_thresholds: ScalingThresholds::default(),
+                auto_scaling: autoscaling,
+                scaling_thresholds: ScalingThresholds::default(),
             }
         }
 
@@ -1412,7 +1412,7 @@ pub mod production_extensions {
             self.device_performance_history
                 .entry(device_id)
                 .or_insert_with(Vec::new)
-                .push(data_point);
+                .push(datapoint);
 
             // Keep only recent history (last 100 data points)
             if let Some(history) = self.device_performance_history.get_mut(&device_id) {

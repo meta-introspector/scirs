@@ -1358,7 +1358,7 @@ where
 
     let mut cross_entropy = F::zero();
     for (p1, p2) in prob1.iter().zip(prob2.iter()) {
-        if *p1 > F::zero() && *p2 >, F::zero() {
+        if *p1 > F::zero() && *p2 > F::zero() {
             cross_entropy = cross_entropy - (*p1) * p2.ln();
         }
     }

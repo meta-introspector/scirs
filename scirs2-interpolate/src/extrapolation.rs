@@ -390,7 +390,7 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
     /// Create a new advanced extrapolator
     pub fn new(_baseextrapolator: Extrapolator<T>) -> Self {
         Self {
-            base_extrapolator,
+            base_extrapolator: _baseextrapolator,
             confidence_config: None,
             ensemble_config: None,
             adaptive_config: None,
@@ -401,7 +401,7 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
 
     /// Enable confidence-based extrapolation
     pub fn with_confidence(mut self, config: ConfidenceExtrapolationConfig<T>) -> Self {
-        self.confidence_config = Some(_config);
+        self.confidence_config = Some(config);
         self
     }
 
@@ -425,7 +425,7 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
 
     /// Set historical data for advanced methods
     pub fn with_historical_data(mut self, x_data: Array1<T>, ydata: Array1<T>) -> Self {
-        self.historical_data = Some((x_data, y_data));
+        self.historical_data = Some((x_data, ydata));
         self
     }
 
@@ -840,7 +840,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     /// A reference to the modified extrapolator
     pub fn with_derivatives(mut self, lower_derivative: T, upperderivative: T) -> Self {
         self.lower_derivative = lower_derivative;
-        self.upper_derivative = upper_derivative;
+        self.upper_derivative = upperderivative;
         self
     }
 
@@ -1544,7 +1544,8 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     /// Returns the nearest boundary value - equivalent to constant extrapolation
     /// but specifically designed for compatibility with SciPy's 'nearest' mode.
     fn nearest_extrapolation(
-        &self_x: T,
+        &self,
+        x: T,
         direction: ExtrapolationDirection,
     ) -> InterpolateResult<T> {
         match direction {
@@ -1624,7 +1625,8 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     /// Uses zero derivatives at the boundaries for smooth extrapolation.
     /// This corresponds to "clamped" boundary conditions in spline theory.
     fn clamped_extrapolation(
-        &self_x: T,
+        &self,
+        x: T,
         direction: ExtrapolationDirection,
     ) -> InterpolateResult<T> {
         // For clamped extrapolation, we use zero derivatives at boundaries
@@ -1658,7 +1660,8 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     ///
     /// Similar to constant extrapolation but optimized for structured grid data.
     fn grid_constant_extrapolation(
-        &self_x: T,
+        &self,
+        x: T,
         direction: ExtrapolationDirection,
     ) -> InterpolateResult<T> {
         // For grid data, use the boundary values
@@ -1866,7 +1869,7 @@ pub fn make_exponential_extrapolator<T: Float + std::fmt::Display>(
     upper_value: T,
     lower_derivative: T,
     upper_derivative: T,
-    lower_rate: T_upper,
+    lower_rate: T,
     _rate: T,
 ) -> Extrapolator<T> {
     let params = ExtrapolationParameters::default().with_exponential_rate(lower_rate.abs());
@@ -1960,7 +1963,7 @@ pub fn make_autoregressive_extrapolator<
         AdvancedExtrapolator::new(base_extrapolator).with_autoregressive(config);
 
     if let Some((x_data, y_data)) = historical_data {
-        _extrapolator = extrapolator.with_historical_data(x_data, y_data);
+        _extrapolator = _extrapolator.with_historical_data(x_data, y_data);
     }
 
     _extrapolator

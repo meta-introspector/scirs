@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
-use crate::advanced_fusion__algorithms::{AdvancedConfig, AdvancedState};
+use crate::advanced_fusion_algorithms::{AdvancedConfig, AdvancedState};
 use crate::error::{NdimageError, NdimageResult};
 
 /// Comprehensive validation framework for Advanced operations
@@ -21,7 +21,7 @@ pub struct ComprehensiveValidator {
     /// Performance benchmarks
     benchmarks: HashMap<String, PerformanceBenchmark>,
     /// Error tracking
-    error_history: Vec<ValidationError>,
+    errorhistory: Vec<ValidationError>,
 }
 
 /// Validation configuration parameters
@@ -38,7 +38,7 @@ pub struct ValidationConfig {
     /// Enable quantum coherence validation
     pub validate_quantum_coherence: bool,
     /// Enable consciousness state validation
-    pub validate_consciousness_state: bool,
+    pub validate_consciousnessstate: bool,
 }
 
 impl Default for ValidationConfig {
@@ -49,7 +49,7 @@ impl Default for ValidationConfig {
             min_quality_threshold: 0.95,
             monitor_memory: true,
             validate_quantum_coherence: true,
-            validate_consciousness_state: true,
+            validate_consciousnessstate: true,
         }
     }
 }
@@ -93,7 +93,7 @@ impl ComprehensiveValidator {
         Self {
             config,
             benchmarks: HashMap::new(),
-            error_history: Vec::new(),
+            errorhistory: Vec::new(),
         }
     }
 
@@ -138,7 +138,7 @@ impl ComprehensiveValidator {
     }
 
     /// Validate input image
-    pub fn validate_input_image<T>(&mut self, image: ArrayView2<T>) -> NdimageResult<()>
+    pub fn validate_inputimage<T>(&mut self, image: ArrayView2<T>) -> NdimageResult<()>
     where
         T: Float + FromPrimitive + Copy + Debug,
     {
@@ -216,8 +216,8 @@ impl ComprehensiveValidator {
         }
 
         // State validation
-        if self.config.validate_consciousness_state {
-            self.validate_consciousness_state(state, &mut report)?;
+        if self.config.validate_consciousnessstate {
+            self.validate_consciousnessstate(state, &mut report)?;
         }
 
         // Update benchmarks
@@ -264,7 +264,7 @@ impl ComprehensiveValidator {
     }
 
     /// Validate consciousness state
-    fn validate_consciousness_state(
+    fn validate_consciousnessstate(
         &self,
         state: &AdvancedState,
         report: &mut ValidationReport,
@@ -315,7 +315,7 @@ impl ComprehensiveValidator {
         PerformanceSummary {
             benchmarks: self.benchmarks.clone(),
             total_operations: self.benchmarks.values().map(|b| b.sample_count).sum(),
-            error_count: self.error_history.len(),
+            error_count: self.errorhistory.len(),
         }
     }
 }
@@ -400,7 +400,7 @@ impl PerformanceSummary {
 pub fn validated_advanced_processing<T>(
     image: ArrayView2<T>,
     config: &AdvancedConfig,
-    previous_state: Option<AdvancedState>,
+    previousstate: Option<AdvancedState>,
     validator: &mut ComprehensiveValidator,
 ) -> NdimageResult<(Array2<T>, AdvancedState, ValidationReport)>
 where
@@ -408,18 +408,18 @@ where
 {
     // Pre-processing validation
     validator.validate_config(config)?;
-    validator.validate_input_image(image)?;
+    validator.validate_inputimage(image)?;
 
     let start_time = Instant::now();
 
     // Perform Advanced processing
-    let (output_state) =
-        crate::advanced_fusion_algorithms::fusion_processing(image, config, previous_state)?;
+    let (outputstate) =
+        crate::advanced_fusion_algorithms::fusion_processing(image, config, previousstate)?;
 
     let processing_time = start_time.elapsed();
 
     // Post-processing validation
-    let report = validator.validate_output(&output, &_state, processing_time)?;
+    let report = validator.validate_output(&output, &state, processing_time)?;
 
     Ok((output, state, report))
 }
@@ -433,17 +433,17 @@ mod tests {
     fn test_validator_creation() {
         let validator = ComprehensiveValidator::new();
         assert!(validator.benchmarks.is_empty());
-        assert!(validator.error_history.is_empty());
+        assert!(validator.errorhistory.is_empty());
     }
 
     #[test]
     fn test_input_validation() {
         let mut validator = ComprehensiveValidator::new();
-        let valid_image = Array2::ones((10, 10));
-        assert!(validator.validate_input_image(valid_image.view()).is_ok());
+        let validimage = Array2::ones((10, 10));
+        assert!(validator.validate_inputimage(validimage.view()).is_ok());
 
-        let small_image = Array2::ones((1, 1));
-        assert!(validator.validate_input_image(small_image.view()).is_err());
+        let smallimage = Array2::ones((1, 1));
+        assert!(validator.validate_inputimage(smallimage.view()).is_err());
     }
 
     #[test]

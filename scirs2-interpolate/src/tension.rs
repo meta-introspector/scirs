@@ -251,16 +251,16 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - The points at which to evaluate the spline
+    /// * `xnew` - The points at which to evaluate the spline
     ///
     /// # Returns
     ///
     /// A `Result` containing the interpolated values at the given points.
     pub fn evaluate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
-        let n = x_new.len();
+        let n = xnew.len();
         let mut result = Array1::zeros(n);
 
-        for (i, &xi) in x_new.iter().enumerate() {
+        for (i, &xi) in xnew.iter().enumerate() {
             result[i] = self.evaluate_single(xi)?;
         }
 
@@ -272,17 +272,17 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
         let n = self.x.len();
 
         // Handle extrapolation
-        if x_val < self.x[0] || x_val > self.x[n - 1] {
+        if xval < self.x[0] || xval > self.x[n - 1] {
             match self.extrapolate {
                 ExtrapolateMode::Extrapolate => {
                     // Allow extrapolation - use nearest segment
-                    let idx = if x_val < self.x[0] { 0 } else { n - 2 };
-                    return self.evaluate_segment(idx, x_val);
+                    let idx = if xval < self.x[0] { 0 } else { n - 2 };
+                    return self.evaluate_segment(idx, xval);
                 }
                 ExtrapolateMode::Error => {
                     return Err(InterpolateError::OutOfBounds(format!(
                         "x value {} is outside the interpolation range [{}, {}]",
-                        x_val,
+                        xval,
                         self.x[0],
                         self.x[n - 1]
                     )));
@@ -294,21 +294,21 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
             }
         }
 
-        // Find the segment containing x_val
+        // Find the segment containing xval
         let mut idx = 0;
         for i in 0..n - 1 {
-            if x_val >= self.x[i] && x_val <= self.x[i + 1] {
+            if xval >= self.x[i] && xval <= self.x[i + 1] {
                 idx = i;
                 break;
             }
         }
 
-        self.evaluate_segment(idx, x_val)
+        self.evaluate_segment(idx, xval)
     }
 
     /// Evaluate the spline on a specific segment.
     fn evaluate_segment(&self, idx: usize, xval: T) -> InterpolateResult<T> {
-        let dx = x_val - self.x[idx];
+        let dx = xval - self.x[idx];
 
         // If tension is essentially zero, use cubic formula
         if self.tension == T::zero() {
@@ -337,7 +337,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     /// # Arguments
     ///
     /// * `deriv_order` - The order of the derivative (1 for first derivative, 2 for second, etc.)
-    /// * `x_new` - The points at which to evaluate the derivative
+    /// * `xnew` - The points at which to evaluate the derivative
     ///
     /// # Returns
     ///
@@ -345,10 +345,10 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     pub fn derivative(
         &self,
         deriv_order: usize,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
         if deriv_order == 0 {
-            return self.evaluate(x_new);
+            return self.evaluate(xnew);
         }
 
         if deriv_order > 3 {
@@ -358,10 +358,10 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
             )));
         }
 
-        let n = x_new.len();
+        let n = xnew.len();
         let mut result = Array1::zeros(n);
 
-        for (i, &xi) in x_new.iter().enumerate() {
+        for (i, &xi) in xnew.iter().enumerate() {
             result[i] = self.derivative_single(deriv_order, xi)?;
         }
 
@@ -373,17 +373,17 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
         let n = self.x.len();
 
         // Handle extrapolation
-        if x_val < self.x[0] || x_val > self.x[n - 1] {
+        if xval < self.x[0] || xval > self.x[n - 1] {
             match self.extrapolate {
                 ExtrapolateMode::Extrapolate => {
                     // Allow extrapolation - use nearest segment
-                    let idx = if x_val < self.x[0] { 0 } else { n - 2 };
-                    return self.derivative_segment(deriv_order, idx, x_val);
+                    let idx = if xval < self.x[0] { 0 } else { n - 2 };
+                    return self.derivative_segment(deriv_order, idx, xval);
                 }
                 ExtrapolateMode::Error => {
                     return Err(InterpolateError::OutOfBounds(format!(
                         "x value {} is outside the interpolation range [{}, {}]",
-                        x_val,
+                        xval,
                         self.x[0],
                         self.x[n - 1]
                     )));
@@ -395,21 +395,21 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
             }
         }
 
-        // Find the segment containing x_val
+        // Find the segment containing xval
         let mut idx = 0;
         for i in 0..n - 1 {
-            if x_val >= self.x[i] && x_val <= self.x[i + 1] {
+            if xval >= self.x[i] && xval <= self.x[i + 1] {
                 idx = i;
                 break;
             }
         }
 
-        self.derivative_segment(deriv_order, idx, x_val)
+        self.derivative_segment(deriv_order, idx, xval)
     }
 
     /// Calculate derivative of the spline on a specific segment.
     fn derivative_segment(&self, deriv_order: usize, idx: usize, xval: T) -> InterpolateResult<T> {
-        let dx = x_val - self.x[idx];
+        let dx = xval - self.x[idx];
 
         // If tension is essentially zero, use cubic formula derivatives
         if self.tension == T::zero() {
@@ -460,7 +460,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     ///
     /// # Arguments
     ///
-    /// * `x_val` - The x coordinate at which to evaluate derivatives
+    /// * `xval` - The x coordinate at which to evaluate derivatives
     /// * `max_order` - Maximum order of derivative to compute (inclusive)
     ///
     /// # Returns
@@ -485,11 +485,11 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     /// let first_deriv = derivatives[1];
     /// let second_deriv = derivatives[2];
     /// ```
-    pub fn derivatives_all(&self, x_val: T, maxorder: usize) -> InterpolateResult<Vec<T>> {
+    pub fn derivatives_all(&self, xval: T, maxorder: usize) -> InterpolateResult<Vec<T>> {
         let mut derivatives = Vec::with_capacity(maxorder + 1);
 
         for _order in 0..=maxorder {
-            derivatives.push(self.derivative_single(_order, x_val)?);
+            derivatives.push(self.derivative_single(_order, xval)?);
         }
 
         Ok(derivatives)
@@ -503,7 +503,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     ///
     /// # Arguments
     ///
-    /// * `x_new` - Array of x coordinates at which to evaluate the derivative
+    /// * `xnew` - Array of x coordinates at which to evaluate the derivative
     /// * `order` - The order of the derivative (1 = first derivative, 2 = second derivative, etc.)
     ///
     /// # Returns
@@ -527,10 +527,10 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     /// ```
     pub fn derivative_array(
         &self,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
         order: usize,
     ) -> InterpolateResult<Array1<T>> {
-        self.derivative(order, x_new)
+        self.derivative(order, xnew)
     }
 
     /// Compute the definite integral of the tension spline over an interval
@@ -835,13 +835,13 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
                 ));
             }
 
-            let x_new = x - f_val / f_prime;
+            let xnew = x - f_val / f_prime;
 
-            if (x_new - x).abs() < tol {
-                return Ok(x_new);
+            if (xnew - x).abs() < tol {
+                return Ok(xnew);
             }
 
-            x = x_new;
+            x = xnew;
         }
 
         Err(InterpolateError::ComputationError(format!(
@@ -1026,12 +1026,12 @@ mod tests {
         }
 
         // Test interpolation between data points
-        let x_new = Array::linspace(0.5, 9.5, 10);
-        let y_exact = x_new.mapv(|v| v.powi(2));
+        let xnew = Array::linspace(0.5, 9.5, 10);
+        let y_exact = xnew.mapv(|v| v.powi(2));
 
-        let y_low = spline_low.evaluate(&x_new.view()).unwrap();
-        let y_med = spline_med.evaluate(&x_new.view()).unwrap();
-        let y_high = spline_high.evaluate(&x_new.view()).unwrap();
+        let y_low = spline_low.evaluate(&xnew.view()).unwrap();
+        let y_med = spline_med.evaluate(&xnew.view()).unwrap();
+        let y_high = spline_high.evaluate(&xnew.view()).unwrap();
 
         // Compare MSE for different tension values
         let mse_low = y_low

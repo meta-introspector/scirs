@@ -8,9 +8,9 @@
 
 use crate::error::TimeSeriesError;
 use ndarray::{s, Array1, Array2};
-use scirs2_core::validation::check_array_finite;
-use std::f64::consts::PI;
+use scirs2_core::validation::checkarray_finite;
 use statrs::statistics::Statistics;
+use std::f64::consts::PI;
 
 /// Result type for correlation analysis
 pub type CorrelationResult<T> = Result<T, TimeSeriesError>;
@@ -326,8 +326,8 @@ impl CorrelationAnalyzer {
         y: &Array1<f64>,
         config: &CrossCorrelationConfig,
     ) -> CorrelationResult<CrossCorrelationResult> {
-        check_array_finite(x, "x")?;
-        check_array_finite(y, "y")?;
+        checkarray_finite(x, "x")?;
+        checkarray_finite(y, "y")?;
 
         if x.len() != y.len() {
             return Err(TimeSeriesError::InvalidInput(
@@ -422,8 +422,8 @@ impl CorrelationAnalyzer {
         y: &Array1<f64>,
         config: &DTWConfig,
     ) -> CorrelationResult<DTWResult> {
-        check_array_finite(x, "x")?;
-        check_array_finite(y, "y")?;
+        checkarray_finite(x, "x")?;
+        checkarray_finite(y, "y")?;
 
         let n = x.len();
         let m = y.len();
@@ -525,7 +525,7 @@ impl CorrelationAnalyzer {
         x: &Array1<f64>,
         config: &TimeFrequencyConfig,
     ) -> CorrelationResult<TimeFrequencyResult> {
-        check_array_finite(x, "x")?;
+        checkarray_finite(x, "x")?;
 
         if x.len() < config.window.window_size {
             return Err(TimeSeriesError::InvalidInput(
@@ -558,8 +558,8 @@ impl CorrelationAnalyzer {
         y: &Array1<f64>,
         config: &CoherenceConfig,
     ) -> CorrelationResult<CoherenceResult> {
-        check_array_finite(x, "x")?;
-        check_array_finite(y, "y")?;
+        checkarray_finite(x, "x")?;
+        checkarray_finite(y, "y")?;
 
         if x.len() != y.len() {
             return Err(TimeSeriesError::InvalidInput(
@@ -997,7 +997,8 @@ impl CorrelationAnalyzer {
                         j.saturating_sub(1),
                         cost_matrix[[i.saturating_sub(1), j.saturating_sub(1)]],
                     ),
-                ]_ => vec![
+                ],
+                _ => vec![
                     // Simplified for other patterns
                     (
                         i.saturating_sub(1),

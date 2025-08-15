@@ -228,7 +228,8 @@ where
 #[allow(dead_code)]
 fn interpolate_spline<T>(
     input: &Array<T, IxDyn>,
-    coordinates: &[T], _order: usize,
+    coordinates: &[T],
+    _order: usize,
     mode: &BoundaryMode,
     cval: T,
 ) -> NdimageResult<T>

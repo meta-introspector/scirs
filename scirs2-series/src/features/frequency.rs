@@ -1367,7 +1367,8 @@ where
 /// Calculate confidence intervals for periodogram
 #[allow(dead_code)]
 pub fn calculate_periodogram_confidence_intervals<F>(
-    _periodogram: &[F], _config: &EnhancedPeriodogramConfig,
+    _periodogram: &[F],
+    _config: &EnhancedPeriodogramConfig,
 ) -> Result<Vec<(F, F)>>
 where
     F: Float + FromPrimitive,
@@ -1378,7 +1379,8 @@ where
 /// Calculate peak significance for periodogram
 #[allow(dead_code)]
 pub fn calculate_peak_significance<F>(
-    _periodogram: &[F], _config: &EnhancedPeriodogramConfig,
+    _periodogram: &[F],
+    _config: &EnhancedPeriodogramConfig,
 ) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive,
@@ -1389,7 +1391,8 @@ where
 /// Calculate bias-corrected periodogram
 #[allow(dead_code)]
 pub fn calculate_bias_corrected_periodogram<F>(
-    periodogram: &[F], _config: &EnhancedPeriodogramConfig,
+    periodogram: &[F],
+    _config: &EnhancedPeriodogramConfig,
 ) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive,
@@ -1400,7 +1403,8 @@ where
 /// Calculate variance-reduced periodogram
 #[allow(dead_code)]
 pub fn calculate_variance_reduced_periodogram<F>(
-    periodogram: &[F], _config: &EnhancedPeriodogramConfig,
+    periodogram: &[F],
+    _config: &EnhancedPeriodogramConfig,
 ) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive,
@@ -1411,7 +1415,8 @@ where
 /// Calculate smoothed periodogram
 #[allow(dead_code)]
 pub fn calculate_smoothed_periodogram<F>(
-    periodogram: &[F], _config: &EnhancedPeriodogramConfig,
+    periodogram: &[F],
+    _config: &EnhancedPeriodogramConfig,
 ) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive,
@@ -1422,7 +1427,8 @@ where
 /// Calculate zero-padded periodogram
 #[allow(dead_code)]
 pub fn calculate_zero_padded_periodogram<F>(
-    ts: &Array1<F>, _config: &EnhancedPeriodogramConfig,
+    ts: &Array1<F>,
+    _config: &EnhancedPeriodogramConfig,
 ) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -1434,7 +1440,8 @@ where
 /// Calculate interpolated periodogram
 #[allow(dead_code)]
 pub fn calculate_interpolated_periodogram<F>(
-    periodogram: &[F], _config: &EnhancedPeriodogramConfig,
+    periodogram: &[F],
+    _config: &EnhancedPeriodogramConfig,
 ) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive,

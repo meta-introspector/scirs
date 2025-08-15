@@ -8,13 +8,13 @@
 //! variants of these functions (e.g., `fourier_gaussian_streaming`).
 
 use ndarray::{Array, Array1, Array2, Dimension};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, FromPrimitive, NumCast};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
-use scirs2__fft::{fft, fft2, fftfreq, ifft, ifft2, FFTError};
+use scirs2_fft::{fft, fft2, fftfreq, ifft, ifft2, FFTError};
 
 // Conversion from FFTError to NdimageError
 impl From<FFTError> for NdimageError {
@@ -39,7 +39,8 @@ impl From<FFTError> for NdimageError {
 #[allow(dead_code)]
 pub fn fourier_gaussian<T, D>(
     input: &Array<T, D>,
-    sigma: &[T], _truncate: Option<T>,
+    sigma: &[T],
+    _truncate: Option<T>,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
@@ -1468,7 +1469,9 @@ where
     }
 
     fn merge_overlap(
-        self_output: &mut ArrayViewMut<T, D>, _new_chunk: &ArrayView<T, D>, _overlap_info: &OverlapInfo,
+        self_output: &mut ArrayViewMut<T, D>,
+        _new_chunk: &ArrayView<T, D>,
+        _overlap_info: &OverlapInfo,
     ) -> NdimageResult<()> {
         // Fourier domain filters handle boundaries naturally
         Ok(())
@@ -1532,7 +1535,9 @@ where
     }
 
     fn merge_overlap(
-        self_output: &mut ArrayViewMut<T, D>, _new_chunk: &ArrayView<T, D>, _overlap_info: &OverlapInfo,
+        self_output: &mut ArrayViewMut<T, D>,
+        _new_chunk: &ArrayView<T, D>,
+        _overlap_info: &OverlapInfo,
     ) -> NdimageResult<()> {
         Ok(())
     }

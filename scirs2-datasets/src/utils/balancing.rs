@@ -9,6 +9,7 @@ use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
+use rand::thread_rng;
 use std::collections::HashMap;
 
 /// Balancing strategies for handling imbalanced datasets
@@ -82,7 +83,7 @@ pub fn random_oversample(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -170,7 +171,7 @@ pub fn random_undersample(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -276,7 +277,7 @@ pub fn generate_synthetic_samples(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

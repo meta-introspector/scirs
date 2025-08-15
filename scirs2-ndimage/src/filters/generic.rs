@@ -48,7 +48,7 @@ fn safe_to_float<T: Float + FromPrimitive>(value: f64) -> T {
 ///
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2__ndimage::filters::generic_filter;
+/// use scirs2_ndimage::filters::generic_filter;
 ///
 /// // Define a custom function that calculates the range (max - min)
 /// let range_func = |values: &[f64]| -> f64 {

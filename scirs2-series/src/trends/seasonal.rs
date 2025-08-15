@@ -453,7 +453,8 @@ where
 /// Performs SEATS (Seasonal Extraction in ARIMA Time Series) decomposition
 #[allow(dead_code)]
 fn seats_decomposition<F>(
-    _ts: &Array1<F>, _options: &SeasonalDecompositionOptions,
+    _ts: &Array1<F>,
+    _options: &SeasonalDecompositionOptions,
 ) -> Result<SeasonalDecomposition<F>>
 where
     F: Float + FromPrimitive + Debug,

@@ -89,7 +89,7 @@ impl Mode {
 /// # Example
 /// ```no_run
 /// use ndarray::array;
-/// use scirs2__ndimage::scipy_compat::gaussian_filter;
+/// use scirs2_ndimage::scipy_compat::gaussian_filter;
 ///
 /// let input = array![[1.0, 2.0], [3.0, 4.0]];
 /// let filtered = gaussian_filter(&input, 1.0, None, None, None, None).unwrap();
@@ -873,11 +873,11 @@ pub mod migration {
             println!("  result = ndimage.gaussian_filter(image, sigma=2.0)");
             println!();
             println!("Rust (scirs2-ndimage):");
-            println!("  use scirs2__ndimage::scipy_compat::gaussian_filter;");
+            println!("  use scirs2_ndimage::scipy_compat::gaussian_filter;");
             println!("  let result = gaussian_filter(&image, 2.0, None, None, None, None)?;");
             println!();
             println!("Or with migration helpers:");
-            println!("  use scirs2__ndimage::scipy_compat::migration::*;");
+            println!("  use scirs2_ndimage::scipy_compat::migration::*;");
             println!("  let args = filter_args().mode(\"reflect\").truncate(4.0);");
             println!("  // Then use args in function calls");
         }

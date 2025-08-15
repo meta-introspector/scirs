@@ -398,11 +398,11 @@ pub struct StreamingVisualization {
 
 impl StreamingVisualization {
     /// Create new streaming visualization
-    pub fn new(_config: AdvancedPlotConfig, buffersize: usize) -> Self {
+    pub fn new(config: AdvancedPlotConfig, buffersize: usize) -> Self {
         Self {
             config,
-            data_buffer: VecDeque::with_capacity(buffer_size),
-            max_buffer_size: buffer_size,
+            data_buffer: VecDeque::with_capacity(buffersize),
+            max_buffer_size: buffersize,
         }
     }
 

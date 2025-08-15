@@ -441,7 +441,7 @@ where
         .with_min_len(chunk_size)
         .map(|i| {
             let query_point = xi.slice(ndarray::s![i, ..]);
-            let query_2d = query_point.toshape((1, query_point.len())).unwrap();
+            let query_2d = query_point.to_shape((1, query_point.len())).unwrap();
 
             match rbf_interpolator.interpolate(&query_2d.view()) {
                 Ok(result) => Ok(result[0]),
@@ -578,7 +578,7 @@ where
         ));
     }
 
-    let _default_fill = fill_value.unwrap_or_else(|| F::nan());
+    let default_fill = fill_value.unwrap_or_else(|| F::nan());
     let mut result = Array1::zeros(n_queries);
 
     match n_dims {
@@ -763,7 +763,7 @@ where
     F: Float + FromPrimitive + Debug + Clone + AddAssign,
 {
     let n_queries = xi.nrows();
-    let _default_fill = fill_value.unwrap_or_else(|| F::nan());
+    let default_fill = fill_value.unwrap_or_else(|| F::nan());
 
     // Use inverse distance weighting as approximation to linear interpolation
     // This provides reasonable results for higher dimensions
@@ -1046,7 +1046,7 @@ where
 
         // Perform local cubic interpolation using gradients
         match local_cubic_interpolation(points, values, &gradients.view(), &neighbors, x, y) {
-            Ok(_value) => result[i] = value,
+            Ok(_value) => result[i] = _value,
             Err(_) => result[i] = default_fill,
         }
     }
@@ -1264,7 +1264,7 @@ fn griddata_rbf<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
     xi: &ArrayView2<F>,
-    kernel: RBFKernel_fill,
+    kernel: RBFKernel,
     value: Option<F>,
 ) -> InterpolateResult<Array1<F>>
 where
@@ -1372,16 +1372,13 @@ where
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 #[allow(dead_code)]
-pub fn make_regular_grid<F>(
-    _bounds: &[(F, F)],
-    resolution: &[usize],
-) -> InterpolateResult<Array2<F>>
+pub fn make_regular_grid<F>(bounds: &[(F, F)], resolution: &[usize]) -> InterpolateResult<Array2<F>>
 where
     F: Float + FromPrimitive + Clone,
 {
     if bounds.len() != resolution.len() {
         return Err(InterpolateError::shape_mismatch(
-            format!("_bounds.len() = {}", bounds.len()),
+            format!("bounds.len() = {}", bounds.len()),
             format!("resolution.len() = {}", resolution.len()),
             "make_regular_grid dimension consistency",
         ));

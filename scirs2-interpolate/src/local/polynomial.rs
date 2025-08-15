@@ -194,7 +194,7 @@ where
             ..LocalPolynomialConfig::default()
         };
 
-        Self::with_config(_points, values, config)
+        Self::with_config(points, values, config)
     }
 
     /// Create a new LocalPolynomialRegression with custom configuration
@@ -242,7 +242,8 @@ where
             points,
             values,
             config,
-            response_sd_phantom: PhantomData,
+            response_sd,
+            _phantom: PhantomData,
         })
     }
 
@@ -381,7 +382,7 @@ where
             indices = distances
                 .iter()
                 .take(min_points)
-                .map(|&(idx_)| idx)
+                .map(|&(idx, _)| idx)
                 .collect();
             dist_values = distances
                 .iter()

@@ -10,6 +10,7 @@ use ndarray::Array1;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
+use rand::thread_rng;
 use std::collections::HashMap;
 
 /// Cross-validation fold indices
@@ -72,7 +73,7 @@ pub fn train_test_split(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -169,7 +170,7 @@ pub fn k_fold_split(
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
             None => {
-                let mut r = rand::rng();
+                let mut r = thread_rng();
                 StdRng::seed_from_u64(r.next_u64())
             }
         };
@@ -260,7 +261,7 @@ pub fn stratified_k_fold_split(
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
             None => {
-                let mut r = rand::rng();
+                let mut r = thread_rng();
                 StdRng::seed_from_u64(r.next_u64())
             }
         };

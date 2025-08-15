@@ -659,9 +659,9 @@ pub struct GpuAccelerationManager {
 #[derive(Debug)]
 pub struct GpuProfiler {
     /// Operation timing history
-    timing_history: Vec<(String, Duration)>,
+    timinghistory: Vec<(String, Duration)>,
     /// Memory usage history
-    memory_history: Vec<(Instant, usize)>,
+    memoryhistory: Vec<(Instant, usize)>,
     /// Performance metrics
     metrics: GpuPerformanceMetrics,
 }
@@ -696,12 +696,12 @@ impl GpuAccelerationManager {
     /// Create a new GPU acceleration manager
     pub fn new(config: MemoryPoolConfig) -> NdimageResult<Self> {
         Ok(Self {
-            memory_pool: GpuMemoryPool::new(_config),
+            memory_pool: GpuMemoryPool::new(config),
             kernel_cache: GpuKernelCache::new(),
             device_manager: crate::backend::DeviceManager::new()?,
             profiler: Arc::new(Mutex::new(GpuProfiler {
-                timing_history: Vec::new(),
-                memory_history: Vec::new(),
+                timinghistory: Vec::new(),
+                memoryhistory: Vec::new(),
                 metrics: GpuPerformanceMetrics::default(),
             })),
         })
@@ -762,7 +762,7 @@ impl GpuAccelerationManager {
         GpuPerformanceReport {
             memory_statistics: memory_stats,
             cache_statistics: cache_stats,
-            performance_metrics: profiler.metrics.clone(),
+            performancemetrics: profiler.metrics.clone(),
             recommendations: self.generate_performance_recommendations(),
         }
     }
@@ -792,16 +792,16 @@ impl GpuAccelerationManager {
         let mut profiler = self.profiler.lock().unwrap();
 
         profiler
-            .timing_history
+            .timinghistory
             .push((operation_name.to_string(), execution_time));
-        profiler.memory_history.push((Instant::now(), memory_used));
+        profiler.memoryhistory.push((Instant::now(), memory_used));
 
         // Update metrics
         profiler.metrics.total_operations += 1;
         profiler.metrics.total_gpu_time += execution_time;
 
         // Calculate moving averages
-        if profiler.timing_history.len() > 1 {
+        if profiler.timinghistory.len() > 1 {
             let avg_time =
                 profiler.metrics.total_gpu_time / profiler.metrics.total_operations as u32;
             // Update other metrics based on timing and memory history
@@ -857,7 +857,7 @@ pub struct GpuPerformanceReport {
     /// Kernel cache statistics  
     pub cache_statistics: KernelCacheStats,
     /// Overall performance metrics
-    pub performance_metrics: GpuPerformanceMetrics,
+    pub performancemetrics: GpuPerformanceMetrics,
     /// Performance optimization recommendations
     pub recommendations: Vec<String>,
 }
@@ -899,15 +899,15 @@ impl GpuPerformanceReport {
         println!("\nPerformance Metrics:");
         println!(
             "  Total Operations: {}",
-            self.performance_metrics.total_operations
+            self.performancemetrics.total_operations
         );
         println!(
             "  Total GPU Time: {:.3}ms",
-            self.performance_metrics.total_gpu_time.as_secs_f64() * 1000.0
+            self.performancemetrics.total_gpu_time.as_secs_f64() * 1000.0
         );
         println!(
             "  GPU Utilization: {:.2}%",
-            self.performance_metrics.gpu_utilization * 100.0
+            self.performancemetrics.gpu_utilization * 100.0
         );
 
         if !self.recommendations.is_empty() {

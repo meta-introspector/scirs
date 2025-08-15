@@ -32,7 +32,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::filters::{minimum_filter, BorderMode};
+/// use scirs2_ndimage::filters::{minimum_filter, BorderMode};
 ///
 /// let input = array![[1.0, 2.0, 3.0],
 ///                     [4.0, 5.0, 6.0],
@@ -84,7 +84,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::filters::{maximum_filter, BorderMode};
+/// use scirs2_ndimage::filters::{maximum_filter, BorderMode};
 ///
 /// let input = array![[1.0, 2.0, 3.0],
 ///                     [4.0, 5.0, 6.0],
@@ -518,7 +518,8 @@ where
 fn extrema_filter_nd_general<T, D>(
     input: &Array<T, D>,
     size: &[usize],
-    mode: &BorderMode, origin: &[isize],
+    mode: &BorderMode,
+    origin: &[isize],
     filter_type: FilterType,
     pad_width: &[(usize, usize)],
 ) -> NdimageResult<Array<T, D>>
@@ -553,13 +554,7 @@ where
         use scirs2_core::parallel_ops::*;
 
         if total_elements > 10000 {
-            return extrema_filter_nd_parallel(
-                input,
-                &padded_input,
-                size,
-                filter_type,
-                inputshape,
-            );
+            return extrema_filter_nd_parallel(input, &padded_input, size, filter_type, inputshape);
         }
     }
 
@@ -754,7 +749,7 @@ where
         .collect();
 
     // Convert results back to n-dimensional array
-    let output = Array::fromshape_vec(_input.raw_dim(), results)
+    let output = Array::from_shape_vec(_input.raw_dim(), results)
         .map_err(|_| NdimageError::DimensionError("Failed to create output array".into()))?;
 
     Ok(output)

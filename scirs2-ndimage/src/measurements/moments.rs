@@ -27,7 +27,7 @@ use crate::utils::safe_usize_to_float;
 /// ## Basic 1D center of mass
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__ndimage::measurements::center_of_mass;
+/// use scirs2_ndimage::measurements::center_of_mass;
 ///
 /// // Simple 1D signal with peak at position 2
 /// let signal = Array1::from_vec(vec![0.0, 1.0, 5.0, 1.0, 0.0]);
@@ -40,7 +40,7 @@ use crate::utils::safe_usize_to_float;
 /// ## 2D object localization
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::measurements::center_of_mass;
+/// use scirs2_ndimage::measurements::center_of_mass;
 ///
 /// // Create a 2D object (bright square in upper-left)
 /// let mut image = Array2::zeros((10, 10));
@@ -59,7 +59,7 @@ use crate::utils::safe_usize_to_float;
 /// ## Intensity-weighted centroid
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::measurements::center_of_mass;
+/// use scirs2_ndimage::measurements::center_of_mass;
 ///
 /// // Create object with non-uniform intensity distribution
 /// let image = array![
@@ -77,7 +77,7 @@ use crate::utils::safe_usize_to_float;
 /// ## 3D volume center of mass
 /// ```
 /// use ndarray::Array3;
-/// use scirs2__ndimage::measurements::center_of_mass;
+/// use scirs2_ndimage::measurements::center_of_mass;
 ///
 /// // Create a 3D volume with a bright cube in one corner
 /// let mut volume = Array3::zeros((20, 20, 20));
@@ -97,7 +97,7 @@ use crate::utils::safe_usize_to_float;
 /// ## Binary object analysis
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::center_of_mass;
+/// use scirs2_ndimage::measurements::center_of_mass;
 ///
 /// // Binary image (0.0 and 1.0 values only)
 /// let binary = Array2::fromshape_fn((50, 50), |(i, j)| {

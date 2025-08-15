@@ -12,7 +12,7 @@ use std::sync::Arc;
 use ndarray::{Array, ArrayView, ArrayView2, Dimension, Ix2};
 use num_traits::{Float, FromPrimitive};
 
-use crate::backend::gpu_acceleration__framework::{
+use crate::backend::gpu_acceleration_framework::{
     GpuAccelerationManager, GpuPerformanceReport, MemoryPoolConfig,
 };
 use crate::backend::{Backend, DeviceManager};
@@ -331,7 +331,7 @@ impl GpuOperations {
         Ok(())
     }
 
-    fn should_use_gpu<T, D>(&self, input: &ArrayView<T, D>, operationname: &str) -> bool
+    fn should_use_gpu<T, D>(&self, input: &ArrayView<T, D>, operation_name: &str) -> bool
     where
         T: Float + FromPrimitive,
         D: Dimension,
@@ -361,7 +361,7 @@ impl GpuOperations {
         true
     }
 
-    fn select_backend_for_operation(&self, operationname: &str) -> NdimageResult<Backend> {
+    fn select_backend_for_operation(&self, operation_name: &str) -> NdimageResult<Backend> {
         let capabilities = self.device_manager.get_capabilities();
 
         // Check operation preference
@@ -404,9 +404,11 @@ impl GpuOperations {
 
     fn execute_gpu_convolution<T>(
         &self,
-        input: ArrayView2<T>, _kernel: ArrayView2<T>,
+        input: ArrayView2<T>,
+        _kernel: ArrayView2<T>,
         kernel_source: &str,
-        backend: Backend, mode: BoundaryMode,
+        backend: Backend,
+        mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
         T: Float + FromPrimitive + Clone + Send + Sync,
@@ -420,9 +422,12 @@ impl GpuOperations {
 
     fn execute_gpu_morphology<T>(
         &self,
-        input: ArrayView2<T>, _structuring_element: ArrayView2<bool>,
+        input: ArrayView2<T>,
+        _structuring_element: ArrayView2<bool>,
         kernel_source: &str,
-        backend: Backend, mode: BoundaryMode, _operation: MorphologyOperation,
+        backend: Backend,
+        mode: BoundaryMode,
+        _operation: MorphologyOperation,
     ) -> NdimageResult<Array<T, Ix2>>
     where
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
@@ -440,9 +445,11 @@ impl GpuOperations {
 
     fn execute_gpu_gaussian<T>(
         &self,
-        input: ArrayView2<T>, _sigma: (f64, f64),
+        input: ArrayView2<T>,
+        _sigma: (f64, f64),
         kernel_source: &str,
-        backend: Backend, mode: BoundaryMode,
+        backend: Backend,
+        mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
         T: Float + FromPrimitive + Clone + Send + Sync,
@@ -455,7 +462,8 @@ impl GpuOperations {
 
     fn execute_gpu_distance_transform<T>(
         &self,
-        input: ArrayView2<T>, _metric: DistanceMetric,
+        input: ArrayView2<T>,
+        _metric: DistanceMetric,
         kernel_source: &str,
         backend: Backend,
     ) -> NdimageResult<Array<T, Ix2>>

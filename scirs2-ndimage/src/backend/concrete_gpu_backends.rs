@@ -14,15 +14,15 @@ use num_traits::{Float, FromPrimitive};
 
 #[cfg(any(feature = "cuda", feature = "opencl"))]
 #[allow(unused_imports)]
-use crate::backend::gpu_acceleration__framework::{
+use crate::backend::gpu_acceleration_framework::{
     CompiledKernel, GpuBuffer, GpuBufferHandle, KernelHandle,
 };
 
 #[cfg(feature = "cuda")]
-use crate::backend::gpu_acceleration__framework::{CudaBufferHandle, CudaKernelHandle};
+use crate::backend::gpu_acceleration_framework::{CudaBufferHandle, CudaKernelHandle};
 
 #[cfg(feature = "opencl")]
-use crate::backend::gpu_acceleration__framework::{OpenCLBufferHandle, OpenCLKernelHandle};
+use crate::backend::gpu_acceleration_framework::{OpenCLBufferHandle, OpenCLKernelHandle};
 use crate::error::{NdimageError, NdimageResult};
 
 /// CUDA backend implementation
@@ -122,7 +122,7 @@ impl CudaBackend {
 
         // Use device 0 by default
         let device_id = 0;
-        let context = Self::create_context(device_id)?;
+        let context = Self::createcontext(device_id)?;
         let device_properties = Self::get_device_properties(device_id)?;
 
         Ok(Self {
@@ -318,7 +318,7 @@ impl CudaBackend {
 
         // Reshape result
         Ok(
-            Array::fromshape_vec((input_height, input_width), output_flat).map_err(|e| {
+            Array::from_shape_vec((input_height, input_width), output_flat).map_err(|e| {
                 NdimageError::InvalidInput(format!("Failed to reshape result: {}", e))
             })?,
         )
@@ -331,7 +331,7 @@ impl CudaBackend {
         Ok(1) // Assume 1 device for testing
     }
 
-    fn create_context(_deviceid: i32) -> NdimageResult<CudaContext> {
+    fn createcontext(_deviceid: i32) -> NdimageResult<CudaContext> {
         // Placeholder: would initialize CUDA context and stream
         Ok(CudaContext {
             context: 0x1000, // Dummy context handle
@@ -457,7 +457,7 @@ extern "C" __global__ void convolution_2d(
 impl OpenCLBackend {
     /// Initialize OpenCL backend
     pub fn new() -> NdimageResult<Self> {
-        let context = Self::create_opencl_context()?;
+        let context = Self::create_openclcontext()?;
         let device_properties = Self::get_device_properties(&context)?;
 
         Ok(Self {
@@ -623,7 +623,7 @@ impl OpenCLBackend {
 
         // Reshape result
         Ok(
-            Array::fromshape_vec((input_height, input_width), output_flat).map_err(|e| {
+            Array::from_shape_vec((input_height, input_width), output_flat).map_err(|e| {
                 NdimageError::InvalidInput(format!("Failed to reshape result: {}", e))
             })?,
         )
@@ -631,7 +631,7 @@ impl OpenCLBackend {
 
     // Low-level OpenCL API wrappers (these would call actual OpenCL API)
 
-    fn create_opencl_context() -> NdimageResult<OpenCLContext> {
+    fn create_openclcontext() -> NdimageResult<OpenCLContext> {
         // Placeholder: would initialize OpenCL context, device, and queue
         Ok(OpenCLContext {
             context: 0x1000,

@@ -30,11 +30,11 @@ pub fn demonstrate_advanced_capabilities() -> NdimageResult<()> {
     println!("======================================");
 
     // Create sample test image
-    let test_image = create_test_image(128, 128);
+    let testimage = create_testimage(128, 128);
     println!(
         "✓ Created test image: {}x{}",
-        test_image.nrows(),
-        test_image.ncols()
+        testimage.nrows(),
+        testimage.ncols()
     );
 
     // Initialize Advanced configuration
@@ -44,14 +44,14 @@ pub fn demonstrate_advanced_capabilities() -> NdimageResult<()> {
     // Demonstration 1: Enhanced Quantum Consciousness Evolution
     println!("\n🧠 Testing Enhanced Quantum Consciousness Evolution");
     let consciousness_result =
-        enhanced_quantum_consciousness_evolution(test_image.view(), &config.quantum_neuromorphic)?;
+        enhanced_quantum_consciousness_evolution(testimage.view(), &config.quantum_neuromorphic)?;
     println!("✓ Quantum consciousness processing completed");
     println!("  - Output shape: {:?}", consciousness_result.dim());
 
     // Demonstration 2: Meta-Learning with Temporal Fusion
     println!("\n🔄 Testing Meta-Learning with Temporal Fusion");
     let meta_learning_result = enhanced_meta_learning_with_temporal_fusion(
-        test_image.view(),
+        testimage.view(),
         &config.quantum_neuromorphic,
     )?;
     println!("✓ Meta-learning temporal fusion completed");
@@ -60,7 +60,7 @@ pub fn demonstrate_advanced_capabilities() -> NdimageResult<()> {
     // Demonstration 3: Quantum-Aware Resource Scheduling
     println!("\n⚡ Testing Quantum-Aware Resource Scheduling");
     let resource_result = quantum_aware_resource_scheduling_optimization(
-        test_image.view(),
+        testimage.view(),
         &config.quantum_neuromorphic,
     )?;
     println!("✓ Quantum resource scheduling completed");
@@ -74,24 +74,24 @@ pub fn demonstrate_advanced_capabilities() -> NdimageResult<()> {
     // Simulate optimization cycles
     for cycle in 1..=3 {
         println!("  - Optimization cycle {}/3", cycle);
-        let optimized_config = optimizer.optimize_configuration(&config, &test_image.view())?;
+        let optimized_config = optimizer.optimize_configuration(&config, &testimage.view())?;
         println!("    ✓ Configuration optimized for cycle {}", cycle);
 
         // Run abbreviated processing with optimized config
-        let (processed_state) = fusion_processing(test_image.view(), &optimized_config, None)?;
+        let (processedstate) = fusion_processing(testimage.view(), &optimized_config, None)?;
         println!("    ✓ Processing completed with optimized config");
         println!("    - Output shape: {:?}", processed.dim());
     }
 
     // Demonstration 5: Comprehensive Integration Test
     println!("\n🌟 Testing Comprehensive Advanced Integration");
-    let (final_result, final_state) = fusion_processing(test_image.view(), &config, None)?;
+    let (final_result, finalstate) = fusion_processing(testimage.view(), &config, None)?;
 
     println!("✓ Comprehensive Advanced processing completed");
     println!("  - Final output shape: {:?}", final_result.dim());
     println!(
         "  - Processing state captured: {}",
-        final_state.processing_cycles
+        finalstate.processing_cycles
     );
 
     // Performance Summary
@@ -109,7 +109,7 @@ pub fn demonstrate_advanced_capabilities() -> NdimageResult<()> {
 
 /// Create a sample test image for validation
 #[allow(dead_code)]
-fn create_test_image(height: usize, width: usize) -> Array2<f64> {
+fn create_testimage(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     // Create a complex test pattern with multiple features
@@ -134,7 +134,7 @@ fn create_test_image(height: usize, width: usize) -> Array2<f64> {
 /// Create comprehensive Advanced configuration
 #[allow(dead_code)]
 fn create_advanced_config() -> AdvancedConfig {
-    use scirs2__ndimage::{
+    use scirs2_ndimage::{
         neuromorphic_computing::NeuromorphicConfig, quantum_inspired::QuantumConfig,
         quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
     };
@@ -171,11 +171,11 @@ pub fn advanced_performance_validation() -> NdimageResult<()> {
     for (height, width) in test_sizes {
         println!("\n📐 Testing with {}x{} image", height, width);
 
-        let test_image = create_test_image(height, width);
+        let testimage = create_testimage(height, width);
         let config = create_advanced_config();
 
         let start_time = std::time::Instant::now();
-        let (result, state) = fusion_processing(test_image.view(), &config, None)?;
+        let (result, state) = fusion_processing(testimage.view(), &config, None)?;
         let duration = start_time.elapsed();
 
         println!("  ✓ Processing completed in {:?}", duration);
@@ -224,10 +224,10 @@ mod tests {
 
     #[test]
     fn test_advanced_basic_functionality() -> NdimageResult<()> {
-        let test_image = create_test_image(32, 32);
+        let testimage = create_testimage(32, 32);
         let config = create_advanced_config();
 
-        let (result_state) = fusion_processing(test_image.view(), &config, None)?;
+        let (resultstate) = fusion_processing(testimage.view(), &config, None)?;
 
         assert_eq!(result.dim(), (32, 32));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -237,11 +237,11 @@ mod tests {
 
     #[test]
     fn test_quantum_consciousness() -> NdimageResult<()> {
-        let test_image = create_test_image(16, 16);
+        let testimage = create_testimage(16, 16);
         let config = create_advanced_config();
 
         let result = enhanced_quantum_consciousness_evolution(
-            test_image.view(),
+            testimage.view(),
             &config.quantum_neuromorphic,
         )?;
 
@@ -251,11 +251,11 @@ mod tests {
 
     #[test]
     fn test_meta_learning() -> NdimageResult<()> {
-        let test_image = create_test_image(16, 16);
+        let testimage = create_testimage(16, 16);
         let config = create_advanced_config();
 
         let result = enhanced_meta_learning_with_temporal_fusion(
-            test_image.view(),
+            testimage.view(),
             &config.quantum_neuromorphic,
         )?;
 

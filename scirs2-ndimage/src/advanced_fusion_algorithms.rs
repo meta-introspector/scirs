@@ -11,16 +11,16 @@
 //! - **Advanced-Efficient Resource Management**: Optimal utilization of all available compute resources
 
 use ndarray::{Array1, Array2, Array3, Array4, Array5, ArrayView2};
-use num__complex::Complex;
+use num_complex::Complex;
 use num_traits::{Float, FromPrimitive, Zero};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::f64::consts::PI;
 use std::sync::{Arc, RwLock};
 
 use crate::error::NdimageResult;
-use crate::neuromorphic__computing::NeuromorphicConfig;
-use crate::quantum__inspired::QuantumConfig;
-use crate::quantum_neuromorphic__fusion::QuantumNeuromorphicConfig;
+use crate::neuromorphic_computing::NeuromorphicConfig;
+use crate::quantum_inspired::QuantumConfig;
+use crate::quantum_neuromorphic_fusion::QuantumNeuromorphicConfig;
 
 /// Advanced Processing Configuration
 #[derive(Debug, Clone)]
@@ -99,11 +99,11 @@ pub struct AdvancedState {
     /// Causal relationship graph
     pub causal_graph: BTreeMap<usize, Vec<CausalRelation>>,
     /// Advanced-dimensional feature space
-    pub advanced_features: Array5<f64>,
+    pub advancedfeatures: Array5<f64>,
     /// Resource allocation state
     pub resource_allocation: ResourceState,
     /// Processing efficiency metrics
-    pub efficiency_metrics: EfficiencyMetrics,
+    pub efficiencymetrics: EfficiencyMetrics,
     /// Number of processing cycles
     pub processing_cycles: u64,
 }
@@ -125,9 +125,9 @@ pub struct NetworkNode {
     /// Node ID
     pub id: usize,
     /// Quantum state
-    pub quantum_state: Array1<Complex<f64>>,
+    pub quantumstate: Array1<Complex<f64>>,
     /// Classical state
-    pub classical_state: Array1<f64>,
+    pub classicalstate: Array1<f64>,
     /// Learning parameters
     pub learning_params: Array1<f64>,
     /// Activation function type
@@ -228,7 +228,7 @@ pub struct ResourceState {
     /// Quantum processing allocation (if available)
     pub quantum_allocation: Option<f64>,
     /// Adaptive allocation history
-    pub allocation_history: VecDeque<AllocationSnapshot>,
+    pub allocationhistory: VecDeque<AllocationSnapshot>,
 }
 
 /// Allocation Snapshot
@@ -266,67 +266,68 @@ pub struct EfficiencyMetrics {
 #[allow(dead_code)]
 pub fn fusion_processing<T>(
     image: ArrayView2<T>,
-    config: &AdvancedConfig_previous, state: Option<AdvancedState>,
+    config: &AdvancedConfig,
+    state: Option<AdvancedState>,
 ) -> NdimageResult<(Array2<T>, AdvancedState)>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
 
-    // Initialize or update advanced processing _state
-    let mut advanced_state = initialize_or_update_state(_previous_state, (height, width), config)?;
+    // Initialize or update advanced processing state
+    let mut advancedstate = initialize_or_updatestate(state, (height, width), config)?;
 
     // Stage 1: Advanced-Dimensional Feature Extraction
-    let advanced_features =
-        extract_advanced_dimensional_features(&image, &mut advanced_state, config)?;
+    let advancedfeatures =
+        extract_advanced_dimensionalfeatures(&image, &mut advancedstate, config)?;
 
     // Stage 2: Quantum Consciousness Simulation
     let consciousness_response = if config.quantum_consciousness {
-        simulate_quantum_consciousness(&advanced_features, &mut advanced_state, config)?
+        simulate_quantum_consciousness(&advancedfeatures, &mut advancedstate, config)?
     } else {
         Array2::zeros((height, width))
     };
 
     // Stage 3: Self-Organizing Neural Processing
     let neural_response = if config.self_organization {
-        self_organizing_neural_processing(&advanced_features, &mut advanced_state, config)?
+        self_organizing_neural_processing(&advancedfeatures, &mut advancedstate, config)?
     } else {
         Array2::zeros((height, width))
     };
 
     // Stage 4: Temporal-Causal Analysis
-    let causal_response = analyze_temporal_causality(&image, &mut advanced_state, config)?;
+    let causal_response = analyze_temporal_causality(&image, &mut advancedstate, config)?;
 
     // Stage 5: Meta-Learning Adaptation
     let adapted_response = meta_learning_adaptation(
         &consciousness_response,
         &neural_response,
         &causal_response,
-        &mut advanced_state,
+        &mut advancedstate,
         config,
     )?;
 
     // Stage 6: Advanced-Efficient Resource Optimization
     if config.advanced_efficiency {
-        optimize_resource_allocation(&mut advanced_state, config)?;
+        optimize_resource_allocation(&mut advancedstate, config)?;
     }
 
     // Stage 7: Multi-Scale Integration
     let multi_scale_response =
-        multi_scale_integration(&adapted_response, &mut advanced_state, config)?;
+        multi_scale_integration(&adapted_response, &mut advancedstate, config)?;
 
     // Stage 8: Final Consciousness-Guided Output Generation
     let final_output = generate_consciousness_guided_output(
         &image,
         &multi_scale_response,
-        &advanced_state,
+        &advancedstate,
         config,
     )?;
 
     // Update efficiency metrics
-    update_efficiency_metrics(&mut advanced_state, config)?;
+    update_efficiencymetrics(&mut advancedstate, config)?;
 
-    Ok((final_output, advanced_state))
+    Ok((final_output, advancedstate))
 }
 
 /// Advanced-Dimensional Feature Extraction
@@ -334,16 +335,16 @@ where
 /// Extracts features in multiple dimensions beyond traditional spatial dimensions,
 /// including temporal, frequency, quantum, and consciousness dimensions.
 #[allow(dead_code)]
-pub fn extract_advanced_dimensional_features<T>(
+pub fn extract_advanced_dimensionalfeatures<T>(
     image: &ArrayView2<T>,
-    advanced_state: &mut AdvancedState,
+    advancedstate: &mut AdvancedState,
     config: &AdvancedConfig,
 ) -> NdimageResult<Array5<f64>>
 where
     T: Float + FromPrimitive + Copy,
 {
     let (height, width) = image.dim();
-    let mut advanced_features = Array5::zeros((
+    let mut advancedfeatures = Array5::zeros((
         height,
         width,
         config.advanced_dimensions,
@@ -357,59 +358,58 @@ where
             let pixel_value = image[(y, x)].to_f64().unwrap_or(0.0);
 
             // Spatial dimension features
-            let spatial_features = extract_spatial_features(pixel_value, (y, x), image, config)?;
+            let spatialfeatures = extract_spatialfeatures(pixel_value, (y, x), image, config)?;
 
             // Temporal dimension features
-            let temporal_features =
-                extract_temporal_features(pixel_value, &advanced_state.temporal_memory, config)?;
+            let temporalfeatures =
+                extract_temporalfeatures(pixel_value, &advancedstate.temporal_memory, config)?;
 
             // Frequency dimension features
-            let frequency_features =
-                extract_frequency_features(pixel_value, (y, x), image, config)?;
+            let frequencyfeatures = extract_frequencyfeatures(pixel_value, (y, x), image, config)?;
 
             // Quantum dimension features
-            let quantum_features = extract_quantum_features(
+            let quantumfeatures = extract_quantumfeatures(
                 pixel_value,
-                &advanced_state.consciousness_amplitudes,
+                &advancedstate.consciousness_amplitudes,
                 config,
             )?;
 
             // Consciousness dimension features
-            let consciousness_features =
-                extract_consciousness_features(pixel_value, advanced_state, config)?;
+            let consciousnessfeatures =
+                extract_consciousnessfeatures(pixel_value, advancedstate, config)?;
 
             // Causal dimension features
-            let causal_features =
-                extract_causal_features(pixel_value, &advanced_state.causal_graph, config)?;
+            let causalfeatures =
+                extract_causalfeatures(pixel_value, &advancedstate.causal_graph, config)?;
 
             // Store in advanced-dimensional array
             for d in 0..config.advanced_dimensions {
                 for t in 0..config.temporal_window {
                     for c in 0..config.consciousness_depth {
-                        let feature_value = combine_dimensional_features(
-                            &spatial_features,
-                            &temporal_features,
-                            &frequency_features,
-                            &quantum_features,
-                            &consciousness_features,
-                            &causal_features,
+                        let feature_value = combine_dimensionalfeatures(
+                            &spatialfeatures,
+                            &temporalfeatures,
+                            &frequencyfeatures,
+                            &quantumfeatures,
+                            &consciousnessfeatures,
+                            &causalfeatures,
                             d,
                             t,
                             c,
                             config,
                         )?;
 
-                        advanced_features[(y, x, d, t, c)] = feature_value;
+                        advancedfeatures[(y, x, d, t, c)] = feature_value;
                     }
                 }
             }
         }
     }
 
-    // Update advanced-dimensional feature _state
-    advanced_state.advanced_features = advanced_features.clone();
+    // Update advanced-dimensional feature state
+    advancedstate.advancedfeatures = advancedfeatures.clone();
 
-    Ok(advanced_features)
+    Ok(advancedfeatures)
 }
 
 /// Quantum Consciousness Simulation
@@ -418,22 +418,22 @@ where
 /// including superposition, entanglement, and quantum interference effects.
 #[allow(dead_code)]
 pub fn simulate_quantum_consciousness(
-    advanced_features: &Array5<f64>,
-    advanced_state: &mut AdvancedState,
+    advancedfeatures: &Array5<f64>,
+    advancedstate: &mut AdvancedState,
     config: &AdvancedConfig,
 ) -> NdimageResult<Array2<f64>>
 where
 {
-    let (height, width, dimensions, temporal, consciousness) = advanced_features.dim();
+    let (height, width, dimensions, temporal, consciousness) = advancedfeatures.dim();
     let mut consciousness_output = Array2::zeros((height, width));
 
     // Initialize quantum consciousness amplitudes if not present
-    if advanced_state.consciousness_amplitudes.dim() != (height, width, consciousness, 2) {
-        advanced_state.consciousness_amplitudes = Array4::zeros((height, width, consciousness, 2));
+    if advancedstate.consciousness_amplitudes.dim() != (height, width, consciousness, 2) {
+        advancedstate.consciousness_amplitudes = Array4::zeros((height, width, consciousness, 2));
 
-        // Initialize in quantum superposition _state
+        // Initialize in quantum superposition state
         let amplitude = Complex::new((1.0 / consciousness as f64).sqrt(), 0.0);
-        advanced_state.consciousness_amplitudes.fill(amplitude);
+        advancedstate.consciousness_amplitudes.fill(amplitude);
     }
 
     // Quantum consciousness processing
@@ -447,27 +447,27 @@ where
                 let mut feature_vector = Vec::new();
                 for d in 0..dimensions {
                     for t in 0..temporal {
-                        feature_vector.push(advanced_features[(y, x, d, t, c)]);
+                        feature_vector.push(advancedfeatures[(y, x, d, t, c)]);
                     }
                 }
 
                 // Apply quantum consciousness operators
-                let quantum_state = apply_quantum_consciousness_operators(
+                let quantumstate = apply_quantum_consciousness_operators(
                     &feature_vector,
-                    &advanced_state
+                    &advancedstate
                         .consciousness_amplitudes
                         .slice(s![y, x, c, ..]),
                     config,
                 )?;
 
                 // Update consciousness amplitudes
-                advanced_state.consciousness_amplitudes[(y, x, c, 0)] =
-                    Complex::new(quantum_state.re, 0.0);
-                advanced_state.consciousness_amplitudes[(y, x, c, 1)] =
-                    Complex::new(quantum_state.im, 0.0);
+                advancedstate.consciousness_amplitudes[(y, x, c, 0)] =
+                    Complex::new(quantumstate.re, 0.0);
+                advancedstate.consciousness_amplitudes[(y, x, c, 1)] =
+                    Complex::new(quantumstate.im, 0.0);
 
                 // Accumulate consciousness response
-                consciousness_amplitude += quantum_state;
+                consciousness_amplitude += quantumstate;
             }
 
             // Consciousness measurement (collapse to classical state)
@@ -477,7 +477,7 @@ where
     }
 
     // Apply consciousness-level global coherence
-    apply_global_consciousness_coherence(&mut consciousness_output, advanced_state, config)?;
+    apply_global_consciousness_coherence(&mut consciousness_output, advancedstate, config)?;
 
     Ok(consciousness_output)
 }
@@ -488,21 +488,22 @@ where
 /// and processing requirements, inspired by biological neural plasticity.
 #[allow(dead_code)]
 pub fn self_organizing_neural_processing(
-    advanced_features: &Array5<f64>,
-    advanced_state: &mut AdvancedState,
+    advancedfeatures: &Array5<f64>,
+    advancedstate: &mut AdvancedState,
     config: &AdvancedConfig,
 ) -> NdimageResult<Array2<f64>>
 where
 {
-    let (height, width_dimensions_temporal_consciousness) = advanced_features.dim();
+    let shape = advancedfeatures.dim();
+    let (height, width) = (shape.0, shape.1);
     let mut neural_output = Array2::zeros((height, width));
 
     // Access the network topology with proper locking
-    let mut topology = advanced_state.network_topology.write().unwrap();
+    let mut topology = advancedstate.network_topology.write().unwrap();
 
     // Self-organize network structure based on input patterns
     if config.self_organization {
-        reorganize_network_structure(&mut topology, advanced_features, config)?;
+        reorganize_network_structure(&mut topology, advancedfeatures, config)?;
     }
 
     // Process through self-organizing network
@@ -523,7 +524,7 @@ where
                             let connection_input = calculate_connection_input(
                                 source_node,
                                 connection,
-                                advanced_features,
+                                advancedfeatures,
                                 (y, x),
                                 config,
                             )?;
@@ -538,11 +539,11 @@ where
                 let activated_output =
                     apply_activation_function(node_activation, &activation_type, config)?;
 
-                // Update node _state
-                update_node_state(
+                // Update node state
+                update_nodestate(
                     &mut topology.nodes[pixel_id],
                     activated_output,
-                    advanced_features,
+                    advancedfeatures,
                     (y, x),
                     config,
                 )?;
@@ -570,7 +571,7 @@ where
 #[allow(dead_code)]
 pub fn analyze_temporal_causality<T>(
     image: &ArrayView2<T>,
-    advanced_state: &mut AdvancedState,
+    advancedstate: &mut AdvancedState,
     config: &AdvancedConfig,
 ) -> NdimageResult<Array2<f64>>
 where
@@ -583,38 +584,38 @@ where
     let current_temporal = image_to_temporal_representation(image)?;
 
     // Add to temporal memory
-    advanced_state
+    advancedstate
         .temporal_memory
         .push_back(current_temporal.clone());
 
     // Maintain temporal window size
-    while advanced_state.temporal_memory.len() > config.temporal_window {
-        advanced_state.temporal_memory.pop_front();
+    while advancedstate.temporal_memory.len() > config.temporal_window {
+        advancedstate.temporal_memory.pop_front();
     }
 
     // Analyze causal relationships if we have sufficient temporal data
-    if advanced_state.temporal_memory.len() >= config.causal_depth {
+    if advancedstate.temporal_memory.len() >= config.causal_depth {
         for y in 0..height {
             for x in 0..width {
                 let pixel_id = y * width + x;
 
                 // Extract temporal sequence for this pixel
                 let temporal_sequence =
-                    extract_pixel_temporal_sequence(&advanced_state.temporal_memory, (y, x))?;
+                    extract_pixel_temporal_sequence(&advancedstate.temporal_memory, (y, x))?;
 
                 // Detect causal relationships
                 let causal_relationships =
                     detect_causal_relationships(&temporal_sequence, pixel_id, config)?;
 
                 // Update causal graph
-                advanced_state
+                advancedstate
                     .causal_graph
                     .insert(pixel_id, causal_relationships.clone());
 
                 // Calculate causal influence on current pixel
                 let causal_influence = calculate_causal_influence(
                     &causal_relationships,
-                    &advanced_state.causal_graph,
+                    &advancedstate.causal_graph,
                     config,
                 )?;
 
@@ -635,7 +636,7 @@ pub fn meta_learning_adaptation(
     consciousness_response: &Array2<f64>,
     neural_response: &Array2<f64>,
     causal_response: &Array2<f64>,
-    advanced_state: &mut AdvancedState,
+    advancedstate: &mut AdvancedState,
     config: &AdvancedConfig,
 ) -> NdimageResult<Array2<f64>>
 where
@@ -653,7 +654,7 @@ where
 
     // Update meta-learning parameters based on pattern analysis
     update_meta_learning_parameters(
-        &mut advanced_state.meta_parameters,
+        &mut advancedstate.meta_parameters,
         &pattern_analysis,
         config,
     )?;
@@ -668,22 +669,22 @@ where
             // Determine optimal combination weights using meta-learning
             let combination_weights = determine_optimal_weights(
                 (consciousness_val, neural_val, causal_val),
-                &advanced_state.meta_parameters,
+                &advancedstate.meta_parameters,
                 (y, x),
                 config,
             )?;
 
             // Apply adaptive combination
-            let adapted_value = consciousness_val * combinationweights.0
-                + neural_val * combinationweights.1
-                + causal_val * combinationweights.2;
+            let adapted_value = consciousness_val * combination_weights.0
+                + neural_val * combination_weights.1
+                + causal_val * combination_weights.2;
 
             adapted_output[(y, x)] = adapted_value;
         }
     }
 
     // Apply meta-learning update to improve future adaptations
-    apply_meta_learning_update(advanced_state, &adapted_output, config)?;
+    apply_meta_learning_update(advancedstate, &adapted_output, config)?;
 
     Ok(adapted_output)
 }
@@ -692,12 +693,12 @@ where
 // (In a real implementation, these would be fully developed)
 
 #[allow(dead_code)]
-fn initialize_or_update_state(
-    _previous_state: Option<AdvancedState>,
+fn initialize_or_updatestate(
+    _previousstate: Option<AdvancedState>,
     shape: (usize, usize),
     config: &AdvancedConfig,
 ) -> NdimageResult<AdvancedState> {
-    // Implementation would initialize or update the advanced _state
+    // Implementation would initialize or update the advanced state
     Ok(AdvancedState {
         consciousness_amplitudes: Array4::zeros((shape.0, shape.1, config.consciousness_depth, 2)),
         meta_parameters: Array2::zeros((config.advanced_dimensions, config.temporal_window)),
@@ -713,7 +714,7 @@ fn initialize_or_update_state(
         })),
         temporal_memory: VecDeque::new(),
         causal_graph: BTreeMap::new(),
-        advanced_features: Array5::zeros((
+        advancedfeatures: Array5::zeros((
             shape.0,
             shape.1,
             config.advanced_dimensions,
@@ -721,13 +722,13 @@ fn initialize_or_update_state(
             config.consciousness_depth,
         )),
         resource_allocation: ResourceState {
-            cpu_allocation: vec![0.0; num, _cpus::get()],
+            cpu_allocation: vec![0.0; num_cpus::get()],
             memory_allocation: 0.0,
             gpu_allocation: None,
             quantum_allocation: None,
-            allocation_history: VecDeque::new(),
+            allocationhistory: VecDeque::new(),
         },
-        efficiency_metrics: EfficiencyMetrics {
+        efficiencymetrics: EfficiencyMetrics {
             ops_per_second: 0.0,
             memory_efficiency: 0.0,
             energy_efficiency: 0.0,
@@ -745,10 +746,11 @@ use ndarray::s;
 use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
-fn extract_spatial_features<T>(
+fn extract_spatialfeatures<T>(
     pixel_value: f64,
     position: (usize, usize),
-    image: &ArrayView2<T>, _config: &AdvancedConfig,
+    image: &ArrayView2<T>,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<Vec<f64>>
 where
     T: Float + FromPrimitive + Copy,
@@ -830,7 +832,7 @@ where
 }
 
 #[allow(dead_code)]
-fn extract_temporal_features(
+fn extract_temporalfeatures(
     pixel_value: f64,
     temporal_memory: &VecDeque<Array3<f64>>,
     config: &AdvancedConfig,
@@ -955,7 +957,7 @@ fn extract_temporal_features(
 }
 
 #[allow(dead_code)]
-fn extract_frequency_features<T>(
+fn extract_frequencyfeatures<T>(
     pixel_value: f64,
     position: (usize, usize),
     image: &ArrayView2<T>,
@@ -1086,29 +1088,44 @@ where
 }
 
 #[allow(dead_code)]
-fn extract_quantum_features(
-    _pixel_value: f64, _consciousness_amplitudes: &Array4<Complex<f64>>, _config: &AdvancedConfig,
+fn extract_quantumfeatures(
+    _pixel_value: f64,
+    _consciousness_amplitudes: &Array4<Complex<f64>>,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<Vec<f64>> {
     Ok(vec![0.0; 8])
 }
 
 #[allow(dead_code)]
-fn extract_consciousness_features(
-    _pixel_value: f64, _advanced_state: &AdvancedState, _config: &AdvancedConfig,
+fn extract_consciousnessfeatures(
+    _pixel_value: f64,
+    _advancedstate: &AdvancedState,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<Vec<f64>> {
     Ok(vec![0.0; 8])
 }
 
 #[allow(dead_code)]
-fn extract_causal_features(
-    _pixel_value: f64, _causal_graph: &BTreeMap<usize, Vec<CausalRelation>>, _config: &AdvancedConfig,
+fn extract_causalfeatures(
+    _pixel_value: f64,
+    _causal_graph: &BTreeMap<usize, Vec<CausalRelation>>,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<Vec<f64>> {
     Ok(vec![0.0; 8])
 }
 
 #[allow(dead_code)]
-fn combine_dimensional_features(
-    _spatial: &[f64], _temporal: &[f64], _frequency: &[f64], _quantum: &[f64], _consciousness: &[f64], _causal: &[f64], _d: usize, t: usize, _c: usize, config: &AdvancedConfig,
+fn combine_dimensionalfeatures(
+    _spatial: &[f64],
+    _temporal: &[f64],
+    _frequency: &[f64],
+    _quantum: &[f64],
+    _consciousness: &[f64],
+    _causal: &[f64],
+    _d: usize,
+    t: usize,
+    _c: usize,
+    config: &AdvancedConfig,
 ) -> NdimageResult<f64> {
     Ok(0.0)
 }
@@ -1116,14 +1133,14 @@ fn combine_dimensional_features(
 #[allow(dead_code)]
 fn apply_quantum_consciousness_operators(
     feature_vector: &[f64],
-    consciousness_state: &ndarray::ArrayView1<Complex<f64>>,
+    consciousnessstate: &ndarray::ArrayView1<Complex<f64>>,
     config: &AdvancedConfig,
 ) -> NdimageResult<Complex<f64>> {
-    if feature_vector.is_empty() || consciousness_state.is_empty() {
+    if feature_vector.is_empty() || consciousnessstate.is_empty() {
         return Ok(Complex::new(0.0, 0.0));
     }
 
-    let mut quantum_state = Complex::new(0.0, 0.0);
+    let mut quantumstate = Complex::new(0.0, 0.0);
 
     // Quantum superposition of feature states
     let feature_norm = feature_vector
@@ -1132,70 +1149,78 @@ fn apply_quantum_consciousness_operators(
         .sum::<f64>()
         .sqrt()
         .max(1e-10);
-    let normalized_features: Vec<f64> = feature_vector.iter().map(|&x| x / feature_norm).collect();
+    let normalizedfeatures: Vec<f64> = feature_vector.iter().map(|&x| x / feature_norm).collect();
 
     // Apply quantum Hadamard-like transformation
-    for (i, &feature) in normalized_features.iter().enumerate() {
-        if i < consciousness_state.len() {
+    for (i, &feature) in normalizedfeatures.iter().enumerate() {
+        if i < consciousnessstate.len() {
             let phase = feature * PI * config.quantum.phase_factor;
             let amplitude = (feature.abs() / config.consciousness_depth as f64).sqrt();
 
-            // Quantum interference with existing consciousness _state
-            let existing_state = consciousness_state[i % consciousness_state.len()];
+            // Quantum interference with existing consciousness state
+            let existingstate = consciousnessstate[i % consciousnessstate.len()];
 
             // Apply quantum rotation
             let cos_phase = phase.cos();
             let sin_phase = phase.sin();
 
-            let rotated_real = existing_state.re * cos_phase - existing_state.im * sin_phase;
-            let rotated_imag = existing_state.re * sin_phase + existing_state.im * cos_phase;
+            let rotated_real = existingstate.re * cos_phase - existingstate.im * sin_phase;
+            let rotated_imag = existingstate.re * sin_phase + existingstate.im * cos_phase;
 
-            quantum_state += Complex::new(rotated_real, rotated_imag) * amplitude;
+            quantumstate += Complex::new(rotated_real, rotated_imag) * amplitude;
         }
     }
 
     // Apply quantum entanglement effects
     let entanglement_factor = config.quantum.entanglement_strength;
-    let entangled_phase = normalized_features.iter().sum::<f64>() * PI * entanglement_factor;
+    let entangled_phase = normalizedfeatures.iter().sum::<f64>() * PI * entanglement_factor;
 
     let entanglement_rotation = Complex::new(entangled_phase.cos(), entangled_phase.sin());
-    quantum_state *= entanglement_rotation;
+    quantumstate *= entanglement_rotation;
 
     // Apply consciousness-specific quantum effects
     let consciousness_depth_factor =
         1.0 / (1.0 + (-(config.consciousness_depth as f64) * 0.1).exp());
-    quantum_state *= consciousness_depth_factor;
+    quantumstate *= consciousness_depth_factor;
 
     // Quantum decoherence simulation
     let decoherence_factor = (1.0 - config.quantum.decoherence_rate).max(0.1);
-    quantum_state *= decoherence_factor;
+    quantumstate *= decoherence_factor;
 
-    // Normalize quantum _state
-    let norm = quantum_state.norm();
+    // Normalize quantum state
+    let norm = quantumstate.norm();
     if norm > 1e-10 {
-        quantum_state /= norm;
+        quantumstate /= norm;
     }
 
-    Ok(quantum_state)
+    Ok(quantumstate)
 }
 
 #[allow(dead_code)]
 fn apply_global_consciousness_coherence(
-    _consciousness_output: &mut Array2<f64>, _advanced_state: &AdvancedState, _config: &AdvancedConfig,
+    _consciousness_output: &mut Array2<f64>,
+    _advancedstate: &AdvancedState,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn reorganize_network_structure(
-    _topology: &mut NetworkTopology_advanced, features: &Array5<f64>, _config: &AdvancedConfig,
+    _topology: &mut NetworkTopology,
+    features: &Array5<f64>,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn calculate_connection_input(
-    _source_node: &NetworkNode, _connection: &Connection_advanced, features: &Array5<f64>, _position: (usize, usize), _config: &AdvancedConfig,
+    _source_node: &NetworkNode,
+    _connection: &Connection,
+    features: &Array5<f64>,
+    _position: (usize, usize),
+    _config: &AdvancedConfig,
 ) -> NdimageResult<f64> {
     Ok(0.0)
 }
@@ -1256,22 +1281,31 @@ fn apply_activation_function(
 }
 
 #[allow(dead_code)]
-fn update_node_state(
-    _node: &mut NetworkNode, output: f64, _advanced_features: &Array5<f64>, _position: (usize, usize), _config: &AdvancedConfig,
+fn update_nodestate(
+    _node: &mut NetworkNode,
+    output: f64,
+    _advancedfeatures: &Array5<f64>,
+    _position: (usize, usize),
+    _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn apply_self_organization_learning(
-    _node: &mut NetworkNode, connections: &mut HashMap<usize, Vec<Connection>>, _node_id: usize, _config: &AdvancedConfig,
+    _node: &mut NetworkNode,
+    connections: &mut HashMap<usize, Vec<Connection>>,
+    _node_id: usize,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn apply_self_organization_learning_safe(
-    _topology: &mut NetworkTopology_node, id: usize, _config: &AdvancedConfig,
+    _topology: &mut NetworkTopology,
+    id: usize,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     // Stub implementation to avoid borrowing issues
     Ok(())
@@ -1279,7 +1313,8 @@ fn apply_self_organization_learning_safe(
 
 #[allow(dead_code)]
 fn update_global_network_properties(
-    _topology: &mut NetworkTopology, config: &AdvancedConfig,
+    _topology: &mut NetworkTopology,
+    config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
@@ -1294,7 +1329,8 @@ where
 
 #[allow(dead_code)]
 fn extract_pixel_temporal_sequence(
-    _temporal_memory: &VecDeque<Array3<f64>>, _position: (usize, usize),
+    _temporal_memory: &VecDeque<Array3<f64>>,
+    _position: (usize, usize),
 ) -> NdimageResult<Vec<f64>> {
     Ok(vec![0.0; 8])
 }
@@ -1457,53 +1493,65 @@ fn calculate_window_variance(window: &[f64]) -> f64 {
 
 #[allow(dead_code)]
 fn calculate_causal_influence(
-    _relationships: &[CausalRelation], _causal_graph: &BTreeMap<usize, Vec<CausalRelation>>, _config: &AdvancedConfig,
+    _relationships: &[CausalRelation],
+    _causal_graph: &BTreeMap<usize, Vec<CausalRelation>>,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<f64> {
     Ok(0.0)
 }
 
 #[allow(dead_code)]
 fn analyze_input_patterns(
-    _consciousness: &Array2<f64>, _neural: &Array2<f64>, _causal: &Array2<f64>, _config: &AdvancedConfig,
+    _consciousness: &Array2<f64>,
+    _neural: &Array2<f64>,
+    _causal: &Array2<f64>,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<Array2<f64>> {
     Ok(Array2::zeros((1, 1)))
 }
 
 #[allow(dead_code)]
 fn update_meta_learning_parameters(
-    _meta_params: &mut Array2<f64>, _pattern_analysis: &Array2<f64>, _config: &AdvancedConfig,
+    _meta_params: &mut Array2<f64>,
+    _pattern_analysis: &Array2<f64>,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn determine_optimal_weights(
-    _inputs: (f64, f64, f64), _meta_params: &Array2<f64>, _position: (usize, usize), _config: &AdvancedConfig,
+    _inputs: (f64, f64, f64),
+    _meta_params: &Array2<f64>,
+    _position: (usize, usize),
+    _config: &AdvancedConfig,
 ) -> NdimageResult<(f64, f64, f64)> {
     Ok((0.33, 0.33, 0.34))
 }
 
 #[allow(dead_code)]
 fn apply_meta_learning_update(
-    _advanced_state: &mut AdvancedState, _output: &Array2<f64>, _config: &AdvancedConfig,
+    _advancedstate: &mut AdvancedState,
+    _output: &Array2<f64>,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn optimize_resource_allocation(
-    advanced_state: &mut AdvancedState,
+    advancedstate: &mut AdvancedState,
     config: &AdvancedConfig,
 ) -> NdimageResult<()> {
-    let current_time = advanced_state.resource_allocation.allocation_history.len();
+    let current_time = advancedstate.resource_allocation.allocationhistory.len();
 
     // Measure current resource utilization
     let mut current_utilization = HashMap::new();
 
     // CPU utilization analysis
-    let cpu_count = advanced_state.resource_allocation.cpu_allocation.len();
-    let avg_cpu_load = if !advanced_state.resource_allocation.cpu_allocation.is_empty() {
-        advanced_state
+    let cpu_count = advancedstate.resource_allocation.cpu_allocation.len();
+    let avg_cpu_load = if !advancedstate.resource_allocation.cpu_allocation.is_empty() {
+        advancedstate
             .resource_allocation
             .cpu_allocation
             .iter()
@@ -1517,25 +1565,25 @@ fn optimize_resource_allocation(
     // Memory utilization
     current_utilization.insert(
         "memory".to_string(),
-        advanced_state.resource_allocation.memory_allocation,
+        advancedstate.resource_allocation.memory_allocation,
     );
 
     // GPU utilization (if available)
-    if let Some(gpu_alloc) = advanced_state.resource_allocation.gpu_allocation {
+    if let Some(gpu_alloc) = advancedstate.resource_allocation.gpu_allocation {
         current_utilization.insert("gpu".to_string(), gpu_alloc);
     }
 
     // Quantum utilization (if available)
-    if let Some(quantum_alloc) = advanced_state.resource_allocation.quantum_allocation {
+    if let Some(quantum_alloc) = advancedstate.resource_allocation.quantum_allocation {
         current_utilization.insert("quantum".to_string(), quantum_alloc);
     }
 
     // Calculate performance score based on efficiency metrics
-    let performance_score = (advanced_state.efficiency_metrics.ops_per_second / 1000.0
-        + advanced_state.efficiency_metrics.memory_efficiency
-        + advanced_state.efficiency_metrics.energy_efficiency
-        + advanced_state.efficiency_metrics.quality_efficiency
-        + advanced_state.efficiency_metrics.temporal_efficiency)
+    let performance_score = (advancedstate.efficiencymetrics.ops_per_second / 1000.0
+        + advancedstate.efficiencymetrics.memory_efficiency
+        + advancedstate.efficiencymetrics.energy_efficiency
+        + advancedstate.efficiencymetrics.quality_efficiency
+        + advancedstate.efficiencymetrics.temporal_efficiency)
         / 5.0;
 
     // Efficiency score calculation
@@ -1553,46 +1601,46 @@ fn optimize_resource_allocation(
         efficiency: efficiency_score,
     };
 
-    advanced_state
+    advancedstate
         .resource_allocation
-        .allocation_history
+        .allocationhistory
         .push_back(snapshot);
 
     // Maintain history window
-    while advanced_state.resource_allocation.allocation_history.len() > config.temporal_window {
-        advanced_state
+    while advancedstate.resource_allocation.allocationhistory.len() > config.temporal_window {
+        advancedstate
             .resource_allocation
-            .allocation_history
+            .allocationhistory
             .pop_front();
     }
 
     // Adaptive optimization based on historical performance
-    if advanced_state.resource_allocation.allocation_history.len() >= 3 {
-        let recent_history: Vec<&AllocationSnapshot> = advanced_state
+    if advancedstate.resource_allocation.allocationhistory.len() >= 3 {
+        let recenthistory: Vec<&AllocationSnapshot> = advancedstate
             .resource_allocation
-            .allocation_history
+            .allocationhistory
             .iter()
             .rev()
             .take(3)
             .collect();
 
         // Calculate performance trend
-        let performance_trend = if recent_history.len() >= 2 {
-            recent_history[0].performance - recent_history[1].performance
+        let performance_trend = if recenthistory.len() >= 2 {
+            recenthistory[0].performance - recenthistory[1].performance
         } else {
             0.0
         };
 
         // Calculate efficiency trend
-        let efficiency_trend = if recent_history.len() >= 2 {
-            recent_history[0].efficiency - recent_history[1].efficiency
+        let efficiency_trend = if recenthistory.len() >= 2 {
+            recenthistory[0].efficiency - recenthistory[1].efficiency
         } else {
             0.0
         };
 
         // Adaptive CPU allocation
         if config.adaptive_resources {
-            for cpu_alloc in advanced_state.resource_allocation.cpu_allocation.iter_mut() {
+            for cpu_alloc in advancedstate.resource_allocation.cpu_allocation.iter_mut() {
                 if performance_trend < -0.1 && efficiency_trend < -0.1 {
                     // Performance declining, increase allocation
                     *cpu_alloc = (*cpu_alloc + 0.1).min(1.0);
@@ -1612,16 +1660,16 @@ fn optimize_resource_allocation(
         let memory_pressure = current_utilization.get("memory").unwrap_or(&0.5);
         if *memory_pressure > 0.8 && performance_trend < 0.0 {
             // High memory pressure affecting performance
-            advanced_state.resource_allocation.memory_allocation =
-                (advanced_state.resource_allocation.memory_allocation + 0.1).min(1.0);
+            advancedstate.resource_allocation.memory_allocation =
+                (advancedstate.resource_allocation.memory_allocation + 0.1).min(1.0);
         } else if *memory_pressure < 0.3 && efficiency_trend > 0.1 {
             // Low memory usage, can reduce allocation
-            advanced_state.resource_allocation.memory_allocation =
-                (advanced_state.resource_allocation.memory_allocation - 0.05).max(0.2);
+            advancedstate.resource_allocation.memory_allocation =
+                (advancedstate.resource_allocation.memory_allocation - 0.05).max(0.2);
         }
 
         // GPU allocation optimization (if available)
-        if let Some(ref mut gpu_alloc) = advanced_state.resource_allocation.gpu_allocation {
+        if let Some(ref mut gpu_alloc) = advancedstate.resource_allocation.gpu_allocation {
             let gpu_utilization = current_utilization.get("gpu").unwrap_or(&0.5);
 
             if *gpu_utilization > 0.9 && performance_trend > 0.0 {
@@ -1634,7 +1682,7 @@ fn optimize_resource_allocation(
         }
 
         // Quantum allocation optimization (experimental)
-        if let Some(ref mut quantum_alloc) = advanced_state.resource_allocation.quantum_allocation {
+        if let Some(ref mut quantum_alloc) = advancedstate.resource_allocation.quantum_allocation {
             // Quantum resources are precious and complex to optimize
             let quantum_efficiency = efficiency_score * config.quantum.coherence_factor;
 
@@ -1652,20 +1700,20 @@ fn optimize_resource_allocation(
     if config.advanced_efficiency {
         // Predictive load balancing
         let predicted_load =
-            predict_future_load(&advanced_state.resource_allocation.allocation_history);
+            predict_future_load(&advancedstate.resource_allocation.allocationhistory);
 
         // Preemptive resource adjustment
         if predicted_load > 0.8 {
             // Increase all allocations preemptively
-            for cpu_alloc in advanced_state.resource_allocation.cpu_allocation.iter_mut() {
+            for cpu_alloc in advancedstate.resource_allocation.cpu_allocation.iter_mut() {
                 *cpu_alloc = (*cpu_alloc * 1.1).min(1.0);
             }
 
-            advanced_state.resource_allocation.memory_allocation =
-                (advanced_state.resource_allocation.memory_allocation * 1.1).min(1.0);
+            advancedstate.resource_allocation.memory_allocation =
+                (advancedstate.resource_allocation.memory_allocation * 1.1).min(1.0);
         } else if predicted_load < 0.3 {
             // Reduce allocations to save energy
-            for cpu_alloc in advanced_state.resource_allocation.cpu_allocation.iter_mut() {
+            for cpu_alloc in advancedstate.resource_allocation.cpu_allocation.iter_mut() {
                 *cpu_alloc = (*cpu_alloc * 0.9).max(0.1);
             }
         }
@@ -1677,7 +1725,7 @@ fn optimize_resource_allocation(
 #[allow(dead_code)]
 fn multi_scale_integration(
     input: &Array2<f64>,
-    advanced_state: &mut AdvancedState,
+    advancedstate: &mut AdvancedState,
     config: &AdvancedConfig,
 ) -> NdimageResult<Array2<f64>> {
     let (height, width) = input.dim();
@@ -1835,7 +1883,7 @@ fn multi_scale_integration(
                 let original_value = input[(y, x)];
 
                 // Consciousness-guided integration
-                let consciousness_factor = advanced_state.efficiency_metrics.quality_efficiency;
+                let consciousness_factor = advancedstate.efficiencymetrics.quality_efficiency;
                 let integration_weight = consciousness_factor.tanh();
 
                 integrated_output[(y, x)] = integration_weight * multi_scale_value
@@ -1849,17 +1897,20 @@ fn multi_scale_integration(
 
 #[allow(dead_code)]
 fn generate_consciousness_guided_output<T>(
-    _original_image: &ArrayView2<T>, _processed_response: &Array2<f64>, _advanced_state: &AdvancedState, _config: &AdvancedConfig,
+    _originalimage: &ArrayView2<T>,
+    _processed_response: &Array2<f64>,
+    _advancedstate: &AdvancedState,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = original_image.dim();
+    let (height, width) = _originalimage.dim();
     let mut output = Array2::zeros((height, width));
 
     for y in 0..height {
         for x in 0..width {
-            let processed_val = processed_response[(y, x)];
+            let processed_val = _processed_response[(y, x)];
             output[(y, x)] = T::from_f64(processed_val).unwrap_or_else(|| T::zero());
         }
     }
@@ -1868,27 +1919,27 @@ where
 }
 
 #[allow(dead_code)]
-fn update_efficiency_metrics(
-    advanced_state: &mut AdvancedState,
+fn update_efficiencymetrics(
+    advancedstate: &mut AdvancedState,
     config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     let start_time = std::time::Instant::now();
 
     // Calculate processing speed (operations per second)
-    let total_elements = advanced_state.advanced_features.len() as f64;
+    let total_elements = advancedstate.advancedfeatures.len() as f64;
     let processing_time = start_time.elapsed().as_secs_f64().max(1e-10);
-    advanced_state.efficiency_metrics.ops_per_second = total_elements / processing_time;
+    advancedstate.efficiencymetrics.ops_per_second = total_elements / processing_time;
 
     // Calculate memory efficiency
-    let allocated_memory = advanced_state.resource_allocation.memory_allocation;
-    let used_memory = if !advanced_state
+    let allocated_memory = advancedstate.resource_allocation.memory_allocation;
+    let used_memory = if !advancedstate
         .resource_allocation
-        .allocation_history
+        .allocationhistory
         .is_empty()
     {
-        advanced_state
+        advancedstate
             .resource_allocation
-            .allocation_history
+            .allocationhistory
             .back()
             .unwrap()
             .utilization
@@ -1897,38 +1948,38 @@ fn update_efficiency_metrics(
     } else {
         &0.5
     };
-    advanced_state.efficiency_metrics.memory_efficiency = used_memory / allocated_memory.max(0.1);
+    advancedstate.efficiencymetrics.memory_efficiency = used_memory / allocated_memory.max(0.1);
 
     // Calculate energy efficiency (simplified model)
-    let cpu_usage: f64 = advanced_state
+    let cpu_usage: f64 = advancedstate
         .resource_allocation
         .cpu_allocation
         .iter()
         .sum();
-    let gpu_usage = advanced_state
+    let gpu_usage = advancedstate
         .resource_allocation
         .gpu_allocation
         .unwrap_or(0.0);
-    let quantum_usage = advanced_state
+    let quantum_usage = advancedstate
         .resource_allocation
         .quantum_allocation
         .unwrap_or(0.0);
 
     let total_energy_consumption = cpu_usage * 100.0 + gpu_usage * 250.0 + quantum_usage * 1000.0; // Watts (approximate)
-    advanced_state.efficiency_metrics.energy_efficiency = if total_energy_consumption > 0.0 {
-        advanced_state.efficiency_metrics.ops_per_second / total_energy_consumption
+    advancedstate.efficiencymetrics.energy_efficiency = if total_energy_consumption > 0.0 {
+        advancedstate.efficiencymetrics.ops_per_second / total_energy_consumption
     } else {
         0.0
     };
 
     // Calculate quality efficiency (based on consciousness and quantum coherence)
     let consciousness_quality = {
-        let coherence_sum = advanced_state
+        let coherence_sum = advancedstate
             .consciousness_amplitudes
             .iter()
             .map(|&amp| amp.norm())
             .sum::<f64>();
-        let total_elements = advanced_state.consciousness_amplitudes.len() as f64;
+        let total_elements = advancedstate.consciousness_amplitudes.len() as f64;
         if total_elements > 0.0 {
             coherence_sum / total_elements
         } else {
@@ -1938,23 +1989,22 @@ fn update_efficiency_metrics(
 
     let quantum_quality = config.quantum.coherence_factor * (1.0 - config.quantum.decoherence_rate);
     let neural_quality = {
-        let topology = advanced_state.network_topology.read().unwrap();
+        let topology = advancedstate.network_topology.read().unwrap();
         topology.global_properties.efficiency
     };
 
-    advanced_state.efficiency_metrics.quality_efficiency =
+    advancedstate.efficiencymetrics.quality_efficiency =
         (consciousness_quality + quantum_quality + neural_quality) / 3.0;
 
     // Calculate temporal efficiency (real-time processing capability)
     let target_fps = 30.0; // Target 30 FPS for real-time processing
     let actual_fps = 1.0 / processing_time.max(1e-10);
-    advanced_state.efficiency_metrics.temporal_efficiency = (actual_fps / target_fps).min(1.0);
+    advancedstate.efficiencymetrics.temporal_efficiency = (actual_fps / target_fps).min(1.0);
 
     // Update global network properties with efficiency metrics
     {
-        let mut topology = advanced_state.network_topology.write().unwrap();
-        topology.global_properties.efficiency =
-            advanced_state.efficiency_metrics.quality_efficiency;
+        let mut topology = advancedstate.network_topology.write().unwrap();
+        topology.global_properties.efficiency = advancedstate.efficiencymetrics.quality_efficiency;
         topology.global_properties.coherence = consciousness_quality;
 
         // Update consciousness emergence based on quantum and neural integration
@@ -1963,8 +2013,8 @@ fn update_efficiency_metrics(
 
         // Update self-organization index based on network adaptivity
         if config.self_organization {
-            let adaptivity_score = advanced_state.efficiency_metrics.temporal_efficiency
-                * advanced_state.efficiency_metrics.quality_efficiency;
+            let adaptivity_score = advancedstate.efficiencymetrics.temporal_efficiency
+                * advancedstate.efficiencymetrics.quality_efficiency;
             topology.global_properties.self_organization_index =
                 (topology.global_properties.self_organization_index * 0.9 + adaptivity_score * 0.1)
                     .min(1.0);
@@ -1981,7 +2031,7 @@ fn predict_future_load(history: &VecDeque<AllocationSnapshot>) -> f64 {
     }
 
     // Simple linear trend prediction
-    let recent_loads: Vec<f64> = _history
+    let recent_loads: Vec<f64> = history
         .iter()
         .rev()
         .take(5)
@@ -2010,11 +2060,11 @@ fn predict_future_load(history: &VecDeque<AllocationSnapshot>) -> f64 {
 #[derive(Debug, Clone)]
 pub struct QuantumConsciousnessEvolution {
     /// Consciousness evolution history
-    pub evolution_history: VecDeque<ConsciousnessState>,
+    pub evolutionhistory: VecDeque<ConsciousnessState>,
     /// Evolution rate parameters
     pub evolution_rate: f64,
     /// Consciousness complexity metrics
-    pub complexity_metrics: ConsciousnessComplexity,
+    pub complexitymetrics: ConsciousnessComplexity,
     /// Quantum coherence optimization engine
     pub coherence_optimizer: QuantumCoherenceOptimizer,
     /// Evolutionary selection pressure
@@ -2060,7 +2110,7 @@ pub struct QuantumCoherenceOptimizer {
     /// Optimization parameters
     pub optimization_params: HashMap<String, f64>,
     /// Performance history
-    pub performance_history: VecDeque<f64>,
+    pub performancehistory: VecDeque<f64>,
 }
 
 #[derive(Debug, Clone)]
@@ -2083,9 +2133,9 @@ pub enum CoherenceStrategy {
 impl Default for QuantumConsciousnessEvolution {
     fn default() -> Self {
         Self {
-            evolution_history: VecDeque::new(),
+            evolutionhistory: VecDeque::new(),
             evolution_rate: 0.01,
-            complexity_metrics: ConsciousnessComplexity {
+            complexitymetrics: ConsciousnessComplexity {
                 integrated_information: 0.0,
                 causal_complexity: 0.0,
                 temporal_coherence: 0.0,
@@ -2106,7 +2156,7 @@ impl Default for QuantumConsciousnessEvolution {
                     },
                 ],
                 optimization_params: HashMap::new(),
-                performance_history: VecDeque::new(),
+                performancehistory: VecDeque::new(),
             },
             selection_pressure: 0.1,
             emergence_threshold: 0.7,
@@ -2122,22 +2172,22 @@ impl Default for QuantumConsciousnessEvolution {
 #[allow(dead_code)]
 pub fn enhanced_quantum_consciousness_evolution<T>(
     image: ArrayView2<T>,
-    advanced_features: &Array5<f64>,
-    advanced_state: &mut AdvancedState,
+    advancedfeatures: &Array5<f64>,
+    advancedstate: &mut AdvancedState,
     config: &AdvancedConfig,
     evolution_system: &mut QuantumConsciousnessEvolution,
 ) -> NdimageResult<Array2<f64>>
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width, dimensions, temporal, consciousness) = advanced_features.dim();
+    let (height, width, dimensions, temporal, consciousness) = advancedfeatures.dim();
     let mut consciousness_output = Array2::zeros((height, width));
 
-    // Analyze current consciousness _state
-    let current_state = analyze_consciousness_state(advanced_state, config)?;
+    // Analyze current consciousness state
+    let currentstate = analyze_consciousnessstate(advancedstate, config)?;
 
     // Evolutionary consciousness adaptation
-    evolve_consciousness_parameters(evolution_system, &current_state, config)?;
+    evolve_consciousness_parameters(evolution_system, &currentstate, config)?;
 
     // Enhanced quantum processing with evolution
     for y in 0..height {
@@ -2150,14 +2200,14 @@ where
                 let mut feature_vector = Vec::new();
                 for d in 0..dimensions {
                     for t in 0..temporal {
-                        feature_vector.push(advanced_features[(y, x, d, t, c)]);
+                        feature_vector.push(advancedfeatures[(y, x, d, t, c)]);
                     }
                 }
 
                 // Apply evolved quantum consciousness operators
-                let evolved_quantum_state = apply_evolved_quantum_consciousness_operators(
+                let evolved_quantumstate = apply_evolved_quantum_consciousness_operators(
                     &feature_vector,
-                    &advanced_state
+                    &advancedstate
                         .consciousness_amplitudes
                         .slice(s![y, x, c, ..]),
                     config,
@@ -2165,13 +2215,13 @@ where
                 )?;
 
                 // Update consciousness amplitudes with evolution
-                advanced_state.consciousness_amplitudes[(y, x, c, 0)] =
-                    Complex::new(evolved_quantum_state.re, 0.0);
-                advanced_state.consciousness_amplitudes[(y, x, c, 1)] =
-                    Complex::new(evolved_quantum_state.im, 0.0);
+                advancedstate.consciousness_amplitudes[(y, x, c, 0)] =
+                    Complex::new(evolved_quantumstate.re, 0.0);
+                advancedstate.consciousness_amplitudes[(y, x, c, 1)] =
+                    Complex::new(evolved_quantumstate.im, 0.0);
 
                 // Accumulate evolved consciousness response
-                evolved_consciousness_amplitude += evolved_quantum_state;
+                evolved_consciousness_amplitude += evolved_quantumstate;
             }
 
             // Apply consciousness evolution and selection
@@ -2189,26 +2239,26 @@ where
     // Apply global consciousness evolution coherence
     apply_evolved_global_consciousness_coherence(
         &mut consciousness_output,
-        advanced_state,
+        advancedstate,
         evolution_system,
         config,
     )?;
 
     // Update evolution history
-    update_consciousness_evolution_history(evolution_system, &current_state)?;
+    update_consciousness_evolutionhistory(evolution_system, &currentstate)?;
 
     Ok(consciousness_output)
 }
 
 /// Analyze current consciousness state for evolutionary adaptation
 #[allow(dead_code)]
-fn analyze_consciousness_state(
-    advanced_state: &AdvancedState,
+fn analyze_consciousnessstate(
+    advancedstate: &AdvancedState,
     config: &AdvancedConfig,
 ) -> NdimageResult<ConsciousnessState> {
     // Calculate consciousness level based on quantum amplitudes
-    let total_amplitudes = advanced_state.consciousness_amplitudes.len() as f64;
-    let coherence_sum = advanced_state
+    let total_amplitudes = advancedstate.consciousness_amplitudes.len() as f64;
+    let coherence_sum = advancedstate
         .consciousness_amplitudes
         .iter()
         .map(|&amp| amp.norm())
@@ -2221,7 +2271,7 @@ fn analyze_consciousness_state(
     };
 
     // Calculate quantum coherence quality
-    let coherence_variance = advanced_state
+    let coherence_variance = advancedstate
         .consciousness_amplitudes
         .iter()
         .map(|&amp| {
@@ -2234,11 +2284,11 @@ fn analyze_consciousness_state(
     let coherence_quality = 1.0 / (1.0 + coherence_variance);
 
     // Calculate Phi measure (simplified integrated information)
-    let phi_measure = calculate_simplified_phi_measure(advanced_state, config)?;
+    let phi_measure = calculate_simplified_phi_measure(advancedstate, config)?;
 
     // Calculate attention strength from network topology
     let attention_strength = {
-        let topology = advanced_state.network_topology.read().unwrap();
+        let topology = advancedstate.network_topology.read().unwrap();
         topology.global_properties.coherence
     };
 
@@ -2251,18 +2301,18 @@ fn analyze_consciousness_state(
         phi_measure,
         attention_strength,
         self_awareness,
-        timestamp: advanced_state.temporal_memory.len(),
+        timestamp: advancedstate.temporal_memory.len(),
     })
 }
 
 /// Calculate simplified Phi measure for integrated information
 #[allow(dead_code)]
 fn calculate_simplified_phi_measure(
-    advanced_state: &AdvancedState,
+    advancedstate: &AdvancedState,
     config: &AdvancedConfig,
 ) -> NdimageResult<f64> {
     // Simplified Phi calculation based on causal relationships
-    let total_causal_strength: f64 = advanced_state
+    let total_causal_strength: f64 = advancedstate
         .causal_graph
         .values()
         .flat_map(|relations| relations.iter())
@@ -2270,7 +2320,7 @@ fn calculate_simplified_phi_measure(
         .sum();
 
     let num_pixels =
-        advanced_state.consciousness_amplitudes.len() / (config.consciousness_depth * 2);
+        advancedstate.consciousness_amplitudes.len() / (config.consciousness_depth * 2);
 
     let phi = if num_pixels > 0 {
         total_causal_strength / num_pixels as f64
@@ -2285,13 +2335,14 @@ fn calculate_simplified_phi_measure(
 #[allow(dead_code)]
 fn evolve_consciousness_parameters(
     evolution_system: &mut QuantumConsciousnessEvolution,
-    current_state: &ConsciousnessState, _config: &AdvancedConfig,
+    currentstate: &ConsciousnessState,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     // Calculate evolution pressure based on consciousness quality
-    let consciousness_fitness = (current_state.level
-        + current_state.coherence_quality
-        + current_state.phi_measure
-        + current_state.self_awareness)
+    let consciousness_fitness = (currentstate.level
+        + currentstate.coherence_quality
+        + currentstate.phi_measure
+        + currentstate.self_awareness)
         / 4.0;
 
     // Apply evolutionary pressure
@@ -2307,9 +2358,9 @@ fn evolve_consciousness_parameters(
     }
 
     // Update complexity metrics
-    evolution_system.complexity_metrics.integrated_information = current_state.phi_measure;
-    evolution_system.complexity_metrics.temporal_coherence = current_state.coherence_quality;
-    evolution_system.complexity_metrics.emergence_strength = consciousness_fitness;
+    evolution_system.complexitymetrics.integrated_information = currentstate.phi_measure;
+    evolution_system.complexitymetrics.temporal_coherence = currentstate.coherence_quality;
+    evolution_system.complexitymetrics.emergence_strength = consciousness_fitness;
 
     // Evolve quantum coherence optimization strategies
     evolve_coherence_strategies(
@@ -2327,15 +2378,14 @@ fn evolve_coherence_strategies(
     fitness: f64,
 ) -> NdimageResult<()> {
     // Add fitness to performance history
-    optimizer.performance_history.push_back(fitness);
-    if optimizer.performance_history.len() > 50 {
-        optimizer.performance_history.pop_front();
+    optimizer.performancehistory.push_back(fitness);
+    if optimizer.performancehistory.len() > 50 {
+        optimizer.performancehistory.pop_front();
     }
 
     // Calculate average performance
-    let avg_performance = if !optimizer.performance_history.is_empty() {
-        optimizer.performance_history.iter().sum::<f64>()
-            / optimizer.performance_history.len() as f64
+    let avg_performance = if !optimizer.performancehistory.is_empty() {
+        optimizer.performancehistory.iter().sum::<f64>() / optimizer.performancehistory.len() as f64
     } else {
         0.5
     };
@@ -2384,22 +2434,22 @@ fn evolve_coherence_strategies(
 #[allow(dead_code)]
 fn apply_evolved_quantum_consciousness_operators(
     feature_vector: &[f64],
-    consciousness_state: &ndarray::ArrayView1<Complex<f64>>,
+    consciousnessstate: &ndarray::ArrayView1<Complex<f64>>,
     config: &AdvancedConfig,
     evolution_system: &QuantumConsciousnessEvolution,
 ) -> NdimageResult<Complex<f64>> {
-    if feature_vector.is_empty() || consciousness_state.is_empty() {
+    if feature_vector.is_empty() || consciousnessstate.is_empty() {
         return Ok(Complex::new(0.0, 0.0));
     }
 
     // Apply base quantum consciousness processing
-    let base_state =
-        apply_quantum_consciousness_operators(feature_vector, consciousness_state, config)?;
+    let basestate =
+        apply_quantum_consciousness_operators(feature_vector, consciousnessstate, config)?;
 
     // Apply evolutionary enhancements
 
     // 1. Consciousness level modulation
-    let consciousness_level = evolution_system.complexity_metrics.emergence_strength;
+    let consciousness_level = evolution_system.complexitymetrics.emergence_strength;
     let level_enhancement = Complex::new(consciousness_level.cos(), consciousness_level.sin());
 
     // 2. Evolutionary phase adjustment
@@ -2407,28 +2457,28 @@ fn apply_evolved_quantum_consciousness_operators(
     let evolution_enhancement = Complex::new(evolution_phase.cos(), evolution_phase.sin());
 
     // 3. Quantum coherence optimization
-    let coherence_factor = evolution_system.complexity_metrics.temporal_coherence;
+    let coherence_factor = evolution_system.complexitymetrics.temporal_coherence;
     let coherence_enhancement = coherence_factor * (1.0 + 0.1 * (evolution_phase * 2.0).sin());
 
     // Combine enhancements
-    let mut evolved_quantum_state =
-        base_state * level_enhancement * evolution_enhancement * coherence_enhancement;
+    let mut evolved_quantumstate =
+        basestate * level_enhancement * evolution_enhancement * coherence_enhancement;
 
     // Apply consciousness emergence threshold
-    if evolution_system.complexity_metrics.emergence_strength > evolution_system.emergence_threshold
+    if evolution_system.complexitymetrics.emergence_strength > evolution_system.emergence_threshold
     {
         // Emergence boost for high-consciousness states
         let emergence_boost = Complex::new(1.2, 0.1);
-        evolved_quantum_state *= emergence_boost;
+        evolved_quantumstate *= emergence_boost;
     }
 
     // Normalize to prevent runaway amplification
-    let norm = evolved_quantum_state.norm();
+    let norm = evolved_quantumstate.norm();
     if norm > 1e-10 {
-        evolved_quantum_state /= norm;
+        evolved_quantumstate /= norm;
     }
 
-    Ok(evolved_quantum_state)
+    Ok(evolved_quantumstate)
 }
 
 /// Apply consciousness evolution and selection mechanisms
@@ -2445,7 +2495,7 @@ fn apply_consciousness_evolution_selection(
     // Apply evolutionary selection pressure
     let selection_factor = 1.0
         + evolution_system.selection_pressure
-            * (evolution_system.complexity_metrics.emergence_strength - 0.5);
+            * (evolution_system.complexitymetrics.emergence_strength - 0.5);
 
     // Apply spatial consciousness gradient
     let spatial_factor = calculate_spatial_consciousness_factor(position, config);
@@ -2463,7 +2513,8 @@ fn apply_consciousness_evolution_selection(
 /// Calculate spatial consciousness factor
 #[allow(dead_code)]
 fn calculate_spatial_consciousness_factor(
-    _position: (usize, usize), _config: &AdvancedConfig,
+    _position: (usize, usize),
+    _config: &AdvancedConfig,
 ) -> f64 {
     // Simplified spatial modulation - could be enhanced with actual spatial patterns
     1.0
@@ -2471,8 +2522,8 @@ fn calculate_spatial_consciousness_factor(
 
 /// Calculate temporal evolution factor
 #[allow(dead_code)]
-fn calculate_temporal_evolution_factor(_evolutionsystem: &QuantumConsciousnessEvolution) -> f64 {
-    let history_length = evolution_system.evolution_history.len() as f64;
+fn calculate_temporal_evolution_factor(evolution_system: &QuantumConsciousnessEvolution) -> f64 {
+    let history_length = evolution_system.evolutionhistory.len() as f64;
     let evolution_strength = evolution_system.evolution_rate * history_length.sqrt();
 
     1.0 + 0.1 * evolution_strength.tanh()
@@ -2481,14 +2532,16 @@ fn calculate_temporal_evolution_factor(_evolutionsystem: &QuantumConsciousnessEv
 /// Apply evolved global consciousness coherence
 #[allow(dead_code)]
 fn apply_evolved_global_consciousness_coherence(
-    consciousness_output: &mut Array2<f64>, _advanced_state: &AdvancedState,
-    evolution_system: &QuantumConsciousnessEvolution, _config: &AdvancedConfig,
+    consciousness_output: &mut Array2<f64>,
+    _advancedstate: &AdvancedState,
+    evolution_system: &QuantumConsciousnessEvolution,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     let (height, width) = consciousness_output.dim();
 
     // Calculate global consciousness coherence enhancement
-    let global_coherence = evolution_system.complexity_metrics.temporal_coherence;
-    let emergence_strength = evolution_system.complexity_metrics.emergence_strength;
+    let global_coherence = evolution_system.complexitymetrics.temporal_coherence;
+    let emergence_strength = evolution_system.complexitymetrics.emergence_strength;
 
     // Apply global coherence field
     let coherence_enhancement = global_coherence * emergence_strength;
@@ -2509,17 +2562,17 @@ fn apply_evolved_global_consciousness_coherence(
 
 /// Update consciousness evolution history
 #[allow(dead_code)]
-fn update_consciousness_evolution_history(
+fn update_consciousness_evolutionhistory(
     evolution_system: &mut QuantumConsciousnessEvolution,
-    current_state: &ConsciousnessState,
+    currentstate: &ConsciousnessState,
 ) -> NdimageResult<()> {
     evolution_system
-        .evolution_history
-        .push_back(current_state.clone());
+        .evolutionhistory
+        .push_back(currentstate.clone());
 
     // Maintain history window
-    if evolution_system.evolution_history.len() > 1000 {
-        evolution_system.evolution_history.pop_front();
+    if evolution_system.evolutionhistory.len() > 1000 {
+        evolution_system.evolutionhistory.pop_front();
     }
 
     Ok(())
@@ -2637,7 +2690,7 @@ pub struct LearningLevel {
     /// Learning strategies at this level
     pub strategies: Vec<LearningStrategy>,
     /// Performance metrics
-    pub performance_metrics: LevelPerformanceMetrics,
+    pub performancemetrics: LevelPerformanceMetrics,
 }
 
 #[derive(Debug, Clone)]
@@ -2649,7 +2702,7 @@ pub struct LearningStrategy {
     /// Success rate
     pub success_rate: f64,
     /// Adaptation history
-    pub adaptation_history: VecDeque<StrategyAdaptation>,
+    pub adaptationhistory: VecDeque<StrategyAdaptation>,
 }
 
 #[derive(Debug, Clone)]
@@ -2685,7 +2738,7 @@ pub struct StrategyEvolution {
     /// Mutation parameters
     pub mutation_params: MutationParameters,
     /// Evolution history
-    pub evolution_history: VecDeque<EvolutionGeneration>,
+    pub evolutionhistory: VecDeque<EvolutionGeneration>,
 }
 
 #[derive(Debug, Clone)]
@@ -2753,7 +2806,7 @@ pub struct EvolutionGeneration {
 #[derive(Debug, Clone)]
 pub struct MetaLearningTracker {
     /// Learning performance history
-    pub performance_history: VecDeque<MetaLearningPerformance>,
+    pub performancehistory: VecDeque<MetaLearningPerformance>,
     /// Strategy effectiveness tracking
     pub strategy_effectiveness: HashMap<String, StrategyEffectiveness>,
     /// Learning curve analysis
@@ -2907,7 +2960,7 @@ impl Default for EnhancedMetaLearningSystem {
                         level_id: 0,
                         abstraction_degree: 0.2,
                         strategies: Vec::new(),
-                        performance_metrics: LevelPerformanceMetrics {
+                        performancemetrics: LevelPerformanceMetrics {
                             learning_rate: 0.01,
                             generalization_ability: 0.5,
                             adaptation_speed: 0.1,
@@ -2918,7 +2971,7 @@ impl Default for EnhancedMetaLearningSystem {
                         level_id: 1,
                         abstraction_degree: 0.5,
                         strategies: Vec::new(),
-                        performance_metrics: LevelPerformanceMetrics {
+                        performancemetrics: LevelPerformanceMetrics {
                             learning_rate: 0.005,
                             generalization_ability: 0.7,
                             adaptation_speed: 0.05,
@@ -2929,7 +2982,7 @@ impl Default for EnhancedMetaLearningSystem {
                         level_id: 2,
                         abstraction_degree: 0.8,
                         strategies: Vec::new(),
-                        performance_metrics: LevelPerformanceMetrics {
+                        performancemetrics: LevelPerformanceMetrics {
                             learning_rate: 0.001,
                             generalization_ability: 0.9,
                             adaptation_speed: 0.02,
@@ -2954,10 +3007,10 @@ impl Default for EnhancedMetaLearningSystem {
                     adaptive_mutation: true,
                     mutation_distribution: MutationDistribution::Adaptive,
                 },
-                evolution_history: VecDeque::new(),
+                evolutionhistory: VecDeque::new(),
             },
             performance_tracker: MetaLearningTracker {
-                performance_history: VecDeque::new(),
+                performancehistory: VecDeque::new(),
                 strategy_effectiveness: HashMap::new(),
                 learning_curves: HashMap::new(),
             },
@@ -2988,10 +3041,10 @@ pub fn enhanced_meta_learning_with_temporal_fusion(
     consciousness_response: &Array2<f64>,
     neural_response: &Array2<f64>,
     causal_response: &Array2<f64>,
-    advanced_state: &mut AdvancedState,
+    advancedstate: &mut AdvancedState,
     config: &AdvancedConfig,
     meta_learning_system: &mut EnhancedMetaLearningSystem,
-    task_context: &str,
+    taskcontext: &str,
 ) -> NdimageResult<Array2<f64>> {
     let (height, width) = consciousness_response.dim();
     let mut enhanced_output = Array2::zeros((height, width));
@@ -3002,14 +3055,14 @@ pub fn enhanced_meta_learning_with_temporal_fusion(
         neural_response,
         causal_response,
         &mut meta_learning_system.temporal_memory_fusion,
-        task_context,
+        taskcontext,
     )?;
 
     // Step 2: Hierarchical Learning Processing
     let hierarchical_output = apply_hierarchical_learning(
         &temporal_memory_output,
         &mut meta_learning_system.hierarchical_learner,
-        advanced_state,
+        advancedstate,
         config,
     )?;
 
@@ -3018,14 +3071,14 @@ pub fn enhanced_meta_learning_with_temporal_fusion(
         &mut meta_learning_system.strategy_evolution,
         &temporal_memory_output,
         &hierarchical_output,
-        task_context,
+        taskcontext,
     )?;
 
     // Step 4: Apply Best Evolved Strategies
     let strategy_enhanced_output = apply_evolved_strategies(
         &hierarchical_output,
         &evolved_strategies,
-        advanced_state,
+        advancedstate,
         config,
     )?;
 
@@ -3033,14 +3086,14 @@ pub fn enhanced_meta_learning_with_temporal_fusion(
     perform_adaptive_memory_consolidation(
         &mut meta_learning_system.memory_consolidation,
         &strategy_enhanced_output,
-        task_context,
+        taskcontext,
     )?;
 
     // Step 6: Update Meta-Learning Performance Tracking
     update_meta_learning_performance(
         &mut meta_learning_system.performance_tracker,
         &strategy_enhanced_output,
-        task_context,
+        taskcontext,
     )?;
 
     // Step 7: Final Integration and Output
@@ -3057,18 +3110,14 @@ pub fn enhanced_meta_learning_with_temporal_fusion(
                 (y, x),
             )?;
 
-            enhanced_output[(y, x)] = temporal_val * fusionweights.0
-                + hierarchical_val * fusionweights.1
-                + strategy_val * fusionweights.2;
+            enhanced_output[(y, x)] = temporal_val * fusion_weights.0
+                + hierarchical_val * fusion_weights.1
+                + strategy_val * fusion_weights.2;
         }
     }
 
     // Step 8: Update meta-parameters for future learning
-    update_meta_learning_parameters(
-        &mut advanced_state.meta_parameters,
-        &enhanced_output,
-        config,
-    )?;
+    update_meta_learning_parameters(&mut advancedstate.meta_parameters, &enhanced_output, config)?;
 
     Ok(enhanced_output)
 }
@@ -3080,7 +3129,7 @@ fn apply_temporal_memory_fusion(
     neural_response: &Array2<f64>,
     causal_response: &Array2<f64>,
     temporal_fusion: &mut TemporalMemoryFusion,
-    task_context: &str,
+    taskcontext: &str,
 ) -> NdimageResult<Array2<f64>> {
     let (height, width) = consciousness_response.dim();
     let mut fused_output = Array2::zeros((height, width));
@@ -3090,7 +3139,7 @@ fn apply_temporal_memory_fusion(
         consciousness_response,
         neural_response,
         causal_response,
-        task_context,
+        taskcontext,
     )?;
 
     // Add to short-term memory
@@ -3114,7 +3163,7 @@ fn apply_temporal_memory_fusion(
                 &temporal_fusion.short_term_memory,
                 &temporal_fusion.long_term_memory,
                 (y, x),
-                task_context,
+                taskcontext,
             )?;
 
             // Apply temporal _fusion
@@ -3141,7 +3190,7 @@ fn create_memory_trace(
     consciousness_response: &Array2<f64>,
     neural_response: &Array2<f64>,
     causal_response: &Array2<f64>,
-    task_context: &str,
+    taskcontext: &str,
 ) -> NdimageResult<MemoryTrace> {
     let (height, width) = consciousness_response.dim();
     let mut content = Array2::zeros((height, width));
@@ -3159,9 +3208,9 @@ fn create_memory_trace(
     // Calculate importance score
     let importance = calculate_memory_importance(&content)?;
 
-    // Create _context
-    let _context = MemoryContext {
-        operation_type: task_context.to_string(),
+    // Create context
+    let context = MemoryContext {
+        operation_type: taskcontext.to_string(),
         data_characteristics: vec![
             content.sum() / content.len() as f64,
             {
@@ -3202,7 +3251,8 @@ fn calculate_memory_importance(content: &Array2<f64>) -> NdimageResult<f64> {
 /// (For brevity, I'm showing the structure but not implementing all helpers)
 #[allow(dead_code)]
 fn consolidate_to_long_term_memory(
-    _trace: &MemoryTrace_long_term, memory: &mut HashMap<String, ConsolidatedMemory>,
+    _trace: &MemoryTrace,
+    memory: &mut HashMap<String, ConsolidatedMemory>,
 ) -> NdimageResult<()> {
     // Implementation would consolidate _memory _trace into long-term storage
     Ok(())
@@ -3210,7 +3260,10 @@ fn consolidate_to_long_term_memory(
 
 #[allow(dead_code)]
 fn retrieve_relevant_memories(
-    _short_term: &VecDeque<MemoryTrace>, _long_term: &HashMap<String, ConsolidatedMemory>, _position: (usize, usize), _context: &str,
+    _short_term: &VecDeque<MemoryTrace>,
+    _long_term: &HashMap<String, ConsolidatedMemory>,
+    _position: (usize, usize),
+    context: &str,
 ) -> NdimageResult<Vec<f64>> {
     // Implementation would retrieve contextually relevant memories
     Ok(vec![0.0; 5]) // Placeholder
@@ -3218,7 +3271,10 @@ fn retrieve_relevant_memories(
 
 #[allow(dead_code)]
 fn apply_memory_fusion(
-    current_val: f64, _memories: &[f64], _fusion_weights: &Array1<f64>, _decay_factors: &Array1<f64>,
+    current_val: f64,
+    _memories: &[f64],
+    _fusion_weights: &Array1<f64>,
+    _decay_factors: &Array1<f64>,
 ) -> NdimageResult<f64> {
     // Implementation would apply sophisticated memory fusion
     Ok(current_val) // Simplified for now
@@ -3226,7 +3282,8 @@ fn apply_memory_fusion(
 
 #[allow(dead_code)]
 fn update_memory_attention(
-    _attention: &mut MemoryAttention, output: &Array2<f64>,
+    _attention: &mut MemoryAttention,
+    output: &Array2<f64>,
 ) -> NdimageResult<()> {
     // Implementation would update _attention weights based on performance
     Ok(())
@@ -3234,7 +3291,10 @@ fn update_memory_attention(
 
 #[allow(dead_code)]
 fn apply_hierarchical_learning(
-    _input: &Array2<f64>, _hierarchical_learner: &mut HierarchicalLearner_advanced, _state: &AdvancedState, config: &AdvancedConfig,
+    _input: &Array2<f64>,
+    _hierarchical_learner: &mut HierarchicalLearner,
+    state: &AdvancedState,
+    config: &AdvancedConfig,
 ) -> NdimageResult<Array2<f64>> {
     // Implementation would apply hierarchical learning processing
     Ok(_input.clone()) // Simplified for now
@@ -3242,7 +3302,10 @@ fn apply_hierarchical_learning(
 
 #[allow(dead_code)]
 fn evolve_learning_strategies(
-    _strategy_evolution: &mut StrategyEvolution_temporal, _output: &Array2<f64>, _hierarchical_output: &Array2<f64>, _task_context: &str,
+    _strategy_evolution: &mut StrategyEvolution,
+    _output: &Array2<f64>,
+    _hierarchical_output: &Array2<f64>,
+    _taskcontext: &str,
 ) -> NdimageResult<Vec<EvolutionaryStrategy>> {
     // Implementation would evolve and select best learning strategies
     Ok(Vec::new()) // Placeholder
@@ -3250,7 +3313,10 @@ fn evolve_learning_strategies(
 
 #[allow(dead_code)]
 fn apply_evolved_strategies(
-    input: &Array2<f64>, _strategies: &[EvolutionaryStrategy], _advanced_state: &AdvancedState, _config: &AdvancedConfig,
+    input: &Array2<f64>,
+    _strategies: &[EvolutionaryStrategy],
+    _advancedstate: &AdvancedState,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<Array2<f64>> {
     // Implementation would apply evolved _strategies to input
     Ok(input.clone()) // Simplified for now
@@ -3258,7 +3324,9 @@ fn apply_evolved_strategies(
 
 #[allow(dead_code)]
 fn perform_adaptive_memory_consolidation(
-    _consolidation: &mut AdaptiveMemoryConsolidation, output: &Array2<f64>, _task_context: &str,
+    _consolidation: &mut AdaptiveMemoryConsolidation,
+    output: &Array2<f64>,
+    _taskcontext: &str,
 ) -> NdimageResult<()> {
     // Implementation would perform memory _consolidation operations
     Ok(())
@@ -3266,7 +3334,9 @@ fn perform_adaptive_memory_consolidation(
 
 #[allow(dead_code)]
 fn update_meta_learning_performance(
-    _tracker: &mut MetaLearningTracker, output: &Array2<f64>, _task_context: &str,
+    _tracker: &mut MetaLearningTracker,
+    output: &Array2<f64>,
+    _taskcontext: &str,
 ) -> NdimageResult<()> {
     // Implementation would update performance tracking
     Ok(())
@@ -3274,7 +3344,9 @@ fn update_meta_learning_performance(
 
 #[allow(dead_code)]
 fn calculate_adaptive_fusion_weights(
-    _values: (f64, f64, f64), _meta_system: &EnhancedMetaLearningSystem, _position: (usize, usize),
+    _values: (f64, f64, f64),
+    _meta_system: &EnhancedMetaLearningSystem,
+    _position: (usize, usize),
 ) -> NdimageResult<(f64, f64, f64)> {
     // Implementation would calculate adaptive fusion weights
     Ok((0.33, 0.33, 0.34)) // Equal weights for now
@@ -3326,7 +3398,7 @@ pub struct QuantumProcessingUnit {
     /// Gate fidelity
     pub gate_fidelity: f64,
     /// Current quantum state
-    pub quantum_state: Array1<Complex<f64>>,
+    pub quantumstate: Array1<Complex<f64>>,
     /// Available operations
     pub available_operations: Vec<QuantumOperation>,
     /// Utilization level
@@ -3602,7 +3674,7 @@ pub struct EntangledResource {
     /// Resource type
     pub resource_type: ResourceType,
     /// Quantum state
-    pub quantum_state: Array1<Complex<f64>>,
+    pub quantumstate: Array1<Complex<f64>>,
     /// Entanglement partners
     pub entanglement_partners: Vec<String>,
     /// Entanglement quality
@@ -3630,9 +3702,9 @@ pub struct QuantumOptimizationEngine {
     /// Optimization algorithms
     pub algorithms: Vec<QuantumOptimizationAlgorithm>,
     /// Current optimization state
-    pub optimization_state: QuantumOptimizationState,
+    pub optimizationstate: QuantumOptimizationState,
     /// Optimization history
-    pub optimization_history: VecDeque<OptimizationIteration>,
+    pub optimizationhistory: VecDeque<OptimizationIteration>,
     /// Convergence criteria
     pub convergence_criteria: ConvergenceCriteria,
 }
@@ -3662,7 +3734,7 @@ pub struct QuantumOptimizationState {
     /// Current objective value
     pub objective_value: f64,
     /// Quantum state representation
-    pub quantum_state: Array1<Complex<f64>>,
+    pub quantumstate: Array1<Complex<f64>>,
     /// Gradient information
     pub gradient: Array1<f64>,
     /// Iteration count
@@ -3728,11 +3800,11 @@ pub struct RealTimeQuantumMonitor {
     /// Monitoring frequency (Hz)
     pub monitoring_frequency: f64,
     /// Current quantum states
-    pub current_states: HashMap<String, Array1<Complex<f64>>>,
+    pub currentstates: HashMap<String, Array1<Complex<f64>>>,
     /// Performance alerts
     pub alerts: Vec<PerformanceAlert>,
     /// Monitoring history
-    pub monitoring_history: VecDeque<MonitoringSnapshot>,
+    pub monitoringhistory: VecDeque<MonitoringSnapshot>,
 }
 
 #[derive(Debug, Clone)]
@@ -3776,9 +3848,9 @@ pub struct MonitoringSnapshot {
     /// Timestamp
     pub timestamp: usize,
     /// System state
-    pub system_state: HashMap<String, f64>,
+    pub systemstate: HashMap<String, f64>,
     /// Quantum metrics
-    pub quantum_metrics: QuantumPerformanceMetrics,
+    pub quantummetrics: QuantumPerformanceMetrics,
     /// Resource utilization
     pub resource_utilization: HashMap<String, f64>,
 }
@@ -3802,7 +3874,7 @@ pub struct QuantumPredictionModel {
     /// Training data
     pub training_data: Vec<Array1<f64>>,
     /// Model performance
-    pub performance_metrics: PredictionAccuracyMetrics,
+    pub performancemetrics: PredictionAccuracyMetrics,
 }
 
 #[derive(Debug, Clone)]
@@ -3917,14 +3989,14 @@ impl Default for QuantumAwareResourceScheduler {
             },
             optimization_engine: QuantumOptimizationEngine {
                 algorithms: Vec::new(),
-                optimization_state: QuantumOptimizationState {
+                optimizationstate: QuantumOptimizationState {
                     parameters: Array1::zeros(10),
                     objective_value: 0.0,
-                    quantum_state: Array1::from_elem(4, Complex::new(0.5, 0.0)),
+                    quantumstate: Array1::from_elem(4, Complex::new(0.5, 0.0)),
                     gradient: Array1::zeros(10),
                     iteration: 0,
                 },
-                optimization_history: VecDeque::new(),
+                optimizationhistory: VecDeque::new(),
                 convergence_criteria: ConvergenceCriteria {
                     max_iterations: 1000,
                     objective_tolerance: 1e-6,
@@ -3943,16 +4015,16 @@ impl Default for QuantumAwareResourceScheduler {
                 },
                 real_time_monitor: RealTimeQuantumMonitor {
                     monitoring_frequency: 1000.0,
-                    current_states: HashMap::new(),
+                    currentstates: HashMap::new(),
                     alerts: Vec::new(),
-                    monitoring_history: VecDeque::new(),
+                    monitoringhistory: VecDeque::new(),
                 },
                 performance_predictor: QuantumPerformancePredictor {
                     prediction_model: QuantumPredictionModel {
                         model_type: "quantum_neural_network".to_string(),
                         parameters: Array2::eye(4),
                         training_data: Vec::new(),
-                        performance_metrics: PredictionAccuracyMetrics {
+                        performancemetrics: PredictionAccuracyMetrics {
                             mae: 0.0,
                             rmse: 0.0,
                             r_squared: 0.0,
@@ -3983,13 +4055,13 @@ impl Default for QuantumAwareResourceScheduler {
 /// load balancing, and performance optimization with quantum coherence preservation.
 #[allow(dead_code)]
 pub fn quantum_aware_resource_scheduling_optimization(
-    advanced_state: &mut AdvancedState,
+    advancedstate: &mut AdvancedState,
     config: &AdvancedConfig,
     scheduler: &mut QuantumAwareResourceScheduler,
     workload_characteristics: &WorkloadCharacteristics,
 ) -> NdimageResult<ResourceSchedulingDecision> {
-    // Step 1: Analyze current resource _state
-    let current_resource_state = analyze_quantum_resource_state(advanced_state, scheduler)?;
+    // Step 1: Analyze current resource state
+    let current_resourcestate = analyze_quantum_resourcestate(advancedstate, scheduler)?;
 
     // Step 2: Predict future workload using quantum ML
     let workload_prediction = predict_quantum_workload(
@@ -4000,7 +4072,7 @@ pub fn quantum_aware_resource_scheduling_optimization(
     // Step 3: Optimize resource allocation using quantum algorithms
     let optimal_allocation = quantum_optimize_resource_allocation(
         &mut scheduler.optimization_engine,
-        &current_resource_state,
+        &current_resourcestate,
         &workload_prediction,
         config,
     )?;
@@ -4026,7 +4098,7 @@ pub fn quantum_aware_resource_scheduling_optimization(
     let monitoring_feedback = quantum_performance_monitoring(
         &mut scheduler.performance_monitor,
         &task_schedule,
-        advanced_state,
+        advancedstate,
     )?;
 
     // Step 8: Apply feedback for continuous optimization
@@ -4037,7 +4109,7 @@ pub fn quantum_aware_resource_scheduling_optimization(
         resource_allocation: optimal_allocation,
         load_balancing: load_balancing_decision,
         task_schedule,
-        performance_metrics: scheduler.performance_monitor.metrics.clone(),
+        performancemetrics: scheduler.performance_monitor.metrics.clone(),
         quantum_coherence_preservation: calculate_coherence_preservation(
             &scheduler.entanglement_graph,
         )?,
@@ -4093,7 +4165,7 @@ pub struct ResourceSchedulingDecision {
     /// Task scheduling plan
     pub task_schedule: QuantumTaskSchedule,
     /// Expected performance metrics
-    pub performance_metrics: QuantumPerformanceMetrics,
+    pub performancemetrics: QuantumPerformanceMetrics,
     /// Quantum coherence preservation level
     pub quantum_coherence_preservation: f64,
     /// Estimated performance improvement
@@ -4204,8 +4276,9 @@ pub struct CircuitOptimization {
 
 /// Helper functions for quantum scheduling (simplified implementations)
 #[allow(dead_code)]
-fn analyze_quantum_resource_state(
-    _advanced_state: &AdvancedState, _scheduler: &QuantumAwareResourceScheduler,
+fn analyze_quantum_resourcestate(
+    _advancedstate: &AdvancedState,
+    _scheduler: &QuantumAwareResourceScheduler,
 ) -> NdimageResult<HashMap<String, f64>> {
     // Implementation would analyze current quantum resource utilization
     Ok(HashMap::new())
@@ -4213,7 +4286,8 @@ fn analyze_quantum_resource_state(
 
 #[allow(dead_code)]
 fn predict_quantum_workload(
-    _predictor: &QuantumLoadPredictor, workload: &WorkloadCharacteristics,
+    _predictor: &QuantumLoadPredictor,
+    workload: &WorkloadCharacteristics,
 ) -> NdimageResult<Vec<f64>> {
     // Implementation would use quantum ML to predict future _workload
     Ok(vec![0.5; 10])
@@ -4221,7 +4295,10 @@ fn predict_quantum_workload(
 
 #[allow(dead_code)]
 fn quantum_optimize_resource_allocation(
-    _engine: &mut QuantumOptimizationEngine_current, state: &HashMap<String, f64>, _prediction: &[f64], _config: &AdvancedConfig,
+    _engine: &mut QuantumOptimizationEngine,
+    state: &HashMap<String, f64>,
+    _prediction: &[f64],
+    _config: &AdvancedConfig,
 ) -> NdimageResult<QuantumResourceAllocation> {
     // Implementation would use quantum optimization algorithms
     Ok(QuantumResourceAllocation {
@@ -4234,7 +4311,9 @@ fn quantum_optimize_resource_allocation(
 
 #[allow(dead_code)]
 fn apply_quantum_load_balancing(
-    _balancer: &mut QuantumLoadBalancer, allocation: &QuantumResourceAllocation_entanglement, _graph: &ResourceEntanglementGraph,
+    _balancer: &mut QuantumLoadBalancer,
+    allocation: &QuantumResourceAllocation,
+    _graph: &ResourceEntanglementGraph,
 ) -> NdimageResult<QuantumLoadBalancingDecision> {
     // Implementation would apply quantum load balancing strategies
     Ok(QuantumLoadBalancingDecision {
@@ -4247,7 +4326,9 @@ fn apply_quantum_load_balancing(
 
 #[allow(dead_code)]
 fn quantum_schedule_tasks(
-    _algorithms: &[QuantumSchedulingAlgorithm], _load_balancing: &QuantumLoadBalancingDecision, _workload: &WorkloadCharacteristics,
+    _algorithms: &[QuantumSchedulingAlgorithm],
+    _load_balancing: &QuantumLoadBalancingDecision,
+    _workload: &WorkloadCharacteristics,
 ) -> NdimageResult<QuantumTaskSchedule> {
     // Implementation would schedule tasks using quantum _algorithms
     Ok(QuantumTaskSchedule {
@@ -4260,7 +4341,9 @@ fn quantum_schedule_tasks(
 
 #[allow(dead_code)]
 fn update_quantum_entanglement_graph(
-    _graph: &mut ResourceEntanglementGraph, schedule: &QuantumTaskSchedule, _config: &AdvancedConfig,
+    _graph: &mut ResourceEntanglementGraph,
+    schedule: &QuantumTaskSchedule,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     // Implementation would update entanglement relationships
     Ok(())
@@ -4268,7 +4351,9 @@ fn update_quantum_entanglement_graph(
 
 #[allow(dead_code)]
 fn quantum_performance_monitoring(
-    _monitor: &mut QuantumPerformanceMonitor, schedule: &QuantumTaskSchedule_advanced, _state: &AdvancedState,
+    _monitor: &mut QuantumPerformanceMonitor,
+    schedule: &QuantumTaskSchedule,
+    state: &AdvancedState,
 ) -> NdimageResult<QuantumMonitoringFeedback> {
     // Implementation would _monitor quantum performance in real-time
     Ok(QuantumMonitoringFeedback {
@@ -4290,7 +4375,9 @@ pub struct QuantumMonitoringFeedback {
 
 #[allow(dead_code)]
 fn apply_quantum_optimization_feedback(
-    _scheduler: &mut QuantumAwareResourceScheduler, feedback: &QuantumMonitoringFeedback, _config: &AdvancedConfig,
+    _scheduler: &mut QuantumAwareResourceScheduler,
+    feedback: &QuantumMonitoringFeedback,
+    _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     // Implementation would apply _feedback for continuous optimization
     Ok(())
@@ -4322,27 +4409,27 @@ mod tests {
     #[test]
     fn test_advanced_fusion_processing() {
         let image =
-            Array2::fromshape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
 
         let config = AdvancedConfig::default();
         let result = fusion_processing(image.view(), &config, None);
 
         assert!(result.is_ok());
-        let (output_state) = result.unwrap();
+        let (outputstate) = result.unwrap();
         assert_eq!(output.dim(), (4, 4));
         assert!(output.iter().all(|&x| x.is_finite()));
     }
 
     #[test]
-    fn test_extract_advanced_dimensional_features() {
+    fn test_extract_advanced_dimensionalfeatures() {
         let image =
-            Array2::fromshape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.3, 0.7, 0.2, 0.8, 0.4, 0.6])
+            Array2::from_shape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.3, 0.7, 0.2, 0.8, 0.4, 0.6])
                 .unwrap();
 
         let config = AdvancedConfig::default();
-        let mut state = initialize_or_update_state(None, (3, 3), &config).unwrap();
+        let mut state = initialize_or_updatestate(None, (3, 3), &config).unwrap();
 
-        let result = extract_advanced_dimensional_features(&image.view(), &mut state, &config);
+        let result = extract_advanced_dimensionalfeatures(&image.view(), &mut state, &config);
         assert!(result.is_ok());
 
         let features = result.unwrap();
@@ -4361,9 +4448,9 @@ mod tests {
     #[test]
     fn test_simulate_quantum_consciousness() {
         let config = AdvancedConfig::default();
-        let mut state = initialize_or_update_state(None, (2, 2), &config).unwrap();
+        let mut state = initialize_or_updatestate(None, (2, 2), &config).unwrap();
 
-        let advanced_features = Array5::zeros((
+        let advancedfeatures = Array5::zeros((
             2,
             2,
             config.advanced_dimensions,
@@ -4371,7 +4458,7 @@ mod tests {
             config.consciousness_depth,
         ));
 
-        let result = simulate_quantum_consciousness(&advanced_features, &mut state, &config);
+        let result = simulate_quantum_consciousness(&advancedfeatures, &mut state, &config);
         assert!(result.is_ok());
 
         let consciousness_output = result.unwrap();
@@ -4382,9 +4469,9 @@ mod tests {
     #[test]
     fn test_self_organizing_neural_processing() {
         let config = AdvancedConfig::default();
-        let mut state = initialize_or_update_state(None, (2, 2), &config).unwrap();
+        let mut state = initialize_or_updatestate(None, (2, 2), &config).unwrap();
 
-        let advanced_features = Array5::zeros((
+        let advancedfeatures = Array5::zeros((
             2,
             2,
             config.advanced_dimensions,
@@ -4392,7 +4479,7 @@ mod tests {
             config.consciousness_depth,
         ));
 
-        let result = self_organizing_neural_processing(&advanced_features, &mut state, &config);
+        let result = self_organizing_neural_processing(&advancedfeatures, &mut state, &config);
         assert!(result.is_ok());
 
         let neural_output = result.unwrap();
@@ -4403,11 +4490,11 @@ mod tests {
     #[test]
     fn test_temporal_causality_analysis() {
         let image =
-            Array2::fromshape_vec((3, 3), vec![1.0, 0.5, 0.0, 0.8, 0.3, 0.2, 0.6, 0.9, 0.1])
+            Array2::from_shape_vec((3, 3), vec![1.0, 0.5, 0.0, 0.8, 0.3, 0.2, 0.6, 0.9, 0.1])
                 .unwrap();
 
         let config = AdvancedConfig::default();
-        let mut state = initialize_or_update_state(None, (3, 3), &config).unwrap();
+        let mut state = initialize_or_updatestate(None, (3, 3), &config).unwrap();
 
         let result = analyze_temporal_causality(&image.view(), &mut state, &config);
         assert!(result.is_ok());
@@ -4419,12 +4506,12 @@ mod tests {
 
     #[test]
     fn test_meta_learning_adaptation() {
-        let consciousness = Array2::fromshape_vec((2, 2), vec![0.1, 0.3, 0.5, 0.7]).unwrap();
-        let neural = Array2::fromshape_vec((2, 2), vec![0.2, 0.4, 0.6, 0.8]).unwrap();
-        let causal = Array2::fromshape_vec((2, 2), vec![0.15, 0.35, 0.55, 0.75]).unwrap();
+        let consciousness = Array2::from_shape_vec((2, 2), vec![0.1, 0.3, 0.5, 0.7]).unwrap();
+        let neural = Array2::from_shape_vec((2, 2), vec![0.2, 0.4, 0.6, 0.8]).unwrap();
+        let causal = Array2::from_shape_vec((2, 2), vec![0.15, 0.35, 0.55, 0.75]).unwrap();
 
         let config = AdvancedConfig::default();
-        let mut state = initialize_or_update_state(None, (2, 2), &config).unwrap();
+        let mut state = initialize_or_updatestate(None, (2, 2), &config).unwrap();
 
         let result =
             meta_learning_adaptation(&consciousness, &neural, &causal, &mut state, &config);

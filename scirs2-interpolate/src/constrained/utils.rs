@@ -259,14 +259,14 @@ where
     /// # }
     /// ```
     pub fn derivatives_all(&self, x: T, maxorder: usize) -> InterpolateResult<Vec<T>> {
-        let mut derivatives = Vec::with_capacity(max_order + 1);
+        let mut derivatives = Vec::with_capacity(maxorder + 1);
 
         // Order 0 is the function value itself
         derivatives.push(self.evaluate(x)?);
 
-        // Compute derivatives of _order 1 through max_order
-        for _order in 1..=max_order {
-            derivatives.push(self.derivative(x_order)?);
+        // Compute derivatives of _order 1 through maxorder
+        for _order in 1..=maxorder {
+            derivatives.push(self.derivative(x, _order)?);
         }
 
         Ok(derivatives)
@@ -459,9 +459,9 @@ where
             let check_end = constraint.x_max.unwrap_or(domain_end);
 
             // Generate check _points across the constraint region
-            let step = (check_end - check_start) / T::from_usize(num_check_points - 1).unwrap();
+            let step = (check_end - check_start) / T::from_usize(num_checkpoints - 1).unwrap();
 
-            for i in 0..num_check_points {
+            for i in 0..num_checkpoints {
                 let x = check_start + T::from_usize(i).unwrap() * step;
 
                 if !self.check_constraint(constraint.constraint_type, x, constraint.parameter)? {

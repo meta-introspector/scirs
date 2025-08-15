@@ -10,9 +10,9 @@ use rand::prelude::*;
 use std::fmt::Debug;
 
 use crate::error::{Result, TimeSeriesError};
+use rand::seq::SliceRandom;
 use scirs2_core::Rng;
 use statrs::statistics::Statistics;
-use rand::seq::SliceRandom;
 
 /// Method for anomaly detection
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -645,7 +645,8 @@ where
 
 #[allow(dead_code)]
 fn detect_anomalies_prediction_based<F>(
-    ts: &Array1<F>, _options: &AnomalyOptions,
+    ts: &Array1<F>,
+    _options: &AnomalyOptions,
 ) -> Result<AnomalyResult>
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,

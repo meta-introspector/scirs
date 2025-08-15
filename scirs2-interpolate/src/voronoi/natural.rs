@@ -147,16 +147,16 @@ impl<
             Ok(weights) => weights,
             Err(_) => {
                 // Fallback to nearest neighbor for extrapolation
-                let (idx_) = self.kdtree.nearest_neighbor(&query.to_vec())?;
+                let (idx, _) = self.kdtree.nearest_neighbor(&query.to_vec())?;
                 let mut weights = HashMap::new();
                 weights.insert(idx, F::one());
                 weights
             }
         };
 
-        if neighborweights.is_empty() {
+        if neighbor_weights.is_empty() {
             // If no natural neighbors found, use nearest neighbor
-            let (idx_) = self.kdtree.nearest_neighbor(&query.to_vec())?;
+            let (idx, _) = self.kdtree.nearest_neighbor(&query.to_vec())?;
             return Ok(self.values[idx]);
         }
 
@@ -170,7 +170,7 @@ impl<
                 let mut interpolated_value = F::zero();
                 let mut total_weight = F::zero();
 
-                for (idx, weight) in neighborweights.iter() {
+                for (idx, weight) in neighbor_weights.iter() {
                     interpolated_value = interpolated_value + self.values[*idx] * *weight;
                     total_weight = total_weight + *weight;
                 }
@@ -192,10 +192,10 @@ impl<
                 let mut interpolated_value = F::zero();
                 let mut total_weight = F::zero();
 
-                for (idx_) in neighborweights.iter() {
+                for (idx_, _) in neighbor_weights.iter() {
                     // For Laplace method, we need to compute a different weight
                     // based on the distances and Voronoi cell edge lengths
-                    let site = &self.voronoi_diagram.cells[*idx].site;
+                    let site = &self.voronoi_diagram.cells[*idx_].site;
 
                     // Compute distance to the neighbor
                     let mut distance = F::zero();
@@ -207,13 +207,13 @@ impl<
                     if distance < F::epsilon() {
                         // If the query point is very close to this site,
                         // just return the value at this site
-                        return Ok(self.values[*idx]);
+                        return Ok(self.values[*idx_]);
                     }
 
                     // In the Laplace method, weight is inversely proportional to distance
                     let weight = F::one() / distance;
 
-                    interpolated_value = interpolated_value + self.values[*idx] * weight;
+                    interpolated_value = interpolated_value + self.values[*idx_] * weight;
                     total_weight = total_weight + weight;
                 }
 

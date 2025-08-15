@@ -125,7 +125,14 @@ impl AdvancedDatasetAnalyzer {
 
     fn calculate_complexity_score(&self, data: &Array2<f64>) -> Result<f64, Box<dyn Error>> {
         // Simple complexity measure based on variance and correlation
-        let var_mean = data.var_axis(ndarray::Axis(0), 1.0).mean().unwrap_or(1.0);
+        let var_mean = {
+            let val = data.var_axis(ndarray::Axis(0), 1.0).mean();
+            if val.is_nan() {
+                1.0
+            } else {
+                val
+            }
+        };
         let complexity = (var_mean.ln() + 1.0).clamp(0.0, 1.0);
         Ok(complexity)
     }
@@ -154,7 +161,14 @@ impl AdvancedDatasetAnalyzer {
 
         for col in 0..data.ncols() {
             let column = data.column(col);
-            let mean = column.mean().unwrap_or(0.0);
+            let mean = {
+                let val = column.mean();
+                if val.is_nan() {
+                    0.0
+                } else {
+                    val
+                }
+            };
             let std = column.var(1.0).sqrt();
 
             if std > 0.0 {
@@ -174,7 +188,14 @@ impl AdvancedDatasetAnalyzer {
     fn calculate_ml_quality_score(&self, data: &Array2<f64>) -> Result<f64, Box<dyn Error>> {
         // ML quality based on feature variance and separability
         let var_scores: Array1<f64> = data.var_axis(ndarray::Axis(0), 1.0);
-        let mean_variance = var_scores.mean().unwrap_or(1.0);
+        let mean_variance = {
+            let val = var_scores.mean();
+            if val.is_nan() {
+                1.0
+            } else {
+                val
+            }
+        };
 
         // Normalize to 0-1 range
         let quality_score = (mean_variance.ln() + 5.0) / 10.0;
@@ -196,7 +217,14 @@ impl AdvancedDatasetAnalyzer {
         }
 
         let shapiro_wilk_scores = Array1::from_vec(shapiro_scores);
-        let overall_normality = shapiro_wilk_scores.mean().unwrap_or(0.5);
+        let overall_normality = {
+            let val = shapiro_wilk_scores.mean();
+            if val.is_nan() {
+                0.5
+            } else {
+                val
+            }
+        };
 
         Ok(NormalityAssessment {
             overall_normality,
@@ -214,7 +242,14 @@ impl AdvancedDatasetAnalyzer {
             return Ok(0.5);
         }
 
-        let mean = data.mean().unwrap_or(0.0);
+        let mean = {
+            let val = data.mean();
+            if val.is_nan() {
+                0.0
+            } else {
+                val
+            }
+        };
         let variance = data.var(1.0);
 
         if variance == 0.0 {

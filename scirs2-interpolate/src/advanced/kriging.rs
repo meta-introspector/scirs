@@ -321,14 +321,14 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
     /// Predicted values and their associated variances
     pub fn predict(&self, querypoints: &ArrayView2<F>) -> InterpolateResult<PredictionResult<F>> {
         // Check dimensions
-        if querypoints.shape()[1] != self._points.shape()[1] {
+        if querypoints.shape()[1] != self.points.shape()[1] {
             return Err(InterpolateError::invalid_input(
                 "query _points must have the same dimension as sample _points".to_string(),
             ));
         }
 
         let n_query = querypoints.shape()[0];
-        let n_points = self._points.shape()[0];
+        let n_points = self.points.shape()[0];
 
         let mut values = Array1::zeros(n_query);
         let mut variances = Array1::zeros(n_query);
@@ -339,7 +339,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
             // Compute covariance vector between query point and training _points
             let mut k_star = Array1::zeros(n_points);
             for j in 0..n_points {
-                let sample_point = self._points.slice(ndarray::s![j, ..]);
+                let sample_point = self.points.slice(ndarray::s![j, ..]);
                 let dist = Self::distance(&query_point, &sample_point);
                 k_star[j] = Self::covariance(
                     dist,
@@ -365,7 +365,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
             let mut min_dist = F::infinity();
 
             for j in 0..n_points {
-                let sample_point = self._points.slice(ndarray::s![j, ..]);
+                let sample_point = self.points.slice(ndarray::s![j, ..]);
                 let dist = Self::distance(&query_point, &sample_point);
                 avg_dist = avg_dist + dist;
                 min_dist = if dist < min_dist { dist } else { min_dist };

@@ -2767,7 +2767,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
                 AttentionType::MultiQuery(MultiQueryAttention::new(model_dim, num_heads)?)
             }
             "flash" => AttentionType::Flash(FlashAttention::new(model_dim, num_heads, 64)?),
-            "alibi" => AttentionType::ALiBi(ALiBiAttention::new(model_dim, num_heads)?, _ => AttentionType::MultiHead(MultiHeadAttention::new(model_dim, num_heads)?),
+            "alibi" => AttentionType::ALiBi(ALiBiAttention::new(model_dim, num_heads)?),
+            _ => AttentionType::MultiHead(MultiHeadAttention::new(model_dim, num_heads)?),
         };
 
         let _rope = if use_rope {
@@ -3528,7 +3529,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RetrievalAugmentedTimeSeries<F> {
             let query_norm = self.compute_norm(&query.row(0).to_owned());
             let key_norm = self.compute_norm(&self.memory_keys.row(i).to_owned());
 
-            similarity_scores[i] = if query_norm > F::zero() && key_norm >, F::zero() {
+            similarity_scores[i] = if query_norm > F::zero() && key_norm > F::zero() {
                 dot_product / (query_norm * key_norm)
             } else {
                 F::zero()
@@ -4095,7 +4096,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> SpeculativeDecoder<F> {
         let main_norm = main_norm_sq.sqrt();
         let candidate_norm = candidate_norm_sq.sqrt();
 
-        if main_norm > F::zero() && candidate_norm >, F::zero() {
+        if main_norm > F::zero() && candidate_norm > F::zero() {
             dot_product / (main_norm * candidate_norm)
         } else {
             F::zero()
@@ -4393,8 +4394,8 @@ mod tests {
         )
         .unwrap();
 
-        let input = Array2::fromshape_vec((20, 64), (0..1280).map(|i| i as f64 * 0.001).collect())
-            .unwrap();
+        let input =
+            Array2::fromshape_vec((20, 64), (0..1280).map(|i| i as f64 * 0.001).collect()).unwrap();
 
         let output = flash_attn.forward(&input).unwrap();
         assert_eq!(output.dim(), (20, 64));
@@ -4660,9 +4661,8 @@ mod tests {
         let mqa = MultiQueryAttention::<f64>::new(64, 8).unwrap();
         let mha = MultiHeadAttention::<f64>::new(64, 8).unwrap();
 
-        let input =
-            Array2::fromshape_vec((16, 64), (0..1024).map(|i| i as f64 * 0.0005).collect())
-                .unwrap();
+        let input = Array2::fromshape_vec((16, 64), (0..1024).map(|i| i as f64 * 0.0005).collect())
+            .unwrap();
 
         let mqa_output = mqa.forward(&input).unwrap();
         let mha_output = mha.forward(&input).unwrap();

@@ -4,15 +4,15 @@
 //! memory-mapped arrays, chunked processing, and other memory-efficient techniques.
 
 use ndarray::{s, Array2, Array3};
-use scirs2__ndimage::{
+use scirs2_core::memory_efficient::{AccessMode, ChunkingStrategy};
+use scirs2_ndimage::{
     chunked_v2::{convolve_chunked_v2, uniform_filter_chunked_v2, ChunkConfigBuilder},
     filters::{gaussian_filter, BorderMode},
     mmap_io::{
-        create_temp_mmap, load_image_mmap, process_mmap_chunks, save_image_mmap, smart_load_image,
+        create_temp_mmap, loadimage_mmap, process_mmap_chunks, saveimage_mmap, smart_loadimage,
         MmapConfig,
     },
 };
-use scirs2_core::memory_efficient::{AccessMode, ChunkingStrategy};
 use std::path::Path;
 
 #[allow(dead_code)]
@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     example_3_chunked_processing()?;
 
     // Example 4: Processing image sequences efficiently
-    example_4_image_sequence_processing()?;
+    example_4image_sequence_processing()?;
 
     // Example 5: Filter pipeline with memory optimization
     example_5_filter_pipeline()?;
@@ -44,9 +44,9 @@ fn example_1_auto_memory_management() -> Result<(), Box<dyn std::error::Error>> 
     println!("--------------------------------------");
 
     // Create test images of different sizes
-    let small_image = Array2::<f64>::from_elem((100, 100), 1.0);
-    let medium_image = Array2::<f64>::from_elem((1000, 1000), 1.0);
-    let large_image = Array2::<f64>::from_elem((5000, 5000), 1.0);
+    let smallimage = Array2::<f64>::from_elem((100, 100), 1.0);
+    let mediumimage = Array2::<f64>::from_elem((1000, 1000), 1.0);
+    let largeimage = Array2::<f64>::from_elem((5000, 5000), 1.0);
 
     // Configure automatic memory management
     let config = ChunkConfigBuilder::new()
@@ -57,7 +57,7 @@ fn example_1_auto_memory_management() -> Result<(), Box<dyn std::error::Error>> 
     // Process small image (will use regular processing)
     println!("Processing small image (100x100)...");
     let result_small = uniform_filter_chunked_v2(
-        &small_image,
+        &smallimage,
         &[3, 3],
         BorderMode::Reflect,
         Some(config.clone()),
@@ -67,7 +67,7 @@ fn example_1_auto_memory_management() -> Result<(), Box<dyn std::error::Error>> 
     // Process medium image (will use chunked processing)
     println!("Processing medium image (1000x1000)...");
     let result_medium = uniform_filter_chunked_v2(
-        &medium_image,
+        &mediumimage,
         &[5, 5],
         BorderMode::Reflect,
         Some(config.clone()),
@@ -91,20 +91,20 @@ fn example_2_memory_mapped_processing() -> Result<(), Box<dyn std::error::Error>
 
     // Create a temporary large image file
     let temp_dir = tempfile::tempdir()?;
-    let image_path = temp_dir.path().join("large_image.bin");
+    let image_path = temp_dir.path().join("largeimage.bin");
 
     // Create and save a large test image
     let shape = vec![2000, 2000];
     let test_data = Array2::<f64>::from_elem((2000, 2000), 3.14);
 
     println!("Creating memory-mapped image (2000x2000)...");
-    let mmap = save_image_mmap(&test_data.view(), &image_path, 0)?;
+    let mmap = saveimage_mmap(&test_data.view(), &image_path, 0)?;
     println!("  ✓ Created memory-mapped file: {:?}", image_path);
 
     // Load the image as memory-mapped
     println!("Loading image as memory-mapped array...");
     let loaded_mmap =
-        load_image_mmap::<f64, ndarray::Ix2_>(&image_path, &shape, 0, AccessMode::Read)?;
+        loadimage_mmap::<f64, ndarray::Ix2_>(&image_path, &shape, 0, AccessMode::Read)?;
     println!("  ✓ Loaded with shape: {:?}", loaded_mmap.shape());
 
     // Process the memory-mapped image in chunks
@@ -173,7 +173,7 @@ fn example_3_chunked_processing() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Example 4: Processing image sequences efficiently
 #[allow(dead_code)]
-fn example_4_image_sequence_processing() -> Result<(), Box<dyn std::error::Error>> {
+fn example_4image_sequence_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("Example 4: Image Sequence Processing");
     println!("------------------------------------");
 
@@ -195,7 +195,7 @@ fn example_4_image_sequence_processing() -> Result<(), Box<dyn std::error::Error
     let sequence_array = Array3::<f32>::zeros((num_frames, frameshape.0, frameshape.1));
 
     // Save as memory-mapped sequence
-    let sequence_mmap = save_image_mmap(&sequence_array.view(), &sequence_path, 0)?;
+    let sequence_mmap = saveimage_mmap(&sequence_array.view(), &sequence_path, 0)?;
     println!("  ✓ Created memory-mapped sequence");
 
     // Process each frame without loading entire sequence

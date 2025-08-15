@@ -307,7 +307,7 @@ where
                 .collect();
             training_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
-            let x_train_sorted: Array1<T> = training_pairs.iter().map(|(x_)| *x).collect();
+            let x_train_sorted: Array1<T> = training_pairs.iter().map(|(x, _)| *x).collect();
             let y_train_sorted: Array1<T> = training_pairs.iter().map(|(_, y)| *y).collect();
 
             // Train interpolator on training set
@@ -511,7 +511,7 @@ where
                     let train_indices: Vec<usize> = indices
                         .iter()
                         .enumerate()
-                        .filter(|(i_)| *i < start || *i >= end)
+                        .filter(|(i_, _)| *i_ < start || *i_ >= end)
                         .map(|(_, &idx)| idx)
                         .collect();
 
@@ -726,7 +726,7 @@ where
         + 'static,
 {
     fn new(interpolator: RBFInterpolator<T>) -> Self {
-        Self { _interpolator }
+        Self { interpolator }
     }
 }
 
@@ -796,7 +796,7 @@ where
         + 'static,
 {
     fn new(interpolator: BSpline<T>) -> Self {
-        Self { _interpolator }
+        Self { interpolator }
     }
 }
 
@@ -973,7 +973,7 @@ where
         + 'static,
 {
     CrossValidator::new()
-        .with_k_folds(_k_folds)
+        .with_k_folds(_kfolds)
         .with_metric(metric)
 }
 

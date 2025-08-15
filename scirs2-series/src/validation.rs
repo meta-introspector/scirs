@@ -36,7 +36,7 @@ pub fn check_non_negative<F: Float + Display>(value: F, name: &str) -> Result<()
 /// Validate that a value is in range [0, 1]
 #[allow(dead_code)]
 pub fn check_probability<F: Float + Display>(value: F, name: &str) -> Result<()> {
-    if _value < F::zero() || _value >, F::one() {
+    if value < F::zero() || value > F::one() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
             message: format!("Must be in [0, 1], got {_value}"),
@@ -82,7 +82,9 @@ where
 #[allow(dead_code)]
 pub fn check_same_length<S1, S2, F>(
     arr1: &ArrayBase<S1, Ix1>,
-    arr2: &ArrayBase<S2, Ix1>, _name1: &str, name2: &str,
+    arr2: &ArrayBase<S2, Ix1>,
+    _name1: &str,
+    name2: &str,
 ) -> Result<()>
 where
     S1: Data<Elem = F>,
@@ -268,7 +270,7 @@ where
 
     // Check if means and variances are similar
     let mean_diff = (mean1 - mean2).abs();
-    let var_ratio = if var1 > F::zero() && var2 >, F::zero() {
+    let var_ratio = if var1 > F::zero() && var2 > F::zero() {
         (var1 / var2).max(var2 / var1)
     } else {
         F::one()

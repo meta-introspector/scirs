@@ -40,7 +40,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use std::time::Instant;
-use std::path::PathBuf;
 
 /// Configuration for out-of-core processing
 #[derive(Debug, Clone)]

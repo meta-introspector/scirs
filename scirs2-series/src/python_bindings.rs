@@ -20,10 +20,12 @@ use std::collections::HashMap;
 
 #[cfg(feature = "python")]
 use crate::{
-use statrs::statistics::Statistics;
     arima_models::{ArimaConfig, ArimaModel},
     utils::*,
 };
+
+#[cfg(feature = "python")]
+use statrs::statistics::Statistics;
 
 /// Python wrapper for time series data
 #[cfg(feature = "python")]
@@ -219,9 +221,9 @@ impl PyARIMA {
     fn forecast<'py>(&self, py: Python<'py>, steps: usize) -> PyResult<Bound<'py, PyArray1<f64>>> {
         match (&self.model, &self.data) {
             (Some(model), Some(data)) => {
-                let forecasts = model.forecast(steps, data).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}"))
-                })?;
+                let forecasts = model
+                    .forecast(steps, data)
+                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}")))?;
                 Ok(forecasts.into_pyarray(py))
             }
             _ => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError_>(
@@ -357,7 +359,8 @@ fn auto_arima(
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}")))?;
 
     let config = ArimaConfig {
-        _p: params.pdq.0, d: params.pdq.1,
+        _p: params.pdq.0,
+        d: params.pdq.1,
         _q: params.pdq.2,
         seasonal_p: params.seasonal_pdq.0,
         seasonal_d: params.seasonal_pdq.1,

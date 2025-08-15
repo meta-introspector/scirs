@@ -7,7 +7,7 @@
 //! - Median filter
 
 use ndarray::{array, Array2};
-use scirs2__ndimage::filters::{
+use scirs2_ndimage::filters::{
     gaussian_filter, maximum_filter, median_filter, minimum_filter, uniform_filter, BorderMode,
 };
 

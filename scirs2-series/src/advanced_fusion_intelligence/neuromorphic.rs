@@ -95,7 +95,7 @@ pub struct SynapticPlasticityManager<F: Float + Debug> {
     homeostatic_scaling: bool,
 }
 
-impl<F: Float + Debug> SynapticPlasticityManager<F> {
+impl<F: Float + Debug + FromPrimitive> SynapticPlasticityManager<F> {
     /// Create new synaptic plasticity manager
     pub fn new() -> Self {
         SynapticPlasticityManager {
@@ -232,51 +232,51 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicProcessingUnit<F> {
     /// Process spike patterns through neuromorphic layers
     pub fn process_spikes(&mut self, inputspikes: &Array1<F>) -> Result<Array1<F>> {
         // 1. Convert input to spike trains
-        let spike_train = self.convert_to_spike_train(input_spikes)?;
-        
+        let spike_train = self.convert_to_spike_train(inputspikes)?;
+
         // 2. Process through spiking layers
         let mut current_spikes = spike_train;
         for layer in &mut self.spiking_layers {
             current_spikes = self.process_through_layer(layer, &current_spikes)?;
         }
-        
+
         // 3. Apply plasticity updates
         self.update_plasticity()?;
-        
+
         // 4. Apply homeostatic regulation
         self.apply_homeostasis()?;
-        
+
         Ok(current_spikes)
     }
 
     /// Convert continuous values to spike trains
     fn convert_to_spike_train(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut spike_train = Array1::zeros(data.len());
-        
+
         for (i, &value) in data.iter().enumerate() {
             // Convert value to spike probability using Poisson process
             let spike_probability = value.abs();
             let spike_threshold = F::from_f64(0.5).unwrap();
-            
+
             spike_train[i] = if spike_probability > spike_threshold {
                 F::from_f64(1.0).unwrap()
             } else {
                 F::zero()
             };
         }
-        
+
         Ok(spike_train)
     }
 
     /// Process spikes through a single layer
     fn process_through_layer(
-        &self, 
-        layer: &mut AdvancedSpikingLayer<F>, 
-        input_spikes: &Array1<F>
+        &self,
+        layer: &mut AdvancedSpikingLayer<F>,
+        input_spikes: &Array1<F>,
     ) -> Result<Array1<F>> {
         // Simplified layer processing
         let mut output_spikes = Array1::zeros(layer.neurons.len());
-        
+
         for (i, neuron) in layer.neurons.iter().enumerate() {
             // Compute weighted input to neuron
             let mut weighted_input = F::zero();
@@ -285,20 +285,21 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicProcessingUnit<F> {
                     weighted_input = weighted_input + spike * layer.connections[j].weight;
                 }
             }
-            
+
             // Apply neuron dynamics
             if weighted_input > neuron.threshold {
                 output_spikes[i] = F::from_f64(1.0).unwrap();
             }
         }
-        
+
         Ok(output_spikes)
     }
 
     /// Update synaptic plasticity
     fn update_plasticity(&mut self) -> Result<()> {
         for layer in &mut self.spiking_layers {
-            self.plasticity_manager.apply_plasticity(&mut layer.connections)?;
+            self.plasticity_manager
+                .apply_plasticity(&mut layer.connections)?;
         }
         Ok(())
     }
@@ -324,7 +325,7 @@ impl<F: Float + Debug> AdvancedSpikingLayer<F> {
             })
             .collect();
 
-        let connections = (0..num_connections)
+        let connections = (0..numconnections)
             .map(|_| SynapticConnection {
                 weight: F::from_f64(0.5).unwrap(),
                 delay: F::from_f64(1.0).unwrap(),
@@ -342,7 +343,7 @@ impl<F: Float + Debug> AdvancedSpikingLayer<F> {
     /// Update layer state with input spikes
     pub fn update(&mut self, inputspikes: &[F]) -> Result<Vec<F>> {
         let mut output_spikes = vec![F::zero(); self.neurons.len()];
-        
+
         for (i, neuron) in self.neurons.iter_mut().enumerate() {
             // Compute input current
             let mut input_current = F::zero();
@@ -351,18 +352,18 @@ impl<F: Float + Debug> AdvancedSpikingLayer<F> {
                     input_current = input_current + spike * self.connections[j].weight;
                 }
             }
-            
+
             // Update membrane potential
             let leak_factor = F::from_f64(0.9).unwrap();
             neuron.potential = neuron.potential * leak_factor + input_current;
-            
+
             // Check for spike
             if neuron.potential > neuron.threshold {
                 output_spikes[i] = F::from_f64(1.0).unwrap();
                 neuron.potential = neuron.reset_potential;
             }
         }
-        
+
         Ok(output_spikes)
     }
 }
@@ -383,7 +384,7 @@ impl<F: Float + Debug> SpikingNeuron<F> {
         // Leaky integrate-and-fire dynamics
         let decay_factor = (-dt / self.tau_membrane).exp();
         self.potential = self.potential * decay_factor + input_current * dt;
-        
+
         // Check for spike
         if self.potential > self.threshold {
             self.potential = self.reset_potential;
@@ -397,7 +398,7 @@ impl<F: Float + Debug> SpikingNeuron<F> {
 impl<F: Float + Debug> AdvancedDendriticTree<F> {
     /// Create new dendritic tree
     pub fn new(numbranches: usize) -> Self {
-        let branches = (0..num_branches)
+        let branches = (0..numbranches)
             .map(|_| DendriticBranch {
                 length: F::from_f64(100.0).unwrap(),
                 diameter: F::from_f64(2.0).unwrap(),
@@ -420,7 +421,7 @@ impl<F: Float + Debug> AdvancedDendriticTree<F> {
         }
 
         let mut integrated_input = F::zero();
-        
+
         for (i, &input) in inputs.iter().enumerate() {
             if i < self.branches.len() {
                 let branch = &self.branches[i];

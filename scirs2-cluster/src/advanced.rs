@@ -7,7 +7,7 @@
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis, Zip};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::{Rng, SeedableRng};
-use rand__distr::{Distribution, Uniform};
+use rand_distr::{Distribution, Uniform};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::Debug;
 

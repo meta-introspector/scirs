@@ -9,7 +9,7 @@ use crate::advanced__clustering::{
 };
 use crate::error::{ClusteringError, Result};
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 

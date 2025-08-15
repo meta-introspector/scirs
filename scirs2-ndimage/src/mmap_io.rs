@@ -31,7 +31,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///
 /// A memory-mapped array that can be used like a regular ndarray
 #[allow(dead_code)]
-pub fn load_image_mmap<T, D, P>(
+pub fn loadimage_mmap<T, D, P>(
     path: P,
     shape: &[usize],
     offset: usize,
@@ -84,7 +84,7 @@ where
 ///
 /// A memory-mapped array pointing to the saved data
 #[allow(dead_code)]
-pub fn save_image_mmap<T, D, P>(
+pub fn saveimage_mmap<T, D, P>(
     array: &ArrayView<T, D>,
     path: P,
     offset: usize,
@@ -301,7 +301,7 @@ where
     let raw_dim = D::from_dimension(&*shape)
         .map_err(|_| NdimageError::DimensionError("Invalid shape for dimension type".into()))?;
 
-    let array = Array::fromshape_vec(raw_dim, data)
+    let array = Array::from_shape_vec(raw_dim, data)
         .map_err(|e| NdimageError::ProcessingError(format!("Failed to create array: {}", e)))?;
 
     Ok(array)
@@ -309,7 +309,7 @@ where
 
 /// Smart image loader that automatically decides between regular and memory-mapped loading
 #[allow(dead_code)]
-pub fn smart_load_image<T, D, P>(
+pub fn smart_loadimage<T, D, P>(
     path: P,
     shape: &[usize],
     config: Option<MmapConfig>,
@@ -327,7 +327,7 @@ where
 
     if total_bytes > config.auto_mmap_threshold {
         // Use memory-mapped loading for large files
-        let mmap = load_image_mmap::<T, D, P>(path, shape, 0, AccessMode::Read)?;
+        let mmap = loadimage_mmap::<T, D, P>(path, shape, 0, AccessMode::Read)?;
         Ok(ImageData::MemoryMapped(mmap))
     } else {
         // Load into regular array for small files
@@ -377,16 +377,16 @@ where
 
 /// Example: Process a large image file using memory mapping
 #[allow(dead_code)]
-pub fn process_large_image_example<P: AsRef<Path>>(
+pub fn process_largeimage_example<P: AsRef<Path>>(
     input_path: P,
     output_path: P,
     shape: &[usize],
 ) -> NdimageResult<()> {
     // Load input as memory-mapped
-    let input_mmap = load_image_mmap::<f64, Ix2_>(input_path, shape, 0, AccessMode::Read)?;
+    let input_mmap = loadimage_mmap::<f64, Ix2_>(input_path, shape, 0, AccessMode::Read)?;
 
     // Create output memory-mapped array
-    let output_mmap = save_image_mmap(
+    let output_mmap = saveimage_mmap(
         &Array::<f64, IxDyn>::zeros(IxDyn(shape)).view(),
         output_path,
         0,
@@ -426,18 +426,18 @@ mod tests {
     #[test]
     fn test_save_and_load_mmap() {
         let temp_dir = tempdir().unwrap();
-        let file_path = temp_dir.path().join("test_image.bin");
+        let file_path = temp_dir.path().join("testimage.bin");
 
         // Create test data
         let data = Array2::<f64>::from_elem((50, 50), 3.14);
 
         // Save as memory-mapped
-        let saved_mmap = save_image_mmap(&data.view(), &file_path, 0).unwrap();
+        let saved_mmap = saveimage_mmap(&data.view(), &file_path, 0).unwrap();
         assert_eq!(saved_mmap.shape(), &[50, 50]);
 
         // Load back
         let loaded_mmap =
-            load_image_mmap::<f64, Ix2_>(&file_path, &[50, 50], 0, AccessMode::Read).unwrap();
+            loadimage_mmap::<f64, Ix2_>(&file_path, &[50, 50], 0, AccessMode::Read).unwrap();
 
         // Verify data
         let loaded_view = loaded_mmap.as_array::<Ix2>().unwrap();

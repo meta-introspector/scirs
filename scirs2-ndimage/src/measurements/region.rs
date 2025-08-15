@@ -30,7 +30,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Basic region analysis
 /// ```rust
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::measurements::region_properties;
+/// use scirs2_ndimage::measurements::region_properties;
 ///
 /// // Image with different regions
 /// let image = array![
@@ -58,7 +58,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Cell morphology analysis
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::region_properties;
+/// use scirs2_ndimage::measurements::region_properties;
 ///
 /// // Simulate segmented cell image
 /// let cell_intensities = Array2::fromshape_fn((50, 50), |(i, j)| {
@@ -95,7 +95,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Selective property extraction
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__ndimage::measurements::region_properties;
+/// use scirs2_ndimage::measurements::region_properties;
 ///
 /// let data = array![
 ///     [1.0, 2.0, 5.0, 6.0],
@@ -119,10 +119,10 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Materials analysis workflow
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::region_properties;
+/// use scirs2_ndimage::measurements::region_properties;
 ///
 /// // Simulate microscopy image of material grains
-/// let grain_image = Array2::fromshape_fn((100, 100), |(i, j)| {
+/// let grainimage = Array2::fromshape_fn((100, 100), |(i, j)| {
 ///     // Create grain-like structures with different properties
 ///     let grain_id = ((i / 25) * 2 + (j / 25)) + 1;
 ///     let base_intensity = match grain_id {
@@ -141,7 +141,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     ((i / 25) * 2 + (j / 25)) + 1
 /// });
 ///
-/// let grain_props = region_properties(&grain_image, &grain_labels, None).unwrap();
+/// let grain_props = region_properties(&grainimage, &grain_labels, None).unwrap();
 ///
 /// // Quality control: identify grains with unusual properties
 /// let total_area: usize = grain_props.iter().map(|g| g.area).sum();
@@ -160,7 +160,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Medical imaging: lesion characterization
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::region_properties;
+/// use scirs2_ndimage::measurements::region_properties;
 ///
 /// // Simulate medical image with lesions
 /// let medical_scan = Array2::fromshape_fn((80, 80), |(i, j)| {
@@ -242,7 +242,8 @@ use crate::error::{NdimageError, NdimageResult};
 #[allow(dead_code)]
 pub fn region_properties<T, D>(
     input: &Array<T, D>,
-    labels: &Array<usize, D>, _properties: Option<Vec<&str>>,
+    labels: &Array<usize, D>,
+    _properties: Option<Vec<&str>>,
 ) -> NdimageResult<Vec<RegionProperties<T>>>
 where
     T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
@@ -359,9 +360,9 @@ where
 /// ## Basic object detection in 2D
 /// ```rust
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::measurements::find_objects;
+/// use scirs2_ndimage::measurements::find_objects;
 ///
-/// let labeled_image = array![
+/// let labeledimage = array![
 ///     [0, 1, 1, 0, 0],
 ///     [0, 1, 1, 0, 2],
 ///     [0, 0, 0, 0, 2],
@@ -369,7 +370,7 @@ where
 ///     [3, 3, 0, 0, 0]
 /// ];
 ///
-/// let objects = find_objects(&labeled_image).unwrap();
+/// let objects = find_objects(&labeledimage).unwrap();
 ///
 /// // objects[0] = bounding box for object 1: [0, 2, 1, 3] (rows 0-1, cols 1-2)
 /// // objects[1] = bounding box for object 2: [1, 4, 4, 5] (rows 1-3, cols 4-4)  
@@ -379,7 +380,7 @@ where
 /// ## Cell detection and extraction workflow
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::find_objects;
+/// use scirs2_ndimage::measurements::find_objects;
 ///
 /// // Simulate cell segmentation result
 /// let cell_labels = Array2::fromshape_fn((100, 100), |(i, j)| {
@@ -416,7 +417,7 @@ where
 /// ## 3D object detection
 /// ```rust
 /// use ndarray::Array3;
-/// use scirs2__ndimage::measurements::find_objects;
+/// use scirs2_ndimage::measurements::find_objects;
 ///
 /// // Create 3D labeled volume
 /// let labeled_volume = Array3::fromshape_fn((50, 50, 50), |(z, y, x)| {
@@ -446,9 +447,9 @@ where
 /// ## Object extraction and cropping
 /// ```rust
 /// use ndarray::{Array2, s};
-/// use scirs2__ndimage::measurements::find_objects;
+/// use scirs2_ndimage::measurements::find_objects;
 ///
-/// let segmented_image = Array2::fromshape_fn((60, 60), |(i, j)| {
+/// let segmentedimage = Array2::fromshape_fn((60, 60), |(i, j)| {
 ///     // Create multiple objects
 ///     if (i >= 10 && i < 25) && (j >= 10 && j < 25) {
 ///         1  // Square object
@@ -459,7 +460,7 @@ where
 ///     }
 /// });
 ///
-/// let bboxes = find_objects(&segmented_image).unwrap();
+/// let bboxes = find_objects(&segmentedimage).unwrap();
 ///
 /// // Extract each object as a separate sub-array
 /// for (obj_id, bbox) in bboxes.iter().enumerate() {
@@ -469,7 +470,7 @@ where
 ///     let max_col = bbox[3];
 ///     
 ///     // Crop the object from the original image
-///     let cropped_object = segmented_image.slice(s![min_row..max_row, min_col..max_col]);
+///     let cropped_object = segmentedimage.slice(s![min_row..max_row, min_col..max_col]);
 ///     
 ///     println!("Object {} cropped to shape: {:?}", obj_id + 1, cropped_object.shape());
 ///     
@@ -480,7 +481,7 @@ where
 /// ## Quality control: filter objects by size
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__ndimage::measurements::find_objects;
+/// use scirs2_ndimage::measurements::find_objects;
 ///
 /// let detection_result = Array2::fromshape_fn((100, 100), |(i, j)| {
 ///     // Simulate detection with objects of various sizes

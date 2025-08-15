@@ -467,7 +467,7 @@ impl DistributedProcessor {
 
     fn select_samples_static(dataset: &Dataset, indices: &[usize]) -> Result<Dataset> {
         let selected_data = dataset.data.select(Axis(0), indices);
-        let selected_target = _dataset
+        let selected_target = dataset
             .target
             .as_ref()
             .map(|target| target.select(Axis(0), indices));

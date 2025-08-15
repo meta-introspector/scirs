@@ -8,7 +8,7 @@ use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{s, Array1, Array2, Array3};
 use rand::prelude::*;
-use rand::{rngs::StdRng, SeedableRng};
+use rand::{rngs::StdRng, thread_rng, SeedableRng};
 use statrs::statistics::Statistics;
 use std::time::{Duration, Instant};
 
@@ -184,7 +184,7 @@ impl NeuromorphicProcessor {
 
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut thread_rng()),
         };
 
         // Initialize neuromorphic network
@@ -236,7 +236,7 @@ impl NeuromorphicProcessor {
     ) -> Result<Dataset> {
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut thread_rng()),
         };
 
         // Initialize adaptive neural network
@@ -285,7 +285,7 @@ impl NeuromorphicProcessor {
 
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut thread_rng()),
         };
 
         let mut network = self.initialize_network(&mut rng)?;
@@ -442,7 +442,7 @@ impl NeuromorphicProcessor {
             if feature_idx < self.network_config.input_neurons {
                 // Rate encoding: higher values = higher spike probability
                 let spike_probability = (feature_value.abs().tanh() + 1.0) / 2.0;
-                let spike_current = if rand::rng().random::<f64>() < spike_probability {
+                let spike_current = if thread_rng().random::<f64>() < spike_probability {
                     0.5 * feature_value.signum()
                 } else {
                     0.0

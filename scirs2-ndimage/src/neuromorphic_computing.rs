@@ -165,7 +165,7 @@ where
     }
 
     // Convert spike trains back to image
-    let result = spike_trains_to_image(output_spikes.view(), config)?;
+    let result = spike_trains_toimage(output_spikes.view(), config)?;
 
     Ok(result)
 }
@@ -193,7 +193,7 @@ where
     };
 
     // Process events through neuromorphic filters
-    let mut processed_image = Array2::zeros((height, width));
+    let mut processedimage = Array2::zeros((height, width));
     let mut event_accumulator = Array2::zeros((height, width));
 
     // Event-driven convolution using integrate-and-fire neurons
@@ -211,11 +211,11 @@ where
             let normalized = T::from_f64(accumulated.tanh()).ok_or_else(|| {
                 NdimageError::ComputationError("Type conversion failed".to_string())
             })?;
-            processed_image[(y, x)] = normalized;
+            processedimage[(y, x)] = normalized;
         }
     }
 
-    Ok((processed_image, events))
+    Ok((processedimage, events))
 }
 
 /// Liquid State Machine for Temporal Image Processing
@@ -223,7 +223,7 @@ where
 /// Implements a liquid state machine (reservoir computing) for processing
 /// temporal sequences of images with rich dynamics and memory.
 #[allow(dead_code)]
-pub fn liquid_state_machine<T>(
+pub fn liquidstate_machine<T>(
     image_sequence: &[ArrayView2<T>],
     reservoir_size: usize,
     config: &NeuromorphicConfig,
@@ -243,7 +243,7 @@ where
     let mut reservoir = initialize_reservoir(reservoir_size, height, width, config)?;
 
     // Process _sequence through liquid state machine
-    let mut liquid_states = Vec::new();
+    let mut liquidstates = Vec::new();
 
     for (t, image) in image_sequence.iter().enumerate() {
         // Convert image to input currents
@@ -253,14 +253,14 @@ where
         update_reservoir_dynamics(&mut reservoir, &input_currents, config)?;
 
         // Capture liquid state
-        let state = capture_reservoir_state(&reservoir)?;
-        liquid_states.push(state);
+        let state = capture_reservoirstate(&reservoir)?;
+        liquidstates.push(state);
     }
 
     // Read out final processed image from liquid states
-    let processed_image = readout_from_liquid_states(&liquid_states, (height, width), config)?;
+    let processedimage = readout_from_liquidstates(&liquidstates, (height, width), config)?;
 
-    Ok(processed_image)
+    Ok(processedimage)
 }
 
 /// Adaptive Homeostatic Filtering
@@ -282,7 +282,7 @@ where
     let mut neurons = Array2::from_elem((height, width), SpikingNeuron::default());
     let mut synaptic_weights = Array3::from_elem((height, width, 9), 0.5); // 3x3 neighborhood
 
-    let mut processed_image = Array2::zeros((height, width));
+    let mut processedimage = Array2::zeros((height, width));
 
     // Adaptive processing with homeostatic regulation
     for step in 0..adaptation_steps {
@@ -325,7 +325,7 @@ where
                     0.0
                 };
 
-                processed_image[(y, x)] = T::from_f64(output_value).ok_or_else(|| {
+                processedimage[(y, x)] = T::from_f64(output_value).ok_or_else(|| {
                     NdimageError::ComputationError("Type conversion failed".to_string())
                 })?;
 
@@ -335,7 +335,7 @@ where
         }
     }
 
-    Ok(processed_image)
+    Ok(processedimage)
 }
 
 /// Temporal Coding Feature Extraction
@@ -359,7 +359,7 @@ where
     let mut feature_maps = Array3::zeros((num_features, height, width));
 
     // Convert image to temporal patterns
-    let temporal_image = create_temporal_patterns(&image, time_window, config)?;
+    let temporalimage = create_temporal_patterns(&image, time_window, config)?;
 
     for (feature_idx, detector) in feature_detectors.iter().enumerate() {
         let (det_h, det_w) = detector.dim();
@@ -375,7 +375,7 @@ where
 
                     for dy in 0..det_h {
                         for dx in 0..det_w {
-                            let img_val = temporal_image[(t, y + dy, x + dx)];
+                            let img_val = temporalimage[(t, y + dy, x + dx)];
                             let det_val = detector[(dy, dx)];
                             spatial_correlation += img_val * det_val;
                         }
@@ -405,7 +405,7 @@ where
 /// of image features through biological-like synaptic adaptation.
 #[allow(dead_code)]
 pub fn stdp_unsupervised_learning<T>(
-    training_images: &[ArrayView2<T>],
+    trainingimages: &[ArrayView2<T>],
     filter_size: (usize, usize),
     config: &NeuromorphicConfig,
     epochs: usize,
@@ -425,7 +425,7 @@ where
 
     // STDP learning over multiple epochs
     for epoch in 0..epochs {
-        for (img_idx, image) in training_images.iter().enumerate() {
+        for (img_idx, image) in trainingimages.iter().enumerate() {
             let (height, width) = image.dim();
 
             // Random location for unsupervised patch learning
@@ -629,8 +629,9 @@ fn apply_stdp_learning(
 }
 
 #[allow(dead_code)]
-fn spike_trains_to_image<T>(
-    spike_trains: ndarray::ArrayView3<f64>, _config: &NeuromorphicConfig,
+fn spike_trains_toimage<T>(
+    spike_trains: ndarray::ArrayView3<f64>,
+    _config: &NeuromorphicConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -769,7 +770,9 @@ fn apply_event_kernel(
 
 #[allow(dead_code)]
 fn initialize_reservoir(
-    reservoir_size: usize, _height: usize, width: usize,
+    reservoir_size: usize,
+    _height: usize,
+    width: usize,
     config: &NeuromorphicConfig,
 ) -> NdimageResult<Array1<SpikingNeuron>> {
     let mut reservoir = Array1::from_elem(reservoir_size, SpikingNeuron::default());
@@ -833,7 +836,7 @@ fn update_reservoir_dynamics(
 }
 
 #[allow(dead_code)]
-fn capture_reservoir_state(reservoir: &Array1<SpikingNeuron>) -> NdimageResult<Array1<f64>> {
+fn capture_reservoirstate(reservoir: &Array1<SpikingNeuron>) -> NdimageResult<Array1<f64>> {
     let mut state = Array1::zeros(_reservoir.len());
 
     for (i, neuron) in reservoir.iter().enumerate() {
@@ -844,25 +847,26 @@ fn capture_reservoir_state(reservoir: &Array1<SpikingNeuron>) -> NdimageResult<A
 }
 
 #[allow(dead_code)]
-fn readout_from_liquid_states(
-    liquid_states: &[Array1<f64>],
-    outputshape: (usize, usize), _config: &NeuromorphicConfig,
+fn readout_from_liquidstates(
+    liquidstates: &[Array1<f64>],
+    outputshape: (usize, usize),
+    _config: &NeuromorphicConfig,
 ) -> NdimageResult<Array2<f64>> {
     let (height, width) = outputshape;
     let mut output = Array2::zeros((height, width));
 
-    if liquid_states.is_empty() {
+    if liquidstates.is_empty() {
         return Ok(output);
     }
 
-    let reservoir_size = liquid_states[0].len();
+    let reservoir_size = liquidstates[0].len();
 
     // Simple linear readout (in practice would use trained weights)
     for y in 0..height {
         for x in 0..width {
             let mut sum = 0.0;
 
-            for state in liquid_states {
+            for state in liquidstates {
                 for i in 0..reservoir_size {
                     let weight = ((y * width + x + i) as f64
                         / (height * width * reservoir_size) as f64)
@@ -965,11 +969,11 @@ mod tests {
     #[test]
     fn test_event_driven_processing() {
         let current =
-            Array2::fromshape_vec((3, 3), vec![0.0, 1.0, 0.0, 1.0, 0.5, 1.0, 0.0, 1.0, 0.0])
+            Array2::from_shape_vec((3, 3), vec![0.0, 1.0, 0.0, 1.0, 0.5, 1.0, 0.0, 1.0, 0.0])
                 .unwrap();
 
         let previous =
-            Array2::fromshape_vec((3, 3), vec![0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 0.0, 0.5, 0.0])
+            Array2::from_shape_vec((3, 3), vec![0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 0.0, 0.5, 0.0])
                 .unwrap();
 
         let config = NeuromorphicConfig::default();
@@ -983,7 +987,7 @@ mod tests {
     #[test]
     fn test_homeostatic_adaptive_filter() {
         let image =
-            Array2::fromshape_vec((5, 5), (0..25).map(|x| x as f64 / 25.0).collect()).unwrap();
+            Array2::from_shape_vec((5, 5), (0..25).map(|x| x as f64 / 25.0).collect()).unwrap();
 
         let config = NeuromorphicConfig::default();
         let result = homeostatic_adaptive_filter(image.view(), &config, 5).unwrap();
@@ -995,9 +999,9 @@ mod tests {
     #[test]
     fn test_temporal_coding_feature_extraction() {
         let image =
-            Array2::fromshape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
 
-        let edge_detector = Array2::fromshape_vec(
+        let edge_detector = Array2::from_shape_vec(
             (3, 3),
             vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
         )
@@ -1015,13 +1019,13 @@ mod tests {
 
     #[test]
     fn test_stdp_unsupervised_learning() {
-        let training_image =
-            Array2::fromshape_vec((6, 6), (0..36).map(|x| x as f64 / 36.0).collect()).unwrap();
-        let training_images = vec![training_image.view()];
+        let trainingimage =
+            Array2::from_shape_vec((6, 6), (0..36).map(|x| x as f64 / 36.0).collect()).unwrap();
+        let trainingimages = vec![trainingimage.view()];
 
         let config = NeuromorphicConfig::default();
         let learned_filter =
-            stdp_unsupervised_learning(&training_images, (3, 3), &config, 2).unwrap();
+            stdp_unsupervised_learning(&trainingimages, (3, 3), &config, 2).unwrap();
 
         assert_eq!(learned_filter.dim(), (3, 3));
         assert!(learned_filter.iter().all(|&x| x.is_finite()));

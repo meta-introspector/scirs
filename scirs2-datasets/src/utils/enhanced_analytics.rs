@@ -442,9 +442,30 @@ impl AdvancedDatasetAnalyzer {
 
         // Calculate overall normality as weighted average
         let overall_normality = {
-            let mean_shapiro = shapiro_wilk_scores.mean().unwrap_or(0.0);
-            let mean_anderson = anderson_darling_scores.mean().unwrap_or(0.0);
-            let mean_jarque = jarque_bera_scores.mean().unwrap_or(0.0);
+            let mean_shapiro = {
+                let val = shapiro_wilk_scores.mean();
+                if val.is_nan() {
+                    0.0
+                } else {
+                    val
+                }
+            };
+            let mean_anderson = {
+                let val = anderson_darling_scores.mean();
+                if val.is_nan() {
+                    0.0
+                } else {
+                    val
+                }
+            };
+            let mean_jarque = {
+                let val = jarque_bera_scores.mean();
+                if val.is_nan() {
+                    0.0
+                } else {
+                    val
+                }
+            };
 
             (mean_shapiro * 0.4 + mean_anderson * 0.3 + mean_jarque * 0.3).clamp(0.0, 1.0)
         };
@@ -468,7 +489,14 @@ impl AdvancedDatasetAnalyzer {
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         // Simplified normality score based on skewness and kurtosis
-        let mean = data.mean().unwrap_or(0.0);
+        let mean = {
+            let val = data.mean();
+            if val.is_nan() {
+                0.0
+            } else {
+                val
+            }
+        };
         let variance = data.var(1.0);
 
         if variance <= f64::EPSILON {
@@ -518,7 +546,14 @@ impl AdvancedDatasetAnalyzer {
             return Ok(0.0);
         }
 
-        let mean = data.mean().unwrap_or(0.0);
+        let mean = {
+            let val = data.mean();
+            if val.is_nan() {
+                0.0
+            } else {
+                val
+            }
+        };
         let variance = data.var(1.0);
 
         if variance <= f64::EPSILON {
@@ -683,8 +718,22 @@ impl AdvancedDatasetAnalyzer {
             return Ok(0.0);
         }
 
-        let mean_x = x.mean().unwrap_or(0.0);
-        let mean_y = y.mean().unwrap_or(0.0);
+        let mean_x = {
+            let val = x.mean();
+            if val.is_nan() {
+                0.0
+            } else {
+                val
+            }
+        };
+        let mean_y = {
+            let val = y.mean();
+            if val.is_nan() {
+                0.0
+            } else {
+                val
+            }
+        };
 
         let mut numerator = 0.0;
         let mut sum_sq_x = 0.0;

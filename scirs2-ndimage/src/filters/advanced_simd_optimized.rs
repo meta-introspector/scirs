@@ -736,7 +736,8 @@ where
 /// Separable erosion for specific structure patterns
 #[allow(dead_code)]
 fn advanced_simd_separable_erosion<T>(
-    input: ArrayView2<T>, _structure: ArrayView2<bool>,
+    input: ArrayView2<T>,
+    _structure: ArrayView2<bool>,
 ) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps + PartialOrd,

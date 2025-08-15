@@ -405,7 +405,8 @@ where
 
 #[allow(dead_code)]
 fn robust_loess_seasonal<F>(
-    ts: &Array1<F>, _period: usize,
+    ts: &Array1<F>,
+    _period: usize,
     bandwidth: F,
     weights: &Array1<F>,
 ) -> Result<Array1<F>>

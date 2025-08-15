@@ -54,8 +54,7 @@ impl EmbeddedMethods {
         }
 
         // Normalize features
-        let (normalized_features_feature_means_feature_stds) =
-            Self::normalize_features(features);
+        let (normalized_features_feature_means_feature_stds) = Self::normalize_features(features);
         let target_mean = target.sum() / n_samples as f64;
         let normalized_target = target.mapv(|x| x - target_mean);
 

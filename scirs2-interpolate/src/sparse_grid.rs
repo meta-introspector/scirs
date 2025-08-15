@@ -68,7 +68,7 @@ pub struct MultiIndex {
 impl MultiIndex {
     /// Create a new multi-index
     pub fn new(indices: Vec<usize>) -> Self {
-        Self { _indices }
+        Self { indices }
     }
 
     /// Get the L1 norm (sum of indices)
@@ -186,7 +186,7 @@ where
 
     /// Set the maximum level for the sparse grid
     pub fn with_max_level(mut self, maxlevel: usize) -> Self {
-        self.max_level = max_level;
+        self.max_level = maxlevel;
         self
     }
 
@@ -340,7 +340,7 @@ where
         indices: &mut Vec<MultiIndex>,
     ) {
         if dim == self.dimension {
-            if current.iter()._sum::<usize>() <= self.max_level {
+            if current.iter().sum::<usize>() <= self.max_level {
                 indices.push(MultiIndex::new(current));
             }
             return;
@@ -395,7 +395,7 @@ where
     fn generate_tensor_product_points(&self, multiidx: &MultiIndex) -> Vec<Vec<F>> {
         let mut points = vec![Vec::new()];
 
-        for (dim, &level) in multi_idx.indices.iter().enumerate() {
+        for (dim, &level) in multiidx.indices.iter().enumerate() {
             let dim_points = self.generate_1d_points(level, dim);
 
             let mut new_points = Vec::new();
@@ -437,7 +437,7 @@ where
     /// Convert coordinates to multi-index representation
     fn coords_to_multi_index(&self, coords: &[F], baseidx: &MultiIndex) -> MultiIndex {
         // For simplicity, use a hash-based approach
-        let mut indices = base_idx.indices.clone();
+        let mut indices = baseidx.indices.clone();
 
         // Add coordinate-based information to make unique
         for (i, &coord) in coords.iter().enumerate() {
@@ -453,8 +453,9 @@ where
 
     /// Compute hierarchical surplus for a point
     fn compute_hierarchical_surplus(
-        self_coords: &[F],
-        value: F_multi,
+        &self,
+        coords: &[F],
+        value: F,
         idx: &MultiIndex,
     ) -> InterpolateResult<F> {
         // Simplified surplus computation
@@ -644,7 +645,7 @@ where
             // Adaptive grid spacing based on level and dimension
             let level_spacing = F::from_f64(2.0_f64.powi(-(self.max_level as i32))).unwrap();
             let h = (self.bounds[i].1 - self.bounds[i].0) * level_spacing;
-            let dist = (query[i] - grid_point[i]).abs();
+            let dist = (query[i] - gridpoint[i]).abs();
 
             if dist <= h {
                 weight *= F::one() - dist / h;

@@ -6,7 +6,7 @@ use ndarray::{Array1, ArrayBase, Data, Ix1, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
 
-use crate::arima__models::SelectionCriterion;
+use crate::arima_models::SelectionCriterion;
 use crate::error::{Result, TimeSeriesError};
 use crate::optimization::{LBFGSOptimizer, OptimizationOptions};
 use crate::utils::partial_autocorrelation;
@@ -138,7 +138,7 @@ where
 
     /// Fit SARIMA model
     pub fn fit(&mut self, data: &ArrayBase<impl Data<Elem = F>, Ix1>) -> Result<()> {
-        scirs2_core::validation::check_array_finite(data, "data")?;
+        scirs2_core::validation::checkarray_finite(data, "data")?;
 
         // Need sufficient data for seasonal model
         let min_data = 2 * self.period + self.p + self.p_seasonal + self.d + self.d_seasonal;

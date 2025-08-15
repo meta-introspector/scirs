@@ -576,7 +576,7 @@ mod tests {
     use image::{ImageBuffer, Luma};
 
     fn create_test_image(width: u32, height: u32, pattern: u8) -> GrayImage {
-        ImageBuffer::from_fn(_width, height, |x, y| {
+        ImageBuffer::from_fn(width, height, |x, y| {
             Luma([((x + y + pattern as u32) % 256) as u8])
         })
     }
@@ -646,6 +646,6 @@ mod tests {
         assert!(result.is_ok());
 
         let (gradient_cost) = result.unwrap();
-        assert_eq!(gradient.len(), 6);
+        assert_eq!(gradient_cost.len(), 6);
     }
 }

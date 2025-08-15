@@ -10,6 +10,7 @@ use ndarray::Array1;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
+use rand::thread_rng;
 use std::collections::HashMap;
 
 /// Performs random sampling with or without replacement
@@ -70,7 +71,7 @@ pub fn random_sample(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -161,7 +162,7 @@ pub fn stratified_sample(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -292,7 +293,7 @@ pub fn importance_sample(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -421,7 +422,7 @@ pub fn multiple_bootstrap_samples(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rand::rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

@@ -130,7 +130,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    scirs2_core::validation::check_array_finite(residuals, "residuals")?;
+    scirs2_core::validation::checkarray_finite(residuals, "residuals")?;
 
     if residuals.len() < 4 {
         return Err(TimeSeriesError::InvalidInput(
@@ -188,7 +188,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Display,
 {
-    let n = F::from(_data.len()).unwrap();
+    let n = F::from(data.len()).unwrap();
     let mean = data.mean().unwrap_or(F::zero());
 
     let mut m2 = F::zero();
@@ -224,7 +224,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    scirs2_core::validation::check_array_finite(residuals, "residuals")?;
+    scirs2_core::validation::checkarray_finite(residuals, "residuals")?;
 
     let n = residuals.len();
     if lags >= n {
@@ -266,8 +266,8 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Display,
 {
-    let n = F::from(_residuals.len()).unwrap();
-    let (skewness, kurtosis) = calculate_moments(_residuals)?;
+    let n = F::from(residuals.len()).unwrap();
+    let (skewness, kurtosis) = calculate_moments(residuals)?;
 
     // Jarque-Bera statistic
     let statistic = n / F::from(6.0).unwrap()
@@ -292,7 +292,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    scirs2_core::validation::check_array_finite(_residuals, "_residuals")?;
+    scirs2_core::validation::checkarray_finite(residuals, "residuals")?;
 
     let n = residuals.len();
     if lags >= n {
@@ -388,8 +388,8 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Display,
 {
-    scirs2_core::validation::check_array_finite(actual, "actual")?;
-    scirs2_core::validation::check_array_finite(predicted, "predicted")?;
+    scirs2_core::validation::checkarray_finite(actual, "actual")?;
+    scirs2_core::validation::checkarray_finite(predicted, "predicted")?;
 
     if actual.len() != predicted.len() {
         return Err(TimeSeriesError::InvalidInput(
@@ -484,7 +484,7 @@ where
     Fit: Fn(&mut Model, &Array1<F>) -> Result<()>,
     Predict: Fn(&Model, usize, &Array1<F>) -> Result<Array1<F>>,
 {
-    scirs2_core::validation::check_array_finite(data, "data")?;
+    scirs2_core::validation::checkarray_finite(data, "data")?;
 
     let n = data.len();
     if n < min_train_size + forecast_horizon {
@@ -587,7 +587,8 @@ where
             3 => (F::from(7.815).unwrap(), F::from(11.345).unwrap()),
             4 => (F::from(9.488).unwrap(), F::from(13.277).unwrap()),
             5 => (F::from(11.070).unwrap(), F::from(15.086).unwrap()),
-            10 => (F::from(18.307).unwrap(), F::from(23.209).unwrap(), _ => (
+            10 => (F::from(18.307).unwrap(), F::from(23.209).unwrap()),
+            _ => (
                 F::from(df).unwrap() * F::from(1.5).unwrap(),
                 F::from(df).unwrap() * F::from(2.0).unwrap(),
             ),

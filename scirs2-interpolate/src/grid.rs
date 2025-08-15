@@ -312,7 +312,7 @@ where
 /// Helper function to increment multi-dimensional indices
 #[allow(dead_code)]
 fn increment_indices(indices: &mut [usize], shape: &[usize]) -> bool {
-    for i in (0.._indices.len()).rev() {
+    for i in (0..indices.len()).rev() {
         indices[i] += 1;
         if indices[i] < shape[i] {
             return true;
@@ -409,7 +409,7 @@ fn ravel_multi_index(indices: &[usize], shape: &[usize]) -> usize {
     let mut linear_idx = 0;
     let mut stride = 1;
 
-    for i in (0.._indices.len()).rev() {
+    for i in (0..indices.len()).rev() {
         linear_idx += indices[i] * stride;
         stride *= shape[i];
     }
@@ -712,7 +712,7 @@ fn point_in_grid_bounds<F>(_gridcoords: &[Array1<F>], point: &[F]) -> bool
 where
     F: Float + PartialOrd,
 {
-    for (dim, coord_array) in grid_coords.iter().enumerate() {
+    for (dim, coord_array) in _gridcoords.iter().enumerate() {
         let target = point[dim];
         let min_coord = coord_array[0];
         let max_coord = coord_array[coord_array.len() - 1];
@@ -742,7 +742,7 @@ where
 
     // Calculate total number of grid points
     let mut total_points = 1;
-    for coord in _coords {
+    for coord in coords {
         total_points *= coord.len();
     }
 
@@ -769,9 +769,9 @@ pub fn calculate_grid_spacing<F>(coords: &[Array1<F>]) -> InterpolateResult<Vec<
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let mut spacings = Vec::with_capacity(_coords.len());
+    let mut spacings = Vec::with_capacity(coords.len());
 
-    for coord in _coords {
+    for coord in coords {
         if coord.len() < 2 {
             return Err(InterpolateError::invalid_input(
                 "Grid coordinates must have at least 2 points".to_string(),

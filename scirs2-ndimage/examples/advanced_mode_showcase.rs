@@ -34,11 +34,11 @@
 //! - Bio-quantum hybrid feature detection
 
 use ndarray::{Array1, Array2, Array3};
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     // Neuromorphic algorithms
     event_driven_processing,
     homeostatic_adaptive_filter,
-    liquid_state_machine,
+    liquidstate_machine,
     // Quantum algorithms
     quantum_amplitude_amplification,
     quantum_annealing_segmentation,
@@ -122,7 +122,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 struct AdvancedTestData {
-    natural_image: Array2<f64>,
+    naturalimage: Array2<f64>,
     synthetic_patterns: Array2<f64>,
     noisy_medical: Array2<f64>,
     temporal_sequence: Vec<Array2<f64>>,
@@ -136,7 +136,7 @@ fn create_advanced_test_dataset() -> AdvancedTestData {
     let size = 32;
 
     // Natural-like image with complex structures
-    let mut natural_image = Array2::zeros((size, size));
+    let mut naturalimage = Array2::zeros((size, size));
     for y in 0..size {
         for x in 0..size {
             let fx = x as f64 / size as f64;
@@ -148,7 +148,7 @@ fn create_advanced_test_dataset() -> AdvancedTestData {
                 + 0.1 * (fx * fy * 16.0 * PI).sin()
                 + 0.4 * (-((fx - 0.7).powi(2) + (fy - 0.3).powi(2)) / 0.01).exp();
 
-            natural_image[(y, x)] = pattern.tanh();
+            naturalimage[(y, x)] = pattern.tanh();
         }
     }
 
@@ -170,7 +170,7 @@ fn create_advanced_test_dataset() -> AdvancedTestData {
     }
 
     // Noisy medical-like image
-    let mut noisy_medical = natural_image.clone();
+    let mut noisy_medical = naturalimage.clone();
     for element in noisy_medical.iter_mut() {
         *element += (rand::random::<f64>() - 0.5) * 0.4;
         *element = element.tanh(); // Keep in reasonable range
@@ -179,7 +179,7 @@ fn create_advanced_test_dataset() -> AdvancedTestData {
     // Temporal sequence showing motion/evolution
     let mut temporal_sequence = Vec::new();
     for t in 0..8 {
-        let mut frame = natural_image.clone();
+        let mut frame = naturalimage.clone();
         let time_factor = t as f64 / 8.0;
 
         // Add temporal evolution
@@ -194,16 +194,17 @@ fn create_advanced_test_dataset() -> AdvancedTestData {
     }
 
     // Feature detection templates
-    let edge_template = Array2::fromshape_vec(
+    let edge_template = Array2::from_shape_vec(
         (3, 3),
         vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
     )
     .unwrap();
 
     let corner_template =
-        Array2::fromshape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0]).unwrap();
+        Array2::from_shape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0])
+            .unwrap();
 
-    let blob_template = Array2::fromshape_vec(
+    let blob_template = Array2::from_shape_vec(
         (5, 5),
         vec![
             0.0, 0.2, 0.5, 0.2, 0.0, 0.2, 0.8, 1.0, 0.8, 0.2, 0.5, 1.0, 1.0, 1.0, 0.5, 0.2, 0.8,
@@ -232,7 +233,7 @@ fn create_advanced_test_dataset() -> AdvancedTestData {
     println!();
 
     AdvancedTestData {
-        natural_image,
+        naturalimage,
         synthetic_patterns,
         noisy_medical,
         temporal_sequence,
@@ -279,14 +280,14 @@ fn demonstrate_quantum_preprocessing(
     let gaussian_kernel = create_gaussian_kernel(3, 1.0);
     let edge_kernel = create_edge_kernel();
     let enhancement_kernel = create_enhancement_kernel();
-    let filter_states = vec![gaussian_kernel, edge_kernel, enhancement_kernel];
+    let filterstates = vec![gaussian_kernel, edge_kernel, enhancement_kernel];
 
     let superposition_result =
-        quantum_superposition_filter(test_data.natural_image.view(), &filter_states, config)?;
+        quantum_superposition_filter(test_data.naturalimage.view(), &filterstates, config)?;
 
     println!(
         "   ✓ Applied {} quantum filter states in superposition",
-        filter_states.len()
+        filterstates.len()
     );
 
     // Quantum entanglement correlation for feature relationships
@@ -304,13 +305,13 @@ fn demonstrate_quantum_preprocessing(
 
     // Quantum error correction for noise resilience
     println!("🛡️ Quantum Error Correction for Noise Resilience...");
-    let corrected_image = quantum_error_correction(
+    let correctedimage = quantum_error_correction(
         test_data.noisy_medical.view(),
         5, // High redundancy
         config,
     )?;
 
-    let noise_reduction = calculate_noise_reduction(&test_data.noisy_medical, &corrected_image);
+    let noise_reduction = calculate_noise_reduction(&test_data.noisy_medical, &correctedimage);
     println!("   ✓ Noise reduction achieved: {:.1}%", noise_reduction);
 
     let phase1_duration = start_time.elapsed();
@@ -332,13 +333,13 @@ fn demonstrate_neuromorphic_learning(
 
     // STDP unsupervised feature learning
     println!("🔄 STDP Unsupervised Feature Learning from Natural Images...");
-    let training_images: Vec<_> = test_data
+    let trainingimages: Vec<_> = test_data
         .temporal_sequence
         .iter()
         .map(|img| img.view())
         .collect();
     let learned_filter = stdp_unsupervised_learning(
-        &training_images,
+        &trainingimages,
         (5, 5),
         config,
         15, // Learning epochs
@@ -349,11 +350,11 @@ fn demonstrate_neuromorphic_learning(
         "   ✓ Learned filter complexity score: {:.4}",
         filter_complexity
     );
-    println!("   ✓ Training images processed: {}", training_images.len());
+    println!("   ✓ Training images processed: {}", trainingimages.len());
 
     // Event-driven processing simulation
     println!("⚡ Event-Driven Retinal-Like Processing...");
-    let mut event_accumulator = test_data.natural_image.clone();
+    let mut event_accumulator = test_data.naturalimage.clone();
     let mut total_events = 0;
 
     for i in 1..test_data.temporal_sequence.len() {
@@ -375,7 +376,7 @@ fn demonstrate_neuromorphic_learning(
     println!(
         "   ✓ Event density: {:.2} events/pixel/frame",
         total_events as f64
-            / (test_data.natural_image.len() * test_data.temporal_sequence.len()) as f64
+            / (test_data.naturalimage.len() * test_data.temporal_sequence.len()) as f64
     );
 
     // Homeostatic adaptive filtering
@@ -426,8 +427,8 @@ fn demonstrate_hybrid_processing(
     }
 
     // Then apply neuromorphic temporal coding
-    let temporal_features = temporal_coding_feature_extraction(
-        test_data.natural_image.view(),
+    let temporalfeatures = temporal_coding_feature_extraction(
+        test_data.naturalimage.view(),
         &quantum_enhanced_templates,
         neuromorphic_config,
         20, // Time window
@@ -437,7 +438,7 @@ fn demonstrate_hybrid_processing(
         "   ✓ Quantum-enhanced templates: {}",
         quantum_enhanced_templates.len()
     );
-    println!("   ✓ Temporal feature maps: {:?}", temporal_features.dim());
+    println!("   ✓ Temporal feature maps: {:?}", temporalfeatures.dim());
 
     // Neuromorphic-guided quantum optimization
     println!("🎯 Neuromorphic-Guided Quantum Variational Enhancement...");
@@ -471,7 +472,7 @@ fn demonstrate_hybrid_processing(
     }
 
     // Process through liquid state machine
-    let liquid_processed = liquid_state_machine(
+    let liquid_processed = liquidstate_machine(
         &quantum_preprocessed_sequence
             .iter()
             .map(|f| f.view())
@@ -508,7 +509,7 @@ fn demonstrate_fusion_pipeline(
     println!("🧬 Integrated Quantum-Neuromorphic Pattern Classification...");
 
     // Step 1: Neuromorphic feature extraction
-    let snn_features = spiking_neural_network_filter(
+    let snnfeatures = spiking_neural_network_filter(
         test_data.synthetic_patterns.view(),
         &[16, 8], // Two-layer SNN
         neuromorphic_config,
@@ -517,9 +518,9 @@ fn demonstrate_fusion_pipeline(
 
     // Step 2: Quantum machine learning classification
     let training_data = vec![
-        test_data.natural_image.clone(),
+        test_data.naturalimage.clone(),
         test_data.synthetic_patterns.clone(),
-        snn_features.clone(),
+        snnfeatures.clone(),
     ];
     let labels = vec![0, 1, 2]; // Different pattern types
 
@@ -545,13 +546,13 @@ fn demonstrate_fusion_pipeline(
         test_data.feature_templates[1].clone(),
     ];
 
-    let amplified_features = quantum_amplitude_amplification(
-        test_data.natural_image.view(),
+    let amplifiedfeatures = quantum_amplitude_amplification(
+        test_data.naturalimage.view(),
         &learned_templates,
         quantum_config,
     )?;
 
-    let amplification_effectiveness = calculate_amplification_effectiveness(&amplified_features);
+    let amplification_effectiveness = calculate_amplification_effectiveness(&amplifiedfeatures);
     println!(
         "   ✓ Quantum amplification effectiveness: {:.4}",
         amplification_effectiveness
@@ -593,7 +594,7 @@ fn demonstrate_multiscale_analysis(
     // Multi-scale quantum Fourier analysis
     println!("🌊 Multi-Scale Quantum Fourier Transform Analysis...");
 
-    let qft_result = quantum_fourier_enhancement(test_data.natural_image.view(), quantum_config)?;
+    let qft_result = quantum_fourier_enhancement(test_data.naturalimage.view(), quantum_config)?;
 
     let frequency_complexity = calculate_frequency_complexity(&qft_result);
     println!(
@@ -610,16 +611,16 @@ fn demonstrate_multiscale_analysis(
 
     for (i, &scale) in scales.iter().enumerate() {
         // Create scaled version (simple decimation for demo)
-        let scaled_size = (test_data.natural_image.nrows() as f64 * scale) as usize;
-        let scaled_image = if scale == 1.0 {
-            test_data.natural_image.clone()
+        let scaled_size = (test_data.naturalimage.nrows() as f64 * scale) as usize;
+        let scaledimage = if scale == 1.0 {
+            test_data.naturalimage.clone()
         } else {
-            subsample_image(&test_data.natural_image, scaled_size)?
+            subsampleimage(&test_data.naturalimage, scaled_size)?
         };
 
         // Apply neuromorphic processing
         let processed = homeostatic_adaptive_filter(
-            scaled_image.view(),
+            scaledimage.view(),
             neuromorphic_config,
             10 + i * 5, // Varying adaptation steps
         )?;
@@ -642,7 +643,7 @@ fn demonstrate_multiscale_analysis(
         quantum_config,
     )?;
 
-    let synthesis_score = calculate_synthesis_quality(&test_data.natural_image, &final_result);
+    let synthesis_score = calculate_synthesis_quality(&test_data.naturalimage, &final_result);
     println!(
         "   ✓ Bio-quantum synthesis quality score: {:.4}",
         synthesis_score
@@ -690,7 +691,7 @@ fn create_gaussian_kernel(size: usize, sigma: f64) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_edge_kernel() -> Array2<f64> {
-    Array2::fromshape_vec(
+    Array2::from_shape_vec(
         (3, 3),
         vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
     )
@@ -699,7 +700,7 @@ fn create_edge_kernel() -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_enhancement_kernel() -> Array2<f64> {
-    Array2::fromshape_vec(
+    Array2::from_shape_vec(
         (3, 3),
         vec![0.0, -1.0, 0.0, -1.0, 5.0, -1.0, 0.0, -1.0, 0.0],
     )
@@ -825,7 +826,7 @@ fn calculate_enhancement_quality(original: &Array2<f64>, enhanced: &Array2<f64>)
 
 #[allow(dead_code)]
 fn calculate_contrast(image: &Array2<f64>) -> f64 {
-    let (min_val, max_val) = _image
+    let (min_val, max_val) = image
         .iter()
         .fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), &x| {
             (min.min(x), max.max(x))
@@ -890,7 +891,7 @@ fn calculate_frequency_complexity(_qftresult: &Array2<num_complex::Complex<f64>>
 }
 
 #[allow(dead_code)]
-fn subsample_image(
+fn subsampleimage(
     image: &Array2<f64>,
     new_size: usize,
 ) -> Result<Array2<f64>, Box<dyn std::error::Error>> {

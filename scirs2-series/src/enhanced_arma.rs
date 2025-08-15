@@ -222,7 +222,7 @@ where
     where
         S: Data<Elem = F>,
     {
-        scirs2_core::validation::check_array_finite(data, "data")?;
+        scirs2_core::validation::checkarray_finite(data, "data")?;
 
         let min_required = self.p * 3 + 10; // Need more data for robust estimation
         if data.len() < min_required {

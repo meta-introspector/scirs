@@ -1226,9 +1226,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                     };
                 }
             }
-            EnsembleStrategy::Stacking {
-                meta_learner: meta,
-            } => {
+            EnsembleStrategy::Stacking { meta_learner: meta } => {
                 if let Some(ref meta_model) = self.meta_model {
                     ensemble_forecast = meta_model.predict(model_predictions)?;
                 } else {

@@ -542,7 +542,7 @@ where
     S: Data<Elem = F>,
     F: Float + NumCast + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    scirs2_core::validation::check_array_finite(data, "data")?;
+    scirs2_core::validation::checkarray_finite(data, "data")?;
 
     if axis != 0 {
         return Err(TimeSeriesError::InvalidInput(
@@ -608,7 +608,7 @@ where
     S: Data<Elem = F>,
     F: Float + NumCast + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    scirs2_core::validation::check_array_finite(data, "data")?;
+    scirs2_core::validation::checkarray_finite(data, "data")?;
 
     if axis > 1 {
         return Err(TimeSeriesError::InvalidInput(
@@ -703,13 +703,14 @@ where
 pub fn resample<S, F>(
     x: &ArrayBase<S, Ix1>,
     num: usize,
-    axis: usize, window: Option<&Array1<F>>,
+    axis: usize,
+    window: Option<&Array1<F>>,
 ) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
     F: Float + NumCast + FromPrimitive + Debug + Display,
 {
-    scirs2_core::validation::check_array_finite(x, "x")?;
+    scirs2_core::validation::checkarray_finite(x, "x")?;
     scirs2_core::validation::check_positive(num as f64, "num")?;
 
     if axis != 0 {
@@ -779,7 +780,7 @@ where
     S: Data<Elem = F>,
     F: Float + NumCast + FromPrimitive + Debug + Display,
 {
-    scirs2_core::validation::check_array_finite(x, "x")?;
+    scirs2_core::validation::checkarray_finite(x, "x")?;
     scirs2_core::validation::check_positive(q as f64, "q")?;
 
     if axis != 0 {
@@ -827,10 +828,7 @@ where
 
 /// Apply Chebyshev Type I filter (simplified implementation)
 #[allow(dead_code)]
-fn apply_chebyshev_filter<S, F>(
-    x: &ArrayBase<S, Ix1>,
-    order: usize, cutoff: F,
-) -> Result<Array1<F>>
+fn apply_chebyshev_filter<S, F>(x: &ArrayBase<S, Ix1>, order: usize, cutoff: F) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
     F: Float + NumCast + FromPrimitive + Debug + Display,
@@ -996,7 +994,9 @@ where
 
         // Convert to days since year 0
         let start_days = start.0 * 365
-            + (1.._start.1).map(|m| days_in_month[m as usize]).sum::<u32>() as i32
+            + (1.._start.1)
+                .map(|m| days_in_month[m as usize])
+                .sum::<u32>() as i32
             + start.2 as i32;
 
         let end_days = end.0 * 365
@@ -1147,7 +1147,11 @@ mod tests {
         let detrended = detrend(&x.view(), 0, "constant", None).unwrap();
 
         // Mean should be removed
-        assert_relative_eq!(detrended.mean().unwrap(), 0.0, epsilon = 1e-10);
+        assert_relative_eq!(
+            detrended.mean().expect("Failed to compute mean"),
+            0.0,
+            epsilon = 1e-10
+        );
 
         // Check specific values
         assert_relative_eq!(detrended[0], -2.0, epsilon = 1e-10);
@@ -1181,7 +1185,7 @@ mod tests {
 
     #[test]
     fn test_detrend_2d() {
-        let x = Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+        let x = Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
             .unwrap();
 
         // Detrend along columns (axis=0)
@@ -1189,7 +1193,11 @@ mod tests {
 
         // Each column should have zero mean
         for col in detrended.columns() {
-            assert_relative_eq!(col.mean().unwrap(), 0.0, epsilon = 1e-10);
+            assert_relative_eq!(
+                col.mean().expect("Failed to compute mean"),
+                0.0,
+                epsilon = 1e-10
+            );
         }
     }
 

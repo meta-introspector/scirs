@@ -743,7 +743,11 @@ where
 // We're not going to use this function as we've implemented a more specialized approach above
 #[allow(dead_code)]
 fn pad_along_axis<T, D>(
-    _output: &mut Array<T, D>, _input: &Array<T, D>, _axis: usize, _dest_idx: usizesrc, _idx: usize,
+    _output: &mut Array<T, D>,
+    _input: &Array<T, D>,
+    _axis: usize,
+    _dest_idx: usizesrc,
+    _idx: usize,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Debug + Clone,
@@ -771,7 +775,9 @@ where
 pub fn get_window<T, D>(
     input: &Array<T, D>,
     center: &[usize],
-    window_size: &[usize], _mode: &BorderMode_constant, value: Option<T>,
+    window_size: &[usize],
+    _mode: &BorderMode_constant,
+    value: Option<T>,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone,
@@ -986,7 +992,8 @@ where
         out_indices: &mut Vec<usize>,
         in_indices: &mut Vec<usize>,
         dim: usize,
-        center_starts: &[usize], _pad_width: &[(usize, usize)],
+        center_starts: &[usize],
+        _pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
             // We have full indices, copy the value
@@ -1171,7 +1178,8 @@ where
         out_indices: &mut Vec<usize>,
         in_indices: &mut Vec<usize>,
         dim: usize,
-        center_starts: &[usize], _pad_width: &[(usize, usize)],
+        center_starts: &[usize],
+        _pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
             // We have full indices, copy the value
@@ -1329,7 +1337,8 @@ where
         out_indices: &mut Vec<usize>,
         in_indices: &mut Vec<usize>,
         dim: usize,
-        center_starts: &[usize], _pad_width: &[(usize, usize)],
+        center_starts: &[usize],
+        _pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
             // We have full indices, copy the value
@@ -1514,7 +1523,8 @@ where
         out_indices: &mut Vec<usize>,
         in_indices: &mut Vec<usize>,
         dim: usize,
-        center_starts: &[usize], _pad_width: &[(usize, usize)],
+        center_starts: &[usize],
+        _pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
             // We have full indices, copy the value
@@ -1662,7 +1672,10 @@ where
 #[allow(dead_code)]
 pub fn apply_window_function<T, D, F>(
     input: &Array<T, D>,
-    window_size: &[usize], _mode: &BorderMode_constant, value: Option<T>, _func: F,
+    window_size: &[usize],
+    _mode: &BorderMode_constant,
+    value: Option<T>,
+    _func: F,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone,
@@ -1797,7 +1810,7 @@ mod tests {
     #[test]
     fn test_pad_array_constant_mode_2d() {
         // Create a simple 2D array
-        let array = Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0])
+        let array = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0])
             .expect("Array2 creation should succeed for 2D test");
 
         // Apply constant padding
@@ -1828,8 +1841,7 @@ mod tests {
     #[test]
     fn test_copy_nd_array() {
         // Create a 3D source array
-        let source =
-            Array3::<f64>::fromshape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
+        let source = Array3::<f64>::fromshape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
         let dest = Array3::<f64>::zeros((4, 4, 4));
 
         // Convert to dynamic dimensionality

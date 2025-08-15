@@ -1248,15 +1248,16 @@ where
     F: Float + FromPrimitive,
 {
     let signal_power = original.mapv(|x| x * x).sum();
-    let noise_power = _original
-        .iter()
-        .zip(denoised.iter())
-        .fold(F::zero(), |acc, (&orig, &den)| {
-            let diff = orig - den;
-            acc + diff * diff
-        });
+    let noise_power =
+        _original
+            .iter()
+            .zip(denoised.iter())
+            .fold(F::zero(), |acc, (&orig, &den)| {
+                let diff = orig - den;
+                acc + diff * diff
+            });
 
-    if noise_power > F::zero() && signal_power >, F::zero() {
+    if noise_power > F::zero() && signal_power > F::zero() {
         let snr = (signal_power / noise_power).ln() / F::from(10.0).unwrap().ln()
             * F::from(10.0).unwrap();
         Ok(snr)

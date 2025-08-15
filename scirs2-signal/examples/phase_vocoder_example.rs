@@ -223,6 +223,7 @@ fn semitone_to_note_name(semitones: f64) -> String {
         11 => format!(
             "major 7th {}",
             if semitones_int > 0 { "up" } else { "down" }
-        , _ => unreachable!(),
+        ),
+        _ => unreachable!(),
     }
 }

@@ -1050,7 +1050,7 @@ where
         match kernel {
             KernelType::Standard(k) => Self::evaluate_standard_kernel(r, epsilon, k),
             KernelType::Enhanced(k) => Self::evaluate_enhanced_kernel(r, epsilon, k),
-            KernelType::Custom(__) => {
+            KernelType::Custom(__, _) => {
                 // In a real implementation, we would call a registered custom kernel function
                 // For now, default to a basic Gaussian
                 (-r * r / (epsilon * epsilon)).exp()
@@ -1178,15 +1178,15 @@ where
     /// Interpolate at new points
     pub fn interpolate(&self, querypoints: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check dimensions
-        if querypoints.shape()[1] != self._points.shape()[1] {
+        if querypoints.shape()[1] != self.points.shape()[1] {
             return Err(InterpolateError::DimensionMismatch(
                 "query _points must have the same dimension as sample _points".to_string(),
             ));
         }
 
         let n_query = querypoints.shape()[0];
-        let n_points = self._points.shape()[0];
-        let n_dims = self._points.shape()[1];
+        let n_points = self.points.shape()[0];
+        let n_dims = self.points.shape()[1];
         let mut result = Array1::zeros(n_query);
 
         if self.use_multiscale {
@@ -1202,7 +1202,7 @@ where
                     let epsilon = self.scale_parameters.as_ref().unwrap()[scale_idx];
 
                     for i in 0..n_points {
-                        let sample_point = self._points.slice(ndarray::s![i, ..]);
+                        let sample_point = self.points.slice(ndarray::s![i, ..]);
                         let r = EnhancedRBFBuilder::<F>::scaled_distance(
                             &query_point,
                             &sample_point,
@@ -1236,7 +1236,7 @@ where
 
                 // Evaluate RBF contribution
                 for i in 0..n_points {
-                    let sample_point = self._points.slice(ndarray::s![i, ..]);
+                    let sample_point = self.points.slice(ndarray::s![i, ..]);
                     let r = EnhancedRBFBuilder::<F>::scaled_distance(
                         &query_point,
                         &sample_point,
@@ -1299,7 +1299,7 @@ where
 
         // For a basic implementation, just compute error at sample points
         // and apply a correction factor
-        let mse = self.calculate_error()?;
+        let (mse, _, _) = self.calculate_error()?;
 
         // Apply a correction factor to estimate LOO error
         // This is a very rough approximation
@@ -1349,7 +1349,7 @@ where
             KernelType::Enhanced(EnhancedRBFKernel::BeckertWendland(a)) => {
                 format!("Beckert-Wendland (α={a})")
             }
-            KernelType::Custom(__) => "Custom".to_string(),
+            KernelType::Custom(__, _) => "Custom".to_string(),
         };
 
         let scale_str = if self.use_multiscale {

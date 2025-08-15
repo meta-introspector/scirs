@@ -89,7 +89,7 @@ where
     dim: usize,
 
     /// Leaf size (max points in a leaf node)
-    leaf_size: usize,
+    leafsize: usize,
 
     /// Marker for generic type parameter
     _phantom: PhantomData<F>,
@@ -109,7 +109,7 @@ where
     ///
     /// A new Ball Tree for efficient nearest neighbor searches
     pub fn new(points: Array2<F>) -> InterpolateResult<Self> {
-        Self::with_leaf_size(_points, 10)
+        Self::with_leafsize(points, 10)
     }
 
     /// Create a new Ball Tree with a specified leaf size
@@ -117,12 +117,12 @@ where
     /// # Arguments
     ///
     /// * `points` - Point coordinates with shape (n_points, n_dims)
-    /// * `leaf_size` - Maximum number of points in a leaf node
+    /// * `leafsize` - Maximum number of points in a leaf node
     ///
     /// # Returns
     ///
     /// A new Ball Tree for efficient nearest neighbor searches
-    pub fn with_leaf_size(_points: Array2<F>, leafsize: usize) -> InterpolateResult<Self> {
+    pub fn with_leafsize(points: Array2<F>, leafsize: usize) -> InterpolateResult<Self> {
         if points.is_empty() {
             return Err(InterpolateError::InvalidValue(
                 "Points array cannot be empty".to_string(),
@@ -133,17 +133,17 @@ where
         let dim = points.shape()[1];
 
         // For very small datasets, just use a simple linear search
-        if n_points <= leaf_size {
+        if n_points <= leafsize {
             let indices: Vec<usize> = (0..n_points).collect();
-            let center = compute_centroid(&_points, &indices);
-            let radius = compute_radius(&_points, &indices, &center);
+            let center = compute_centroid(&points, &indices);
+            let radius = compute_radius(&points, &indices, &center);
 
             let mut tree = Self {
                 points,
                 nodes: Vec::new(),
                 root: None,
                 dim,
-                leaf_size,
+                leafsize,
                 _phantom: PhantomData,
             };
 
@@ -162,15 +162,15 @@ where
             return Ok(tree);
         }
 
-        // Pre-allocate nodes (approximately 2*n_points/leaf_size)
-        let est_nodes = (2 * n_points / leaf_size).max(16);
+        // Pre-allocate nodes (approximately 2*n_points/leafsize)
+        let est_nodes = (2 * n_points / leafsize).max(16);
 
         let mut tree = Self {
             points,
             nodes: Vec::with_capacity(est_nodes),
             root: None,
             dim,
-            leaf_size,
+            leafsize,
             _phantom: PhantomData,
         };
 
@@ -190,7 +190,7 @@ where
         let radius = compute_radius(&self.points, indices, &center);
 
         // If few enough points, create a leaf node
-        if n_points <= self.leaf_size {
+        if n_points <= self.leafsize {
             let node_idx = self.nodes.len();
             self.nodes.push(BallNode {
                 indices: indices.to_vec(),
@@ -203,7 +203,7 @@ where
         }
 
         // Find the dimension with the largest spread
-        let (split_dim_) = find_max_spread_dimension(&self.points, indices);
+        let (split_dim, _) = find_max_spread_dimension(&self.points, indices);
 
         // Find the two points farthest apart along this dimension to use as seeds
         let (seed1, seed2) = find_distant_points(&self.points, indices, split_dim);
@@ -259,7 +259,7 @@ where
         }
 
         // Very small trees (just use linear search)
-        if self.points.shape()[0] <= self.leaf_size {
+        if self.points.shape()[0] <= self.leafsize {
             return self.linear_nearest_neighbor(query);
         }
 
@@ -308,7 +308,7 @@ where
         }
 
         // Very small trees (just use linear search)
-        if self.points.shape()[0] <= self.leaf_size {
+        if self.points.shape()[0] <= self.leafsize {
             return self.linear_k_nearest_neighbors(query, k);
         }
 
@@ -370,7 +370,7 @@ where
         }
 
         // Very small trees (just use linear search)
-        if self.points.shape()[0] <= self.leaf_size {
+        if self.points.shape()[0] <= self.leafsize {
             return self.linear_points_within_radius(query, radius);
         }
 
@@ -406,11 +406,11 @@ where
 
         // If this is a leaf node, check all points
         if node.left.is_none() && node.right.is_none() {
-            for &_idx in &node.indices {
-                let point = self.points.row(_idx);
-                let _dist = euclidean_distance(query, &point.to_vec());
+            for &idx in &node.indices {
+                let point = self.points.row(idx);
+                let dist = euclidean_distance(query, &point.to_vec());
 
-                if _dist < *best_dist {
+                if dist < *best_dist {
                     *best_dist = dist;
                     *best_idx = idx;
                 }
@@ -460,7 +460,7 @@ where
         } else {
             // Peek at the top of the max-heap to get the farthest point
             match heap.peek() {
-                Some(&(dist_)) => dist.into_inner(),
+                Some(&(dist_, _)) => dist_.into_inner(),
                 None => F::infinity(),
             }
         };
@@ -472,8 +472,8 @@ where
 
         // If this is a leaf node, check all points
         if node.left.is_none() && node.right.is_none() {
-            for &_idx in &node.indices {
-                let point = self.points.row(_idx);
+            for &idx in &node.indices {
+                let point = self.points.row(idx);
                 let dist = euclidean_distance(query, &point.to_vec());
 
                 // Add to heap
@@ -722,7 +722,7 @@ where
         }
 
         // Very small trees (just use linear search)
-        if self.points.shape()[0] <= self.leaf_size {
+        if self.points.shape()[0] <= self.leafsize {
             return self.linear_k_nearest_neighbors_optimized(query, k, max_distance);
         }
 
@@ -799,8 +799,8 @@ where
         let center_dist = euclidean_distance(query, &node.center);
 
         // Enhanced distance bounds checking
-        let min_possible_dist = if center_dist > node._radius {
-            center_dist - node._radius
+        let min_possible_dist = if center_dist > node.radius {
+            center_dist - node.radius
         } else {
             F::zero()
         };
@@ -810,7 +810,7 @@ where
             *search_radius
         } else {
             match heap.peek() {
-                Some(&(dist_)) => dist.into_inner(),
+                Some(&(dist_, _)) => dist_.into_inner(),
                 None => *search_radius,
             }
         };
@@ -822,8 +822,8 @@ where
 
         // If this is a leaf node, check all points
         if node.left.is_none() && node.right.is_none() {
-            for &_idx in &node.indices {
-                let point = self.points.row(_idx);
+            for &idx in &node.indices {
+                let point = self.points.row(idx);
                 let dist = euclidean_distance(query, &point.to_vec());
 
                 // Only consider points within search _radius
@@ -837,8 +837,8 @@ where
 
                     // Update search _radius to the farthest point in current k-nearest set
                     if heap.len() == k {
-                        if let Some(&(max_dist_)) = heap.peek() {
-                            *search_radius = max_dist.into_inner();
+                        if let Some(&(max_dist_, _)) = heap.peek() {
+                            *search_radius = max_dist_.into_inner();
                         }
                     }
                 }
@@ -857,14 +857,14 @@ where
         let left_center_dist = euclidean_distance(query, &left_node.center);
         let right_center_dist = euclidean_distance(query, &right_node.center);
 
-        let left_min_dist = if left_center_dist > left_node._radius {
-            left_center_dist - left_node._radius
+        let left_min_dist = if left_center_dist > left_node.radius {
+            left_center_dist - left_node.radius
         } else {
             F::zero()
         };
 
-        let right_min_dist = if right_center_dist > right_node._radius {
-            right_center_dist - right_node._radius
+        let right_min_dist = if right_center_dist > right_node.radius {
+            right_center_dist - right_node.radius
         } else {
             F::zero()
         };
@@ -884,7 +884,7 @@ where
             *search_radius
         } else {
             match heap.peek() {
-                Some(&(dist_)) => dist.into_inner(),
+                Some(&(dist_, _)) => dist_.into_inner(),
                 None => *search_radius,
             }
         };
@@ -939,7 +939,7 @@ where
         }
 
         // For very small trees or large max_checks, use exact search
-        if self.points.shape()[0] <= self.leaf_size || max_checks >= self.points.shape()[0] {
+        if self.points.shape()[0] <= self.leafsize || max_checks >= self.points.shape()[0] {
             return self.k_nearest_neighbors(query, k);
         }
 
@@ -952,7 +952,7 @@ where
         // Start with root
         nodes_to_visit.push_back((self.root.unwrap(), F::zero()));
 
-        while let Some((node_idx_min_dist)) = nodes_to_visit.pop_front() {
+        while let Some((node_idx, _min_dist)) = nodes_to_visit.pop_front() {
             if checks_performed >= max_checks {
                 break;
             }
@@ -1263,11 +1263,11 @@ mod tests {
 
         // Test near matches
         let query = vec![0.6, 0.6, 0.6];
-        let (idx_) = balltree.nearest_neighbor(&query).unwrap();
+        let (idx, _) = balltree.nearest_neighbor(&query).unwrap();
         assert_eq!(idx, 4); // Should be closest to (0.5, 0.5, 0.5)
 
         let query = vec![0.9, 0.1, 0.1];
-        let (idx_) = balltree.nearest_neighbor(&query).unwrap();
+        let (idx, _) = balltree.nearest_neighbor(&query).unwrap();
         assert_eq!(idx, 1); // Should be closest to (1.0, 0.0, 0.0)
     }
 

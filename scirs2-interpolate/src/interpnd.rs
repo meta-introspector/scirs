@@ -789,7 +789,7 @@ impl<
         }
 
         // Calculate weighted average
-        if sumweights.is_zero() {
+        if sum_weights.is_zero() {
             // This should not happen with non-zero distances
             return Err(InterpolateError::ComputationError(
                 "Sum of weights is zero in IDW interpolation".to_string(),
@@ -851,7 +851,7 @@ impl<
 
         // Evaluate at the query point (reshape 1D point to 2D for RBF interface)
         let binding = point.to_owned();
-        let point_2d = binding.toshape((1, point.len())).unwrap();
+        let point_2d = binding.to_shape((1, point.len())).unwrap();
         let result = rbf.evaluate(&point_2d.view())?;
         Ok(result[0])
     }
@@ -986,7 +986,7 @@ pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
     let mut indices = vec![Vec::<F>::new(); n_dims];
     let mut shape = vec![1; n_dims];
 
-    for (i_grid) in new_grid.iter().enumerate() {
+    for (i, grid) in new_grid.iter().enumerate() {
         let mut idx = vec![F::from_f64(0.0).unwrap(); grid.len()];
         for (j, val) in grid.iter().enumerate() {
             idx[j] = *val;
@@ -1022,7 +1022,7 @@ pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
     }
 
     // Perform interpolation for all points
-    let _values = interp.__call__(&points.view())?;
+    let values = interp.__call__(&points.view())?;
 
     // Reshape the result to match the output _grid
     let mut out_idx_vec = Vec::with_capacity(n_dims);

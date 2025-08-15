@@ -32,7 +32,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Basic 1D noise removal
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__ndimage::filters::{median_filter, BorderMode};
+/// use scirs2_ndimage::filters::{median_filter, BorderMode};
 ///
 /// // Remove impulse noise from a 1D signal
 /// let noisy_signal = Array1::from_vec(vec![1.0, 2.0, 100.0, 4.0, 5.0]);
@@ -43,7 +43,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## 2D image denoising
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__ndimage::filters::{median_filter, BorderMode};
+/// use scirs2_ndimage::filters::{median_filter, BorderMode};
 ///
 /// // Create a noisy image with salt-and-pepper noise
 /// let mut image = Array2::fromshape_fn((100, 100), |(i, j)| {
@@ -65,26 +65,26 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Different window sizes for varying noise levels
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__ndimage::filters::median_filter;
+/// use scirs2_ndimage::filters::median_filter;
 ///
-/// let noisy_image = Array2::fromshape_fn((50, 50), |(i, j)| {
+/// let noisyimage = Array2::fromshape_fn((50, 50), |(i, j)| {
 ///     if (i + j) % 10 == 0 { 255.0 } else { (i * j) as f64 }
 /// });
 ///
 /// // Light denoising with small window
-/// let light_filter = median_filter(&noisy_image, &[3, 3], None).unwrap();
+/// let light_filter = median_filter(&noisyimage, &[3, 3], None).unwrap();
 ///
 /// // Heavy denoising with larger window  
-/// let heavy_filter = median_filter(&noisy_image, &[5, 5], None).unwrap();
+/// let heavy_filter = median_filter(&noisyimage, &[5, 5], None).unwrap();
 ///
 /// // Very aggressive denoising (may blur edges)
-/// let aggressive_filter = median_filter(&noisy_image, &[7, 7], None).unwrap();
+/// let aggressive_filter = median_filter(&noisyimage, &[7, 7], None).unwrap();
 /// ```
 ///
 /// ## 3D volume processing
 /// ```
 /// use ndarray::Array3;
-/// use scirs2__ndimage::filters::median_filter;
+/// use scirs2_ndimage::filters::median_filter;
 ///
 /// let volume = Array3::fromshape_fn((20, 20, 20), |(i, j, k)| {
 ///     if i == 10 && j == 10 && k == 10 { 1000.0 } else { (i + j + k) as f64 }

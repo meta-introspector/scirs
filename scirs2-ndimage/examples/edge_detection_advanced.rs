@@ -4,11 +4,11 @@
 //! including the enhanced Canny edge detector and unified edge detection interface.
 
 use ndarray::{array, Array2};
-use scirs2__ndimage::features::{
+use scirs2_ndimage::features::{
     canny, edge_detector, edge_detector_simple, gradient_edges, EdgeDetectionAlgorithm,
     EdgeDetectionConfig, GradientMethod,
 };
-use scirs2__ndimage::filters::BorderMode;
+use scirs2_ndimage::filters::BorderMode;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -110,7 +110,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Gradient Method Comparison for Diagonal Edges ===");
 
     // Create a diagonal edge image
-    let diagonal_image = array![
+    let diagonalimage = array![
         [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
@@ -121,14 +121,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     println!("\nDiagonal edge image:");
-    print_array(&diagonal_image);
+    print_array(&diagonalimage);
 
     println!("\n9a. Sobel Gradient on Diagonal:");
-    let sobel_diagonal = gradient_edges(&diagonal_image, Some(GradientMethod::Sobel), None, None);
+    let sobel_diagonal = gradient_edges(&diagonalimage, Some(GradientMethod::Sobel), None, None);
     print_array(&sobel_diagonal);
 
     println!("\n9b. Scharr Gradient on Diagonal:");
-    let scharr_diagonal = gradient_edges(&diagonal_image, Some(GradientMethod::Scharr), None, None);
+    let scharr_diagonal = gradient_edges(&diagonalimage, Some(GradientMethod::Scharr), None, None);
     print_array(&scharr_diagonal);
 
     // Note the higher values in the diagonal with Scharr compared to Sobel

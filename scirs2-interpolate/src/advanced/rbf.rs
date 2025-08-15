@@ -335,7 +335,7 @@ impl<
                         condition_report.clone().unwrap_or_else(|| {
                             // Create a default report for fallback case
                             ConditionReport {
-                                condition_number: F::from_f64(1e16).unwrap(),
+                                _conditionnumber: F::from_f64(1e16).unwrap(),
                                 is_well_conditioned: false,
                                 recommended_regularization: Some(regularization),
                                 stability_level: StabilityLevel::Poor,
@@ -435,14 +435,14 @@ impl<
     /// - For repeated evaluations, consider caching distance computations
     pub fn interpolate(&self, querypoints: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check dimensions
-        if querypoints.shape()[1] != self._points.shape()[1] {
+        if querypoints.shape()[1] != self.points.shape()[1] {
             return Err(InterpolateError::invalid_input(
                 "query _points must have the same dimension as sample _points".to_string(),
             ));
         }
 
         let n_query = querypoints.shape()[0];
-        let n_points = self._points.shape()[0];
+        let n_points = self.points.shape()[0];
         let mut result = Array1::zeros(n_query);
 
         for i in 0..n_query {
@@ -450,7 +450,7 @@ impl<
             let query_point = querypoints.slice(ndarray::s![i, ..]);
 
             for j in 0..n_points {
-                let sample_point = self._points.slice(ndarray::s![j, ..]);
+                let sample_point = self.points.slice(ndarray::s![j, ..]);
                 let r = Self::distance(&query_point, &sample_point);
                 let rbf_value = Self::rbf_kernel(r, self.epsilon, self.kernel);
                 sum += self.coefficients[j] * rbf_value;
@@ -631,7 +631,7 @@ impl<
     /// ```
     pub fn predict(&self, querypoints: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check if the interpolator has been fitted
-        if self._points.is_empty() {
+        if self.points.is_empty() {
             return Err(InterpolateError::shape_mismatch(
                 "Interpolator must be fitted before prediction".to_string(),
                 "Call fit() method first".to_string(),

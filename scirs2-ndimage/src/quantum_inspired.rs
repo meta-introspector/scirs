@@ -15,7 +15,7 @@
 //! - **Quantum Amplitude Amplification**: Enhanced feature detection through amplitude amplification
 
 use ndarray::{Array1, Array2, Array3, ArrayView2};
-use num__complex::Complex;
+use num_complex::Complex;
 use num_traits::{Float, FromPrimitive};
 use rand::Rng;
 use std::f64::consts::PI;
@@ -81,7 +81,7 @@ impl Default for QuantumConfig {
 ///
 /// # Parameters
 /// - `image`: Input image
-/// - `filter_states`: Multiple filter kernels representing different quantum states  
+/// - `filterstates`: Multiple filter kernels representing different quantum states  
 /// - `config`: Quantum algorithm configuration
 ///
 /// # Returns
@@ -89,7 +89,7 @@ impl Default for QuantumConfig {
 #[allow(dead_code)]
 pub fn quantum_superposition_filter<T>(
     image: ArrayView2<T>,
-    filter_states: &[Array2<T>],
+    filterstates: &[Array2<T>],
     config: &QuantumConfig,
 ) -> NdimageResult<Array2<T>>
 where
@@ -97,7 +97,7 @@ where
 {
     let (height, width) = image.dim();
 
-    if filter_states.is_empty() {
+    if filterstates.is_empty() {
         return Err(NdimageError::InvalidInput(
             "At least one filter state required".to_string(),
         ));
@@ -105,23 +105,23 @@ where
 
     // Initialize quantum superposition state
     let mut superposition_result = Array2::zeros((height, width));
-    let num_states = filter_states.len();
+    let numstates = filterstates.len();
 
-    // Create quantum superposition of all filter _states
-    for (state_idx, filter) in filter_states.iter().enumerate() {
-        let state_amplitude = T::from_f64(1.0 / (num_states as f64).sqrt())
+    // Create quantum superposition of all filter states
+    for (state_idx, filter) in filterstates.iter().enumerate() {
+        let state_amplitude = T::from_f64(1.0 / (numstates as f64).sqrt())
             .ok_or_else(|| NdimageError::ComputationError("Type conversion failed".to_string()))?;
 
         // Apply quantum phase based on state index
         let phase =
-            T::from_f64(2.0 * PI * state_idx as f64 / num_states as f64).ok_or_else(|| {
+            T::from_f64(2.0 * PI * state_idx as f64 / numstates as f64).ok_or_else(|| {
                 NdimageError::ComputationError("Phase computation failed".to_string())
             })?;
 
         // Apply filter with quantum superposition
         let filtered = apply_quantum_convolution(&image, filter, phase, state_amplitude)?;
 
-        // Accumulate superposition _states
+        // Accumulate superposition states
         superposition_result = superposition_result + filtered;
     }
 
@@ -263,29 +263,29 @@ where
 #[allow(dead_code)]
 pub fn quantum_amplitude_amplification<T>(
     image: ArrayView2<T>,
-    target_features: &[Array2<T>],
+    targetfeatures: &[Array2<T>],
     config: &QuantumConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
-    let mut amplified_features = Array2::zeros((height, width));
+    let mut amplifiedfeatures = Array2::zeros((height, width));
 
     // Number of Grover iterations for optimal amplification
     let grover_iterations = ((PI / 4.0) * ((height * width) as f64).sqrt()) as usize;
 
-    for feature in target_features {
+    for feature in targetfeatures {
         // Create quantum oracle for feature detection
         let oracle = create_quantum_oracle(&image, feature)?;
 
         // Apply quantum amplitude amplification
         for _ in 0..grover_iterations.min(config.iterations) {
-            apply_grover_iteration(&mut amplified_features, &oracle, config)?;
+            apply_grover_iteration(&mut amplifiedfeatures, &oracle, config)?;
         }
     }
 
-    Ok(amplified_features)
+    Ok(amplifiedfeatures)
 }
 
 // Helper functions
@@ -451,7 +451,8 @@ fn calculate_quantum_distance(pos1: (usize, usize), pos2: (usize, usize)) -> Ndi
 
 #[allow(dead_code)]
 fn create_segmentation_hamiltonian<T>(
-    image: &ArrayView2<T>, _num_segments: usize,
+    image: &ArrayView2<T>,
+    _num_segments: usize,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -567,7 +568,8 @@ fn apply_quantum_decoherence<T>(
 fn run_quantum_walk<T>(
     image: &ArrayView2<T>,
     start_pos: (usize, usize),
-    steps: usize, config: &QuantumConfig,
+    steps: usize,
+    config: &QuantumConfig,
 ) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
@@ -686,30 +688,31 @@ where
 
 #[allow(dead_code)]
 fn apply_grover_iteration<T>(
-    amplified_features: &mut Array2<T>,
-    oracle: &Array2<bool>, _config: &QuantumConfig,
+    amplifiedfeatures: &mut Array2<T>,
+    oracle: &Array2<bool>,
+    _config: &QuantumConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = amplified_features.dim();
+    let (height, width) = amplifiedfeatures.dim();
 
     // Grover's algorithm iteration
     // 1. Oracle reflection
     for y in 0..height {
         for x in 0..width {
             if oracle[(y, x)] {
-                amplified_features[(y, x)] = -amplified_features[(y, x)];
+                amplifiedfeatures[(y, x)] = -amplifiedfeatures[(y, x)];
             }
         }
     }
 
     // 2. Diffusion operator (inversion about average)
-    let mean = amplified_features.sum()
+    let mean = amplifiedfeatures.sum()
         / T::from_usize(height * width)
             .ok_or_else(|| NdimageError::ComputationError("Mean calculation failed".to_string()))?;
 
-    amplified_features.mapv_inplace(|x| T::from_f64(2.0).unwrap() * mean - x);
+    amplifiedfeatures.mapv_inplace(|x| T::from_f64(2.0).unwrap() * mean - x);
 
     Ok(())
 }
@@ -720,7 +723,8 @@ where
 /// Provides exponential improvements in certain frequency analysis tasks.
 #[allow(dead_code)]
 pub fn quantum_fourier_enhancement<T>(
-    image: ArrayView2<T>, _config: &QuantumConfig,
+    image: ArrayView2<T>,
+    _config: &QuantumConfig,
 ) -> NdimageResult<Array2<Complex<T>>>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
@@ -780,16 +784,16 @@ where
     let num_classes = labels.iter().max().unwrap_or(&0) + 1;
 
     // Create quantum feature map
-    let quantum_features = quantum_feature_map(&image, config)?;
+    let quantumfeatures = quantum_feature_map(&image, config)?;
 
     // Initialize quantum weights for each class
     let mut class_probabilities = vec![T::zero(); num_classes];
 
     for (train_img, &label) in training_data.iter().zip(labels.iter()) {
-        let train_features = quantum_feature_map(train_img, config)?;
+        let trainfeatures = quantum_feature_map(train_img, config)?;
 
         // Calculate quantum kernel between features
-        let kernel_value = quantum_kernel(&quantum_features, &train_features, config)?;
+        let kernel_value = quantum_kernel(&quantumfeatures, &trainfeatures, config)?;
 
         // Accumulate class probability using quantum interference
         class_probabilities[label] = class_probabilities[label] + kernel_value;
@@ -815,22 +819,22 @@ where
 /// impossible to handle with classical methods, providing enhanced robustness.
 #[allow(dead_code)]
 pub fn quantum_error_correction<T>(
-    noisy_image: ArrayView2<T>,
+    noisyimage: ArrayView2<T>,
     redundancy_factor: usize,
     config: &QuantumConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy + Send + Sync + 'static,
 {
-    let (height, width) = noisy_image.dim();
-    let mut corrected_image = Array2::zeros((height, width));
+    let (height, width) = noisyimage.dim();
+    let mut correctedimage = Array2::zeros((height, width));
 
     // Create quantum error correction codes
     let syndrome_generators = create_quantum_syndrome_generators(redundancy_factor)?;
 
     for y in 0..height {
         for x in 0..width {
-            let pixel_value = noisy_image[(y, x)];
+            let pixel_value = noisyimage[(y, x)];
 
             // Encode pixel using quantum error correction
             let encoded_pixel = quantum_encode_pixel(pixel_value, &syndrome_generators)?;
@@ -839,11 +843,11 @@ where
             let corrected_pixel =
                 quantum_error_detect_correct(encoded_pixel, &syndrome_generators, config)?;
 
-            corrected_image[(y, x)] = corrected_pixel;
+            correctedimage[(y, x)] = corrected_pixel;
         }
     }
 
-    Ok(corrected_image)
+    Ok(correctedimage)
 }
 
 /// Quantum Tensor Network Image Processing
@@ -872,9 +876,9 @@ where
     let processed_network = apply_tensor_network_gates(tensor_network, config)?;
 
     // Convert back to image format
-    let processed_image = tensor_network_to_image(processed_network, (height, width))?;
+    let processedimage = tensor_network_toimage(processed_network, (height, width))?;
 
-    Ok(processed_image)
+    Ok(processedimage)
 }
 
 /// Quantum Variational Image Enhancement
@@ -895,7 +899,7 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
-    let mut enhanced_image = image.to_owned();
+    let mut enhancedimage = image.to_owned();
 
     // Initialize variational parameters
     let mut parameters = initialize_variational_parameters(num_layers)?;
@@ -903,26 +907,27 @@ where
     // Variational optimization loop
     for iteration in 0..config.iterations {
         // Apply variational quantum circuit
-        let circuit_output = apply_variational_circuit(&enhanced_image, &parameters, config)?;
+        let circuit_output = apply_variational_circuit(&enhancedimage, &parameters, config)?;
 
         // Calculate cost function (image quality metric)
         let cost = calculate_enhancement_cost(&circuit_output, &image)?;
 
         // Update parameters using quantum gradient descent
-        let gradients = calculate_quantum_gradients(&enhanced_image, &parameters, config)?;
+        let gradients = calculate_quantum_gradients(&enhancedimage, &parameters, config)?;
         update_variational_parameters(&mut parameters, &gradients, iteration)?;
 
-        enhanced_image = circuit_output;
+        enhancedimage = circuit_output;
     }
 
-    Ok(enhanced_image)
+    Ok(enhancedimage)
 }
 
 // Helper functions for quantum machine learning and advanced algorithms
 
 #[allow(dead_code)]
 fn quantum_feature_map<T>(
-    image: &ArrayView2<T>, _config: &QuantumConfig,
+    image: &ArrayView2<T>,
+    _config: &QuantumConfig,
 ) -> NdimageResult<Array2<Complex<T>>>
 where
     T: Float + FromPrimitive + Copy,
@@ -937,7 +942,7 @@ where
             let angle = pixel * T::from_f64(PI).unwrap();
 
             // Quantum feature encoding
-            let feature = "Complex"::new(angle.cos(), angle.sin());
+            let feature = Complex::new(angle.cos(), angle.sin());
             feature_map[(y, x)] = feature;
         }
     }
@@ -948,7 +953,8 @@ where
 #[allow(dead_code)]
 fn quantum_kernel<T>(
     features1: &Array2<Complex<T>>,
-    features2: &Array2<Complex<T>>, _config: &QuantumConfig,
+    features2: &Array2<Complex<T>>,
+    _config: &QuantumConfig,
 ) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
@@ -1022,7 +1028,8 @@ where
 #[allow(dead_code)]
 fn quantum_error_detect_correct<T>(
     encoded_pixel: Array1<T>,
-    syndrome_generators: &[Array1<T>], _config: &QuantumConfig,
+    syndrome_generators: &[Array1<T>],
+    _config: &QuantumConfig,
 ) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy + 'static,
@@ -1063,7 +1070,8 @@ where
 #[allow(dead_code)]
 fn image_to_tensor_network<T>(
     image: &ArrayView2<T>,
-    bond_dimension: usize, _config: &QuantumConfig,
+    bond_dimension: usize,
+    _config: &QuantumConfig,
 ) -> NdimageResult<Array3<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1117,7 +1125,7 @@ where
 }
 
 #[allow(dead_code)]
-fn tensor_network_to_image<T>(
+fn tensor_network_toimage<T>(
     tensor_network: Array3<T>,
     outputshape: (usize, usize),
 ) -> NdimageResult<Array2<T>>
@@ -1165,7 +1173,8 @@ where
 #[allow(dead_code)]
 fn apply_variational_circuit<T>(
     image: &Array2<T>,
-    parameters: &Array1<T>, _config: &QuantumConfig,
+    parameters: &Array1<T>,
+    _config: &QuantumConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1281,11 +1290,11 @@ mod tests {
 
     #[test]
     fn test_quantum_superposition_filter() {
-        let image = Array2::fromshape_vec((4, 4), (0..16).map(|x| x as f64).collect()).unwrap();
+        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64).collect()).unwrap();
 
-        let filter1 = Array2::fromshape_vec((3, 3), vec![1.0; 9]).unwrap() / 9.0;
+        let filter1 = Array2::from_shape_vec((3, 3), vec![1.0; 9]).unwrap() / 9.0;
         let filter2 =
-            Array2::fromshape_vec((3, 3), vec![-1.0, 0.0, 1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0])
+            Array2::from_shape_vec((3, 3), vec![-1.0, 0.0, 1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0])
                 .unwrap();
 
         let config = QuantumConfig::default();
@@ -1299,7 +1308,7 @@ mod tests {
     #[test]
     fn test_quantum_entanglement_correlation() {
         let image =
-            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 1.0, 2.0, 5.0, 2.0, 1.0, 2.0, 1.0])
+            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 1.0, 2.0, 5.0, 2.0, 1.0, 2.0, 1.0])
                 .unwrap();
 
         let config = QuantumConfig::default();
@@ -1311,7 +1320,7 @@ mod tests {
 
     #[test]
     fn test_quantum_walk_edge_detection() {
-        let image = Array2::fromshape_vec((5, 5), (0..25).map(|x| x as f64).collect()).unwrap();
+        let image = Array2::from_shape_vec((5, 5), (0..25).map(|x| x as f64).collect()).unwrap();
 
         let config = QuantumConfig::default();
         let result = quantum_walk_edge_detection(image.view(), 10, &config).unwrap();
@@ -1322,7 +1331,7 @@ mod tests {
 
     #[test]
     fn test_quantum_fourier_enhancement() {
-        let image = Array2::fromshape_vec((4, 4), (0..16).map(|x| x as f64).collect()).unwrap();
+        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64).collect()).unwrap();
 
         let config = QuantumConfig::default();
         let result = quantum_fourier_enhancement(image.view(), &config).unwrap();
@@ -1334,12 +1343,12 @@ mod tests {
     #[test]
     fn test_quantum_machine_learning_classifier() {
         let image =
-            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
                 .unwrap();
 
         let training_data = vec![
-            Array2::fromshape_vec((3, 3), vec![1.0; 9]).unwrap(),
-            Array2::fromshape_vec((3, 3), vec![5.0; 9]).unwrap(),
+            Array2::from_shape_vec((3, 3), vec![1.0; 9]).unwrap(),
+            Array2::from_shape_vec((3, 3), vec![5.0; 9]).unwrap(),
         ];
         let labels = vec![0, 1];
 
@@ -1354,12 +1363,12 @@ mod tests {
 
     #[test]
     fn test_quantum_error_correction() {
-        let noisy_image =
-            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+        let noisyimage =
+            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
                 .unwrap();
 
         let config = QuantumConfig::default();
-        let result = quantum_error_correction(noisy_image.view(), 3, &config).unwrap();
+        let result = quantum_error_correction(noisyimage.view(), 3, &config).unwrap();
 
         assert_eq!(result.dim(), (3, 3));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -1368,7 +1377,7 @@ mod tests {
     #[test]
     fn test_quantum_tensor_network_processing() {
         let image =
-            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
                 .unwrap();
 
         let config = QuantumConfig::default();
@@ -1381,7 +1390,7 @@ mod tests {
     #[test]
     fn test_quantum_variational_enhancement() {
         let image =
-            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
                 .unwrap();
 
         let mut config = QuantumConfig::default();
@@ -1405,19 +1414,19 @@ mod tests {
     }
 
     #[test]
-    fn test_quantum_state_representation() {
+    fn test_quantumstate_representation() {
         let amplitudes = Array2::zeros((2, 2));
         let phases = Array2::zeros((2, 2));
         let coherence = Array2::zeros((2, 2));
 
-        let quantum_state = QuantumState {
+        let quantumstate = QuantumState {
             amplitudes,
             phases,
             coherence,
         };
 
-        assert_eq!(quantum_state.amplitudes.dim(), (2, 2));
-        assert_eq!(quantum_state.phases.dim(), (2, 2));
-        assert_eq!(quantum_state.coherence.dim(), (2, 2));
+        assert_eq!(quantumstate.amplitudes.dim(), (2, 2));
+        assert_eq!(quantumstate.phases.dim(), (2, 2));
+        assert_eq!(quantumstate.coherence.dim(), (2, 2));
     }
 }

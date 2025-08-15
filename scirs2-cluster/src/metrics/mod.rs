@@ -9,7 +9,7 @@ mod silhouette;
 pub use silhouette::{silhouette_samples, silhouette_score};
 
 mod information_theoretic;
-pub use information__theoretic::{
+pub use information_theoretic::{
     adjusted_mutual_info_score, adjusted_rand_score, completeness_score, homogeneity_score,
     mutual_info_score, normalized_mutual_info_score, v_measure_score,
 };

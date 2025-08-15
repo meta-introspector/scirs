@@ -351,9 +351,9 @@ pub struct ImageHDCEncoder {
 
 impl ImageHDCEncoder {
     /// Create new image encoder
-    pub fn new(_image_height: usize, imagewidth: usize, config: HDCConfig) -> Self {
+    pub fn new(image_height: usize, imagewidth: usize, config: HDCConfig) -> Self {
         let mut pixel_encoders = HashMap::new();
-        let position_encoders = Array2::fromshape_fn((_image_height, image_width), |_| {
+        let position_encoders = Array2::fromshape_fn((image_height, image_width), |_| {
             Hypervector::random(config.hypervector_dim, config.sparsity)
         });
 
@@ -377,7 +377,7 @@ impl ImageHDCEncoder {
     }
 
     /// Encode image as hypervector
-    pub fn encode_image<T>(&self, image: ArrayView2<T>) -> NdimageResult<Hypervector>
+    pub fn encodeimage<T>(&self, image: ArrayView2<T>) -> NdimageResult<Hypervector>
     where
         T: Float + FromPrimitive + Copy,
     {
@@ -413,13 +413,13 @@ impl ImageHDCEncoder {
     where
         T: Float + FromPrimitive + Copy,
     {
-        let encoded_image = self.encode_image(patch)?;
+        let encodedimage = self.encodeimage(patch)?;
 
         // Bind with patch _type if available
         if let Some(type_hv) = self.feature_encoders.get(patch_type) {
-            Ok(encoded_image.bind(type_hv))
+            Ok(encodedimage.bind(type_hv))
         } else {
-            Ok(encoded_image)
+            Ok(encodedimage)
         }
     }
 
@@ -434,10 +434,10 @@ impl ImageHDCEncoder {
 /// Optimized image classification using hyperdimensional computing.
 /// Achieves brain-like efficiency with massive parallelism.
 #[allow(dead_code)]
-pub fn hdc_image_classification<T>(
+pub fn hdcimage_classification<T>(
     images: &[ArrayView2<T>],
     labels: &[String],
-    test_images: &[ArrayView2<T>],
+    testimages: &[ArrayView2<T>],
     config: &HDCConfig,
 ) -> NdimageResult<Vec<(String, f64)>>
 where
@@ -455,24 +455,24 @@ where
     let encoder = ImageHDCEncoder::new(height, width, config.clone());
     let mut memory = HDCMemory::new(config.clone());
 
-    // Training phase: encode and store _images
+    // Training phase: encode and store images
     for (image, label) in images.iter().zip(labels.iter()) {
-        let encoded_image = encoder.encode_image(*image)?;
+        let encodedimage = encoder.encodeimage(*image)?;
 
         // If label already exists, bundle with existing pattern
         if let Some(existing) = memory.patterns.get(label) {
-            let bundled = existing.bundle(&encoded_image);
+            let bundled = existing.bundle(&encodedimage);
             memory.store(label.clone(), bundled);
         } else {
-            memory.store(label.clone(), encoded_image);
+            memory.store(label.clone(), encodedimage);
         }
     }
 
-    // Testing phase: classify test _images
+    // Testing phase: classify test images
     let mut results = Vec::new();
 
-    for test_image in test_images {
-        let encoded_test = encoder.encode_image(*test_image)?;
+    for testimage in testimages {
+        let encoded_test = encoder.encodeimage(*testimage)?;
 
         if let Some((predicted_label, confidence)) = memory.retrieve(&encoded_test) {
             results.push((predicted_label, confidence));
@@ -503,7 +503,7 @@ where
 
     // Encode and store patterns
     for (pattern, label) in patterns {
-        let encoded_pattern = encoder.encode_image(*pattern)?;
+        let encoded_pattern = encoder.encodeimage(*pattern)?;
         memory.store(label.clone(), encoded_pattern);
     }
 
@@ -514,7 +514,7 @@ where
     for y in 0..height.saturating_sub(patch_size) {
         for x in 0..width.saturating_sub(patch_size) {
             let patch = image.slice(s![y..y + patch_size, x..x + patch_size]);
-            let encoded_patch = encoder.encode_image(patch)?;
+            let encoded_patch = encoder.encodeimage(patch)?;
 
             if let Some((matched_label, confidence)) = memory.retrieve(&encoded_patch) {
                 matches.push(PatternMatch {
@@ -611,7 +611,7 @@ where
     // Encode individual frames
     let mut encoded_frames = Vec::new();
     for image in image_sequence.iter().take(sequence_length) {
-        let encoded_frame = encoder.encode_image(*image)?;
+        let encoded_frame = encoder.encodeimage(*image)?;
         encoded_frames.push(encoded_frame);
     }
 
@@ -645,7 +645,7 @@ where
     let encoder = ImageHDCEncoder::new(height, width, config.clone());
 
     // Encode the input image
-    let encoded_image = encoder.encode_image(image)?;
+    let encodedimage = encoder.encodeimage(image)?;
 
     // Compose query from _concepts
     let mut composed_query = None;
@@ -662,13 +662,13 @@ where
 
     if let Some(query_hv) = composed_query {
         // Compute similarity between image and composed query
-        let similarity = encoded_image.similarity(&query_hv);
+        let similarity = encodedimage.similarity(&query_hv);
 
         // Decompose image to find constituent _concepts
         let mut concept_presence = HashMap::new();
 
         for (concept_name, concept_hv) in &concept_memory.item_memory {
-            let presence_strength = encoded_image.similarity(concept_hv);
+            let presence_strength = encodedimage.similarity(concept_hv);
             if presence_strength > config.cleanup_threshold {
                 concept_presence.insert(concept_name.clone(), presence_strength);
             }
@@ -678,7 +678,7 @@ where
             query_similarity: similarity,
             concept_presence,
             composed_representation: query_hv,
-            image_representation: encoded_image,
+            image_representation: encodedimage,
         })
     } else {
         Err(NdimageError::InvalidInput(
@@ -708,7 +708,7 @@ where
     let encoder = ImageHDCEncoder::new(height, width, config.clone());
 
     // Encode image at base level
-    let base_encoding = encoder.encode_image(image)?;
+    let base_encoding = encoder.encodeimage(image)?;
     let mut level_encodings = vec![base_encoding.clone()];
     let mut abstraction_results = Vec::new();
 
@@ -764,7 +764,7 @@ where
 /// - Provides meta-learning capabilities
 #[allow(dead_code)]
 pub fn advanced_continual_learning_hdc<T>(
-    training_images: &[ArrayView2<T>],
+    trainingimages: &[ArrayView2<T>],
     training_labels: &[String],
     memory_system: &mut ContinualLearningMemory,
     config: &HDCConfig,
@@ -772,21 +772,21 @@ pub fn advanced_continual_learning_hdc<T>(
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
-    if training_images.is_empty() || training_images.len() != training_labels.len() {
+    if trainingimages.is_empty() || trainingimages.len() != training_labels.len() {
         return Err(NdimageError::InvalidInput(
             "Invalid training data".to_string(),
         ));
     }
 
-    let (height, width) = training_images[0].dim();
+    let (height, width) = trainingimages[0].dim();
     let encoder = ImageHDCEncoder::new(height, width, config.clone());
 
     let mut learning_stats = ContinualLearningStats::new();
 
     // Phase 1: Encode new experiences
     let mut new_experiences = Vec::new();
-    for (image, label) in training_images.iter().zip(training_labels.iter()) {
-        let encoded_experience = encoder.encode_image(*image)?;
+    for (image, label) in trainingimages.iter().zip(training_labels.iter()) {
+        let encoded_experience = encoder.encodeimage(*image)?;
 
         // Check for interference with existing memories
         let interference_score = memory_system.calculate_interference(&encoded_experience);
@@ -850,7 +850,7 @@ where
     let encoder = ImageHDCEncoder::new(height, width, config.clone());
 
     // Encode visual modality
-    let visual_encoding = encoder.encode_image(visual_data)?;
+    let visual_encoding = encoder.encodeimage(visual_data)?;
     let mut fusion_components = vec![FusionComponent {
         modality: "visual".to_string(),
         encoding: visual_encoding.clone(),
@@ -889,11 +889,8 @@ where
     };
 
     // Perform multi-modal fusion
-    let fused_representation = perform_weighted_fusion(
-        &fusion_components,
-        attentionweights.as_ref(),
-        fusion_config,
-    )?;
+    let fused_representation =
+        perform_weighted_fusion(&fusion_components, attentionweights.as_ref(), fusion_config)?;
 
     // Cross-modal coherence analysis
     let coherence_analysis = analyze_cross_modal_coherence(&fusion_components, config)?;
@@ -918,7 +915,7 @@ where
 /// - Performance monitoring and optimization
 #[allow(dead_code)]
 pub fn advanced_online_learning_hdc<T>(
-    stream_image: ArrayView2<T>,
+    streamimage: ArrayView2<T>,
     true_label: Option<&str>,
     learning_system: &mut OnlineLearningSystem,
     config: &HDCConfig,
@@ -926,11 +923,11 @@ pub fn advanced_online_learning_hdc<T>(
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
-    let (height, width) = stream_image.dim();
+    let (height, width) = streamimage.dim();
     let encoder = ImageHDCEncoder::new(height, width, config.clone());
 
     // Encode current input
-    let current_encoding = encoder.encode_image(stream_image)?;
+    let current_encoding = encoder.encodeimage(streamimage)?;
 
     // Make prediction with current _system
     let prediction_result = learning_system.predict(&current_encoding)?;
@@ -961,7 +958,7 @@ where
     Ok(OnlineLearningResult {
         prediction: prediction_result,
         learning_update: update_result,
-        _system_performance: learning_system.get_performance_metrics(),
+        _system_performance: learning_system.get_performancemetrics(),
         adaptation_rate: learning_system.get_current_adaptation_rate(),
     })
 }
@@ -1178,7 +1175,8 @@ impl ContinualLearningMemory {
 
     pub fn add_experience(
         &mut self,
-        experience: Experience, consolidation: &ConsolidationResult,
+        experience: Experience,
+        consolidation: &ConsolidationResult,
     ) -> NdimageResult<()> {
         self.episodic_buffer.push_back(experience);
         self.current_time += 1;
@@ -1405,7 +1403,7 @@ impl OnlineLearningSystem {
         Ok(())
     }
 
-    pub fn get_performance_metrics(&self) -> PerformanceMetrics {
+    pub fn get_performancemetrics(&self) -> PerformanceMetrics {
         PerformanceMetrics {
             accuracy: self.performance_tracker.get_accuracy(),
             learning_speed: self.performance_tracker.get_learning_speed(),
@@ -1454,49 +1452,48 @@ impl AdaptationParameters {
 /// Performance tracking for online learning
 #[derive(Debug, Clone)]
 pub struct PerformanceTracker {
-    pub accuracy_history: VecDeque<f64>,
-    pub learning_speed_history: VecDeque<f64>,
-    pub memory_usage_history: VecDeque<f64>,
+    pub accuracyhistory: VecDeque<f64>,
+    pub learning_speedhistory: VecDeque<f64>,
+    pub memory_usagehistory: VecDeque<f64>,
     pub update_count: usize,
 }
 
 impl PerformanceTracker {
     pub fn new() -> Self {
         Self {
-            accuracy_history: VecDeque::new(),
-            learning_speed_history: VecDeque::new(),
-            memory_usage_history: VecDeque::new(),
+            accuracyhistory: VecDeque::new(),
+            learning_speedhistory: VecDeque::new(),
+            memory_usagehistory: VecDeque::new(),
             update_count: 0,
         }
     }
 
     pub fn record_update(&mut self, error: f64, learningrate: f64) {
         let accuracy = 1.0 - error.min(1.0);
-        self.accuracy_history.push_back(accuracy);
-        self.learning_speed_history.push_back(learning_rate);
+        self.accuracyhistory.push_back(accuracy);
+        self.learning_speedhistory.push_back(learning_rate);
         self.update_count += 1;
 
         // Keep only recent history
-        if self.accuracy_history.len() > 1000 {
-            self.accuracy_history.pop_front();
-            self.learning_speed_history.pop_front();
+        if self.accuracyhistory.len() > 1000 {
+            self.accuracyhistory.pop_front();
+            self.learning_speedhistory.pop_front();
         }
     }
 
     pub fn get_accuracy(&self) -> f64 {
-        if self.accuracy_history.is_empty() {
+        if self.accuracyhistory.is_empty() {
             0.0
         } else {
-            self.accuracy_history.iter().sum::<f64>() / self.accuracy_history.len() as f64
+            self.accuracyhistory.iter().sum::<f64>() / self.accuracyhistory.len() as f64
         }
     }
 
     pub fn get_learning_speed(&self) -> f64 {
-        if self.learning_speed_history.is_empty() {
+        if self.learning_speedhistory.is_empty() {
             0.0
         } else {
-            self.learning_speed_history.iter().sum::<f64>()
-                / self.learning_speed_history.len() as f64
+            self.learning_speedhistory.iter().sum::<f64>() / self.learning_speedhistory.len() as f64
         }
     }
 
@@ -1506,13 +1503,13 @@ impl PerformanceTracker {
     }
 
     pub fn get_recent_performance_change(&self) -> f64 {
-        if self.accuracy_history.len() < 10 {
+        if self.accuracyhistory.len() < 10 {
             return 0.0;
         }
 
-        let recent: f64 = self.accuracy_history.iter().rev().take(5).sum::<f64>() / 5.0;
+        let recent: f64 = self.accuracyhistory.iter().rev().take(5).sum::<f64>() / 5.0;
         let older: f64 = self
-            .accuracy_history
+            .accuracyhistory
             .iter()
             .rev()
             .skip(5)
@@ -1576,7 +1573,8 @@ fn weight_hypervector(hv: &Hypervector, weight: f64) -> Hypervector {
 
 #[allow(dead_code)]
 fn generate_reasoning_chains(
-    _abstraction_levels: &[AbstractionLevel], _concept_library: &HierarchicalConceptLibrary,
+    _abstraction_levels: &[AbstractionLevel],
+    _concept_library: &HierarchicalConceptLibrary,
 ) -> NdimageResult<Vec<ReasoningChain>> {
     // Simplified implementation - would implement sophisticated reasoning chain generation
     Ok(vec![ReasoningChain {
@@ -1599,7 +1597,9 @@ fn assess_reasoning_confidence(_reasoningchains: &[ReasoningChain]) -> MetaCogni
 
 #[allow(dead_code)]
 fn apply_interference_resistant_encoding(
-    encoding: &Hypervector_memory, system: &ContinualLearningMemory, _config: &HDCConfig,
+    encoding: &Hypervector_memory,
+    system: &ContinualLearningMemory,
+    _config: &HDCConfig,
 ) -> NdimageResult<Hypervector> {
     // Apply noise or permutation to reduce interference
     let noise_hv = Hypervector::random(encoding.dimension, 0.001);
@@ -1608,7 +1608,8 @@ fn apply_interference_resistant_encoding(
 
 #[allow(dead_code)]
 fn calculate_experience_importance(
-    _encoding: &Hypervector_memory, system: &ContinualLearningMemory,
+    _encoding: &Hypervector_memory,
+    system: &ContinualLearningMemory,
 ) -> f64 {
     // Simplified importance calculation
     0.7
@@ -1616,7 +1617,9 @@ fn calculate_experience_importance(
 
 #[allow(dead_code)]
 fn perform_memory_consolidation(
-    _new_experiences: &[Experience], _memory_system: &mut ContinualLearningMemory, _config: &HDCConfig,
+    _new_experiences: &[Experience],
+    _memory_system: &mut ContinualLearningMemory,
+    _config: &HDCConfig,
 ) -> NdimageResult<ConsolidationResult> {
     Ok(ConsolidationResult {
         interference_prevented: 3,
@@ -1645,7 +1648,8 @@ fn encode_semantic_concepts(concepts: &[String], config: &HDCConfig) -> NdimageR
 #[allow(dead_code)]
 fn compute_attention_weights(
     _visual_encoding: &Hypervector,
-    attention_map: ArrayView2<f64>, _config: &HDCConfig,
+    attention_map: ArrayView2<f64>,
+    _config: &HDCConfig,
 ) -> NdimageResult<Vec<f64>> {
     // Convert attention _map to weights
     let weights: Vec<f64> = attention_map.iter().cloned().collect();
@@ -1654,7 +1658,9 @@ fn compute_attention_weights(
 
 #[allow(dead_code)]
 fn perform_weighted_fusion(
-    components: &[FusionComponent], _attention_weights: Option<&Vec<f64>>, _fusion_config: &MultiModalFusionConfig,
+    components: &[FusionComponent],
+    _attention_weights: Option<&Vec<f64>>,
+    _fusion_config: &MultiModalFusionConfig,
 ) -> NdimageResult<Hypervector> {
     if components.is_empty() {
         return Err(NdimageError::InvalidInput(
@@ -1674,7 +1680,8 @@ fn perform_weighted_fusion(
 
 #[allow(dead_code)]
 fn analyze_cross_modal_coherence(
-    components: &[FusionComponent], _config: &HDCConfig,
+    components: &[FusionComponent],
+    _config: &HDCConfig,
 ) -> NdimageResult<CrossModalCoherence> {
     let mut coherence_score = 0.0;
     let mut modality_alignment = HashMap::new();
@@ -1797,31 +1804,31 @@ mod tests {
     }
 
     #[test]
-    fn test_image_hdc_encoder() {
+    fn testimage_hdc_encoder() {
         let config = HDCConfig::default();
         let encoder = ImageHDCEncoder::new(10, 10, config);
 
         let image =
-            Array2::fromshape_vec((10, 10), (0..100).map(|x| x as f64 / 100.0).collect()).unwrap();
+            Array2::from_shape_vec((10, 10), (0..100).map(|x| x as f64 / 100.0).collect()).unwrap();
 
-        let encoded = encoder.encode_image(image.view()).unwrap();
+        let encoded = encoder.encodeimage(image.view()).unwrap();
         assert_eq!(encoded.dimension, 10000);
         assert!(encoded.sparse_data.len() > 0);
     }
 
     #[test]
-    fn test_hdc_image_classification() {
+    fn test_hdcimage_classification() {
         let config = HDCConfig::default();
 
         // Create simple training data
-        let train_images = vec![Array2::zeros((8, 8)).view(), Array2::ones((8, 8)).view()];
+        let trainimages = vec![Array2::zeros((8, 8)).view(), Array2::ones((8, 8)).view()];
         let train_labels = vec!["zeros".to_string(), "ones".to_string()];
 
         // Test data
-        let test_images = vec![Array2::zeros((8, 8)).view()];
+        let testimages = vec![Array2::zeros((8, 8)).view()];
 
         let results =
-            hdc_image_classification(&train_images, &train_labels, &test_images, &config).unwrap();
+            hdcimage_classification(&trainimages, &train_labels, &testimages, &config).unwrap();
 
         assert_eq!(results.len(), 1);
         assert!(results[0].1 >= 0.0); // Valid confidence score
@@ -1832,7 +1839,7 @@ mod tests {
         let config = HDCConfig::default();
 
         let image =
-            Array2::fromshape_vec((64, 64), (0..4096).map(|x| x as f64 / 4096.0).collect())
+            Array2::from_shape_vec((64, 64), (0..4096).map(|x| x as f64 / 4096.0).collect())
                 .unwrap();
         let pattern = Array2::ones((32, 32));
 
@@ -1865,7 +1872,7 @@ mod tests {
     fn test_advanced_hierarchical_hdc_reasoning() {
         let config = HDCConfig::default();
         let image =
-            Array2::fromshape_vec((8, 8), (0..64).map(|x| x as f64 / 64.0).collect()).unwrap();
+            Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64 / 64.0).collect()).unwrap();
 
         let mut concept_library = HierarchicalConceptLibrary::new();
 
@@ -1903,11 +1910,11 @@ mod tests {
         let config = HDCConfig::default();
         let mut memory_system = ContinualLearningMemory::new(&config);
 
-        let training_images = vec![Array2::zeros((4, 4)).view(), Array2::ones((4, 4)).view()];
+        let trainingimages = vec![Array2::zeros((4, 4)).view(), Array2::ones((4, 4)).view()];
         let training_labels = vec!["zeros".to_string(), "ones".to_string()];
 
         let result = advanced_continual_learning_hdc(
-            &training_images,
+            &trainingimages,
             &training_labels,
             &mut memory_system,
             &config,
@@ -1926,7 +1933,7 @@ mod tests {
         let fusion_config = MultiModalFusionConfig::default();
 
         let visual_data =
-            Array2::fromshape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
         let temporal_zeros = Array2::zeros((4, 4));
         let temporal_ones = Array2::ones((4, 4));
         let temporal_sequence = vec![temporal_zeros.view(), temporal_ones.view()];
@@ -1958,11 +1965,11 @@ mod tests {
         let config = HDCConfig::default();
         let mut learning_system = OnlineLearningSystem::new(&config);
 
-        let stream_image = Array2::zeros((6, 6));
+        let streamimage = Array2::zeros((6, 6));
         let true_label = "test_pattern";
 
         let result = advanced_online_learning_hdc(
-            stream_image.view(),
+            streamimage.view(),
             Some(true_label),
             &mut learning_system,
             &config,
@@ -2049,7 +2056,7 @@ mod tests {
         assert!(system.perform_maintenance_cycle(&config).is_ok());
 
         // Test performance metrics
-        let metrics = system.get_performance_metrics();
+        let metrics = system.get_performancemetrics();
         assert!(metrics.accuracy >= 0.0);
         assert!(metrics.accuracy <= 1.0);
     }

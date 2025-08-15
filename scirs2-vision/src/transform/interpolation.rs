@@ -420,7 +420,7 @@ fn create_kernel(_kernelfunc: fn(f64) -> f64, kernel_size: usize, scale: f64) ->
 
     for i in 0..kernel_size {
         let x = (i as f64 - radius) / scale;
-        kernel[i] = _kernel_func(x);
+        kernel[i] = _kernelfunc(x);
     }
 
     // Normalize kernel

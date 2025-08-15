@@ -320,7 +320,7 @@ where
 {
     /// Create a new empty sparse matrix
     pub fn new(nrows: usize, ncols: usize) -> Self {
-        let row_ptrs = vec![0; _nrows + 1];
+        let row_ptrs = vec![0; nrows + 1];
 
         Self {
             nrows,

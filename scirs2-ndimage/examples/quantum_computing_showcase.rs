@@ -18,7 +18,7 @@
 //! 10. **Quantum Annealing Segmentation** - Global optimization segmentation
 
 use ndarray::{Array1, Array2};
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     quantum_amplitude_amplification, quantum_annealing_segmentation,
     quantum_entanglement_correlation, quantum_error_correction, quantum_fourier_enhancement,
     quantum_machine_learning_classifier, quantum_superposition_filter,
@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Create sample images for demonstration
-    let test_images = create_test_images();
+    let testimages = create_testimages();
 
     // Configure quantum algorithms
     let mut config = QuantumConfig::default();
@@ -53,34 +53,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Demonstration 1: Quantum Superposition Filtering
-    demonstrate_quantum_superposition_filtering(&test_images.original, &config)?;
+    demonstrate_quantum_superposition_filtering(&testimages.original, &config)?;
 
     // Demonstration 2: Quantum Entanglement Correlation
-    demonstrate_quantum_entanglement_correlation(&test_images.original, &config)?;
+    demonstrate_quantum_entanglement_correlation(&testimages.original, &config)?;
 
     // Demonstration 3: Quantum Walk Edge Detection
-    demonstrate_quantum_walk_edge_detection(&test_images.original, &config)?;
+    demonstrate_quantum_walk_edge_detection(&testimages.original, &config)?;
 
     // Demonstration 4: Quantum Machine Learning Classification
-    demonstrate_quantum_machine_learning(&test_images, &config)?;
+    demonstrate_quantum_machine_learning(&testimages, &config)?;
 
     // Demonstration 5: Quantum Error Correction
-    demonstrate_quantum_error_correction(&test_images.noisy, &config)?;
+    demonstrate_quantum_error_correction(&testimages.noisy, &config)?;
 
     // Demonstration 6: Quantum Tensor Network Processing
-    demonstrate_quantum_tensor_networks(&test_images.original, &config)?;
+    demonstrate_quantum_tensor_networks(&testimages.original, &config)?;
 
     // Demonstration 7: Quantum Variational Enhancement
-    demonstrate_quantum_variational_enhancement(&test_images.blurred, &config)?;
+    demonstrate_quantum_variational_enhancement(&testimages.blurred, &config)?;
 
     // Demonstration 8: Quantum Fourier Transform
-    demonstrate_quantum_fourier_transform(&test_images.original, &config)?;
+    demonstrate_quantum_fourier_transform(&testimages.original, &config)?;
 
     // Demonstration 9: Quantum Amplitude Amplification
-    demonstrate_quantum_amplitude_amplification(&test_images.original, &config)?;
+    demonstrate_quantum_amplitude_amplification(&testimages.original, &config)?;
 
     // Demonstration 10: Quantum Annealing Segmentation
-    demonstrate_quantum_annealing_segmentation(&test_images.original, &config)?;
+    demonstrate_quantum_annealing_segmentation(&testimages.original, &config)?;
 
     println!("✨ Quantum showcase completed successfully!");
     println!("These algorithms demonstrate the power of quantum-inspired computing");
@@ -93,11 +93,11 @@ struct TestImages {
     original: Array2<f64>,
     noisy: Array2<f64>,
     blurred: Array2<f64>,
-    edge_features: Array2<f64>,
+    edgefeatures: Array2<f64>,
 }
 
 #[allow(dead_code)]
-fn create_test_images() -> TestImages {
+fn create_testimages() -> TestImages {
     println!("🎨 Creating test images...");
 
     // Create a synthetic image with various features
@@ -154,7 +154,7 @@ fn create_test_images() -> TestImages {
     }
 
     // Create edge feature template
-    let edge_features = Array2::fromshape_vec(
+    let edgefeatures = Array2::from_shape_vec(
         (3, 3),
         vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
     )
@@ -170,7 +170,7 @@ fn create_test_images() -> TestImages {
         original,
         noisy,
         blurred,
-        edge_features,
+        edgefeatures,
     }
 }
 
@@ -188,23 +188,23 @@ fn demonstrate_quantum_superposition_filtering(
 
     // Create multiple filter states
     let gaussian_filter =
-        Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 1.0, 2.0, 4.0, 2.0, 1.0, 2.0, 1.0]).unwrap()
+        Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 1.0, 2.0, 4.0, 2.0, 1.0, 2.0, 1.0]).unwrap()
             / 16.0;
 
     let edge_filter =
-        Array2::fromshape_vec((3, 3), vec![-1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+        Array2::from_shape_vec((3, 3), vec![-1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0])
             .unwrap();
 
     let identity_filter =
-        Array2::fromshape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]).unwrap();
+        Array2::from_shape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]).unwrap();
 
-    let filter_states = vec![gaussian_filter, edge_filter, identity_filter];
+    let filterstates = vec![gaussian_filter, edge_filter, identity_filter];
 
-    let result = quantum_superposition_filter(image.view(), &filter_states, config)?;
+    let result = quantum_superposition_filter(image.view(), &filterstates, config)?;
 
     let duration = start.elapsed();
 
-    println!("   ✓ Applied {} quantum filter states", filter_states.len());
+    println!("   ✓ Applied {} quantum filter states", filterstates.len());
     println!("   ✓ Result dimensions: {:?}", result.dim());
     println!("   ✓ Processing time: {:.2?}", duration);
     println!("   ✓ Quantum coherence maintained throughout superposition");
@@ -279,7 +279,7 @@ fn demonstrate_quantum_walk_edge_detection(
 
 #[allow(dead_code)]
 fn demonstrate_quantum_machine_learning(
-    test_images: &TestImages,
+    testimages: &TestImages,
     config: &QuantumConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🧠 Quantum Machine Learning Classification");
@@ -289,15 +289,15 @@ fn demonstrate_quantum_machine_learning(
 
     // Create training dataset
     let training_data = vec![
-        test_images.original.clone(),
-        test_images.noisy.clone(),
-        test_images.blurred.clone(),
+        testimages.original.clone(),
+        testimages.noisy.clone(),
+        testimages.blurred.clone(),
     ];
     let labels = vec![0, 1, 2]; // 0=clean, 1=noisy, 2=blurred
 
     // Test classification on original image
     let (predicted_class, confidence) = quantum_machine_learning_classifier(
-        test_images.original.view(),
+        testimages.original.view(),
         &training_data,
         &labels,
         config,
@@ -318,7 +318,7 @@ fn demonstrate_quantum_machine_learning(
 
 #[allow(dead_code)]
 fn demonstrate_quantum_error_correction(
-    noisy_image: &Array2<f64>,
+    noisyimage: &Array2<f64>,
     config: &QuantumConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🛡️ Quantum Error Correction");
@@ -327,18 +327,15 @@ fn demonstrate_quantum_error_correction(
     let start = Instant::now();
 
     let redundancy_factor = 3;
-    let corrected_image = quantum_error_correction(noisy_image.view(), redundancy_factor, config)?;
+    let correctedimage = quantum_error_correction(noisyimage.view(), redundancy_factor, config)?;
 
     let duration = start.elapsed();
 
     // Calculate noise reduction metrics
     let original_noise =
-        noisy_image.iter().map(|&x| (x - 0.5).abs()).sum::<f64>() / noisy_image.len() as f64;
-    let corrected_noise = corrected_image
-        .iter()
-        .map(|&x| (x - 0.5).abs())
-        .sum::<f64>()
-        / corrected_image.len() as f64;
+        noisyimage.iter().map(|&x| (x - 0.5).abs()).sum::<f64>() / noisyimage.len() as f64;
+    let corrected_noise =
+        correctedimage.iter().map(|&x| (x - 0.5).abs()).sum::<f64>() / correctedimage.len() as f64;
     let noise_reduction = (original_noise - corrected_noise) / original_noise * 100.0;
 
     println!("   ✓ Redundancy factor: {}", redundancy_factor);
@@ -363,7 +360,7 @@ fn demonstrate_quantum_tensor_networks(
     let start = Instant::now();
 
     let bond_dimension = 4;
-    let processed_image = quantum_tensor_network_processing(image.view(), bond_dimension, config)?;
+    let processedimage = quantum_tensor_network_processing(image.view(), bond_dimension, config)?;
 
     let duration = start.elapsed();
 
@@ -375,7 +372,7 @@ fn demonstrate_quantum_tensor_networks(
     // Calculate reconstruction fidelity
     let mse = image
         .iter()
-        .zip(processed_image.iter())
+        .zip(processedimage.iter())
         .map(|(&a, &b)| (a - b).powi(2))
         .sum::<f64>()
         / image.len() as f64;
@@ -394,7 +391,7 @@ fn demonstrate_quantum_tensor_networks(
 
 #[allow(dead_code)]
 fn demonstrate_quantum_variational_enhancement(
-    blurred_image: &Array2<f64>,
+    blurredimage: &Array2<f64>,
     config: &QuantumConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Quantum Variational Enhancement");
@@ -403,13 +400,13 @@ fn demonstrate_quantum_variational_enhancement(
     let start = Instant::now();
 
     let num_layers = 3;
-    let enhanced_image = quantum_variational_enhancement(blurred_image.view(), num_layers, config)?;
+    let enhancedimage = quantum_variational_enhancement(blurredimage.view(), num_layers, config)?;
 
     let duration = start.elapsed();
 
     // Calculate enhancement metrics
-    let original_variance = calculate_image_variance(blurred_image);
-    let enhanced_variance = calculate_image_variance(&enhanced_image);
+    let original_variance = calculateimage_variance(blurredimage);
+    let enhanced_variance = calculateimage_variance(&enhancedimage);
     let sharpness_improvement = (enhanced_variance - original_variance) / original_variance * 100.0;
 
     println!("   ✓ Variational layers: {}", num_layers);
@@ -473,11 +470,12 @@ fn demonstrate_quantum_amplitude_amplification(
     .unwrap();
 
     let corner_feature =
-        Array2::fromshape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0]).unwrap();
+        Array2::from_shape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0])
+            .unwrap();
 
-    let target_features = vec![edge_feature, corner_feature];
+    let targetfeatures = vec![edge_feature, corner_feature];
 
-    let amplified_result = quantum_amplitude_amplification(image.view(), &target_features, config)?;
+    let amplified_result = quantum_amplitude_amplification(image.view(), &targetfeatures, config)?;
 
     let duration = start.elapsed();
 
@@ -489,7 +487,7 @@ fn demonstrate_quantum_amplitude_amplification(
         .filter(|&&x| x > mean_amplitude * 2.0)
         .count();
 
-    println!("   ✓ Target features: {}", target_features.len());
+    println!("   ✓ Target features: {}", targetfeatures.len());
     println!("   ✓ Max amplitude: {:.4}", max_amplitude);
     println!("   ✓ Mean amplitude: {:.4}", mean_amplitude);
     println!("   ✓ Highly amplified pixels: {}", amplified_pixels);
@@ -542,7 +540,7 @@ fn demonstrate_quantum_annealing_segmentation(
 // Helper functions
 
 #[allow(dead_code)]
-fn calculate_image_variance(image: &Array2<f64>) -> f64 {
+fn calculateimage_variance(image: &Array2<f64>) -> f64 {
     let mean = image.sum() / image.len() as f64;
     let variance = image.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / image.len() as f64;
     variance

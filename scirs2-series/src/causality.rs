@@ -8,9 +8,9 @@
 
 use crate::error::TimeSeriesError;
 use ndarray::{s, Array1, Array2};
-use scirs2_core::validation::check_array_finite;
-use std::collections::HashMap;
+use scirs2_core::validation::checkarray_finite;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 /// Result type for causality testing
 pub type CausalityResult<T> = Result<T, TimeSeriesError>;
@@ -205,8 +205,8 @@ impl CausalityTester {
         y: &Array1<f64>,
         config: &GrangerConfig,
     ) -> CausalityResult<GrangerCausalityResult> {
-        check_array_finite(x, "x")?;
-        check_array_finite(y, "y")?;
+        checkarray_finite(x, "x")?;
+        checkarray_finite(y, "y")?;
 
         if x.len() != y.len() {
             return Err(TimeSeriesError::InvalidInput(
@@ -306,8 +306,8 @@ impl CausalityTester {
         y: &Array1<f64>,
         config: &TransferEntropyConfig,
     ) -> CausalityResult<TransferEntropyResult> {
-        check_array_finite(x, "x")?;
-        check_array_finite(y, "y")?;
+        checkarray_finite(x, "x")?;
+        checkarray_finite(y, "y")?;
 
         if x.len() != y.len() {
             return Err(TimeSeriesError::InvalidInput(
@@ -369,8 +369,8 @@ impl CausalityTester {
         y: &Array1<f64>,
         config: &CCMConfig,
     ) -> CausalityResult<CCMResult> {
-        check_array_finite(x, "x")?;
-        check_array_finite(y, "y")?;
+        checkarray_finite(x, "x")?;
+        checkarray_finite(y, "y")?;
 
         if x.len() != y.len() {
             return Err(TimeSeriesError::InvalidInput(
@@ -449,7 +449,7 @@ impl CausalityTester {
         intervention_point: usize,
         confidence_level: f64,
     ) -> CausalityResult<CausalImpactResult> {
-        check_array_finite(y, "y")?;
+        checkarray_finite(y, "y")?;
 
         if intervention_point >= y.len() {
             return Err(TimeSeriesError::InvalidInput(

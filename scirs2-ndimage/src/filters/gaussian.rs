@@ -32,7 +32,7 @@ use scirs2_core::{parallel_ops, CoreError};
 /// ## Basic 1D smoothing
 /// ```no_run
 /// use ndarray::array;
-/// use scirs2__ndimage::filters::gaussian_filter;
+/// use scirs2_ndimage::filters::gaussian_filter;
 ///
 /// let data = array![1.0, 5.0, 2.0, 8.0, 3.0];
 /// let smoothed = gaussian_filter(&data, 0.8, None, None).unwrap();
@@ -42,7 +42,7 @@ use scirs2_core::{parallel_ops, CoreError};
 /// ## 2D image smoothing with different border modes
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2__ndimage::filters::{gaussian_filter, BorderMode};
+/// use scirs2_ndimage::filters::{gaussian_filter, BorderMode};
 ///
 /// let image = Array2::fromshape_fn((10, 10), |(i, j)| {
 ///     ((i * j) as f64).sin()
@@ -58,7 +58,7 @@ use scirs2_core::{parallel_ops, CoreError};
 /// ## 3D volume smoothing
 /// ```no_run
 /// use ndarray::Array3;
-/// use scirs2__ndimage::filters::gaussian_filter;
+/// use scirs2_ndimage::filters::gaussian_filter;
 ///
 /// let volume = Array3::fromshape_fn((20, 20, 20), |(i, j, k)| {
 ///     (i + j + k) as f64
@@ -668,9 +668,12 @@ where
         2 => {
             // For 2D arrays, use a specialized implementation with Ix2 dimensionality
             // This requires explicitly converting to and from Array2
-            let array2d = input.to_owned().into__dimensionality::<Ix2>().map_err(|_| {
-                NdimageError::DimensionError("Failed to convert to 2D array".into())
-            })?;
+            let array2d = input
+                .to_owned()
+                .into__dimensionality::<Ix2>()
+                .map_err(|_| {
+                    NdimageError::DimensionError("Failed to convert to 2D array".into())
+                })?;
 
             let radius = (trunc * sigma).ceil() as usize;
             let size = 2 * radius + 1;

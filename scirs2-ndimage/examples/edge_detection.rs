@@ -7,7 +7,7 @@
 //! - Gradient magnitude
 
 use ndarray::{array, Array2};
-use scirs2__ndimage::filters::{gradient_magnitude, laplace, prewitt, roberts, scharr, sobel};
+use scirs2_ndimage::filters::{gradient_magnitude, laplace, prewitt, roberts, scharr, sobel};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -8,7 +8,7 @@
 //! - SciPy-compatible API
 
 use ndarray::{array, Array2};
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     backend::{Backend, BackendBuilder},
     error::NdimageResult,
     filters::simd_specialized::{
@@ -23,7 +23,7 @@ use scirs2__ndimage::{
 
 // Import advanced SIMD extensions
 #[cfg(feature = "simd")]
-use scirs2__ndimage::filters::{
+use scirs2_ndimage::filters::{
     advanced_simd_advanced_edge_detection, advanced_simd_multi_scale_lbp,
     advanced_simd_wavelet_pyramid, WaveletType,
 };
@@ -37,34 +37,34 @@ fn main() -> NdimageResult<()> {
     enable_memory_profiling();
 
     // Create test image
-    let test_image = create_test_image();
+    let testimage = create_testimage();
     println!(
         "Created test image: {}x{}",
-        test_image.nrows(),
-        test_image.ncols()
+        testimage.nrows(),
+        testimage.ncols()
     );
 
     // 1. Demonstrate GPU acceleration (if available)
     #[cfg(feature = "cuda")]
     {
         println!("\n--- GPU Acceleration Demo ---");
-        demo_gpu_acceleration(&test_image)?;
+        demo_gpu_acceleration(&testimage)?;
     }
 
     // 2. Demonstrate SIMD-optimized filters
     println!("\n--- SIMD-Optimized Filters Demo ---");
-    demo_simd_filters(&test_image)?;
+    demo_simd_filters(&testimage)?;
 
     // 3. Demonstrate advanced SIMD extensions
     #[cfg(feature = "simd")]
     {
         println!("\n--- Advanced SIMD Extensions Demo ---");
-        demo_advanced_simd_extensions(&test_image)?;
+        demo_advanced_simd_extensions(&testimage)?;
     }
 
     // 4. Demonstrate SciPy-compatible API
     println!("\n--- SciPy-Compatible API Demo ---");
-    demo_scipy_compat(&test_image)?;
+    demo_scipy_compat(&testimage)?;
 
     // 5. Display performance analysis
     println!("\n--- Performance Analysis ---");
@@ -90,7 +90,7 @@ fn main() -> NdimageResult<()> {
                     duration: *duration,
                     memory_allocated: 0,
                     memory_deallocated: 0,
-                    arrayshape: vec![test_image.nrows(), test_image.ncols()],
+                    arrayshape: vec![testimage.nrows(), testimage.ncols()],
                     backend: Backend::Cpu,
                     thread_count: 1,
                     timestamp: std::time::Instant::now(),
@@ -107,7 +107,7 @@ fn main() -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn create_test_image() -> Array2<f64> {
+fn create_testimage() -> Array2<f64> {
     let size = 256;
     let mut image = Array2::zeros((size, size));
 
@@ -139,7 +139,7 @@ fn create_test_image() -> Array2<f64> {
 #[cfg(feature = "cuda")]
 #[allow(dead_code)]
 fn demo_gpu_acceleration(image: &Array2<f64>) -> NdimageResult<()> {
-    use scirs2__ndimage::backend::cuda::CudaOperations;
+    use scirs2_ndimage::backend::cuda::CudaOperations;
 
     println!("Setting up GPU backend...");
 
@@ -155,7 +155,7 @@ fn demo_gpu_acceleration(image: &Array2<f64>) -> NdimageResult<()> {
 
     // Perform Gaussian filter on GPU
     let sigma = [2.0, 2.0];
-    let gpu_result = cuda_ops.gaussian_filter_2d(&_image.view(), sigma)?;
+    let gpu_result = cuda_ops.gaussian_filter_2d(&image.view(), sigma)?;
 
     println!(
         "GPU Gaussian filter completed: {}x{}",
@@ -164,7 +164,7 @@ fn demo_gpu_acceleration(image: &Array2<f64>) -> NdimageResult<()> {
     );
 
     // Compare with CPU version
-    let cpu_result = gaussian_filter(_image, sigma.to_vec(), None, None, None, None)?;
+    let cpu_result = gaussian_filter(image, sigma.to_vec(), None, None, None, None)?;
 
     // Calculate difference
     let diff = (&gpu_result - &cpu_result).mapv(|x| x.abs()).sum();
@@ -196,7 +196,7 @@ fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
     println!("Running SIMD guided filter...");
     let guided_result = simd_guided_filter(
         image.view(),
-        image.view(), // using _image as its own guide
+        image.view(), // using image as its own guide
         5,            // radius
         0.01,         // epsilon
     )?;
@@ -236,12 +236,12 @@ fn demo_scipy_compat(image: &Array2<f64>) -> NdimageResult<()> {
         Some(0.0),        // cval
         Some(true),       // prefilter
     )?;
-    println!("Zoomed _image size: {}x{}", zoomed.nrows(), zoomed.ncols());
+    println!("Zoomed image size: {}x{}", zoomed.nrows(), zoomed.ncols());
 
     // 3. Rotate operation
     println!("Running rotation...");
     let rotated = rotate(
-        &_image.view(),
+        &image.view(),
         45.0,             // angle in degrees
         None,             // axes
         Some(false),      // reshape
@@ -301,7 +301,7 @@ fn demo_advanced_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
     let radii = [1, 2, 3];
     let sample_points = [8, 16, 24];
 
-    let lbp_result = advanced_simd_multi_scale_lbp(_image.view(), &radii, &sample_points)?;
+    let lbp_result = advanced_simd_multi_scale_lbp(image.view(), &radii, &sample_points)?;
 
     println!(
         "Multi-scale LBP completed: {}x{}",

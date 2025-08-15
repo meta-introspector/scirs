@@ -166,7 +166,7 @@ where
             kernel,
             epsilon,
             coefficients: None,
-            config,
+            _config: config,
             stats: CacheOptimizedStats::default(),
         })
     }
@@ -191,7 +191,7 @@ where
         let start_time = std::time::Instant::now();
 
         let n_points = self.points.nrows();
-        let block_size = self.config.block_size.min(n_points);
+        let block_size = self._config.block_size.min(n_points);
 
         // Create distance matrix using blocked computation
         let distance_matrix = self.compute_blocked_distance_matrix()?;
@@ -213,7 +213,7 @@ where
     fn compute_blocked_distance_matrix(&self) -> InterpolateResult<Array2<F>> {
         let n_points = self.points.nrows();
         let n_dims = self.points.ncols();
-        let block_size = self.config.block_size;
+        let block_size = self._config.block_size;
 
         let mut distance_matrix = Array2::zeros((n_points, n_points));
 
@@ -247,8 +247,8 @@ where
         // Process dimensions in chunks for better cache utilization
         let chunk_size = 4; // Process 4 dimensions at a time
 
-        for dim_chunk in (0..n_dims).step_by(chunk_size) {
-            let end_dim = (dim_chunk + chunk_size).min(n_dims);
+        for dim_chunk in (0..ndims).step_by(chunk_size) {
+            let end_dim = (dim_chunk + chunk_size).min(ndims);
 
             for dim in dim_chunk..end_dim {
                 let diff = self.points[[i, dim]] - self.points[[j, dim]];
@@ -260,9 +260,9 @@ where
     }
 
     /// Apply RBF kernel to distance matrix using blocked operations
-    fn apply_kernel_blocked(&self, distancematrix: &Array2<F>) -> InterpolateResult<Array2<F>> {
+    fn apply_kernel_blocked(&self, distance_matrix: &Array2<F>) -> InterpolateResult<Array2<F>> {
         let n_points = distance_matrix.nrows();
-        let block_size = self.config.block_size;
+        let block_size = self._config.block_size;
         let mut kernel_matrix = Array2::zeros((n_points, n_points));
 
         for i_block in (0..n_points).step_by(block_size) {
@@ -323,7 +323,7 @@ where
         let n = kernel_matrix.nrows();
         let mut augmented = Array2::zeros((n, n + 1));
 
-        // Copy kernel _matrix and values vector
+        // Copy kernel matrix and values vector
         for i in 0..n {
             for j in 0..n {
                 augmented[[i, j]] = kernel_matrix[[i, j]];
@@ -395,8 +395,8 @@ where
 
         let coefficients = self.coefficients.as_ref().unwrap();
         let n_queries = query_points.nrows();
-        let n_points = self._points.nrows();
-        let block_size = self.config.block_size;
+        let n_points = self.points.nrows();
+        let block_size = self._config.block_size;
 
         let mut results = Array1::zeros(n_queries);
 
@@ -408,12 +408,12 @@ where
                 let query = query_points.row(query_idx);
                 let mut value = F::zero();
 
-                // Process training _points in blocks
+                // Process training points in blocks
                 for point_block in (0..n_points).step_by(block_size) {
                     let point_end = (point_block + block_size).min(n_points);
 
                     for point_idx in point_block..point_end {
-                        let point = self._points.row(point_idx);
+                        let point = self.points.row(point_idx);
                         let distance = self.compute_query_distance(&query, &point);
                         let kernel_value = self.apply_kernel_function(distance);
                         value = value + coefficients[point_idx] * kernel_value;

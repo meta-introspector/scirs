@@ -218,11 +218,11 @@ fn main() -> Result<()> {
             fs::write(output_file, json_output)?;
         }
         "markdown" => {
-            let markdown_output = generate_markdown_report(&analysis_result);
+            let markdown_output = generate_markdownreport(&analysis_result);
             fs::write(output_file, markdown_output)?;
         }
         "html" => {
-            let html_output = generate_html_report(&analysis_result);
+            let html_output = generate_htmlreport(&analysis_result);
             fs::write(output_file, html_output)?;
         }
         _ => unreachable!(),
@@ -234,15 +234,15 @@ fn main() -> Result<()> {
 
 #[allow(dead_code)]
 fn load_analysis_input(_inputdir: &str) -> Result<AnalysisInput> {
-    let input_path = Path::new(_input_dir);
+    let inputpath = Path::new(_input_dir);
 
     // Try to find relevant files
     let mut snapshots = Vec::new();
     let mut allocation_events = Vec::new();
     let mut metadata = None;
 
-    if input_path.is_dir() {
-        for entry in fs::read_dir(input_path)? {
+    if inputpath.is_dir() {
+        for entry in fs::read_dir(inputpath)? {
             let entry = entry?;
             let path = entry.path();
 
@@ -250,10 +250,9 @@ fn load_analysis_input(_inputdir: &str) -> Result<AnalysisInput> {
                 if filename.contains("memory_profile") && filename.ends_with(".json") {
                     // Try to parse as profiling results
                     let content = fs::read_to_string(&path)?;
-                    if let Ok(profiling_data) = serde_json::from_str::<serde_json::Value>(&content)
-                    {
+                    if let Ok(profilingdata) = serde_json::from_str::<serde_json::Value>(&content) {
                         // Extract snapshots if available
-                        if let Some(snapshot_array) = profiling_data.get("snapshots") {
+                        if let Some(snapshot_array) = profilingdata.get("snapshots") {
                             if let Ok(parsed_snapshots) =
                                 serde_json::from_value::<Vec<MemoryUsageSnapshot>>(
                                     snapshot_array.clone(),
@@ -264,9 +263,9 @@ fn load_analysis_input(_inputdir: &str) -> Result<AnalysisInput> {
                         }
 
                         // Extract metadata if available
-                        if let Some(session_data) = profiling_data.get("session") {
+                        if let Some(sessiondata) = profilingdata.get("session") {
                             if let Ok(parsed_metadata) =
-                                serde_json::from_value::<AnalysisMetadata>(session_data.clone())
+                                serde_json::from_value::<AnalysisMetadata>(sessiondata.clone())
                             {
                                 metadata = Some(parsed_metadata);
                             }
@@ -285,7 +284,7 @@ fn load_analysis_input(_inputdir: &str) -> Result<AnalysisInput> {
         }
     } else {
         // Single file input
-        let content = fs::read_to_string(input_path)?;
+        let content = fs::read_to_string(inputpath)?;
         let data: serde_json::Value = serde_json::from_str(&content)?;
 
         // Try to extract data from the file
@@ -297,8 +296,8 @@ fn load_analysis_input(_inputdir: &str) -> Result<AnalysisInput> {
             allocation_events = serde_json::from_value(events_array.clone())?;
         }
 
-        if let Some(meta_data) = data.get("metadata") {
-            metadata = Some(serde_json::from_value(meta_data.clone())?);
+        if let Some(metadata) = data.get("metadata") {
+            metadata = Some(serde_json::from_value(metadata.clone())?);
         }
     }
 
@@ -784,7 +783,7 @@ fn display_analysis_summary(result: &PatternAnalysisResult) {
 }
 
 #[allow(dead_code)]
-fn generate_markdown_report(result: &PatternAnalysisResult) -> String {
+fn generate_markdownreport(result: &PatternAnalysisResult) -> String {
     format!(
         r#"# Memory Pattern Analysis Report
 
@@ -873,7 +872,7 @@ fn generate_markdown_report(result: &PatternAnalysisResult) -> String {
 }
 
 #[allow(dead_code)]
-fn generate_html_report(result: &PatternAnalysisResult) -> String {
+fn generate_htmlreport(result: &PatternAnalysisResult) -> String {
     format!(
         r#"<!DOCTYPE html>
 <html>

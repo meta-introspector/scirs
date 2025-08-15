@@ -32,7 +32,7 @@
 //!     StabilityLevel::Excellent => println!("Matrix is well-conditioned"),
 //!     StabilityLevel::Poor => println!("Consider regularization: {:?}",
 //!                                     report.recommended_regularization),
-//!     _ => println!("Condition number: {:.2e}", report.condition_number),
+//!     _ => println!("Condition number: {:.2e}", report._conditionnumber),
 //! }
 //! ```
 
@@ -50,7 +50,7 @@ where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     /// Estimated condition number of the matrix
-    pub condition_number: F,
+    pub _conditionnumber: F,
 
     /// Whether the matrix is considered well-conditioned
     pub is_well_conditioned: bool,
@@ -159,15 +159,15 @@ where
     }
 
     let mut diagnostics = StabilityDiagnostics {
-        is_symmetric: check_symmetry(_matrix),
+        is_symmetric: check_symmetry(matrix),
         ..Default::default()
     };
 
     // Estimate condition number
-    let condition_number = estimate_condition_number(_matrix, &mut diagnostics)?;
+    let _conditionnumber = estimate__conditionnumber(matrix, &mut diagnostics)?;
 
     // Classify stability level
-    let stability_level = classify_stability(condition_number);
+    let stability_level = classify_stability(_conditionnumber);
 
     // Determine if well-conditioned
     let is_well_conditioned = matches!(
@@ -177,13 +177,13 @@ where
 
     // Suggest regularization if needed
     let recommended_regularization = if !is_well_conditioned {
-        Some(suggest_regularization(condition_number, &diagnostics))
+        Some(suggest_regularization(_conditionnumber, &diagnostics))
     } else {
         None
     };
 
     Ok(ConditionReport {
-        condition_number,
+        _conditionnumber,
         is_well_conditioned,
         recommended_regularization,
         stability_level,
@@ -204,7 +204,7 @@ where
 
     for i in 0..n {
         for j in 0..i {
-            let diff = (_matrix[[i, j]] - matrix[[j, i]]).abs();
+            let diff = (matrix[[i, j]] - matrix[[j, i]]).abs();
             if diff > tol {
                 return false;
             }
@@ -215,7 +215,7 @@ where
 
 /// Estimate condition number using different methods based on availability
 #[allow(dead_code)]
-fn estimate_condition_number<F>(
+fn estimate__conditionnumber<F>(
     matrix: &ArrayView2<F>,
     #[cfg_attr(not(feature = "linalg"), allow(unused_variables))]
     diagnostics: &mut StabilityDiagnostics<F>,
@@ -363,11 +363,11 @@ where
         F::from(1e16 as f32).unwrap_or_else(|| F::from(10000000000000000i64).unwrap())
     });
 
-    if condition_number < threshold_1e12 {
+    if _conditionnumber < threshold_1e12 {
         StabilityLevel::Excellent
-    } else if condition_number < threshold_1e14 {
+    } else if _conditionnumber < threshold_1e14 {
         StabilityLevel::Good
-    } else if condition_number < threshold_1e16 {
+    } else if _conditionnumber < threshold_1e16 {
         StabilityLevel::Marginal
     } else {
         StabilityLevel::Poor
@@ -383,7 +383,7 @@ where
     let machine_eps = diagnostics.machine_epsilon;
 
     // Base regularization on condition _number and machine epsilon
-    let base_reg = machine_eps * condition_number.sqrt();
+    let base_reg = machine_eps * _conditionnumber.sqrt();
 
     // Adjust based on minimum singular value if available
     if let Some(min_sv) = diagnostics.min_singular_value {
@@ -430,7 +430,7 @@ where
             numerator, denominator, safe_threshold
         )))
     } else {
-        Ok(_numerator / denominator)
+        Ok(numerator / denominator)
     }
 }
 
@@ -498,7 +498,7 @@ where
             // Use moderate regularization
             let base_reg =
                 machine_epsilon::<F>() * F::from_f64(1e8).unwrap_or(F::from(100000000).unwrap());
-            base_reg * condition_report.condition_number.sqrt()
+            base_reg * condition_report._conditionnumber.sqrt()
         }
         StabilityLevel::Poor => {
             // Use stronger regularization
@@ -881,7 +881,7 @@ where
     {
         // Fallback: simple Gaussian elimination for small systems
         if matrix.nrows() <= 3 {
-            gaussian_elimination_small(_matrix, rhs)
+            gaussian_elimination_small(matrix, rhs)
         } else {
             Err(InterpolateError::ComputationError(
                 "Linear algebra solve requires 'linalg' feature for large systems".to_string(),
@@ -969,7 +969,7 @@ fn analyze_point_distances<F>(points: &ArrayView2<F>) -> InterpolateResult<(F, F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let n_points = points.nrows();
+    let npoints = points.nrows();
     let mut min_dist = F::infinity();
     let mut max_dist = F::zero();
     let mut clustered_count = 0;
@@ -978,11 +978,11 @@ where
         * F::from_f64(1e6)
             .unwrap_or_else(|| F::from(1e6 as f32).unwrap_or_else(|| F::from(1000000).unwrap()));
 
-    for i in 0..n_points {
-        for j in (i + 1)..n_points {
+    for i in 0..npoints {
+        for j in (i + 1)..npoints {
             // Compute Euclidean distance
             let mut dist_sq = F::zero();
-            for k in 0.._points.ncols() {
+            for k in 0..points.ncols() {
                 let diff = points[[i, k]] - points[[j, k]];
                 dist_sq += diff * diff;
             }
@@ -1010,33 +1010,33 @@ fn check_near_linear_dependencies<F>(points: &ArrayView2<F>) -> InterpolateResul
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
 {
-    let n_points = points.nrows();
+    let npoints = points.nrows();
     let dim = points.ncols();
 
-    // For fewer _points than dimensions + 1, no dependencies are possible
-    if n_points <= dim {
+    // For fewer points than dimensions + 1, no dependencies are possible
+    if npoints <= dim {
         return Ok(false);
     }
 
     // Check rank of the point matrix (after centering)
-    let mut centered_points = points.to_owned();
+    let mut centeredpoints = points.to_owned();
 
-    // Center the _points
+    // Center the points
     for j in 0..dim {
         let mean = points.column(j).mean().unwrap_or(F::zero());
-        for i in 0..n_points {
-            centered_points[[i, j]] -= mean;
+        for i in 0..npoints {
+            centeredpoints[[i, j]] -= mean;
         }
     }
 
     // Try to assess rank using condition number
-    if dim <= 10 && n_points <= 100 {
+    if dim <= 10 && npoints <= 100 {
         // For small matrices, we can check more carefully
-        let gram_matrix = compute_gram_matrix(&centered_points.view());
+        let gram_matrix = compute_gram_matrix(&centeredpoints.view());
         let condition_report = assess_matrix_condition(&gram_matrix.view())?;
 
         // If condition number is very high, likely have linear dependencies
-        Ok(condition_report.condition_number
+        Ok(condition_report._conditionnumber
             > F::from_f64(1e14).unwrap_or_else(|| {
                 F::from(1e14 as f32).unwrap_or_else(|| F::from(100000000000000i64).unwrap())
             }))
@@ -1052,14 +1052,14 @@ fn compute_gram_matrix<F>(points: &ArrayView2<F>) -> Array2<F>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let n_points = points.nrows();
+    let npoints = points.nrows();
     let dim = points.ncols();
     let mut gram = Array2::zeros((dim, dim));
 
     for i in 0..dim {
         for j in 0..dim {
             let mut sum = F::zero();
-            for k in 0..n_points {
+            for k in 0..npoints {
                 sum += points[[k, i]] * points[[k, j]];
             }
             gram[[i, j]] = sum;
@@ -1081,13 +1081,13 @@ where
     let distance_based = _min_distance * machine_eps.sqrt();
 
     // Scale by _distance _ratio (more ill-conditioned data needs more regularization)
-    let ratio_factor = if distance_ratio
+    let ratio_factor = if distanceratio
         > F::from_f64(1e12).unwrap_or_else(|| {
             F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000i64).unwrap())
         }) {
         F::from_f64(1000.0)
             .unwrap_or_else(|| F::from(1000.0 as f32).unwrap_or_else(|| F::from(1000).unwrap()))
-    } else if distance_ratio
+    } else if distanceratio
         > F::from_f64(1e8)
             .unwrap_or_else(|| F::from(1e8 as f32).unwrap_or_else(|| F::from(100000000).unwrap()))
     {
@@ -1108,9 +1108,9 @@ where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
     let dim = points.ncols();
-    let n_points = points.nrows();
+    let npoints = points.nrows();
 
-    if n_points == 0 {
+    if npoints == 0 {
         return Ok(BoundaryAnalysis {
             boundary_has_issues: false,
             extrapolation_stability: StabilityLevel::Good,
@@ -1123,7 +1123,7 @@ where
     let mut min_coords = vec![F::infinity(); dim];
     let mut max_coords = vec![F::neg_infinity(); dim];
 
-    for i in 0..n_points {
+    for i in 0..npoints {
         for j in 0..dim {
             let coord = points[[i, j]];
             if coord < min_coords[j] {
@@ -1137,7 +1137,7 @@ where
 
     // Compute minimum distance to boundary
     let mut min_boundary_dist = F::infinity();
-    for i in 0..n_points {
+    for i in 0..npoints {
         for j in 0..dim {
             let coord = points[[i, j]];
             let dist_to_min = coord - min_coords[j];
@@ -1160,7 +1160,7 @@ where
                 .unwrap_or_else(|| F::from(10.0 as f32).unwrap_or_else(|| F::from(10).unwrap()));
 
     // Extrapolation stability heuristic
-    let extrapolation_stable = well_distributed && n_points > 2 * dim;
+    let extrapolation_stable = well_distributed && npoints > 2 * dim;
 
     Ok(BoundaryAnalysis {
         boundary_has_issues: !well_distributed,
@@ -1188,11 +1188,11 @@ where
     analysis.method_name = method_name.to_string();
 
     // Analyze points for numerical issues
-    analysis.points_analysis = analyze_data_points(points)?;
-    analysis.values_analysis = analyze_function_values(values)?;
+    analysis.pointsanalysis = analyze_datapoints(points)?;
+    analysis.valuesanalysis = analyze_function_values(values)?;
 
     // Check for interpolation-specific edge cases
-    analysis.boundary_analysis = analyze_boundary_conditions(points, values)?;
+    analysis.boundaryanalysis = analyze_boundary_conditions(points, values)?;
 
     // Assess overall stability
     analysis.overall_stability = assess_overall_interpolation_stability(&analysis);
@@ -1213,13 +1213,13 @@ where
     pub method_name: String,
 
     /// Analysis of input points
-    pub points_analysis: DataPointsAnalysis<F>,
+    pub pointsanalysis: DataPointsAnalysis<F>,
 
     /// Analysis of function values
-    pub values_analysis: FunctionValuesAnalysis<F>,
+    pub valuesanalysis: FunctionValuesAnalysis<F>,
 
     /// Analysis of boundary conditions and edge behavior
-    pub boundary_analysis: BoundaryAnalysis<F>,
+    pub boundaryanalysis: BoundaryAnalysis<F>,
 
     /// Overall stability assessment
     pub overall_stability: StabilityLevel,
@@ -1238,9 +1238,9 @@ where
     fn default() -> Self {
         Self {
             method_name: String::new(),
-            points_analysis: DataPointsAnalysis::default(),
-            values_analysis: FunctionValuesAnalysis::default(),
-            boundary_analysis: BoundaryAnalysis::default(),
+            pointsanalysis: DataPointsAnalysis::default(),
+            valuesanalysis: FunctionValuesAnalysis::default(),
+            boundaryanalysis: BoundaryAnalysis::default(),
             overall_stability: StabilityLevel::Good,
             recommendations: Vec::new(),
             analysis_timestamp: std::time::Instant::now(),
@@ -1373,19 +1373,19 @@ where
 
 /// Analyze data points for numerical issues
 #[allow(dead_code)]
-fn analyze_data_points<F>(points: &ArrayView2<F>) -> InterpolateResult<DataPointsAnalysis<F>>
+fn analyze_datapoints<F>(points: &ArrayView2<F>) -> InterpolateResult<DataPointsAnalysis<F>>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let n_points = points.nrows();
+    let npoints = points.nrows();
     let dimension = points.ncols();
 
-    if n_points == 0 {
+    if npoints == 0 {
         return Err(InterpolateError::empty_data("point analysis"));
     }
 
     let mut analysis = DataPointsAnalysis {
-        point_count: n_points,
+        point_count: npoints,
         dimension,
         ..Default::default()
     };
@@ -1395,12 +1395,12 @@ where
     let mut max_dist = F::zero();
     let mut has_duplicates = false;
 
-    for i in 0..n_points {
-        for j in (i + 1)..n_points {
-            let dist_sq = _points
+    for i in 0..npoints {
+        for j in (i + 1)..npoints {
+            let dist_sq = points
                 .row(i)
                 .iter()
-                .zip(_points.row(j).iter())
+                .zip(points.row(j).iter())
                 .map(|(&a, &b)| (a - b) * (a - b))
                 .fold(F::zero(), |acc, x| acc + x);
 
@@ -1425,12 +1425,12 @@ where
     analysis.has_duplicates = has_duplicates;
 
     // Check for collinearity (simplified for 2D case)
-    if dimension == 2 && n_points >= 3 {
-        analysis.are_collinear = check_collinearity_2d(_points);
+    if dimension == 2 && npoints >= 3 {
+        analysis.are_collinear = check_collinearity_2d(points);
     }
 
     // Calculate clustering score (simplified variance-based measure)
-    analysis.clustering_score = calculate_clustering_score(_points);
+    analysis.clustering_score = calculate_clustering_score(points);
 
     Ok(analysis)
 }
@@ -1494,10 +1494,10 @@ where
     let mut analysis = BoundaryAnalysis::default();
 
     // Simple boundary analysis (identify extreme points)
-    let n_points = points.nrows();
+    let npoints = points.nrows();
     let dimension = points.ncols();
 
-    if n_points < 3 {
+    if npoints < 3 {
         analysis.boundary_has_issues = true;
         analysis.extrapolation_stability = StabilityLevel::Poor;
         return Ok(analysis);
@@ -1512,12 +1512,12 @@ where
             .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(idx_)| idx);
+            .map(|(idx, _)| idx);
         let max_idx = column
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(idx_)| idx);
+            .map(|(idx, _)| idx);
 
         if let Some(idx) = min_idx {
             boundary_indices.push(idx);
@@ -1601,10 +1601,10 @@ where
         let mut min_dist = F::infinity();
         for j in 0..n {
             if i != j {
-                let dist_sq = _points
+                let dist_sq = points
                     .row(i)
                     .iter()
-                    .zip(_points.row(j).iter())
+                    .zip(points.row(j).iter())
                     .map(|(&a, &b)| (a - b) * (a - b))
                     .fold(F::zero(), |acc, x| acc + x);
                 let dist = dist_sq.sqrt();
@@ -1718,7 +1718,7 @@ where
     // Estimate noise using high-frequency components (first differences)
     let mut first_diffs = Vec::new();
     for i in 1..n {
-        first_diffs.push((_values[i] - values[i - 1]).abs());
+        first_diffs.push((values[i] - values[i - 1]).abs());
     }
 
     // Use median absolute deviation as robust noise estimate
@@ -1742,27 +1742,27 @@ where
     let mut stability_factors = Vec::new();
 
     // Data points stability factors
-    if analysis.points_analysis.has_duplicates {
+    if analysis.pointsanalysis.has_duplicates {
         stability_factors.push(StabilityLevel::Poor);
     }
-    if analysis.points_analysis.are_collinear {
+    if analysis.pointsanalysis.are_collinear {
         stability_factors.push(StabilityLevel::Marginal);
     }
-    if analysis.points_analysis.clustering_score > F::from(0.8).unwrap() {
+    if analysis.pointsanalysis.clustering_score > F::from(0.8).unwrap() {
         stability_factors.push(StabilityLevel::Marginal);
     }
 
     // Function values stability factors
-    if analysis.values_analysis.has_outliers {
+    if analysis.valuesanalysis.has_outliers {
         stability_factors.push(StabilityLevel::Marginal);
     }
-    if analysis.values_analysis.smoothness_score < F::from(0.3).unwrap() {
+    if analysis.valuesanalysis.smoothness_score < F::from(0.3).unwrap() {
         stability_factors.push(StabilityLevel::Poor);
     }
 
-    // Boundary _analysis factors
-    if analysis.boundary_analysis.boundary_has_issues {
-        stability_factors.push(_analysis.boundary_analysis.extrapolation_stability);
+    // Boundary analysis factors
+    if analysis.boundaryanalysis.boundary_has_issues {
+        stability_factors.push(analysis.boundaryanalysis.extrapolation_stability);
     }
 
     // Return worst stability level found
@@ -1781,50 +1781,50 @@ where
     let mut recommendations = Vec::new();
 
     // Data points recommendations
-    if analysis.points_analysis.has_duplicates {
+    if analysis.pointsanalysis.has_duplicates {
         recommendations.push("Remove duplicate or nearly duplicate data points".to_string());
     }
 
-    if analysis.points_analysis.are_collinear {
+    if analysis.pointsanalysis.are_collinear {
         recommendations.push("Add data points outside the current linear arrangement".to_string());
     }
 
-    if analysis.points_analysis.clustering_score > F::from(0.7).unwrap() {
+    if analysis.pointsanalysis.clustering_score > F::from(0.7).unwrap() {
         recommendations.push("Add data points in sparse regions for better coverage".to_string());
     }
 
-    if analysis.points_analysis.point_count < 5 {
+    if analysis.pointsanalysis.point_count < 5 {
         recommendations
             .push("Consider adding more data points for robust interpolation".to_string());
     }
 
     // Function values recommendations
-    if analysis.values_analysis.has_outliers {
+    if analysis.valuesanalysis.has_outliers {
         recommendations
             .push("Consider robust interpolation methods or outlier removal".to_string());
     }
 
-    if analysis.values_analysis.smoothness_score < F::from(0.5).unwrap() {
+    if analysis.valuesanalysis.smoothness_score < F::from(0.5).unwrap() {
         recommendations
             .push("Data appears noisy - consider smoothing or regularization".to_string());
     }
 
-    if analysis.values_analysis.noise_level
-        > analysis.values_analysis.value_range * F::from(0.1).unwrap()
+    if analysis.valuesanalysis.noise_level
+        > analysis.valuesanalysis.value_range * F::from(0.1).unwrap()
     {
         recommendations
             .push("High noise level detected - consider denoising preprocessing".to_string());
     }
 
     // Boundary recommendations
-    if analysis.boundary_analysis.boundary_has_issues {
+    if analysis.boundaryanalysis.boundary_has_issues {
         recommendations.push("Boundary conditions may cause extrapolation issues".to_string());
     }
 
     // Method-specific recommendations
     match analysis.method_name.as_str() {
         "rbf" | "enhanced_rbf" => {
-            if analysis.values_analysis.has_outliers {
+            if analysis.valuesanalysis.has_outliers {
                 recommendations.push(
                     "For RBF interpolation, consider robust kernels or outlier preprocessing"
                         .to_string(),
@@ -1832,7 +1832,7 @@ where
             }
         }
         "kriging" | "enhanced_kriging" => {
-            if analysis.points_analysis.clustering_score > F::from(0.8).unwrap() {
+            if analysis.pointsanalysis.clustering_score > F::from(0.8).unwrap() {
                 recommendations.push(
                     "Kriging works best with well-distributed points - consider spatial design"
                         .to_string(),
@@ -1840,7 +1840,7 @@ where
             }
         }
         "spline" | "bspline" => {
-            if !_analysis.values_analysis.is_monotonic && analysis.values_analysis.has_outliers {
+            if !analysis.valuesanalysis.is_monotonic && analysis.valuesanalysis.has_outliers {
                 recommendations.push(
                     "Consider constrained splines for monotonic or bounded interpolation"
                         .to_string(),
@@ -1948,10 +1948,10 @@ where
 
     for i in 0..n {
         for j in (i + 1)..n {
-            let sep_sq = _points
+            let sep_sq = points
                 .row(i)
                 .iter()
-                .zip(_points.row(j).iter())
+                .zip(points.row(j).iter())
                 .map(|(&a, &b)| (a - b) * (a - b))
                 .fold(F::zero(), |acc, x| acc + x);
 
@@ -2003,7 +2003,7 @@ mod tests {
         let report =
             assess_matrix_condition(&matrix.view()).expect("Failed to assess matrix condition");
 
-        assert_relative_eq!(report.condition_number, 1.0, epsilon = 1e-10);
+        assert_relative_eq!(report._conditionnumber, 1.0, epsilon = 1e-10);
         assert!(report.is_well_conditioned);
         assert_eq!(report.stability_level, StabilityLevel::Excellent);
         assert!(report.recommended_regularization.is_none());
@@ -2016,7 +2016,7 @@ mod tests {
 
         let report = assess_matrix_condition(&matrix.view()).unwrap();
 
-        assert!(report.condition_number > 1e12);
+        assert!(report._conditionnumber > 1e12);
         assert!(!report.is_well_conditioned);
         assert!(matches!(report.stability_level, StabilityLevel::Poor));
         assert!(report.recommended_regularization.is_some());
@@ -2203,7 +2203,7 @@ where
 
 /// Compute adaptive regularization parameter based on matrix characteristics
 #[allow(dead_code)]
-pub fn compute_adaptive_regularization<F>(_min_value: F, conditionestimate: F) -> F
+pub fn compute_adaptive_regularization<F>(min_value: F, conditionestimate: F) -> F
 where
     F: Float + FromPrimitive + Debug + Display,
 {
@@ -2213,18 +2213,18 @@ where
     let base_reg = eps.sqrt() * min_value.max(eps);
 
     // Scale by condition number _estimate
-    let condition_factor = if condition_estimate
+    let condition_factor = if conditionestimate
         > F::from_f64(1e15).unwrap_or_else(|| {
             F::from(1e15 as f32).unwrap_or_else(|| F::from(1000000000000000i64).unwrap())
         }) {
         F::from_f64(1000.0).unwrap_or_else(|| F::from(1000).unwrap())
-    } else if condition_estimate
+    } else if conditionestimate
         > F::from_f64(1e12).unwrap_or_else(|| {
             F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000i64).unwrap())
         })
     {
         F::from_f64(100.0).unwrap_or_else(|| F::from(100).unwrap())
-    } else if condition_estimate
+    } else if conditionestimate
         > F::from_f64(1e8)
             .unwrap_or_else(|| F::from(1e8 as f32).unwrap_or_else(|| F::from(100000000).unwrap()))
     {

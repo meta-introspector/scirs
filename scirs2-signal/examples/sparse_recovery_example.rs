@@ -3,12 +3,11 @@ use ndarray::{Array1, Array2};
 use rand::{seq::SliceRandom, Rng};
 use scirs2_linalg::vector_norm;
 use scirs2_signal::sparse::{
-use rand::seq::SliceRandom;
-use std::f64::consts::PI;
     compressed_sensing_recover, image_inpainting, measure_sparsity, random_sensing_matrix,
     recover_missing_samples, sparse_denoise, SparseRecoveryConfig, SparseRecoveryMethod,
     SparseTransform,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

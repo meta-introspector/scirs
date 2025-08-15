@@ -572,7 +572,7 @@ where
                 ..Default::default()
             };
 
-            let str_result = crate::decomposition:: str, _decomposition(ts, &_options)?;
+            let str_result = crate::decomposition::str_decomposition(ts, &_options)?;
 
             Ok(AutoDecompositionResult {
                 periods,
@@ -716,7 +716,7 @@ mod tests {
             seasonal_periods: vec![forced_period as f64],
             ..Default::default()
         };
-        let str_result = crate::decomposition:: str, _decomposition(&ts, &str_options).unwrap();
+        let str_result = crate::decomposition::str_decomposition(&ts, &str_options).unwrap();
         assert_eq!(str_result.trend.len(), ts.len());
         assert_eq!(str_result.seasonal_components.len(), 1);
 

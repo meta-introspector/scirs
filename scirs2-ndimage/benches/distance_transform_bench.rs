@@ -5,7 +5,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array2, Array3, IxDyn};
-use scirs2__ndimage::morphology::{distance_transform_bf, distance_transform_edt};
+use scirs2_ndimage::morphology::{distance_transform_bf, distance_transform_edt};
 
 #[allow(dead_code)]
 fn create_test_pattern_2d(rows: usize, cols: usize) -> Array2<bool> {
@@ -130,8 +130,8 @@ fn bench_distance_transform_3d(c: &mut Criterion) {
 }
 
 #[allow(dead_code)]
-fn bench_distance_metrics(c: &mut Criterion) {
-    let mut group = c.benchmark_group("distance_metrics");
+fn bench_distancemetrics(c: &mut Criterion) {
+    let mut group = c.benchmark_group("distancemetrics");
 
     let input = create_test_pattern_2d(100, 100);
     let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
@@ -228,7 +228,7 @@ criterion_group!(
     distance_transform_benches,
     bench_distance_transform_2d,
     bench_distance_transform_3d,
-    bench_distance_metrics,
+    bench_distancemetrics,
     bench_sampling_effects,
     bench_return_modes
 );

@@ -23,7 +23,7 @@
 //!
 //! ```
 //! use ndarray::{Array2, array};
-//! use scirs2__ndimage::morphology::simple_morph::binary_erosion_2d;
+//! use scirs2_ndimage::morphology::simple_morph::binary_erosion_2d;
 //!
 //! // Create a binary image
 //! let input = array![[false, true, true],
@@ -52,10 +52,10 @@ mod grayscale;
 // Public re-exports
 pub use binary::*;
 pub use connected::*;
-pub use distance__transform::*;
-pub use distance_transform__optimized::*;
+pub use distance_transform::*;
+pub use distance_transform_optimized::*;
 pub use grayscale::*;
-pub use morphology__optimized::*;
+pub use morphology_optimized::*;
 pub use structuring::*;
 pub use utils::*;
 

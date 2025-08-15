@@ -41,7 +41,7 @@ use scirs2_core::parallel_ops;
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2__ndimage::filters::{uniform_filter, BorderMode};
+/// use scirs2_ndimage::filters::{uniform_filter, BorderMode};
 ///
 /// let input = array![[1.0, 2.0, 3.0],
 ///                     [4.0, 5.0, 6.0],
@@ -622,7 +622,8 @@ where
 fn uniform_filter_nd_general<T, D>(
     input: &Array<T, D>,
     size: &[usize],
-    mode: &BorderMode, origin: &[isize],
+    mode: &BorderMode,
+    origin: &[isize],
     pad_width: &[(usize, usize)],
     norm_factor: T,
 ) -> NdimageResult<Array<T, D>>
@@ -653,13 +654,7 @@ where
     #[cfg(feature = "parallel")]
     {
         if total_elements > 10000 {
-            return uniform_filter_nd_parallel(
-                input,
-                &padded_input,
-                size,
-                norm_factor,
-                inputshape,
-            );
+            return uniform_filter_nd_parallel(input, &padded_input, size, norm_factor, inputshape);
         }
     }
 
@@ -818,7 +813,7 @@ where
         .collect();
 
     // Convert results back to n-dimensional array
-    let output = Array::fromshape_vec(_input.raw_dim(), results)
+    let output = Array::from_shape_vec(_input.raw_dim(), results)
         .map_err(|_| NdimageError::DimensionError("Failed to create output array".into()))?;
 
     Ok(output)
@@ -1117,7 +1112,8 @@ where
 #[allow(dead_code)]
 pub fn uniform_filter_chunked<T>(
     input: &Array2<T>,
-    size: &[usize], _chunk_size: usize,
+    size: &[usize],
+    _chunk_size: usize,
     mode: Option<BorderMode>,
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array2<T>>
@@ -1224,7 +1220,8 @@ where
 #[allow(dead_code)]
 pub fn uniform_filter_chunked<T>(
     input: &Array2<T>,
-    size: &[usize], _chunk_size: usize,
+    size: &[usize],
+    _chunk_size: usize,
     mode: Option<BorderMode>,
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array2<T>>

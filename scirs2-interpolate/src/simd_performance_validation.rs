@@ -139,7 +139,7 @@ pub struct ValidationResult<T: InterpolationFloat> {
     /// Test identifier
     pub test_name: String,
     /// Data size tested
-    pub data_size: usize,
+    pub datasize: usize,
     /// Operation type (RBF evaluation, distance matrix, etc.)
     pub operation: SimdOperation,
     /// Instruction set used
@@ -404,15 +404,15 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
         let batch_sizes = [10, 100, 1000];
 
         for &batch_size in &batch_sizes {
-            for &data_size in &self.config.test_sizes.clone() {
-                if data_size > 10_000 {
+            for &datasize in &self.config.test_sizes.clone() {
+                if datasize > 10_000 {
                     continue; // Limit for batch operations
                 }
 
-                let test_name = format!("batch_eval_batch_{}_data_{}", batch_size, data_size);
+                let test_name = format!("batch_eval_batch_{}_data_{}", batch_size, datasize);
                 println!("Validating: {}", test_name);
 
-                let result = self.validate_batch_evaluation(batch_size, data_size)?;
+                let result = self.validate_batch_evaluation(batch_size, datasize)?;
                 self.results.push(result);
             }
         }
@@ -482,7 +482,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
 
         Ok(ValidationResult {
             test_name: format!("rbf_{:?}_size_{}", kernel, size),
-            data_size: size,
+            datasize: size,
             operation: SimdOperation::RbfEvaluation {
                 kernel,
                 epsilon: epsilon.to_f64().unwrap_or(1.0),
@@ -526,7 +526,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
 
         Ok(ValidationResult {
             test_name: format!("distance_matrix_size_{}", size),
-            data_size: size,
+            datasize: size,
             operation: SimdOperation::DistanceMatrix,
             instruction_set: self.get_active_instruction_set(),
             correctness,
@@ -574,7 +574,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
 
         Ok(ValidationResult {
             test_name: format!("knn_search_k_{}_size_{}", k, size),
-            data_size: size,
+            datasize: size,
             operation: SimdOperation::KnnSearch { k },
             instruction_set: self.get_active_instruction_set(),
             correctness,
@@ -588,7 +588,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
     fn validate_batch_evaluation(
         &self,
         batch_size: usize,
-        data_size: usize,
+        datasize: usize,
     ) -> InterpolateResult<ValidationResult<T>> {
         let points = self.generate_test_points(batch_size, 3)?;
 
@@ -615,11 +615,11 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
 
         let performance =
             self.calculate_performance_metrics(simd_timing, scalar_timing, batch_size);
-        let memory_usage = self.estimate_memory_usage(data_size, 3);
+        let memory_usage = self.estimate_memory_usage(datasize, 3);
 
         Ok(ValidationResult {
-            test_name: format!("batch_eval_batch_{}_data_{}", batch_size, data_size),
-            data_size,
+            test_name: format!("batch_eval_batch_{}_data_{}", batch_size, datasize),
+            datasize,
             operation: SimdOperation::BatchEvaluation { batch_size },
             instruction_set: self.get_active_instruction_set(),
             correctness,
@@ -648,8 +648,8 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
 
     /// Generate test coefficients
     fn generate_test_coefficients(&self, ncoefficients: usize) -> InterpolateResult<Vec<T>> {
-        Ok((0..n_coefficients)
-            .map(|i| T::from_f64(1.0 + (i as f64) / (n_coefficients as f64)).unwrap())
+        Ok((0..ncoefficients)
+            .map(|i| T::from_f64(1.0 + (i as f64) / (ncoefficients as f64)).unwrap())
             .collect())
     }
 
@@ -880,7 +880,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
     #[allow(dead_code)]
     fn validate_knn_correctness(
         &self,
-        _scalar_result: &[(usize, T)],
+        scalar_result: &[(usize, T)],
         _simd_result: &[(usize, T)],
     ) -> InterpolateResult<CorrectnessResult<T>> {
         // For k-NN, we use relaxed validation since exact ordering may differ
@@ -938,7 +938,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
     /// Estimate memory usage for an operation
     fn estimate_memory_usage(&self, datasize: usize, dimensions: usize) -> MemoryUsageResult {
         let element_size = std::mem::size_of::<T>();
-        let estimated_peak = data_size * dimensions * element_size * 2; // Input + output
+        let estimated_peak = datasize * dimensions * element_size * 2; // Input + output
 
         MemoryUsageResult {
             peak_memory_bytes: estimated_peak,
@@ -960,8 +960,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
             brand: "Unknown CPU".to_string(),
             architecture: std::env::consts::ARCH.to_string(),
             logical_cores: num_cpus::get(),
-            physical_cores: num,
-            _cpus: get_physical(),
+            physical_cores: num_cpus::get_physical(),
             cache_sizes: vec![32_768, 262_144, 8_388_608], // Typical L1, L2, L3 sizes
             base_frequency: None,
         }

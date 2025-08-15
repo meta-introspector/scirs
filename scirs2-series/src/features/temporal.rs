@@ -684,7 +684,7 @@ where
         // Calculate LID using the maximum likelihood estimator
         let mut sum = F::zero();
         for j in 0..k {
-            if distances[j] > F::zero() && distances[k - 1] >, F::zero() {
+            if distances[j] > F::zero() && distances[k - 1] > F::zero() {
                 sum = sum + (distances[k - 1] / distances[j]).ln();
             }
         }

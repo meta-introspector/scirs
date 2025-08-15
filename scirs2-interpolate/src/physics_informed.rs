@@ -41,8 +41,8 @@
 //! ).unwrap();
 //!
 //! // Evaluate while respecting physical constraints
-//! let x_new = Array1::linspace(0.0, 10.0, 101);
-//! let y_new = interpolator.evaluate(&x_new.view()).unwrap();
+//! let xnew = Array1::linspace(0.0, 10.0, 101);
+//! let y_new = interpolator.evaluate(&xnew.view()).unwrap();
 //! ```
 
 use crate::constrained::{ConstrainedSpline, Constraint, ConstraintType};
@@ -279,7 +279,7 @@ where
 
     /// Set maximum optimization iterations
     pub fn with_max_iterations(mut self, maxiter: usize) -> Self {
-        self.config.max_iterations = max_iter;
+        self.config.max_iterations = maxiter;
         self
     }
 
@@ -287,24 +287,24 @@ where
     ///
     /// # Arguments
     ///
-    /// * `x_new` - Points at which to evaluate the interpolation
+    /// * `xnew` - Points at which to evaluate the interpolation
     ///
     /// # Returns
     ///
     /// `PhysicsInformedResult` containing interpolated values and constraint metrics
     pub fn evaluate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<PhysicsInformedResult<T>> {
         // Start with constrained spline evaluation
-        let initial_values = self.constrained_spline.evaluate_array(x_new)?;
+        let initial_values = self.constrained_spline.evaluate_array(xnew)?;
 
         // Apply physics corrections (positivity, monotonicity, etc.)
-        let physics_corrected = self.apply_physics_corrections(&initial_values, x_new)?;
+        let physics_corrected = self.apply_physics_corrections(&initial_values, xnew)?;
 
         // Apply conservation law corrections
-        let corrected_values = self.apply_conservation_corrections(&physics_corrected, x_new)?;
+        let corrected_values = self.apply_conservation_corrections(&physics_corrected, xnew)?;
 
         // Check constraint satisfaction
-        let constraint_violations = self.check_constraint_violations(&corrected_values, x_new)?;
-        let conservation_errors = self.check_conservation_errors(&corrected_values, x_new)?;
+        let constraint_violations = self.check_constraint_violations(&corrected_values, xnew)?;
+        let conservation_errors = self.check_conservation_errors(&corrected_values, xnew)?;
 
         // Calculate penalty cost
         let penalty_cost =
@@ -333,9 +333,9 @@ where
     /// This method uses an iterative approach to better satisfy constraints
     pub fn evaluate_with_iteration(
         &self,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<PhysicsInformedResult<T>> {
-        let mut current_values = self.constrained_spline.evaluate_array(x_new)?;
+        let mut current_values = self.constrained_spline.evaluate_array(xnew)?;
         let mut best_penalty = T::infinity();
         let mut best_values = current_values.clone();
         let mut iterations_used = 0;
@@ -344,14 +344,14 @@ where
             iterations_used = iter + 1;
 
             // Apply conservation corrections
-            current_values = self.apply_conservation_corrections(&current_values, x_new)?;
+            current_values = self.apply_conservation_corrections(&current_values, xnew)?;
 
             // Apply positivity and monotonicity corrections
-            current_values = self.apply_physics_corrections(&current_values, x_new)?;
+            current_values = self.apply_physics_corrections(&current_values, xnew)?;
 
             // Check constraint satisfaction
-            let constraint_violations = self.check_constraint_violations(&current_values, x_new)?;
-            let conservation_errors = self.check_conservation_errors(&current_values, x_new)?;
+            let constraint_violations = self.check_constraint_violations(&current_values, xnew)?;
+            let conservation_errors = self.check_conservation_errors(&current_values, xnew)?;
 
             let penalty_cost =
                 self.calculate_penalty_cost(&constraint_violations, &conservation_errors)?;
@@ -378,8 +378,8 @@ where
         }
 
         // Final constraint check on best solution
-        let constraint_violations = self.check_constraint_violations(&best_values, x_new)?;
-        let conservation_errors = self.check_conservation_errors(&best_values, x_new)?;
+        let constraint_violations = self.check_constraint_violations(&best_values, xnew)?;
+        let conservation_errors = self.check_conservation_errors(&best_values, xnew)?;
         let constraints_satisfied = constraint_violations
             .values()
             .all(|&v| v < self.config.constraint_tolerance)
@@ -449,7 +449,7 @@ where
     fn apply_conservation_corrections(
         &self,
         values: &Array1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
         let mut corrected_values = values.clone();
 
@@ -457,11 +457,11 @@ where
             match conservation_law {
                 ConservationLaw::MassConservation { total_mass } => {
                     corrected_values =
-                        self.apply_mass_conservation(&corrected_values, x_new, *total_mass)?;
+                        self.apply_mass_conservation(&corrected_values, xnew, *total_mass)?;
                 }
                 ConservationLaw::EnergyConservation { total_energy } => {
                     corrected_values =
-                        self.apply_energy_conservation(&corrected_values, x_new, *total_energy)?;
+                        self.apply_energy_conservation(&corrected_values, xnew, *total_energy)?;
                 }
                 ConservationLaw::GenericConservation {
                     conserved_quantity,
@@ -470,7 +470,7 @@ where
                 } => {
                     corrected_values = self.apply_generic_conservation(
                         &corrected_values,
-                        x_new,
+                        xnew,
                         *conserved_quantity,
                         weight_function.as_ref(),
                     )?;
@@ -489,17 +489,17 @@ where
     fn apply_mass_conservation(
         &self,
         values: &Array1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
         target_mass: T,
     ) -> InterpolateResult<Array1<T>> {
-        if x_new.len() < 2 {
+        if xnew.len() < 2 {
             return Ok(values.clone());
         }
 
         // Calculate current integral (_mass) using trapezoidal rule
         let mut current_mass = T::zero();
-        for i in 0..x_new.len() - 1 {
-            let dx = x_new[i + 1] - x_new[i];
+        for i in 0..xnew.len() - 1 {
+            let dx = xnew[i + 1] - xnew[i];
             let avg_value = (values[i] + values[i + 1]) / T::from(2.0).unwrap();
             current_mass += avg_value * dx;
         }
@@ -507,7 +507,7 @@ where
         // Apply uniform scaling to conserve _mass with improved robustness
         if current_mass.abs() < T::from(1e-12).unwrap() {
             // If current _mass is essentially zero, create a uniform distribution
-            let domain_width = x_new[x_new.len() - 1] - x_new[0];
+            let domain_width = xnew[xnew.len() - 1] - xnew[0];
             let uniform_value = target_mass / domain_width;
             Ok(Array1::from_elem(values.len(), uniform_value))
         } else if current_mass > T::zero() {
@@ -519,7 +519,7 @@ where
             Ok(values * bounded_scaling)
         } else {
             // If current _mass is negative, redistribute to achieve target _mass
-            let domain_width = x_new[x_new.len() - 1] - x_new[0];
+            let domain_width = xnew[xnew.len() - 1] - xnew[0];
             let uniform_value = target_mass / domain_width;
             Ok(Array1::from_elem(
                 values.len(),
@@ -532,17 +532,17 @@ where
     fn apply_energy_conservation(
         &self,
         values: &Array1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
         target_energy: T,
     ) -> InterpolateResult<Array1<T>> {
-        if x_new.len() < 2 {
+        if xnew.len() < 2 {
             return Ok(values.clone());
         }
 
         // Calculate current _energy (integral of v^2)
         let mut current_energy = T::zero();
-        for i in 0..x_new.len() - 1 {
-            let dx = x_new[i + 1] - x_new[i];
+        for i in 0..xnew.len() - 1 {
+            let dx = xnew[i + 1] - xnew[i];
             let avg_energy =
                 (values[i] * values[i] + values[i + 1] * values[i + 1]) / T::from(2.0).unwrap();
             current_energy += avg_energy * dx;
@@ -551,7 +551,7 @@ where
         // Apply scaling to achieve target _energy
         if current_energy.abs() < T::from(1e-12).unwrap() {
             // If current _energy is essentially zero, create a uniform distribution
-            let domain_width = x_new[x_new.len() - 1] - x_new[0];
+            let domain_width = xnew[xnew.len() - 1] - xnew[0];
             let uniform_magnitude = (target_energy / domain_width).sqrt();
             Ok(Array1::from_elem(values.len(), uniform_magnitude))
         } else if current_energy > T::zero() {
@@ -563,7 +563,7 @@ where
             Ok(values * bounded_scaling)
         } else {
             // If current _energy is negative (shouldn't happen), use fallback
-            let domain_width = x_new[x_new.len() - 1] - x_new[0];
+            let domain_width = xnew[xnew.len() - 1] - xnew[0];
             let uniform_magnitude = (target_energy / domain_width).sqrt();
             Ok(Array1::from_elem(values.len(), uniform_magnitude))
         }
@@ -573,11 +573,11 @@ where
     fn apply_generic_conservation(
         &self,
         values: &Array1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
         target_quantity: T,
         weight_function: Option<&Array1<T>>,
     ) -> InterpolateResult<Array1<T>> {
-        if x_new.len() < 2 {
+        if xnew.len() < 2 {
             return Ok(values.clone());
         }
 
@@ -594,14 +594,14 @@ where
         };
 
         // Use mass conservation logic for generic conservation
-        self.apply_mass_conservation(&weighted_values, x_new, target_quantity)
+        self.apply_mass_conservation(&weighted_values, xnew, target_quantity)
     }
 
     /// Apply physics corrections for positivity and other constraints
     fn apply_physics_corrections(
         &self,
         values: &Array1<T>,
-        _x_new: &ArrayView1<T>,
+        _xnew: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
         let mut corrected_values = values.clone();
 
@@ -668,9 +668,9 @@ where
     fn check_constraint_violations(
         &self,
         values: &Array1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<HashMap<String, T>> {
-        let mut violations = HashMap::_new();
+        let mut violations = HashMap::new();
 
         for (i, constraint) in self.config.constraints.iter().enumerate() {
             let violation_key = format!("constraint_{}", i);
@@ -703,7 +703,7 @@ where
                     let mut min_distance = T::infinity();
                     let mut closest_value = values[0];
 
-                    for (j, &x_val) in x_new.iter().enumerate() {
+                    for (j, &x_val) in xnew.iter().enumerate() {
                         let distance = (x_val - *x_loc).abs();
                         if distance < min_distance {
                             min_distance = distance;
@@ -737,21 +737,21 @@ where
     fn check_conservation_errors(
         &self,
         values: &Array1<T>,
-        x_new: &ArrayView1<T>,
+        xnew: &ArrayView1<T>,
     ) -> InterpolateResult<HashMap<String, T>> {
-        let mut errors = HashMap::_new();
+        let mut errors = HashMap::new();
 
         for (i, conservation_law) in self.config.conservation_laws.iter().enumerate() {
             let error_key = format!("conservation_{}", i);
 
             let error = match conservation_law {
                 ConservationLaw::MassConservation { total_mass } => {
-                    let current_mass = self.calculate_integral(values, x_new)?;
+                    let current_mass = self.calculate_integral(values, xnew)?;
                     (current_mass - *total_mass).abs()
                 }
                 ConservationLaw::EnergyConservation { total_energy } => {
                     let energy_values = values.mapv(|v| v * v);
-                    let current_energy = self.calculate_integral(&energy_values, x_new)?;
+                    let current_energy = self.calculate_integral(&energy_values, xnew)?;
                     (current_energy - *total_energy).abs()
                 }
                 ConservationLaw::GenericConservation {
@@ -764,7 +764,7 @@ where
                     } else {
                         values.clone()
                     };
-                    let current_quantity = self.calculate_integral(&weighted_values, x_new)?;
+                    let current_quantity = self.calculate_integral(&weighted_values, xnew)?;
                     (current_quantity - *conserved_quantity).abs()
                 }
                 _ => T::zero(),
@@ -955,12 +955,12 @@ mod tests {
         let interpolator =
             make_mass_conserving_interpolator(&x.view(), &y.view(), total_mass).unwrap();
 
-        let x_new = Array1::linspace(0.0, 1.0, 11); // Use fewer points for stability
-        let result = interpolator.evaluate_with_iteration(&x_new.view()).unwrap();
+        let xnew = Array1::linspace(0.0, 1.0, 11); // Use fewer points for stability
+        let result = interpolator.evaluate_with_iteration(&xnew.view()).unwrap();
 
         // Check that mass is approximately conserved with generous tolerance
         let calculated_mass = interpolator
-            .calculate_integral(&result.values, &x_new.view())
+            .calculate_integral(&result.values, &xnew.view())
             .unwrap();
 
         // Use relative error check instead of absolute
@@ -988,8 +988,8 @@ mod tests {
         let interpolator =
             PhysicsInformedInterpolator::new(&x.view(), &y.view(), constraints).unwrap();
 
-        let x_new = Array1::linspace(0.0, 3.0, 31);
-        let result = interpolator.evaluate_with_iteration(&x_new.view()).unwrap();
+        let xnew = Array1::linspace(0.0, 3.0, 31);
+        let result = interpolator.evaluate_with_iteration(&xnew.view()).unwrap();
 
         // Check that all values are positive
         for &value in result.values.iter() {
@@ -1005,8 +1005,8 @@ mod tests {
         let interpolator =
             make_monotonic_physics_interpolator(&x.view(), &y.view(), true, false).unwrap();
 
-        let x_new = Array1::linspace(0.0, 5.0, 51);
-        let result = interpolator.evaluate_with_iteration(&x_new.view()).unwrap();
+        let xnew = Array1::linspace(0.0, 5.0, 51);
+        let result = interpolator.evaluate_with_iteration(&xnew.view()).unwrap();
 
         // Check that the result is approximately monotonic increasing
         let mut violations = 0;
@@ -1036,8 +1036,8 @@ mod tests {
             make_smooth_physics_interpolator(&x.view(), &y.view(), 10.0, boundary_conditions)
                 .unwrap();
 
-        let x_new = Array1::from_vec(vec![0.0, 2.0]); // Test at boundary and middle
-        let result = interpolator.evaluate(&x_new.view()).unwrap();
+        let xnew = Array1::from_vec(vec![0.0, 2.0]); // Test at boundary and middle
+        let result = interpolator.evaluate(&xnew.view()).unwrap();
 
         // Check that boundary condition is approximately satisfied
         // Allow generous tolerance due to physics-informed corrections
@@ -1068,8 +1068,8 @@ mod tests {
             .unwrap()
             .with_conservation_laws(conservation_laws);
 
-        let x_new = Array1::linspace(0.0, 1.0, 21);
-        let result = interpolator.evaluate(&x_new.view()).unwrap();
+        let xnew = Array1::linspace(0.0, 1.0, 21);
+        let result = interpolator.evaluate(&xnew.view()).unwrap();
 
         // Check that energy conservation error is small
         assert!(result.conservation_errors.contains_key("conservation_0"));
@@ -1099,8 +1099,8 @@ mod tests {
             .with_conservation_laws(conservation_laws)
             .with_max_iterations(50);
 
-        let x_new = Array1::linspace(0.0, 2.0, 21);
-        let result = interpolator.evaluate_with_iteration(&x_new.view()).unwrap();
+        let xnew = Array1::linspace(0.0, 2.0, 21);
+        let result = interpolator.evaluate_with_iteration(&xnew.view()).unwrap();
 
         // Check that multiple constraints are reasonably satisfied
         let total_violations: f64 = result

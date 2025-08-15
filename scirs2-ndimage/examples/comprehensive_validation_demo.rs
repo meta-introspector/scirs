@@ -4,7 +4,7 @@
 //! benchmarking modules to ensure scirs2-ndimage meets SciPy compatibility
 //! and performance standards.
 
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     api_compatibility_verification::{ApiCompatibilityTester, CompatibilityConfig},
     comprehensive_examples::{validate_all_examples, ExampleTutorial},
     comprehensive_scipy_validation::{SciPyValidationSuite, ValidationConfig},

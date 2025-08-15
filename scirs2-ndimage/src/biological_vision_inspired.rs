@@ -81,7 +81,7 @@ pub struct CorticalLayer {
     /// Top-down predictions
     pub top_down_predictions: Array3<f64>,
     /// Bottom-up features
-    pub bottom_up_features: Array3<f64>,
+    pub bottom_upfeatures: Array3<f64>,
     /// Prediction errors
     pub prediction_errors: Array3<f64>,
 }
@@ -124,7 +124,7 @@ pub struct Ommatidium {
     /// Photoreceptor response
     pub response: f64,
     /// Temporal response history
-    pub response_history: VecDeque<f64>,
+    pub responsehistory: VecDeque<f64>,
 }
 
 /// Attention and saccade planning system
@@ -163,7 +163,7 @@ pub struct ColorConstancySystem {
     /// Surface reflectance estimates
     pub surface_reflectance: Array2<(f64, f64, f64)>,
     /// Adaptation state
-    pub adaptation_state: (f64, f64, f64),
+    pub adaptationstate: (f64, f64, f64),
     /// Color memory
     pub color_memory: Vec<(f64, f64, f64)>,
 }
@@ -198,7 +198,7 @@ where
                 height / (level + 1),
                 width / (level + 1),
             )),
-            bottom_up_features: Array3::zeros((
+            bottom_upfeatures: Array3::zeros((
                 num_features,
                 height / (level + 1),
                 width / (level + 1),
@@ -218,20 +218,14 @@ where
 
     // Forward pass through hierarchy
     for level in 1..config.cortical_layers {
-        forward_pass_cortical_layer(
-            &mut cortical_layers[level],
-            &cortical_layers[level - 1],
-            config,
-        )?;
+        let (lower, upper) = cortical_layers.split_at_mut(level);
+        forward_pass_cortical_layer(&mut upper[0], &lower[level - 1], config)?;
     }
 
     // Backward pass with predictions
     for level in (0..config.cortical_layers - 1).rev() {
-        backward_pass_cortical_layer(
-            &mut cortical_layers[level],
-            &cortical_layers[level + 1],
-            config,
-        )?;
+        let (lower, upper) = cortical_layers.split_at_mut(level + 1);
+        backward_pass_cortical_layer(&mut lower[level], &upper[0], config)?;
     }
 
     // Apply lateral inhibition
@@ -435,19 +429,19 @@ where
 /// for robust color processing under varying illumination.
 #[allow(dead_code)]
 pub fn bio_inspired_color_constancy<T>(
-    color_image_sequence: &[Array3<T>],
+    colorimage_sequence: &[Array3<T>],
     config: &BiologicalVisionConfig,
 ) -> NdimageResult<ColorConstancySystem>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
-    if color_image_sequence.is_empty() {
+    if colorimage_sequence.is_empty() {
         return Err(NdimageError::InvalidInput(
             "Empty color _sequence".to_string(),
         ));
     }
 
-    let (height, width, channels) = color_image_sequence[0].dim();
+    let (height, width, channels) = colorimage_sequence[0].dim();
     if channels != 3 {
         return Err(NdimageError::InvalidInput(
             "Expected RGB images".to_string(),
@@ -457,23 +451,23 @@ where
     let mut color_system = ColorConstancySystem {
         illumination_estimates: Array2::from_elem((height, width), (1.0, 1.0, 1.0)),
         surface_reflectance: Array2::from_elem((height, width), (0.5, 0.5, 0.5)),
-        adaptation_state: (1.0, 1.0, 1.0),
+        adaptationstate: (1.0, 1.0, 1.0),
         color_memory: Vec::new(),
     };
 
     // Process color _sequence
-    for color_image in color_image_sequence {
+    for colorimage in colorimage_sequence {
         // Estimate illumination using biological algorithms
-        estimate_illumination(&mut color_system, color_image, config)?;
+        estimate_illumination(&mut color_system, colorimage, config)?;
 
         // Adapt to illumination changes
         adapt_to_illumination(&mut color_system, config)?;
 
         // Compute surface reflectance
-        compute_surface_reflectance(&mut color_system, color_image)?;
+        compute_surface_reflectance(&mut color_system, colorimage)?;
 
         // Update color memory
-        update_color_memory(&mut color_system, color_image, config)?;
+        update_color_memory(&mut color_system, colorimage, config)?;
     }
 
     Ok(color_system)
@@ -504,7 +498,7 @@ where
     for &target in initial_targets {
         let track = MotionTrack {
             current_position: target,
-            position_history: VecDeque::from(vec![target]),
+            positionhistory: VecDeque::from(vec![target]),
             velocity_estimate: (0.0, 0.0),
             acceleration_estimate: (0.0, 0.0),
             confidence: 1.0,
@@ -543,7 +537,7 @@ where
 #[derive(Debug, Clone)]
 pub struct MotionTrack {
     pub current_position: (usize, usize),
-    pub position_history: VecDeque<(usize, usize)>,
+    pub positionhistory: VecDeque<(usize, usize)>,
     pub velocity_estimate: (f64, f64),
     pub acceleration_estimate: (f64, f64),
     pub confidence: f64,
@@ -579,7 +573,7 @@ where
                         feature_idx as f64 * PI / layer.feature_maps.len_of(Axis(0)) as f64;
                     let response = pixel_value * orientation.cos();
 
-                    layer.bottom_up_features[(feature_idx, y, x)] = response;
+                    layer.bottom_upfeatures[(feature_idx, y, x)] = response;
                     layer.feature_maps[(feature_idx, y, x)] = response;
                 }
             }
@@ -625,7 +619,7 @@ fn forward_pass_cortical_layer(
                 }
 
                 if count > 0 {
-                    current_layer.bottom_up_features[(feature_idx, y, x)] =
+                    current_layer.bottom_upfeatures[(feature_idx, y, x)] =
                         pooled_response / count as f64;
                     current_layer.feature_maps[(feature_idx, y, x)] =
                         pooled_response / count as f64;
@@ -666,7 +660,7 @@ fn backward_pass_cortical_layer(
                         prediction / next_layer.feature_maps.len_of(Axis(0)) as f64;
 
                     // Compute prediction error
-                    let error = current_layer.bottom_up_features[(feature_idx, y, x)]
+                    let error = current_layer.bottom_upfeatures[(feature_idx, y, x)]
                         - current_layer.top_down_predictions[(feature_idx, y, x)];
                     current_layer.prediction_errors[(feature_idx, y, x)] = error;
                 }
@@ -686,7 +680,7 @@ fn apply_lateral_inhibition(
     let height = layer.feature_maps.len_of(Axis(1));
     let width = layer.feature_maps.len_of(Axis(2));
 
-    let mut inhibited_features = layer.feature_maps.clone();
+    let mut inhibitedfeatures = layer.feature_maps.clone();
 
     for feature_idx in 0..num_features {
         for y in 1..height - 1 {
@@ -708,12 +702,12 @@ fn apply_lateral_inhibition(
                 // Apply inhibition
                 let inhibited_response =
                     center_response - config.lateral_inhibition_strength * inhibition / 8.0;
-                inhibited_features[(feature_idx, y, x)] = inhibited_response.max(0.0);
+                inhibitedfeatures[(feature_idx, y, x)] = inhibited_response.max(0.0);
             }
         }
     }
 
-    layer.feature_maps = inhibited_features;
+    layer.feature_maps = inhibitedfeatures;
     Ok(())
 }
 
@@ -885,7 +879,7 @@ fn initialize_compound_eye(
             position: (radius * angle.cos(), radius * angle.sin()),
             optical_axis: (angle.cos(), angle.sin(), 0.0),
             response: 0.0,
-            response_history: VecDeque::new(),
+            responsehistory: VecDeque::new(),
         };
 
         ommatidia.push(ommatidium);
@@ -949,7 +943,10 @@ where
 
 #[allow(dead_code)]
 fn update_ommatidia_responses<T>(
-    _compound_eye: &mut CompoundEyeModel_current, _frame: &ArrayView2<T>, _previous_frame: &ArrayView2<T>, _config: &BiologicalVisionConfig,
+    _compound_eye: &mut CompoundEyeModel_current,
+    _frame: &ArrayView2<T>,
+    _previous_frame: &ArrayView2<T>,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -959,49 +956,58 @@ where
 
 #[allow(dead_code)]
 fn compute_motion_detection(
-    _compound_eye: &mut CompoundEyeModel, _config: &BiologicalVisionConfig,
+    _compound_eye: &mut CompoundEyeModel,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn detect_looming_objects(
-    _compound_eye: &mut CompoundEyeModel, _config: &BiologicalVisionConfig,
+    _compound_eye: &mut CompoundEyeModel,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_wide_field_neurons(
-    _compound_eye: &mut CompoundEyeModel, _config: &BiologicalVisionConfig,
+    _compound_eye: &mut CompoundEyeModel,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn add_feature_based_attention(
-    _attention_map: &mut Array2<f64>, _feature_map: &Array3<f64>, _weight: f64,
+    _attention_map: &mut Array2<f64>,
+    _feature_map: &Array3<f64>,
+    _weight: f64,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn apply_inhibition_of_return(
-    _attention_system: &mut AttentionSystem, _config: &BiologicalVisionConfig,
+    _attention_system: &mut AttentionSystem,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn plan_saccade_sequence(
-    _attention_system: &mut AttentionSystem, _config: &BiologicalVisionConfig,
+    _attention_system: &mut AttentionSystem,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn initialize_predictive_coding_system(
-    _height: usize, width: usize, _config: &BiologicalVisionConfig,
+    _height: usize,
+    width: usize,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<PredictiveCodingSystem> {
     Ok(PredictiveCodingSystem {
         prediction_models: Vec::new(),
@@ -1013,14 +1019,18 @@ fn initialize_predictive_coding_system(
 
 #[allow(dead_code)]
 fn generate_predictions(
-    _system: &mut PredictiveCodingSystem, time: usize, _config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem,
+    time: usize,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn compute_prediction_errors<T>(
-    _system: &mut PredictiveCodingSystem, image: &ArrayView2<T>, _config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem,
+    image: &ArrayView2<T>,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1030,28 +1040,33 @@ where
 
 #[allow(dead_code)]
 fn update_prediction_models(
-    _system: &mut PredictiveCodingSystem, config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem,
+    config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn estimate_prediction_confidence(
-    _system: &mut PredictiveCodingSystem, config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem,
+    config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn adapt_to_prediction_errors(
-    _system: &mut PredictiveCodingSystem, config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem,
+    config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn estimate_illumination<T>(
-    _color_system: &mut ColorConstancySystem_color, _image: &Array3<T>, _config: &BiologicalVisionConfig,
+    _color_system: &mut ColorConstancySystem_color,
+    image: &Array3<T>,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1061,14 +1076,16 @@ where
 
 #[allow(dead_code)]
 fn adapt_to_illumination(
-    _color_system: &mut ColorConstancySystem, _config: &BiologicalVisionConfig,
+    _color_system: &mut ColorConstancySystem,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn compute_surface_reflectance<T>(
-    _color_system: &mut ColorConstancySystem_color, _image: &Array3<T>,
+    _color_system: &mut ColorConstancySystem_color,
+    image: &Array3<T>,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1078,7 +1095,9 @@ where
 
 #[allow(dead_code)]
 fn update_color_memory<T>(
-    _color_system: &mut ColorConstancySystem_color, _image: &Array3<T>, _config: &BiologicalVisionConfig,
+    _color_system: &mut ColorConstancySystem_color,
+    image: &Array3<T>,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1088,7 +1107,9 @@ where
 
 #[allow(dead_code)]
 fn update_motion_estimates<T>(
-    _track: &mut MotionTrack, window: &[ArrayView2<T>], _config: &BiologicalVisionConfig,
+    _track: &mut MotionTrack,
+    window: &[ArrayView2<T>],
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1098,14 +1119,17 @@ where
 
 #[allow(dead_code)]
 fn predict_future_positions(
-    _track: &mut MotionTrack, config: &BiologicalVisionConfig,
+    _track: &mut MotionTrack,
+    config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_tracking_confidence<T>(
-    _track: &mut MotionTrack, window: &[ArrayView2<T>], _config: &BiologicalVisionConfig,
+    _track: &mut MotionTrack,
+    window: &[ArrayView2<T>],
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1115,7 +1139,10 @@ where
 
 #[allow(dead_code)]
 fn manage_tracks<T>(
-    _tracks: &mut Vec<MotionTrack>, _image_sequence: &[ArrayView2<T>], _window_start: usize, _config: &BiologicalVisionConfig,
+    _tracks: &mut Vec<MotionTrack>,
+    image_sequence: &[ArrayView2<T>],
+    _window_start: usize,
+    _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1146,7 +1173,7 @@ mod tests {
             receptive_field_size: 5,
             lateral_connections: Array2::zeros((16, 16)),
             top_down_predictions: Array3::zeros((16, 64, 64)),
-            bottom_up_features: Array3::zeros((16, 64, 64)),
+            bottom_upfeatures: Array3::zeros((16, 64, 64)),
             prediction_errors: Array3::zeros((16, 64, 64)),
         };
 
@@ -1158,7 +1185,7 @@ mod tests {
     #[test]
     fn test_hierarchical_cortical_processing() {
         let image =
-            Array2::fromshape_vec((32, 32), (0..1024).map(|x| x as f64 / 1024.0).collect())
+            Array2::from_shape_vec((32, 32), (0..1024).map(|x| x as f64 / 1024.0).collect())
                 .unwrap();
         let config = BiologicalVisionConfig::default();
 
@@ -1171,8 +1198,8 @@ mod tests {
     #[test]
     fn test_retinal_processing() {
         let image1 =
-            Array2::fromshape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect()).unwrap();
-        let image2 = Array2::fromshape_vec(
+            Array2::from_shape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect()).unwrap();
+        let image2 = Array2::from_shape_vec(
             (16, 16),
             (0..256).map(|x| (x + 10) as f64 / 256.0).collect(),
         )
@@ -1206,7 +1233,7 @@ mod tests {
     #[test]
     fn test_bio_inspired_attention() {
         let image =
-            Array2::fromshape_vec((32, 32), (0..1024).map(|x| x as f64 / 1024.0).collect())
+            Array2::from_shape_vec((32, 32), (0..1024).map(|x| x as f64 / 1024.0).collect())
                 .unwrap();
         let feature_maps = vec![Array3::zeros((8, 32, 32))];
         let config = BiologicalVisionConfig::default();
@@ -1222,7 +1249,7 @@ mod tests {
     fn test_motion_track_creation() {
         let track = MotionTrack {
             current_position: (10, 20),
-            position_history: VecDeque::from(vec![(8, 18), (9, 19), (10, 20)]),
+            positionhistory: VecDeque::from(vec![(8, 18), (9, 19), (10, 20)]),
             velocity_estimate: (1.0, 1.0),
             acceleration_estimate: (0.0, 0.0),
             confidence: 0.9,
@@ -1230,7 +1257,7 @@ mod tests {
         };
 
         assert_eq!(track.current_position, (10, 20));
-        assert_eq!(track.position_history.len(), 3);
+        assert_eq!(track.positionhistory.len(), 3);
         assert_eq!(track.predicted_positions.len(), 2);
         assert_eq!(track.confidence, 0.9);
     }
@@ -1238,7 +1265,7 @@ mod tests {
     #[test]
     fn test_advanced_retinal_circuits() {
         let image =
-            Array2::fromshape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect()).unwrap();
+            Array2::from_shape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect()).unwrap();
         let config = BiologicalVisionConfig::default();
 
         let advanced_retina = advanced_retinal_circuits(image.view(), &config).unwrap();
@@ -1251,15 +1278,15 @@ mod tests {
 
     #[test]
     fn test_binocular_stereo_processing() {
-        let left_image =
-            Array2::fromshape_vec((20, 20), (0..400).map(|x| x as f64 / 400.0).collect()).unwrap();
-        let right_image =
-            Array2::fromshape_vec((20, 20), (0..400).map(|x| (x + 2) as f64 / 400.0).collect())
+        let leftimage =
+            Array2::from_shape_vec((20, 20), (0..400).map(|x| x as f64 / 400.0).collect()).unwrap();
+        let rightimage =
+            Array2::from_shape_vec((20, 20), (0..400).map(|x| (x + 2) as f64 / 400.0).collect())
                 .unwrap();
         let config = BiologicalVisionConfig::default();
 
         let stereo_result =
-            binocular_stereo_processing(left_image.view(), right_image.view(), &config).unwrap();
+            binocular_stereo_processing(leftimage.view(), rightimage.view(), &config).unwrap();
 
         assert_eq!(stereo_result.disparity_map.dim(), (20, 20));
         assert_eq!(stereo_result.depth_map.dim(), (20, 20));
@@ -1269,8 +1296,8 @@ mod tests {
     #[test]
     fn test_visual_working_memory() {
         let images = vec![
-            Array2::fromshape_vec((8, 8), (0..64).map(|x| x as f64 / 64.0).collect()).unwrap(),
-            Array2::fromshape_vec((8, 8), (0..64).map(|x| (x + 10) as f64 / 64.0).collect())
+            Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64 / 64.0).collect()).unwrap(),
+            Array2::from_shape_vec((8, 8), (0..64).map(|x| (x + 10) as f64 / 64.0).collect())
                 .unwrap(),
         ];
         let config = BiologicalVisionConfig::default();
@@ -1346,7 +1373,7 @@ pub struct AdvancedRetinaModel {
     /// Approach-sensitive neurons
     pub approach_sensitive_neurons: Array2<f64>,
     /// Retinal adaptation state
-    pub adaptation_state: Array2<f64>,
+    pub adaptationstate: Array2<f64>,
 }
 
 /// Binocular stereo processing configuration
@@ -1457,7 +1484,7 @@ where
         local_edge_detectors: Array2::zeros((height, width)),
         object_motion_detectors: Array2::zeros((height, width)),
         approach_sensitive_neurons: Array2::zeros((height, width)),
-        adaptation_state: Array2::ones((height, width)),
+        adaptationstate: Array2::ones((height, width)),
     };
 
     // Process through specialized retinal circuits
@@ -1518,17 +1545,17 @@ where
 /// ocular dominance columns, and stereoscopic depth perception.
 #[allow(dead_code)]
 pub fn binocular_stereo_processing<T>(
-    left_image: ArrayView2<T>,
-    right_image: ArrayView2<T>,
+    leftimage: ArrayView2<T>,
+    rightimage: ArrayView2<T>,
     config: &BiologicalVisionConfig,
 ) -> NdimageResult<BinocularStereoResult>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
-    let (height, width) = left_image.dim();
+    let (height, width) = leftimage.dim();
     let binocular_config = BinocularConfig::default();
 
-    if right_image.dim() != (height, width) {
+    if rightimage.dim() != (height, width) {
         return Err(NdimageError::InvalidInput(
             "Left and right images must have same dimensions".to_string(),
         ));
@@ -1552,8 +1579,8 @@ where
 
         // Binocular correlation for this disparity
         compute_binocular_correlation(
-            &left_image,
-            &right_image,
+            &leftimage,
+            &rightimage,
             disparity,
             &mut stereo_result.binocular_neurons[disparity_idx],
             &binocular_config,
@@ -1589,8 +1616,8 @@ where
 
     // Compute ocular dominance
     compute_ocular_dominance(
-        &left_image,
-        &right_image,
+        &leftimage,
+        &rightimage,
         &mut stereo_result.ocular_dominance_map,
         &binocular_config,
     )?;
@@ -1635,14 +1662,14 @@ where
     // Process image _sequence through working memory
     for (t, image) in image_sequence.iter().enumerate() {
         // Encode new information
-        let encoded_features = encode_visual_features(image, config)?;
+        let encodedfeatures = encode_visualfeatures(image, config)?;
 
         // Determine which memory slot to use (competition)
-        let selected_slot = select_memory_slot(&encoded_features, &vwm_result, &vwm_config)?;
+        let selected_slot = select_memory_slot(&encodedfeatures, &vwm_result, &vwm_config)?;
 
         // Store in selected slot with capacity constraints
         store_in_memory_slot(
-            &encoded_features,
+            &encodedfeatures,
             selected_slot,
             &mut vwm_result,
             &vwm_config,
@@ -1658,7 +1685,7 @@ where
         update_precision_estimates(&mut vwm_result, &vwm_config)?;
 
         // Attention-based slot weighting
-        update_attention_weights(&mut vwm_result, &encoded_features, &vwm_config)?;
+        update_attention_weights(&mut vwm_result, &encodedfeatures, &vwm_config)?;
 
         // Memory decay and forgetting
         apply_memory_decay(&mut vwm_result, &vwm_config)?;
@@ -1725,50 +1752,47 @@ where
 /// that modify visual processing based on experience.
 #[allow(dead_code)]
 pub fn neural_plasticity_adaptation<T>(
-    image_history: &[ArrayView2<T>],
+    imagehistory: &[ArrayView2<T>],
     config: &BiologicalVisionConfig,
 ) -> NdimageResult<Array3<f64>>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
-    if image_history.is_empty() {
+    if imagehistory.is_empty() {
         return Err(NdimageError::InvalidInput(
-            "Empty image _history".to_string(),
+            "Empty image history".to_string(),
         ));
     }
 
-    let (height, width) = image_history[0].dim();
+    let (height, width) = imagehistory[0].dim();
     let num_adaptation_types = 4; // Short-term, medium-term, long-term, homeostatic
 
     let mut adaptation_maps = Array3::zeros((num_adaptation_types, height, width));
 
     // Short-term adaptation (seconds to minutes)
-    let short_term_window = image_history.len().min(10);
+    let short_term_window = imagehistory.len().min(10);
     if short_term_window > 1 {
-        let recent_images = &image_history[image_history.len() - short_term_window..];
-        compute_short_term_adaptation(
-            recent_images,
-            &mut adaptation_maps.slice_mut(s![0, .., ..]),
-        )?;
+        let recentimages = &imagehistory[imagehistory.len() - short_term_window..];
+        compute_short_term_adaptation(recentimages, &mut adaptation_maps.slice_mut(s![0, .., ..]))?;
     }
 
     // Medium-term adaptation (minutes to hours)
-    let medium_term_window = image_history.len().min(100);
+    let medium_term_window = imagehistory.len().min(100);
     if medium_term_window > 10 {
-        let medium_images = &image_history[image_history.len() - medium_term_window..];
+        let mediumimages = &imagehistory[imagehistory.len() - medium_term_window..];
         compute_medium_term_adaptation(
-            medium_images,
+            mediumimages,
             &mut adaptation_maps.slice_mut(s![1, .., ..]),
         )?;
     }
 
     // Long-term adaptation (hours to days)
-    if image_history.len() > 100 {
-        compute_long_term_adaptation(image_history, &mut adaptation_maps.slice_mut(s![2, .., ..]))?;
+    if imagehistory.len() > 100 {
+        compute_long_term_adaptation(imagehistory, &mut adaptation_maps.slice_mut(s![2, .., ..]))?;
     }
 
     // Homeostatic adaptation (maintaining overall activity balance)
-    compute_homeostatic_adaptation(image_history, &mut adaptation_maps.slice_mut(s![3, .., ..]))?;
+    compute_homeostatic_adaptation(imagehistory, &mut adaptation_maps.slice_mut(s![3, .., ..]))?;
 
     Ok(adaptation_maps)
 }
@@ -1901,10 +1925,10 @@ fn compute_local_edge_detection(
 
     // Sobel-like edge detection
     let sobel_x =
-        Array2::fromshape_vec((3, 3), vec![-1.0, 0.0, 1.0, -2.0, 0.0, 2.0, -1.0, 0.0, 1.0])
+        Array2::from_shape_vec((3, 3), vec![-1.0, 0.0, 1.0, -2.0, 0.0, 2.0, -1.0, 0.0, 1.0])
             .unwrap();
     let sobel_y =
-        Array2::fromshape_vec((3, 3), vec![-1.0, -2.0, -1.0, 0.0, 0.0, 0.0, 1.0, 2.0, 1.0])
+        Array2::from_shape_vec((3, 3), vec![-1.0, -2.0, -1.0, 0.0, 0.0, 0.0, 1.0, 2.0, 1.0])
             .unwrap();
 
     let mut gx = 0.0;
@@ -1975,7 +1999,7 @@ fn apply_retinal_adaptation(
     retina: &mut AdvancedRetinaModel,
     config: &AdvancedRetinalConfig,
 ) -> NdimageResult<()> {
-    let (height, width) = retina.adaptation_state.dim();
+    let (height, width) = retina.adaptationstate.dim();
 
     // Update adaptation state based on recent activity
     for y in 0..height {
@@ -1985,9 +2009,9 @@ fn apply_retinal_adaptation(
                 + retina.iprgc_responses[(y, x)];
 
             // Exponential adaptation
-            let current_adaptation = retina.adaptation_state[(y, x)];
+            let current_adaptation = retina.adaptationstate[(y, x)];
             let new_adaptation = current_adaptation * 0.95 + total_activity * 0.05;
-            retina.adaptation_state[(y, x)] = new_adaptation;
+            retina.adaptationstate[(y, x)] = new_adaptation;
 
             // Apply adaptation to all responses
             let adaptation_factor = 1.0 / (1.0 + new_adaptation * 0.5);
@@ -2024,8 +2048,8 @@ fn simulate_retinal_waves(
 
 #[allow(dead_code)]
 fn compute_binocular_correlation<T>(
-    left_image: &ArrayView2<T>,
-    right_image: &ArrayView2<T>,
+    leftimage: &ArrayView2<T>,
+    rightimage: &ArrayView2<T>,
     disparity: i32,
     output: &mut Array2<f64>,
     config: &BinocularConfig,
@@ -2033,7 +2057,7 @@ fn compute_binocular_correlation<T>(
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = left_image.dim();
+    let (height, width) = leftimage.dim();
     let half_rf = config.binocular_rf_size / 2;
 
     for y in half_rf..height - half_rf {
@@ -2055,8 +2079,8 @@ where
                     let rx = right_x - half_rf + dx;
 
                     if ly < height && lx < width && ry < height && rx < width {
-                        let left_val = left_image[(ly, lx)].to_f64().unwrap_or(0.0);
-                        let right_val = right_image[(ry, rx)].to_f64().unwrap_or(0.0);
+                        let left_val = leftimage[(ly, lx)].to_f64().unwrap_or(0.0);
+                        let right_val = rightimage[(ry, rx)].to_f64().unwrap_or(0.0);
 
                         left_rf += left_val;
                         right_rf += right_val;
@@ -2080,20 +2104,20 @@ where
 
 #[allow(dead_code)]
 fn compute_ocular_dominance<T>(
-    left_image: &ArrayView2<T>,
-    right_image: &ArrayView2<T>,
+    leftimage: &ArrayView2<T>,
+    rightimage: &ArrayView2<T>,
     dominance_map: &mut Array2<f64>,
     config: &BinocularConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = left_image.dim();
+    let (height, width) = leftimage.dim();
 
     for y in 0..height {
         for x in 0..width {
-            let left_val = left_image[(y, x)].to_f64().unwrap_or(0.0);
-            let right_val = right_image[(y, x)].to_f64().unwrap_or(0.0);
+            let left_val = leftimage[(y, x)].to_f64().unwrap_or(0.0);
+            let right_val = rightimage[(y, x)].to_f64().unwrap_or(0.0);
 
             // Ocular dominance: -1 (left eye) to +1 (right eye)
             let total_activity = left_val + right_val;
@@ -2159,7 +2183,7 @@ fn refine_disparity_map(
 }
 
 #[allow(dead_code)]
-fn encode_visual_features<T>(
+fn encode_visualfeatures<T>(
     image: &ArrayView2<T>,
     config: &BiologicalVisionConfig,
 ) -> NdimageResult<Array2<f64>>
@@ -2338,7 +2362,7 @@ fn update_precision_estimates(
 #[allow(dead_code)]
 fn update_attention_weights(
     vwm_result: &mut VisualWorkingMemoryResult,
-    current_features: &Array2<f64>,
+    currentfeatures: &Array2<f64>,
     config: &VisualWorkingMemoryConfig,
 ) -> NdimageResult<()> {
     let mut new_weights = Array1::zeros(config.memory_slots);
@@ -2346,7 +2370,7 @@ fn update_attention_weights(
 
     for slot_idx in 0..config.memory_slots {
         let relevance =
-            calculate_memory_compatibility(current_features, &vwm_result.memory_slots[slot_idx])?;
+            calculate_memory_compatibility(currentfeatures, &vwm_result.memory_slots[slot_idx])?;
 
         new_weights[slot_idx] = relevance.max(0.1); // Minimum attention
         total_weight += new_weights[slot_idx];
@@ -2421,7 +2445,7 @@ fn apply_circadian_color_adjustment(_pixel_value: f64, circadianphase: f64) -> N
 
 #[allow(dead_code)]
 fn compute_short_term_adaptation<T>(
-    recent_images: &[ArrayView2<T>],
+    recentimages: &[ArrayView2<T>],
     adaptation_map: &mut ArrayViewMut2<f64>,
 ) -> NdimageResult<()>
 where
@@ -2433,10 +2457,10 @@ where
     for y in 0..height {
         for x in 0..width {
             let mut recent_activity = 0.0;
-            for image in recent_images {
+            for image in recentimages {
                 recent_activity += image[(y, x)].to_f64().unwrap_or(0.0);
             }
-            recent_activity /= recent_images.len() as f64;
+            recent_activity /= recentimages.len() as f64;
 
             // Adaptation reduces sensitivity to recently active areas
             let adaptation_factor = 1.0 / (1.0 + recent_activity * 2.0);
@@ -2449,7 +2473,7 @@ where
 
 #[allow(dead_code)]
 fn compute_medium_term_adaptation<T>(
-    medium_images: &[ArrayView2<T>],
+    mediumimages: &[ArrayView2<T>],
     adaptation_map: &mut ArrayViewMut2<f64>,
 ) -> NdimageResult<()>
 where
@@ -2460,7 +2484,7 @@ where
     // Medium-term adaptation based on variance over time
     for y in 0..height {
         for x in 0..width {
-            let values: Vec<f64> = medium_images
+            let values: Vec<f64> = mediumimages
                 .iter()
                 .map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
                 .collect();
@@ -2480,7 +2504,7 @@ where
 
 #[allow(dead_code)]
 fn compute_long_term_adaptation<T>(
-    all_images: &[ArrayView2<T>],
+    allimages: &[ArrayView2<T>],
     adaptation_map: &mut ArrayViewMut2<f64>,
 ) -> NdimageResult<()>
 where
@@ -2491,7 +2515,7 @@ where
     // Long-term adaptation: structural changes based on long-term statistics
     for y in 0..height {
         for x in 0..width {
-            let values: Vec<f64> = all_images
+            let values: Vec<f64> = allimages
                 .iter()
                 .map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
                 .collect();
@@ -2515,7 +2539,7 @@ where
 
 #[allow(dead_code)]
 fn compute_homeostatic_adaptation<T>(
-    all_images: &[ArrayView2<T>],
+    allimages: &[ArrayView2<T>],
     adaptation_map: &mut ArrayViewMut2<f64>,
 ) -> NdimageResult<()>
 where
@@ -2526,7 +2550,7 @@ where
     // Homeostatic adaptation: maintain overall activity balance
     let mut global_activities = Vec::new();
 
-    for image in all_images {
+    for image in allimages {
         let global_activity = image
             .iter()
             .map(|&x| x.to_f64().unwrap_or(0.0))
@@ -2539,11 +2563,11 @@ where
 
     for y in 0..height {
         for x in 0..width {
-            let local_mean = all_images
+            let local_mean = allimages
                 .iter()
                 .map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
                 .sum::<f64>()
-                / all_images.len() as f64;
+                / allimages.len() as f64;
 
             // Homeostatic scaling to maintain target activity
             let scaling_factor = if local_mean > 0.0 {

@@ -184,7 +184,8 @@ where
         c if c >= 0.95 => F::from_f64(1.96).unwrap(),
         c if c >= 0.90 => F::from_f64(1.645).unwrap(),
         c if c >= 0.85 => F::from_f64(1.44).unwrap(),
-        c if c >= 0.80 => F::from_f64(1.282).unwrap(, _ => F::from_f64(1.0).unwrap(),
+        c if c >= 0.80 => F::from_f64(1.282).unwrap(),
+        _ => F::from_f64(1.0).unwrap(),
     };
 
     // Compute forecast and confidence intervals
@@ -290,7 +291,8 @@ where
         c if c >= 0.95 => F::from_f64(1.96).unwrap(),
         c if c >= 0.90 => F::from_f64(1.645).unwrap(),
         c if c >= 0.85 => F::from_f64(1.44).unwrap(),
-        c if c >= 0.80 => F::from_f64(1.282).unwrap(, _ => F::from_f64(1.0).unwrap(),
+        c if c >= 0.80 => F::from_f64(1.282).unwrap(),
+        _ => F::from_f64(1.0).unwrap(),
     };
 
     // Create forecast arrays
@@ -550,7 +552,8 @@ where
         c if c >= 0.95 => F::from_f64(1.96).unwrap(),
         c if c >= 0.90 => F::from_f64(1.645).unwrap(),
         c if c >= 0.85 => F::from_f64(1.44).unwrap(),
-        c if c >= 0.80 => F::from_f64(1.282).unwrap(, _ => F::from_f64(1.0).unwrap(),
+        c if c >= 0.80 => F::from_f64(1.282).unwrap(),
+        _ => F::from_f64(1.0).unwrap(),
     };
 
     // Create forecast arrays
@@ -771,7 +774,8 @@ where
     let z_score = match conf_level {
         c if c >= 0.99 => F::from_f64(2.576).unwrap(),
         c if c >= 0.95 => F::from_f64(1.96).unwrap(),
-        c if c >= 0.90 => F::from_f64(1.645).unwrap(, _ => F::from_f64(1.0).unwrap(),
+        c if c >= 0.90 => F::from_f64(1.645).unwrap(),
+        _ => F::from_f64(1.0).unwrap(),
     };
 
     for h in 0..horizon {
@@ -1440,7 +1444,7 @@ where
             }
 
             // If average correlation is high, assume there's seasonality
-            count > 0 && (sum_corr / F::from_usize(count).unwrap()) >, F::from_f64(0.3).unwrap()
+            count > 0 && (sum_corr / F::from_usize(count).unwrap()) > F::from_f64(0.3).unwrap()
         } else {
             false
         }

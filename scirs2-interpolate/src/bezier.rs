@@ -131,11 +131,11 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
     ///
     /// Array of points on the Bezier curve at the given parameter values
     pub fn evaluate_array(&self, tvalues: &ArrayView1<F>) -> InterpolateResult<Array2<F>> {
-        let n_points = t_values.len();
+        let n_points = tvalues.len();
         let dim = self.control_points.shape()[1];
         let mut result = Array2::zeros((n_points, dim));
 
-        for (i, &t) in t_values.iter().enumerate() {
+        for (i, &t) in tvalues.iter().enumerate() {
             let point = self.evaluate(t)?;
             for d in 0..dim {
                 result[[i, d]] = point[d];

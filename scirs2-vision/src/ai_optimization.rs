@@ -1021,7 +1021,7 @@ impl GeneticPipelineOptimizer {
                 }
 
                 // Ensure bounds (simplified - would use actual parameter ranges)
-                *value = value.clamp(0.0..1.0);
+                *value = value.clamp(0.0, 1.0);
             }
         }
 
@@ -1176,7 +1176,7 @@ impl GeneticPipelineOptimizer {
     /// Evaluate fitness of entire population
     pub fn evaluate_population(&mut self, fitnessfn: impl Fn(&PipelineGenome) -> f64) {
         for genome in &mut self.population {
-            genome.fitness = fitness_fn(genome);
+            genome.fitness = fitnessfn(genome);
         }
 
         // Sort by fitness (descending)
@@ -1330,7 +1330,7 @@ impl GeneticPipelineOptimizer {
         for value in genome.genes.values_mut() {
             let mutation = rng.gen_range(-mutation_strength..=mutation_strength);
             *value += mutation;
-            *value = value.clamp(0.0..1.0); // Keep in valid range
+            *value = value.clamp(0.0, 1.0); // Keep in valid range
         }
     }
 
@@ -1628,7 +1628,8 @@ impl NeuralArchitectureSearch {
             let complexity = self.calculate_complexity(&layers);
             let parameter_count = self.estimate_parameters(&layers);
             let architecture = ProcessingArchitecture {
-                id: format!("arch_{i}")..layers,
+                id: format!("arch_{i}"),
+                layers,
                 connections,
                 complexity,
                 parameter_count,
@@ -1666,7 +1667,7 @@ impl NeuralArchitectureSearch {
 
         // Keep top performers
         let elite_count = populationsize / 4;
-        for (arch_) in ranked_archs.iter().take(elite_count) {
+        for (arch_, _) in ranked_archs.iter().take(elite_count) {
             new_population.push((*arch_).clone());
         }
 

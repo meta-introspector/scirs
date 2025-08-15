@@ -114,7 +114,7 @@ impl SciPyValidationSuite {
 
         let result = gaussian_filter(&input, 1.0, None, None)?;
 
-        let validation = self.calculate_validation_metrics(
+        let validation = self.calculate_validationmetrics(
             &reference.view(),
             &result.view(),
             "gaussian_filter_3x3_sigma1".to_string(),
@@ -483,7 +483,7 @@ impl SciPyValidationSuite {
     }
 
     /// Calculate detailed validation metrics between reference and computed arrays
-    fn calculate_validation_metrics(
+    fn calculate_validationmetrics(
         &self,
         reference: &ArrayView2<f64>,
         computed: &ArrayView2<f64>,

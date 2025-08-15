@@ -277,7 +277,7 @@ where
 
     /// Set the coordinate reference system
     pub fn with_coordinate_system(mut self, coordsys: CoordinateSystem) -> Self {
-        self.config.coordinate_system = coord_sys;
+        self.config.coordinate_system = coordsys;
         self
     }
 
@@ -289,7 +289,7 @@ where
 
     /// Enable or disable spherical distance calculations
     pub fn with_spherical_distance(mut self, usespherical: bool) -> Self {
-        self.config.use_spherical_distance = use_spherical;
+        self.config.use_spherical_distance = usespherical;
         self
     }
 
@@ -301,7 +301,7 @@ where
 
     /// Set maximum number of neighbors
     pub fn with_max_neighbors(mut self, maxneighbors: usize) -> Self {
-        self.config.max_neighbors = Some(max_neighbors);
+        self.config.max_neighbors = Some(maxneighbors);
         self
     }
 
@@ -494,7 +494,7 @@ where
         &mut self,
         _x_coords: &Array1<T>,
         _y_coords: &Array1<T>,
-        _values: &ArrayView1<T>,
+        values: &ArrayView1<T>,
     ) -> InterpolateResult<()> {
         // For now, compute basic statistics
         // In a full implementation, this would include:
@@ -506,7 +506,7 @@ where
         let n = values.len();
         if n > 1 {
             let mean_val = values.sum() / T::from_usize(n).unwrap();
-            let variance = _values
+            let variance = values
                 .iter()
                 .map(|&x| (x - mean_val) * (x - mean_val))
                 .sum::<T>()

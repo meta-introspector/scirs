@@ -30,7 +30,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__ndimage::segmentation::threshold_binary;
+/// use scirs2_ndimage::segmentation::threshold_binary;
 ///
 /// let image = array![
 ///     [0.0, 0.2, 0.5],
@@ -70,7 +70,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__ndimage::segmentation::otsu_threshold;
+/// use scirs2_ndimage::segmentation::otsu_threshold;
 ///
 /// let image = array![
 ///     [0.1, 0.2, 0.3],
@@ -102,10 +102,10 @@ where
         }
     }
 
-    // Handle edge case of flat _image
+    // Handle edge case of flat image
     if min_val == max_val {
-        // Create a binary _image with all zeros (as all values == threshold)
-        let binary = threshold_binary(_image, min_val)?;
+        // Create a binary image with all zeros (as all values == threshold)
+        let binary = threshold_binary(image, min_val)?;
         return Ok((binary, min_val));
     }
 
@@ -169,8 +169,8 @@ where
     // Convert threshold index back to intensity value
     let threshold = min_val + safe_usize_to_float(threshold_idx)? * bin_width;
 
-    // Create binary _image using the threshold
-    let binary = threshold_binary(_image, threshold)?;
+    // Create binary image using the threshold
+    let binary = threshold_binary(image, threshold)?;
 
     Ok((binary, threshold))
 }
@@ -195,7 +195,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__ndimage::segmentation::{adaptive_threshold, AdaptiveMethod};
+/// use scirs2_ndimage::segmentation::{adaptive_threshold, AdaptiveMethod};
 ///
 /// let image = array![
 ///     [0.1, 0.2, 0.7],
@@ -267,9 +267,9 @@ where
                         let dist = safe_usize_to_float(dist_sq as usize)?.sqrt();
 
                         // Gaussian weight
-                        let sigma = safe_usize_to_float(radius)? / safe_f64to_float::<T>(2.0)?;
+                        let sigma = safe_usize_to_float(radius)? / safe_f64_to_float::<T>(2.0)?;
                         let weight =
-                            (-dist * dist / (safe_f64to_float::<T>(2.0)? * sigma * sigma)).exp();
+                            (-dist * dist / (safe_f64_to_float::<T>(2.0)? * sigma * sigma)).exp();
 
                         weighted_sum += val * weight;
                         weight_sum += weight;

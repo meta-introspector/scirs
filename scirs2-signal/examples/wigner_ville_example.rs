@@ -6,10 +6,10 @@ use std::io::Write;
 
 use scirs2_signal::window;
 use scirs2_signal::wvd::{
-use std::f64::consts::PI;
     cross_wigner_ville, extract_ridges, frequency_axis, smoothed_pseudo_wigner_ville, time_axis,
     wigner_ville, WvdConfig,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -84,7 +84,8 @@ fn generate_test_signal() -> Array1<f64> {
     let noise_level = 0.05;
     let mut rng = rand::rng();
     let noise = Array::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..);
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..,
+    );
 
     // Combine components
     &chirp + &transient + &noise
@@ -125,7 +126,8 @@ type AnalysisResult = Result<(Array2<f64>, Vec<Vec<(usize, f64)>>), Box<dyn std:
 /// Analyze a signal with the Smoothed Pseudo Wigner-Ville Distribution
 #[allow(dead_code)]
 fn analyze_with_smoothed_wvd(
-    signal: &Array1<f64>, _t_axis: &Array1<f64>,
+    signal: &Array1<f64>,
+    _t_axis: &Array1<f64>,
     f_axis: &Array1<f64>,
 ) -> AnalysisResult {
     // Create windows for time and frequency smoothing

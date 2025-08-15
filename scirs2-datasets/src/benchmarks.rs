@@ -73,7 +73,7 @@ impl BenchmarkResult {
 
     /// Set memory usage
     pub fn with_memory(mut self, memoryused: usize) -> Self {
-        self.memory_used = Some(memory_used);
+        self.memory_used = Some(memoryused);
         self
     }
 
@@ -253,7 +253,7 @@ impl BenchmarkRunner {
 
     /// Set warmup iterations
     pub fn with_warmup(mut self, warmupiterations: usize) -> Self {
-        self.warmup_iterations = warmup_iterations;
+        self.warmup_iterations = warmupiterations;
         self
     }
 

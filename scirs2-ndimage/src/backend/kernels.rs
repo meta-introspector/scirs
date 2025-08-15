@@ -14,7 +14,7 @@ use crate::utils::safe_f64_to_float;
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(_value).ok_or_else(|| {
+    T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
@@ -592,9 +592,9 @@ impl KernelRegistry {
             2,
         );
         self.register_kernel(
-            "glcm_features_2d",
+            "glcmfeatures_2d",
             TEXTURE_ANALYSIS_KERNEL,
-            "glcm_features_2d",
+            "glcmfeatures_2d",
             1,
         );
         self.register_kernel(
@@ -673,7 +673,7 @@ impl KernelRegistry {
             KernelInfo {
                 name: name.to_string(),
                 source: source.to_string(),
-                entry_point: entry_point.to_string(),
+                entry_point: entrypoint.to_string(),
                 work_dimensions: dims,
             },
         );
@@ -725,7 +725,7 @@ where
     /// Create an empty buffer of given size
     pub fn empty(size: usize) -> NdimageResult<Self> {
         Ok(Self {
-            data: vec![T::default(); _size],
+            data: vec![T::default(); size],
         })
     }
 }
@@ -790,7 +790,8 @@ where
         kernel: &KernelInfo,
         inputs: &[&dyn GpuBuffer<T>],
         outputs: &[&mut dyn GpuBuffer<T>],
-        work_size: &[usize], _params: &[T],
+        work_size: &[usize],
+        _params: &[T],
     ) -> NdimageResult<()> {
         // This is a basic CPU fallback that returns an error indicating
         // that GPU kernel execution on CPU is not fully implemented.
@@ -851,7 +852,7 @@ where
     let mut output_data = vec![T::zero(); h * w];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::fromshape_vec((h, w), output_data)?)
+    Ok(Array::from_shape_vec((h, w), output_data)?)
 }
 
 /// GPU-accelerated convolution implementation
@@ -899,7 +900,7 @@ where
     let mut output_data = vec![T::zero(); ih * iw];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::fromshape_vec((ih, iw), output_data)?)
+    Ok(Array::from_shape_vec((ih, iw), output_data)?)
 }
 
 /// GPU-accelerated median filter implementation
@@ -945,7 +946,7 @@ where
     let mut output_data = vec![T::zero(); h * w];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::fromshape_vec((h, w), output_data)?)
+    Ok(Array::from_shape_vec((h, w), output_data)?)
 }
 
 /// GPU-accelerated morphological erosion
@@ -999,7 +1000,7 @@ where
     let mut output_data = vec![T::zero(); h * w];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::fromshape_vec((h, w), output_data)?)
+    Ok(Array::from_shape_vec((h, w), output_data)?)
 }
 
 /// GPU-accelerated separable Gaussian filter implementation
@@ -1099,7 +1100,7 @@ where
     let mut output_data = vec![T::zero(); h * w];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::fromshape_vec((h, w), output_data)?)
+    Ok(Array::from_shape_vec((h, w), output_data)?)
 }
 
 /// GPU-accelerated bilateral filter implementation
@@ -1148,7 +1149,7 @@ where
     let mut output_data = vec![T::zero(); h * w];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::fromshape_vec((h, w), output_data)?)
+    Ok(Array::from_shape_vec((h, w), output_data)?)
 }
 
 /// GPU-accelerated Sobel filter implementation
@@ -1204,9 +1205,9 @@ where
     magnitude_buffer.copy_to_host(&mut magnitude_data)?;
 
     Ok((
-        Array::fromshape_vec((h, w), output_x_data)?,
-        Array::fromshape_vec((h, w), output_y_data)?,
-        Array::fromshape_vec((h, w), magnitude_data)?,
+        Array::from_shape_vec((h, w), output_x_data)?,
+        Array::from_shape_vec((h, w), output_y_data)?,
+        Array::from_shape_vec((h, w), magnitude_data)?,
     ))
 }
 
@@ -1252,7 +1253,7 @@ where
     let mut output_data = vec![T::zero(); h * w];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::fromshape_vec((h, w), output_data)?)
+    Ok(Array::from_shape_vec((h, w), output_data)?)
 }
 
 // GPU buffer allocation functions that delegate to backend-specific implementations
@@ -1264,13 +1265,13 @@ where
 {
     #[cfg(feature = "cuda")]
     {
-        return crate::backend::cuda::allocate_gpu_buffer(_data);
+        return crate::backend::cuda::allocate_gpu_buffer(data);
     }
 
     #[cfg(not(feature = "cuda"))]
     {
         // CPU fallback: create a CPU buffer that implements the GpuBuffer trait
-        Ok(Box::new(CpuFallbackBuffer::from_slice(_data)?))
+        Ok(Box::new(CpuFallbackBuffer::from_slice(data)?))
     }
 }
 
@@ -1281,13 +1282,13 @@ where
 {
     #[cfg(feature = "cuda")]
     {
-        return crate::backend::cuda::allocate_gpu_buffer_empty(_size);
+        return crate::backend::cuda::allocate_gpu_buffer_empty(size);
     }
 
     #[cfg(not(feature = "cuda"))]
     {
         // CPU fallback: create an empty CPU buffer that implements the GpuBuffer trait
-        Ok(Box::new(CpuFallbackBuffer::empty(_size)?))
+        Ok(Box::new(CpuFallbackBuffer::empty(size)?))
     }
 }
 

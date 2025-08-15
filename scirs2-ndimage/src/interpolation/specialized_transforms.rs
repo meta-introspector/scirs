@@ -35,7 +35,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///
 /// ```ignore
 /// use ndarray::array;
-/// use scirs2__ndimage::interpolation::specialized_transforms::perspective_transform;
+/// use scirs2_ndimage::interpolation::specialized_transforms::perspective_transform;
 ///
 /// // Create a perspective transformation matrix
 /// let matrix = array![
@@ -360,7 +360,11 @@ where
 #[allow(dead_code)]
 fn apply_tps_mapping<T>(
     x: T,
-    y: T_control, points: &Array2<T>, _weights: &Array2<T>, _a_x: &T_a, _y: &T,
+    y: T_control,
+    points: &Array2<T>,
+    _weights: &Array2<T>,
+    _a_x: &T_a,
+    _y: &T,
 ) -> (T, T)
 where
     T: Float + FromPrimitive,

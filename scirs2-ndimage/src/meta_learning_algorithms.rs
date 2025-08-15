@@ -115,8 +115,8 @@ pub struct TransferLearningConfig {
 impl Default for TransferLearningConfig {
     fn default() -> Self {
         Self {
-            source_domains: vec!["natural_images".to_string(), "medical_images".to_string()],
-            target_domain: "satellite_images".to_string(),
+            source_domains: vec!["naturalimages".to_string(), "medicalimages".to_string()],
+            target_domain: "satelliteimages".to_string(),
             strategy: TransferStrategy::GradualTransfer { stages: 3 },
             domain_adaptation: DomainAdaptationMethod::DANN { lambda: 0.1 },
             feature_alignment: FeatureAlignmentMethod::CORAL,
@@ -437,12 +437,12 @@ where
         // Apply few-shot learning if limited examples
         if task.support_set.len() < config.few_shot.support_set_size {
             let few_shot_result = apply_few_shot_learning(task, config)?;
-            results.push(few_shot_result.processed_image);
+            results.push(few_shot_result.processedimage);
             insights.few_shot_results.push(few_shot_result);
         } else {
             // Apply transfer learning
             let transfer_result = apply_transfer_learning(task, config)?;
-            results.push(transfer_result.processed_image);
+            results.push(transfer_result.processedimage);
             insights.transfer_results.push(transfer_result);
         }
     }
@@ -502,7 +502,7 @@ pub struct MetaLearningInsights {
     /// Performance improvements
     pub performance_improvements: Vec<String>,
     /// Learning efficiency metrics
-    pub efficiency_metrics: Vec<String>,
+    pub efficiencymetrics: Vec<String>,
     /// Knowledge transfer effectiveness
     pub transfer_effectiveness: Vec<String>,
     /// Meta-learning discoveries
@@ -513,7 +513,7 @@ pub struct MetaLearningInsights {
 #[derive(Debug, Clone)]
 pub struct FewShotResult {
     /// Processed image
-    pub processed_image: Array2<f64>,
+    pub processedimage: Array2<f64>,
     /// Adaptation steps taken
     pub adaptation_steps: usize,
     /// Final performance
@@ -526,7 +526,7 @@ pub struct FewShotResult {
 #[derive(Debug, Clone)]
 pub struct TransferResult {
     /// Processed image
-    pub processed_image: Array2<f64>,
+    pub processedimage: Array2<f64>,
     /// Source domains used
     pub source_domains: Vec<String>,
     /// Transfer effectiveness
@@ -538,17 +538,18 @@ pub struct TransferResult {
 // Helper function implementations (simplified for demonstration)
 #[allow(dead_code)]
 fn apply_few_shot_learning<T>(
-    task: &TaskData<T>, _config: &AdvancedMetaLearningConfig,
+    task: &TaskData<T>,
+    _config: &AdvancedMetaLearningConfig,
 ) -> NdimageResult<FewShotResult>
 where
     T: Float + FromPrimitive + Copy,
 {
     // Simplified few-shot learning implementation
     let (height, width) = task.support_set[0].input.dim();
-    let processed_image = Array2::ones((height, width)) * 1.05; // Enhanced processing
+    let processedimage = Array2::ones((height, width)) * 1.05; // Enhanced processing
 
     Ok(FewShotResult {
-        processed_image,
+        processedimage,
         adaptation_steps: 5,
         performance: 0.92,
         efficiency: 0.88,
@@ -557,18 +558,19 @@ where
 
 #[allow(dead_code)]
 fn apply_transfer_learning<T>(
-    task: &TaskData<T>, _config: &AdvancedMetaLearningConfig,
+    task: &TaskData<T>,
+    _config: &AdvancedMetaLearningConfig,
 ) -> NdimageResult<TransferResult>
 where
     T: Float + FromPrimitive + Copy,
 {
     // Simplified transfer learning implementation
     let (height, width) = task.support_set[0].input.dim();
-    let processed_image = Array2::ones((height, width)) * 1.08; // Enhanced processing
+    let processedimage = Array2::ones((height, width)) * 1.08; // Enhanced processing
 
     Ok(TransferResult {
-        processed_image,
-        source_domains: vec!["natural_images".to_string()],
+        processedimage,
+        source_domains: vec!["naturalimages".to_string()],
         transfer_effectiveness: 0.85,
         improvement: 0.15,
     })
@@ -576,14 +578,15 @@ where
 
 #[allow(dead_code)]
 fn extract_meta_learning_insights(
-    insights: &mut MetaLearningInsights, config: &AdvancedMetaLearningConfig,
+    insights: &mut MetaLearningInsights,
+    config: &AdvancedMetaLearningConfig,
 ) -> NdimageResult<()> {
     // Extract insights (simplified)
     insights
         .performance_improvements
         .push("Meta-learning achieved 25% faster convergence".to_string());
     insights
-        .efficiency_metrics
+        .efficiencymetrics
         .push("Few-shot learning reduced required examples by 80%".to_string());
     insights
         .transfer_effectiveness
@@ -621,7 +624,7 @@ mod tests {
             query_set: vec![],
             metadata: TaskMetadata {
                 task_type: "denoising".to_string(),
-                domain: "natural_images".to_string(),
+                domain: "naturalimages".to_string(),
                 difficulty: 0.5,
                 expected_performance: 0.9,
                 properties: std::collections::HashMap::new(),
@@ -633,7 +636,7 @@ mod tests {
 
         assert!(result.is_ok());
         let few_shot_result = result.unwrap();
-        assert_eq!(few_shot_result.processed_image.dim(), (10, 10));
+        assert_eq!(few_shot_result.processedimage.dim(), (10, 10));
         assert!(few_shot_result.performance > 0.0);
         assert!(few_shot_result.efficiency > 0.0);
     }
@@ -650,7 +653,7 @@ mod tests {
             query_set: vec![],
             metadata: TaskMetadata {
                 task_type: "enhancement".to_string(),
-                domain: "medical_images".to_string(),
+                domain: "medicalimages".to_string(),
                 difficulty: 0.7,
                 expected_performance: 0.85,
                 properties: std::collections::HashMap::new(),
@@ -662,7 +665,7 @@ mod tests {
 
         assert!(result.is_ok());
         let transfer_result = result.unwrap();
-        assert_eq!(transfer_result.processed_image.dim(), (5, 5));
+        assert_eq!(transfer_result.processedimage.dim(), (5, 5));
         assert!(transfer_result.transfer_effectiveness > 0.0);
         assert!(transfer_result.improvement > 0.0);
         assert!(!transfer_result.source_domains.is_empty());
@@ -681,7 +684,7 @@ mod tests {
                 query_set: vec![],
                 metadata: TaskMetadata {
                     task_type: "filtering".to_string(),
-                    domain: "satellite_images".to_string(),
+                    domain: "satelliteimages".to_string(),
                     difficulty: 0.6,
                     expected_performance: 0.8,
                     properties: std::collections::HashMap::new(),
@@ -700,7 +703,7 @@ mod tests {
                 query_set: vec![],
                 metadata: TaskMetadata {
                     task_type: "segmentation".to_string(),
-                    domain: "natural_images".to_string(),
+                    domain: "naturalimages".to_string(),
                     difficulty: 0.8,
                     expected_performance: 0.9,
                     properties: std::collections::HashMap::new(),
@@ -712,10 +715,10 @@ mod tests {
         let result = enhanced_meta_learning_processing(&task_data, &config);
 
         assert!(result.is_ok());
-        let (processed_images, insights) = result.unwrap();
-        assert_eq!(processed_images.len(), 2);
+        let (processedimages, insights) = result.unwrap();
+        assert_eq!(processedimages.len(), 2);
         assert!(!insights.performance_improvements.is_empty());
-        assert!(!insights.efficiency_metrics.is_empty());
+        assert!(!insights.efficiencymetrics.is_empty());
         assert!(!insights.meta_discoveries.is_empty());
     }
 }

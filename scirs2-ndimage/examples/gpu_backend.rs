@@ -1,7 +1,7 @@
 //! Example demonstrating GPU backend support for accelerated processing
 
 use ndarray::Array2;
-use scirs2__ndimage::{
+use scirs2_ndimage::{
     auto_backend, gaussian_filter, Backend, BackendBuilder, BackendConfig, BackendExecutor,
     BackendOp, GaussianFilterOp, NdimageResult,
 };

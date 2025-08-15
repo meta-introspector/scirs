@@ -11,14 +11,14 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-use crate::advanced_fusion__algorithms::AdvancedConfig;
+use crate::advanced_fusion_algorithms::AdvancedConfig;
 use crate::error::{NdimageError, NdimageResult};
 
 /// Adaptive optimization system for Advanced mode operations
 #[derive(Debug)]
 pub struct AdaptiveAdvancedOptimizer {
     /// Performance history database
-    performance_history: Arc<RwLock<HashMap<String, VecDeque<PerformanceSnapshot>>>>,
+    performancehistory: Arc<RwLock<HashMap<String, VecDeque<PerformanceSnapshot>>>>,
     /// Machine learning model for performance prediction
     ml_predictor: Arc<Mutex<PerformancePredictionModel>>,
     /// Hardware characteristics profiler
@@ -119,7 +119,7 @@ pub struct PerformancePredictionModel {
     /// Bias term
     bias: f64,
     /// Model accuracy history
-    accuracy_history: VecDeque<f64>,
+    accuracyhistory: VecDeque<f64>,
     /// Training data
     training_data: Vec<(Array1<f64>, f64)>,
 }
@@ -129,7 +129,7 @@ impl PerformancePredictionModel {
         Self {
             feature_weights: Array1::zeros(16), // 16 features initially
             bias: 0.0,
-            accuracy_history: VecDeque::new(),
+            accuracyhistory: VecDeque::new(),
             training_data: Vec::new(),
         }
     }
@@ -169,7 +169,7 @@ impl PerformancePredictionModel {
                 let error = prediction - target;
 
                 // Update weights using gradient descent
-                for (i, weight) in self.featureweights.iter_mut().enumerate() {
+                for (i, weight) in self.feature_weights.iter_mut().enumerate() {
                     *weight -= learning_rate * error * features[i];
                 }
                 self.bias -= learning_rate * error;
@@ -225,7 +225,7 @@ impl HardwareProfiler {
     }
 
     /// Estimate optimal parameters based on hardware characteristics
-    pub fn suggest_optimal_parameters(&self, datasize: usize) -> OptimalParameters {
+    pub fn suggest_optimal_parameters(&self, data_size: usize) -> OptimalParameters {
         let cache_friendly_tile_size = (self.cache_sizes[0] / 8).min(1024); // L1 cache friendly
         let parallel_threshold = data_size / self.num_cores;
 
@@ -254,7 +254,7 @@ pub struct ParameterController {
     /// Parameter bounds
     parameter_bounds: HashMap<String, (f64, f64)>,
     /// Adjustment history
-    adjustment_history: VecDeque<ParameterAdjustment>,
+    adjustmenthistory: VecDeque<ParameterAdjustment>,
 }
 
 #[derive(Debug, Clone)]
@@ -278,7 +278,7 @@ impl ParameterController {
         Self {
             current_parameters: HashMap::new(),
             parameter_bounds: bounds,
-            adjustment_history: VecDeque::new(),
+            adjustmenthistory: VecDeque::new(),
         }
     }
 
@@ -315,7 +315,7 @@ impl ParameterController {
                     adjustments.insert(param_name.clone(), limited_new_value);
 
                     // Record adjustment
-                    self.adjustment_history.push_back(ParameterAdjustment {
+                    self.adjustmenthistory.push_back(ParameterAdjustment {
                         parameter_name: param_name.clone(),
                         old_value: current_value,
                         new_value: limited_new_value,
@@ -327,8 +327,8 @@ impl ParameterController {
         }
 
         // Limit history size
-        if self.adjustment_history.len() > 1000 {
-            self.adjustment_history.pop_front();
+        if self.adjustmenthistory.len() > 1000 {
+            self.adjustmenthistory.pop_front();
         }
 
         Ok(adjustments)
@@ -366,7 +366,7 @@ impl RealTimeMonitor {
     }
 
     /// Start monitoring an operation
-    pub fn start_monitoring(&mut self, operationname: String) {
+    pub fn start_monitoring(&mut self, operation_name: String) {
         self.current_operation = Some(operation_name);
         self.start_time = Some(Instant::now());
         self.active = true;
@@ -394,7 +394,7 @@ impl AdaptiveAdvancedOptimizer {
     /// Create a new adaptive optimizer
     pub fn new(config: AdaptiveOptimizerConfig) -> Self {
         Self {
-            performance_history: Arc::new(RwLock::new(HashMap::new())),
+            performancehistory: Arc::new(RwLock::new(HashMap::new())),
             ml_predictor: Arc::new(Mutex::new(PerformancePredictionModel::new())),
             hardware_profiler: Arc::new(Mutex::new(HardwareProfiler::new())),
             parameter_controller: Arc::new(Mutex::new(ParameterController::new())),
@@ -426,7 +426,7 @@ impl AdaptiveAdvancedOptimizer {
                 NdimageError::ComputationError("Failed to acquire ML predictor lock".into())
             })?;
 
-            let features = self.extract_features(data_characteristics, &optimal_params);
+            let features = self.extractfeatures(data_characteristics, &optimal_params);
             let predicted_performance = ml_predictor.predict_performance(&features);
 
             // Adjust configuration based on prediction
@@ -466,16 +466,16 @@ impl AdaptiveAdvancedOptimizer {
         };
 
         // Add to performance history
-        let mut history = self.performance_history.write().map_err(|_| {
+        let mut history = self.performancehistory.write().map_err(|_| {
             NdimageError::ComputationError("Failed to acquire performance history lock".into())
         })?;
 
-        let operation_history = history.entry(operation_type).or_insert_with(VecDeque::new);
-        operation_history.push_back(snapshot);
+        let operationhistory = history.entry(operation_type).or_insert_with(VecDeque::new);
+        operationhistory.push_back(snapshot);
 
         // Limit history size
-        if operation_history.len() > self.config.history_window_size {
-            operation_history.pop_front();
+        if operationhistory.len() > self.config.history_window_size {
+            operationhistory.pop_front();
         }
 
         // Update ML model
@@ -490,7 +490,7 @@ impl AdaptiveAdvancedOptimizer {
 
             let data_size = data_characteristics.dimensions.iter().product::<usize>();
             let optimal_params = hardware_profiler.suggest_optimal_parameters(data_size);
-            let features = self.extract_features(&data_characteristics, &optimal_params);
+            let features = self.extractfeatures(&data_characteristics, &optimal_params);
 
             // Use execution time as performance target (lower is better, so invert)
             let performance_score = 1.0 / (metrics.execution_time.as_secs_f64() + 1e-6);
@@ -501,7 +501,7 @@ impl AdaptiveAdvancedOptimizer {
     }
 
     /// Extract features for machine learning
-    fn extract_features(
+    fn extractfeatures(
         &self,
         data_chars: &DataCharacteristics,
         optimal_params: &OptimalParameters,
@@ -557,7 +557,7 @@ impl AdaptiveAdvancedOptimizer {
         &self,
         operation_type: &str,
     ) -> NdimageResult<PerformanceAnalysis> {
-        let history = self.performance_history.read().map_err(|_| {
+        let history = self.performancehistory.read().map_err(|_| {
             NdimageError::ComputationError("Failed to acquire performance history lock".into())
         })?;
 
@@ -698,7 +698,7 @@ mod tests {
         let optimizer = AdaptiveAdvancedOptimizer::new(config);
 
         // Test basic creation
-        assert!(optimizer.performance_history.read().unwrap().is_empty());
+        assert!(optimizer.performancehistory.read().unwrap().is_empty());
     }
 
     #[test]

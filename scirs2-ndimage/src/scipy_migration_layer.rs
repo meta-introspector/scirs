@@ -234,7 +234,7 @@ impl SciPyCompatLayer {
         let binary_input = self.convert_to_binary(input);
 
         // Use default 3x3 cross structure if none provided
-        let default_structure = Array::fromshape_vec(
+        let default_structure = Array::from_shape_vec(
             (3, 3),
             vec![false, true, false, true, true, true, false, true, false],
         )
@@ -299,7 +299,7 @@ impl SciPyCompatLayer {
     {
         let binary_input = self.convert_to_binary(input);
 
-        let default_structure = Array::fromshape_vec(
+        let default_structure = Array::from_shape_vec(
             (3, 3),
             vec![false, true, false, true, true, true, false, true, false],
         )
@@ -486,7 +486,8 @@ impl SciPyCompatLayer {
             "constant" => Ok(BoundaryMode::Constant),
             "nearest" => Ok(BoundaryMode::Nearest),
             "mirror" => Ok(BoundaryMode::Mirror),
-            "wrap" => Ok(BoundaryMode::Wrap, _ => {
+            "wrap" => Ok(BoundaryMode::Wrap),
+            _ => {
                 self.add_warning_const(
                     "parameter_conversion",
                     &format!("Unknown mode '{}', using default 'reflect'", mode_str),
@@ -746,7 +747,7 @@ pub fn display_migration_guide() {
 This compatibility layer provides SciPy-compatible APIs for easy migration.
 
 Basic Usage:
-    use scirs2__ndimage::scipy_migration_layer as ndimage;
+    use scirs2_ndimage::scipy_migration_layer as ndimage;
     
     // Same API as SciPy
     let result = ndimage::gaussian_filter(input, sigma, None, None, None, None)?;
@@ -757,7 +758,7 @@ Key Differences:
 3. Performance characteristics may differ due to Rust optimizations
 
 Migration Steps:
-1. Replace `import scipy.ndimage` with `use scirs2__ndimage::scipy_migration_layer as ndimage;`
+1. Replace `import scipy.ndimage` with `use scirs2_ndimage::scipy_migration_layer as ndimage;`
 2. Add error handling for function calls
 3. Check migration warnings for any unsupported features
 4. Test thoroughly and report any compatibility issues
