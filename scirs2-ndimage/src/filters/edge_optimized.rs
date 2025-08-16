@@ -3,7 +3,7 @@
 //! This module provides high-performance implementations of edge detection filters
 //! using SIMD instructions and parallel processing for improved performance.
 
-use ndarray::{Array2, ArrayView2, Axis, Zip};
+use ndarray::{Array2, ArrayView1, ArrayView2, Axis, Zip};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -169,7 +169,7 @@ where
     T: Float + FromPrimitive + Debug + Send + Sync + 'static,
 {
     let (height, width) = input.dim();
-    let input_ptr = input as *const ArrayView2<T>;
+    let input_shared = input.to_owned(); // Create owned copy for safe sharing
     let mode_clone = mode.clone();
 
     output
@@ -177,7 +177,8 @@ where
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
-            let input_ref = unsafe { &*input_ptr };
+            let input_view = input_shared.view();
+            let input_ref = &input_view;
 
             for j in 0..width {
                 let val = if axis == 0 {
@@ -252,7 +253,7 @@ where
                         ) * k3;
 
                     let right =
-                        get_pixel_value(input_ref, i as isize - 1, j as isize + 1, &mode_clone)
+                        get_pixel_value(input_ref, i as isize - 1, j as isize + 1, &mode_clone, Some(T::zero()))
                             * k1
                             + get_pixel_value(
                                 input_ref,
@@ -461,7 +462,7 @@ where
     T: Float + FromPrimitive + Debug + Send + Sync + 'static,
 {
     let (height, width) = input.dim();
-    let input_ptr = input as *const ArrayView2<T>;
+    let input_shared = input.to_owned(); // Create owned copy for safe sharing
     let mode_clone = mode.clone();
 
     // Pre-calculate constants outside the parallel closure
@@ -473,7 +474,8 @@ where
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
-            let input_ref = unsafe { &*input_ptr };
+            let input_view = input_shared.view();
+            let input_ref = &input_view;
 
             for j in 0..width {
                 let center = input_ref[[i, j]];
@@ -492,6 +494,7 @@ where
                                         i as isize + di,
                                         j as isize + dj,
                                         &mode_clone,
+                                        Some(T::zero()),
                                     );
                             }
                         }
@@ -555,7 +558,7 @@ where
     T: SimdUnifiedOps,
 {
     if grad_x.dim() != grad_y.dim() {
-        return Err(NdimageError::ShapeError(
+        return Err(NdimageError::InvalidInput(
             "Gradient arrays must have the same shape".into(),
         ));
     }
@@ -578,7 +581,14 @@ where
             )
         })?;
 
-        T::simd_magnitude(gx_flat, gy_flat, mag_flat);
+        // Compute magnitude using available SIMD operations: sqrt(gx^2 + gy^2)
+        let gx_view = ArrayView1::from(gx_flat);
+        let gy_view = ArrayView1::from(gy_flat);
+        let gx_squared = T::simd_mul(&gx_view, &gx_view);
+        let gy_squared = T::simd_mul(&gy_view, &gy_view);
+        let magnitude_squared = T::simd_add(&gx_squared.view(), &gy_squared.view());
+        let magnitude_result = T::simd_sqrt(&magnitude_squared.view());
+        mag_flat.copy_from_slice(magnitude_result.as_slice().unwrap());
     } else {
         // Standard calculation for small arrays
         Zip::from(&mut magnitude)

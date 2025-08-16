@@ -377,7 +377,7 @@ fn compare_labels(labels1: ArrayView1<i32>, labels2: ArrayView1<i32>) -> bool {
         return false;
     }
 
-    for i in 0.._labels1.len() {
+    for i in 0..labels1.len() {
         if labels1[i] != labels2[i] {
             return false;
         }

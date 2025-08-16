@@ -9,7 +9,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(_value).ok_or_else(|| {
+    T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
@@ -83,12 +83,12 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 /// use scirs2_ndimage::measurements::sum_labels;
 ///
 /// // Simulate segmented image with intensity values
-/// let intensityimage = Array2::fromshape_fn((100, 100), |(i, j)| {
+/// let intensityimage = Array2::from_shape_fn((100, 100), |(i, j)| {
 ///     ((i + j) as f64).sin().abs() * 255.0
 /// });
 ///
 /// // Simulate segmentation labels (e.g., from watershed)
-/// let segmentation = Array2::fromshape_fn((100, 100), |(i, j)| {
+/// let segmentation = Array2::from_shape_fn((100, 100), |(i, j)| {
 ///     ((i / 10) * 10 + (j / 10)) + 1  // Create grid-like segments
 /// });
 ///
@@ -205,7 +205,7 @@ where
 /// use scirs2_ndimage::measurements::mean_labels;
 ///
 /// // Simulate medical image with different tissue types
-/// let intensity_map = Array2::fromshape_fn((50, 50), |(i, j)| {
+/// let intensity_map = Array2::from_shape_fn((50, 50), |(i, j)| {
 ///     match (i / 10, j / 10) {
 ///         (0..=1, 0..=1) => 50.0,   // Tissue type A
 ///         (2..=3, 2..=3) => 150.0,  // Tissue type B  
@@ -213,7 +213,7 @@ where
 ///     }
 /// });
 ///
-/// let tissue_labels = Array2::fromshape_fn((50, 50), |(i, j)| {
+/// let tissue_labels = Array2::from_shape_fn((50, 50), |(i, j)| {
 ///     match (i / 10, j / 10) {
 ///         (0..=1, 0..=1) => 1,  // Label 1: Type A
 ///         (2..=3, 2..=3) => 2,  // Label 2: Type B
@@ -257,11 +257,11 @@ where
 /// use scirs2_ndimage::measurements::mean_labels;
 ///
 /// // Simulate workflow after watershed segmentation
-/// let originalimage = Array2::<f64>::fromshape_fn((20, 20), |(i, j)| {
+/// let originalimage = Array2::<f64>::from_shape_fn((20, 20), |(i, j)| {
 ///     ((i as f64 - 10.0).powi(2) + (j as f64 - 10.0).powi(2)).sqrt()
 /// });
 ///
-/// let segmentation_result = Array2::fromshape_fn((20, 20), |(i, j)| {
+/// let segmentation_result = Array2::from_shape_fn((20, 20), |(i, j)| {
 ///     if i < 10 && j < 10 { 1 }
 ///     else if i >= 10 && j < 10 { 2 }
 ///     else if i < 10 && j >= 10 { 3 }
@@ -536,7 +536,7 @@ where
 /// use scirs2_ndimage::measurements::count_labels;
 ///
 /// // Simulate segmented image with objects of various sizes
-/// let labels = Array2::fromshape_fn((100, 100), |(i, j)| {
+/// let labels = Array2::from_shape_fn((100, 100), |(i, j)| {
 ///     match (i / 20, j / 20) {
 ///         (0, 0) => 1,  // Large object
 ///         (1, 1) => 2,  // Medium object  
@@ -621,7 +621,7 @@ where
 /// use scirs2_ndimage::measurements::count_labels;
 ///
 /// // After watershed or other segmentation algorithm
-/// let segmentation_result = Array2::fromshape_fn((50, 50), |(i, j)| {
+/// let segmentation_result = Array2::from_shape_fn((50, 50), |(i, j)| {
 ///     // Simulate segmentation with regions of different sizes
 ///     if i < 25 && j < 25 { 1 }
 ///     else if i >= 25 && j < 25 { 2 }
@@ -805,7 +805,7 @@ where
 /// use scirs2_ndimage::measurements::histogram;
 ///
 /// // Simulate textured image regions
-/// let textureimage = Array2::fromshape_fn((50, 50), |(i, j)| {
+/// let textureimage = Array2::from_shape_fn((50, 50), |(i, j)| {
 ///     let noise = ((i * 7 + j * 11) % 100) as f64 / 100.0;
 ///     match (i / 25, j / 25) {
 ///         (0, 0) => 0.2 + 0.1 * noise,  // Low intensity, low variation
@@ -815,7 +815,7 @@ where
 ///     }
 /// });
 ///
-/// let texture_labels = Array2::fromshape_fn((50, 50), |(i, j)| {
+/// let texture_labels = Array2::from_shape_fn((50, 50), |(i, j)| {
 ///     match (i / 25, j / 25) {
 ///         (0, 0) => 1,
 ///         (0, 1) => 2,
@@ -852,7 +852,7 @@ where
 /// use scirs2_ndimage::measurements::histogram;
 ///
 /// // Simulate medical image with different tissue types
-/// let medicalimage = Array2::fromshape_fn((100, 100), |(i, j)| {
+/// let medicalimage = Array2::from_shape_fn((100, 100), |(i, j)| {
 ///     match (i / 33, j / 33) {
 ///         (0_) => 50.0 + (i % 10) as f64,   // Tissue A: 50-60 range
 ///         (1_) => 150.0 + (j % 15) as f64,  // Tissue B: 150-165 range
@@ -860,7 +860,7 @@ where
 ///     }
 /// });
 ///
-/// let tissue_segmentation = Array2::fromshape_fn((100, 100), |(i, j)| {
+/// let tissue_segmentation = Array2::from_shape_fn((100, 100), |(i, j)| {
 ///     match (i / 33, j / 33) {
 ///         (0_) => 1,  // Tissue A
 ///         (1_) => 2,  // Tissue B  
@@ -891,7 +891,7 @@ where
 /// use ndarray::Array2;
 /// use scirs2_ndimage::measurements::histogram;
 ///
-/// let image = Array2::fromshape_fn((50, 50), |(i, j)| {
+/// let image = Array2::from_shape_fn((50, 50), |(i, j)| {
 ///     if (i - 25).pow(2) + (j - 25).pow(2) < 400 {
 ///         200.0  // Bright circular object
 ///     } else {
@@ -1100,8 +1100,8 @@ mod tests {
 
     #[test]
     fn test_sum_labels_3d() {
-        let input = Array3::fromshape_fn((2, 2, 2), |(i, j, k)| (i + j + k) as f64);
-        let labels = Array3::fromshape_fn((2, 2, 2), |(i, j_k)| if i == j { 1 } else { 2 });
+        let input = Array3::from_shape_fn((2, 2, 2), |(i, j, k)| (i + j + k) as f64);
+        let labels = Array3::from_shape_fn((2, 2, 2), |(i, j_k)| if i == j { 1 } else { 2 });
 
         let sums =
             sum_labels(&input, &labels, None).expect("sum_labels should succeed for 3D test");
@@ -1237,8 +1237,8 @@ mod tests {
     #[test]
     fn test_high_dimensional_arrays() {
         // Test 4D arrays
-        let input = Array::fromshape_fn((2, 2, 2, 2), |(i, j, k, l)| (i + j + k + l) as f64);
-        let labels = Array::fromshape_fn((2, 2, 2, 2), |(i, j_k_l)| i + j + 1);
+        let input = Array::from_shape_fn((2, 2, 2, 2), |(i, j, k, l)| (i + j + k + l) as f64);
+        let labels = Array::from_shape_fn((2, 2, 2, 2), |(i, j_k_l)| i + j + 1);
 
         let sums =
             sum_labels(&input, &labels, None).expect("sum_labels should succeed for 4D test");

@@ -418,7 +418,7 @@ where
     // Initialize synaptic weights randomly
     let mut rng = rand::rng();
     let mut learned_filter =
-        Array2::fromshape_fn(filter_size, |_| (rng.random_range::<f64>(-0.1..0.1)));
+        Array2::from_shape_fn(filter_size, |_| (rng.random_range::<f64>(-0.1..0.1)));
 
     let mut pre_synaptic_traces = Array2::zeros(filter_size);
     let mut post_synaptic_trace = 0.0;
@@ -837,7 +837,7 @@ fn update_reservoir_dynamics(
 
 #[allow(dead_code)]
 fn capture_reservoirstate(reservoir: &Array1<SpikingNeuron>) -> NdimageResult<Array1<f64>> {
-    let mut state = Array1::zeros(_reservoir.len());
+    let mut state = Array1::zeros(reservoir.len());
 
     for (i, neuron) in reservoir.iter().enumerate() {
         state[i] = neuron.membrane_potential;

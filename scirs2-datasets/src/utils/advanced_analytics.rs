@@ -218,7 +218,7 @@ impl AdvancedDatasetAnalyzer {
 
         let shapiro_wilk_scores = Array1::from_vec(shapiro_scores);
         let overall_normality = {
-            let val = shapiro_wilk_scores.mean();
+            let val = shapiro_wilk_scores.view().mean();
             if val.is_nan() {
                 0.5
             } else {
@@ -243,11 +243,9 @@ impl AdvancedDatasetAnalyzer {
         }
 
         let mean = {
-            let val = data.mean();
-            if val.is_nan() {
-                0.0
-            } else {
-                val
+            match data.mean() {
+                Some(val) if !val.is_nan() => val,
+                _ => 0.0,
             }
         };
         let variance = data.var(1.0);
@@ -288,7 +286,7 @@ impl AdvancedDatasetAnalyzer {
 
         // Calculate feature importance based on variance and correlation with other features
         for i in 0..n_features {
-            let feature = "data".column(i);
+            let feature = data.column(i);
             let variance = feature.var(1.0);
 
             // Simple importance based on variance (higher variance = more important)
@@ -304,7 +302,7 @@ impl AdvancedDatasetAnalyzer {
 
 /// Perform quick quality assessment of a dataset
 pub fn quick_quality_assessment(dataset: &Dataset) -> Result<f64, Box<dyn Error>> {
-    let data = &_dataset.data;
+    let data = &dataset.data;
 
     // Quick quality assessment based on basic statistics
     let n_samples = data.nrows();

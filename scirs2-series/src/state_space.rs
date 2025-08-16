@@ -107,7 +107,7 @@ where
         observation: ObservationModel<F>,
     ) -> Self {
         Self {
-            _state: initial_state,
+            state: initial_state,
             transition,
             observation,
         }
@@ -435,7 +435,7 @@ where
 
     if m == n {
         // Square _matrix - try direct inversion
-        match matrix_inverse(_matrix) {
+        match matrix_inverse(matrix) {
             Ok(inv) => return Ok(inv),
             Err(_) => {
                 // Fall through to regularized approach
@@ -446,7 +446,7 @@ where
     // For non-square or singular matrices, use (A'A + λI)^(-1) A'
     let regularization = F::from(1e-8).unwrap();
     let at = matrix.t();
-    let ata = at.dot(_matrix);
+    let ata = at.dot(matrix);
 
     // Add regularization to diagonal
     let mut regularized = ata.clone();
@@ -571,16 +571,16 @@ where
     pub fn local_level(_sigma_level: F, sigmaobs: F) -> Result<Self> {
         let transition = StateTransition {
             transition_matrix: Array2::eye(1),
-            process_noise: Array2::from_elem((1, 1), _sigma_level * sigma_level),
+            process_noise: Array2::from_elem((1, 1), _sigma_level * _sigma_level),
         };
 
         let observation = ObservationModel {
             observation_matrix: Array2::eye(1),
-            observation_noise: Array2::from_elem((1, 1), sigma_obs * sigma_obs),
+            observation_noise: Array2::from_elem((1, 1), sigmaobs * sigmaobs),
         };
 
         Ok(Self {
-            _level: Some(transition),
+            level: Some(transition),
             trend: None,
             seasonal: None,
             observation,
@@ -590,7 +590,7 @@ where
     /// Create a local linear trend model
     pub fn local_linear_trend(_sigma_level: F, sigma_trend: F, sigmaobs: F) -> Result<Self> {
         // State: [_level_trend]
-        let transition_matrix = Array2::fromshape_vec(
+        let transition_matrix = Array2::from_shape_vec(
             (2, 2),
             vec![F::one(), F::one(), F::zero(), F::one()],
         )
@@ -598,10 +598,10 @@ where
             TimeSeriesError::InvalidInput(format!("Failed to create transition matrix: {e}"))
         })?;
 
-        let process_noise = Array2::fromshape_vec(
+        let process_noise = Array2::from_shape_vec(
             (2, 2),
             vec![
-                sigma_level * sigma_level,
+                _sigma_level * _sigma_level,
                 F::zero(),
                 F::zero(),
                 sigma_trend * sigma_trend,
@@ -617,19 +617,19 @@ where
         };
 
         let observation = ObservationModel {
-            observation_matrix: Array2::fromshape_vec((1, 2), vec![F::one(), F::zero()]).map_err(
+            observation_matrix: Array2::from_shape_vec((1, 2), vec![F::one(), F::zero()]).map_err(
                 |e| {
                     TimeSeriesError::InvalidInput(format!(
                         "Failed to create observation matrix: {e}"
                     ))
                 },
             )?,
-            observation_noise: Array2::from_elem((1, 1), sigma_obs * sigma_obs),
+            observation_noise: Array2::from_elem((1, 1), sigmaobs * sigmaobs),
         };
 
         Ok(Self {
-            _level: Some(transition),
-            _trend: None,
+            level: Some(transition),
+            trend: None,
             seasonal: None,
             observation,
         })
@@ -925,7 +925,7 @@ where
         };
 
         Ok(Self {
-            _level: Some(level_transition),
+            level: Some(level_transition),
             trend: None,
             seasonal: Some(seasonal_transition),
             observation,
@@ -972,7 +972,7 @@ where
     /// Add control input
     pub fn with_control(mut self, control: Array2<F>, controlmatrix: Array2<F>) -> Self {
         self.control = Some(control);
-        self.control_matrix = Some(control_matrix);
+        self.control_matrix = Some(controlmatrix);
         self
     }
 

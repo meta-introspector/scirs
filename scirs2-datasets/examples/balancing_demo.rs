@@ -4,7 +4,7 @@
 //! imbalanced datasets in machine learning applications.
 
 use ndarray::{Array1, Array2};
-use scirs2__datasets::{
+use scirs2_datasets::{
     create_balanced_dataset, generate_synthetic_samples, load_iris, random_oversample,
     random_undersample, BalancingStrategy,
 };
@@ -34,40 +34,40 @@ fn main() {
 
     // Demonstrate random oversampling
     println!("=== Random Oversampling =======================");
-    let (oversampled_data, oversampled_targets) =
+    let (oversampleddata, oversampled_targets) =
         random_oversample(&data, &targets, Some(42)).unwrap();
 
     println!("After random oversampling:");
     print_class_distribution(&oversampled_targets);
-    println!("Total samples: {}\n", oversampled_data.nrows());
+    println!("Total samples: {}\n", oversampleddata.nrows());
 
     // Demonstrate random undersampling
     println!("=== Random Undersampling ======================");
-    let (undersampled_data, undersampled_targets) =
+    let (undersampleddata, undersampled_targets) =
         random_undersample(&data, &targets, Some(42)).unwrap();
 
     println!("After random undersampling:");
     print_class_distribution(&undersampled_targets);
-    println!("Total samples: {}\n", undersampled_data.nrows());
+    println!("Total samples: {}\n", undersampleddata.nrows());
 
     // Demonstrate SMOTE-like synthetic sample generation
     println!("=== Synthetic Sample Generation (SMOTE-like) ==");
 
     // Generate 4 synthetic samples for class 0 (minority class)
-    let (synthetic_data, synthetic_targets) =
+    let (syntheticdata, synthetic_targets) =
         generate_synthetic_samples(&data, &targets, 0.0, 4, 1, Some(42)).unwrap();
 
     println!(
         "Generated {} synthetic samples for class 0",
-        synthetic_data.nrows()
+        syntheticdata.nrows()
     );
     println!("Synthetic samples (first 3 features of each):");
-    for i in 0..synthetic_data.nrows() {
+    for i in 0..syntheticdata.nrows() {
         println!(
             "  Sample {}: [{:.3}, {:.3}] -> class {}",
             i,
-            synthetic_data[[i, 0]],
-            synthetic_data[[i, 1]],
+            syntheticdata[[i, 0]],
+            syntheticdata[[i, 1]],
             synthetic_targets[i]
         );
     }
@@ -145,15 +145,15 @@ fn main() {
             })
             .collect();
 
-        let imbalanced_data = iris.data.select(ndarray::Axis(0), &indices_to_keep);
+        let imbalanceddata = iris.data.select(ndarray::Axis(0), &indices_to_keep);
         let imbalanced_targets = iris_targets.select(ndarray::Axis(0), &indices_to_keep);
 
         println!("\nArtificially imbalanced Iris:");
         print_class_distribution(&imbalanced_targets);
 
         // Balance it using SMOTE
-        let (rebalanced_data, rebalanced_targets) = create_balanced_dataset(
-            &imbalanced_data,
+        let (rebalanceddata, rebalanced_targets) = create_balanced_dataset(
+            &imbalanceddata,
             &imbalanced_targets,
             BalancingStrategy::SMOTE { k_neighbors: 3 },
             Some(42),
@@ -162,7 +162,7 @@ fn main() {
 
         println!("\nAfter SMOTE rebalancing:");
         print_class_distribution(&rebalanced_targets);
-        println!("Total samples: {}", rebalanced_data.nrows());
+        println!("Total samples: {}", rebalanceddata.nrows());
     }
 
     println!("\n=== Performance Comparison ====================");

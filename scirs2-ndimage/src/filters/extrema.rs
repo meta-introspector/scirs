@@ -506,7 +506,7 @@ where
         }
         _ => {
             // For higher dimensions, use general n-dimensional algorithm
-            extrema_filter_nd_general(input, size, mode, origin, filter_type, &pad_width)?
+            output = extrema_filter_nd_general(input, size, mode, origin, filter_type, &pad_width)?;
         }
     }
 
@@ -596,12 +596,13 @@ where
     }
 
     // Iterate through each position in the _input array
-    for linear_idx in 0.._input.len() {
+    for linear_idx in 0..input.len() {
         let coords = index_to_coords(linear_idx, inputshape);
 
         // Initialize extrema with the first element in the window
         let mut extrema_coords = coords.clone();
-        let mut extrema = padded_input[&*extrema_coords];
+        let padded_dyn = padded_input.view().into_dyn();
+        let mut extrema = padded_dyn[ndarray::IxDyn(&extrema_coords)];
 
         // Generate all window coordinates around this position
         let mut window_coords = vec![0; ndim];
@@ -615,7 +616,7 @@ where
             }
 
             // Get value at this window position
-            let val = padded_input[&*actual_coords];
+            let val = padded_dyn[ndarray::IxDyn(&actual_coords)];
 
             // Update extrema based on filter _type
             match filter_type {
@@ -647,7 +648,8 @@ where
         }
 
         // Set the extrema value in the output
-        output[&*coords] = extrema;
+        let mut output_dyn = output.view_mut().into_dyn();
+        output_dyn[ndarray::IxDyn(&coords)] = extrema;
     }
 
     Ok(output.clone())
@@ -749,7 +751,7 @@ where
         .collect();
 
     // Convert results back to n-dimensional array
-    let output = Array::from_shape_vec(_input.raw_dim(), results)
+    let output = Array::from_shape_vec(input.raw_dim(), results)
         .map_err(|_| NdimageError::DimensionError("Failed to create output array".into()))?;
 
     Ok(output)

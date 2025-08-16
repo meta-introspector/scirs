@@ -67,8 +67,8 @@ where
 
     // Generate knot positions based on the selected strategy
     let knots = match options.knot_placement {
-        KnotPlacementStrategy::Uniform => generate_uniform_knots(_ts.len(), options.num_knots),
-        KnotPlacementStrategy::Quantile => generate_quantile_knots(_ts.len(), options.num_knots),
+        KnotPlacementStrategy::Uniform => generate_uniform_knots(ts.len(), options.num_knots),
+        KnotPlacementStrategy::Quantile => generate_quantile_knots(ts.len(), options.num_knots),
         KnotPlacementStrategy::Custom => {
             if let Some(positions) = &options.knot_positions {
                 // Validate custom knot positions
@@ -99,9 +99,9 @@ where
 
     // Fit the appropriate spline type
     match options.spline_type {
-        SplineType::Cubic => fit_cubic_spline(_ts, &knots, options.extrapolate),
-        SplineType::NaturalCubic => fit_natural_cubic_spline(_ts, &knots, options.extrapolate),
-        SplineType::BSpline => fit_bspline(_ts, &knots, options.degree, options.extrapolate),
+        SplineType::Cubic => fit_cubic_spline(ts, &knots, options.extrapolate),
+        SplineType::NaturalCubic => fit_natural_cubic_spline(ts, &knots, options.extrapolate),
+        SplineType::BSpline => fit_bspline(ts, &knots, options.degree, options.extrapolate),
         SplineType::PSpline => fit_pspline(
             ts,
             &knots,
@@ -115,40 +115,40 @@ where
 /// Generates uniformly spaced knot positions
 #[allow(dead_code)]
 fn generate_uniform_knots(n: usize, numknots: usize) -> Vec<usize> {
-    let mut _knots = Vec::with_capacity(num_knots);
+    let mut _knots = Vec::with_capacity(numknots);
 
     // Ensure first and last points are included
-    knots.push(0);
+    _knots.push(0);
 
-    if num_knots > 2 {
-        let step = (n - 1) as f64 / (num_knots - 1) as f64;
-        for i in 1..(num_knots - 1) {
+    if numknots > 2 {
+        let step = (n - 1) as f64 / (numknots - 1) as f64;
+        for i in 1..(numknots - 1) {
             let pos = (i as f64 * step).round() as usize;
-            knots.push(pos);
+            _knots.push(pos);
         }
     }
 
-    knots.push(n - 1);
+    _knots.push(n - 1);
     _knots
 }
 
 /// Generates knots at quantile positions of the data
 #[allow(dead_code)]
 fn generate_quantile_knots(n: usize, numknots: usize) -> Vec<usize> {
-    let mut _knots = Vec::with_capacity(num_knots);
+    let mut _knots = Vec::with_capacity(numknots);
 
     // Ensure first and last points are included
-    knots.push(0);
+    _knots.push(0);
 
-    if num_knots > 2 {
-        for i in 1..(num_knots - 1) {
-            let quantile = i as f64 / (num_knots - 1) as f64;
+    if numknots > 2 {
+        for i in 1..(numknots - 1) {
+            let quantile = i as f64 / (numknots - 1) as f64;
             let pos = (quantile * (n - 1) as f64).round() as usize;
-            knots.push(pos);
+            _knots.push(pos);
         }
     }
 
-    knots.push(n - 1);
+    _knots.push(n - 1);
     _knots
 }
 
@@ -234,7 +234,7 @@ where
         let x_0 = knots[0];
         let x_1 = knots[1];
         let h = F::from_usize(x_1 - x_0).unwrap();
-        let _slope_left = (_ts[x_1] - ts[x_0]) / h
+        let _slope_left = (ts[x_1] - ts[x_0]) / h
             - h * (F::from_f64(2.0).unwrap() * second_derivs[0] + second_derivs[1])
                 / F::from_f64(6.0).unwrap();
 
@@ -242,7 +242,7 @@ where
         let x_n_minus_1 = knots[num_knots - 2];
         let x_n = knots[num_knots - 1];
         let h = F::from_usize(x_n - x_n_minus_1).unwrap();
-        let _slope_right = (_ts[x_n] - ts[x_n_minus_1]) / h
+        let _slope_right = (ts[x_n] - ts[x_n_minus_1]) / h
             + h * (second_derivs[num_knots - 2]
                 + F::from_f64(2.0).unwrap() * second_derivs[num_knots - 1])
                 / F::from_f64(6.0).unwrap();
@@ -265,7 +265,7 @@ where
 {
     // Natural cubic spline is the same as cubic spline but with second derivatives
     // at the endpoints set to zero, which is already handled in fit_cubic_spline
-    fit_cubic_spline(ts, knots_extrapolate)
+    fit_cubic_spline(ts, knots, _extrapolate)
 }
 
 /// Fits a B-spline to the time series data
@@ -349,7 +349,7 @@ fn create_bspline_basis<F>(_xvalues: Vec<F>, knots: &[usize], degree: usize) -> 
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = x_values.len();
+    let n = _xvalues.len();
 
     // For a B-spline of degree p with n knots, we have n+p-1 basis functions
     let num_basis = knots.len() + degree - 1;
@@ -374,7 +374,7 @@ where
     // Implement the Cox-de Boor recursion formula
     // Start with degree 0 (piecewise constant)
     for i in 0..n {
-        let x = x_values[i];
+        let x = _xvalues[i];
 
         for j in 0..(augmented_knots.len() - 1) {
             if j < num_basis {
@@ -395,7 +395,7 @@ where
 
     for d in 1..=degree {
         for i in 0..n {
-            let x = x_values[i];
+            let x = _xvalues[i];
 
             for j in 0..(num_basis - d) {
                 let mut sum = F::zero();
@@ -616,12 +616,12 @@ where
     F: Float + FromPrimitive + Debug + 'static,
 {
     // First, compute the main trend estimate
-    let trend = estimate_spline_trend(ts_options)?;
+    let trend = estimate_spline_trend(ts, options)?;
 
     // Then compute confidence intervals
     let (lower, upper) =
         super::confidence::compute_trend_confidence_interval(ts, &trend, ci_options, |data| {
-            estimate_spline_trend(data_options)
+            estimate_spline_trend(data, options)
         })?;
 
     Ok(TrendWithConfidenceInterval {

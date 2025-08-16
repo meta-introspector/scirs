@@ -260,15 +260,15 @@ where
     /// # Returns
     ///
     /// * Result containing the Mahalanobis distance metric or an error
-    pub fn from_data(data: ArrayView2<F>) -> Result<Self> {
-        let cov_matrix = compute_covariance_matrix(_data)?;
+    pub fn fromdata(data: ArrayView2<F>) -> Result<Self> {
+        let cov_matrix = compute_covariance_matrix(data)?;
         let inv_cov = invert_matrix(cov_matrix)?;
         Ok(Self { inv_cov })
     }
 
     /// Create a Mahalanobis distance metric from a precomputed inverse covariance matrix
     pub fn from_inv_cov(_invcov: Array2<F>) -> Self {
-        Self { _inv_cov }
+        Self { inv_cov: _invcov }
     }
 }
 
@@ -306,16 +306,16 @@ where
     // Compute means
     let means = data.mean_axis(Axis(0)).unwrap();
 
-    // Center the _data
-    let mut centered_data = Array2::zeros((n_samples, n_features));
+    // Center the data
+    let mut centereddata = Array2::zeros((n_samples, n_features));
     for i in 0..n_samples {
         for j in 0..n_features {
-            centered_data[[i, j]] = data[[i, j]] - means[j];
+            centereddata[[i, j]] = data[[i, j]] - means[j];
         }
     }
 
     // Compute covariance matrix: (1/(n-1)) * X^T * X
-    let cov = centered_data.t().dot(&centered_data) / F::from(n_samples - 1).unwrap();
+    let cov = centereddata.t().dot(&centereddata) / F::from(n_samples - 1).unwrap();
     Ok(cov)
 }
 
@@ -443,7 +443,7 @@ where
                     "Data required for Mahalanobis distance computation".into(),
                 )
             })?;
-            let metric = MahalanobisDistance::from_data(data)?;
+            let metric = MahalanobisDistance::fromdata(data)?;
             Ok(Box::new(metric))
         }
     }
@@ -514,7 +514,7 @@ mod tests {
         )
         .unwrap();
 
-        let metric = MahalanobisDistance::from_data(data.view()).unwrap();
+        let metric = MahalanobisDistance::fromdata(data.view()).unwrap();
 
         let x = Array1::from_vec(vec![1.0, 2.0]);
         let y = Array1::from_vec(vec![2.0, 3.0]);

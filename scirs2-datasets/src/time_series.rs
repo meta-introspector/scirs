@@ -227,7 +227,7 @@ pub fn stock_market(returns: bool) -> Result<Dataset> {
     for (i, date) in dates.iter().enumerate() {
         for (j, symbol) in symbols.iter().enumerate() {
             if let Some(record) = date_symbol_map.get(&(date.clone(), symbol.clone())) {
-                data[[i, j]] = if _returns {
+                data[[i, j]] = if returns {
                     record.close - record.open
                 } else {
                     record.close
@@ -252,7 +252,7 @@ pub fn stock_market(returns: bool) -> Result<Dataset> {
             dates.first().unwrap_or(&"unknown".to_string()),
         )
         .with_metadata("end_date", dates.last().unwrap_or(&"unknown".to_string()))
-        .with_metadata("data_type", if _returns { "_returns" } else { "prices" });
+        .with_metadata("data_type", if returns { "_returns" } else { "prices" });
 
     Ok(dataset)
 }
@@ -312,7 +312,7 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
         "precipitation",
     ];
 
-    if let Some(f) = _feature {
+    if let Some(f) = feature {
         if !valid_features.contains(&f) {
             return Err(DatasetsError::InvalidFormat(format!(
                 "Invalid _feature: {f}. Valid features are: {valid_features:?}"
@@ -376,7 +376,7 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
         date_location_map.insert((record.date.clone(), record.location.clone()), record);
     }
 
-    let mut dataset = match _feature {
+    let mut dataset = match feature {
         Some(feat) => {
             // Single _feature mode - create a 2D matrix (dates x locations)
             let mut data = Array2::zeros((dates.len(), locations.len()));

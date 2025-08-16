@@ -67,15 +67,15 @@ pub struct EnvironmentalSensorAnalysis {
 impl EnvironmentalSensorAnalysis {
     /// Create new environmental sensor analysis
     pub fn new(_timestamps: Array1<i64>, samplinginterval: f64) -> Result<Self> {
-        check_positive(sampling_interval, "sampling_interval")?;
+        check_positive(samplinginterval, "sampling_interval")?;
 
         Ok(Self {
             temperature: None,
             humidity: None,
             pressure: None,
             light: None,
-            timestamps,
-            sampling_interval,
+            timestamps: _timestamps,
+            sampling_interval: samplinginterval,
         })
     }
 
@@ -357,7 +357,7 @@ impl MotionSensorAnalysis {
                 .map(|row| (row[0] * row[0] + row[1] * row[1] + row[2] * row[2]).sqrt())
                 .collect();
 
-            let mean_magnitude = magnitude.mean().unwrap();
+            let mean_magnitude = magnitude.clone().mean();
             let std_magnitude = magnitude.std(0.0);
             let max_magnitude = magnitude.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
@@ -438,7 +438,7 @@ impl MotionSensorAnalysis {
                         .map(|row| (row[0] * row[0] + row[1] * row[1] + row[2] * row[2]).sqrt())
                         .collect();
 
-                    let mean_future = future_magnitudes.mean().unwrap();
+                    let mean_future = future_magnitudes.mean();
                     if mean_future < 2.0 {
                         // Low acceleration following high impact
                         fall_events.push(i);
@@ -463,7 +463,7 @@ impl MotionSensorAnalysis {
             .collect();
 
         // Apply high-pass filter to remove gravity component
-        let mean_magnitude = magnitude.mean().unwrap();
+        let mean_magnitude = magnitude.clone().mean();
         let filtered: Array1<f64> = magnitude.iter().map(|&x| x - mean_magnitude).collect();
 
         // Simple peak detection for step counting
@@ -674,7 +674,7 @@ impl IoTAnalysis {
 
     /// Add data quality assessment for a sensor
     pub fn add_quality_assessment(&mut self, sensorname: String, quality: DataQuality) {
-        self.quality_assessments.insert(sensor_name, quality);
+        self.quality_assessments.insert(sensorname, quality);
     }
 
     /// Generate comprehensive IoT system health report

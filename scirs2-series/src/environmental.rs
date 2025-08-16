@@ -122,7 +122,7 @@ impl TemperatureAnalysis {
 
         for (i, &_temp) in self.temperatures.iter().enumerate() {
             let effective_temp = if let Some(max_t) = max_temp {
-                temp.min(max_t)
+                _temp.min(max_t)
             } else {
                 _temp
             };
@@ -137,7 +137,7 @@ impl TemperatureAnalysis {
     pub fn temperature_trend(&self) -> Result<(f64, f64, f64)> {
         let n = self.temperatures.len() as f64;
         let x_mean = self.time_stamps.iter().map(|&x| x as f64).sum::<f64>() / n;
-        let y_mean = self.temperatures.mean().unwrap();
+        let y_mean = self.temperatures.clone().mean();
 
         let mut numerator = 0.0;
         let mut denominator = 0.0;
@@ -170,17 +170,17 @@ impl TemperatureAnalysis {
 
     /// Calculate climate normals (30-year averages)
     pub fn climate_normals(&self, windowsize: usize) -> Result<Array1<f64>> {
-        if window_size > self.temperatures.len() {
+        if windowsize > self.temperatures.len() {
             return Err(TimeSeriesError::InvalidInput(
                 "Window _size larger than data".to_string(),
             ));
         }
 
-        let mut normals = Array1::zeros(self.temperatures.len() - window_size + 1);
+        let mut normals = Array1::zeros(self.temperatures.len() - windowsize + 1);
 
         for i in 0..normals.len() {
-            let window = self.temperatures.slice(ndarray::s![i..i + window_size]);
-            normals[i] = window.mean().unwrap();
+            let window = self.temperatures.slice(ndarray::s![i..i + windowsize]);
+            normals[i] = window.mean();
         }
 
         Ok(normals)
@@ -197,7 +197,7 @@ pub struct PrecipitationAnalysis {
 
 impl PrecipitationAnalysis {
     /// Create new precipitation analysis
-    pub fn new(_precipitation: Array1<f64>, timestamps: Array1<i64>) -> Result<Self> {
+    pub fn new(precipitation: Array1<f64>, timestamps: Array1<i64>) -> Result<Self> {
         if precipitation.iter().any(|x| !x.is_finite()) {
             return Err(TimeSeriesError::InvalidInput(
                 "Precipitation contains non-finite values".to_string(),
@@ -213,17 +213,17 @@ impl PrecipitationAnalysis {
 
         Ok(Self {
             precipitation,
-            time_stamps,
+            time_stamps: timestamps,
         })
     }
 
     /// Detect drought periods using Standardized Precipitation Index
     pub fn drought_detection(
         &self,
-        window_size: usize,
+        windowsize: usize,
         threshold: f64,
     ) -> Result<Vec<(usize, usize)>> {
-        let spi = self.standardized_precipitation_index(window_size)?;
+        let spi = self.standardized_precipitation_index(windowsize)?;
         let mut droughts = Vec::new();
         let mut current_start = None;
 
@@ -248,25 +248,25 @@ impl PrecipitationAnalysis {
 
     /// Calculate Standardized Precipitation Index (SPI)
     pub fn standardized_precipitation_index(&self, windowsize: usize) -> Result<Array1<f64>> {
-        if window_size > self.precipitation.len() {
+        if windowsize > self.precipitation.len() {
             return Err(TimeSeriesError::InvalidInput(
                 "Window _size larger than data".to_string(),
             ));
         }
 
-        let mut spi = Array1::zeros(self.precipitation.len() - window_size + 1);
+        let mut spi = Array1::zeros(self.precipitation.len() - windowsize + 1);
 
         // Calculate rolling sums
         let mut rolling_sums = Array1::zeros(spi.len());
         for i in 0..spi.len() {
             rolling_sums[i] = self
                 .precipitation
-                .slice(ndarray::s![i..i + window_size])
+                .slice(ndarray::s![i..i + windowsize])
                 .sum();
         }
 
         // Calculate statistics
-        let mean = rolling_sums.mean().unwrap();
+        let mean = rolling_sums.clone().mean();
         let std_dev = rolling_sums.std(0.0);
 
         // Calculate SPI
@@ -309,7 +309,7 @@ impl PrecipitationAnalysis {
         let mut current_streak = 0;
 
         for (i, &precip) in self.precipitation.iter().enumerate() {
-            if precip <= dry_threshold {
+            if precip <= drythreshold {
                 current_streak += 1;
             } else {
                 current_streak = 0;
@@ -409,13 +409,13 @@ impl AtmosphericAnalysis {
 
     /// Calculate wind power density
     pub fn wind_power_density(&self, airdensity: f64) -> Result<Array1<f64>> {
-        check_positive(air_density, "air_density")?;
+        check_positive(airdensity, "airdensity")?;
 
         let mut power_density = Array1::zeros(self.wind_speed.len());
 
         for (i, &speed) in self.wind_speed.iter().enumerate() {
             // Power _density = 0.5 * ρ * v³
-            power_density[i] = 0.5 * air_density * speed.powi(3);
+            power_density[i] = 0.5 * airdensity * speed.powi(3);
         }
 
         Ok(power_density)
@@ -427,13 +427,13 @@ impl AtmosphericAnalysis {
             TimeSeriesError::InvalidInput("Wind direction data required".to_string())
         })?;
 
-        let bin_size = 360.0 / direction_bins as f64;
+        let bin_size = 360.0 / directionbins as f64;
         let speed_bins = [0.0, 5.0, 10.0, 15.0, 20.0, f64::INFINITY];
 
-        let mut rose_data = Array2::zeros((direction_bins, speed_bins.len() - 1));
+        let mut rose_data = Array2::zeros((directionbins, speed_bins.len() - 1));
 
         for (&dir, &speed) in wind_dir.iter().zip(self.wind_speed.iter()) {
-            let dir_bin = ((dir / bin_size).floor() as usize).min(direction_bins - 1);
+            let dir_bin = ((dir / bin_size).floor() as usize).min(directionbins - 1);
 
             for (s_bin, window) in speed_bins.windows(2).enumerate() {
                 if speed >= window[0] && speed < window[1] {
@@ -644,7 +644,7 @@ impl EnvironmentalAnalysis {
 
         // Temperature stress
         if let Some(ref temp_analysis) = self.temperature {
-            let temp_mean = temp_analysis.temperatures.mean().unwrap();
+            let temp_mean = temp_analysis.temperatures.clone().mean();
             let temp_std = temp_analysis.temperatures.std(0.0);
 
             let temp_stress: Array1<f64> = temp_analysis

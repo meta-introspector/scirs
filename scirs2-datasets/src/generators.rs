@@ -12,8 +12,8 @@ use crate::gpu::GpuBackend as LocalGpuBackend;
 // Parallel operations will be added as needed
 // #[cfg(feature = "parallel")]
 // use scirs2_core::parallel_ops::*;
+use rand::rng;
 use rand::seq::SliceRandom;
-use rand::thread_rng;
 use std::f64::consts::PI;
 
 /// Generate a random classification dataset with clusters
@@ -67,7 +67,7 @@ pub fn make_classification(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -79,12 +79,12 @@ pub fn make_classification(
 
     for i in 0..n_centroids {
         for j in 0..n_informative {
-            centroids[[i, j]] = scale * rng.gen_range(-1.0f64..1.0f64);
+            centroids[[i, j]] = scale * rng.random_range(-1.0f64..1.0f64);
         }
     }
 
     // Generate _samples
-    let mut data = Array2::zeros((n_samples..n_features));
+    let mut data = Array2::zeros((n_samples, n_features));
     let mut target = Array1::zeros(n_samples);
 
     let normal = rand_distr::Normal::new(0.0, 1.0).unwrap();
@@ -140,7 +140,7 @@ pub fn make_classification(
     let featurenames: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
 
     // Create _class names
-    let _classnames: Vec<String> = (0..n_classes).map(|i| format!("class_{i}")).collect();
+    let classnames: Vec<String> = (0..n_classes).map(|i| format!("class_{i}")).collect();
 
     dataset = dataset
         .with_featurenames(featurenames)
@@ -195,7 +195,7 @@ pub fn make_regression(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -283,7 +283,7 @@ pub fn make_time_series(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -293,18 +293,18 @@ pub fn make_time_series(
 
     for feature in 0..n_features {
         let trend_coef = if trend {
-            rng.gen_range(0.01f64..0.1f64)
+            rng.random_range(0.01f64..0.1f64)
         } else {
             0.0
         };
-        let seasonality_period = rng.gen_range(10..=50) as f64;
+        let seasonality_period = rng.random_range(10..=50) as f64;
         let seasonality_amplitude = if seasonality {
-            rng.gen_range(1.0f64..5.0f64)
+            rng.random_range(1.0f64..5.0f64)
         } else {
             0.0
         };
 
-        let base_value = rng.gen_range(-10.0f64..10.0f64);
+        let base_value = rng.random_range(-10.0f64..10.0f64);
 
         for i in 0..n_samples {
             let t = i as f64;
@@ -390,7 +390,7 @@ pub fn make_blobs(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -401,12 +401,12 @@ pub fn make_blobs(
 
     for i in 0..centers {
         for j in 0..n_features {
-            cluster_centers[[i, j]] = rng.gen_range(-center_box..=center_box);
+            cluster_centers[[i, j]] = rng.random_range(-center_box..=center_box);
         }
     }
 
     // Generate _samples around centers
-    let mut data = Array2::zeros((n_samples..n_features));
+    let mut data = Array2::zeros((n_samples, n_features));
     let mut target = Array1::zeros(n_samples);
 
     let normal = rand_distr::Normal::new(0.0, cluster_std).unwrap();
@@ -481,7 +481,7 @@ pub fn make_spirals(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -558,7 +558,7 @@ pub fn make_moons(n_samples: usize, noise: f64, randomseed: Option<u64>) -> Resu
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -655,7 +655,7 @@ pub fn make_circles(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -742,7 +742,7 @@ pub fn make_swiss_roll(n_samples: usize, noise: f64, randomseed: Option<u64>) ->
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -836,7 +836,7 @@ pub fn make_anisotropic_blobs(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -847,12 +847,12 @@ pub fn make_anisotropic_blobs(
 
     for i in 0..centers {
         for j in 0..n_features {
-            cluster_centers[[i, j]] = rng.gen_range(-center_box..=center_box);
+            cluster_centers[[i, j]] = rng.random_range(-center_box..=center_box);
         }
     }
 
     // Generate _samples around centers with anisotropic distribution
-    let mut data = Array2::zeros((n_samples..n_features));
+    let mut data = Array2::zeros((n_samples, n_features));
     let mut target = Array1::zeros(n_samples);
 
     let normal = rand_distr::Normal::new(0.0, cluster_std).unwrap();
@@ -870,7 +870,7 @@ pub fn make_anisotropic_blobs(
         };
 
         // Generate a random rotation angle for this cluster
-        let rotation_angle = rng.gen_range(0.0..(2.0 * PI));
+        let rotation_angle = rng.random_range(0.0..(2.0 * PI));
 
         for _ in 0..n_samples_center {
             // Generate point with anisotropic distribution (elongated along first axis)
@@ -974,7 +974,7 @@ pub fn make_hierarchical_clusters(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -985,11 +985,11 @@ pub fn make_hierarchical_clusters(
 
     for i in 0..n_main_clusters {
         for j in 0..n_features {
-            main_centers[[i, j]] = rng.gen_range(-center_box..=center_box);
+            main_centers[[i, j]] = rng.random_range(-center_box..=center_box);
         }
     }
 
-    let mut data = Array2::zeros((n_samples..n_features));
+    let mut data = Array2::zeros((n_samples, n_features));
     let mut main_target = Array1::zeros(n_samples);
     let mut sub_target = Array1::zeros(n_samples);
 
@@ -1099,7 +1099,7 @@ pub fn inject_missing_data(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1112,7 +1112,7 @@ pub fn inject_missing_data(
             // Missing Completely at Random - uniform probability
             for i in 0..n_samples {
                 for j in 0..n_features {
-                    if rng.gen_range(0.0f64..1.0) < missing_rate {
+                    if rng.random_range(0.0f64..1.0) < missing_rate {
                         missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
@@ -1128,7 +1128,7 @@ pub fn inject_missing_data(
 
                 for j in 1..n_features {
                     // Skip first feature
-                    if rng.gen_range(0.0f64..1.0) < adjusted_rate {
+                    if rng.random_range(0.0f64..1.0) < adjusted_rate {
                         missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
@@ -1143,7 +1143,7 @@ pub fn inject_missing_data(
                     let normalized_val = (value + 10.0) / 20.0; // Normalize roughly to [0,1]
                     let adjusted_rate = missing_rate * normalized_val.clamp(0.1, 3.0);
 
-                    if rng.gen_range(0.0f64..1.0) < adjusted_rate {
+                    if rng.random_range(0.0f64..1.0) < adjusted_rate {
                         missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
@@ -1156,8 +1156,8 @@ pub fn inject_missing_data(
             let n_blocks = (missing_rate * n_samples as f64).ceil() as usize;
 
             for _ in 0..n_blocks {
-                let start_row = rng.gen_range(0..n_samples);
-                let start_col = rng.gen_range(0..n_features.saturating_sub(block_size));
+                let start_row = rng.random_range(0..n_samples);
+                let start_col = rng.random_range(0..n_features.saturating_sub(block_size));
 
                 for i in start_row..n_samples.min(start_row + block_size) {
                     for j in start_col..n_features.min(start_col + block_size) {
@@ -1197,7 +1197,7 @@ pub fn inject_outliers(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1229,12 +1229,12 @@ pub fn inject_outliers(
         OutlierType::Point => {
             // Point outliers - individual anomalous points
             for _ in 0..n_outliers {
-                let outlier_idx = rng.gen_range(0..n_samples);
+                let outlier_idx = rng.random_range(0..n_samples);
                 outlier_mask[outlier_idx] = true;
 
                 // Modify each feature to be an outlier
                 for j in 0..n_features {
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -1247,17 +1247,17 @@ pub fn inject_outliers(
         OutlierType::Contextual => {
             // Contextual outliers - anomalous in specific feature combinations
             for _ in 0..n_outliers {
-                let outlier_idx = rng.gen_range(0..n_samples);
+                let outlier_idx = rng.random_range(0..n_samples);
                 outlier_mask[outlier_idx] = true;
 
                 // Only modify a subset of features to create contextual anomaly
-                let n_features_to_modify = rng.gen_range(1..=(n_features / 2).max(1));
+                let n_features_to_modify = rng.random_range(1..=(n_features / 2).max(1));
                 let mut features_to_modify: Vec<usize> = (0..n_features).collect();
                 features_to_modify.shuffle(&mut rng);
                 features_to_modify.truncate(n_features_to_modify);
 
                 for &j in &features_to_modify {
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -1276,7 +1276,7 @@ pub fn inject_outliers(
                 // Generate cluster center for this collective outlier
                 let mut outlier_center = vec![0.0; n_features];
                 for j in 0..n_features {
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -1287,11 +1287,11 @@ pub fn inject_outliers(
 
                 // Generate points around this center
                 for _ in 0..outliers_per_group {
-                    let outlier_idx = rng.gen_range(0..n_samples);
+                    let outlier_idx = rng.random_range(0..n_samples);
                     outlier_mask[outlier_idx] = true;
 
                     for j in 0..n_features {
-                        let noise = rng.gen_range(-0.5f64..0.5f64) * feature_stds[j];
+                        let noise = rng.random_range(-0.5f64..0.5f64) * feature_stds[j];
                         data[[outlier_idx, j]] = outlier_center[j] + noise;
                     }
                 }
@@ -1312,7 +1312,7 @@ pub fn add_time_series_noise(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1334,10 +1334,10 @@ pub fn add_time_series_noise(
                 // Add random spikes (impulse noise)
                 let n_spikes = (n_samples as f64 * strength * 0.1).ceil() as usize;
                 for _ in 0..n_spikes {
-                    let spike_idx = rng.gen_range(0..n_samples);
-                    let feature_idx = rng.gen_range(0..n_features);
-                    let spike_magnitude = rng.gen_range(5.0..=15.0) * strength;
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let spike_idx = rng.random_range(0..n_samples);
+                    let feature_idx = rng.random_range(0..n_features);
+                    let spike_magnitude = rng.random_range(5.0..=15.0) * strength;
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -1509,25 +1509,25 @@ impl GpuConfig {
     }
 
     /// Set whether to use GPU
-    pub fn with_gpu(mut self, usegpu: bool) -> Self {
+    pub fn with_gpu(mut self, use_gpu: bool) -> Self {
         self.use_gpu = use_gpu;
         self
     }
 
     /// Set GPU device ID
-    pub fn with_device(mut self, deviceid: usize) -> Self {
+    pub fn with_device(mut self, device_id: usize) -> Self {
         self.device_id = device_id;
         self
     }
 
     /// Set precision mode
-    pub fn with_single_precision(mut self, singleprecision: bool) -> Self {
+    pub fn with_single_precision(mut self, single_precision: bool) -> Self {
         self.use_single_precision = single_precision;
         self
     }
 
     /// Set chunk size
-    pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
+    pub fn with_chunk_size(mut self, chunk_size: usize) -> Self {
         self.chunk_size = chunk_size;
         self
     }
@@ -1543,7 +1543,7 @@ pub fn make_classification_gpu(
     n_clusters_per_class: usize,
     n_informative: usize,
     randomseed: Option<u64>,
-    gpu_config: GpuConfig,
+    gpuconfig: GpuConfig,
 ) -> Result<Dataset> {
     // Check if GPU is available and requested
     if gpuconfig.use_gpu && gpu_is_available() {
@@ -1554,7 +1554,7 @@ pub fn make_classification_gpu(
             n_clusters_per_class,
             n_informative,
             randomseed,
-            gpu_config,
+            gpuconfig,
         )
     } else {
         // Fallback to CPU implementation
@@ -1578,7 +1578,7 @@ fn make_classification_gpu_impl(
     n_clusters_per_class: usize,
     n_informative: usize,
     randomseed: Option<u64>,
-    gpu_config: GpuConfig,
+    gpuconfig: GpuConfig,
 ) -> Result<Dataset> {
     // Input validation
     if n_samples == 0 || n_features == 0 || n_informative == 0 {
@@ -1608,7 +1608,7 @@ fn make_classification_gpu_impl(
         threads_per_block: 256,
         enable_double_precision: !gpuconfig.use_single_precision,
         use_fast_math: false,
-        randomseed: None,
+        random_seed: None,
     })
     .map_err(|e| DatasetsError::Other(format!("Failed to create GPU context: {e}")))?;
 
@@ -1651,7 +1651,7 @@ fn make_classification_gpu_impl(
 
     // Add metadata
     let featurenames: Vec<String> = (0..n_features).map(|i| format!("feature_{i}")).collect();
-    let _classnames: Vec<String> = (0..n_classes).map(|i| format!("class_{i}")).collect();
+    let classnames: Vec<String> = (0..n_classes).map(|i| format!("class_{i}")).collect();
 
     dataset = dataset
         .with_featurenames(featurenames)
@@ -1688,7 +1688,7 @@ fn generate_classification_chunk_gpu(
 
     for i in 0..n_centroids {
         for j in 0..n_informative {
-            centroids[i * n_informative + j] = 2.0 * rng.gen_range(-1.0f64..1.0f64);
+            centroids[i * n_informative + j] = 2.0 * rng.random_range(-1.0f64..1.0f64);
         }
     }
 
@@ -1699,7 +1699,8 @@ fn generate_classification_chunk_gpu(
     // Implement GPU buffer operations for accelerated data generation
     if *gpu_context.backend() != LocalGpuBackend::Cpu {
         return generate_classification_gpu_optimized(
-            gpu_context..&centroids,
+            gpu_context,
+            &centroids,
             n_samples,
             n_features,
             n_classes,
@@ -1837,7 +1838,7 @@ pub fn make_regression_gpu(
     n_informative: usize,
     noise: f64,
     randomseed: Option<u64>,
-    gpu_config: GpuConfig,
+    gpuconfig: GpuConfig,
 ) -> Result<Dataset> {
     // Check if GPU is available and requested
     if gpuconfig.use_gpu && gpu_is_available() {
@@ -1847,7 +1848,7 @@ pub fn make_regression_gpu(
             n_informative,
             noise,
             randomseed,
-            gpu_config,
+            gpuconfig,
         )
     } else {
         // Fallback to CPU implementation
@@ -1863,7 +1864,7 @@ fn make_regression_gpu_impl(
     n_informative: usize,
     noise: f64,
     randomseed: Option<u64>,
-    gpu_config: GpuConfig,
+    gpuconfig: GpuConfig,
 ) -> Result<Dataset> {
     // Input validation
     if n_samples == 0 || n_features == 0 || n_informative == 0 {
@@ -1887,7 +1888,7 @@ fn make_regression_gpu_impl(
         threads_per_block: 256,
         enable_double_precision: !gpuconfig.use_single_precision,
         use_fast_math: false,
-        randomseed: None,
+        random_seed: None,
     })
     .map_err(|e| DatasetsError::Other(format!("Failed to create GPU context: {e}")))?;
 
@@ -1897,11 +1898,11 @@ fn make_regression_gpu_impl(
     // Generate coefficient matrix on GPU
     let mut coefficients = vec![0.0; n_informative];
     for coeff in coefficients.iter_mut().take(n_informative) {
-        *coeff = rng.gen_range(-2.0f64..2.0f64);
+        *coeff = rng.random_range(-2.0f64..2.0f64);
     }
 
     // Generate data matrix in chunks
-    let chunk_size = std::cmp::min(gpuconfig.chunk_size..n_samples);
+    let chunk_size = std::cmp::min(gpuconfig.chunk_size, n_samples);
     let num_chunks = n_samples.div_ceil(chunk_size);
 
     let mut all_data = Vec::new();
@@ -2058,7 +2059,7 @@ pub fn make_blobs_gpu(
     n_centers: usize,
     cluster_std: f64,
     randomseed: Option<u64>,
-    gpu_config: GpuConfig,
+    gpuconfig: GpuConfig,
 ) -> Result<Dataset> {
     // Check if GPU is available and requested
     if gpuconfig.use_gpu && gpu_is_available() {
@@ -2068,7 +2069,7 @@ pub fn make_blobs_gpu(
             n_centers,
             cluster_std,
             randomseed,
-            gpu_config,
+            gpuconfig,
         )
     } else {
         // Fallback to CPU implementation
@@ -2084,7 +2085,7 @@ fn make_blobs_gpu_impl(
     n_centers: usize,
     cluster_std: f64,
     randomseed: Option<u64>,
-    gpu_config: GpuConfig,
+    gpuconfig: GpuConfig,
 ) -> Result<Dataset> {
     // Input validation
     if n_samples == 0 || n_features == 0 || n_centers == 0 {
@@ -2108,7 +2109,7 @@ fn make_blobs_gpu_impl(
         threads_per_block: 256,
         enable_double_precision: !gpuconfig.use_single_precision,
         use_fast_math: false,
-        randomseed: None,
+        random_seed: None,
     })
     .map_err(|e| DatasetsError::Other(format!("Failed to create GPU context: {e}")))?;
 
@@ -2116,7 +2117,7 @@ fn make_blobs_gpu_impl(
     let mut rng = StdRng::seed_from_u64(_seed);
 
     // Generate cluster _centers
-    let mut _centers = Array2::zeros((n_centers, n_features));
+    let mut centers = Array2::zeros((n_centers, n_features));
     let center_dist = rand_distr::Normal::new(0.0, 10.0).unwrap();
 
     for i in 0..n_centers {
@@ -2147,7 +2148,7 @@ fn make_blobs_gpu_impl(
             // Use GPU kernel for parallel sample generation
             let gpu_generated = generate_blobs_center_gpu(
                 &gpu_context,
-                &_centers,
+                &centers,
                 center_idx,
                 n_samples_center,
                 n_features,
@@ -2374,7 +2375,7 @@ pub fn benchmark_gpu_vs_cpu(
     let cpu_time = cpu_start.elapsed().as_secs_f64() / iterations as f64;
 
     // Benchmark GPU implementation
-    let gpu_config = GpuConfig::default();
+    let gpuconfig = GpuConfig::default();
     let gpu_start = Instant::now();
     for _ in 0..iterations {
         let _result = make_classification_gpu(
@@ -2412,7 +2413,7 @@ pub fn make_s_curve(n_samples: usize, noise: f64, randomseed: Option<u64>) -> Re
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2466,7 +2467,7 @@ pub fn make_swiss_roll_advanced(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2536,7 +2537,7 @@ pub fn make_severed_sphere(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2595,7 +2596,7 @@ pub fn make_twin_peaks(n_samples: usize, noise: f64, randomseed: Option<u64>) ->
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2667,7 +2668,7 @@ pub fn make_helix(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2720,7 +2721,7 @@ pub fn make_intersecting_manifolds(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2807,7 +2808,7 @@ pub fn make_torus(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2902,7 +2903,7 @@ impl Default for ManifoldConfig {
 
 impl ManifoldConfig {
     /// Create a new manifold configuration
-    pub fn new(_manifoldtype: ManifoldType) -> Self {
+    pub fn new(manifold_type: ManifoldType) -> Self {
         Self {
             manifold_type,
             ..Default::default()

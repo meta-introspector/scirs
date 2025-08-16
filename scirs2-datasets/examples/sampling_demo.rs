@@ -4,7 +4,7 @@
 //! utilities provided by scirs2-datasets.
 
 use ndarray::Array1;
-use scirs2__datasets::{load_iris, random_sample, stratified_sample, Dataset};
+use scirs2_datasets::{load_iris, random_sample, stratified_sample, Dataset};
 
 #[allow(dead_code)]
 fn main() {
@@ -25,41 +25,41 @@ fn main() {
 
     // Demonstrate random sampling without replacement
     println!("=== Random Sampling (without replacement) ===");
-    let sample_size = 30;
-    let random_indices = random_sample(n_samples, sample_size, false, Some(42)).unwrap();
+    let samplesize = 30;
+    let random_indices = random_sample(n_samples, samplesize, false, Some(42)).unwrap();
 
-    println!("Sampled {sample_size} indices from {n_samples} total samples");
+    println!("Sampled {samplesize} indices from {n_samples} total samples");
     println!(
         "Sample indices: {:?}",
         &random_indices[..10.min(random_indices.len())]
     );
 
     // Create a subset dataset
-    let sample_data = iris.data.select(ndarray::Axis(0), &random_indices);
+    let sampledata = iris.data.select(ndarray::Axis(0), &random_indices);
     let sample_target = iris
         .target
         .as_ref()
         .map(|t| t.select(ndarray::Axis(0), &random_indices));
-    let sample_dataset = Dataset::new(sample_data, sample_target)
+    let sampledataset = Dataset::new(sampledata, sample_target)
         .with_description("Random sample from Iris dataset".to_string());
 
     println!(
         "Random sample dataset: {} samples, {} features",
-        sample_dataset.n_samples(),
-        sample_dataset.n_features()
+        sampledataset.n_samples(),
+        sampledataset.n_features()
     );
 
-    if let Some(target) = &sample_dataset.target {
+    if let Some(target) = &sampledataset.target {
         let sample_class_counts = count_classes(target);
         println!("Sample class distribution: {sample_class_counts:?}\n");
     }
 
     // Demonstrate bootstrap sampling (with replacement)
     println!("=== Bootstrap Sampling (with replacement) ===");
-    let bootstrap_size = 200; // More than original dataset size
-    let bootstrap_indices = random_sample(n_samples, bootstrap_size, true, Some(42)).unwrap();
+    let bootstrapsize = 200; // More than original dataset size
+    let bootstrap_indices = random_sample(n_samples, bootstrapsize, true, Some(42)).unwrap();
 
-    println!("Bootstrap sampled {bootstrap_size} indices from {n_samples} total samples");
+    println!("Bootstrap sampled {bootstrapsize} indices from {n_samples} total samples");
     println!(
         "Bootstrap may have duplicates - first 10 indices: {:?}",
         &bootstrap_indices[..10]
@@ -80,24 +80,24 @@ fn main() {
     // Demonstrate stratified sampling
     println!("=== Stratified Sampling ===");
     if let Some(target) = &iris.target {
-        let stratified_size = 30;
-        let stratified_indices = stratified_sample(target, stratified_size, Some(42)).unwrap();
+        let stratifiedsize = 30;
+        let stratified_indices = stratified_sample(target, stratifiedsize, Some(42)).unwrap();
 
-        println!("Stratified sampled {stratified_size} indices maintaining class proportions");
+        println!("Stratified sampled {stratifiedsize} indices maintaining class proportions");
 
         // Create stratified subset
-        let stratified_data = iris.data.select(ndarray::Axis(0), &stratified_indices);
+        let stratifieddata = iris.data.select(ndarray::Axis(0), &stratified_indices);
         let stratified_target = target.select(ndarray::Axis(0), &stratified_indices);
-        let stratified_dataset = Dataset::new(stratified_data, Some(stratified_target))
+        let stratifieddataset = Dataset::new(stratifieddata, Some(stratified_target))
             .with_description("Stratified sample from Iris dataset".to_string());
 
         println!(
             "Stratified sample dataset: {} samples, {} features",
-            stratified_dataset.n_samples(),
-            stratified_dataset.n_features()
+            stratifieddataset.n_samples(),
+            stratifieddataset.n_features()
         );
 
-        let stratified_class_counts = count_classes(&stratified_dataset.target.unwrap());
+        let stratified_class_counts = count_classes(&stratifieddataset.target.unwrap());
         println!("Stratified sample class distribution: {stratified_class_counts:?}");
 
         // Verify proportions are maintained

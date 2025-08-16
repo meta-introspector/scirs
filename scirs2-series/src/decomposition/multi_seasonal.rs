@@ -220,32 +220,32 @@ where
     let mut period_scores = Vec::new();
 
     // Method 1: Autocorrelation-based detection
-    let acf_periods = detect_periods_acf(_ts, config.min_period, max_period)?;
+    let acf_periods = detect_periods_acf(ts, config.min_period, max_period)?;
     for period in acf_periods {
-        let strength = calculate_seasonal_strength(_ts, period, &config.model)?;
+        let strength = calculate_seasonal_strength(ts, period, &config.model)?;
         if strength > config.seasonal_strength_threshold {
             period_scores.push((period, strength));
         }
     }
 
     // Method 2: Periodogram-based detection
-    let pgram_periods = detect_periods_periodogram(_ts, config.min_period, max_period)?;
+    let pgram_periods = detect_periods_periodogram(ts, config.min_period, max_period)?;
     for period in pgram_periods {
-        let strength = calculate_seasonal_strength(_ts, period, &config.model)?;
+        let strength = calculate_seasonal_strength(ts, period, &config.model)?;
         if strength > config.seasonal_strength_threshold {
             // Check if already detected
-            if !period_scores.iter().any(|(p_)| *p == period) {
+            if !period_scores.iter().any(|(p_, _)| *p_ == period) {
                 period_scores.push((period, strength));
             }
         }
     }
 
     // Method 3: Multiple autocorrelation peaks
-    let multi_acf_periods = detect_multiple_acf_peaks(_ts, config.min_period, max_period)?;
+    let multi_acf_periods = detect_multiple_acf_peaks(ts, config.min_period, max_period)?;
     for period in multi_acf_periods {
-        let strength = calculate_seasonal_strength(_ts, period, &config.model)?;
+        let strength = calculate_seasonal_strength(ts, period, &config.model)?;
         if strength > config.seasonal_strength_threshold
-            && !period_scores.iter().any(|(p_)| *p == period)
+            && !period_scores.iter().any(|(p_, _)| *p_ == period)
         {
             period_scores.push((period, strength));
         }
@@ -256,14 +256,14 @@ where
 
     // Extract periods and filter out harmonics
     let mut periods = Vec::new();
-    for (period_) in period_scores {
+    for (period_, _strength) in period_scores {
         // Check if this period is not a harmonic of an existing period
         let is_harmonic = periods
             .iter()
-            .any(|&existing| period % existing == 0 || existing % period == 0);
+            .any(|&existing| period_ % existing == 0 || existing % period_ == 0);
 
         if !is_harmonic {
-            periods.push(period);
+            periods.push(period_);
         }
     }
 
@@ -272,15 +272,15 @@ where
 
 /// Detects periods using autocorrelation function
 #[allow(dead_code)]
-fn detect_periods_acf<F>(_ts: &Array1<F>, min_period: usize, maxperiod: usize) -> Result<Vec<usize>>
+fn detect_periods_acf<F>(ts: &Array1<F>, min_period: usize, maxperiod: usize) -> Result<Vec<usize>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let acf = autocorrelation(_ts, Some(max_period))?;
+    let acf = autocorrelation(ts, Some(maxperiod))?;
     let mut periods = Vec::new();
 
     // Find local maxima in ACF
-    for i in min_period..max_period.min(acf.len() - 1) {
+    for i in min_period..maxperiod.min(acf.len() - 1) {
         if acf[i] > acf[i - 1] && acf[i] > acf[i + 1] {
             let threshold = F::from_f64(0.1).unwrap(); // 10% threshold
             if acf[i] > threshold {

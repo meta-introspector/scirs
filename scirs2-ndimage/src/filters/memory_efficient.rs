@@ -19,7 +19,7 @@ pub struct UniformChunkProcessor<T> {
 }
 
 impl<T> UniformChunkProcessor<T> {
-    pub fn new(_size: Vec<usize>, bordermode: BorderMode) -> Self {
+    pub fn new(size: Vec<usize>, bordermode: BorderMode) -> Self {
         Self {
             size,
             border_mode_marker: std::marker::PhantomData,
@@ -73,7 +73,7 @@ pub struct MedianChunkProcessor<T> {
 }
 
 impl<T> MedianChunkProcessor<T> {
-    pub fn new(_size: Vec<usize>, bordermode: BorderMode) -> Self {
+    pub fn new(size: Vec<usize>, bordermode: BorderMode) -> Self {
         Self {
             size,
             border_mode_marker: std::marker::PhantomData,
@@ -83,7 +83,7 @@ impl<T> MedianChunkProcessor<T> {
 
 impl<T, D> ChunkProcessor<T, D> for MedianChunkProcessor<T>
 where
-    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + Zero + PartialOrd + 'static,
+    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + Zero + PartialOrd + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     fn process_chunk(
@@ -171,7 +171,7 @@ pub fn median_filter_chunked<T, D>(
     config: Option<ChunkConfig>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + Zero + PartialOrd + 'static,
+    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + Zero + PartialOrd + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     let config = config.unwrap_or_default();
@@ -354,7 +354,7 @@ mod tests {
 
     #[test]
     fn test_chunked_vs_regular() {
-        let input = Array2::<f64>::fromshape_fn((50, 50), |(i, j)| {
+        let input = Array2::<f64>::from_shape_fn((50, 50), |(i, j)| {
             (i as f64 * 0.1).sin() + (j as f64 * 0.1).cos()
         });
 

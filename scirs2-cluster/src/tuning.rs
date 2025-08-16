@@ -4,7 +4,7 @@
 //! for all clustering algorithms in the scirs2-cluster crate. It supports
 //! grid search, random search, Bayesian optimization, and adaptive strategies.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use rand::{rng, Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
@@ -371,7 +371,7 @@ struct BayesianState {
     /// Noise level
     noise_level: f64,
     /// Current best observed value
-    current_best: f64,
+    currentbest: f64,
 }
 
 /// Gaussian Process hyperparameters
@@ -901,7 +901,7 @@ where
     pub fn tune_gmm(&self, data: ArrayView2<F>, searchspace: SearchSpace) -> Result<TuningResult> {
         let start_time = std::time::Instant::now();
 
-        let parameter_combinations = self.generate_parameter_combinations(&search_space)?;
+        let parameter_combinations = self.generate_parameter_combinations(&searchspace)?;
 
         let mut evaluation_history = Vec::new();
         let mut best_score = f64::NEG_INFINITY;
@@ -1655,12 +1655,12 @@ where
             .map(|r| r.score)
             .fold(f64::NEG_INFINITY, f64::max);
 
-        let current_best = evaluation_history
+        let currentbest = evaluation_history
             .iter()
             .map(|r| r.score)
             .fold(f64::NEG_INFINITY, f64::max);
 
-        (current_best - best_recent) < early_stop_config.min_improvement
+        (currentbest - best_recent) < early_stop_config.min_improvement
     }
 
     /// Calculate exploration statistics
@@ -1722,8 +1722,8 @@ where
     fn generate_bayesian_combinations(
         &self,
         search_space: &SearchSpace,
-        n_initial_points: usize_acquisition,
-        _function: &AcquisitionFunction,
+        n_initial_points: usize,
+        acquisition_function: &AcquisitionFunction,
     ) -> Result<Vec<HashMap<String, f64>>> {
         let mut combinations = Vec::new();
         // Extract parameter names for consistent ordering
@@ -1739,10 +1739,10 @@ where
                 length_scales: vec![1.0; parameter_names.len()],
                 signal_variance: 1.0,
                 noise_variance: 0.1,
-                kernel_type: KernelType::RBF { length, scale: 1.0 },
+                kernel_type: KernelType::RBF { length_scale: 1.0 },
             },
             noise_level: 0.1,
-            current_best: f64::NEG_INFINITY,
+            currentbest: f64::NEG_INFINITY,
         };
 
         // Generate initial random _points
@@ -1784,7 +1784,7 @@ where
         let normalized_weights: Vec<f64> = weights.iter().map(|w| w / weight_sum).collect();
 
         // Allocate evaluations based on weights
-        for (strategy, &weight) in strategies.iter().zip(normalizedweights.iter()) {
+        for (strategy, &weight) in strategies.iter().zip(normalized_weights.iter()) {
             let n_evaluations = (total_evaluations as f64 * weight) as usize;
 
             let strategy_combinations = match strategy {
@@ -1864,9 +1864,9 @@ where
     /// Optimize acquisition function to find next evaluation point
     fn optimize_acquisition_function(
         &self,
-        search_space: &SearchSpace_bayesian,
-        _state: &BayesianState_acquisition,
-        function: &AcquisitionFunction,
+        search_space: &SearchSpace,
+        bayesian_state: &BayesianState,
+        acquisition_function: &AcquisitionFunction,
     ) -> Result<HashMap<String, f64>> {
         let mut best_acquisition = f64::NEG_INFINITY;
         let mut best_point = HashMap::new();
@@ -1893,21 +1893,22 @@ where
 
     /// Evaluate acquisition function at a point
     fn evaluate_acquisition_function(
-        self_point: &HashMap<String, f64>,
-        _bayesian_state: &BayesianState_acquisition,
-        _function: &AcquisitionFunction,
+        &self,
+        point: &HashMap<String, f64>,
+        bayesian_state: &BayesianState,
+        acquisition_function: &AcquisitionFunction,
     ) -> f64 {
-        let x = self.extract_feature_vector(_point, &bayesian_state.parameter_names);
+        let x = self.extract_feature_vector(point, &bayesian_state.parameter_names);
         let (mean, variance) = self.predict_gp(&x, bayesian_state);
         let std_dev = variance.sqrt();
 
         match acquisition_function {
             AcquisitionFunction::ExpectedImprovement => {
-                self.expected_improvement(mean, std_dev, bayesian_state.current_best)
+                self.expected_improvement(mean, std_dev, bayesian_state.currentbest)
             }
             AcquisitionFunction::UpperConfidenceBound { beta } => mean + beta * std_dev,
             AcquisitionFunction::ProbabilityOfImprovement => {
-                self.probability_of_improvement(mean, std_dev, bayesian_state.current_best)
+                self.probability_of_improvement(mean, std_dev, bayesian_state.currentbest)
             }
             AcquisitionFunction::EntropySearch => {
                 // Simplified entropy search implementation
@@ -1932,7 +1933,7 @@ where
             return 0.0;
         }
 
-        let improvement = mean - current_best;
+        let improvement = mean - currentbest;
         let z = improvement / std_dev;
 
         improvement * self.normal_cdf(z) + std_dev * self.normal_pdf(z)
@@ -1941,15 +1942,15 @@ where
     /// Probability of Improvement acquisition function
     fn probability_of_improvement(&self, mean: f64, std_dev: f64, currentbest: f64) -> f64 {
         if std_dev <= 1e-10 {
-            return if mean > current_best { 1.0 } else { 0.0 };
+            return if mean > currentbest { 1.0 } else { 0.0 };
         }
 
-        let z = (mean - current_best) / std_dev;
+        let z = (mean - currentbest) / std_dev;
         self.normal_cdf(z)
     }
 
     /// Gaussian Process prediction
-    fn predict_gp(&self, x: &[f64], bayesianstate: &BayesianState) -> (f64, f64) {
+    fn predict_gp(&self, x: &[f64], bayesian_state: &BayesianState) -> (f64, f64) {
         if bayesian_state.observations.is_empty() {
             return (0.0, 1.0); // Prior mean and variance
         }
@@ -2209,8 +2210,8 @@ where
     fn generate_smbo_combinations(
         &self,
         search_space: &SearchSpace,
-        surrogate_model: &SurrogateModel_acquisition,
-        _function: &AcquisitionFunction,
+        surrogate_model: &SurrogateModel,
+        acquisition_function: &AcquisitionFunction,
     ) -> Result<Vec<HashMap<String, f64>>> {
         // SMBO is similar to Bayesian optimization but with different surrogate models
 
@@ -2240,10 +2241,10 @@ where
                             length_scales: vec![1.0; parameter_names.len()],
                             signal_variance: 1.0,
                             noise_variance: 0.1,
-                            kernel_type: KernelType::RBF { length, scale: 1.0 },
+                            kernel_type: KernelType::RBF { length_scale: 1.0 },
                         },
                         noise_level: 0.1,
-                        current_best: f64::NEG_INFINITY,
+                        currentbest: f64::NEG_INFINITY,
                     };
 
                     self.update_gaussian_process(&mut bayesian_state, &combinations);
@@ -2605,8 +2606,8 @@ where
     fn generate_smbo_combinations(
         &self,
         search_space: &SearchSpace,
-        surrogate_model: &SurrogateModel_acquisition,
-        _function: &AcquisitionFunction,
+        surrogate_model: &SurrogateModel,
+        acquisition_function: &AcquisitionFunction,
     ) -> Result<Vec<HashMap<String, f64>>> {
         let mut combinations = Vec::new();
         let n_initial_points = 5; // Start with 5 random points
@@ -2833,9 +2834,9 @@ where
     /// Optimize acquisition function to find next point
     fn optimize_acquisition_function(
         &self,
-        search_space: &SearchSpace_bayesian,
-        _state: &BayesianState_acquisition,
-        function: &AcquisitionFunction,
+        search_space: &SearchSpace,
+        bayesian_state: &BayesianState,
+        acquisition_function: &AcquisitionFunction,
     ) -> Result<HashMap<String, f64>> {
         // Enhanced acquisition _function optimization
         let n_candidates = 1000;
@@ -2859,9 +2860,10 @@ where
 
     /// Evaluate acquisition function at a point
     fn evaluate_acquisition_function(
-        self_point: &HashMap<String, f64>,
-        _bayesian_state: &BayesianState_acquisition,
-        _function: &AcquisitionFunction,
+        &self,
+        point: &HashMap<String, f64>,
+        bayesian_state: &BayesianState,
+        acquisition_function: &AcquisitionFunction,
     ) -> f64 {
         // Simplified acquisition _function evaluation
         // In practice, this would compute EI, UCB, PI, etc. based on GP predictions
@@ -3063,9 +3065,9 @@ where
     /// Enhanced acquisition function optimization with multiple strategies
     fn optimize_acquisition_function_enhanced(
         &self,
-        search_space: &SearchSpace_bayesian,
-        _state: &BayesianState_acquisition,
-        function: &AcquisitionFunction,
+        search_space: &SearchSpace,
+        bayesian_state: &BayesianState,
+        acquisition_function: &AcquisitionFunction,
         iteration: usize,
     ) -> Result<HashMap<String, f64>> {
         let n_candidates = std::cmp::max(1000, 100 * search_space.parameters.len());
@@ -3119,7 +3121,7 @@ where
     /// Generate local optimization candidates around promising regions
     fn generate_local_optimization_candidates(
         &self,
-        search_space: &SearchSpace_bayesian,
+        search_space: &SearchSpace,
         _state: &BayesianState,
         n_candidates: usize,
     ) -> Result<Vec<HashMap<String, f64>>> {
@@ -3157,7 +3159,7 @@ where
                     candidate.insert(param_name.clone(), perturbed_value);
                 }
 
-                candidates.push(candidate);
+                _candidates.push(candidate);
             }
         }
 
@@ -3166,17 +3168,19 @@ where
 
     /// Enhanced acquisition function evaluation with proper GP predictions
     fn evaluate_acquisition_function_enhanced(
-        self_point: &HashMap<String, f64>,
-        _bayesian_state: &BayesianState_acquisition,
-        _function: &AcquisitionFunction,
+        &self,
+        point: &HashMap<String, f64>,
+        bayesian_state: &BayesianState,
+        acquisition_function: &AcquisitionFunction,
     ) -> f64 {
         // Get GP predictions at the _point (simplified)
-        let (mean, variance) = self.predict_gp(_point, bayesian_state);
+        let x = self.extract_feature_vector(point, &bayesian_state.parameter_names);
+        let (mean, variance) = self.predict_gp(&x, bayesian_state);
         let std_dev = variance.sqrt();
 
         match acquisition_function {
             AcquisitionFunction::ExpectedImprovement => {
-                let f_best = bayesian_state.current_best;
+                let f_best = bayesian_state.currentbest;
                 if std_dev < 1e-6 {
                     return 0.0; // No uncertainty, no improvement expected
                 }
@@ -3189,7 +3193,7 @@ where
             }
             AcquisitionFunction::UpperConfidenceBound { beta } => mean + beta * std_dev,
             AcquisitionFunction::ProbabilityOfImprovement => {
-                let f_best = bayesian_state.current_best;
+                let f_best = bayesian_state.currentbest;
                 if std_dev < 1e-6 {
                     return if mean > f_best { 1.0 } else { 0.0 };
                 }
@@ -3217,7 +3221,7 @@ where
     fn predict_gp(
         &self,
         _point: &HashMap<String, f64>,
-        _bayesian_state: &BayesianState,
+        bayesian_state: &BayesianState,
     ) -> (f64, f64) {
         if bayesian_state.observations.is_empty() || bayesian_state.gp_covariance.is_none() {
             // No observations or GP not trained, return prior
@@ -3228,7 +3232,7 @@ where
         let n_features = bayesian_state.parameter_names.len();
         let mut x_test = Array2::zeros((1, n_features));
         for (i, param_name) in bayesian_state.parameter_names.iter().enumerate() {
-            x_test[[0, i]] = point.get(param_name).unwrap_or(&0.0).clone();
+            x_test[[0, i]] = _point.get(param_name).unwrap_or(&0.0).clone();
         }
 
         // Extract training data
@@ -3455,7 +3459,7 @@ where
     }
 
     /// Solve triangular system L * x = b
-    fn solve_triangular(&self, lmatrix: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
+    fn solve_triangular(&self, l_matrix: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
         let n = l_matrix.nrows();
         if n != b.len() {
             return Err(ClusteringError::InvalidInput(
@@ -3474,7 +3478,7 @@ where
 
             if l_matrix[[i, i]].abs() < 1e-12 {
                 return Err(ClusteringError::InvalidInput(
-                    "Singular _matrix".to_string(),
+                    "Singular matrix".to_string(),
                 ));
             }
 
@@ -3509,7 +3513,7 @@ fn erf(x: f64) -> f64 {
 impl Default for TuningConfig {
     fn default() -> Self {
         Self {
-            strategy: SearchStrategy::RandomSearch { n, trials: 50 },
+            strategy: SearchStrategy::RandomSearch { n_trials: 50 },
             metric: EvaluationMetric::SilhouetteScore,
             cv_config: CrossValidationConfig {
                 n_folds: 5,
@@ -4381,7 +4385,7 @@ pub mod advanced_optimization {
                 all_results: observations
                     .into_iter()
                     .map(|(params_fidelity, score)| EvaluationResult {
-                        parameters: params,
+                        parameters: params_fidelity.0,
                         score,
                         cv_scores: vec![score],
                         runtime: 0.0,
@@ -4891,7 +4895,7 @@ pub mod neural_architecture_search {
 
     impl<F: Float + FromPrimitive + Debug + Send + Sync> NeuralArchitectureSearch<F> {
         /// Create new NAS instance
-        pub fn new(_searchspace: SearchSpace<F>) -> Self {
+        pub fn new(search_space: SearchSpace<F>) -> Self {
             Self {
                 controller_weights: Vec::new(),
                 search_space,
@@ -4906,10 +4910,10 @@ pub mod neural_architecture_search {
             let mut rng = rand::rng();
 
             // Simple 2-layer network for hyperparameter generation
-            let w1 = Array2::fromshape_fn((input_dim, hidden_dim), |_| {
+            let w1 = Array2::from_shape_fn((input_dim, hiddendim), |_| {
                 F::from(rng.gen_range(-0.1..0.1)).unwrap()
             });
-            let w2 = Array2::fromshape_fn((hidden_dim..self.search_space.len()), |_| {
+            let w2 = Array2::from_shape_fn((hiddendim, self.search_space.len()), |_| {
                 F::from(rng.gen_range(-0.1..0.1)).unwrap()
             });
 
@@ -4956,12 +4960,12 @@ pub mod neural_architecture_search {
                                 *min + (normalized_value * range).round().to_usize().unwrap_or(0);
                             F::from(scaled).unwrap()
                         }
-                        HyperParameter::Categorical { options } => {
-                            let idx = (normalized_value * F::from(options.len()).unwrap())
+                        HyperParameter::Categorical { choices } => {
+                            let idx = (normalized_value * F::from(choices.len()).unwrap())
                                 .to_usize()
                                 .unwrap_or(0)
-                                .min(options.len() - 1);
-                            options[idx]
+                                .min(choices.len() - 1);
+                            choices[idx]
                         }
                     };
                     config.insert(param_name.clone(), param_value);
@@ -5126,7 +5130,7 @@ pub mod neural_architecture_search {
 
     impl<F: Float + FromPrimitive + Debug + Send + Sync> MultiarmedBanditOptimizer<F> {
         /// Create new multi-armed bandit optimizer
-        pub fn new(_searchspace: SearchSpace<F>, algorithm: BanditAlgorithm) -> Self {
+        pub fn new(search_space: SearchSpace<F>, algorithm: BanditAlgorithm) -> Self {
             Self {
                 arms: Vec::new(),
                 rewards: Vec::new(),
@@ -5140,7 +5144,7 @@ pub mod neural_architecture_search {
         pub fn initialize_arms(&mut self, narms: usize) -> Result<()> {
             let mut rng = rand::rng();
 
-            for _ in 0..n_arms {
+            for _ in 0..narms {
                 let mut config = HashMap::new();
 
                 for (param_name, param_def) in &self.search_space {
@@ -5153,9 +5157,9 @@ pub mod neural_architecture_search {
                             let val = rng.gen_range(*min..=*max);
                             F::from(val).unwrap()
                         }
-                        HyperParameter::Categorical { options } => {
-                            let idx = rng.gen_range(0..options.len());
-                            options[idx]
+                        HyperParameter::Categorical { choices } => {
+                            let idx = rng.gen_range(0..choices.len());
+                            choices[idx]
                         }
                     };
                     config.insert(param_name.clone()..value);
@@ -5238,14 +5242,14 @@ pub mod neural_architecture_search {
 
         /// Update arm with reward
         pub fn update_arm(&mut self, armindex: usize, reward: F) -> Result<()> {
-            if arm_index >= self.arms.len() {
+            if armindex >= self.arms.len() {
                 return Err(ClusteringError::InvalidInput(
                     "Invalid arm _index".to_string(),
                 ));
             }
 
-            self.rewards[arm_index].push(reward);
-            self.pulls[arm_index] += 1;
+            self.rewards[armindex].push(reward);
+            self.pulls[armindex] += 1;
 
             Ok(())
         }
@@ -5407,9 +5411,9 @@ pub mod neural_architecture_search {
                             let val = rng.gen_range(*min..=*max);
                             F::from(val).unwrap()
                         }
-                        HyperParameter::Categorical { options } => {
-                            let idx = rng.gen_range(0..options.len());
-                            options[idx]
+                        HyperParameter::Categorical { choices } => {
+                            let idx = rng.gen_range(0..choices.len());
+                            choices[idx]
                         }
                     };
                     config.insert(param_name.clone()..value);
@@ -5903,7 +5907,7 @@ pub fn quick_algorithm_selection<F: Float + FromPrimitive + Send + Sync + Debug>
     data: ArrayView2<F>,
 ) -> Result<AlgorithmSelectionResult> {
     let config = TuningConfig {
-        strategy: SearchStrategy::RandomSearch { n, trials: 20 },
+        strategy: SearchStrategy::RandomSearch { n_trials: 20 },
         max_evaluations: 20,
         early_stopping: Some(EarlyStoppingConfig {
             patience: 5,

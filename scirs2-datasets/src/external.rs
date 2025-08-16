@@ -535,15 +535,15 @@ pub mod repositories {
         pub fn new(_apikey: Option<String>) -> Result<Self> {
             let mut config = ExternalConfig::default();
 
-            if let Some(ref key) = _api_key {
+            if let Some(ref key) = _apikey {
                 config
                     .headers
-                    .insert("Authorization".to_string(), format!("Bearer {_key}"));
+                    .insert("Authorization".to_string(), format!("Bearer {key}"));
             }
 
             Ok(Self {
                 client: ExternalClient::with_config(config)?,
-                api_key,
+                api_key: _apikey,
             })
         }
 
@@ -680,7 +680,7 @@ pub mod convenience {
     #[cfg(not(feature = "download"))]
     pub fn load_github_dataset_sync(user: &str, repo: &str, path: &str) -> Result<Dataset> {
         let github = GitHubRepository::new()?;
-        github.load_from_repo_sync(_user, repo, path)
+        github.load_from_repo_sync(user, repo, path)
     }
 
     /// List available UCI datasets

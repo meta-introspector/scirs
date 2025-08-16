@@ -15,7 +15,7 @@ use crate::utils::safe_f64_to_float;
 /// Helper function for safe conversion from usize to float
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(_value).ok_or_else(|| {
+    T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
@@ -23,7 +23,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 /// Helper function for safe conversion from i32 to float
 #[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
-    T::from_i32(_value).ok_or_else(|| {
+    T::from_i32(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
     })
 }
@@ -428,7 +428,7 @@ where
 
     for i in 0..height {
         for j in 0..width {
-            if !_input[[i, j]] {
+            if !input[[i, j]] {
                 dt[[i, j]] = T::zero();
             }
         }
@@ -552,7 +552,7 @@ mod tests {
     fn test_chessboard_distance_transform() {
         let input = array![[true, true, true], [true, false, true], [true, true, true]];
 
-        let dt = chessboard_distance_transform(&input)
+        let dt = chessboard_distance_transform::<f64>(&input)
             .expect("chessboard_distance_transform should succeed for test");
 
         // Center should be 0 (background)

@@ -796,8 +796,8 @@ where
             }
             let mut inv = Array2::zeros((2, 2));
             inv[[0, 0]] = matrix[[1, 1]] / det;
-            inv[[0, 1]] = -_matrix[[0, 1]] / det;
-            inv[[1, 0]] = -_matrix[[1, 0]] / det;
+            inv[[0, 1]] = -matrix[[0, 1]] / det;
+            inv[[1, 0]] = -matrix[[1, 0]] / det;
             inv[[1, 1]] = matrix[[0, 0]] / det;
             return Ok(inv);
         }

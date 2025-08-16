@@ -113,7 +113,7 @@ fn find_lca_height<F: Float>(i: usize, j: usize, z: &Array2<F>, clusterheight: &
         // Check if i and j are now in the same cluster
         if cluster_map[i] == cluster_map[j] {
             // Found the lowest common ancestor
-            return cluster_height[cluster_map[i]];
+            return clusterheight[cluster_map[i]];
         }
     }
 

@@ -167,7 +167,7 @@ impl Dataset {
     ///
     /// Self for method chaining
     pub fn with_feature_descriptions(mut self, featuredescriptions: Vec<String>) -> Self {
-        self.feature_descriptions = Some(feature_descriptions);
+        self.feature_descriptions = Some(featuredescriptions);
         self
     }
 

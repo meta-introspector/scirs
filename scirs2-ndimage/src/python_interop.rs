@@ -37,7 +37,7 @@ pub struct PyError {
 
 impl From<NdimageError> for PyError {
     fn from(error: NdimageError) -> Self {
-        match _error {
+        match error {
             NdimageError::InvalidInput(msg) => PyError {
                 _error_type: "ValueError".to_string(),
                 message: msg,

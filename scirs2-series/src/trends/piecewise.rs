@@ -380,13 +380,13 @@ where
         }
 
         // Find the pair with the lowest merge cost
-        if let Some((idx_)) = merge_costs.iter().min_by(|(_, cost1), (_, cost2)| {
+        if let Some((idx_, _)) = merge_costs.iter().min_by(|(_, cost1), (_, cost2)| {
             cost1
                 .partial_cmp(cost2)
                 .unwrap_or(std::cmp::Ordering::Equal)
         }) {
             // Remove the breakpoint
-            all_breakpoints.remove(*idx);
+            all_breakpoints.remove(*idx_);
         } else {
             break;
         }
@@ -571,14 +571,14 @@ fn fit_linear_model<F>(_segmentts: &ArrayView1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = segment_ts.len();
+    let n = _segmentts.len();
 
     // Create x values: 0, 1, 2, ...
     let x_values: Vec<F> = (0..n).map(|i| F::from_usize(i).unwrap()).collect();
 
     // Calculate means
     let mean_x = F::from_usize(n - 1).unwrap() / F::from_f64(2.0).unwrap();
-    let mean_y = segment_ts.sum() / F::from_usize(n).unwrap();
+    let mean_y = _segmentts.sum() / F::from_usize(n).unwrap();
 
     // Calculate covariance and variance
     let mut cov_xy = F::zero();
@@ -586,7 +586,7 @@ where
 
     for i in 0..n {
         let x_dev = x_values[i] - mean_x;
-        let y_dev = segment_ts[i] - mean_y;
+        let y_dev = _segmentts[i] - mean_y;
 
         cov_xy = cov_xy + x_dev * y_dev;
         var_x = var_x + x_dev * x_dev;
@@ -616,7 +616,7 @@ fn fit_polynomial_model<F>(_segmentts: &ArrayView1<F>, degree: usize) -> Result<
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = segment_ts.len();
+    let n = _segmentts.len();
 
     if n <= degree {
         return Err(TimeSeriesError::InsufficientData {
@@ -655,7 +655,7 @@ where
 
         let mut sum = F::zero();
         for k in 0..n {
-            sum = sum + x_design[[k, i]] * segment_ts[k];
+            sum = sum + x_design[[k, i]] * _segmentts[k];
         }
         xty[i] = sum;
     }
@@ -852,12 +852,12 @@ where
     F: Float + FromPrimitive + Debug + 'static,
 {
     // First, compute the main trend estimate
-    let trend = estimate_piecewise_trend(ts_options)?;
+    let trend = estimate_piecewise_trend(ts, options)?;
 
     // Then compute confidence intervals
     let (lower, upper) =
         super::confidence::compute_trend_confidence_interval(ts, &trend, ci_options, |data| {
-            estimate_piecewise_trend(data_options)
+            estimate_piecewise_trend(data, options)
         })?;
 
     Ok(TrendWithConfidenceInterval {

@@ -247,7 +247,7 @@ where
     // Step 4: Solve regularized least squares problem
     // (X^T X + λR) β = X^T y
     let xtx = design_matrix.t().dot(&design_matrix);
-    let xty = design_matrix.t().dot(_ts);
+    let xty = design_matrix.t().dot(ts);
 
     // Add regularization
     let system_matrix = xtx + regularization_matrix;

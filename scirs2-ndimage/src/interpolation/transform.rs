@@ -71,7 +71,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use ndarray::{Array2, array};
 /// use scirs2_ndimage::interpolation::affine_transform;
 ///
-/// let input = Array2::fromshape_fn((10, 10), |(i, j)| (i + j) as f64);
+/// let input = Array2::from_shape_fn((10, 10), |(i, j)| (i + j) as f64);
 ///
 /// // Scale by 2x and translate by (5, 5)
 /// let scale_matrix = array![
@@ -93,7 +93,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use ndarray::{Array2, array};
 /// use scirs2_ndimage::interpolation::affine_transform;
 ///
-/// let squareimage = Array2::fromshape_fn((20, 20), |(i, j)| {
+/// let squareimage = Array2::from_shape_fn((20, 20), |(i, j)| {
 ///     if i >= 5 && i < 15 && j >= 5 && j < 15 { 1.0 } else { 0.0 }
 /// });
 ///
@@ -115,7 +115,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use ndarray::{Array2, array};
 /// use scirs2_ndimage::interpolation::{affine_transform, BoundaryMode};
 ///
-/// let distorted = Array2::fromshape_fn((30, 40), |(i, j)| {
+/// let distorted = Array2::from_shape_fn((30, 40), |(i, j)| {
 ///     ((i as f64 / 5.0).sin() * (j as f64 / 5.0).cos()).abs()
 /// });
 ///
@@ -146,12 +146,12 @@ use crate::error::{NdimageError, NdimageResult};
 /// use ndarray::{Array3, Array2};
 /// use scirs2_ndimage::interpolation::affine_transform;
 ///
-/// let volume = Array3::fromshape_fn((20, 20, 20), |(i, j, k)| {
+/// let volume = Array3::from_shape_fn((20, 20, 20), |(i, j, k)| {
 ///     ((i + j + k) as f64) / 60.0
 /// });
 ///
 /// // 3D rotation around z-axis
-/// let rotation_3d = Array2::fromshape_fn((3, 3), |(i, j)| {
+/// let rotation_3d = Array2::from_shape_fn((3, 3), |(i, j)| {
 ///     match (i, j) {
 ///         (0, 0) => 0.866, (0, 1) => -0.5, (0, 2) => 0.0,
 ///         (1, 0) => 0.5,   (1, 1) => 0.866, (1, 2) => 0.0,

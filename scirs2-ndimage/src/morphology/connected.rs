@@ -15,8 +15,8 @@ struct UnionFind {
 impl UnionFind {
     fn new(size: usize) -> Self {
         UnionFind {
-            parent: (0.._size).collect(),
-            rank: vec![0; _size],
+            parent: (0..size).collect(),
+            rank: vec![0; size],
         }
     }
 
@@ -118,13 +118,13 @@ fn get_neighbors(
 #[allow(dead_code)]
 fn generate_all_offsets(ndim: usize) -> Vec<Vec<isize>> {
     let mut offsets = Vec::new();
-    let total_combinations = 3_usize.pow(_ndim as u32);
+    let total_combinations = 3_usize.pow(ndim as u32);
 
     for i in 0..total_combinations {
-        let mut offset = Vec::with_capacity(_ndim);
+        let mut offset = Vec::with_capacity(ndim);
         let mut temp = i;
 
-        for _ in 0.._ndim {
+        for _ in 0..ndim {
             let val = (temp % 3) as isize - 1; // -1, 0, or 1
             offset.push(val);
             temp /= 3;
@@ -145,7 +145,7 @@ fn ravel_index(indices: &[usize], shape: &[usize]) -> usize {
     let mut flat_index = 0;
     let mut stride = 1;
 
-    for i in (0.._indices.len()).rev() {
+    for i in (0..indices.len()).rev() {
         flat_index += indices[i] * stride;
         stride *= shape[i];
     }
@@ -157,7 +157,7 @@ fn ravel_index(indices: &[usize], shape: &[usize]) -> usize {
 #[allow(dead_code)]
 fn unravel_index(_flatindex: usize, shape: &[usize]) -> Vec<usize> {
     let mut indices = vec![0; shape.len()];
-    let mut remaining = flat_index;
+    let mut remaining = _flatindex;
 
     for i in (0..shape.len()).rev() {
         let stride: usize = shape[(i + 1)..].iter().product();

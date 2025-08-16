@@ -4,7 +4,7 @@
 //! results, including quantum state visualization, neuromorphic adaptation plots,
 //! and AI algorithm selection insights.
 
-use crate::advanced__clustering::{AdvancedClusteringResult, AdvancedPerformanceMetrics};
+use crate::advanced_clustering::{AdvancedClusteringResult, AdvancedPerformanceMetrics};
 use crate::error::{ClusteringError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::HashMap;
@@ -466,7 +466,7 @@ impl AdvancedVisualizer {
         let n_samples = data.nrows();
         let n_features = data.ncols();
 
-        if target_dims >= n_features {
+        if targetdims >= n_features {
             return Ok(data.to_owned());
         }
 
@@ -482,13 +482,13 @@ impl AdvancedVisualizer {
             for j in 0..n_features {
                 let mut cov_sum = 0.0;
 
-                for sample_idx in 0..n_samples {
-                    let xi = centered[[sample_idx, i]];
-                    let xj = centered[[sample_idx, j]];
+                for sampleidx in 0..n_samples {
+                    let xi = centered[[sampleidx, i]];
+                    let xj = centered[[sampleidx, j]];
 
                     // Apply quantum enhancement based on sample properties
                     let quantum_weight =
-                        self.calculate_quantum_sample_weight(sample_idx, &centered.row(sample_idx));
+                        self.calculate_quantum_sample_weight(sampleidx, &centered.row(sampleidx));
                     cov_sum += xi * xj * quantum_weight;
                 }
 
@@ -497,12 +497,12 @@ impl AdvancedVisualizer {
         }
 
         // Quantum-inspired eigenvalue decomposition approximation
-        let eigenvectors = self.quantum_eigendecomposition(&covariance, target_dims)?;
+        let eigenvectors = self.quantum_eigendecomposition(&covariance, targetdims)?;
 
         // Project data onto quantum-enhanced principal components
-        let mut reduced = Array2::zeros((n_samples, target_dims));
+        let mut reduced = Array2::zeros((n_samples, targetdims));
         for i in 0..n_samples {
-            for j in 0..target_dims {
+            for j in 0..targetdims {
                 let mut projection = 0.0;
                 for k in 0..n_features {
                     projection += centered[[i, k]] * eigenvectors[[k, j]];
@@ -531,7 +531,7 @@ impl AdvancedVisualizer {
         };
 
         // Quantum phase based on sample index and properties
-        let quantum_phase = 2.0 * std::f64::consts::PI * (sample_idx as f64 + sample_mean) / 100.0;
+        let quantum_phase = 2.0 * std::f64::consts::PI * (sampleidx as f64 + sample_mean) / 100.0;
 
         // Quantum superposition weight
         let amplitude = (1.0 + entropy_factor) / 2.0;
@@ -620,10 +620,10 @@ impl AdvancedVisualizer {
     }
 
     /// Calculate quantum coherence factor for projections
-    fn calculate_projection_coherence(&self, sample_idx: usize, componentidx: usize) -> f64 {
+    fn calculate_projection_coherence(&self, sampleidx: usize, componentidx: usize) -> f64 {
         // Quantum coherence based on sample and component indices
-        let phase_sample = 2.0 * std::f64::consts::PI * sample_idx as f64 / 100.0;
-        let phase_component = std::f64::consts::PI * component_idx as f64 / 10.0;
+        let phase_sample = 2.0 * std::f64::consts::PI * sampleidx as f64 / 100.0;
+        let phase_component = std::f64::consts::PI * componentidx as f64 / 10.0;
 
         // Interference pattern between sample and component phases
         let interference = (phase_sample + phase_component).cos();
@@ -970,7 +970,7 @@ impl AdvancedVisualizer {
             .performance_dashboard
             .improvement_factors
             .iter()
-            .find(|(name_)| name.contains("Neuromorphic"))
+            .find(|(name_)| name_.contains("Neuromorphic"))
             .map(|(_, value)| *value)
             .unwrap_or(1.0)
     }
@@ -981,7 +981,7 @@ impl AdvancedVisualizer {
             .performance_dashboard
             .improvement_factors
             .iter()
-            .find(|(name_)| name.contains("AI"))
+            .find(|(name_)| name_.contains("AI"))
             .map(|(_, value)| *value)
             .unwrap_or(1.0)
     }

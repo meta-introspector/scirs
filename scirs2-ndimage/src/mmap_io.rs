@@ -243,7 +243,7 @@ where
     let expected_bytes = total_elements * element_size;
 
     // Open and read the file
-    let mut file = File::open(_path.as_ref())
+    let mut file = File::open(path.as_ref())
         .map_err(|e| NdimageError::IoError(format!("Failed to open file: {}", e)))?;
 
     // Check file size
@@ -383,7 +383,7 @@ pub fn process_largeimage_example<P: AsRef<Path>>(
     shape: &[usize],
 ) -> NdimageResult<()> {
     // Load input as memory-mapped
-    let input_mmap = loadimage_mmap::<f64, Ix2_>(input_path, shape, 0, AccessMode::Read)?;
+    let input_mmap = loadimage_mmap::<f64, Ix2>(input_path, shape, 0, AccessMode::Read)?;
 
     // Create output memory-mapped array
     let output_mmap = saveimage_mmap(
@@ -417,7 +417,7 @@ mod tests {
     #[test]
     fn test_create_temp_mmap() {
         let shape = vec![100, 100];
-        let (mmap_temp_path) = create_temp_mmap::<f64>(&shape).unwrap();
+        let (mmap, _temp_path) = create_temp_mmap::<f64>(&shape).unwrap();
 
         assert_eq!(mmap.shape(), &shape);
         assert_eq!(mmap.size(), 10000);
@@ -437,7 +437,7 @@ mod tests {
 
         // Load back
         let loaded_mmap =
-            loadimage_mmap::<f64, Ix2_>(&file_path, &[50, 50], 0, AccessMode::Read).unwrap();
+            loadimage_mmap::<f64, Ix2>(&file_path, &[50, 50], 0, AccessMode::Read).unwrap();
 
         // Verify data
         let loaded_view = loaded_mmap.as_array::<Ix2>().unwrap();
@@ -447,7 +447,7 @@ mod tests {
     #[test]
     fn test_mmap_chunk_iterator() {
         let shape = vec![1000];
-        let (mmap_temp_path) = create_temp_mmap::<f64>(&shape).unwrap();
+        let (mmap, _temp_path) = create_temp_mmap::<f64>(&shape).unwrap();
 
         let iterator = MmapChunkIterator::new(&mmap, ChunkingStrategy::Fixed(100));
         let chunks: Vec<_> = iterator.iter().collect();

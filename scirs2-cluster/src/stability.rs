@@ -632,7 +632,7 @@ pub mod advanced {
         CrossValidationStability<F>
     {
         /// Create a new cross-validation stability assessor
-        pub fn new(_config: StabilityConfig, nfolds: usize) -> Self {
+        pub fn new(config: StabilityConfig, nfolds: usize) -> Self {
             Self {
                 config,
                 n_folds_phantom: std::marker::PhantomData,
@@ -739,7 +739,7 @@ pub mod advanced {
                     .iter()
                     .enumerate()
                     .filter(|(_, &label)| label == cluster_id)
-                    .map(|(idx_)| idx)
+                    .map(|(idx_, _)| idx_)
                     .collect();
 
                 let cluster_size = cluster_members.len();
@@ -788,7 +788,7 @@ pub mod advanced {
         PerturbationStability<F>
     {
         /// Create a new perturbation stability assessor
-        pub fn new(_config: StabilityConfig, perturbationtypes: Vec<PerturbationType>) -> Self {
+        pub fn new(config: StabilityConfig, perturbationtypes: Vec<PerturbationType>) -> Self {
             Self {
                 config,
                 perturbation_types_phantom: std::marker::PhantomData,
@@ -949,7 +949,7 @@ pub mod advanced {
         MultiScaleStability<F>
     {
         /// Create a new multi-scale stability assessor
-        pub fn new(_config: StabilityConfig, scalefactors: Vec<f64>) -> Self {
+        pub fn new(config: StabilityConfig, scalefactors: Vec<f64>) -> Self {
             Self {
                 config,
                 scale_factors_phantom: std::marker::PhantomData,
@@ -1213,7 +1213,7 @@ pub mod advanced {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(idx_)| idx)
+                .map(|(idx_, _)| idx_)
                 .unwrap_or(0);
 
             Ok(k_range.0 + best_idx)
@@ -1236,7 +1236,7 @@ pub mod advanced {
 
     impl<F: Float + FromPrimitive + Debug> JaccardStability<F> {
         /// Create a new Jaccard stability validator
-        pub fn new(_n_bootstrap: usize, subsample_ratio: f64, randomseed: Option<u64>) -> Self {
+        pub fn new(n_bootstrap: usize, subsample_ratio: f64, randomseed: Option<u64>) -> Self {
             Self {
                 n_bootstrap,
                 subsample_ratio,
@@ -1285,7 +1285,7 @@ pub mod advanced {
                                     .iter()
                                     .enumerate()
                                     .find(|(_, &idx2)| idx1 == idx2)
-                                    .map(|(i2_)| (i1, i2))
+                                    .map(|(i2_, _)| (i1, i2_))
                             })
                             .collect();
 
@@ -1471,7 +1471,7 @@ pub mod advanced {
         }
 
         /// Compute stability for a single cluster across bootstrap samples
-        fn compute_cluster_stability(&self, clustersamples: &[HashSet<usize>]) -> Result<F> {
+        fn compute_cluster_stability(&self, cluster_samples: &[HashSet<usize>]) -> Result<F> {
             if cluster_samples.len() < 2 {
                 return Ok(F::zero());
             }
@@ -1624,7 +1624,7 @@ pub mod advanced {
         }
 
         /// Find the range of perturbations with lowest sensitivity
-        fn find_robust_range(&self, sensitivityprofile: &[F]) -> (f64, f64) {
+        fn find_robust_range(&self, sensitivity_profile: &[F]) -> (f64, f64) {
             if sensitivity_profile.is_empty() {
                 return (0.0, 0.0);
             }

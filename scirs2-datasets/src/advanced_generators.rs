@@ -7,8 +7,7 @@
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, Axis};
-use rand::{thread_rng, Rng};
-use statrs::statistics::Statistics;
+use rand::{rng, Rng};
 
 /// Configuration for adversarial example generation
 #[derive(Debug, Clone)]
@@ -197,7 +196,9 @@ pub struct AdvancedGenerator {
 impl AdvancedGenerator {
     /// Create a new advanced generator
     pub fn new(_random_state: Option<u64>) -> Self {
-        Self { _random_state }
+        Self {
+            random_state: _random_state,
+        }
     }
 
     /// Generate adversarial examples
@@ -421,7 +422,7 @@ impl AdvancedGenerator {
                 }
             };
 
-            let shifted_dataset = self.apply_domain_shift(&source_dataset, shift, &config)?;
+            let shifted_dataset = self.apply_domain_shift(&source_dataset, shift)?;
             domain_datasets.push((format!("source_{domain_id}"), shifted_dataset));
         }
 
@@ -432,7 +433,7 @@ impl AdvancedGenerator {
             shift_strength: 1.5,
         };
 
-        let target_dataset = self.apply_domain_shift(&source_dataset, &target_shift, &config)?;
+        let target_dataset = self.apply_domain_shift(&source_dataset, &target_shift)?;
         domain_datasets.push(("target".to_string(), target_dataset));
 
         Ok(DomainAdaptationDataset {
@@ -495,7 +496,7 @@ impl AdvancedGenerator {
             // Apply concept drift
             if task_id > 0 {
                 let drift = Array2::from_shape_fn((n_classes, n_features), |_| {
-                    thread_rng().random::<f64>() * concept_drift_strength
+                    rng().random::<f64>() * concept_drift_strength
                 });
                 base_centers = base_centers + drift;
             }
@@ -529,7 +530,7 @@ impl AdvancedGenerator {
         }
 
         Ok(ContinualLearningDataset {
-            _tasks: task_datasets,
+            tasks: task_datasets,
             concept_drift_strength,
         })
     }
@@ -549,7 +550,7 @@ impl AdvancedGenerator {
                 let mut perturbations = Array2::zeros((n_samples, n_features));
                 for i in 0..n_samples {
                     for j in 0..n_features {
-                        let sign = if thread_rng().random::<f64>() > 0.5 {
+                        let sign = if rng().random::<f64>() > 0.5 {
                             1.0
                         } else {
                             -1.0
@@ -565,7 +566,7 @@ impl AdvancedGenerator {
                 for _iter in 0..config.iterations {
                     for i in 0..n_samples {
                         for j in 0..n_features {
-                            let gradient = thread_rng().random::<f64>() * 2.0 - 1.0; // Simulated gradient
+                            let gradient = rng().random::<f64>() * 2.0 - 1.0; // Simulated gradient
                             perturbations[[i, j]] += config.step_size * gradient.signum();
                             // Clip to epsilon ball
                             perturbations[[i, j]] =
@@ -578,7 +579,7 @@ impl AdvancedGenerator {
             AttackMethod::RandomNoise => {
                 // Random noise baseline
                 let perturbations = Array2::from_shape_fn((n_samples, n_features), |_| {
-                    (thread_rng().random::<f64>() * 2.0 - 1.0) * config.epsilon
+                    (rng().random::<f64>() * 2.0 - 1.0) * config.epsilon
                 });
                 Ok(perturbations)
             }
@@ -587,7 +588,7 @@ impl AdvancedGenerator {
                 let mut perturbations = Array2::zeros(data.dim());
                 for i in 0..data.nrows() {
                     for j in 0..data.ncols() {
-                        let noise = thread_rng().random::<f64>() * 2.0 - 1.0;
+                        let noise = rng().random::<f64>() * 2.0 - 1.0;
                         perturbations[[i, j]] = config.epsilon * noise;
                     }
                 }
@@ -623,13 +624,13 @@ impl AdvancedGenerator {
         config: &AnomalyConfig,
     ) -> Result<Array2<f64>> {
         use rand::Rng;
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
         match config.anomaly_type {
             AnomalyType::Point => {
                 // Point _anomalies - outliers far from normal distribution
                 let normal_mean = normal_data.mean_axis(Axis(0)).ok_or_else(|| {
-                    DatasetsError::GenerationError(
+                    DatasetsError::ComputationError(
                         "Failed to compute mean for normal data".to_string(),
                     )
                 })?;
@@ -650,14 +651,14 @@ impl AdvancedGenerator {
                 let mut anomalies: Array2<f64> = Array2::zeros((n_anomalies, n_features));
                 for i in 0..n_anomalies {
                     // Pick a random normal sample and permute some _features
-                    let base_idx = rng.gen_range(0..normal_data.nrows());
+                    let base_idx = rng.random_range(0..normal_data.nrows());
                     let mut anomaly = normal_data.row(base_idx).to_owned();
 
                     // Permute random _features
                     let n_permute = (n_features as f64 * 0.3) as usize;
                     for _ in 0..n_permute {
-                        let j = rng.gen_range(0..n_features);
-                        let k = rng.gen_range(0..n_features);
+                        let j = rng.random_range(0..n_features);
+                        let k = rng.random_range(0..n_features);
                         let temp = anomaly[j];
                         anomaly[j] = anomaly[k];
                         anomaly[k] = temp;
@@ -670,12 +671,11 @@ impl AdvancedGenerator {
             _ => {
                 // Default to point _anomalies implementation
                 let normal_mean = normal_data.mean_axis(Axis(0)).ok_or_else(|| {
-                    DatasetsError::GenerationError(
+                    DatasetsError::ComputationError(
                         "Failed to compute mean for normal data".to_string(),
                     )
                 })?;
                 let normal_std = normal_data.std_axis(Axis(0), 0.0);
-                let mut rng = thread_rng();
 
                 let mut anomalies = Array2::zeros((n_anomalies, n_features));
                 for i in 0..n_anomalies {
@@ -692,12 +692,12 @@ impl AdvancedGenerator {
 
     fn generate_shuffle_indices(&self, n_samples: usize) -> Result<Vec<usize>> {
         use rand::Rng;
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mut indices: Vec<usize> = (0..n_samples).collect();
 
         // Simple shuffle using Fisher-Yates
         for i in (1..n_samples).rev() {
-            let j = rng.gen_range(0..=i);
+            let j = rng.random_range(0..=i);
             indices.swap(i, j);
         }
 
@@ -723,7 +723,7 @@ impl AdvancedGenerator {
     fn generate_shared_features(&self, n_samples: usize, n_features: usize) -> Result<Array2<f64>> {
         // Generate shared _features using multivariate normal distribution
         let data = Array2::from_shape_fn((n_samples, n_features), |_| {
-            thread_rng().random::<f64>() * 2.0 - 1.0 // Standard normal approximation
+            rng().random::<f64>() * 2.0 - 1.0 // Standard normal approximation
         });
         Ok(data)
     }
@@ -737,7 +737,7 @@ impl AdvancedGenerator {
         // Generate task-specific _features with slight bias per task
         let task_bias = task_id as f64 * 0.1;
         let data = Array2::from_shape_fn((n_samples, n_features), |_| {
-            thread_rng().random::<f64>() * 2.0 - 1.0 + task_bias
+            rng().random::<f64>() * 2.0 - 1.0 + task_bias
         });
         Ok(data)
     }
@@ -785,7 +785,7 @@ impl AdvancedGenerator {
                         .enumerate()
                         .map(|(j, &x)| x * (j as f64 + 1.0) * correlation)
                         .sum::<f64>();
-                    weighted_sum + thread_rng().random::<f64>() * noise
+                    weighted_sum + rng().random::<f64>() * noise
                 });
                 Ok(target)
             }
@@ -818,11 +818,7 @@ impl AdvancedGenerator {
         )
     }
 
-    fn apply_domain_shift(
-        &self,
-        base_dataset: &Dataset,
-        shift: &DomainAdaptationConfig,
-    ) -> Result<Dataset> {
+    fn apply_domain_shift(&self, base_dataset: &Dataset, shift: &DomainShift) -> Result<Dataset> {
         let shifted_data = &base_dataset.data + &shift.mean_shift;
 
         let mut metadata = base_dataset.metadata.clone();
@@ -884,7 +880,7 @@ impl AdvancedGenerator {
 
     fn generate_class_centers(&self, n_classes: usize, n_features: usize) -> Result<Array2<f64>> {
         let centers = Array2::from_shape_fn((n_classes, n_features), |_| {
-            thread_rng().random::<f64>() * 4.0 - 2.0
+            rng().random::<f64>() * 4.0 - 2.0
         });
         Ok(centers)
     }
@@ -1110,8 +1106,8 @@ mod tests {
         assert_eq!(adversarial_dataset.n_features(), base_dataset.n_features());
 
         // Check that the data has been perturbed
-        let original_mean = base_dataset.data.mean().unwrap();
-        let adversarial_mean = adversarial_dataset.data.mean().unwrap();
+        let original_mean = base_dataset.data.mean().unwrap_or(0.0);
+        let adversarial_mean = adversarial_dataset.data.mean().unwrap_or(0.0);
         assert!((original_mean - adversarial_mean).abs() > 1e-6);
     }
 

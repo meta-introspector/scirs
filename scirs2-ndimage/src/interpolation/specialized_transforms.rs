@@ -227,20 +227,20 @@ where
     // Validate inputs
     if source_points.shape() != target_points.shape() {
         return Err(NdimageError::InvalidInput(
-            "Source and target _points must have the same shape".into(),
+            "Source and target points must have the same shape".into(),
         ));
     }
 
     if source_points.shape()[1] != 2 || target_points.shape()[1] != 2 {
         return Err(NdimageError::InvalidInput(
-            "Control _points must be Nx2 arrays".into(),
+            "Control points must be Nx2 arrays".into(),
         ));
     }
 
     let n_points = source_points.shape()[0];
     if n_points < 3 {
         return Err(NdimageError::InvalidInput(
-            "At least 3 control _points are required for TPS".into(),
+            "At least 3 control points are required for TPS".into(),
         ));
     }
 
@@ -360,18 +360,18 @@ where
 #[allow(dead_code)]
 fn apply_tps_mapping<T>(
     x: T,
-    y: T_control,
+    y: T,
     points: &Array2<T>,
     _weights: &Array2<T>,
-    _a_x: &T_a,
-    _y: &T,
+    _a_x: &T,
+    _a_y: &T,
 ) -> (T, T)
 where
     T: Float + FromPrimitive,
 {
     // Simplified implementation - return input coordinates
     // In a full implementation, this would apply the TPS transformation
-    (_x_y)
+    (x, y)
 }
 
 /// Apply a multi-resolution transformation using image pyramids

@@ -10,7 +10,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// Based on the theory of B-spline interpolation
 #[allow(dead_code)]
 fn get_spline_poles<T: Float + FromPrimitive>(order: usize) -> Vec<T> {
-    match _order {
+    match order {
         0 | 1 => vec![], // No poles for constant or linear
         2 => {
             // Quadratic B-spline has one pole at sqrt(8) - 3
@@ -81,9 +81,9 @@ fn apply_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T, init
         return;
     }
 
-    coeffs[0] = initial_coeff;
+    coeffs[0] = initialcoeff;
 
-    for i in 1.._coeffs.len() {
+    for i in 1..coeffs.len() {
         coeffs[i] = coeffs[i] + pole * coeffs[i - 1];
     }
 }
@@ -96,10 +96,10 @@ fn apply_anti_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T,
     }
 
     let last_idx = coeffs.len() - 1;
-    coeffs[last_idx] = initial_coeff;
+    coeffs[last_idx] = initialcoeff;
 
     for i in (0..last_idx).rev() {
-        coeffs[i] = pole * (_coeffs[i + 1] - coeffs[i]);
+        coeffs[i] = pole * (coeffs[i + 1] - coeffs[i]);
     }
 }
 
@@ -137,14 +137,14 @@ where
 
     // For orders 0 and 1, no filtering is needed
     if spline_order <= 1 {
-        return Ok(_input.to_owned());
+        return Ok(input.to_owned());
     }
 
     // Create output array
     let mut output = input.to_owned();
 
     // Apply spline filtering along each axis
-    for axis in 0.._input.ndim() {
+    for axis in 0..input.ndim() {
         spline_filter_axis(&mut output, spline_order, axis)?;
     }
 

@@ -305,7 +305,7 @@ impl CorrelationAnalyzer {
     /// Create a new analyzer with random seed
     pub fn with_seed(seed: u64) -> Self {
         Self {
-            random_seed: Some(_seed),
+            random_seed: Some(seed),
         }
     }
 
@@ -379,7 +379,7 @@ impl CorrelationAnalyzer {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.abs().partial_cmp(&b.abs()).unwrap())
-            .map(|(idx_)| idx)
+            .map(|(idx_, _)| idx_)
             .unwrap_or(0);
 
         let max_correlation = correlations[max_idx];
@@ -818,7 +818,7 @@ impl CorrelationAnalyzer {
         indexed_values.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
 
         let mut ranks = Array1::zeros(x.len());
-        for (rank, &(original_index_)) in indexed_values.iter().enumerate() {
+        for (rank, &(original_index, _)) in indexed_values.iter().enumerate() {
             ranks[original_index] = rank as f64 + 1.0;
         }
 
@@ -915,7 +915,7 @@ impl CorrelationAnalyzer {
     }
 
     fn compute_local_cost(&self, x: f64, y: f64, costfunction: DTWCostFunction) -> f64 {
-        match cost_function {
+        match costfunction {
             DTWCostFunction::Euclidean => (x - y).abs(),
             DTWCostFunction::Manhattan => (x - y).abs(),
             DTWCostFunction::SquaredEuclidean => (x - y).powi(2),
@@ -1018,14 +1018,14 @@ impl CorrelationAnalyzer {
                 ],
             };
 
-            let (next_i, next_j_) = candidates
+            let (next_i, next_j_, _) = candidates
                 .into_iter()
-                .filter(|(ni, nj_)| *ni > 0 && *nj > 0)
+                .filter(|(ni, nj_, _)| *ni > 0 && *nj_ > 0)
                 .min_by(|a, b| a.2.partial_cmp(&b.2).unwrap())
                 .unwrap_or((1, 1, 0.0));
 
             i = next_i;
-            j = next_j;
+            j = next_j_;
             path.push((i - 1, j - 1)); // Convert to 0-indexed
         }
 
@@ -1099,7 +1099,7 @@ impl CorrelationAnalyzer {
         let max_scale = n_times as f64 / 4.0;
         let scale_factor = (max_scale / min_scale).powf(1.0 / (n_scales - 1) as f64);
 
-        for (scale_idx_scale) in (0..n_scales).enumerate() {
+        for scale_idx in 0..n_scales {
             let current_scale = min_scale * scale_factor.powi(scale_idx as i32);
             frequencies[scale_idx] = config.sampling_freq / (2.0 * PI * current_scale);
 
@@ -1244,7 +1244,7 @@ impl CorrelationAnalyzer {
     fn coherence_confidence_threshold(&self, confidence_level: f64, nsegments: usize) -> f64 {
         // Approximation for coherence confidence threshold
         let alpha = 1.0 - confidence_level;
-        let dof = 2 * n_segments;
+        let dof = 2 * nsegments;
 
         // For large DOF, use chi-squared approximation
         if dof > 30 {

@@ -7,6 +7,7 @@
 use crate::error::{ClusteringError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
+use rand::Rng;
 use std::collections::HashMap;
 
 #[cfg(feature = "serde")]
@@ -2463,7 +2464,7 @@ pub mod benchmark {
             let mut rng = rand::rng();
             let normal = Normal::new(0.0, 1.0);
 
-            Array2::fromshape_fn((n_samples, n_features), |_| normal.sample(&mut rng))
+            Array2::from_shape_fn((n_samples, n_features), |_| normal.sample(&mut rng))
         }
 
         /// Estimate memory bandwidth utilization

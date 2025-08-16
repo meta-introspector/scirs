@@ -18,7 +18,7 @@ use crate::utils::safe_f64_to_float;
 /// Helper function for safe i32 conversion
 #[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
-    T::from_i32(_value).ok_or_else(|| {
+    T::from_i32(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
     })
 }
@@ -127,7 +127,7 @@ where
     let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
 
     for k in 0..kernel_size {
-        let dist = safe_i32_to_float((k as i32) - (radius as i32))?;
+        let dist: T = safe_i32_to_float((k as i32) - (radius as i32))?;
         spatial_weights[k] = (-dist * dist / two_sigma_spatial_sq).exp();
     }
 
@@ -203,9 +203,9 @@ where
 
     for dy in 0..kernel_size {
         for dx in 0..kernel_size {
-            let y_dist = safe_i32_to_float((dy as i32) - (radius as i32))?;
-            let x_dist = safe_i32_to_float((dx as i32) - (radius as i32))?;
-            let spatial_dist_sq = y_dist * y_dist + x_dist * x_dist;
+            let y_dist: T = safe_i32_to_float((dy as i32) - (radius as i32))?;
+            let x_dist: T = safe_i32_to_float((dx as i32) - (radius as i32))?;
+            let spatial_dist_sq: T = y_dist * y_dist + x_dist * x_dist;
             spatial_weights[[dy, dx]] = (-spatial_dist_sq / two_sigma_spatial_sq).exp();
         }
     }
@@ -291,31 +291,25 @@ where
         let mut weight_sum = T::zero();
 
         // Iterate through neighborhood
-        iterate_neighborhood(&idx_vec, radius, input.ndim(), |neighbor_offset| {
-            // Calculate neighbor position in padded array
-            let neighbor_idx: Vec<usize> = center_idx
-                .iter()
-                .zip(neighbor_offset.iter())
-                .map(|(&center, &offset)| (center as i32 + offset) as usize)
-                .collect();
+        for offset in -(radius as i32)..=(radius as i32) {
+            let neighbor_idx = center_idx[0] as i32 + offset;
+            if neighbor_idx >= 0 && neighbor_idx < padded_input.len() as i32 {
+                let neighbor_value = padded_input[neighbor_idx as usize];
 
-            let neighbor_value = padded_input[&IxDyn(&neighbor_idx)];
+                // Calculate spatial weight
+                let dist: T = safe_i32_to_float(offset)?;
+                let spatial_dist_sq = dist * dist;
+                let spatial_weight = (-spatial_dist_sq / two_sigma_spatial_sq).exp();
 
-            // Calculate _spatial weight
-            let spatial_dist_sq = neighbor_offset.iter().try_fold(T::zero(), |acc, &offset| {
-                let dist = safe_i32_to_float(offset)?;
-                Ok(acc + dist * dist)
-            })?;
-            let spatial_weight = (-spatial_dist_sq / two_sigma_spatial_sq).exp();
+                // Calculate color weight
+                let color_diff = neighbor_value - center_value;
+                let color_weight = (-color_diff * color_diff / two_sigma_color_sq).exp();
 
-            // Calculate _color weight
-            let color_diff = neighbor_value - center_value;
-            let color_weight = (-color_diff * color_diff / two_sigma_color_sq).exp();
-
-            let total_weight = spatial_weight * color_weight;
-            weighted_sum = weighted_sum + neighbor_value * total_weight;
-            weight_sum = weight_sum + total_weight;
-        });
+                let total_weight = spatial_weight * color_weight;
+                weighted_sum = weighted_sum + neighbor_value * total_weight;
+                weight_sum = weight_sum + total_weight;
+            }
+        }
 
         *output_val = if weight_sum > T::zero() {
             weighted_sum / weight_sum
@@ -984,7 +978,7 @@ pub fn multi_scale_bilateral_filter<T, D>(
     config: &MultiScaleBilateralConfig,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + std::fmt::Display + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension,
 {
     if input.ndim() == 0 {
@@ -1078,7 +1072,7 @@ pub fn adaptive_bilateral_filter<T, D>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + std::fmt::Display + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
@@ -1196,16 +1190,16 @@ where
 
 /// Compute local variance in a 2D array using a sliding window
 #[allow(dead_code)]
-fn compute_local_variance<T>(_input: &Array2<T>, windowsize: usize) -> NdimageResult<Array2<T>>
+fn compute_local_variance<T>(input: &Array2<T>, windowsize: usize) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
 {
     let (rows, cols) = input.dim();
     let mut variance = Array2::zeros((rows, cols));
-    let radius = window_size / 2;
+    let radius = windowsize / 2;
 
     let pad_width = vec![(radius, radius), (radius, radius)];
-    let padded = super::pad_array(_input, &pad_width, &BorderMode::Reflect, None)?;
+    let padded = super::pad_array(input, &pad_width, &BorderMode::Reflect, None)?;
 
     for i in 0..rows {
         for j in 0..cols {
@@ -1217,8 +1211,8 @@ where
             let mut sum_sq = T::zero();
             let mut count = T::zero();
 
-            for dy in 0..window_size {
-                for dx in 0..window_size {
+            for dy in 0..windowsize {
+                for dx in 0..windowsize {
                     let y = center_y - radius + dy;
                     let x = center_x - radius + dx;
                     let value = padded[[y, x]];
@@ -1264,12 +1258,12 @@ where
         for dx in 0..window_size {
             let _y = center_y - radius + dy;
             let _x = center_x - radius + dx;
-            let neighbor_value = padded_input[[_y_x]];
+            let neighbor_value = padded_input[[_y, _x]];
 
             // Spatial weight
-            let y_dist = safe_i32_to_float((dy as i32) - (radius as i32))?;
-            let x_dist = safe_i32_to_float((dx as i32) - (radius as i32))?;
-            let spatial_dist_sq = y_dist * y_dist + x_dist * x_dist;
+            let y_dist = safe_i32_to_float::<T>((dy as i32) - (radius as i32))?;
+            let x_dist = safe_i32_to_float::<T>((dx as i32) - (radius as i32))?;
+            let spatial_dist_sq: T = y_dist * y_dist + x_dist * x_dist;
             let spatial_weight = (-spatial_dist_sq / two_sigma_spatial_sq).exp();
 
             // Color weight
@@ -1294,7 +1288,7 @@ where
 fn downsampleimage<T, D>(input: &Array<T, D>, factor: f64) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     if factor <= 0.0 || factor >= 1.0 {
         return Err(NdimageError::InvalidInput(
@@ -1313,11 +1307,14 @@ where
     }
 
     // Simple nearest-neighbor downsampling
-    let mut output = Array::zeros(newshape.clone());
+    let output_dyn = ndarray::ArrayD::<T>::zeros(newshape.clone());
+    let mut output = output_dyn.into_dimensionality::<D>().map_err(|_| {
+        NdimageError::DimensionError("Failed to convert output array to correct dimension".into())
+    })?;
 
     // For 2D case (most common)
     if input.ndim() == 2 && newshape.len() == 2 {
-        let input_2d = _input
+        let input_2d = input
             .to_owned()
             .into_dimensionality::<ndarray::Ix2>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D".into()))?;
@@ -1337,7 +1334,7 @@ where
     }
 
     // Fallback: return a copy for unsupported dimensions
-    Ok(_input.clone())
+    Ok(input.clone())
 }
 
 /// Upsample an image to match the target shape
@@ -1358,7 +1355,7 @@ where
 
     // For 2D case
     if input.ndim() == 2 {
-        let input_2d = _input
+        let input_2d = input
             .to_owned()
             .into_dimensionality::<ndarray::Ix2>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D".into()))?;

@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
+use std::path::PathBuf;
 use std::process;
 use uuid::Uuid;
 
@@ -586,12 +587,12 @@ fn load_baseline(path: &PathBuf) -> Result<BaselineMetrics> {
 
 #[allow(dead_code)]
 fn save_baseline(baseline: &BaselineMetrics, path: &PathBuf) -> Result<()> {
-    let content = serde_json::to_string_pretty(_baseline).map_err(|e| {
+    let content = serde_json::to_string_pretty(baseline).map_err(|e| {
         OptimError::OptimizationError(format!("Failed to serialize baseline: {}", e))
     })?;
 
     fs::write(path, content)
-        .map_err(|e| OptimError::ResourceError(format!("Failed to write _baseline file: {}", e)))
+        .map_err(|e| OptimError::ResourceError(format!("Failed to write baseline file: {}", e)))
 }
 
 #[allow(dead_code)]
@@ -778,8 +779,8 @@ fn merge_baseline_with_results(
 }
 
 #[allow(dead_code)]
-fn extract_numeric_value(value: &serde, json: Value) -> Option<f64> {
-    match _value {
+fn extract_numeric_value(value: &serde_json::Value) -> Option<f64> {
+    match value {
         serde_json::Value::Number(n) => n.as_f64(),
         serde_json::Value::Object(obj) => {
             // Try common numeric fields
@@ -815,7 +816,7 @@ fn validate_baseline(baseline: &BaselineMetrics) -> Result<bool> {
     }
 
     // Validate individual metrics
-    for (_name, metric) in &_baseline.metrics {
+    for (_name, metric) in &baseline.metrics {
         if metric.samples.is_empty() {
             return Ok(false);
         }
@@ -834,7 +835,7 @@ fn validate_baseline(baseline: &BaselineMetrics) -> Result<bool> {
 
 #[allow(dead_code)]
 fn find_baseline_files(_baselinedir: &str) -> Result<Vec<PathBuf>> {
-    let dirpath = PathBuf::from(_baseline_dir);
+    let dirpath = PathBuf::from(_baselinedir);
 
     if !dirpath.exists() {
         return Ok(vec![]);

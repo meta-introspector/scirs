@@ -833,7 +833,7 @@ pub mod technical_indicators {
             });
         }
 
-        let mut result = Array1::zeros(_data.len() - window + 1);
+        let mut result = Array1::zeros(data.len() - window + 1);
 
         for i in 0..result.len() {
             let sum = data.slice(s![i..i + window]).sum();
@@ -862,12 +862,12 @@ pub mod technical_indicators {
             });
         }
 
-        let mut result = Array1::zeros(_data.len());
+        let mut result = Array1::zeros(data.len());
         result[0] = data[0];
 
         let one_minus_alpha = one - alpha;
 
-        for i in 1.._data.len() {
+        for i in 1..data.len() {
             result[i] = alpha * data[i] + one_minus_alpha * result[i - 1];
         }
 
@@ -923,7 +923,7 @@ pub mod technical_indicators {
         }
 
         // Calculate price changes
-        let mut changes = Array1::zeros(_data.len() - 1);
+        let mut changes = Array1::zeros(data.len() - 1);
         for i in 0..changes.len() {
             changes[i] = data[i + 1] - data[i];
         }
@@ -1189,10 +1189,10 @@ pub mod technical_indicators {
             });
         }
 
-        let mut obv = Array1::zeros(_close.len());
+        let mut obv = Array1::zeros(close.len());
         obv[0] = volume[0];
 
-        for i in 1.._close.len() {
+        for i in 1..close.len() {
             if close[i] > close[i - 1] {
                 obv[i] = obv[i - 1] + volume[i];
             } else if close[i] < close[i - 1] {
@@ -1646,14 +1646,14 @@ pub mod volatility {
             });
         }
 
-        let mut ewma_var = Array1::zeros(_returns.len());
+        let mut ewma_var = Array1::zeros(returns.len());
 
         // Initialize with first squared return
         ewma_var[0] = returns[0].powi(2);
 
         let one_minus_lambda = F::one() - lambda;
 
-        for i in 1.._returns.len() {
+        for i in 1..returns.len() {
             ewma_var[i] = lambda * ewma_var[i - 1] + one_minus_lambda * returns[i].powi(2);
         }
 
@@ -1716,7 +1716,7 @@ pub mod volatility {
 
         for i in sampling_frequency..prices.len() {
             let logreturn = (prices[i] / prices[i - sampling_frequency]).ln();
-            squared_returns = squared_returns + log_return.powi(2);
+            squared_returns = squared_returns + logreturn.powi(2);
             count += 1;
         }
 
@@ -1815,7 +1815,7 @@ pub mod risk {
         // Calculate annualized return
         let totalreturn = (prices[prices.len() - 1] / prices[0]) - F::one();
         let years = F::from(returns.len()).unwrap() / F::from(periods_per_year).unwrap();
-        let annualizedreturn = (F::one() + total_return).powf(F::one() / years) - F::one();
+        let annualizedreturn = (F::one() + totalreturn).powf(F::one() / years) - F::one();
 
         // Calculate maximum drawdown
         let mdd = max_drawdown(prices)?;
@@ -2009,7 +2009,7 @@ pub mod risk {
         periods_per_year: usize,
     ) -> Result<F> {
         // Calculate portfolio beta
-        let portfolio_beta = beta(_returns, market_returns)?;
+        let portfolio_beta = beta(returns, market_returns)?;
 
         if portfolio_beta == F::zero() {
             return Ok(F::infinity());
@@ -2017,7 +2017,7 @@ pub mod risk {
 
         // Calculate annualized excess return
         let annualized_rf = risk_free_rate / F::from(periods_per_year).unwrap();
-        let meanreturn = returns.sum() / F::from(_returns.len()).unwrap();
+        let meanreturn = returns.sum() / F::from(returns.len()).unwrap();
         let excessreturn = meanreturn - annualized_rf;
         let annualized_excess = excessreturn * F::from(periods_per_year).unwrap();
 
@@ -2032,11 +2032,11 @@ pub mod risk {
         periods_per_year: usize,
     ) -> Result<F> {
         // Calculate portfolio beta
-        let portfolio_beta = beta(_returns, market_returns)?;
+        let portfolio_beta = beta(returns, market_returns)?;
 
         // Calculate mean _returns
         let annualized_rf = risk_free_rate / F::from(periods_per_year).unwrap();
-        let mean_portfolio = returns.sum() / F::from(_returns.len()).unwrap();
+        let mean_portfolio = returns.sum() / F::from(returns.len()).unwrap();
         let mean_market = market_returns.sum() / F::from(market_returns.len()).unwrap();
 
         // Calculate alpha using CAPM formula
@@ -2119,7 +2119,7 @@ pub mod risk {
             // Calculate portfolio value change over horizon
             let mut portfolioreturn = F::one();
             for _ in 0..horizon {
-                portfolioreturn = portfolioreturn * (F::one() + simulated_return);
+                portfolioreturn = portfolioreturn * (F::one() + simulatedreturn);
             }
 
             simulated_returns.push(portfolioreturn - F::one());
@@ -2175,14 +2175,14 @@ pub mod portfolio {
     impl<F: Float + Clone> Portfolio<F> {
         /// Create a new portfolio
         pub fn new(_weights: Array1<F>, assetnames: Vec<String>) -> Result<Self> {
-            if weights.len() != asset_names.len() {
+            if _weights.len() != assetnames.len() {
                 return Err(TimeSeriesError::DimensionMismatch {
-                    expected: weights.len(),
-                    actual: asset_names.len(),
+                    expected: _weights.len(),
+                    actual: assetnames.len(),
                 });
             }
 
-            let weight_sum = weights.sum();
+            let weight_sum = _weights.sum();
             let tolerance = F::from(0.01).unwrap();
             if (weight_sum - F::one()).abs() > tolerance {
                 return Err(TimeSeriesError::InvalidInput(
@@ -2191,8 +2191,8 @@ pub mod portfolio {
             }
 
             Ok(Self {
-                weights,
-                asset_names,
+                weights: _weights,
+                asset_names: assetnames,
                 rebalance_frequency: None,
             })
         }
@@ -2205,17 +2205,17 @@ pub mod portfolio {
                 ));
             }
 
-            let weight = F::one() / F::from(n_assets).unwrap();
-            let weights = Array1::from_elem(n_assets, weight);
+            let weight = F::one() / F::from(_n_assets).unwrap();
+            let weights = Array1::from_elem(_n_assets, weight);
 
-            Self::new(weights, asset_names)
+            Self::new(weights, assetnames)
         }
 
         /// Get portfolio weight for specific asset
         pub fn get_weight(&self, assetname: &str) -> Option<F> {
             self.asset_names
                 .iter()
-                .position(|_name| _name == asset_name)
+                .position(|_name| _name == assetname)
                 .map(|idx| self.weights[idx])
         }
     }
@@ -2263,12 +2263,12 @@ pub mod portfolio {
 
         // Annualized return
         let years = F::from(returns.len()).unwrap() / F::from(periods_per_year).unwrap();
-        let annualizedreturn = (F::one() + total_return).powf(F::one() / years) - F::one();
+        let annualizedreturn = (F::one() + totalreturn).powf(F::one() / years) - F::one();
 
         // Volatility (annualized)
         let meanreturn = returns.sum() / F::from(returns.len()).unwrap();
         let variance =
-            returns.mapv(|r| (r - mean_return).powi(2)).sum() / F::from(returns.len() - 1).unwrap();
+            returns.mapv(|r| (r - meanreturn).powi(2)).sum() / F::from(returns.len() - 1).unwrap();
         let volatility = variance.sqrt() * F::from(periods_per_year).unwrap().sqrt();
 
         // Risk metrics
@@ -2280,8 +2280,8 @@ pub mod portfolio {
         let es_95 = super::risk::expected_shortfall(returns, 0.95)?;
 
         Ok(PortfolioMetrics {
-            total_return,
-            annualized_return,
+            total_return: totalreturn,
+            annualized_return: annualizedreturn,
             volatility,
             sharpe_ratio: sharpe,
             sortino_ratio: sortino,
@@ -2321,7 +2321,7 @@ pub mod portfolio {
                 .map(|(&w, &r)| w * r)
                 .fold(F::zero(), |acc, x| acc + x);
 
-            let return_diff = targetreturn - current_return;
+            let return_diff = target_return - currentreturn;
 
             if return_diff.abs() < F::from(1e-6).unwrap() {
                 break;
@@ -2446,7 +2446,7 @@ pub mod portfolio {
 
         // Calculate VaR
         let varreturn = horizon_mean + z_score * horizon_std;
-        let var_amount = portfolio_value * var_return.abs();
+        let var_amount = portfolio_value * varreturn.abs();
 
         Ok(var_amount)
     }
@@ -3490,8 +3490,8 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
             };
 
             conditional_variance[i] = omega
-                + alpha * lagged_return.powi(2)
-                + gamma * negative_indicator * lagged_return.powi(2)
+                + alpha * laggedreturn.powi(2)
+                + gamma * negative_indicator * laggedreturn.powi(2)
                 + beta * lagged_variance;
         }
 
@@ -3677,11 +3677,11 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
             let lagged_std = conditional_std[i - 1];
 
             // APARCH innovation term
-            let abs_innovation = lagged_return.abs();
+            let abs_innovation = laggedreturn.abs();
             let sign_adjustment = if laggedreturn < F::zero() {
-                abs_innovation - gamma * lagged_return
+                abs_innovation - gamma * laggedreturn
             } else {
-                abs_innovation + gamma * lagged_return
+                abs_innovation + gamma * laggedreturn
             };
 
             // Power transformation
@@ -4308,10 +4308,10 @@ pub mod advanced_technical_indicators {
             });
         }
 
-        let mut obv = Array1::zeros(_close.len());
+        let mut obv = Array1::zeros(close.len());
         obv[0] = volume[0];
 
-        for i in 1.._close.len() {
+        for i in 1..close.len() {
             if close[i] > close[i - 1] {
                 obv[i] = obv[i - 1] + volume[i];
             } else if close[i] < close[i - 1] {
@@ -4651,7 +4651,7 @@ pub mod advanced_technical_indicators {
 
             // Calculate smoothing constant
             let _sc = efficiency_ratio * (fast_alpha - slow_alpha) + slow_alpha;
-            let sc_squared = _sc * sc;
+            let sc_squared = _sc * _sc;
 
             // Update KAMA
             kama[i] = kama[i - 1] + sc_squared * (data[i] - kama[i - 1]);
@@ -4744,7 +4744,7 @@ pub mod risk_metrics {
         let meanreturn = returns.sum() / F::from(n).unwrap();
         let variance = returns
             .iter()
-            .map(|&r| (r - mean_return).powi(2))
+            .map(|&r| (r - meanreturn).powi(2))
             .fold(F::zero(), |acc, x| acc + x)
             / F::from(n - 1).unwrap();
         let std_dev = variance.sqrt();
@@ -4824,7 +4824,7 @@ pub mod risk_metrics {
         let skewness = if std_dev > F::zero() {
             let skew_sum = returns
                 .iter()
-                .map(|&r| ((r - mean_return) / std_dev).powi(3))
+                .map(|&r| ((r - meanreturn) / std_dev).powi(3))
                 .fold(F::zero(), |acc, x| acc + x);
             skew_sum / F::from(n).unwrap()
         } else {
@@ -4835,7 +4835,7 @@ pub mod risk_metrics {
         let kurtosis = if std_dev > F::zero() {
             let kurt_sum = returns
                 .iter()
-                .map(|&r| ((r - mean_return) / std_dev).powi(4))
+                .map(|&r| ((r - meanreturn) / std_dev).powi(4))
                 .fold(F::zero(), |acc, x| acc + x);
             kurt_sum / F::from(n).unwrap() - F::from(3.0).unwrap() // Excess kurtosis
         } else {
@@ -4884,7 +4884,7 @@ pub mod risk_metrics {
 
         let n = returns.len();
         let mean = returns.sum() / F::from(n).unwrap();
-        let variance = _returns
+        let variance = returns
             .iter()
             .map(|&r| (r - mean).powi(2))
             .fold(F::zero(), |acc, x| acc + x)
@@ -4892,7 +4892,7 @@ pub mod risk_metrics {
         let std_dev = variance.sqrt();
 
         // Normal distribution inverse CDF approximation
-        let alpha = F::one() - confidence_level;
+        let alpha = F::one() - confidencelevel;
         let z_score = normal_inverse_cdf(alpha);
         let var = -(mean + z_score * std_dev);
 
@@ -4936,7 +4936,7 @@ pub mod risk_metrics {
             // Box-Muller transformation
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             let simulatedreturn = mean + std_dev * F::from(z).unwrap();
-            simulated_returns.push(simulated_return);
+            simulated_returns.push(simulatedreturn);
         }
 
         // Sort and find VaR
@@ -5066,7 +5066,7 @@ pub mod risk_metrics {
             ));
         }
 
-        let n = F::from(_returns.len()).unwrap();
+        let n = F::from(returns.len()).unwrap();
         let mean_asset = returns.sum() / n;
         let mean_benchmark = benchmark_returns.sum() / n;
 
@@ -5097,13 +5097,13 @@ pub mod risk_metrics {
         risk_free_rate: F,
         trading_days_per_year: usize,
     ) -> Result<F> {
-        let beta = calculate_beta(_returns, benchmark_returns)?;
+        let beta = calculate_beta(returns, benchmark_returns)?;
 
         if beta.abs() < F::from(1e-10).unwrap() {
             return Ok(F::zero());
         }
 
-        let n = F::from(_returns.len()).unwrap();
+        let n = F::from(returns.len()).unwrap();
         let meanreturn = returns.sum() / n;
         let annualizedreturn = meanreturn * F::from(trading_days_per_year).unwrap();
         let excessreturn = annualizedreturn - risk_free_rate;
@@ -5118,9 +5118,9 @@ pub mod risk_metrics {
         risk_free_rate: F,
         trading_days_per_year: usize,
     ) -> Result<F> {
-        let beta = calculate_beta(_returns, benchmark_returns)?;
+        let beta = calculate_beta(returns, benchmark_returns)?;
 
-        let n = F::from(_returns.len()).unwrap();
+        let n = F::from(returns.len()).unwrap();
         let mean_assetreturn = returns.sum() / n;
         let mean_benchmarkreturn = benchmark_returns.sum() / n;
 
@@ -5128,7 +5128,7 @@ pub mod risk_metrics {
         let annualized_benchmark = mean_benchmarkreturn * F::from(trading_days_per_year).unwrap();
 
         let expectedreturn = risk_free_rate + beta * (annualized_benchmark - risk_free_rate);
-        Ok(annualized_asset - expected_return)
+        Ok(annualized_asset - expectedreturn)
     }
 
     /// Approximate normal inverse CDF

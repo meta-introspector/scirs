@@ -36,19 +36,19 @@ where
                 "VAR _order must be at least 1".to_string(),
             ));
         }
-        if n_vars == 0 {
+        if nvars == 0 {
             return Err(TimeSeriesError::InvalidInput(
                 "Number of variables must be at least 1".to_string(),
             ));
         }
 
-        let coefficients = vec![Array2::zeros((n_vars, n_vars)); _order];
-        let intercept = Array1::zeros(n_vars);
-        let covariance = Array2::eye(n_vars);
+        let coefficients = vec![Array2::zeros((nvars, nvars)); _order];
+        let intercept = Array1::zeros(nvars);
+        let covariance = Array2::eye(nvars);
 
         Ok(Self {
-            order,
-            n_vars,
+            order: _order,
+            n_vars: nvars,
             coefficients,
             intercept,
             covariance,
@@ -192,10 +192,10 @@ where
             ));
         }
 
-        if shock_var >= self.n_vars {
+        if shockvar >= self.n_vars {
             return Err(TimeSeriesError::InvalidInput(format!(
                 "Shock variable {} out of range (0-{})",
-                shock_var,
+                shockvar,
                 self.n_vars - 1
             )));
         }
@@ -204,7 +204,7 @@ where
 
         // Initial shock
         let mut shock = Array1::zeros(self.n_vars);
-        shock[shock_var] = F::one();
+        shock[shockvar] = F::one();
         responses.row_mut(0).assign(&shock);
 
         // Calculate responses
@@ -278,7 +278,7 @@ where
             ));
         }
 
-        if cause_var >= self.n_vars || effect_var >= self.n_vars {
+        if cause_var >= self.n_vars || effectvar >= self.n_vars {
             return Err(TimeSeriesError::InvalidInput(
                 "Variable indices out of range".to_string(),
             ));
@@ -348,11 +348,11 @@ where
             ));
         }
 
-        let adjustment = Array2::zeros((n_vars, rank));
-        let cointegration = Array2::zeros((n_vars, rank));
-        let short_run = vec![Array2::zeros((n_vars, n_vars)); lag_order - 1];
-        let deterministic = Array2::zeros((n_vars, 2)); // constant and trend
-        let covariance = Array2::eye(n_vars);
+        let adjustment = Array2::zeros((_n_vars, rank));
+        let cointegration = Array2::zeros((_n_vars, rank));
+        let short_run = vec![Array2::zeros((_n_vars, _n_vars)); lagorder - 1];
+        let deterministic = Array2::zeros((_n_vars, 2)); // constant and trend
+        let covariance = Array2::eye(_n_vars);
 
         Ok(Self {
             rank,
@@ -414,12 +414,12 @@ where
     }
 
     // Try Cholesky decomposition first (for positive definite matrices)
-    if let Ok(beta) = solve_cholesky(_xtx, xty) {
+    if let Ok(beta) = solve_cholesky(xtx, xty) {
         return Ok(beta);
     }
 
     // Fall back to LU decomposition with partial pivoting
-    solve_lu_decomposition(_xtx, xty)
+    solve_lu_decomposition(xtx, xty)
 }
 
 /// Solve using Cholesky decomposition
@@ -643,7 +643,7 @@ where
 
         if criterion_value < best_criterion {
             best_criterion = criterion_value;
-            best_order = order;
+            best_order = _order;
         }
     }
 

@@ -117,7 +117,7 @@ where
     let actual_motif_length = motif_length.unwrap_or(ts.len() / 10).max(3);
 
     // Discover _motifs
-    let _motifs = discover_motifs(ts, actual_motif_length, max_motifs)?;
+    let motifs = discover_motifs(ts, actual_motif_length, max_motifs)?;
 
     // Calculate discord scores
     let discord_scores = calculate_discord_scores(ts, actual_motif_length, k_neighbors)?;
@@ -183,7 +183,7 @@ where
         }
     }
 
-    let mut _motifs = Vec::new();
+    let mut motifs = Vec::new();
     let mut used_indices = vec![false; num_subsequences];
 
     for _ in 0..max_motifs {
@@ -253,14 +253,14 @@ where
         };
 
         motifs.push(MotifInfo {
-            _length: motif_length,
+            length: motif_length,
             frequency: positions.len(),
             positions,
             avg_distance,
         });
     }
 
-    Ok(_motifs)
+    Ok(motifs)
 }
 
 // =============================================================================
@@ -453,9 +453,9 @@ where
 
     // Generate candidate shapelets from class 1
     for ts in ts_class1.iter() {
-        for _length in min_length..=max_length.min(ts.len() / 2) {
+        for length in min_length..=max_length.min(ts.len() / 2) {
             for start in 0..=(ts.len() - length) {
-                let shapelet = ts.slice(s![start..start + _length]).to_owned();
+                let shapelet = ts.slice(s![start..start + length]).to_owned();
 
                 // Calculate information gain
                 let info_gain =
@@ -601,7 +601,7 @@ where
 
 /// Calculate distance matrix for time series subsequences
 #[allow(dead_code)]
-pub fn calculate_distance_matrix<F>(_ts: &Array1<F>, subsequencelength: usize) -> Result<Array2<F>>
+pub fn calculate_distance_matrix<F>(ts: &Array1<F>, subsequence_length: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
@@ -617,7 +617,7 @@ where
 
     for i in 0..num_subsequences {
         for j in (i + 1)..num_subsequences {
-            let dist = euclidean_distance_subsequence(_ts, i, j, subsequence_length);
+            let dist = euclidean_distance_subsequence(ts, i, j, subsequence_length);
             distances[[i, j]] = dist;
             distances[[j, i]] = dist;
         }
@@ -628,7 +628,7 @@ where
 
 /// Find nearest neighbors for each subsequence
 #[allow(dead_code)]
-pub fn find_nearest_neighbors<F>(_distancematrix: &Array2<F>, k: usize) -> Result<Vec<Vec<usize>>>
+pub fn find_nearest_neighbors<F>(distance_matrix: &Array2<F>, k: usize) -> Result<Vec<Vec<usize>>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
@@ -638,7 +638,7 @@ where
     for i in 0..n {
         let mut distances_with_indices: Vec<(F, usize)> = (0..n)
             .filter(|&j| j != i)
-            .map(|j| (_distance_matrix[[i, j]], j))
+            .map(|j| (distance_matrix[[i, j]], j))
             .collect();
 
         distances_with_indices

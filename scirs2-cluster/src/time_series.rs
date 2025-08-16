@@ -194,7 +194,7 @@ where
 
     for i in 1..=n {
         for j in 1..=m {
-            let cost = (_series1[i - 1] - series2[j - 1]).powi(2);
+            let cost = (series1[i - 1] - series2[j - 1]).powi(2);
 
             let candidates = [dtw[[i - 1, j]], dtw[[i, j - 1]], dtw[[i - 1, j - 1]]];
 
@@ -289,7 +289,7 @@ where
                 .iter()
                 .enumerate()
                 .filter(|(_, &assignment)| assignment == cluster_id)
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .collect();
 
             if !cluster_members.is_empty() {
@@ -525,7 +525,7 @@ where
                 .iter()
                 .enumerate()
                 .filter(|(_, &assignment)| assignment == cluster_id)
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .collect();
 
             if !cluster_members.is_empty() {

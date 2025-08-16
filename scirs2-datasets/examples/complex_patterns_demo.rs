@@ -3,7 +3,7 @@
 //! This example demonstrates the use of advanced pattern generators for creating
 //! non-linear datasets, complex clustering patterns, and hierarchical structures.
 
-use scirs2__datasets::{
+use scirs2_datasets::{
     make_anisotropic_blobs, make_circles, make_hierarchical_clusters, make_moons, make_spirals,
     make_swiss_roll,
 };
@@ -54,7 +54,7 @@ fn main() {
     // Different anisotropy factors demonstration
     println!("\n   Anisotropy Factor Comparison:");
     for factor in [1.0, 2.0, 5.0, 10.0] {
-        let _dataset = make_anisotropic_blobs(100, 2, 3, 1.0, factor, Some(42)).unwrap();
+        let dataset = make_anisotropic_blobs(100, 2, 3, 1.0, factor, Some(42)).unwrap();
         println!("     Factor {:.1}: {} clusters", factor, 3);
     }
 
@@ -75,7 +75,7 @@ fn main() {
     // Noise effect on spirals
     println!("1. Noise Effect on Spirals:");
     for noise in [0.0, 0.05, 0.1, 0.2] {
-        let _spiral_data = make_spirals(100, 2, noise, Some(42)).unwrap();
+        let _spiraldata = make_spirals(100, 2, noise, Some(42)).unwrap();
         println!(
             "   Noise {:.2}: Clean separation = {}",
             noise,
@@ -86,14 +86,14 @@ fn main() {
     // Factor effect on circles
     println!("\n2. Factor Effect on Concentric Circles:");
     for factor in [0.2, 0.4, 0.6, 0.8] {
-        let _circle_data = make_circles(100, factor, 0.05, Some(42)).unwrap();
+        let _circledata = make_circles(100, factor, 0.05, Some(42)).unwrap();
         println!("   Factor {factor:.1}: Inner/Outer ratio = {factor:.1}");
     }
 
     // Cluster complexity in hierarchical patterns
     println!("\n3. Hierarchical Cluster Complexity:");
     for (main, sub) in [(2, 2), (2, 4), (3, 3), (4, 2)] {
-        let _hier_data = make_hierarchical_clusters(120, 2, main, sub, 2.0, 0.5, Some(42)).unwrap();
+        let _hierdata = make_hierarchical_clusters(120, 2, main, sub, 2.0, 0.5, Some(42)).unwrap();
         println!(
             "   {} main × {} sub = {} total clusters",
             main,
@@ -182,7 +182,7 @@ fn main() {
 /// Print a concise summary of a dataset
 #[allow(dead_code)]
 fn print_dataset_summary(dataset: &scirs2_datasets::Dataset, name: &str) {
-    let n_classes = if let Some(target) = &_dataset.target {
+    let n_classes = if let Some(target) = &dataset.target {
         let unique_labels: std::collections::HashSet<_> =
             target.iter().map(|&x| x as i32).collect();
         unique_labels.len()
@@ -207,8 +207,8 @@ fn print_dataset_summary(dataset: &scirs2_datasets::Dataset, name: &str) {
     // Print first few data points for small _datasets
     if dataset.n_samples() <= 10 && dataset.n_features() <= 3 {
         println!("   Sample points:");
-        for i in 0.._dataset.n_samples().min(3) {
-            let point: Vec<f64> = (0.._dataset.n_features())
+        for i in 0..dataset.n_samples().min(3) {
+            let point: Vec<f64> = (0..dataset.n_features())
                 .map(|j| dataset.data[[i, j]])
                 .collect();
             println!(

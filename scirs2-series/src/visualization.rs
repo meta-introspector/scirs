@@ -304,7 +304,7 @@ impl TimeSeriesPlot {
     /// Set axis labels
     pub fn set_labels(&mut self, x_label: &str, ylabel: &str) {
         self.x_label = x_label.to_string();
-        self.y_label = y_label.to_string();
+        self.y_label = ylabel.to_string();
     }
 
     /// Add a time series to the plot
@@ -437,7 +437,7 @@ impl TimeSeriesPlot {
 
     /// Highlight change points on the plot
     pub fn highlight_change_points(&mut self, changepoints: &[f64]) {
-        for &cp in change_points {
+        for &cp in changepoints {
             let annotation = Annotation {
                 annotation_type: AnnotationType::VerticalLine,
                 x: cp,
@@ -924,7 +924,7 @@ impl Dashboard {
 
     /// Add a plot to the dashboard
     pub fn add_plot(&mut self, sectiontitle: &str, plot: TimeSeriesPlot) {
-        self.plots.push((section_title.to_string(), plot));
+        self.plots.push((sectiontitle.to_string(), plot));
     }
 
     /// Configure dashboard layout
@@ -989,14 +989,15 @@ impl Dashboard {
         ));
 
         // Add each plot section
-        for (i, (section_title_plot)) in self.plots.iter().enumerate() {
+        for (i, (section_title_plot, _plot)) in self.plots.iter().enumerate() {
             html.push_str(&format!(
                 r#"
         <div class="plot-section">
-            <div class="plot-title">{section_title}</div>
+            <div class="plot-title">{}</div>
             <div id="plot_{i}" class="plot-container"></div>
         </div>
-"#
+"#,
+                section_title_plot
             ));
         }
 

@@ -32,8 +32,8 @@
 pub mod common {
     use ndarray::{Array1, Array2};
     use ndarray_rand::rand::distributions::Uniform;
+    use ndarray_rand::rand::rngs::SmallRng;
     use ndarray_rand::rand::SeedableRng;
-    use ndarray_rand::rand_chacha::ChaCha8Rng;
     use ndarray_rand::RandomExt;
 
     /// Standard seed for reproducible benchmarks
@@ -41,19 +41,19 @@ pub mod common {
 
     /// Generate a random matrix with controlled properties
     pub fn generate_random_matrix(n: usize, seed: u64) -> Array2<f64> {
-        let mut rng = ChaCha8Rng::seed_from_u64(seed);
+        let mut rng = SmallRng::seed_from_u64(seed);
         Array2::random_using((n, n), Uniform::new(-1.0, 1.0), &mut rng)
     }
 
     /// Generate a random vector with controlled properties
     pub fn generate_random_vector(n: usize, seed: u64) -> Array1<f64> {
-        let mut rng = ChaCha8Rng::seed_from_u64(seed);
+        let mut rng = SmallRng::seed_from_u64(seed);
         Array1::random_using(n, Uniform::new(-1.0, 1.0), &mut rng)
     }
 
     /// Generate a symmetric positive definite matrix
     pub fn generate_spd_matrix(n: usize, seed: u64) -> Array2<f64> {
-        let mut rng = ChaCha8Rng::seed_from_u64(seed);
+        let mut rng = SmallRng::seed_from_u64(seed);
         let a = Array2::random_using((n, n), Uniform::new(-1.0, 1.0), &mut rng);
 
         // A^T * A is always positive definite
@@ -72,7 +72,7 @@ pub mod common {
 
     /// Check if a computation result is numerically acceptable
     pub fn is_numerically_acceptable(relativeerror: f64, tolerance: f64) -> bool {
-        relative_error < tolerance && relative_error.is_finite()
+        relativeerror < tolerance && relativeerror.is_finite()
     }
 }
 

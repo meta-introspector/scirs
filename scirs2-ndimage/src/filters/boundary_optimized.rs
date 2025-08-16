@@ -336,7 +336,7 @@ pub fn convolve1d_optimized<T>(
     cval: Option<T>,
 ) -> NdimageResult<Array1<T>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps + 'static,
 {
     let n = input.len();
     let k = kernel.len();
@@ -412,7 +412,7 @@ pub fn apply_filter2d_optimized<T, F>(
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
-    F: FnMut(&Boundary2D<T>, usize, usize, (usize, usize), (isize, isize)) -> T + Clone + Send,
+    F: FnMut(&Boundary2D<T>, usize, usize, (usize, usize), (isize, isize)) -> T + Clone + Send + Sync,
 {
     let (h, w) = input.dim();
     let (kh, kw) = kernelshape;

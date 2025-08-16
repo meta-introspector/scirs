@@ -7,9 +7,9 @@
 use crate::error::{DatasetsError, Result};
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
+use rand::rng;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
-use rand::thread_rng;
 use std::collections::HashMap;
 
 /// Balancing strategies for handling imbalanced datasets
@@ -83,7 +83,7 @@ pub fn random_oversample(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -101,14 +101,14 @@ pub fn random_oversample(
         if class_size < max_class_size {
             let samples_needed = max_class_size - class_size;
             for _ in 0..samples_needed {
-                let random_idx = rng.gen_range(0..class_size);
+                let random_idx = rng.random_range(0..class_size);
                 resampled_indices.push(indices[random_idx]);
             }
         }
     }
 
     // Create resampled data and targets
-    let resampled_data = data.select(ndarray::Axis(0)..&resampled_indices);
+    let resampled_data = data.select(ndarray::Axis(0), &resampled_indices);
     let resampled_targets = targets.select(ndarray::Axis(0), &resampled_indices);
 
     Ok((resampled_data, resampled_targets))
@@ -171,7 +171,7 @@ pub fn random_undersample(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -255,11 +255,11 @@ pub fn generate_synthetic_samples(
     }
 
     // Find samples belonging to the target _class
-    let _class_indices: Vec<usize> = targets
+    let class_indices: Vec<usize> = targets
         .iter()
         .enumerate()
         .filter(|(_, &target)| (target - target_class).abs() < 1e-10)
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .collect();
 
     if class_indices.len() < 2 {
@@ -277,7 +277,7 @@ pub fn generate_synthetic_samples(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -288,7 +288,7 @@ pub fn generate_synthetic_samples(
 
     for i in 0..n_synthetic {
         // Randomly select a sample from the target _class
-        let base_idx = class_indices[rng.gen_range(0..class_indices.len())];
+        let base_idx = class_indices[rng.random_range(0..class_indices.len())];
         let base_sample = data.row(base_idx);
 
         // Find k nearest _neighbors within the same _class
@@ -311,13 +311,13 @@ pub fn generate_synthetic_samples(
         let k_nearest = &distances[0..k_neighbors.min(distances.len())];
 
         // Select a random neighbor from the k nearest
-        let neighbor_idx = k_nearest[rng.gen_range(0..k_nearest.len())].0;
+        let neighbor_idx = k_nearest[rng.random_range(0..k_nearest.len())].0;
         let neighbor_sample = data.row(neighbor_idx);
 
         // Generate _synthetic sample by interpolation
-        let alpha = rng.gen_range(0.0..1.0);
+        let alpha = rng.random_range(0.0..1.0);
         for (j, synthetic_feature) in synthetic_data.row_mut(i).iter_mut().enumerate() {
-            *synthetic_feature = "base_sample"[j] + alpha * (neighbor_sample[j] - base_sample[j]);
+            *synthetic_feature = base_sample[j] + alpha * (neighbor_sample[j] - base_sample[j]);
         }
     }
 

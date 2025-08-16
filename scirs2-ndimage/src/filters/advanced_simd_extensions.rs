@@ -17,7 +17,7 @@ use crate::utils::safe_f64_to_float;
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(_value).ok_or_else(|| {
+    T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
@@ -289,7 +289,7 @@ fn generate_wavelet_filters<T>(_wavelettype: WaveletType) -> NdimageResult<(Vec<
 where
     T: Float + FromPrimitive,
 {
-    match _wavelet_type {
+    match _wavelettype {
         WaveletType::Haar => {
             let sqrt2_inv = safe_f64_to_float::<T>(1.0 / std::f64::consts::SQRT_2)?;
             let low_pass = vec![sqrt2_inv, sqrt2_inv];
@@ -415,11 +415,11 @@ where
 /// Compute LBP sampling coordinates
 #[allow(dead_code)]
 fn compute_lbp_coordinates(_radius: usize, npoints: usize) -> NdimageResult<Vec<(isize, isize)>> {
-    let mut coords = Vec::with_capacity(n_points);
+    let mut coords = Vec::with_capacity(npoints);
     let radius_f = _radius as f64;
 
-    for i in 0..n_points {
-        let angle = 2.0 * std::f64::consts::PI * i as f64 / n_points as f64;
+    for i in 0..npoints {
+        let angle = 2.0 * std::f64::consts::PI * i as f64 / npoints as f64;
         let dy = (radius_f * angle.sin()).round() as isize;
         let dx = (radius_f * angle.cos()).round() as isize;
         coords.push((dy, dx));
@@ -433,9 +433,9 @@ fn compute_lbp_coordinates(_radius: usize, npoints: usize) -> NdimageResult<Vec<
 fn lbp_to_uniform_pattern(_code: u32, npoints: usize) -> u32 {
     // Count transitions (uniform patterns have <= 2 transitions)
     let mut transitions = 0u32;
-    for i in 0..n_points {
+    for i in 0..npoints {
         let bit1 = (_code >> i) & 1;
-        let bit2 = (_code >> ((i + 1) % n_points)) & 1;
+        let bit2 = (_code >> ((i + 1) % npoints)) & 1;
         if bit1 != bit2 {
             transitions += 1;
         }
@@ -443,10 +443,10 @@ fn lbp_to_uniform_pattern(_code: u32, npoints: usize) -> u32 {
 
     if transitions <= 2 {
         // Uniform pattern - return number of 1s
-        code.count_ones()
+        _code.count_ones()
     } else {
         // Non-uniform pattern - return special _code
-        n_points as u32 + 1
+        npoints as u32 + 1
     }
 }
 
@@ -520,7 +520,7 @@ where
 {
     let mut kernel = Vec::with_capacity(size);
     let radius = (size / 2) as isize;
-    let sigma_sq = _sigma * sigma;
+    let sigma_sq = sigma * sigma;
     let two_sigma_sq = safe_f64_to_float::<T>(2.0)? * sigma_sq;
     let norm_factor =
         (safe_f64_to_float::<T>(2.0)? * safe_f64_to_float::<T>(std::f64::consts::PI)? * sigma_sq)
@@ -791,7 +791,7 @@ mod tests {
 
     #[test]
     fn test_advanced_simd_multi_scale_lbp() {
-        let input = Array2::fromshape_fn((32, 32), |(i, j)| ((i + j) % 3) as f64);
+        let input = Array2::from_shape_fn((32, 32), |(i, j)| ((i + j) % 3) as f64);
 
         let radii = [1, 2, 3];
         let sample_points = [8, 16, 24];
@@ -807,7 +807,7 @@ mod tests {
     #[test]
     fn test_advanced_simd_advanced_edge_detection() {
         let input =
-            Array2::fromshape_fn((64, 64), |(i_j)| if i > 30 && i < 34 { 1.0 } else { 0.0 });
+            Array2::from_shape_fn((64, 64), |(i_j)| if i > 30 && i < 34 { 1.0 } else { 0.0 });
 
         let result = advanced_simd_advanced_edge_detection(input.view(), 1.0, 0.1, 0.3).unwrap();
 

@@ -3,7 +3,7 @@
 //! This module provides the main distributed K-means algorithm with
 //! support for multiple workers, fault tolerance, and load balancing.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -630,7 +630,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             // Check convergence criteria
             let movement_converged =
                 max_movement.to_f64().unwrap_or(f64::INFINITY) < self.config.tolerance;
-            let inertia_change = (self.global_inertia - new_inertia).abs();
+            let inertia_change = (self.global_inertia - newinertia).abs();
             let inertia_converged =
                 inertia_change < self.config.tolerance * self.global_inertia.abs();
 
@@ -662,7 +662,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             centroid_movement,
             converged,
             timestamp: SystemTime::now(),
-            computation_time_ms: iteration_time_ms,
+            computation_time_ms: iteration_timems,
         };
 
         self.convergence_history.push(convergence_info);

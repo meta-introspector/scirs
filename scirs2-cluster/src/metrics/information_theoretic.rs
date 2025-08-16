@@ -27,7 +27,7 @@ use scirs2_core::Rng;
 /// # Arguments
 ///
 /// * `labels_true` - Ground truth class labels
-/// * `labels_pred` - Predicted cluster labels
+/// * `labelspred` - Predicted cluster labels
 ///
 /// # Returns
 ///
@@ -47,13 +47,13 @@ use scirs2_core::Rng;
 /// ```
 #[allow(dead_code)]
 pub fn mutual_info_score<F>(
-    _labels_true: ArrayView1<i32>,
-    labels_pred: ArrayView1<i32>,
+    labels_true: ArrayView1<i32>,
+    labelspred: ArrayView1<i32>,
 ) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if labels_true.len() != labels_pred.len() {
+    if labels_true.len() != labelspred.len() {
         return Err(ClusteringError::InvalidInput(
             "True and predicted labels must have the same length".to_string(),
         ));
@@ -65,7 +65,7 @@ where
     }
 
     // Create contingency table
-    let contingency = build_contingency_table(labels_true, labels_pred);
+    let contingency = build_contingency_table(labels_true, labelspred);
 
     let mut mi = F::zero();
     let n_samples_f = F::from(n_samples).unwrap();
@@ -105,7 +105,7 @@ where
 /// # Arguments
 ///
 /// * `labels_true` - Ground truth class labels
-/// * `labels_pred` - Predicted cluster labels
+/// * `labelspred` - Predicted cluster labels
 ///
 /// # Returns
 ///
@@ -113,14 +113,14 @@ where
 #[allow(dead_code)]
 pub fn normalized_mutual_info_score<F>(
     labels_true: ArrayView1<i32>,
-    labels_pred: ArrayView1<i32>,
+    labelspred: ArrayView1<i32>,
 ) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let mi = mutual_info_score(labels_true, labels_pred)?;
+    let mi = mutual_info_score(labels_true, labelspred)?;
     let h_true = entropy(labels_true)?;
-    let h_pred = entropy(labels_pred)?;
+    let h_pred = entropy(labelspred)?;
 
     if h_true == F::zero() && h_pred == F::zero() {
         return Ok(F::one());
@@ -143,7 +143,7 @@ where
 /// # Arguments
 ///
 /// * `labels_true` - Ground truth class labels
-/// * `labels_pred` - Predicted cluster labels
+/// * `labelspred` - Predicted cluster labels
 ///
 /// # Returns
 ///
@@ -151,15 +151,15 @@ where
 #[allow(dead_code)]
 pub fn adjusted_mutual_info_score<F>(
     labels_true: ArrayView1<i32>,
-    labels_pred: ArrayView1<i32>,
+    labelspred: ArrayView1<i32>,
 ) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let mi = mutual_info_score(labels_true, labels_pred)?;
-    let emi = expected_mutual_info(labels_true, labels_pred)?;
+    let mi = mutual_info_score(labels_true, labelspred)?;
+    let emi = expected_mutual_info(labels_true, labelspred)?;
     let h_true = entropy(labels_true)?;
-    let h_pred = entropy(labels_pred)?;
+    let h_pred = entropy(labelspred)?;
 
     let max_entropy = if h_true > h_pred { h_true } else { h_pred };
 
@@ -179,7 +179,7 @@ where
 /// # Arguments
 ///
 /// * `labels_true` - Ground truth class labels
-/// * `labels_pred` - Predicted cluster labels
+/// * `labelspred` - Predicted cluster labels
 ///
 /// # Returns
 ///
@@ -187,12 +187,12 @@ where
 #[allow(dead_code)]
 pub fn adjusted_rand_score<F>(
     labels_true: ArrayView1<i32>,
-    labels_pred: ArrayView1<i32>,
+    labelspred: ArrayView1<i32>,
 ) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if labels_true.len() != labels_pred.len() {
+    if labels_true.len() != labelspred.len() {
         return Err(ClusteringError::InvalidInput(
             "True and predicted labels must have the same length".to_string(),
         ));
@@ -203,7 +203,7 @@ where
         return Ok(F::one());
     }
 
-    let contingency = build_contingency_table(labels_true, labels_pred);
+    let contingency = build_contingency_table(labels_true, labelspred);
 
     // Calculate marginal sums
     let mut row_sums = HashMap::new();
@@ -255,18 +255,18 @@ where
 /// # Arguments
 ///
 /// * `labels_true` - Ground truth class labels
-/// * `labels_pred` - Predicted cluster labels
+/// * `labelspred` - Predicted cluster labels
 ///
 /// # Returns
 ///
 /// The V-measure score (0 to 1, higher is better)
 #[allow(dead_code)]
-pub fn v_measure_score<F>(_labels_true: ArrayView1<i32>, labelspred: ArrayView1<i32>) -> Result<F>
+pub fn v_measure_score<F>(labels_true: ArrayView1<i32>, labelspred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let homogeneity = homogeneity_score(_labels_true, labels_pred)?;
-    let completeness = completeness_score(_labels_true, labels_pred)?;
+    let homogeneity = homogeneity_score(labels_true, labelspred)?;
+    let completeness = completeness_score(labels_true, labelspred)?;
 
     if homogeneity + completeness == F::zero() {
         Ok(F::zero())
@@ -284,26 +284,26 @@ where
 /// # Arguments
 ///
 /// * `labels_true` - Ground truth class labels
-/// * `labels_pred` - Predicted cluster labels
+/// * `labelspred` - Predicted cluster labels
 ///
 /// # Returns
 ///
 /// The homogeneity score (0 to 1, higher is better)
 #[allow(dead_code)]
 pub fn homogeneity_score<F>(
-    _labels_true: ArrayView1<i32>,
-    labels_pred: ArrayView1<i32>,
+    labels_true: ArrayView1<i32>,
+    labelspred: ArrayView1<i32>,
 ) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let h_true = entropy(_labels_true)?;
+    let h_true = entropy(labels_true)?;
 
     if h_true == F::zero() {
         return Ok(F::one());
     }
 
-    let h_true_given_pred = conditional_entropy(labels_true, labels_pred)?;
+    let h_true_given_pred = conditional_entropy(labels_true, labelspred)?;
     Ok((h_true - h_true_given_pred) / h_true)
 }
 
@@ -316,7 +316,7 @@ where
 /// # Arguments
 ///
 /// * `labels_true` - Ground truth class labels
-/// * `labels_pred` - Predicted cluster labels
+/// * `labelspred` - Predicted cluster labels
 ///
 /// # Returns
 ///
@@ -324,18 +324,18 @@ where
 #[allow(dead_code)]
 pub fn completeness_score<F>(
     labels_true: ArrayView1<i32>,
-    labels_pred: ArrayView1<i32>,
+    labelspred: ArrayView1<i32>,
 ) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let h_pred = entropy(labels_pred)?;
+    let h_pred = entropy(labelspred)?;
 
     if h_pred == F::zero() {
         return Ok(F::one());
     }
 
-    let h_pred_given_true = conditional_entropy(labels_pred, labels_true)?;
+    let h_pred_given_true = conditional_entropy(labelspred, labels_true)?;
     Ok((h_pred - h_pred_given_true) / h_pred)
 }
 
@@ -345,11 +345,11 @@ where
 #[allow(dead_code)]
 fn build_contingency_table(
     labels_true: ArrayView1<i32>,
-    labels_pred: ArrayView1<i32>,
+    labelspred: ArrayView1<i32>,
 ) -> HashMap<(i32, i32), usize> {
     let mut contingency = HashMap::new();
 
-    for (&true_label, &pred_label) in labels_true.iter().zip(labels_pred.iter()) {
+    for (&true_label, &pred_label) in labels_true.iter().zip(labelspred.iter()) {
         *contingency.entry((true_label, pred_label)).or_insert(0) += 1;
     }
 
@@ -383,39 +383,39 @@ where
 
 /// Calculate conditional entropy H(X|Y)
 #[allow(dead_code)]
-fn conditional_entropy<F>(_labels_x: ArrayView1<i32>, labelsy: ArrayView1<i32>) -> Result<F>
+fn conditional_entropy<F>(labelsx: ArrayView1<i32>, labelsy: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let contingency = build_contingency_table(_labels_x, labels_y);
+    let contingency = build_contingency_table(labelsx, labelsy);
 
     // Calculate marginal counts for Y
     let mut y_counts = HashMap::new();
     for (&(_, y), &count) in &contingency {
-        *y_counts.entry(_y).or_insert(0) += count;
+        *y_counts.entry(y).or_insert(0) += count;
     }
 
-    let n_samples = labels_x.len();
+    let n_samples = labelsx.len();
     let n_samples_f = F::from(n_samples).unwrap();
 
     let mut cond_entropy = F::zero();
 
-    for (&_y, &n_y) in &y_counts {
-        if n_y == 0 {
+    for (&y, &ny) in &y_counts {
+        if ny == 0 {
             continue;
         }
 
-        let p_y = F::from(n_y).unwrap() / n_samples_f;
-        let mut h_x_given_y = F::zero();
+        let py = F::from(ny).unwrap() / n_samples_f;
+        let mut hx_giveny = F::zero();
 
-        for (&(_x, y_val), &n_xy) in &contingency {
-            if y_val == _y && n_xy > 0 {
-                let p_x_given_y = F::from(n_xy).unwrap() / F::from(n_y).unwrap();
-                h_x_given_y = h_x_given_y - p_x_given_y * p_x_given_y.ln();
+        for (&(x, y_val), &nxy) in &contingency {
+            if y_val == y && nxy > 0 {
+                let px_giveny = F::from(nxy).unwrap() / F::from(ny).unwrap();
+                hx_giveny = hx_giveny - px_giveny * px_giveny.ln();
             }
         }
 
-        cond_entropy = cond_entropy + p_y * h_x_given_y;
+        cond_entropy = cond_entropy + py * hx_giveny;
     }
 
     Ok(cond_entropy)
@@ -423,12 +423,12 @@ where
 
 /// Calculate expected mutual information for random labeling
 #[allow(dead_code)]
-fn expected_mutual_info<F>(_labels_true: ArrayView1<i32>, labelspred: ArrayView1<i32>) -> Result<F>
+fn expected_mutual_info<F>(labels_true: ArrayView1<i32>, labelspred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
     // Proper calculation of Expected Mutual Information using hypergeometric distribution
-    let contingency = build_contingency_table(&_labels_true, &labels_pred);
+    let contingency = build_contingency_table(&labels_true, &labelspred);
 
     let n = labels_true.len() as f64;
     let mut row_sums = HashMap::new();
@@ -490,13 +490,13 @@ fn comb2(n: usize) -> usize {
 /// n is sample size, k is observed successes
 #[allow(dead_code)]
 fn hypergeometric_pmf(k: usize, n_total: usize, row_sum: usize, colsum: usize) -> f64 {
-    if k > row_sum || k > col_sum || (row_sum + col_sum - k) > n_total {
+    if k > row_sum || k > colsum || (row_sum + colsum - k) > n_total {
         return 0.0;
     }
 
     // Use log space to avoid overflow
-    let log_prob = log_comb(row_sum, k) + log_comb(n_total - row_sum, col_sum - k)
-        - log_comb(n_total, col_sum);
+    let log_prob = log_comb(row_sum, k) + log_comb(n_total - row_sum, colsum - k)
+        - log_comb(n_total, colsum);
     log_prob.exp()
 }
 
@@ -541,7 +541,7 @@ pub enum NormalizationMethod {
 /// # Arguments
 ///
 /// * `labels_true` - Ground truth class labels
-/// * `labels_pred` - Predicted cluster labels
+/// * `labelspred` - Predicted cluster labels
 /// * `method` - Normalization method to use
 ///
 /// # Returns
@@ -550,15 +550,15 @@ pub enum NormalizationMethod {
 #[allow(dead_code)]
 pub fn normalized_mutual_info_score_with_method<F>(
     labels_true: ArrayView1<i32>,
-    labels_pred: ArrayView1<i32>,
+    labelspred: ArrayView1<i32>,
     method: NormalizationMethod,
 ) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let mi = mutual_info_score(labels_true, labels_pred)?;
+    let mi = mutual_info_score(labels_true, labelspred)?;
     let h_true = entropy(labels_true)?;
-    let h_pred = entropy(labels_pred)?;
+    let h_pred = entropy(labelspred)?;
 
     let normalizer = match method {
         NormalizationMethod::Geometric => (h_true * h_pred).sqrt(),
@@ -582,7 +582,7 @@ where
 /// # Arguments
 ///
 /// * `labels_true` - Ground truth class labels
-/// * `labels_pred` - Predicted cluster labels
+/// * `labelspred` - Predicted cluster labels
 ///
 /// # Returns
 ///
@@ -590,12 +590,12 @@ where
 #[allow(dead_code)]
 pub fn fowlkes_mallows_score<F>(
     labels_true: ArrayView1<i32>,
-    labels_pred: ArrayView1<i32>,
+    labelspred: ArrayView1<i32>,
 ) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if labels_true.len() != labels_pred.len() {
+    if labels_true.len() != labelspred.len() {
         return Err(ClusteringError::InvalidInput(
             "True and predicted labels must have the same length".to_string(),
         ));
@@ -609,7 +609,7 @@ where
     for i in 0..n {
         for j in (i + 1)..n {
             let same_true = labels_true[i] == labels_true[j];
-            let same_pred = labels_pred[i] == labels_pred[j];
+            let same_pred = labelspred[i] == labelspred[j];
 
             match (same_true, same_pred) {
                 (_true, true) => tp += 1,
@@ -649,17 +649,17 @@ where
 /// # Arguments
 ///
 /// * `labels_true` - Ground truth class labels
-/// * `labels_pred` - Predicted cluster labels
+/// * `labelspred` - Predicted cluster labels
 ///
 /// # Returns
 ///
 /// The Rand Index (0 to 1, higher is better)
 #[allow(dead_code)]
-pub fn rand_score<F>(_labels_true: ArrayView1<i32>, labelspred: ArrayView1<i32>) -> Result<F>
+pub fn rand_score<F>(labels_true: ArrayView1<i32>, labelspred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if labels_true.len() != labels_pred.len() {
+    if labels_true.len() != labelspred.len() {
         return Err(ClusteringError::InvalidInput(
             "True and predicted labels must have the same length".to_string(),
         ));
@@ -671,7 +671,7 @@ where
     for i in 0..n {
         for j in (i + 1)..n {
             let same_true = labels_true[i] == labels_true[j];
-            let same_pred = labels_pred[i] == labels_pred[j];
+            let same_pred = labelspred[i] == labelspred[j];
 
             if same_true == same_pred {
                 agreements += 1;
@@ -695,7 +695,7 @@ where
 /// # Arguments
 ///
 /// * `labels_true` - Ground truth class labels
-/// * `labels_pred` - Predicted cluster labels
+/// * `labelspred` - Predicted cluster labels
 ///
 /// # Returns
 ///
@@ -703,15 +703,15 @@ where
 #[allow(dead_code)]
 pub fn normalized_variation_of_information<F>(
     labels_true: ArrayView1<i32>,
-    labels_pred: ArrayView1<i32>,
+    labelspred: ArrayView1<i32>,
 ) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
     let h_true = entropy(labels_true)?;
-    let h_pred = entropy(labels_pred)?;
-    let h_cond_true_pred = conditional_entropy(labels_true, labels_pred)?;
-    let h_cond_pred_true = conditional_entropy(labels_pred, labels_true)?;
+    let h_pred = entropy(labelspred)?;
+    let h_cond_true_pred = conditional_entropy(labels_true, labelspred)?;
+    let h_cond_pred_true = conditional_entropy(labelspred, labels_true)?;
 
     let vi = h_cond_true_pred + h_cond_pred_true;
     let joint_entropy = h_true + h_cond_pred_true;
@@ -731,7 +731,7 @@ where
 /// # Arguments
 ///
 /// * `labels_true` - Ground truth class labels
-/// * `labels_pred` - Predicted cluster labels
+/// * `labelspred` - Predicted cluster labels
 ///
 /// # Returns
 ///
@@ -739,21 +739,21 @@ where
 #[allow(dead_code)]
 pub fn jensen_shannon_divergence<F>(
     labels_true: ArrayView1<i32>,
-    labels_pred: ArrayView1<i32>,
+    labelspred: ArrayView1<i32>,
 ) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
     // Convert labels to probability distributions
     let dist_true = labels_to_distribution::<F>(labels_true)?;
-    let dist_pred = labels_to_distribution::<F>(labels_pred)?;
+    let dist_pred = labels_to_distribution::<F>(labelspred)?;
 
     // Ensure both distributions have the same support
     let mut all_labels = std::collections::HashSet::new();
     for &label in labels_true.iter() {
         all_labels.insert(label);
     }
-    for &label in labels_pred.iter() {
+    for &label in labelspred.iter() {
         all_labels.insert(label);
     }
 
@@ -859,15 +859,15 @@ where
     let mut cmi = F::zero();
 
     // Calculate I(X; Y | Z) = sum over x,y,z of P(x,y,z) * log(P(x,y,z) * P(z) / (P(x,z) * P(y,z)))
-    for ((x, y, z), &n_xyz) in &triplet_counts {
-        let p_xyz = n_xyz as f64 / n;
+    for ((x, y, z), &nxyz) in &triplet_counts {
+        let pxyz = nxyz as f64 / n;
         let p_z = *z_counts.get(z).unwrap() as f64 / n;
-        let p_xz = *xz_counts.get(&(*x, *z)).unwrap() as f64 / n;
-        let p_yz = *yz_counts.get(&(*y, *z)).unwrap() as f64 / n;
+        let pxz = *xz_counts.get(&(*x, *z)).unwrap() as f64 / n;
+        let pyz = *yz_counts.get(&(*y, *z)).unwrap() as f64 / n;
 
-        if p_xyz > 0.0 && p_z > 0.0 && p_xz > 0.0 && p_yz > 0.0 {
-            let log_term = (p_xyz * p_z / (p_xz * p_yz)).ln();
-            cmi = cmi + F::from(p_xyz * log_term).unwrap();
+        if pxyz > 0.0 && p_z > 0.0 && pxz > 0.0 && pyz > 0.0 {
+            let log_term = (pxyz * p_z / (pxz * pyz)).ln();
+            cmi = cmi + F::from(pxyz * log_term).unwrap();
         }
     }
 
@@ -1017,7 +1017,7 @@ pub mod advanced_validation {
 
     impl<F: Float + FromPrimitive + Debug + Send + Sync> StabilityValidator<F> {
         /// Create a new stability validator
-        pub fn new(_n_bootstrap: usize, samplefraction: f64) -> Self {
+        pub fn new(n_bootstrap: usize, sample_fraction: f64) -> Self {
             Self {
                 n_bootstrap,
                 sample_fraction,
@@ -1050,13 +1050,13 @@ pub mod advanced_validation {
                         .collect();
 
                     // Extract bootstrap sample
-                    let mut bootstrap_data = Array2::zeros((sample_size..data.ncols()));
+                    let mut bootstrapdata = Array2::zeros((sample_size..data.ncols()));
                     for (i, &idx) in indices.iter().enumerate() {
-                        bootstrap_data.row_mut(i).assign(&data.row(idx));
+                        bootstrapdata.row_mut(i).assign(&data.row(idx));
                     }
 
                     // Apply clustering algorithm
-                    cluster_fn(bootstrap_data.view())
+                    cluster_fn(bootstrapdata.view())
                 })
                 .collect::<Result<Vec<_>>>()?;
 
@@ -1158,12 +1158,12 @@ pub mod advanced_validation {
                                 .map(|_| rng.gen_range(0..n_samples))
                                 .collect();
 
-                            let mut bootstrap_data = Array2::zeros((sample_size..data.ncols()));
+                            let mut bootstrapdata = Array2::zeros((sample_size..data.ncols()));
                             for (i, &idx) in indices.iter().enumerate() {
-                                bootstrap_data.row_mut(i).assign(&data.row(idx));
+                                bootstrapdata.row_mut(i).assign(&data.row(idx));
                             }
 
-                            cluster_fn(bootstrap_data.view(), params)
+                            cluster_fn(bootstrapdata.view(), params)
                         })
                         .collect::<Result<Vec<_>>>()?;
 
@@ -1256,10 +1256,10 @@ pub mod advanced_validation {
 
             // Calculate H(Y_t+1 | Y_t) - H(Y_t+1 | Y_t, X_t)
             for (&(_source_past, target_past, target_future), &count) in &triplet_counts {
-                let p_xyz = F::from(count).unwrap() / n_samples_f;
+                let pxyz = F::from(count).unwrap() / n_samples_f;
                 let p_z = F::from(*target_future_counts.get(&target_future).unwrap()).unwrap()
                     / n_samples_f;
-                let p_y =
+                let py =
                     F::from(*target_past_counts.get(&target_past).unwrap()).unwrap() / n_samples_f;
 
                 // Find joint probability P(Y_t, Y_t+1)
@@ -1269,10 +1269,10 @@ pub mod advanced_validation {
                         yz_count += 1;
                     }
                 }
-                let p_yz = F::from(yz_count).unwrap() / n_samples_f;
+                let pyz = F::from(yz_count).unwrap() / n_samples_f;
 
-                if p_xyz > F::zero() && p_z > F::zero() && p_y > F::zero() && p_yz > F::zero() {
-                    transfer_entropy = transfer_entropy + p_xyz * (p_xyz * p_y / (p_yz * p_z)).ln();
+                if pxyz > F::zero() && p_z > F::zero() && py > F::zero() && pyz > F::zero() {
+                    transfer_entropy = transfer_entropy + pxyz * (pxyz * py / (pyz * p_z)).ln();
                 }
             }
 
@@ -1284,12 +1284,12 @@ pub mod advanced_validation {
         where
             F: Float + FromPrimitive + Debug,
         {
-            if clustering_solutions.is_empty() {
+            if _clusteringsolutions.is_empty() {
                 return Ok(F::zero());
             }
 
-            let n_samples = clustering_solutions[0].len();
-            for solution in clustering_solutions {
+            let n_samples = _clusteringsolutions[0].len();
+            for solution in _clusteringsolutions {
                 if solution.len() != n_samples {
                     return Err(ClusteringError::InvalidInput(
                         "All clustering _solutions must have the same length".to_string(),
@@ -1299,13 +1299,13 @@ pub mod advanced_validation {
 
             // Calculate individual entropies
             let mut individual_entropies = Vec::new();
-            for solution in clustering_solutions {
+            for solution in _clusteringsolutions {
                 let entropy = entropy::<F>(*solution)?;
                 individual_entropies.push(entropy);
             }
 
             // Calculate joint entropy
-            let joint_entropy = Self::joint_entropy(clustering_solutions)?;
+            let joint_entropy = Self::joint_entropy(_clusteringsolutions)?;
 
             // Multi-information = sum of individual entropies - joint entropy
             let sum_individual: F = individual_entropies.iter().sum();
@@ -1317,12 +1317,12 @@ pub mod advanced_validation {
         where
             F: Float + FromPrimitive + Debug,
         {
-            let n_samples = clustering_solutions[0].len();
+            let n_samples = _clusteringsolutions[0].len();
             let mut joint_counts = HashMap::new();
 
             // Count joint occurrences
             for i in 0..n_samples {
-                let joint_label: Vec<i32> = _clustering_solutions
+                let joint_label: Vec<i32> = _clusteringsolutions
                     .iter()
                     .map(|solution| solution[i])
                     .collect();
@@ -1416,7 +1416,7 @@ pub mod advanced_validation {
 
         /// Convert labels to string representation
         fn labels_to_string(labels: &ArrayView1<i32>) -> String {
-            _labels
+            labels
                 .iter()
                 .map(|&x| x.to_string())
                 .collect::<Vec<_>>()
@@ -1459,16 +1459,16 @@ pub mod advanced_validation {
         where
             F: Float + FromPrimitive + Debug,
         {
-            if membership_matrix.is_empty() {
+            if _membershipmatrix.is_empty() {
                 return Ok(F::zero());
             }
 
-            let n_samples = membership_matrix.nrows();
+            let n_samples = _membershipmatrix.nrows();
             let mut sum_squares = F::zero();
 
             for i in 0..n_samples {
-                for j in 0..membership_matrix.ncols() {
-                    let membership = membership_matrix[[i, j]];
+                for j in 0.._membershipmatrix.ncols() {
+                    let membership = _membershipmatrix[[i, j]];
                     sum_squares = sum_squares + membership * membership;
                 }
             }
@@ -1481,16 +1481,16 @@ pub mod advanced_validation {
         where
             F: Float + FromPrimitive + Debug,
         {
-            if membership_matrix.is_empty() {
+            if _membershipmatrix.is_empty() {
                 return Ok(F::zero());
             }
 
-            let n_samples = membership_matrix.nrows();
+            let n_samples = _membershipmatrix.nrows();
             let mut entropy_sum = F::zero();
 
             for i in 0..n_samples {
-                for j in 0..membership_matrix.ncols() {
-                    let membership = membership_matrix[[i, j]];
+                for j in 0.._membershipmatrix.ncols() {
+                    let membership = _membershipmatrix[[i, j]];
                     if membership > F::zero() {
                         entropy_sum = entropy_sum - membership * membership.ln();
                     }
@@ -1504,19 +1504,19 @@ pub mod advanced_validation {
         pub fn xie_beni_index<F>(
             data: ArrayView2<F>,
             centers: ArrayView2<F>,
-            membership_matrix: ArrayView2<F>,
+            _membershipmatrix: ArrayView2<F>,
             m: F, // Fuzzification parameter
         ) -> Result<F>
         where
             F: Float + FromPrimitive + Debug,
         {
-            if data.nrows() != membership_matrix.nrows() {
+            if data.nrows() != _membershipmatrix.nrows() {
                 return Err(ClusteringError::InvalidInput(
                     "Data and membership _matrix must have same number of samples".to_string(),
                 ));
             }
 
-            if centers.nrows() != membership_matrix.ncols() {
+            if centers.nrows() != _membershipmatrix.ncols() {
                 return Err(ClusteringError::InvalidInput(
                     "Centers and membership _matrix must be compatible".to_string(),
                 ));
@@ -1529,7 +1529,7 @@ pub mod advanced_validation {
             let mut wcss = F::zero();
             for i in 0..n_samples {
                 for k in 0..n_clusters {
-                    let membership = membership_matrix[[i, k]];
+                    let membership = _membershipmatrix[[i, k]];
                     let membership_powered = Self::power(membership, m);
 
                     // Calculate squared distance to center
@@ -1568,10 +1568,10 @@ pub mod advanced_validation {
         /// Helper function to compute power of a float (simple implementation)
         fn power<F: Float + FromPrimitive>(base: F, exponent: F) -> F {
             // Simple implementation using logarithms
-            if _base <= F::zero() {
+            if base <= F::zero() {
                 return F::zero();
             }
-            (_base.ln() * exponent).exp()
+            (base.ln() * exponent).exp()
         }
     }
 
@@ -1580,15 +1580,15 @@ pub mod advanced_validation {
 
     impl ConsensusValidator {
         /// Calculate consensus matrix from multiple clustering solutions
-        pub fn consensus_matrix(_clusteringsolutions: &[Array1<usize>]) -> Result<Array2<f64>> {
-            if clustering_solutions.is_empty() {
+        pub fn _consensusmatrix(_clusteringsolutions: &[Array1<usize>]) -> Result<Array2<f64>> {
+            if _clusteringsolutions.is_empty() {
                 return Err(ClusteringError::InvalidInput(
                     "At least one clustering solution required".to_string(),
                 ));
             }
 
-            let n_samples = clustering_solutions[0].len();
-            for solution in clustering_solutions {
+            let n_samples = _clusteringsolutions[0].len();
+            for solution in _clusteringsolutions {
                 if solution.len() != n_samples {
                     return Err(ClusteringError::InvalidInput(
                         "All clustering _solutions must have the same number of samples"
@@ -1598,10 +1598,10 @@ pub mod advanced_validation {
             }
 
             let mut consensus = Array2::zeros((n_samples, n_samples));
-            let n_solutions = clustering_solutions.len() as f64;
+            let n_solutions = _clusteringsolutions.len() as f64;
 
             // For each pair of samples, count how often they are in the same cluster
-            for solution in clustering_solutions {
+            for solution in _clusteringsolutions {
                 for i in 0..n_samples {
                     for j in 0..n_samples {
                         if solution[i] == solution[j] {
@@ -1619,20 +1619,20 @@ pub mod advanced_validation {
 
         /// Calculate consensus clustering stability
         pub fn consensus_stability(_consensusmatrix: ArrayView2<f64>) -> Result<f64> {
-            if consensus_matrix.nrows() != consensus_matrix.ncols() {
+            if _consensusmatrix.nrows() != _consensusmatrix.ncols() {
                 return Err(ClusteringError::InvalidInput(
                     "Consensus _matrix must be square".to_string(),
                 ));
             }
 
-            let n_samples = consensus_matrix.nrows();
+            let n_samples = _consensusmatrix.nrows();
             let mut stability_sum = 0.0;
             let mut count = 0;
 
             // Calculate stability as average consensus value
             for i in 0..n_samples {
                 for j in (i + 1)..n_samples {
-                    let consensus_value = consensus_matrix[[i, j]];
+                    let consensus_value = _consensusmatrix[[i, j]];
                     // Stability is how close consensus is to 0 or 1 (binary decisions)
                     let stability = 1.0 - 4.0 * consensus_value * (1.0 - consensus_value);
                     stability_sum += stability;
@@ -1649,13 +1649,13 @@ pub mod advanced_validation {
 
         /// Calculate Area Under CDF for consensus clustering
         pub fn area_under_cdf(_consensusmatrix: ArrayView2<f64>) -> Result<f64> {
-            let n_samples = consensus_matrix.nrows();
+            let n_samples = _consensusmatrix.nrows();
             let mut values = Vec::new();
 
             // Collect all consensus values (excluding diagonal)
             for i in 0..n_samples {
                 for j in (i + 1)..n_samples {
-                    values.push(_consensus_matrix[[i, j]]);
+                    values.push(_consensusmatrix[[i, j]]);
                 }
             }
 
@@ -1697,9 +1697,9 @@ pub mod advanced_validation {
             let mut best_score = 0.0;
 
             for (i, &k) in k_values.iter().enumerate() {
-                let consensus_matrix = &consensus_matrices[i];
-                let stability = Self::consensus_stability(consensus_matrix.view())?;
-                let auc = Self::area_under_cdf(consensus_matrix.view())?;
+                let _consensusmatrix = &consensus_matrices[i];
+                let stability = Self::consensus_stability(_consensusmatrix.view())?;
+                let auc = Self::area_under_cdf(_consensusmatrix.view())?;
 
                 // Combined score: high stability and high AUC indicate good clustering
                 let score = stability * auc;
@@ -1721,41 +1721,41 @@ pub mod advanced_validation {
         /// Feature redundancy matrix
         redundancy_matrix: Array2<F>,
         /// Selected feature indices
-        selected_features: Vec<usize>,
+        selectedfeatures: Vec<usize>,
     }
 
     impl<F: Float + FromPrimitive + Debug> InformationFeatureSelector<F> {
         /// Create new feature selector
         pub fn new(_nfeatures: usize) -> Self {
             Self {
-                relevance_scores: vec![F::zero(); _n_features],
-                redundancy_matrix: Array2::zeros((_n_features, n_features)),
-                selected_features: Vec::new(),
+                relevance_scores: vec![F::zero(); _nfeatures],
+                redundancy_matrix: Array2::zeros((_nfeatures, _nfeatures)),
+                selectedfeatures: Vec::new(),
             }
         }
 
         /// Select features using mutual information maximization
-        pub fn select_features(
+        pub fn selectfeatures(
             &mut self,
             data: ArrayView2<F>,
             target_labels: ArrayView1<i32>,
-            n_features_to_select: usize,
+            nfeatures_to_select: usize,
         ) -> Result<Vec<usize>> {
-            let n_features = data.ncols();
+            let nfeatures = data.ncols();
 
             // Calculate relevance scores (MI with target)
-            for j in 0..n_features {
-                let feature_data = data.column(j);
-                let discretized_feature = "self".discretize_feature(feature_data)?;
-                let relevance = mutual_info_score::<F>(target_labels, discretized_feature.view())?;
+            for j in 0..nfeatures {
+                let featuredata = data.column(j);
+                let discretizedfeature = "self".discretizefeature(featuredata)?;
+                let relevance = mutual_info_score::<F>(target_labels, discretizedfeature.view())?;
                 self.relevance_scores[j] = relevance;
             }
 
             // Calculate redundancy matrix (MI between features)
-            for i in 0..n_features {
-                for j in (i + 1)..n_features {
-                    let feature_i = self.discretize_feature(data.column(i))?;
-                    let feature_j = self.discretize_feature(data.column(j))?;
+            for i in 0..nfeatures {
+                for j in (i + 1)..nfeatures {
+                    let feature_i = self.discretizefeature(data.column(i))?;
+                    let feature_j = self.discretizefeature(data.column(j))?;
                     let redundancy = mutual_info_score::<F>(feature_i.view(), feature_j.view())?;
                     self.redundancy_matrix[[i, j]] = redundancy;
                     self.redundancy_matrix[[j, i]] = redundancy;
@@ -1763,12 +1763,12 @@ pub mod advanced_validation {
             }
 
             // MRMR (Maximum Relevance Minimum Redundancy) selection
-            self.selected_features.clear();
-            let mut available_features: Vec<usize> = (0..n_features).collect();
+            self.selectedfeatures.clear();
+            let mut availablefeatures: Vec<usize> = (0..nfeatures).collect();
 
             // Select first feature with highest relevance
             if let Some((idx, &max_relevance_idx)) =
-                available_features
+                availablefeatures
                     .iter()
                     .enumerate()
                     .max_by(|(_, &a), (_, &b)| {
@@ -1777,30 +1777,30 @@ pub mod advanced_validation {
                             .unwrap()
                     })
             {
-                self.selected_features.push(max_relevance_idx);
-                available_features.remove(idx);
+                self.selectedfeatures.push(max_relevance_idx);
+                availablefeatures.remove(idx);
             }
 
             // Select remaining features using MRMR criterion
-            while self.selected_features.len() < n_features_to_select
-                && !available_features.is_empty()
+            while self.selectedfeatures.len() < nfeatures_to_select
+                && !availablefeatures.is_empty()
             {
-                let mut best_feature = "available_features"[0];
+                let mut bestfeature = "availablefeatures"[0];
                 let mut best_score = F::neg_infinity();
 
-                for &candidate in &available_features {
+                for &candidate in &availablefeatures {
                     let relevance = self.relevance_scores[candidate];
 
                     // Calculate average redundancy with already selected features
                     let mut redundancy_sum = F::zero();
-                    for &selected in &self.selected_features {
+                    for &selected in &self.selectedfeatures {
                         redundancy_sum =
                             redundancy_sum + self.redundancy_matrix[[candidate, selected]];
                     }
-                    let avg_redundancy = if self.selected_features.is_empty() {
+                    let avg_redundancy = if self.selectedfeatures.is_empty() {
                         F::zero()
                     } else {
-                        redundancy_sum / F::from(self.selected_features.len()).unwrap()
+                        redundancy_sum / F::from(self.selectedfeatures.len()).unwrap()
                     };
 
                     // MRMR score: relevance - redundancy
@@ -1808,19 +1808,19 @@ pub mod advanced_validation {
 
                     if mrmr_score > best_score {
                         best_score = mrmr_score;
-                        best_feature = "candidate";
+                        bestfeature = "candidate";
                     }
                 }
 
-                self.selected_features.push(best_feature);
-                available_features.retain(|&x| x != best_feature);
+                self.selectedfeatures.push(bestfeature);
+                availablefeatures.retain(|&x| x != bestfeature);
             }
 
-            Ok(self.selected_features.clone())
+            Ok(self.selectedfeatures.clone())
         }
 
         /// Discretize continuous features for mutual information calculation
-        fn discretize_feature(&self, feature: ArrayView1<F>) -> Result<Array1<i32>> {
+        fn discretizefeature(&self, feature: ArrayView1<F>) -> Result<Array1<i32>> {
             if feature.is_empty() {
                 return Ok(Array1::zeros(0));
             }
@@ -1859,13 +1859,13 @@ pub mod advanced_validation {
         }
 
         /// Get feature importance scores
-        pub fn get_feature_scores(&self) -> &[F] {
+        pub fn getfeature_scores(&self) -> &[F] {
             &self.relevance_scores
         }
 
         /// Get selected feature indices
-        pub fn get_selected_features(&self) -> &[usize] {
-            &self.selected_features
+        pub fn get_selectedfeatures(&self) -> &[usize] {
+            &self.selectedfeatures
         }
     }
 }
@@ -1884,19 +1884,19 @@ pub mod advanced_metrics {
     /// # Arguments
     ///
     /// * `labels_true` - Ground truth class labels
-    /// * `labels_pred` - Predicted cluster labels
+    /// * `labelspred` - Predicted cluster labels
     ///
     /// # Returns
     ///
     /// The Jensen-Shannon divergence (0 to 1, lower is better)
     pub fn jensen_shannon_divergence<F>(
         labels_true: ArrayView1<i32>,
-        labels_pred: ArrayView1<i32>,
+        labelspred: ArrayView1<i32>,
     ) -> Result<F>
     where
         F: Float + FromPrimitive + Debug,
     {
-        if labels_true.len() != labels_pred.len() {
+        if labels_true.len() != labelspred.len() {
             return Err(ClusteringError::InvalidInput(
                 "True and predicted labels must have the same length".to_string(),
             ));
@@ -1904,7 +1904,7 @@ pub mod advanced_metrics {
 
         // Convert to probability distributions
         let p = cluster_distribution(labels_true)?;
-        let q = cluster_distribution(labels_pred)?;
+        let q = cluster_distribution(labelspred)?;
 
         // Align distributions (handle different cluster numbers)
         let (p_aligned, q_aligned) = align_distributions(p, q);
@@ -2034,13 +2034,13 @@ pub mod advanced_metrics {
             indices.sort_unstable();
 
             // Create _bootstrap sample
-            let mut bootstrap_data = Array2::zeros((sample_size, data.ncols()));
+            let mut bootstrapdata = Array2::zeros((sample_size, data.ncols()));
             for (i, &idx) in indices.iter().enumerate() {
-                bootstrap_data.row_mut(i).assign(&data.row(idx));
+                bootstrapdata.row_mut(i).assign(&data.row(idx));
             }
 
             // Apply clustering
-            let labels = clustering_fn(&bootstrap_data)?;
+            let labels = clustering_fn(&bootstrapdata)?;
             all_labels.push((indices, labels));
         }
 
@@ -2100,7 +2100,7 @@ pub mod advanced_metrics {
 
         for (i, &(pos1, pos2_)) in common_samples.iter().enumerate() {
             labels1_common[i] = labels1[pos1];
-            labels2_common[i] = labels2[pos2];
+            labels2_common[i] = labels2[pos2_];
         }
 
         // Calculate adjusted mutual information as stability measure
@@ -2146,17 +2146,17 @@ pub mod advanced_metrics {
 
         // Discretize the feature
         let feature_column = data.column(feature_idx);
-        let discretized_feature = "discretize_feature"(feature_column)?;
+        let discretizedfeature = "discretizefeature"(feature_column)?;
 
         // Calculate conditional entropy H(Labels | Feature)
-        let h_conditional = conditional_entropy(labels, discretized_feature.view())?;
+        let h_conditional = conditional_entropy(labels, discretizedfeature.view())?;
 
         // Information gain = H(Labels) - H(Labels | Feature)
         Ok(h_labels - h_conditional)
     }
 
     /// Discretize a continuous feature into bins
-    fn discretize_feature<F>(feature: ndarray::ArrayView1<F>) -> Result<Array1<i32>>
+    fn discretizefeature<F>(feature: ndarray::ArrayView1<F>) -> Result<Array1<i32>>
     where
         F: Float + FromPrimitive,
     {
@@ -2172,13 +2172,13 @@ pub mod advanced_metrics {
         let range = max_val - min_val;
 
         if range == F::zero() {
-            return Ok(Array1::zeros(_feature.len()));
+            return Ok(Array1::zeros(feature.len()));
         }
 
         let n_bins = 10;
         let bin_width = range / F::from(n_bins).unwrap();
 
-        let discretized: Vec<i32> = _feature
+        let discretized: Vec<i32> = feature
             .iter()
             .map(|&val| {
                 let bin = ((val - min_val) / bin_width).to_usize().unwrap_or(0);
@@ -2213,24 +2213,24 @@ pub mod advanced_metrics {
         let mut h_conditional = F::zero();
         let n_samples_f = F::from(n_samples).unwrap();
 
-        // Calculate H(Y | X) = sum_x P(x) * H(Y | X=x)
+        // Calculate H(Y | X) = sumx P(x) * H(Y | X=x)
         for (&x_val, &x_count) in &x_counts {
-            let p_x = F::from(x_count).unwrap() / n_samples_f;
+            let px = F::from(x_count).unwrap() / n_samples_f;
 
             // Calculate H(Y | X=x)
-            let mut h_y_given_x = F::zero();
+            let mut hy_givenx = F::zero();
             let x_count_f = F::from(x_count).unwrap();
 
-            for (&(x_joint_y_val), &joint_count) in &joint_counts {
-                if x_joint == x_val {
-                    let p_y_given_x = F::from(joint_count).unwrap() / x_count_f;
-                    if p_y_given_x > F::zero() {
-                        h_y_given_x = h_y_given_x - p_y_given_x * p_y_given_x.ln();
+            for (&(x_jointy_val), &joint_count) in &joint_counts {
+                if x_jointy_val == x_val {
+                    let py_givenx = F::from(joint_count).unwrap() / x_count_f;
+                    if py_givenx > F::zero() {
+                        hy_givenx = hy_givenx - py_givenx * py_givenx.ln();
                     }
                 }
             }
 
-            h_conditional = h_conditional + p_x * h_y_given_x;
+            h_conditional = h_conditional + px * hy_givenx;
         }
 
         Ok(h_conditional)
@@ -2264,21 +2264,21 @@ pub mod advanced_metrics {
 
         // Calculate average information gain across all features
         let mut total_info_gain = F::zero();
-        let n_features = data.ncols();
+        let nfeatures = data.ncols();
 
-        for feature_idx in 0..n_features {
-            let info_gain = information_gain(_data, labels, feature_idx)?;
+        for feature_idx in 0..nfeatures {
+            let info_gain = information_gain(data, labels, feature_idx)?;
             total_info_gain = total_info_gain + info_gain;
         }
 
-        let avg_info_gain = if n_features > 0 {
-            total_info_gain / F::from(n_features).unwrap()
+        let avg_info_gain = if nfeatures > 0 {
+            total_info_gain / F::from(nfeatures).unwrap()
         } else {
             F::zero()
         };
 
         // Calculate within-cluster information content
-        let within_cluster_info = calculate_within_cluster_information(_data, labels)?;
+        let within_cluster_info = calculate_within_cluster_information(data, labels)?;
 
         // Combine metrics (this is a heuristic combination)
         let quality = avg_info_gain / (F::one() + h_clusters) * within_cluster_info;
@@ -2294,13 +2294,13 @@ pub mod advanced_metrics {
     where
         F: Float + FromPrimitive + Debug,
     {
-        let mut cluster_data: HashMap<i32, Vec<usize>> = HashMap::new();
+        let mut clusterdata: HashMap<i32, Vec<usize>> = HashMap::new();
 
         // Group samples by cluster
         for (i, &label) in labels.iter().enumerate() {
             if label >= 0 {
                 // Ignore noise points
-                cluster_data.entry(label).or_insert_with(Vec::new).push(i);
+                clusterdata.entry(label).or_insert_with(Vec::new).push(i);
             }
         }
 
@@ -2308,7 +2308,7 @@ pub mod advanced_metrics {
         let mut total_samples = 0;
 
         // Calculate information content within each cluster
-        for (_, sample_indices) in cluster_data {
+        for (_, sample_indices) in clusterdata {
             if sample_indices.len() > 1 {
                 let cluster_size = sample_indices.len();
 

@@ -19,7 +19,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// Helper function for safe i32 conversion
 #[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
-    T::from_i32(_value).ok_or_else(|| {
+    T::from_i32(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
     })
 }
@@ -28,7 +28,7 @@ fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
 #[allow(dead_code)]
 fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
     value.to_usize().ok_or_else(|| {
-        NdimageError::ComputationError("Failed to convert _value to usize".to_string())
+        NdimageError::ComputationError("Failed to convert value to usize".to_string())
     })
 }
 
@@ -36,22 +36,22 @@ fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 #[allow(dead_code)]
 fn safe_to_isize<T: Float>(value: T) -> NdimageResult<isize> {
     value.to_isize().ok_or_else(|| {
-        NdimageError::ComputationError("Failed to convert _value to isize".to_string())
+        NdimageError::ComputationError("Failed to convert value to isize".to_string())
     })
 }
 
 /// Helper function for safe i32 conversion
 #[allow(dead_code)]
 fn safe_to_i32<T: Float>(value: T) -> NdimageResult<i32> {
-    _value.to_i32().ok_or_else(|| {
-        NdimageError::ComputationError("Failed to convert _value to i32".to_string())
-    })
+    value
+        .to_i32()
+        .ok_or_else(|| NdimageError::ComputationError("Failed to convert value to i32".to_string()))
 }
 
 /// Helper function for safe usize to float conversion
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(_value).ok_or_else(|| {
+    T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
@@ -69,7 +69,7 @@ struct CacheKey {
 }
 
 impl<T: Float + FromPrimitive + Debug + Clone> CoefficientCache<T> {
-    pub fn new(_maxentries: usize) -> Self {
+    pub fn new(max_entries: usize) -> Self {
         Self {
             cache: Arc::new(RwLock::new(HashMap::new())),
             max_entries,
@@ -177,10 +177,10 @@ fn compute_bspline_coefficients<T>(order: usize, offset: T) -> NdimageResult<Vec
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
-    let mut coeffs = vec![T::zero(); _order + 1];
+    let mut coeffs = vec![T::zero(); order + 1];
 
-    // Simplified B-spline computation for _order 5
-    if _order == 5 {
+    // Simplified B-spline computation for order 5
+    if order == 5 {
         let t = offset;
         let t2 = t * t;
         let t3 = t2 * t;

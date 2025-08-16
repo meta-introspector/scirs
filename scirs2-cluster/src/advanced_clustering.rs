@@ -47,7 +47,7 @@
 //! ```
 
 use crate::error::{ClusteringError, Result};
-use crate::quantum__clustering::{QAOAConfig, VQEConfig};
+use crate::quantum_clustering::{QAOAConfig, VQEConfig};
 use crate::vq::euclidean_distance;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
@@ -343,7 +343,7 @@ impl AdvancedClusterer {
 
         for i in 0..n_samples {
             let point = data.row(i);
-            let cluster_id = clusters[i];
+            let clusterid = clusters[i];
 
             // Calculate intra-cluster distance
             let mut intra_distances = Vec::new();
@@ -356,7 +356,7 @@ impl AdvancedClusterer {
                 let other_point = data.row(j);
                 let distance = euclidean_distance(&point, &other_point);
 
-                if clusters[j] == cluster_id {
+                if clusters[j] == clusterid {
                     intra_distances.push(distance);
                 } else {
                     inter_distances.push(distance);
@@ -445,11 +445,11 @@ impl AdvancedClusterer {
             let mut min_distance = f64::INFINITY;
             let mut best_cluster = 0;
 
-            for (cluster_id, centroid) in centroids.outer_iter().enumerate() {
+            for (clusterid, centroid) in centroids.outer_iter().enumerate() {
                 let distance = euclidean_distance(&point, &centroid);
                 if distance < min_distance {
                     min_distance = distance;
-                    best_cluster = cluster_id;
+                    best_cluster = clusterid;
                 }
             }
 
@@ -500,7 +500,7 @@ impl AIClusteringSelector {
         let best_algorithm = predicted_performance
             .iter()
             .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(alg_)| alg.clone())
+            .map(|(alg_)| alg_.clone())
             .unwrap_or_else(|| "quantum_neuromorphic_kmeans".to_string());
 
         Ok(best_algorithm)
@@ -740,7 +740,7 @@ impl AIClusteringSelector {
 
         // Meta-learning improves with experience (simulated based on data complexity)
         let complexity_factor =
-            (characteristics.n_features as f32 * characteristics.cluster_tendency) / 100.0;
+            (characteristics.n_features as f32 * characteristics.cluster_tendency as f32) / 100.0;
         score += (complexity_factor * 0.2) as f64;
 
         // Better with structured data
@@ -869,9 +869,9 @@ impl QuantumNeuromorphicProcessor {
             let amplitude = 1.0 / (num_neurons as f64).sqrt();
 
             // Random synaptic weights with quantum-inspired initialization
-            let mut synaptic_weights = Array1::zeros(input_dim);
-            for j in 0..input_dim {
-                let weight_phase = 2.0 * PI * (i + j) as f64 / (num_neurons + input_dim) as f64;
+            let mut synaptic_weights = Array1::zeros(inputdim);
+            for j in 0..inputdim {
+                let weight_phase = 2.0 * PI * (i + j) as f64 / (num_neurons + inputdim) as f64;
                 synaptic_weights[j] = weight_phase.cos() * 0.5 + 0.5; // Normalized to [0, 1]
             }
 
@@ -937,14 +937,14 @@ impl QuantumNeuromorphicProcessor {
                 let mut min_distance = f64::INFINITY;
                 let mut best_cluster = 0;
 
-                for (cluster_id, centroid) in centroids.outer_iter().enumerate() {
+                for (clusterid, centroid) in centroids.outer_iter().enumerate() {
                     // Advanced quantum-enhanced distance with entanglement
                     let distance = self
-                        .calculate_quantum_entangled_distance(&point, &centroid, cluster_id, idx)?;
+                        .calculate_quantum_entangled_distance(&point, &centroid, clusterid, idx)?;
 
                     if distance < min_distance {
                         min_distance = distance;
-                        best_cluster = cluster_id;
+                        best_cluster = clusterid;
                     }
                 }
 
@@ -1039,22 +1039,22 @@ impl QuantumNeuromorphicProcessor {
         &self,
         point: &ArrayView1<f64>,
         centroid: &ArrayView1<f64>,
-        cluster_id: usize,
+        clusterid: usize,
         point_idx: usize,
     ) -> Result<f64> {
         let base_distance = euclidean_distance(point, centroid);
 
         // Quantum enhancement factors
-        let quantum_factor = self.quantum_spiking_neurons[cluster_id]
+        let quantum_factor = self.quantum_spiking_neurons[clusterid]
             .quantum_state
             .norm_sqr();
-        let entanglement_factor = self.quantum_spiking_neurons[cluster_id].entanglement_strength;
+        let entanglement_factor = self.quantum_spiking_neurons[clusterid].entanglement_strength;
 
         // Neuromorphic spike history influence
-        let spike_influence = self.calculate_spike_history_influence(cluster_id);
+        let spike_influence = self.calculate_spike_history_influence(clusterid);
 
         // Quantum uncertainty principle effects
-        let uncertainty_factor = self.calculate_quantum_uncertainty(point, cluster_id);
+        let uncertainty_factor = self.calculate_quantum_uncertainty(point, clusterid);
 
         // Combined quantum-neuromorphic distance
         let quantum_enhancement = 1.0 + quantum_factor * 0.2 - entanglement_factor * 0.1;
@@ -1069,7 +1069,7 @@ impl QuantumNeuromorphicProcessor {
 
     /// Calculate spike history influence on clustering
     fn calculate_spike_history_influence(&self, clusterid: usize) -> f64 {
-        if let Some(neuron) = self.quantum_spiking_neurons.get(cluster_id) {
+        if let Some(neuron) = self.quantum_spiking_neurons.get(clusterid) {
             if neuron.spike_history.is_empty() {
                 return 0.0;
             }
@@ -1087,7 +1087,7 @@ impl QuantumNeuromorphicProcessor {
 
     /// Calculate quantum uncertainty effects
     fn calculate_quantum_uncertainty(&self, point: &ArrayView1<f64>, clusterid: usize) -> f64 {
-        if let Some(neuron) = self.quantum_spiking_neurons.get(cluster_id) {
+        if let Some(neuron) = self.quantum_spiking_neurons.get(clusterid) {
             // Position uncertainty based on quantum coherence
             let coherence = neuron.quantum_state.norm();
             let momentum_uncertainty = 1.0 / coherence.max(0.1); // Heisenberg-like principle
@@ -1112,40 +1112,39 @@ impl QuantumNeuromorphicProcessor {
     ) -> Result<()> {
         let k = centroids.nrows();
 
-        for cluster_id in 0..k {
+        for clusterid in 0..k {
             let mut cluster_points = Vec::new();
             let mut quantum_weights = Vec::new();
 
             // Collect points and their quantum weights
             for (idx, &point_cluster) in clusters.iter().enumerate() {
-                if point_cluster == cluster_id {
+                if point_cluster == clusterid {
                     cluster_points.push(data.row(idx));
 
                     // Calculate quantum weight based on coherence and spike activity
-                    let weight = if let Some(neuron) = self.quantum_spiking_neurons.get(cluster_id)
-                    {
+                    let weight = if let Some(neuron) = self.quantum_spiking_neurons.get(clusterid) {
                         let coherence_weight = neuron.quantum_state.norm();
                         let spike_weight = 1.0 + neuron.plasticity_trace;
                         coherence_weight * spike_weight
                     } else {
                         1.0
                     };
-                    quantumweights.push(weight);
+                    quantum_weights.push(weight);
                 }
             }
 
             if !cluster_points.is_empty() {
                 // Calculate quantum-weighted centroid
-                let total_weight: f64 = quantumweights.iter().sum();
+                let total_weight: f64 = quantum_weights.iter().sum();
                 if total_weight > 0.0 {
                     let mut weighted_centroid = Array1::zeros(centroids.ncols());
 
-                    for (point, weight) in cluster_points.iter().zip(quantumweights.iter()) {
+                    for (point, weight) in cluster_points.iter().zip(quantum_weights.iter()) {
                         weighted_centroid = weighted_centroid + &(point.to_owned() * *weight);
                     }
 
                     weighted_centroid /= total_weight;
-                    centroids.row_mut(cluster_id).assign(&weighted_centroid);
+                    centroids.row_mut(clusterid).assign(&weighted_centroid);
                 }
             }
         }
@@ -1245,11 +1244,11 @@ impl QuantumNeuromorphicProcessor {
 
     fn update_quantum_neuromorphic_state_enhanced(
         &mut self,
-        cluster_id: usize,
+        clusterid: usize,
         point: &ArrayView1<f64>,
         iteration: usize,
     ) {
-        if let Some(neuron) = self.quantum_spiking_neurons.get_mut(cluster_id) {
+        if let Some(neuron) = self.quantum_spiking_neurons.get_mut(clusterid) {
             // Calculate weighted input current using synaptic weights
             let mut weighted_input = 0.0;
             for (i, &value) in point.iter().enumerate() {
@@ -1351,7 +1350,7 @@ impl QuantumNeuromorphicProcessor {
     }
 
     fn update_quantum_neuromorphic_state(&mut self, clusterid: usize, point: &ArrayView1<f64>) {
-        if let Some(neuron) = self.quantum_spiking_neurons.get_mut(cluster_id) {
+        if let Some(neuron) = self.quantum_spiking_neurons.get_mut(clusterid) {
             // Calculate weighted input current using synaptic weights
             let mut weighted_input = 0.0;
             for (i, &value) in point.iter().enumerate() {
@@ -1487,7 +1486,7 @@ impl MetaLearningClusterOptimizer {
         self.task_embeddings
             .iter()
             .filter_map(|(task_id, embedding)| {
-                let similarity = self.cosine_similarity(task_embedding_embedding);
+                let similarity = self.cosine_similarity(taskembedding);
                 if similarity > 0.8 {
                     Some(task_id.clone())
                 } else {

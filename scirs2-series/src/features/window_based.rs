@@ -446,12 +446,12 @@ fn calculate_window_features<F>(_ts: &Array1<F>, windowsize: usize) -> Result<Wi
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = ts.len();
-    if n < window_size {
+    let n = _ts.len();
+    if n < windowsize {
         return Ok(WindowFeatures::default());
     }
 
-    let num_windows = n - window_size + 1;
+    let num_windows = n - windowsize + 1;
     let mut rolling_means = Vec::with_capacity(num_windows);
     let mut rolling_stds = Vec::with_capacity(num_windows);
     let mut rolling_mins = Vec::with_capacity(num_windows);
@@ -465,13 +465,13 @@ where
 
     // Calculate rolling statistics
     for i in 0..num_windows {
-        let window = ts.slice(s![i..i + window_size]);
+        let window = _ts.slice(s![i..i + windowsize]);
 
         // Basic statistics
-        let mean = window.sum() / F::from(window_size).unwrap();
+        let mean = window.sum() / F::from(windowsize).unwrap();
         rolling_means.push(mean);
 
-        let variance = window.mapv(|x| (x - mean).powi(2)).sum() / F::from(window_size).unwrap();
+        let variance = window.mapv(|x| (x - mean).powi(2)).sum() / F::from(windowsize).unwrap();
         let std = variance.sqrt();
         rolling_stds.push(std);
 
@@ -493,18 +493,18 @@ where
         let mut sorted_window: Vec<F> = window.iter().cloned().collect();
         sorted_window.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-        let median_idx = window_size / 2;
-        let median = if window_size % 2 == 0 {
+        let median_idx = windowsize / 2;
+        let median = if windowsize % 2 == 0 {
             (sorted_window[median_idx - 1] + sorted_window[median_idx]) / F::from(2.0).unwrap()
         } else {
             sorted_window[median_idx]
         };
         rolling_medians.push(median);
 
-        let q1_idx = window_size / 4;
-        let q3_idx = 3 * window_size / 4;
+        let q1_idx = windowsize / 4;
+        let q3_idx = 3 * windowsize / 4;
         let q1 = sorted_window[q1_idx];
-        let q3 = sorted_window[q3_idx.min(window_size - 1)];
+        let q3 = sorted_window[q3_idx.min(windowsize - 1)];
         rolling_quantiles.push((q1, q3));
 
         // Higher-order moments (skewness and kurtosis)
@@ -512,8 +512,8 @@ where
             let sum_cube = window.mapv(|x| ((x - mean) / std).powi(3)).sum();
             let sum_quad = window.mapv(|x| ((x - mean) / std).powi(4)).sum();
 
-            let skewness = sum_cube / F::from(window_size).unwrap();
-            let kurtosis = sum_quad / F::from(window_size).unwrap() - F::from(3.0).unwrap();
+            let skewness = sum_cube / F::from(windowsize).unwrap();
+            let kurtosis = sum_quad / F::from(windowsize).unwrap() - F::from(3.0).unwrap();
 
             rolling_skewness.push(skewness);
             rolling_kurtosis.push(kurtosis);
@@ -532,7 +532,7 @@ where
     )?;
 
     Ok(WindowFeatures {
-        window_size,
+        window_size: windowsize,
         rolling_means,
         rolling_stds,
         rolling_mins,
@@ -596,8 +596,8 @@ where
 
     // Trend calculations (linear regression slope)
     let indices: Vec<F> = (0..n).map(|i| F::from(i).unwrap()).collect();
-    let (trend_in_means_) = linear_fit(&indices, rolling_means);
-    let (trend_in_stds_) = linear_fit(&indices, rolling_stds);
+    let (trend_in_means_, _) = linear_fit(&indices, rolling_means);
+    let (trend_in_stds_, _) = linear_fit(&indices, rolling_stds);
 
     // Variability index (CV of CVs)
     let mean_cv = rolling_cv.iter().fold(F::zero(), |acc, &x| acc + x) / n_f;
@@ -619,8 +619,8 @@ where
         max_range,
         min_range,
         mean_range,
-        trend_in_means,
-        trend_in_stds,
+        trend_in_means: trend_in_means_,
+        trend_in_stds: trend_in_stds_,
         variability_index,
     })
 }
@@ -635,14 +635,14 @@ fn calculate_multi_scale_variance<F>(_ts: &Array1<F>, windowsizes: &[usize]) -> 
 where
     F: Float + FromPrimitive + Debug,
 {
-    let mut variances = Vec::with_capacity(window_sizes.len());
+    let mut variances = Vec::with_capacity(windowsizes.len());
 
-    for &window_size in window_sizes {
+    for &window_size in windowsizes {
         let mut scale_variances = Vec::new();
-        let num_windows = ts.len().saturating_sub(window_size).saturating_add(1);
+        let num_windows = _ts.len().saturating_sub(window_size).saturating_add(1);
 
         for i in 0..num_windows {
-            let window = ts.slice(s![i..i + window_size]);
+            let window = _ts.slice(s![i..i + window_size]);
             let mean = window.sum() / F::from(window_size).unwrap();
             let variance =
                 window.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(window_size).unwrap();
@@ -668,18 +668,18 @@ fn calculate_multi_scale_trends<F>(_ts: &Array1<F>, windowsizes: &[usize]) -> Re
 where
     F: Float + FromPrimitive + Debug,
 {
-    let mut trends = Vec::with_capacity(window_sizes.len());
+    let mut trends = Vec::with_capacity(windowsizes.len());
 
-    for &window_size in window_sizes {
+    for &window_size in windowsizes {
         let mut scale_trends = Vec::new();
-        let num_windows = ts.len().saturating_sub(window_size).saturating_add(1);
+        let num_windows = _ts.len().saturating_sub(window_size).saturating_add(1);
 
         for i in 0..num_windows {
-            let window = ts.slice(s![i..i + window_size]);
+            let window = _ts.slice(s![i..i + window_size]);
             let indices: Vec<F> = (0..window_size).map(|j| F::from(j).unwrap()).collect();
             let values: Vec<F> = window.iter().cloned().collect();
-            let (slope_) = linear_fit(&indices, &values);
-            scale_trends.push(slope);
+            let (slope_, _) = linear_fit(&indices, &values);
+            scale_trends.push(slope_);
         }
 
         let mean_trend = if !scale_trends.is_empty() {
@@ -906,15 +906,15 @@ where
 {
     let alpha_f = F::from(alpha).unwrap();
     let one_minus_alpha = F::one() - alpha_f;
-    let mut ewma = Vec::with_capacity(_ts.len());
+    let mut ewma = Vec::with_capacity(ts.len());
 
     if ts.is_empty() {
         return Ok(ewma);
     }
 
-    ewma.push(_ts[0]);
+    ewma.push(ts[0]);
 
-    for i in 1.._ts.len() {
+    for i in 1..ts.len() {
         let new_val = alpha_f * ts[i] + one_minus_alpha * ewma[i - 1];
         ewma.push(new_val);
     }
@@ -930,7 +930,7 @@ where
 {
     let alpha_f = F::from(alpha).unwrap();
     let one_minus_alpha = F::one() - alpha_f;
-    let mut ewmv = Vec::with_capacity(_ts.len());
+    let mut ewmv = Vec::with_capacity(ts.len());
 
     if ts.is_empty() || ewma.is_empty() {
         return Ok(ewmv);
@@ -938,7 +938,7 @@ where
 
     ewmv.push(F::zero());
 
-    for i in 1.._ts.len() {
+    for i in 1..ts.len() {
         let diff = ts[i] - ewma[i];
         let new_var = alpha_f * diff * diff + one_minus_alpha * ewmv[i - 1];
         ewmv.push(new_var);
@@ -1043,8 +1043,8 @@ where
     let slow_alpha = 2.0 / (slow_period as f64 + 1.0);
     let signal_alpha = 2.0 / (signal_period as f64 + 1.0);
 
-    let fast_ema = calculate_ewma(_ts, fast_alpha)?;
-    let slow_ema = calculate_ewma(_ts, slow_alpha)?;
+    let fast_ema = calculate_ewma(ts, fast_alpha)?;
+    let slow_ema = calculate_ewma(ts, slow_alpha)?;
 
     // Calculate MACD line
     let macd_line: Vec<F> = fast_ema

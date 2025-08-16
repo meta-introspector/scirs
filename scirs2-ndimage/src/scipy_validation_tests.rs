@@ -101,7 +101,7 @@ mod tests {
     #[test]
     fn test_center_of_mass_analytical() {
         // Create a symmetric object - center of mass should be at geometric center
-        let symmetric = Array2::fromshape_fn((11, 11), |(i, j)| {
+        let symmetric = Array2::from_shape_fn((11, 11), |(i, j)| {
             let di = (i as f64 - 5.0).abs();
             let dj = (j as f64 - 5.0).abs();
             if di <= 2.0 && dj <= 2.0 {
@@ -139,8 +139,8 @@ mod tests {
         }
 
         // Test linearity: filter(a*x + b*y) = a*filter(x) + b*filter(y)
-        let x = Array2::fromshape_fn((5, 5), |(i, j)| (i + j) as f64);
-        let y = Array2::fromshape_fn((5, 5), |(i, j)| (i * j) as f64);
+        let x = Array2::from_shape_fn((5, 5), |(i, j)| (i + j) as f64);
+        let y = Array2::from_shape_fn((5, 5), |(i, j)| (i * j) as f64);
 
         let a = 2.0;
         let b = 3.0;
@@ -164,7 +164,7 @@ mod tests {
     #[test]
     fn test_rank_filter_percentiles() {
         // Create array with known distribution
-        let input = Array2::fromshape_fn((5, 5), |(i, j)| (i * 5 + j) as f64);
+        let input = Array2::from_shape_fn((5, 5), |(i, j)| (i * 5 + j) as f64);
 
         // Test minimum filter (0th percentile)
         let min_result = minimum_filter(&input, &[3, 3], None, None)
@@ -191,7 +191,7 @@ mod tests {
     /// Test affine transformation properties
     #[test]
     fn test_affine_transform_properties() {
-        let input = Array2::fromshape_fn((5, 5), |(i, j)| (i + j) as f64);
+        let input = Array2::from_shape_fn((5, 5), |(i, j)| (i + j) as f64);
 
         // Identity transformation should preserve array
         let identity = array![[1.0, 0.0], [0.0, 1.0]];
@@ -226,7 +226,7 @@ mod tests {
     #[test]
     fn test_interpolation_accuracy() {
         // Create a simple linear function z = x + y
-        let input = Array2::fromshape_fn((10, 10), |(i, j)| i as f64 + j as f64);
+        let input = Array2::from_shape_fn((10, 10), |(i, j)| i as f64 + j as f64);
 
         // Zoom by factor of 2 with linear interpolation
         let zoomed = zoom(&input, 2.0, None, None, None, None)
@@ -286,8 +286,8 @@ mod tests {
     #[test]
     fn test_3d_consistency() {
         // Create a 3D volume with uniform slices
-        let slice_2d = Array2::fromshape_fn((8, 8), |(i, j)| (i + j) as f64);
-        let volume_3d = Array3::fromshape_fn((8, 8, 5), |(i, j_k)| (i + j) as f64);
+        let slice_2d = Array2::from_shape_fn((8, 8), |(i, j)| (i + j) as f64);
+        let volume_3d = Array3::from_shape_fn((8, 8, 5), |(i, j, _k)| (i + j) as f64);
 
         // Apply Gaussian filter to 2D slice
         let filtered_2d = gaussian_filter(&slice_2d, 1.0, None, None)
@@ -333,7 +333,7 @@ mod tests {
 
         // Test with mixed scale values
         let mixed =
-            Array2::fromshape_fn((5, 5), |(i, j)| if (i + j) % 2 == 0 { 1e-5 } else { 1e5 });
+            Array2::from_shape_fn((5, 5), |(i, j)| if (i + j) % 2 == 0 { 1e-5 } else { 1e5 });
         let result_mixed = gaussian_filter(&mixed, 1.0, None, None)
             .expect("gaussian_filter should succeed for mixed scale values");
         assert!(result_mixed.iter().all(|&x| x.is_finite()));

@@ -521,7 +521,7 @@ where
                             }
 
                             if let Ok(mut model) = SarimaModel::new(
-                                p, d, q, p_seasonal, d_seasonal, q_seasonal, period,
+                                _p, _d, _q, p_seasonal, d_seasonal, q_seasonal, period,
                             ) {
                                 if model.fit(data).is_ok() {
                                     let n_params = _p + _q + p_seasonal + q_seasonal + 1;
@@ -562,13 +562,13 @@ where
         Some(model) => {
             let params = {
                 let mut _p = Array1::zeros(7);
-                p[0] = F::from(model._p).unwrap();
-                p[1] = F::from(model._d).unwrap();
-                p[2] = F::from(model._q).unwrap();
-                p[3] = F::from(model.p_seasonal).unwrap();
-                p[4] = F::from(model.d_seasonal).unwrap();
-                p[5] = F::from(model.q_seasonal).unwrap();
-                p[6] = F::from(model.period).unwrap();
+                _p[0] = F::from(model.p).unwrap();
+                _p[1] = F::from(model.d).unwrap();
+                _p[2] = F::from(model.q).unwrap();
+                _p[3] = F::from(model.p_seasonal).unwrap();
+                _p[4] = F::from(model.d_seasonal).unwrap();
+                _p[5] = F::from(model.q_seasonal).unwrap();
+                _p[6] = F::from(model.period).unwrap();
                 _p
             };
             Ok((model, params))

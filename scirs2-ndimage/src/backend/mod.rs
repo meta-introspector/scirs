@@ -21,9 +21,9 @@ pub use gpu_acceleration_framework::{
 pub use kernels::{GpuBuffer, GpuKernelExecutor, KernelInfo};
 
 #[cfg(feature = "cuda")]
-pub use concrete_gpu__backends::CudaContext;
+pub use concrete_gpu_backends::CudaContext;
 #[cfg(feature = "opencl")]
-pub use concrete_gpu__backends::OpenCLContext;
+pub use concrete_gpu_backends::OpenCLContext;
 // TODO: Implement MetalContext in concrete_gpu_backends.rs
 // #[cfg(all(target_os = "macos", feature = "metal"))]
 // pub use concrete_gpu__backends::MetalContext;
@@ -99,11 +99,11 @@ where
     fn execute_gpu(&self, input: &ArrayView<T, D>, backend: Backend) -> NdimageResult<Array<T, D>>;
 
     /// Get estimated memory requirements
-    fn memory_requirement(&self, inputshape: &[usize]) -> usize;
+    fn memory_requirement(&self, input_shape: &[usize]) -> usize;
 
     /// Check if this operation benefits from GPU acceleration
-    fn benefits_from_gpu(&self, arraysize: usize) -> bool {
-        arraysize > 50_000 // Default threshold
+    fn benefits_from_gpu(&self, array_size: usize) -> bool {
+        array_size > 50_000 // Default threshold
     }
 }
 
@@ -111,17 +111,17 @@ where
 pub struct BackendExecutor {
     config: BackendConfig,
     #[cfg(feature = "gpu")]
-    gpucontext: Option<Arc<dyn GpuContext>>,
+    gpu_context: Option<Arc<dyn GpuContext>>,
 }
 
 impl BackendExecutor {
     pub fn new(config: BackendConfig) -> NdimageResult<Self> {
         #[cfg(feature = "gpu")]
-        let gpucontext = match config.backend {
+        let gpu_context = match config.backend {
             #[cfg(feature = "cuda")]
-            Backend::Cuda => Some(Arc::new(CudaContext::new(_config.device_id)?)),
+            Backend::Cuda => Some(Arc::new(CudaContext::new(config.device_id)?)),
             #[cfg(feature = "opencl")]
-            Backend::OpenCL => Some(Arc::new(OpenCLContext::new(_config.device_id)?)),
+            Backend::OpenCL => Some(Arc::new(OpenCLContext::new(config.device_id)?)),
             // TODO: Implement Metal backend
             // #[cfg(all(target_os = "macos", feature = "metal"))]
             // Backend::Metal => Some(Arc::new(MetalContext::new(_config.device_id)?), _ => None,
@@ -130,7 +130,7 @@ impl BackendExecutor {
         Ok(Self {
             config,
             #[cfg(feature = "gpu")]
-            gpucontext,
+            gpu_context,
         })
     }
 
@@ -161,7 +161,7 @@ impl BackendExecutor {
     }
 
     /// Select the best backend for an operation
-    fn select_backend<T, D, Op>(&self, op: &Op, arraysize: usize) -> NdimageResult<Backend>
+    fn select_backend<T, D, Op>(&self, op: &Op, array_size: usize) -> NdimageResult<Backend>
     where
         T: Float + FromPrimitive + Debug + Clone,
         D: Dimension,
@@ -170,9 +170,9 @@ impl BackendExecutor {
         match self.config.backend {
             Backend::Auto => {
                 // Automatic selection based on heuristics
-                if arraysize < self.config.gpu_threshold {
+                if array_size < self.config.gpu_threshold {
                     Ok(Backend::Cpu)
-                } else if op.benefits_from_gpu(arraysize) {
+                } else if op.benefits_from_gpu(array_size) {
                     // Check available GPU backends
                     #[cfg(feature = "cuda")]
                     if self.is_cuda_available() {
@@ -271,13 +271,13 @@ where
         }
     }
 
-    fn memory_requirement(&self, inputshape: &[usize]) -> usize {
-        let elements: usize = inputshape.iter().product();
+    fn memory_requirement(&self, input_shape: &[usize]) -> usize {
+        let elements: usize = input_shape.iter().product();
         // Input + output + temporary buffers
         elements * std::mem::size_of::<T>() * 3
     }
 
-    fn benefits_from_gpu(&self, arraysize: usize) -> bool {
+    fn benefits_from_gpu(&self, array_size: usize) -> bool {
         // Gaussian filter benefits from GPU for large arrays
         array_size > 100_000
     }

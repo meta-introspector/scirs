@@ -7,7 +7,7 @@
 //!
 //! ```
 //! use ndarray::{ArrayView1, Array2, ArrayView2};
-//! use scirs2__cluster::vq::kmeans;
+//! use scirs2_cluster::vq::kmeans;
 //!
 //! // Example data
 //! let data = Array2::fromshape_vec((6, 2), vec![
@@ -42,12 +42,12 @@ mod parallel_kmeans;
 mod simd_kmeans;
 mod simd_optimizations;
 mod weighted_kmeans;
-pub use self::distance__metrics::{
+pub use self::distance_metrics::{
     create_metric, ChebyshevDistance, CorrelationDistance, CosineDistance,
     DistanceMetric as VQDistanceMetric, EuclideanDistance, MahalanobisDistance, ManhattanDistance,
     MetricType, MinkowskiDistance,
 };
-pub use distance__simd::{
+pub use distance_simd::{
     distance_to_centroids_simd, pairwise_euclidean_parallel, pairwise_euclidean_simd,
 };
 pub use kmeans::{
@@ -56,13 +56,13 @@ pub use kmeans::{
 };
 pub use kmeans2::{kmeans2, kmeans2_str, MinitMethod, MissingMethod};
 pub use minibatch_kmeans::*;
-pub use parallel__kmeans::{parallel_kmeans, ParallelKMeansOptions};
-pub use simd__kmeans::{kmeans_plus_plus_simd, kmeans_simd, mini_batch_kmeans_simd};
-pub use simd__optimizations::{
+pub use parallel_kmeans::{parallel_kmeans, ParallelKMeansOptions};
+pub use simd_kmeans::{kmeans_plus_plus_simd, kmeans_simd, mini_batch_kmeans_simd};
+pub use simd_optimizations::{
     calculate_distortion_simd, compute_centroids_simd, euclidean_distance_simd, vq_simd,
     whiten_simd, SimdOptimizationConfig,
 };
-pub use weighted__kmeans::{weighted_kmeans, weighted_kmeans_plus_plus, WeightedKMeansOptions};
+pub use weighted_kmeans::{weighted_kmeans, weighted_kmeans_plus_plus, WeightedKMeansOptions};
 
 /// Computes the Euclidean distance between two vectors
 #[allow(dead_code)]
@@ -99,7 +99,7 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__cluster::vq::whiten;
+/// use scirs2_cluster::vq::whiten;
 ///
 /// let data = Array2::<f64>::fromshape_vec((4, 2), vec![
 ///     1.0, 2.0,
@@ -148,7 +148,7 @@ where
     let mut whitened = Array2::<F>::zeros((n_samples, n_features));
     for i in 0..n_samples {
         for j in 0..n_features {
-            whitened[[i, j]] = (_obs[[i, j]] - means[j]) / stds[j];
+            whitened[[i, j]] = (obs[[i, j]] - means[j]) / stds[j];
         }
     }
 

@@ -612,31 +612,31 @@ fn sort5(arr: &mut [f32; 5]) {
     // Sorting network for 5 elements
     // Optimal sorting network from http://pages.ripco.net/~jgamble/nw.html
     if arr[0] > arr[1] {
-        swap(_arr, 0, 1);
+        swap(arr, 0, 1);
     }
     if arr[3] > arr[4] {
-        swap(_arr, 3, 4);
+        swap(arr, 3, 4);
     }
     if arr[2] > arr[4] {
-        swap(_arr, 2, 4);
+        swap(arr, 2, 4);
     }
     if arr[2] > arr[3] {
-        swap(_arr, 2, 3);
+        swap(arr, 2, 3);
     }
     if arr[0] > arr[3] {
-        swap(_arr, 0, 3);
+        swap(arr, 0, 3);
     }
     if arr[0] > arr[2] {
-        swap(_arr, 0, 2);
+        swap(arr, 0, 2);
     }
     if arr[1] > arr[4] {
-        swap(_arr, 1, 4);
+        swap(arr, 1, 4);
     }
     if arr[1] > arr[3] {
-        swap(_arr, 1, 3);
+        swap(arr, 1, 3);
     }
     if arr[1] > arr[2] {
-        swap(_arr, 1, 2);
+        swap(arr, 1, 2);
     }
 }
 
@@ -1233,7 +1233,7 @@ mod tests {
         use ndarray::Array3;
 
         // Create a 3D test array
-        let array = Array3::fromshape_fn((3, 3, 3), |(i, j, k)| {
+        let array = Array3::from_shape_fn((3, 3, 3), |(i, j, k)| {
             (i * 9 + j * 3 + k) as f64 // Values from 0 to 26
         });
 

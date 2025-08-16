@@ -14,7 +14,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
-use ndarray::ArrayView1;
 
 /// Configuration for dataset exploration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -64,9 +63,9 @@ pub struct DatasetSummary {
     /// Statistical summary of features
     pub statistics: FeatureStatistics,
     /// Missing data analysis
-    pub missing_data: MissingDataAnalysis,
+    pub missingdata: MissingDataAnalysis,
     /// Target variable analysis (if available)
-    pub target_analysis: Option<TargetAnalysis>,
+    pub targetanalysis: Option<TargetAnalysis>,
     /// Data quality assessment
     pub quality_assessment: QualityAssessment,
 }
@@ -254,15 +253,15 @@ impl DatasetExplorer {
     pub fn summarize(&self, dataset: &Dataset) -> Result<DatasetSummary> {
         let info = self.collect_basic_info(dataset);
         let statistics = self.compute_feature_statistics(dataset)?;
-        let missing_data = self.analyze_missing_data(dataset);
-        let target_analysis = self.analyze_target(dataset)?;
-        let quality_assessment = self.assess_quality(dataset, &statistics, &missing_data)?;
+        let missingdata = self.analyze_missingdata(dataset);
+        let targetanalysis = self.analyze_target(dataset)?;
+        let quality_assessment = self.assess_quality(dataset, &statistics, &missingdata)?;
 
         Ok(DatasetSummary {
             info,
             statistics,
-            missing_data,
-            target_analysis,
+            missingdata,
+            targetanalysis,
             quality_assessment,
         })
     }
@@ -311,10 +310,10 @@ impl DatasetExplorer {
             match input {
                 "1" => self.display_statistics(&summary.statistics)?,
                 "2" => self.interactive_feature_details(dataset, &summary.statistics)?,
-                "3" => self.display_missing_data(&summary.missing_data)?,
+                "3" => self.display_missingdata(&summary.missingdata)?,
                 "4" => {
-                    if let Some(ref target_analysis) = summary.target_analysis {
-                        self.display_target_analysis(target_analysis)?;
+                    if let Some(ref targetanalysis) = summary.targetanalysis {
+                        self.display_targetanalysis(targetanalysis)?;
                     } else {
                         println!("No target variable found in dataset.");
                     }
@@ -558,7 +557,7 @@ impl DatasetExplorer {
         }
     }
 
-    fn analyze_missing_data(&self, dataset: &Dataset) -> MissingDataAnalysis {
+    fn analyze_missingdata(&self, dataset: &Dataset) -> MissingDataAnalysis {
         let n_samples = dataset.n_samples();
         let n_features = dataset.n_features();
         let total_values = n_samples * n_features;
@@ -672,18 +671,19 @@ impl DatasetExplorer {
     }
 
     fn assess_quality(
-        selfdataset: &Dataset,
+        &self,
+        _dataset: &Dataset,
         statistics: &FeatureStatistics,
-        missing_data: &MissingDataAnalysis,
+        missingdata: &MissingDataAnalysis,
     ) -> Result<QualityAssessment> {
         let mut issues = Vec::new();
         let mut quality_score = 100.0;
 
         // Check missing _data
-        if missing_data.missing_percentage > 5.0 {
-            let severity = if missing_data.missing_percentage > 20.0 {
+        if missingdata.missing_percentage > 5.0 {
+            let severity = if missingdata.missing_percentage > 20.0 {
                 Severity::High
-            } else if missing_data.missing_percentage > 10.0 {
+            } else if missingdata.missing_percentage > 10.0 {
                 Severity::Medium
             } else {
                 Severity::Low
@@ -692,19 +692,16 @@ impl DatasetExplorer {
             issues.push(QualityIssue {
                 issue_type: IssueType::MissingData,
                 severity,
-                description: format!(
-                    "{:.1}% of _data is missing",
-                    missing_data.missing_percentage
-                ),
-                affected_features: missing_data
+                description: format!("{:.1}% of _data is missing", missingdata.missing_percentage),
+                affected_features: missingdata
                     .feature_missing
                     .iter()
-                    .filter(|(__, pct)| *pct > 5.0)
-                    .map(|(name__)| name.clone())
+                    .filter(|(_, _, pct)| *pct > 5.0)
+                    .map(|(name, _, _)| name.clone())
                     .collect(),
             });
 
-            quality_score -= missing_data.missing_percentage.min(30.0);
+            quality_score -= missingdata.missing_percentage.min(30.0);
         }
 
         // Check for low variance features
@@ -799,10 +796,10 @@ impl DatasetExplorer {
     fn display_table(&self, summary: &DatasetSummary) -> Result<()> {
         self.display_basic_info(&summary.info);
         self.display_statistics(&summary.statistics)?;
-        self.display_missing_data(&summary.missing_data)?;
+        self.display_missingdata(&summary.missingdata)?;
 
-        if let Some(ref target_analysis) = summary.target_analysis {
-            self.display_target_analysis(target_analysis)?;
+        if let Some(ref targetanalysis) = summary.targetanalysis {
+            self.display_targetanalysis(targetanalysis)?;
         }
 
         self.display_quality_assessment(&summary.quality_assessment)?;
@@ -875,17 +872,17 @@ impl DatasetExplorer {
         Ok(())
     }
 
-    fn display_missing_data(&self, missingdata: &MissingDataAnalysis) -> Result<()> {
+    fn display_missingdata(&self, missingdata: &MissingDataAnalysis) -> Result<()> {
         println!("❌ Missing Data Analysis");
         println!("========================");
         println!(
             "Total missing: {} ({:.2}%)",
-            missing_data.total_missing, missing_data.missing_percentage
+            missingdata.total_missing, missingdata.missing_percentage
         );
 
-        if !missing_data.feature_missing.is_empty() {
+        if !missingdata.feature_missing.is_empty() {
             println!("\nMissing by feature:");
-            for (feature, count, percentage) in &missing_data.feature_missing {
+            for (feature, count, percentage) in &missingdata.feature_missing {
                 if *count > 0 {
                     println!("  {feature}: {count} ({percentage:.1}%)");
                 }
@@ -896,14 +893,14 @@ impl DatasetExplorer {
         Ok(())
     }
 
-    fn display_target_analysis(&self, targetanalysis: &TargetAnalysis) -> Result<()> {
+    fn display_targetanalysis(&self, targetanalysis: &TargetAnalysis) -> Result<()> {
         println!("🎯 Target Analysis");
         println!("==================");
 
-        let target = &target_analysis.target_stats;
+        let target = &targetanalysis.target_stats;
         println!("Target type: {:?}", target.data_type);
 
-        if let Some(ref distribution) = target_analysis.class_distribution {
+        if let Some(ref distribution) = targetanalysis.class_distribution {
             println!("\nClass distribution:");
             for (class, count) in distribution {
                 println!("  {class}: {count}");
@@ -911,7 +908,7 @@ impl DatasetExplorer {
         }
 
         println!("\nTop correlations with features:");
-        for (feature, correlation) in target_analysis.correlations_with_features.iter().take(5) {
+        for (feature, correlation) in targetanalysis.correlations_with_features.iter().take(5) {
             println!("  {feature}: {correlation:.3}");
         }
 
@@ -1057,7 +1054,7 @@ impl DatasetExplorer {
 
         if let Ok(index) = input.parse::<usize>() {
             if index > 0 && index <= statistics.features.len() {
-                let feature = "" & statistics.features[index - 1];
+                let feature = &statistics.features[index - 1];
                 self.display_feature_detail(feature, dataset)?;
             } else {
                 println!("Invalid feature number.");
@@ -1069,7 +1066,7 @@ impl DatasetExplorer {
         Ok(())
     }
 
-    fn display_feature_detail(&self, feature: &FeatureStats, dataset: &Dataset) -> Result<()> {
+    fn display_feature_detail(&self, feature: &FeatureStats, _dataset: &Dataset) -> Result<()> {
         println!("\n📊 Feature: {}", feature.name);
         println!("==================");
         println!("Type: {:?}", feature.data_type);

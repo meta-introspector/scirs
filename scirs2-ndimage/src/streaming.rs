@@ -187,14 +187,14 @@ where
 
         while current_size > self.config.chunk_size && chunk_dims.iter().any(|&d| d > 1) {
             // Find largest dimension and halve it
-            let (max_idx_) = chunk_dims
+            let (max_idx_, _) = chunk_dims
                 .iter()
                 .enumerate()
                 .filter(|(_, &d)| d > 1)
                 .max_by_key(|(_, &d)| d)
                 .unwrap();
 
-            chunk_dims[max_idx] /= 2;
+            chunk_dims[max_idx_] /= 2;
             current_size = chunk_dims.iter().product::<usize>() * element_size;
         }
 
@@ -212,7 +212,7 @@ where
 
     /// Iterator over chunk information
     fn chunk_iterator<'a>(&'a self, shape: &'a [usize], chunkdims: &'a [usize]) -> ChunkIterator {
-        ChunkIterator::new(shape, chunk_dims, &self.config.overlap)
+        ChunkIterator::new(shape, chunkdims, &self.config.overlap)
     }
 
     /// Extract a chunk from an array
@@ -349,7 +349,7 @@ impl ChunkIterator {
     fn new(shape: &[usize], chunkdims: &[usize], overlap: &[usize]) -> Self {
         Self {
             shape: shape.to_vec(),
-            chunk_dims: chunk_dims.to_vec(),
+            chunk_dims: chunkdims.to_vec(),
             overlap: overlap.to_vec(),
             current: vec![0; shape.len()],
             done: false,
@@ -582,7 +582,7 @@ where
 {
     pub fn new(_baseconfig: StreamConfig) -> Self {
         Self {
-            base_config,
+            base_config: _baseconfig,
             performance_monitor: PerformanceMonitor::new(),
             memory_manager: MemoryManager::new(),
             _phantom: std::marker::PhantomData,
@@ -789,7 +789,7 @@ where
         D: Dimension,
         Op: GpuStreamableOp<T, D>,
     {
-        use crate::_backend::GpuContext;
+        use crate::backend::GpuContext;
 
         // Initialize GPU context
         let gpucontext = GpuContext::new()?;
@@ -924,7 +924,7 @@ impl PerformanceMonitor {
         self.history.push(PerformanceMetrics {
             chunk_size: current.chunk_size,
             processing_time: avg_time,
-            timestamp: std::_time::Instant::now(),
+            timestamp: std::time::Instant::now(),
         });
 
         new_config

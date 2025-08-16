@@ -59,7 +59,7 @@ pub struct DistributedProcessor {
 impl DistributedProcessor {
     /// Create a new distributed processor
     pub fn new(config: DistributedConfig) -> Result<Self> {
-        let cachedir = dirs::cachedir()
+        let cachedir = dirs::cache_dir()
             .ok_or_else(|| DatasetsError::Other("Could not determine cache directory".to_string()))?
             .join("scirs2-datasets");
         let cache = DatasetCache::new(cachedir);
@@ -530,7 +530,7 @@ impl DistributedProcessor {
     }
 
     fn compute_chunk_statistics(chunk: &Dataset) -> Result<ChunkStatistics> {
-        let data = &_chunk.data;
+        let data = &chunk.data;
         let n_features = data.ncols();
         let n_samples = data.nrows() as f64;
 
@@ -667,7 +667,7 @@ impl DistributedProcessor {
             featurenames: dataset.featurenames.clone(),
             targetnames: dataset.targetnames.clone(),
             feature_descriptions: dataset.feature_descriptions.clone(),
-            description: Some("Distributed scaled _dataset".to_string()),
+            description: Some("Distributed scaled dataset".to_string()),
             metadata: dataset.metadata.clone(),
         })
     }

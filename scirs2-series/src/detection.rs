@@ -253,7 +253,7 @@ where
 
     // Remove the mean to center the data
     let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).unwrap();
-    let centered_ts = Array1::fromshape_fn(n, |i| ts[i] - mean);
+    let centered_ts = Array1::from_shape_fn(n, |i| ts[i] - mean);
 
     // Compute the periodogram using DFT
     for k in 0..=n / 2 {
@@ -358,7 +358,7 @@ where
     // Add periods from FFT
     for &(period, strength) in &fft_result.periods {
         // Check if period already exists in the combined list
-        let exists = all_periods.iter().any(|&(p_)| p == period);
+        let exists = all_periods.iter().any(|&(p_, _)| p_ == period);
         if !exists {
             all_periods.push((period, strength));
         }
@@ -407,10 +407,10 @@ where
         // Mark harmonics as used
         for j in 0..sorted_periods.len() {
             if i != j && !used[j] {
-                let (other_period_) = sorted_periods[j];
+                let (other_period_, _) = sorted_periods[j];
 
                 // Check if other_period is a harmonic (multiple or factor) of period
-                if other_period % period == 0 || period % other_period == 0 {
+                if other_period_ % period == 0 || period % other_period_ == 0 {
                     used[j] = true;
                 }
             }
@@ -542,7 +542,7 @@ where
     match method {
         DecompositionType::MSTL => {
             let _options = crate::decomposition::MSTLOptions {
-                seasonal_periods: periods.iter().map(|&(p_)| p).collect(),
+                seasonal_periods: periods.iter().map(|&(p_, _)| p_).collect(),
                 ..Default::default()
             };
 
@@ -555,7 +555,7 @@ where
         }
         DecompositionType::TBATS => {
             let _options = crate::decomposition::TBATSOptions {
-                seasonal_periods: periods.iter().map(|&(p_)| p as f64).collect(),
+                seasonal_periods: periods.iter().map(|&(p_, _)| p_ as f64).collect(),
                 ..Default::default()
             };
 
@@ -568,7 +568,7 @@ where
         }
         DecompositionType::STR => {
             let _options = crate::decomposition::STROptions {
-                seasonal_periods: periods.iter().map(|&(p_)| p as f64).collect(),
+                seasonal_periods: periods.iter().map(|&(p_, _)| p_ as f64).collect(),
                 ..Default::default()
             };
 

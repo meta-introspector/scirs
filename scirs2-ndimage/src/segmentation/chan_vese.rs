@@ -68,12 +68,12 @@ fn compute_curvature(phi: &ArrayView2<f64>) -> Array2<f64> {
     for i in 1..height - 1 {
         for j in 1..width - 1 {
             // Central differences
-            let phi_x = (_phi[[i, j + 1]] - phi[[i, j - 1]]) / 2.0;
-            let phi_y = (_phi[[i + 1, j]] - phi[[i - 1, j]]) / 2.0;
+            let phi_x = (phi[[i, j + 1]] - phi[[i, j - 1]]) / 2.0;
+            let phi_y = (phi[[i + 1, j]] - phi[[i - 1, j]]) / 2.0;
 
             let phi_xx = phi[[i, j + 1]] - 2.0 * phi[[i, j]] + phi[[i, j - 1]];
             let phi_yy = phi[[i + 1, j]] - 2.0 * phi[[i, j]] + phi[[i - 1, j]];
-            let phi_xy = (_phi[[i + 1, j + 1]] - phi[[i + 1, j - 1]] - phi[[i - 1, j + 1]]
+            let phi_xy = (phi[[i + 1, j + 1]] - phi[[i + 1, j - 1]] - phi[[i - 1, j + 1]]
                 + phi[[i - 1, j - 1]])
                 / 4.0;
 
@@ -110,7 +110,7 @@ fn reinitialize_level_set(phi: &mut Array2<f64>, iterations: usize) {
                 let c_plus = c.max(0.0);
                 let d_minus = d.min(0.0);
 
-                let sign_phi = phi[[i, j]] / (_phi[[i, j]].abs() + 1e-10);
+                let sign_phi = phi[[i, j]] / (phi[[i, j]].abs() + 1e-10);
 
                 let grad_plus = ((a_plus * a_plus).max(b_minus * b_minus)
                     + (c_plus * c_plus).max(d_minus * d_minus))
@@ -135,7 +135,7 @@ fn reinitialize_level_set(phi: &mut Array2<f64>, iterations: usize) {
             }
         }
 
-        *_phi = phi_new;
+        *phi = phi_new;
     }
 }
 
@@ -184,7 +184,7 @@ where
         let center_x = width as f64 / 2.0;
         let radius = (height.min(width) as f64) / 4.0;
 
-        Array2::fromshape_fn((height, width), |(i, j)| {
+        Array2::from_shape_fn((height, width), |(i, j)| {
             let dy = i as f64 - center_y;
             let dx = j as f64 - center_x;
             radius - (dy * dy + dx * dx).sqrt()
@@ -296,45 +296,43 @@ where
 
     for k in 0..num_phases {
         // Initialize with different patterns
-        let phi = match k {
-            0 => {
-                // Vertical division
-                Array2::fromshape_fn(
-                    (height, width),
-                    |(_, j)| {
-                        if j < width / 2 {
+        let phi =
+            match k {
+                0 => {
+                    // Vertical division
+                    Array2::from_shape_fn(
+                        (height, width),
+                        |(_, j)| {
+                            if j < width / 2 {
+                                10.0
+                            } else {
+                                -10.0
+                            }
+                        },
+                    )
+                }
+                1 => {
+                    // Horizontal division
+                    Array2::from_shape_fn((height, width), |(i_)| {
+                        if i_ < height / 2 {
                             10.0
                         } else {
                             -10.0
                         }
-                    },
-                )
-            }
-            1 => {
-                // Horizontal division
-                Array2::fromshape_fn(
-                    (height, width),
-                    |(i_)| {
-                        if i < height / 2 {
+                    })
+                }
+                2 => {
+                    // Diagonal division
+                    Array2::from_shape_fn((height, width), |(i, j)| {
+                        if i + j < (height + width) / 2 {
                             10.0
                         } else {
                             -10.0
                         }
-                    },
-                )
-            }
-            2 => {
-                // Diagonal division
-                Array2::fromshape_fn((height, width), |(i, j)| {
-                    if i + j < (height + width) / 2 {
-                        10.0
-                    } else {
-                        -10.0
-                    }
-                })
-            }
-            _ => unreachable!(),
-        };
+                    })
+                }
+                _ => unreachable!(),
+            };
 
         phi_list.push(phi);
     }
@@ -534,7 +532,7 @@ pub fn mask_to_level_set(
 pub fn checkerboard_level_set(shape: (usize, usize), square_size: usize) -> Array2<f64> {
     let (height, width) = shape;
 
-    Array2::fromshape_fn((height, width), |(i, j)| {
+    Array2::from_shape_fn((height, width), |(i, j)| {
         let row_even = (i / square_size) % 2 == 0;
         let col_even = (j / square_size) % 2 == 0;
 

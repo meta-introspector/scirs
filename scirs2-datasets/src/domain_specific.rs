@@ -12,7 +12,7 @@
 use std::collections::HashMap;
 
 use ndarray::{Array1, Array2};
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 use serde::{Deserialize, Serialize};
 
 use crate::cache::DatasetCache;
@@ -83,7 +83,7 @@ pub mod astronomy {
     impl StellarDatasets {
         /// Create a new stellar datasets client
         pub fn new() -> Result<Self> {
-            let cachedir = dirs::cachedir()
+            let cachedir = dirs::cache_dir()
                 .ok_or_else(|| {
                     DatasetsError::Other("Could not determine cache directory".to_string())
                 })?
@@ -117,11 +117,11 @@ pub mod astronomy {
         fn load_synthetic_stellar_data(&self, catalog: &str, nstars: usize) -> Result<Dataset> {
             use rand_distr::{Distribution, Normal};
 
-            let mut rng = thread_rng();
+            let mut rng = rng();
 
             // Generate synthetic stellar parameters
-            let mut data = Vec::with_capacity(n_stars * 8);
-            let mut spectral_classes = Vec::with_capacity(n_stars);
+            let mut data = Vec::with_capacity(nstars * 8);
+            let mut spectral_classes = Vec::with_capacity(nstars);
 
             // Distributions for stellar parameters
             let ra_dist = rand_distr::Uniform::new(0.0, 360.0).unwrap();
@@ -132,7 +132,7 @@ pub mod astronomy {
             let proper_motion_dist = Normal::new(0.0, 50.0).unwrap();
             let radial_velocity_dist = Normal::new(0.0, 30.0).unwrap();
 
-            for _ in 0..n_stars {
+            for _ in 0..nstars {
                 // Right ascension (degrees)
                 data.push(ra_dist.sample(&mut rng));
                 // Declination (degrees)
@@ -164,7 +164,7 @@ pub mod astronomy {
                 spectral_classes.push(spectral_class as f64);
             }
 
-            let data_array = Array2::from_shape_vec((n_stars, 8), data)
+            let data_array = Array2::from_shape_vec((nstars, 8), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(spectral_classes);
@@ -202,7 +202,7 @@ pub mod astronomy {
                     "Radial velocity (km/s)".to_string(),
                 ]),
                 description: Some(format!(
-                    "Synthetic {catalog} stellar catalog with {n_stars} _stars"
+                    "Synthetic {catalog} stellar catalog with {nstars} _stars"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -211,11 +211,11 @@ pub mod astronomy {
         fn load_synthetic_exoplanet_data(&self, nplanets: usize) -> Result<Dataset> {
             use rand_distr::{Distribution, LogNormal, Normal};
 
-            let mut rng = thread_rng();
+            let mut rng = rng();
 
             // Generate synthetic exoplanet parameters
-            let mut data = Vec::with_capacity(n_planets * 6);
-            let mut planet_types = Vec::with_capacity(n_planets);
+            let mut data = Vec::with_capacity(nplanets * 6);
+            let mut planet_types = Vec::with_capacity(nplanets);
 
             // Distributions for planetary parameters
             let period_dist = LogNormal::new(1.0, 1.5).unwrap();
@@ -225,7 +225,7 @@ pub mod astronomy {
             let stellar_temp_dist = Normal::new(5800.0, 1000.0).unwrap();
             let metallicity_dist = Normal::new(0.0, 0.3).unwrap();
 
-            for _ in 0..n_planets {
+            for _ in 0..nplanets {
                 // Orbital period (days)
                 data.push(period_dist.sample(&mut rng));
                 // Planet radius (Earth radii)
@@ -251,7 +251,7 @@ pub mod astronomy {
                 planet_types.push(planet_type as f64);
             }
 
-            let data_array = Array2::from_shape_vec((n_planets, 6), data)
+            let data_array = Array2::from_shape_vec((nplanets, 6), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(planet_types);
@@ -283,7 +283,7 @@ pub mod astronomy {
                     "Stellar metallicity [Fe/H]".to_string(),
                 ]),
                 description: Some(format!(
-                    "Synthetic exoplanet catalog with {n_planets} _planets"
+                    "Synthetic exoplanet catalog with {nplanets} _planets"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -292,17 +292,17 @@ pub mod astronomy {
         fn load_synthetic_supernova_data(&self, nsupernovae: usize) -> Result<Dataset> {
             use rand_distr::{Distribution, Normal};
 
-            let mut rng = thread_rng();
+            let mut rng = rng();
 
             // Generate synthetic supernova light curve features
-            let mut data = Vec::with_capacity(n_supernovae * 10);
-            let mut sn_types = Vec::with_capacity(n_supernovae);
+            let mut data = Vec::with_capacity(nsupernovae * 10);
+            let mut sn_types = Vec::with_capacity(nsupernovae);
 
             // Different supernova types have different characteristics
             let _type_probs = [0.7, 0.15, 0.10, 0.05]; // Ia, Ib/c, II-P, II-L
 
-            for _ in 0..n_supernovae {
-                let sn_type = rng.gen_range(0..4);
+            for _ in 0..nsupernovae {
+                let sn_type = rng.random_range(0..4);
 
                 let (peak_mag, decline_rate, color_evolution, host_mass) = match sn_type {
                     0 => (-19.3, 1.1, 0.2, 10.5), // Type Ia
@@ -326,22 +326,22 @@ pub mod astronomy {
                 // Host galaxy mass (log M_sun)
                 data.push(host_mass + host_noise.sample(&mut rng));
                 // Redshift
-                data.push(rng.gen_range(0.01..0.3));
+                data.push(rng.random_range(0.01..0.3));
                 // Duration (days)
-                data.push(rng.gen_range(20.0..200.0));
+                data.push(rng.random_range(20.0..200.0));
                 // Stretch factor
-                data.push(rng.gen_range(0.7..1.3));
+                data.push(rng.random_range(0.7..1.3));
                 // Color excess E(B-V)
-                data.push(rng.gen_range(0.0..0.5));
+                data.push(rng.random_range(0.0..0.5));
                 // Discovery magnitude
-                data.push(rng.gen_range(15.0..22.0));
+                data.push(rng.random_range(15.0..22.0));
                 // Galactic latitude
-                data.push(rng.gen_range(-90.0..90.0));
+                data.push(rng.random_range(-90.0..90.0));
 
                 sn_types.push(sn_type as f64);
             }
 
-            let data_array = Array2::from_shape_vec((n_supernovae..10), data)
+            let data_array = Array2::from_shape_vec((nsupernovae, 10), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(sn_types);
@@ -380,7 +380,7 @@ pub mod astronomy {
                     "Galactic latitude (degrees)".to_string(),
                 ]),
                 description: Some(format!(
-                    "Synthetic supernova catalog with {n_supernovae} events"
+                    "Synthetic supernova catalog with {nsupernovae} events"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -403,7 +403,7 @@ pub mod genomics {
     impl GenomicsDatasets {
         /// Create a new genomics datasets client
         pub fn new() -> Result<Self> {
-            let cachedir = dirs::cachedir()
+            let cachedir = dirs::cache_dir()
                 .ok_or_else(|| {
                     DatasetsError::Other("Could not determine cache directory".to_string())
                 })?
@@ -418,10 +418,10 @@ pub mod genomics {
         pub fn load_gene_expression(&self, n_samples: usize, ngenes: usize) -> Result<Dataset> {
             use rand_distr::{Distribution, LogNormal, Normal};
 
-            let mut rng = thread_rng();
+            let mut rng = rng();
 
             // Generate synthetic gene expression matrix
-            let mut data = Vec::with_capacity(n_samples * n_genes);
+            let mut data = Vec::with_capacity(n_samples * ngenes);
             let mut phenotypes = Vec::with_capacity(n_samples);
 
             // Different expression patterns for different conditions
@@ -431,12 +431,12 @@ pub mod genomics {
                 let condition = sample_idx % condition_effects.len();
                 let base_effect = condition_effects[condition];
 
-                for gene_idx in 0..n_genes {
+                for gene_idx in 0..ngenes {
                     // Base expression level
                     let base_expr = LogNormal::new(5.0, 2.0).unwrap().sample(&mut rng);
 
                     // Condition-specific modulation
-                    let gene_effect = if gene_idx < n_genes / 10 {
+                    let gene_effect = if gene_idx < ngenes / 10 {
                         // 10% of _genes are differentially expressed
                         base_effect
                     } else {
@@ -453,13 +453,13 @@ pub mod genomics {
                 phenotypes.push(condition as f64);
             }
 
-            let data_array = Array2::from_shape_vec((n_samples, n_genes), data)
+            let data_array = Array2::from_shape_vec((n_samples, ngenes), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(phenotypes);
 
             // Generate gene names
-            let featurenames: Vec<String> = (0..n_genes).map(|i| format!("GENE_{i:06}")).collect();
+            let featurenames: Vec<String> = (0..ngenes).map(|i| format!("GENE_{i:06}")).collect();
 
             Ok(Dataset {
                 data: data_array,
@@ -479,25 +479,25 @@ pub mod genomics {
                         .collect(),
                 ),
                 description: Some(format!(
-                    "Synthetic gene expression data: {n_samples} _samples × {n_genes} _genes"
+                    "Synthetic gene expression data: {n_samples} _samples × {ngenes} _genes"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
         }
 
         /// Load synthetic DNA sequence features
-        pub fn load_dna_sequences(
+        pub fn load_dnasequences(
             &self,
-            n_sequences: usize,
+            nsequences: usize,
             sequence_length: usize,
         ) -> Result<Dataset> {
-            let mut rng = thread_rng();
+            let mut rng = rng();
             let nucleotides = ['A', 'T', 'G', 'C'];
 
-            let mut _sequences = Vec::new();
-            let mut sequence_types = Vec::with_capacity(n_sequences);
+            let mut sequences = Vec::new();
+            let mut sequence_types = Vec::with_capacity(nsequences);
 
-            for seq_idx in 0..n_sequences {
+            for seq_idx in 0..nsequences {
                 let mut sequence = String::with_capacity(sequence_length);
 
                 // Generate sequence with some patterns
@@ -506,7 +506,7 @@ pub mod genomics {
                 for _pos in 0..sequence_length {
                     let nucleotide = match seq_type {
                         0 => {
-                            // GC-rich _sequences
+                            // GC-rich sequences
                             if rng.random::<f64>() < 0.6 {
                                 if rng.random::<f64>() < 0.5 {
                                     'G'
@@ -520,7 +520,7 @@ pub mod genomics {
                             }
                         }
                         1 => {
-                            // AT-rich _sequences
+                            // AT-rich sequences
                             if rng.random::<f64>() < 0.6 {
                                 if rng.random::<f64>() < 0.5 {
                                     'A'
@@ -534,8 +534,8 @@ pub mod genomics {
                             }
                         }
                         _ => {
-                            // Random _sequences
-                            nucleotides[rng.gen_range(0..4)]
+                            // Random sequences
+                            nucleotides[rng.random_range(0..4)]
                         }
                     };
 
@@ -546,18 +546,18 @@ pub mod genomics {
                 sequence_types.push(seq_type as f64);
             }
 
-            // Convert _sequences to k-mer features (k=3)
+            // Convert sequences to k-mer features (k=3)
             let mut data = Vec::new();
             let k = 3;
             let kmers = Self::generate_kmers(k);
 
-            for sequence in &_sequences {
-                let kmer_counts = Self::count_kmers(sequence..k, &kmers);
+            for sequence in &sequences {
+                let kmer_counts = Self::count_kmers(sequence, k, &kmers);
                 data.extend(kmer_counts);
             }
 
             let n_features = 4_usize.pow(k as u32); // 4^k possible k-mers
-            let data_array = Array2::from_shape_vec((n_sequences, n_features), data)
+            let data_array = Array2::from_shape_vec((nsequences, n_features), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(sequence_types);
@@ -578,7 +578,7 @@ pub mod genomics {
                         .collect(),
                 ),
                 description: Some(format!(
-                    "DNA _sequences: {n_sequences} seqs × {k}-mer features"
+                    "DNA sequences: {nsequences} seqs × {k}-mer features"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -618,14 +618,14 @@ pub mod genomics {
                 .map(|(i, k)| (k.as_str(), i))
                 .collect();
 
-            for i in 0..=_sequence.len().saturating_sub(k) {
-                let kmer = &_sequence[i..i + k];
+            for i in 0..=sequence.len().saturating_sub(k) {
+                let kmer = &sequence[i..i + k];
                 if let Some(&idx) = kmer_to_idx.get(kmer) {
                     counts[idx] += 1.0;
                 }
             }
 
-            // Normalize by _sequence length
+            // Normalize by sequence length
             let total: f64 = counts.iter().sum();
             if total > 0.0 {
                 for count in &mut counts {
@@ -653,7 +653,7 @@ pub mod climate {
     impl ClimateDatasets {
         /// Create a new climate datasets client
         pub fn new() -> Result<Self> {
-            let cachedir = dirs::cachedir()
+            let cachedir = dirs::cache_dir()
                 .ok_or_else(|| {
                     DatasetsError::Other("Could not determine cache directory".to_string())
                 })?
@@ -672,7 +672,7 @@ pub mod climate {
         ) -> Result<Dataset> {
             use rand_distr::{Distribution, Normal};
 
-            let mut rng = thread_rng();
+            let mut rng = rng();
             let days_per_year = 365;
             let total_days = n_years * days_per_year;
 
@@ -721,7 +721,7 @@ pub mod climate {
 
                     let precip = if rng.random::<f64>() < 0.3 {
                         // 30% chance of precipitation
-                        rng.gen_range(0.0..20.0) * seasonal_precip_factor
+                        rng.random_range(0.0..20.0) * seasonal_precip_factor
                     } else {
                         0.0
                     };
@@ -732,7 +732,7 @@ pub mod climate {
                 let mean_temp = temperatures.iter().sum::<f64>() / temperatures.len() as f64;
                 let max_temp = temperatures
                     .iter()
-                    .fold(f64::NEG_INFINITY..|a, &b| a.max(b));
+                    .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
                 let min_temp = temperatures.iter().fold(f64::INFINITY, |a, &b| a.min(b));
                 let temp_range = max_temp - min_temp;
 
@@ -741,10 +741,11 @@ pub mod climate {
 
                 // Generate additional climate variables
                 let avg_humidity = humidity + Normal::new(0.0, 5.0).unwrap().sample(&mut rng);
-                let wind_speed = rng.gen_range(2.0..15.0);
+                let wind_speed = rng.random_range(2.0..15.0);
 
                 data.extend(vec![
-                    mean_temp..temp_range,
+                    mean_temp,
+                    temp_range,
                     total_precip,
                     precip_days,
                     avg_humidity,
@@ -800,21 +801,21 @@ pub mod climate {
         pub fn load_atmospheric_chemistry(&self, nmeasurements: usize) -> Result<Dataset> {
             use rand_distr::{Distribution, LogNormal, Normal};
 
-            let mut rng = thread_rng();
+            let mut rng = rng();
 
-            let mut data = Vec::with_capacity(n_measurements * 12);
-            let mut air_quality_index = Vec::with_capacity(n_measurements);
+            let mut data = Vec::with_capacity(nmeasurements * 12);
+            let mut air_quality_index = Vec::with_capacity(nmeasurements);
 
-            for _ in 0..n_measurements {
+            for _ in 0..nmeasurements {
                 // Generate correlated atmospheric _measurements
-                let base_pollution = rng.gen_range(0.0..1.0);
+                let base_pollution = rng.random_range(0.0..1.0);
 
                 // Major pollutants (concentrations in µg/m³)
-                let pm25: f64 = LogNormal::new(2.0 + base_pollution..0.5)
+                let pm25: f64 = LogNormal::new(2.0 + base_pollution, 0.5)
                     .unwrap()
                     .sample(&mut rng);
-                let pm10 = pm25 * rng.gen_range(1.5..2.5);
-                let no2 = LogNormal::new(3.0 + base_pollution * 0.5..0.3)
+                let pm10 = pm25 * rng.random_range(1.5..2.5);
+                let no2 = LogNormal::new(3.0 + base_pollution * 0.5, 0.3)
                     .unwrap()
                     .sample(&mut rng);
                 let so2 = LogNormal::new(1.0 + base_pollution * 0.3, 0.4)
@@ -829,16 +830,17 @@ pub mod climate {
 
                 // Meteorological factors
                 let temperature = Normal::new(20.0, 10.0).unwrap().sample(&mut rng);
-                let humidity = rng.gen_range(30.0..90.0);
-                let wind_speed = rng.gen_range(0.5..12.0);
-                let pressure = Normal::new(1013.0..15.0).unwrap().sample(&mut rng);
+                let humidity = rng.random_range(30.0..90.0);
+                let wind_speed = rng.random_range(0.5..12.0);
+                let pressure = Normal::new(1013.0, 15.0).unwrap().sample(&mut rng);
 
                 // Derived _measurements
                 let visibility = (50.0 - pm25.ln() * 5.0).max(1.0);
-                let uv_index = rng.gen_range(0.0..12.0);
+                let uv_index = rng.random_range(0.0..12.0);
 
                 data.extend(vec![
-                    pm25..pm10,
+                    pm25,
+                    pm10,
                     no2,
                     so2,
                     o3,
@@ -856,7 +858,7 @@ pub mod climate {
                 air_quality_index.push(aqi);
             }
 
-            let data_array = Array2::from_shape_vec((n_measurements, 12), data)
+            let data_array = Array2::from_shape_vec((nmeasurements, 12), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(air_quality_index);
@@ -894,7 +896,7 @@ pub mod climate {
                     "UV index".to_string(),
                 ]),
                 description: Some(format!(
-                    "Atmospheric chemistry _measurements: {n_measurements} samples"
+                    "Atmospheric chemistry _measurements: {nmeasurements} samples"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -903,7 +905,7 @@ pub mod climate {
         #[allow(clippy::too_many_arguments)]
         fn calculate_aqi(pm25: f64, pm10: f64, no2: f64, so2: f64, o3: f64, co: f64) -> f64 {
             // Simplified AQI calculation
-            let pm25_aqi = (_pm25 / 35.0 * 100.0).min(300.0);
+            let pm25_aqi = (pm25 / 35.0 * 100.0).min(300.0);
             let pm10_aqi = (pm10 / 150.0 * 100.0).min(300.0);
             let no2_aqi = (no2 / 100.0 * 100.0).min(300.0);
             let so2_aqi = (so2 / 75.0 * 100.0).min(300.0);
@@ -940,10 +942,10 @@ pub mod convenience {
     /// Load a gene expression dataset
     pub fn load_gene_expression(
         n_samples: Option<usize>,
-        n_genes: Option<usize>,
+        ngenes: Option<usize>,
     ) -> Result<Dataset> {
         let datasets = GenomicsDatasets::new()?;
-        datasets.load_gene_expression(n_samples.unwrap_or(200), n_genes.unwrap_or(1000))
+        datasets.load_gene_expression(n_samples.unwrap_or(200), ngenes.unwrap_or(1000))
     }
 
     /// Load a climate dataset
@@ -958,7 +960,7 @@ pub mod convenience {
     /// Load atmospheric chemistry data
     pub fn load_atmospheric_chemistry(_nmeasurements: Option<usize>) -> Result<Dataset> {
         let datasets = ClimateDatasets::new()?;
-        datasets.load_atmospheric_chemistry(_n_measurements.unwrap_or(1000))
+        datasets.load_atmospheric_chemistry(_nmeasurements.unwrap_or(1000))
     }
 
     /// List all available domain-specific datasets
@@ -969,7 +971,7 @@ pub mod convenience {
             ("astronomy", "supernovae"),
             ("astronomy", "gaia_dr3"),
             ("genomics", "gene_expression"),
-            ("genomics", "dna_sequences"),
+            ("genomics", "dnasequences"),
             ("climate", "temperature_timeseries"),
             ("climate", "atmospheric_chemistry"),
         ]
@@ -1024,8 +1026,8 @@ mod tests {
     fn test_list_domain_datasets() {
         let datasets = list_domain_datasets();
         assert!(!datasets.is_empty());
-        assert!(datasets.iter().any(|(domain_)| *domain == "astronomy"));
-        assert!(datasets.iter().any(|(domain_)| *domain == "genomics"));
-        assert!(datasets.iter().any(|(domain_)| *domain == "climate"));
+        assert!(datasets.iter().any(|(domain_, _)| *domain_ == "astronomy"));
+        assert!(datasets.iter().any(|(domain_, _)| *domain_ == "genomics"));
+        assert!(datasets.iter().any(|(domain_, _)| *domain_ == "climate"));
     }
 }

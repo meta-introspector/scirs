@@ -3,7 +3,7 @@
 //! This example demonstrates the advanced-sophisticated enhancements added to scirs2-datasets,
 //! including advanced analytics, GPU optimization, and adaptive streaming processing.
 
-use scirs2__datasets::{
+use scirs2_datasets::{
     // Adaptive streaming
     create_adaptive_engine_with_config,
     // Core functionality
@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("===========================================\n");
 
     // Create a sample dataset for demonstration
-    let dataset = create_sample_dataset()?;
+    let dataset = create_sampledataset()?;
     println!(
         "📊 Created sample dataset: {} samples, {} features",
         dataset.n_samples(),
@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create a sample dataset for demonstration
 #[allow(dead_code)]
-fn create_sample_dataset() -> Result<Dataset, Box<dyn std::error::Error>> {
+fn create_sampledataset() -> Result<Dataset, Box<dyn std::error::Error>> {
     println!("🔧 Generating sample classification dataset...");
 
     let dataset = make_classification(
@@ -77,7 +77,7 @@ fn demonstrate_advanced_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::
 
     // Quick quality assessment
     println!("📈 Running quick quality assessment...");
-    let quick_quality = quick_quality_assessment(_dataset)?;
+    let quick_quality = quick_quality_assessment(dataset)?;
     println!("   Quality Score: {quick_quality:.3}");
 
     // Comprehensive advanced-analysis
@@ -89,7 +89,7 @@ fn demonstrate_advanced_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::
         .with_advanced_precision(true)
         .with_significance_threshold(0.01);
 
-    let metrics = analyzer.analyze_dataset_quality(_dataset)?;
+    let metrics = analyzer.analyze_dataset_quality(dataset)?;
     let analysis_time = start_time.elapsed();
 
     println!("   Analysis completed in: {analysis_time:?}");
@@ -106,11 +106,7 @@ fn demonstrate_advanced_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::
     );
     println!(
         "     Shapiro-Wilk (avg): {:.3}",
-        metrics
-            .normality_assessment
-            .shapiro_wilk_scores
-            .mean()
-            .unwrap_or(0.0)
+        metrics.normality_assessment.shapiro_wilk_scores.mean()
     );
 
     // Display correlation insights
@@ -168,10 +164,11 @@ fn demonstrate_advanced_gpu_optimization() -> Result<(), Box<dyn std::error::Err
         matrix.ncols(),
         generation_time
     );
+    let matrix_mean = matrix.clone().mean();
+    let matrix_std = matrix.var(1.0).sqrt();
     println!(
         "   Matrix stats: mean={:.3}, std={:.3}",
-        matrix.mean().unwrap_or(0.0),
-        matrix.var(1.0).sqrt()
+        matrix_mean, matrix_std
     );
 
     // Benchmark performance
@@ -211,22 +208,22 @@ fn demonstrate_adaptive_streaming(dataset: &Dataset) -> Result<(), Box<dyn std::
 
     // Simulate streaming data
     println!("📡 Simulating data stream...");
-    let data = &_dataset.data;
-    let chunk_size = 20;
-    let num_chunks = (data.nrows() / chunk_size).min(10); // Limit for demo
+    let data = &dataset.data;
+    let chunksize = 20;
+    let num_chunks = (data.nrows() / chunksize).min(10); // Limit for demo
 
     let mut total_processed = 0;
     let start_time = Instant::now();
 
     for i in 0..num_chunks {
-        let start_row = i * chunk_size;
-        let end_row = (start_row + chunk_size).min(data.nrows());
+        let start_row = i * chunksize;
+        let end_row = (start_row + chunksize).min(data.nrows());
 
-        // Create chunk from _dataset slice
-        let chunk_data = data.slice(ndarray::s![start_row..end_row, ..]).to_owned();
+        // Create chunk from dataset slice
+        let chunkdata = data.slice(ndarray::s![start_row..end_row, ..]).to_owned();
 
         let chunk = StreamChunk {
-            data: chunk_data,
+            data: chunkdata,
             timestamp: Instant::now(),
             metadata: ChunkMetadata {
                 source_id: format!("demo_source_{i}"),
@@ -310,7 +307,7 @@ mod tests {
 
     #[test]
     fn test_sample_dataset_creation() {
-        let result = create_sample_dataset();
+        let result = create_sampledataset();
         assert!(result.is_ok());
         let dataset = result.unwrap();
         assert_eq!(dataset.n_samples(), 1000);
@@ -319,7 +316,7 @@ mod tests {
 
     #[test]
     fn test_advanced_analytics_integration() {
-        let dataset = create_sample_dataset().unwrap();
+        let dataset = create_sampledataset().unwrap();
         let result = demonstrate_advanced_analytics(&dataset);
         assert!(result.is_ok());
     }
@@ -332,7 +329,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_streaming_integration() {
-        let dataset = create_sample_dataset().unwrap();
+        let dataset = create_sampledataset().unwrap();
         let result = demonstrate_adaptive_streaming(&dataset);
         assert!(result.is_ok());
     }

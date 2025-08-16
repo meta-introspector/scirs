@@ -146,7 +146,7 @@ pub fn silhouette_score<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Resu
 where
     F: Float + FromPrimitive,
 {
-    let sample_scores = silhouette_samples(_data, labels)?;
+    let sample_scores = silhouette_samples(data, labels)?;
     let n_samples = sample_scores.len();
 
     if n_samples == 0 {

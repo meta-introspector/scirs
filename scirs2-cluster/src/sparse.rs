@@ -31,7 +31,7 @@ pub struct SparseDistanceMatrix<F: Float> {
 
 impl<F: Float + FromPrimitive> SparseDistanceMatrix<F> {
     /// Create a new sparse distance matrix
-    pub fn new(_n_samples: usize, defaultvalue: F) -> Self {
+    pub fn new(n_samples: usize, default_value: F) -> Self {
         Self {
             rows: Vec::new(),
             cols: Vec::new(),
@@ -120,7 +120,7 @@ impl<F: Float + FromPrimitive> SparseDistanceMatrix<F> {
 
         // Check all stored distances involving this point
         for idx in 0..self.rows.len() {
-            let (neighbor_distance) = if self.rows[idx] == point {
+            let (neighbor, distance) = if self.rows[idx] == point {
                 (self.cols[idx], self.data[idx])
             } else if self.cols[idx] == point {
                 (self.rows[idx], self.data[idx])
@@ -128,7 +128,7 @@ impl<F: Float + FromPrimitive> SparseDistanceMatrix<F> {
                 continue;
             };
 
-            if _distance <= max_distance {
+            if distance <= maxdistance {
                 neighbors.push((neighbor, distance));
             }
         }
@@ -210,7 +210,7 @@ pub struct SparseHierarchicalClustering<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug + PartialOrd> SparseHierarchicalClustering<F> {
     /// Create a new sparse hierarchical clustering instance
-    pub fn new(_sparse_matrix: SparseDistanceMatrix<F>, linkagemethod: LinkageMethod) -> Self {
+    pub fn new(sparse_matrix: SparseDistanceMatrix<F>, linkage_method: LinkageMethod) -> Self {
         Self {
             sparse_matrix,
             linkage_method,
@@ -316,7 +316,7 @@ impl<F: Float + FromPrimitive + Debug + PartialOrd> SparseHierarchicalClustering
     }
 
     /// Convert MST edges to linkage matrix format
-    fn mst_to_linkage(&self, mut mstedges: Vec<(usize, usize, F)>) -> Result<Array2<F>> {
+    fn mst_to_linkage(&self, mut mst_edges: Vec<(usize, usize, F)>) -> Result<Array2<F>> {
         let n_samples = self.sparse_matrix.n_samples();
 
         // Sort _edges by distance for single linkage, or process in MST order

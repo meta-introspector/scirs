@@ -155,10 +155,10 @@ pub struct QAOAClustering<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     /// Create a new QAOA clustering instance
-    pub fn new(_nclusters: usize, config: QAOAConfig) -> Self {
+    pub fn new(nclusters: usize, config: QAOAConfig) -> Self {
         Self {
             config,
-            n_clusters,
+            n_clusters: nclusters,
             n_qubits: 0,
             gamma_params: Array1::zeros(0),
             beta_params: Array1::zeros(0),
@@ -507,7 +507,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     }
 
     /// Calculate Hamiltonian matrix element between two computational basis states
-    fn calculate_hamiltonian_element(&self, state_i: usize, statej: usize) -> f64 {
+    fn calculate_hamiltonian_element(&self, state_i: usize, state_j: usize) -> f64 {
         if state_i != state_j {
             return 0.0; // Diagonal Hamiltonian
         }
@@ -515,12 +515,12 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
         let mut energy = 0.0;
 
         // Calculate energy based on qubit configuration
-        for _i in 0..self.n_qubits {
-            for _j in 0..self.n_qubits {
+        for i in 0..self.n_qubits {
+            for j in 0..self.n_qubits {
                 let bit_i = (state_i >> i) & 1;
                 let bit_j = (state_i >> j) & 1;
 
-                energy += self.cost_hamiltonian[[_i_j]] * (bit_i * bit_j) as f64;
+                energy += self.cost_hamiltonian[[i, j]] * (bit_i * bit_j) as f64;
             }
         }
 
@@ -600,7 +600,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     }
 
     /// Predict cluster assignments for new data
-    pub fn predict(&selfdata: ArrayView2<F>) -> Result<Array1<usize>> {
+    pub fn predict(&self, _data: ArrayView2<F>) -> Result<Array1<usize>> {
         if !self.fitted {
             return Err(ClusteringError::InvalidInput(
                 "Model must be fitted before prediction".to_string(),
@@ -641,10 +641,10 @@ pub struct VQEClustering<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     /// Create a new VQE clustering instance
-    pub fn new(_nclusters: usize, config: VQEConfig) -> Self {
+    pub fn new(nclusters: usize, config: VQEConfig) -> Self {
         Self {
             config,
-            n_clusters,
+            n_clusters: nclusters,
             n_qubits: 0,
             circuit_parameters: Array1::zeros(0),
             hamiltonian: Array2::zeros((0, 0)),
@@ -656,10 +656,10 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
 
     /// Fit the VQE clustering model
     pub fn fit(&mut self, data: ArrayView2<F>) -> Result<()> {
-        let (n_samples_) = data.dim();
+        let (n_samples_, _) = data.dim();
 
         // Set up problem encoding
-        self.n_qubits = (n_samples as f64).log2().ceil() as usize
+        self.n_qubits = (n_samples_ as f64).log2().ceil() as usize
             + (self.n_clusters as f64).log2().ceil() as usize;
 
         // Initialize circuit parameters
@@ -734,7 +734,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     }
 
     /// Add Ising model term to Hamiltonian
-    fn add_ising_term(&mut self, qubit_i: usize, qubitj: usize, weight: f64) {
+    fn add_ising_term(&mut self, qubit_i: usize, qubit_j: usize, weight: f64) {
         let n_states = self.hamiltonian.nrows();
 
         for state in 0..n_states {
@@ -994,7 +994,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     }
 
     /// Adam optimizer update (simplified)
-    fn adam_update(&mut selfiteration: usize) -> Result<()> {
+    fn adam_update(&mut self, _iteration: usize) -> Result<()> {
         // Simplified Adam - would need momentum tracking in practice
         self.gradient_descent_update()
     }
@@ -1169,10 +1169,10 @@ pub struct QuantumAnnealingClustering<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
     /// Create a new quantum annealing clustering instance
-    pub fn new(_nclusters: usize, config: QuantumAnnealingConfig) -> Self {
+    pub fn new(nclusters: usize, config: QuantumAnnealingConfig) -> Self {
         Self {
             config,
-            n_clusters,
+            n_clusters: nclusters,
             ising_matrix: None,
             spin_configuration: None,
             best_configuration: None,
@@ -1184,9 +1184,9 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
 
     /// Fit the quantum annealing clustering model
     pub fn fit(&mut self, data: ArrayView2<F>) -> Result<()> {
-        let (n_samples_) = data.dim();
+        let (n_samples_, _) = data.dim();
 
-        if n_samples == 0 {
+        if n_samples_ == 0 {
             return Err(ClusteringError::InvalidInput(
                 "Data cannot be empty".to_string(),
             ));
@@ -1196,7 +1196,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
         self.build_ising_model(data)?;
 
         // Initialize spin configuration
-        self.initialize_spins(n_samples)?;
+        self.initialize_spins(n_samples_)?;
 
         // Create temperature schedule
         self.create_temperature_schedule();
@@ -1246,7 +1246,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
     /// Initialize random spin configuration
     fn initialize_spins(&mut self, nsamples: usize) -> Result<()> {
         let qubits_per_sample = (self.n_clusters as f64).log2().ceil() as usize;
-        let total_qubits = n_samples * qubits_per_sample;
+        let total_qubits = nsamples * qubits_per_sample;
 
         use rand::Rng;
         let mut rng = if let Some(seed) = self.config.random_seed {
@@ -1360,12 +1360,12 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
 
     /// Calculate quantum tunneling probability
     fn quantum_tunnel_probability(&self, deltae: f64, temperature: f64) -> f64 {
-        if delta_e <= 0.0 {
+        if deltae <= 0.0 {
             1.0 // Always accept if energy decreases
         } else {
             // Enhanced probability including quantum tunneling effects
-            let classical_prob = (-delta_e / temperature).exp();
-            let quantum_enhancement = 0.1 * (-delta_e / (2.0 * temperature)).exp(); // Simplified quantum correction
+            let classical_prob = (-deltae / temperature).exp();
+            let quantum_enhancement = 0.1 * (-deltae / (2.0 * temperature)).exp(); // Simplified quantum correction
             (classical_prob + quantum_enhancement).min(1.0)
         }
     }

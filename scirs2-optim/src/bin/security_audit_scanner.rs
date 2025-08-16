@@ -126,11 +126,11 @@ fn run_security_audit(matches: &ArgMatches) -> Result<(), Box<dyn std::error::Er
     let mut auditor = SecurityAuditor::new(config);
 
     // Run comprehensive security audit
-    let audit_result = auditor.run_comprehensive_audit(projectpath)?;
+    let _auditresult = auditor.run_comprehensive_audit(projectpath)?;
 
     // Generate and output report
     let format = matches.get_one::<String>("format").unwrap();
-    let report = generate_auditreport(&audit_result, format)?;
+    let report = generate_auditreport(&_auditresult, format)?;
 
     // Output the report
     if let Some(output_file) = matches.get_one::<String>("output") {
@@ -143,7 +143,7 @@ fn run_security_audit(matches: &ArgMatches) -> Result<(), Box<dyn std::error::Er
     }
 
     // Exit with appropriate code based on findings
-    let exit_code = determine_exit_code(&audit_result, matches);
+    let exit_code = determine_exit_code(&_auditresult, matches);
     if exit_code != 0 {
         process::exit(exit_code);
     }
@@ -179,13 +179,13 @@ fn build_audit_config(matches: &ArgMatches) -> Result<AuditConfig, Box<dyn std::
 /// Parse severity level from string
 #[allow(dead_code)]
 fn parse_severity(_severitystr: &str) -> Result<Severity, Box<dyn std::error::Error>> {
-    match severity_str.to_lowercase().as_str() {
+    match _severitystr.to_lowercase().as_str() {
         "info" => Ok(Severity::Info),
         "low" => Ok(Severity::Low),
         "medium" => Ok(Severity::Medium),
         "high" => Ok(Severity::High),
         "critical" => Ok(Severity::Critical),
-        _ => Err(format!("Invalid severity level: {_severity_str}").into()),
+        _ => Err(format!("Invalid severity level: {}", _severitystr).into()),
     }
 }
 
@@ -1170,14 +1170,14 @@ impl LicenseChecker {
 /// Generate audit report in specified format
 #[allow(dead_code)]
 fn generate_auditreport(
-    audit_result: &AuditResult,
+    _auditresult: &AuditResult,
     format: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     match format {
-        "json" => Ok(serde_json::to_string_pretty(audit_result)?),
-        "yaml" => Ok(serde_yaml::to_string(audit_result)?),
-        "markdown" => generate_markdownreport(audit_result),
-        "html" => generate_htmlreport(audit_result),
+        "json" => Ok(serde_json::to_string_pretty(_auditresult)?),
+        "yaml" => Ok(serde_yaml::to_string(_auditresult)?),
+        "markdown" => generate_markdownreport(_auditresult),
+        "html" => generate_htmlreport(_auditresult),
         _ => Err(format!("Unsupported format: {format}").into()),
     }
 }
@@ -1185,7 +1185,7 @@ fn generate_auditreport(
 /// Generate markdown report
 #[allow(dead_code)]
 fn generate_markdownreport(
-    audit_result: &AuditResult,
+    _auditresult: &AuditResult,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut report = String::new();
 
@@ -1193,48 +1193,48 @@ fn generate_markdownreport(
 
     report.push_str(&format!(
         "**Project**: {}\n",
-        audit_result.projectpath.display()
+        _auditresult.projectpath.display()
     ));
-    report.push_str(&format!("**Audit Date**: {:?}\n", audit_result.timestamp));
+    report.push_str(&format!("**Audit Date**: {:?}\n", _auditresult.timestamp));
     report.push_str(&format!(
         "**Duration**: {:.2}s\n",
-        audit_result.duration.as_secs_f64()
+        _auditresult.duration.as_secs_f64()
     ));
     report.push_str(&format!(
         "**Overall Security Score**: {:.1}/100\n\n",
-        audit_result.overall_score
+        _auditresult.overall_score
     ));
 
     // Executive Summary
     report.push_str("## Executive Summary\n\n");
     report.push_str(&format!(
         "Total Issues Found: {}\n",
-        audit_result.summary.total_issues
+        _auditresult.summary.total_issues
     ));
     report.push_str(&format!(
         "- Critical: {}\n",
-        audit_result.summary.critical_issues
+        _auditresult.summary.critical_issues
     ));
-    report.push_str(&format!("- High: {}\n", audit_result.summary.high_issues));
+    report.push_str(&format!("- High: {}\n", _auditresult.summary.high_issues));
     report.push_str(&format!(
         "- Medium: {}\n",
-        audit_result.summary.medium_issues
+        _auditresult.summary.medium_issues
     ));
-    report.push_str(&format!("- Low: {}\n", audit_result.summary.low_issues));
-    report.push_str(&format!("- Info: {}\n", audit_result.summary.info_issues));
+    report.push_str(&format!("- Low: {}\n", _auditresult.summary.low_issues));
+    report.push_str(&format!("- Info: {}\n", _auditresult.summary.info_issues));
     report.push_str(&format!(
         "\n**Risk Level**: {:?}\n\n",
-        audit_result.summary.risk_level
+        _auditresult.summary.risk_level
     ));
 
     // Dependency Vulnerabilities
-    if !audit_result
+    if !_auditresult
         .dependency_results
         .vulnerable_dependencies
         .is_empty()
     {
         report.push_str("## Dependency Vulnerabilities\n\n");
-        for vuln in &audit_result.dependency_results.vulnerable_dependencies {
+        for vuln in &_auditresult.dependency_results.vulnerable_dependencies {
             report.push_str(&format!("### {} ({})\n", vuln.name, vuln.version));
             report.push_str(&format!("- **Severity**: {:?}\n", vuln.severity));
             report.push_str(&format!(
@@ -1250,9 +1250,9 @@ fn generate_markdownreport(
     }
 
     // Exposed Secrets
-    if !audit_result.secret_results.secrets.is_empty() {
+    if !_auditresult.secret_results.secrets.is_empty() {
         report.push_str("## Exposed Secrets\n\n");
-        for secret in &audit_result.secret_results.secrets {
+        for secret in &_auditresult.secret_results.secrets {
             report.push_str(&format!(
                 "### {} (Line {})\n",
                 secret.file.display(),
@@ -1266,9 +1266,9 @@ fn generate_markdownreport(
     }
 
     // Code Issues
-    if !audit_result.code_results.issues.is_empty() {
+    if !_auditresult.code_results.issues.is_empty() {
         report.push_str("## Code Analysis Results\n\n");
-        for issue in &audit_result.code_results.issues {
+        for issue in &_auditresult.code_results.issues {
             if matches!(issue.severity, Severity::High | Severity::Critical) {
                 report.push_str(&format!(
                     "### {} (Line {})\n",
@@ -1285,9 +1285,9 @@ fn generate_markdownreport(
     }
 
     // Recommendations
-    if !audit_result.recommendations.is_empty() {
+    if !_auditresult.recommendations.is_empty() {
         report.push_str("## Recommendations\n\n");
-        for (i, rec) in audit_result.recommendations.iter().enumerate() {
+        for (i, rec) in _auditresult.recommendations.iter().enumerate() {
             report.push_str(&format!("### {}. {}\n", i + 1, rec.title));
             report.push_str(&format!("**Severity**: {:?}\n", rec.severity));
             report.push_str(&format!("{}\n\n", rec.description));
@@ -1325,31 +1325,32 @@ fn generate_htmlreport(_auditresult: &AuditResult) -> Result<String, Box<dyn std
     html.push_str("<div class=\"summary\">\n");
     html.push_str(&format!(
         "<p><strong>Project:</strong> {}</p>\n",
-        audit_result.projectpath.display()
+        _auditresult.projectpath.display()
     ));
     html.push_str(&format!(
         "<p><strong>Overall Score:</strong> {:.1}/100</p>\n",
-        audit_result.overall_score
+        _auditresult.overall_score
     ));
     html.push_str(&format!(
         "<p><strong>Total Issues:</strong> {}</p>\n",
-        audit_result.summary.total_issues
+        _auditresult.summary.total_issues
     ));
     html.push_str(&format!(
         "<p><strong>Risk Level:</strong> {:?}</p>\n",
-        audit_result.summary.risk_level
+        _auditresult.summary.risk_level
     ));
     html.push_str("</div>\n");
 
-    if !audit_result.recommendations.is_empty() {
+    if !_auditresult.recommendations.is_empty() {
         html.push_str("<h2>Key Recommendations</h2>\n");
         html.push_str("<ul>\n");
-        for rec in &audit_result.recommendations {
+        for rec in &_auditresult.recommendations {
             let class = match rec.severity {
                 Severity::Critical => "critical",
                 Severity::High => "high",
                 Severity::Medium => "medium",
                 Severity::Low => "low",
+                Severity::Info => "info",
             };
             html.push_str(&format!(
                 "<li class=\"{}\"><strong>{}:</strong> {}</li>\n",
@@ -1373,23 +1374,23 @@ fn determine_exit_code(_auditresult: &AuditResult, matches: &ArgMatches) -> i32 
     // Exit with non-zero code if issues at or above the minimum severity are found
     match min_severity {
         Severity::Critical => {
-            if audit_result.summary.critical_issues > 0 {
+            if _auditresult.summary.critical_issues > 0 {
                 1
             } else {
                 0
             }
         }
         Severity::High => {
-            if audit_result.summary.critical_issues + audit_result.summary.high_issues > 0 {
+            if _auditresult.summary.critical_issues + _auditresult.summary.high_issues > 0 {
                 1
             } else {
                 0
             }
         }
         Severity::Medium => {
-            if audit_result.summary.critical_issues
-                + audit_result.summary.high_issues
-                + audit_result.summary.medium_issues
+            if _auditresult.summary.critical_issues
+                + _auditresult.summary.high_issues
+                + _auditresult.summary.medium_issues
                 > 0
             {
                 1
@@ -1398,7 +1399,7 @@ fn determine_exit_code(_auditresult: &AuditResult, matches: &ArgMatches) -> i32 
             }
         }
         Severity::Low => {
-            if audit_result.summary.total_issues > 0 {
+            if _auditresult.summary.total_issues > 0 {
                 1
             } else {
                 0

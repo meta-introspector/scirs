@@ -4,9 +4,9 @@
 //! including GARCH volatility modeling, technical indicators, and risk metrics.
 
 use ndarray::{Array1, Array2};
-use scirs2__series::{
-    correlation::{CorrelationAnalyzer, RollingCorrelation},
-    features::{FeatureConfig, FeatureExtractor},
+use scirs2_series::{
+    correlation::CorrelationAnalyzer,
+    // features::{FeatureConfig, FeatureExtractor}, // TODO: Fix when needed
     financial::{Distribution, GarchConfig, GarchModel, MeanModel},
     transformations::NormalizationMethod,
 };

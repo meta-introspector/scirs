@@ -347,7 +347,7 @@ fn get_wavelet_filters<F>(family: &WaveletFamily) -> Result<(Array1<F>, Array1<F
 where
     F: Float + FromPrimitive,
 {
-    match _family {
+    match family {
         WaveletFamily::Haar => {
             // Haar wavelet filters
             let sqrt_2_inv = F::from(std::f64::consts::FRAC_1_SQRT_2).unwrap();
@@ -500,9 +500,9 @@ fn calculate_wavelet_energy_bands<F>(coefficients: &[Array1<F>]) -> Result<Vec<F
 where
     F: Float + FromPrimitive,
 {
-    let mut energy_bands = Vec::with_capacity(_coefficients.len());
+    let mut energy_bands = Vec::with_capacity(coefficients.len());
 
-    for coeff_level in _coefficients {
+    for coeff_level in coefficients {
         let energy = coeff_level.mapv(|x| x * x).sum();
         energy_bands.push(energy);
     }
@@ -516,13 +516,13 @@ fn calculate_relative_wavelet_energy<F>(_energybands: &[F]) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive,
 {
-    let total_energy: F = energy_bands.iter().fold(F::zero(), |acc, &x| acc + x);
+    let total_energy: F = _energybands.iter().fold(F::zero(), |acc, &x| acc + x);
 
     if total_energy <= F::zero() {
-        return Ok(vec![F::zero(); energy_bands.len()]);
+        return Ok(vec![F::zero(); _energybands.len()]);
     }
 
-    let relative_energy = energy_bands
+    let relative_energy = _energybands
         .iter()
         .map(|&energy| energy / total_energy)
         .collect();
@@ -545,7 +545,7 @@ fn calculate_wavelet_entropy<F>(coefficients: &[Array1<F>]) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    let energy_bands = calculate_wavelet_energy_bands(_coefficients)?;
+    let energy_bands = calculate_wavelet_energy_bands(coefficients)?;
     let relative_energy = calculate_relative_wavelet_energy(&energy_bands)?;
 
     let mut entropy = F::zero();
@@ -623,7 +623,7 @@ where
     let n = F::from(scale_energies.len()).unwrap();
     let sum_x: F = scale_energies
         .iter()
-        .map(|(x_)| *x)
+        .map(|(x_, _)| *x_)
         .fold(F::zero(), |acc, x| acc + x);
     let sum_y: F = scale_energies
         .iter()
@@ -635,7 +635,7 @@ where
         .fold(F::zero(), |acc, xy| acc + xy);
     let sum_xx: F = scale_energies
         .iter()
-        .map(|(x_)| *x * *x)
+        .map(|(x_, _)| *x_ * *x_)
         .fold(F::zero(), |acc, xx| acc + xx);
 
     let denominator = n * sum_xx - sum_x * sum_x;
@@ -655,11 +655,11 @@ fn find_dominant_wavelet_scale<F>(_energybands: &[F]) -> usize
 where
     F: Float + PartialOrd,
 {
-    _energy_bands
+    _energybands
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(idx_)| idx)
+        .map(|(idx_, _)| idx_)
         .unwrap_or(0)
 }
 
@@ -673,7 +673,7 @@ fn calculate_mra_features<F>(_dwtresult: &DWTResult<F>) -> Result<MultiResolutio
 where
     F: Float + FromPrimitive,
 {
-    let level_energies = calculate_wavelet_energy_bands(&_dwt_result.coefficients)?;
+    let level_energies = calculate_wavelet_energy_bands(&_dwtresult.coefficients)?;
     let level_relative_energies = calculate_relative_wavelet_energy(&level_energies)?;
 
     // Calculate entropy across levels
@@ -822,11 +822,11 @@ fn estimate_instantaneous_frequencies<F>(_cwtmatrix: &Array2<F>, scales: &[f64])
 where
     F: Float + FromPrimitive + PartialOrd,
 {
-    let (_, n_time) = cwt_matrix.dim();
+    let (_, n_time) = _cwtmatrix.dim();
     let mut inst_freqs = Vec::with_capacity(n_time);
 
     for t in 0..n_time {
-        let time_slice = cwt_matrix.column(t);
+        let time_slice = _cwtmatrix.column(t);
 
         // Find scale with maximum magnitude
         let max_scale_idx = time_slice
@@ -837,7 +837,7 @@ where
                     .partial_cmp(&b.abs())
                     .unwrap_or(std::cmp::Ordering::Equal)
             })
-            .map(|(idx_)| idx)
+            .map(|(idx_, _)| idx_)
             .unwrap_or(0);
 
         // Convert scale to frequency (simplified)
@@ -855,11 +855,11 @@ fn calculate_energy_concentrations<F>(_cwtmatrix: &Array2<F>) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive,
 {
-    let (_, n_time) = cwt_matrix.dim();
+    let (_, n_time) = _cwtmatrix.dim();
     let mut concentrations = Vec::with_capacity(n_time);
 
     for t in 0..n_time {
-        let time_slice = cwt_matrix.column(t);
+        let time_slice = _cwtmatrix.column(t);
         let energy = time_slice.mapv(|x| x * x).sum();
         concentrations.push(energy);
     }
@@ -873,17 +873,17 @@ fn calculate_frequency_stability<F>(_instantaneousfrequencies: &[F]) -> Result<F
 where
     F: Float + FromPrimitive,
 {
-    if instantaneous_frequencies.len() < 2 {
+    if _instantaneousfrequencies.len() < 2 {
         return Ok(F::zero());
     }
 
-    let n = instantaneous_frequencies.len();
-    let mean = instantaneous_frequencies
+    let n = _instantaneousfrequencies.len();
+    let mean = _instantaneousfrequencies
         .iter()
         .fold(F::zero(), |acc, &x| acc + x)
         / F::from(n).unwrap();
 
-    let variance = instantaneous_frequencies
+    let variance = _instantaneousfrequencies
         .iter()
         .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
         / F::from(n - 1).unwrap();
@@ -903,14 +903,14 @@ fn calculate_scalogram_entropy<F>(_cwtmatrix: &Array2<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    let total_energy = cwt_matrix.mapv(|x| x * x).sum();
+    let total_energy = _cwtmatrix.mapv(|x| x * x).sum();
 
     if total_energy <= F::zero() {
         return Ok(F::zero());
     }
 
     let mut entropy = F::zero();
-    for &coeff in cwt_matrix.iter() {
+    for &coeff in _cwtmatrix.iter() {
         let energy = coeff * coeff;
         if energy > F::zero() {
             let p = energy / total_energy;
@@ -927,11 +927,11 @@ fn calculate_frequency_evolution<F>(_cwtmatrix: &Array2<F>, scales: &[f64]) -> R
 where
     F: Float + FromPrimitive + PartialOrd,
 {
-    let (_, n_time) = cwt_matrix.dim();
+    let (_, n_time) = _cwtmatrix.dim();
     let mut evolution = Vec::with_capacity(n_time);
 
     for t in 0..n_time {
-        let time_slice = cwt_matrix.column(t);
+        let time_slice = _cwtmatrix.column(t);
 
         // Calculate weighted average frequency
         let mut weighted_freq = F::zero();
@@ -1118,8 +1118,8 @@ fn calculate_optimal_threshold<F>(coefficients: &[Array1<F>], method: &Denoising
 where
     F: Float + FromPrimitive + PartialOrd,
 {
-    // Calculate noise level estimate using MAD of finest detail _coefficients
-    let finest_detail = &_coefficients[_coefficients.len() - 1];
+    // Calculate noise level estimate using MAD of finest detail coefficients
+    let finest_detail = &coefficients[coefficients.len() - 1];
     if finest_detail.is_empty() {
         return Ok(F::zero());
     }
@@ -1223,8 +1223,8 @@ where
         return Ok(Array1::zeros(0));
     }
 
-    // Simplified reconstruction: use approximation _coefficients scaled by levels
-    let approx_coeffs = &_coefficients[0];
+    // Simplified reconstruction: use approximation coefficients scaled by levels
+    let approx_coeffs = &coefficients[0];
     let mut reconstructed = approx_coeffs.clone();
 
     // Add scaled detail _coefficients (simplified approach)
@@ -1248,14 +1248,13 @@ where
     F: Float + FromPrimitive,
 {
     let signal_power = original.mapv(|x| x * x).sum();
-    let noise_power =
-        _original
-            .iter()
-            .zip(denoised.iter())
-            .fold(F::zero(), |acc, (&orig, &den)| {
-                let diff = orig - den;
-                acc + diff * diff
-            });
+    let noise_power = original
+        .iter()
+        .zip(denoised.iter())
+        .fold(F::zero(), |acc, (&orig, &den)| {
+            let diff = orig - den;
+            acc + diff * diff
+        });
 
     if noise_power > F::zero() && signal_power > F::zero() {
         let snr = (signal_power / noise_power).ln() / F::from(10.0).unwrap().ln()
@@ -1272,8 +1271,8 @@ fn calculate_mse_reduction<F>(original: &Array1<F>, denoised: &Array1<F>) -> Res
 where
     F: Float + FromPrimitive,
 {
-    let n = F::from(_original.len()).unwrap();
-    let mse = _original
+    let n = F::from(original.len()).unwrap();
+    let mse = original
         .iter()
         .zip(denoised.iter())
         .fold(F::zero(), |acc, (&orig, &den)| {

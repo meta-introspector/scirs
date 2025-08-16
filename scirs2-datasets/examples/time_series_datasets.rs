@@ -1,5 +1,5 @@
 use ndarray::s;
-use scirs2__datasets::time_series::electrocardiogram;
+use scirs2_datasets::time_series::electrocardiogram;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -29,10 +29,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  First 10 data points: {ecg_slice:?}");
 
     // Calculate some basic statistics
-    let ecg_data = ecg.data.column(0);
-    let min = ecg_data.fold(f64::INFINITY, |a, &b| a.min(b));
-    let max = ecg_data.fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    let mean = ecg_data.sum() / ecg_data.len() as f64;
+    let ecgdata = ecg.data.column(0);
+    let min = ecgdata.fold(f64::INFINITY, |a, &b| a.min(b));
+    let max = ecgdata.fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let mean = ecgdata.sum() / ecgdata.len() as f64;
 
     println!("  Min: {min:.3} mV");
     println!("  Max: {max:.3} mV");
@@ -57,10 +57,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Load the weather dataset
     println!("\nWeather dataset:");
-    let temp_data = weather(Some("temperature"))?;
+    let tempdata = weather(Some("temperature"))?;
 
-    println!("  Time steps: {}", temp_data.n_samples());
-    println!("  Locations: {}", temp_data.n_features());
+    println!("  Time steps: {}", tempdata.n_samples());
+    println!("  Locations: {}", tempdata.n_features());
     */
 
     println!("\nTime series dataset loaded successfully!");

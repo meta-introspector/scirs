@@ -12,7 +12,7 @@ use crate::utils::{safe_f64_to_float, safe_float_to_f64, safe_usize_to_float};
 
 use crate::filters::{gaussian_filter, median_filter};
 use crate::interpolation::{zoom, InterpolationOrder};
-use crate::measurements::{center_of_mass, moments};
+use crate::measurements::{center_of_mass, moments, central_moments};
 use crate::morphology::label;
 use crate::morphology::{binary_closing, binary_opening, grey_opening};
 
@@ -141,11 +141,27 @@ pub mod medical {
         kernel_size: usize,
     ) -> NdimageResult<Array2<T>>
     where
-        T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Send
+            + Sync
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + ndarray::ScalarOperand
+            + 'static,
     {
         // Top-hat transform to enhance bright structures
-        let structure = crate::morphology::disk_structure(kernel_size)?;
-        let opened = grey_opening(image, Some(&structure.view()), None, None)?;
+        let structure = crate::morphology::disk_structure(kernel_size as f64, None)?;
+        let structure_2d = structure.into_dimensionality::<ndarray::Ix2>()?;
+        let opened = grey_opening(
+            &image.to_owned(),
+            None,
+            Some(&structure_2d),
+            None,
+            None,
+            None,
+        )?;
         let top_hat = image.to_owned() - opened;
 
         // Enhance contrast
@@ -162,7 +178,14 @@ pub mod medical {
         max_size: usize,
     ) -> NdimageResult<Vec<Nodule>>
     where
-        T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Send
+            + Sync
+            + num_traits::NumAssign
+            + std::ops::DivAssign
+            + 'static,
     {
         let mut nodules = Vec::new();
 
@@ -171,20 +194,20 @@ pub mod medical {
         let lung_mask = ct_slice.mapv(|x| x > threshold);
 
         // Apply morphological operations to clean up
-        let cleaned = binary_closing(&lung_mask.view(), None, Some(3), None, None, None, None)?;
-        let cleaned = binary_opening(&cleaned.view(), None, Some(2), None, None, None, None)?;
+        let cleaned = binary_closing(&lung_mask, None, Some(3), None, None, None, None)?;
+        let cleaned = binary_opening(&cleaned, None, Some(2), None, None, None, None)?;
 
         // Find connected components
-        let (labels, num_features) = label(&cleaned.view(), None)?;
+        let (labels, num_features) = label(&cleaned, None, None, None)?;
 
         // Analyze each component
         for i in 1..=num_features {
             let component_mask = labels.mapv(|x| x == i);
-            let _size = component_mask.iter().filter(|&&x| x).count();
+            let size = component_mask.iter().filter(|&&x| x).count();
 
-            if _size >= min_size && _size <= max_size {
+            if size >= min_size && size <= max_size {
                 // Compute properties
-                let com = center_of_mass(&ct_slice.view(), Some(&component_mask.view()))?;
+                let com = center_of_mass(&ct_slice.to_owned())?;
 
                 // Simple circularity measure
                 let coords: Vec<(usize, usize)> = component_mask
@@ -193,7 +216,8 @@ pub mod medical {
                     .map(|((y, x), _)| (y, x))
                     .collect();
 
-                let (cy, cx) = com;
+                let cy = com[0].to_f64().unwrap_or(0.0);
+                let cx = com[1].to_f64().unwrap_or(0.0);
                 let mean_radius = coords
                     .iter()
                     .map(|&(y, x)| {
@@ -218,7 +242,7 @@ pub mod medical {
                 let circularity = 1.0 / (1.0 + radius_variance / mean_radius.powi(2));
 
                 nodules.push(Nodule {
-                    center: com,
+                    center: (cy, cx),
                     size,
                     circularity,
                     mean_intensity: ct_slice
@@ -226,7 +250,7 @@ pub mod medical {
                         .filter(|((y, x), _)| component_mask[[*y, *x]])
                         .map(|(_, &val)| safe_float_to_f64(val).unwrap_or(0.0))
                         .sum::<f64>()
-                        / _size as f64,
+                        / size as f64,
                 });
             }
         }
@@ -299,8 +323,8 @@ pub mod satellite {
         let water_mask = ndwi.mapv(|x| x > threshold);
 
         // Clean up small patches
-        let cleaned = binary_opening(&water_mask.view(), None, Some(2))?;
-        let cleaned = binary_closing(&cleaned.view(), None, Some(3))?;
+        let cleaned = binary_opening(&water_mask, None, Some(2), None, None, None, None)?;
+        let cleaned = binary_closing(&cleaned, None, Some(3), None, None, None, None)?;
 
         Ok(cleaned)
     }
@@ -354,7 +378,7 @@ pub mod satellite {
             ));
         }
 
-        let (height, width_) = image.dim();
+        let (height, width, _) = image.dim();
         let mut cloud_mask = Array2::default((height, width));
 
         // Simple brightness test (clouds are bright in visible bands)
@@ -387,7 +411,7 @@ pub mod satellite {
         }
 
         // Morphological cleaning
-        let cleaned = binary_closing(&cloud_mask.view(), None, Some(5))?;
+        let cleaned = binary_closing(&cloud_mask, None, Some(5), None, None, None, None)?;
 
         Ok(cleaned)
     }
@@ -399,7 +423,16 @@ pub mod satellite {
         method: PanSharpenMethod,
     ) -> NdimageResult<Array3<T>>
     where
-        T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Send
+            + Sync
+            + ndarray::ScalarOperand
+            + std::ops::Mul<Output = T>
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + 'static,
     {
         let (pan_h, pan_w) = panimage.dim();
         let (ms_h, ms_w, num_bands) = multi_spectral.dim();
@@ -417,9 +450,13 @@ pub mod satellite {
                 for band in 0..num_bands {
                     let ms_band = multi_spectral.slice(ndarray::s![.., .., band]);
                     let upsampled = zoom(
-                        &ms_band,
-                        &[scale_y, scale_x],
-                        InterpolationOrder::Cubic,
+                        &ms_band.to_owned(),
+                        T::from_f64(scale_x).ok_or_else(|| {
+                            NdimageError::InvalidInput("Failed to convert scale factor".into())
+                        })?, // Use single scale factor
+                        Some(InterpolationOrder::Cubic),
+                        None,
+                        None,
                         None,
                     )?;
                     sharpened
@@ -464,9 +501,13 @@ pub mod satellite {
                 for band in 0..num_bands {
                     let ms_band = multi_spectral.slice(ndarray::s![.., .., band]);
                     let upsampled = zoom(
-                        &ms_band,
-                        &[scale_y, scale_x],
-                        InterpolationOrder::Cubic,
+                        &ms_band.to_owned(),
+                        T::from_f64(scale_x).ok_or_else(|| {
+                            NdimageError::InvalidInput("Failed to convert scale factor".into())
+                        })?, // Use single scale factor
+                        Some(InterpolationOrder::Cubic),
+                        None,
+                        None,
                         None,
                     )?;
 
@@ -478,9 +519,13 @@ pub mod satellite {
 
                     // Upsample sum
                     let sum_upsampled = zoom(
-                        &ms_sum.view(),
-                        &[scale_y, scale_x],
-                        InterpolationOrder::Cubic,
+                        &ms_sum.to_owned(),
+                        T::from_f64(scale_x).ok_or_else(|| {
+                            NdimageError::InvalidInput("Failed to convert scale factor".into())
+                        })?,
+                        Some(InterpolationOrder::Cubic),
+                        None,
+                        None,
                         None,
                     )?;
 
@@ -551,15 +596,19 @@ pub mod microscopy {
         params: Option<CellSegmentationParams>,
     ) -> NdimageResult<(Array2<i32>, Vec<CellInfo>)>
     where
-        T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+        T: Float + FromPrimitive + Debug + Send + Sync + num_traits::NumAssign + 'static,
     {
         let params = params.unwrap_or_default();
 
         // Apply threshold
         let binary = match params.threshold_method {
-            ThresholdMethod::Otsu => crate::segmentation::otsu_threshold(image)?,
+            ThresholdMethod::Otsu => {
+                let (_thresholded, threshold_val) =
+                    crate::segmentation::otsu_threshold(&image.to_owned(), 256)?;
+                image.mapv(|x| x > threshold_val)
+            }
             ThresholdMethod::Adaptive => crate::segmentation::adaptive_threshold(
-                image,
+                &image.to_owned(),
                 21,
                 crate::segmentation::AdaptiveMethod::Gaussian,
                 safe_f64_to_float::<T>(5.0)?,
@@ -573,12 +622,12 @@ pub mod microscopy {
         // Morphological cleanup
         let mut cleaned = binary;
         for _ in 0..params.cleanup_iterations {
-            cleaned = binary_opening(&cleaned.view(), None, Some(3))?;
-            cleaned = binary_closing(&cleaned.view(), None, Some(3))?;
+            cleaned = binary_opening(&cleaned, None, Some(3), None, None, None, None)?;
+            cleaned = binary_closing(&cleaned, None, Some(3), None, None, None, None)?;
         }
 
         // Label connected components
-        let (labels, num_cells) = label(&cleaned.view(), None)?;
+        let (labels, num_cells) = label(&cleaned, None, None, None)?;
 
         // Analyze each cell
         let mut cell_info = Vec::new();
@@ -591,33 +640,36 @@ pub mod microscopy {
 
             if area >= params.min_area && area <= params.max_area {
                 // Compute cell properties
-                let com = center_of_mass(&image.view(), Some(&mask.view()))?;
-                let moments_result =
-                    moments(&mask.mapv(|x| if x { 1.0 } else { 0.0 }).view(), None)?;
+                let com = center_of_mass(&image.to_owned())?;
+                let central_moments_result = central_moments(&mask.mapv(|x| if x { safe_f64_to_float::<T>(1.0).unwrap_or(T::one()) } else { T::zero() }), 2, None)?;
 
-                // Compute eccentricity from moments
-                let m00 = moments_result.spatial[[0, 0]];
-                let m20 = moments_result.central[[2, 0]];
-                let m02 = moments_result.central[[0, 2]];
-                let m11 = moments_result.central[[1, 1]];
+                // Compute eccentricity from central moments
+                // For 2D with order=2: indices are M_00(0), M_01(1), M_02(2), M_10(3), M_11(4), M_12(5), M_20(6), M_21(7), M_22(8)
+                let m00 = central_moments_result[0]; // μ_00 (total mass)
+                let m20 = central_moments_result[6]; // μ_20 
+                let m02 = central_moments_result[2]; // μ_02
+                let m11 = central_moments_result[4]; // μ_11
 
                 let a = m20 / m00;
-                let b = 2.0 * m11 / m00;
+                let b = safe_f64_to_float::<T>(2.0)? * m11 / m00;
                 let c = m02 / m00;
 
                 let discriminant = (a - c) * (a - c) + b * b;
-                let eccentricity = if discriminant > 0.0 {
+                let zero_t = T::zero();
+                let eccentricity = if discriminant > zero_t {
                     let sqrt_disc = discriminant.sqrt();
-                    let lambda1 = (a + c + sqrt_disc) / 2.0;
-                    let lambda2 = (a + c - sqrt_disc) / 2.0;
+                    let two_t = safe_f64_to_float::<T>(2.0)?;
+                    let lambda1 = (a + c + sqrt_disc) / two_t;
+                    let lambda2 = (a + c - sqrt_disc) / two_t;
 
-                    if lambda1 > 0.0 {
-                        (1.0 - lambda2 / lambda1).sqrt()
+                    if lambda1 > zero_t {
+                        let one_t = T::one();
+                        (one_t - lambda2 / lambda1).sqrt()
                     } else {
-                        0.0
+                        zero_t
                     }
                 } else {
-                    0.0
+                    zero_t
                 };
 
                 // Update filtered labels
@@ -627,11 +679,17 @@ pub mod microscopy {
                     }
                 }
 
+                let center_tuple = if com.len() >= 2 {
+                    (safe_float_to_f64(com[0]).unwrap_or(0.0), safe_float_to_f64(com[1]).unwrap_or(0.0))
+                } else {
+                    (0.0, 0.0)
+                };
+
                 cell_info.push(CellInfo {
                     label: new_label,
                     area,
-                    center: com,
-                    eccentricity,
+                    center: center_tuple,
+                    eccentricity: safe_float_to_f64(eccentricity).unwrap_or(0.0),
                     mean_intensity: image
                         .indexed_iter()
                         .filter(|((y, x), _)| mask[[*y, *x]])
@@ -664,37 +722,46 @@ pub mod microscopy {
         max_size: usize,
     ) -> NdimageResult<(Array2<i32>, usize)>
     where
-        T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+        T: Float + FromPrimitive + Debug + Send + Sync + std::ops::AddAssign + std::ops::DivAssign + num_traits::NumAssign + 'static,
     {
         // Preprocess with median filter to reduce noise
-        let denoised = median_filter(dapi_channel, &[3, 3], None, None)?;
+        let denoised = median_filter(&dapi_channel.to_owned(), &[3, 3], None)?;
 
         // Enhance nuclei using top-hat transform
-        let structure = crate::morphology::disk_structure(10)?;
-        let background = grey_opening(&denoised.view(), Some(&structure.view()), None, None)?;
+        let structure = crate::morphology::disk_structure(10.0, None)?;
+        let structure_2d = structure.into_dimensionality::<ndarray::Ix2>()?;
+        let background = grey_opening(&denoised, None, Some(&structure_2d), None, None, None)?;
         let enhanced = &denoised - &background;
 
         // Threshold using Otsu's method
-        let binary = crate::segmentation::otsu_threshold(&enhanced.view())?;
+        let (binary_t, threshold_value) = crate::segmentation::otsu_threshold(&enhanced, 256)?;
+        
+        // Convert to bool array
+        let binary = binary_t.mapv(|x| x > threshold_value);
 
         // Fill holes in nuclei
-        let filled = crate::morphology::binary_fill_holes(&binary.view())?;
+        let filled = crate::morphology::binary_fill_holes(&binary, None, None)?;
 
         // Remove small objects
-        let cleaned = crate::morphology::remove_small_objects(&filled.view(), min_size)?;
+        let cleaned = crate::morphology::remove_small_objects(&filled, min_size, None)?;
 
         // Label nuclei
-        let (mut labels, num_features) = label(&cleaned.view(), None)?;
+        let (mut labels_usize, num_features) = label(&cleaned, None, None, None)?;
 
-        // Filter by _size
+        // Convert usize labels to i32 and filter by size
+        let mut labels = Array2::<i32>::zeros(labels_usize.dim());
         let mut valid_count = 0;
+        
         for i in 1..=num_features {
-            let _size = labels.iter().filter(|&&x| x == i).count();
-            if _size < min_size || _size > max_size {
-                // Remove this nucleus
-                labels.mapv_inplace(|x| if x == i { 0 } else { x });
-            } else {
+            let nucleus_size = labels_usize.iter().filter(|&&x| x == i).count();
+            if nucleus_size >= min_size && nucleus_size <= max_size {
                 valid_count += 1;
+                // Copy this nucleus to the output with i32 label
+                for ((y, x), &val) in labels_usize.indexed_iter() {
+                    if val == i {
+                        labels[[y, x]] = i as i32;
+                    }
+                }
             }
         }
 

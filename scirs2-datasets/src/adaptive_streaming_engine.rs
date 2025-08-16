@@ -6,7 +6,7 @@
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, Axis};
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 // Use rayon directly for parallel operations to avoid feature flag issues
 use scirs2_core::parallel_ops::*;
 use statrs::statistics::Statistics;
@@ -417,7 +417,7 @@ impl Default for AdaptiveStreamConfig {
 impl AdaptiveStreamingEngine {
     /// Create a new adaptive streaming engine
     pub fn new(config: AdaptiveStreamConfig) -> Self {
-        let buffer_manager = AdaptiveBufferManager::new(&_config);
+        let buffer_manager = AdaptiveBufferManager::new(&config);
         let pattern_detector = PatternDetector::new();
         let performance_optimizer = StreamPerformanceOptimizer::new();
         let quality_monitor = StreamQualityMonitor::new();
@@ -710,7 +710,7 @@ impl AdaptiveStreamingEngine {
     }
 
     /// Detect seasonality (simplified)
-    fn detect_seasonality(&self, timeseries: &[f64]) -> f64 {
+    fn detect_seasonality(&self, time_series: &[f64]) -> f64 {
         if time_series.len() < 4 {
             return 0.0;
         }
@@ -767,7 +767,7 @@ impl AdaptiveStreamingEngine {
     fn chunk_to_dataset(
         &self,
         chunk: StreamChunk,
-        characteristics: DataCharacteristics,
+        _characteristics: DataCharacteristics,
     ) -> Result<Dataset> {
         // For now, create a simple dataset from the chunk data
         // In a real implementation, this could be more sophisticated based on _characteristics
@@ -792,7 +792,7 @@ impl AdaptiveStreamingEngine {
 
 // Implementation stubs for the complex subsystems
 impl AdaptiveBufferManager {
-    fn new(config: &AdaptiveStreamConfig) -> Self {
+    fn new(_config: &AdaptiveStreamConfig) -> Self {
         Self {
             primary_buffer: Arc::new(Mutex::new(VecDeque::new())),
             secondary_buffer: Arc::new(Mutex::new(VecDeque::new())),
@@ -830,7 +830,7 @@ impl AdaptiveBufferManager {
     fn get_batch(&self, batchsize: usize) -> Result<Vec<StreamChunk>> {
         if let Ok(mut buffer) = self.primary_buffer.lock() {
             let mut batch = Vec::new();
-            for _ in 0..batch_size.min(buffer.len()) {
+            for _ in 0..batchsize.min(buffer.len()) {
                 if let Some(chunk) = buffer.pop_front() {
                     batch.push(chunk);
                 }
@@ -866,7 +866,7 @@ impl PatternDetector {
         }
     }
 
-    fn detect_patterns(selfbatch: &[StreamChunk]) -> Result<Vec<PatternSignature>> {
+    fn detect_patterns(&self, _batch: &[StreamChunk]) -> Result<Vec<PatternSignature>> {
         // Placeholder implementation
         Ok(vec![PatternSignature {
             features: Array1::zeros(10),
@@ -896,7 +896,7 @@ impl StreamPerformanceOptimizer {
         }
     }
 
-    fn optimize_for_patterns(&self, patterns: &[PatternSignature]) -> Result<OptimizationConfig> {
+    fn optimize_for_patterns(&self, _patterns: &[PatternSignature]) -> Result<OptimizationConfig> {
         if let Ok(config) = self.current_config.lock() {
             Ok(config.clone())
         } else {
@@ -934,7 +934,7 @@ impl StreamQualityMonitor {
         }
     }
 
-    fn assess_quality(&self, results: &[Dataset]) -> Result<()> {
+    fn assess_quality(&self, _results: &[Dataset]) -> Result<()> {
         // Placeholder implementation
         Ok(())
     }
@@ -1101,18 +1101,18 @@ impl QuantumInspiredOptimizer {
     /// Apply quantum tunneling for exploration
     fn apply_quantum_tunneling(&mut self) {
         for state in &mut self.quantum_states {
-            if thread_rng().random::<f64>() < self.annealing_params.tunneling_probability {
+            if rng().random::<f64>() < self.annealing_params.tunneling_probability {
                 // Quantum tunneling: randomly perturb configuration
                 for config_amp in &mut state.config_superposition {
-                    if thread_rng().random::<f64>() < 0.1 {
+                    if rng().random::<f64>() < 0.1 {
                         // Tunnel to nearby configuration space
                         config_amp.config.optimal_batch_size = (config_amp.config.optimal_batch_size
                             as f64
-                            * (1.0 + (thread_rng().random::<f64>() - 0.5) * 0.2))
+                            * (1.0 + (rng().random::<f64>() - 0.5) * 0.2))
                             as usize;
                         config_amp.config.optimal_buffer_size =
                             (config_amp.config.optimal_buffer_size as f64
-                                * (1.0 + (thread_rng().random::<f64>() - 0.5) * 0.2))
+                                * (1.0 + (rng().random::<f64>() - 0.5) * 0.2))
                                 as usize;
                     }
                 }
@@ -1173,7 +1173,7 @@ impl QuantumInspiredOptimizer {
         }
 
         // Quantum measurement - probabilistic state selection
-        let random_value = thread_rng().random::<f64>();
+        let random_value = rng().random::<f64>();
         let mut cumulative_prob = 0.0;
 
         for (i, &prob) in self.measurement_probabilities.iter().enumerate() {
@@ -1211,26 +1211,26 @@ impl QuantumOptimizationState {
         let config_superposition = (0..4)
             .map(|_| ConfigurationAmplitude {
                 config: OptimizationConfig {
-                    optimal_batch_size: thread_rng().gen_range(500..2000),
-                    optimal_buffer_size: thread_rng().gen_range(5000..20000),
-                    num_workers: thread_rng().gen_range(1..9),
-                    memory_strategy: match thread_rng().gen_range(0..4) {
+                    optimal_batch_size: rng().random_range(500..2000),
+                    optimal_buffer_size: rng().random_range(5000..20000),
+                    num_workers: rng().random_range(1..9),
+                    memory_strategy: match rng().random_range(0..4) {
                         0 => MemoryStrategy::Conservative,
                         1 => MemoryStrategy::Balanced,
                         2 => MemoryStrategy::Aggressive,
                         _ => MemoryStrategy::Adaptive,
                     },
                 },
-                amplitude: (thread_rng().random::<f64>(), thread_rng().random::<f64>()),
-                phase: thread_rng().random::<f64>() * 2.0 * std::f64::consts::PI,
+                amplitude: (rng().random::<f64>(), rng().random::<f64>()),
+                phase: rng().random::<f64>() * 2.0 * std::f64::consts::PI,
             })
             .collect();
 
         Self {
             config_superposition,
-            energy: thread_rng().random::<f64>() * 10.0,
-            coherence_time: Duration::from_millis(thread_rng().gen_range(100..1000)),
-            entanglement_degree: thread_rng().random::<f64>(),
+            energy: rng().random::<f64>() * 10.0,
+            coherence_time: Duration::from_millis(rng().random_range(100..1000)),
+            entanglement_degree: rng().random::<f64>(),
         }
     }
 }
@@ -1558,7 +1558,7 @@ impl NeuralAdaptiveSystem {
             }
             ChangeType::ModifyLayerSize => {
                 if !self.neural_network.layers.is_empty() {
-                    let layer_idx = thread_rng().gen_range(0..self.neural_network.layers.len());
+                    let layer_idx = rng().random_range(0..self.neural_network.layers.len());
                     self.neural_network.modify_layer_size(layer_idx, 32);
                 }
             }
@@ -1744,7 +1744,7 @@ impl AdaptiveNeuralNetwork {
         let _next_layer_size = self.layers[insert_position].weights.nrows();
 
         // Create new layer
-        let new_layer = NeuralLayer::new(prev_layer_size, size, activation, layer_type);
+        let new_layer = NeuralLayer::new(prev_layer_size, size, activation, layertype);
 
         // Modify next layer to accept new input size
         self.layers[insert_position].resize_input(size);
@@ -1764,20 +1764,20 @@ impl AdaptiveNeuralNetwork {
         let _output_size = if layer_idx + 1 < self.layers.len() {
             self.layers[layer_idx + 1].weights.nrows()
         } else {
-            new_size
+            newsize
         };
 
         // Recreate layer with new _size
         self.layers[layer_idx] = NeuralLayer::new(
             input_size,
-            new_size,
+            newsize,
             self.layers[layer_idx].activation,
             self.layers[layer_idx].layer_type,
         );
 
         // Update next layer if exists
         if layer_idx + 1 < self.layers.len() {
-            self.layers[layer_idx + 1].resize_input(new_size);
+            self.layers[layer_idx + 1].resize_input(newsize);
         }
     }
 
@@ -1815,7 +1815,7 @@ impl NeuralLayer {
         layer_type: LayerType,
     ) -> Self {
         let weights = Array2::from_shape_fn((output_size, input_size), |_| {
-            thread_rng().random::<f64>() * 0.01 - 0.005 // Small random initialization
+            rng().random::<f64>() * 0.01 - 0.005 // Small random initialization
         });
 
         let bias = Array1::zeros(output_size);
@@ -1871,17 +1871,17 @@ impl NeuralLayer {
     }
 
     /// Update layer weights
-    fn update_weights(&mut self, learning_rate: f64, momentum: f64) {
+    fn update_weights(&mut self, learning_rate: f64, _momentum: f64) {
         // Simplified weight update (in real implementation, this would use gradients)
         let weight_update = Array2::from_shape_fn(self.weights.dim(), |_| {
-            (thread_rng().random::<f64>() - 0.5) * learning_rate * 0.001
+            (rng().random::<f64>() - 0.5) * learning_rate * 0.001
         });
 
         self.weights = &self.weights - &weight_update;
 
         // Simple bias update
         let bias_update = Array1::from_shape_fn(self.bias.len(), |_| {
-            (thread_rng().random::<f64>() - 0.5) * learning_rate * 0.001
+            (rng().random::<f64>() - 0.5) * learning_rate * 0.001
         });
 
         self.bias = &self.bias - &bias_update;
@@ -1892,8 +1892,8 @@ impl NeuralLayer {
         let output_size = self.weights.nrows();
 
         // Create new weights matrix with different input _size
-        self.weights = Array2::from_shape_fn((output_size, new_input_size), |_| {
-            thread_rng().random::<f64>() * 0.01 - 0.005
+        self.weights = Array2::from_shape_fn((output_size, new_inputsize), |_| {
+            rng().random::<f64>() * 0.01 - 0.005
         });
     }
 }
@@ -1931,7 +1931,7 @@ impl PerformancePredictionModel {
     }
 
     /// Predict future performance
-    fn predict(&self, horizon: Duration) -> Result<PerformancePredictionPoint> {
+    fn predict(&self, _horizon: Duration) -> Result<PerformancePredictionPoint> {
         if self.performance_history.is_empty() {
             return Ok(PerformancePredictionPoint {
                 features: Array1::zeros(1),
@@ -1984,7 +1984,7 @@ impl AdaptiveStreamingEngine {
         // - NeuralAdaptiveSystem for pattern learning
         // - Advanced prediction models
 
-        Self::new(_config)
+        Self::new(config)
     }
 
     /// Optimize using quantum-inspired algorithms

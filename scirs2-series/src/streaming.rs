@@ -173,7 +173,7 @@ pub struct EWMA<F: Float> {
 impl<F: Float + Debug> EWMA<F> {
     /// Create new EWMA tracker
     pub fn new(alpha: F) -> Result<Self> {
-        if _alpha <= F::zero() || alpha > F::one() {
+        if alpha <= F::zero() || alpha > F::one() {
             return Err(TimeSeriesError::InvalidParameter {
                 name: "_alpha".to_string(),
                 message: "Alpha must be between 0 and 1".to_string(),
@@ -314,7 +314,7 @@ impl<F: Float + Debug> StreamingAnalyzer<F> {
     pub fn new(config: StreamConfig) -> Result<Self> {
         let ewma = EWMA::new(F::from(0.1).unwrap())?;
         let cusum = CusumDetector::new(
-            F::from(_config.change_detection_threshold).unwrap(),
+            F::from(config.change_detection_threshold).unwrap(),
             F::from(0.5).unwrap(),
         );
 
@@ -540,29 +540,29 @@ impl<F: Float + Debug> MultiSeriesAnalyzer<F> {
     /// Add new time series to track
     pub fn add_series(&mut self, seriesid: String) -> Result<()> {
         let analyzer = StreamingAnalyzer::new(self.config.clone())?;
-        self.analyzers.insert(series_id, analyzer);
+        self.analyzers.insert(seriesid, analyzer);
         Ok(())
     }
 
     /// Add observation to specific series
     pub fn add_observation(&mut self, seriesid: &str, value: F) -> Result<()> {
-        if let Some(analyzer) = self.analyzers.get_mut(series_id) {
+        if let Some(analyzer) = self.analyzers.get_mut(seriesid) {
             analyzer.add_observation(value)
         } else {
             Err(TimeSeriesError::InvalidInput(format!(
-                "Series '{series_id}' not found"
+                "Series '{seriesid}' not found"
             )))
         }
     }
 
     /// Get analyzer for specific series
     pub fn get_analyzer(&self, seriesid: &str) -> Option<&StreamingAnalyzer<F>> {
-        self.analyzers.get(series_id)
+        self.analyzers.get(seriesid)
     }
 
     /// Get mutable analyzer for specific series
     pub fn get_analyzer_mut(&mut self, seriesid: &str) -> Option<&mut StreamingAnalyzer<F>> {
-        self.analyzers.get_mut(series_id)
+        self.analyzers.get_mut(seriesid)
     }
 
     /// Get all series IDs
@@ -572,7 +572,7 @@ impl<F: Float + Debug> MultiSeriesAnalyzer<F> {
 
     /// Remove series
     pub fn remove_series(&mut self, seriesid: &str) -> bool {
-        self.analyzers.remove(series_id).is_some()
+        self.analyzers.remove(seriesid).is_some()
     }
 
     /// Get cross-series correlation (simplified)
@@ -845,8 +845,8 @@ pub mod feature_engineering {
         pub fn new(_max_window_size: usize, featureconfigs: Vec<FeatureConfig>) -> Self {
             Self {
                 window_buffer: VecDeque::with_capacity(_max_window_size),
-                max_window_size,
-                feature_configs,
+                max_window_size: _max_window_size,
+                feature_configs: featureconfigs,
                 cached_stats: HashMap::new(),
                 feature_history: VecDeque::with_capacity(100),
                 update_frequency: 10,
@@ -917,7 +917,7 @@ pub mod feature_engineering {
                 return Ok(F::zero());
             }
 
-            match feature_type {
+            match featuretype {
                 FeatureType::Mean => {
                     let sum = data.iter().fold(F::zero(), |acc, &x| acc + x);
                     Ok(sum / F::from(data.len()).unwrap())
@@ -1213,7 +1213,7 @@ pub mod feature_engineering {
 
             let magnitudes: Vec<F> = data.iter().map(|&x| x.abs()).collect();
             let total_energy: F = magnitudes.iter().fold(F::zero(), |acc, &x| acc + x * x);
-            let _threshold = F::from(rolloff_threshold).unwrap() * total_energy;
+            let _threshold = F::from(rolloffthreshold).unwrap() * total_energy;
 
             let mut cumulative_energy = F::zero();
             for (i, &magnitude) in magnitudes.iter().enumerate() {
@@ -1396,7 +1396,7 @@ pub mod feature_engineering {
             }
 
             // Simple linear regression on log-log plot
-            let _log_scales: Vec<F> = variations.iter().map(|(s_)| s.ln()).collect();
+            let _log_scales: Vec<F> = variations.iter().map(|(s_, _)| s_.ln()).collect();
             let log_variations: Vec<F> = variations.iter().map(|(_, v)| v.ln()).collect();
 
             let slope = self.compute_linear_trend(&log_variations)?;
@@ -1484,8 +1484,8 @@ pub mod feature_engineering {
             let mean = window.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(period).unwrap();
             let std_dev = self.compute_std(window);
 
-            let upper_band = mean + F::from(num_std).unwrap() * std_dev;
-            let lower_band = mean - F::from(num_std).unwrap() * std_dev;
+            let upper_band = mean + F::from(numstd).unwrap() * std_dev;
+            let lower_band = mean - F::from(numstd).unwrap() * std_dev;
 
             let current_price = data[data.len() - 1];
 
@@ -1682,25 +1682,25 @@ pub mod adaptive {
     impl<F: Float + Debug + Clone + FromPrimitive> AdaptiveLinearRegression<F> {
         /// Create new adaptive linear regression
         pub fn new(_num_features: usize, forgettingfactor: F, regularization: F) -> Result<Self> {
-            if forgetting_factor <= F::zero() || forgetting_factor > F::one() {
+            if forgettingfactor <= F::zero() || forgettingfactor > F::one() {
                 return Err(TimeSeriesError::InvalidParameter {
                     name: "forgetting_factor".to_string(),
                     message: "Forgetting _factor must be in (0, 1]".to_string(),
                 });
             }
 
-            let mut covariance = Array2::zeros((num_features, num_features));
+            let mut covariance = Array2::zeros((_num_features, _num_features));
             let identity_scale = F::from(1000.0).unwrap(); // Large initial uncertainty
-            for i in 0..num_features {
+            for i in 0.._num_features {
                 covariance[[i, i]] = identity_scale;
             }
 
             Ok(Self {
-                coefficients: Array1::zeros(num_features),
+                coefficients: Array1::zeros(_num_features),
                 covariance,
-                forgetting_factor,
+                forgetting_factor: forgettingfactor,
                 regularization,
-                num_features,
+                num_features: _num_features,
                 update_count: 0,
             })
         }
@@ -1857,7 +1857,7 @@ pub mod adaptive {
                 ma_coeffs: Array1::zeros(q),
                 observations: VecDeque::with_capacity(100),
                 residuals: VecDeque::with_capacity(100),
-                learning_rate,
+                learning_rate: learningrate,
                 initialized: false,
             }
         }
@@ -1986,7 +1986,7 @@ pub mod adaptive {
         }
 
         /// Initialize MA parameters (simplified)
-        fn initialize_ma_parameters(&mut selfdata: &[F]) -> Result<()> {
+        fn initialize_ma_parameters(&mut self, data: &[F]) -> Result<()> {
             // Simple initialization: small random values
             for i in 0..self.q {
                 self.ma_coeffs[i] = F::from(0.1).unwrap() * F::from((i + 1) as f64 * 0.1).unwrap();
@@ -2028,7 +2028,7 @@ pub mod adaptive {
         }
 
         /// Update parameters using gradient descent
-        fn update_parameters(&mut selfobservation: F, residual: F) -> Result<()> {
+        fn update_parameters(&mut self, observation: F, residual: F) -> Result<()> {
             let processed_data: Vec<F> = if self.d > 0 {
                 self.apply_differencing_to_series()
             } else {
@@ -2529,8 +2529,8 @@ pub mod advanced {
             Self {
                 patterns: Vec::new(),
                 pattern_names: Vec::new(),
-                buffer: VecDeque::with_capacity(_max_buffer_size),
-                max_buffer_size,
+                buffer: VecDeque::with_capacity(_max_buffersize),
+                max_buffer_size: _max_buffersize,
                 threshold,
             }
         }
@@ -2652,7 +2652,7 @@ pub mod advanced {
         /// Create new circular buffer
         pub fn new(capacity: usize) -> Self {
             Self {
-                buffer: vec![F::default(); _capacity],
+                buffer: vec![F::default(); capacity],
                 position: 0,
                 capacity,
                 is_full: false,
@@ -2718,7 +2718,7 @@ pub mod advanced {
 
         /// Calculate statistics over recent window
         pub fn window_stats(&self, windowsize: usize) -> OnlineStats<F> {
-            let recent_data = self.recent(window_size);
+            let recent_data = self.recent(windowsize);
             let mut stats = OnlineStats::new();
 
             for value in recent_data {

@@ -77,7 +77,7 @@ impl Default for FewShotConfig {
             n_ways: 3,
             support_set_size: 15,
             query_set_size: 10,
-            algorithm: FewShotAlgorithm::MAML { inner, lr: 0.01 },
+            algorithm: FewShotAlgorithm::MAML { inner_lr: 0.01 },
             adaptation_steps: 5,
             adaptation_lr: 0.01,
         }
@@ -173,7 +173,7 @@ pub struct MetaOptimizerConfig {
 impl Default for MetaOptimizerConfig {
     fn default() -> Self {
         Self {
-            optimizer_type: MetaOptimizerType::L2L { lstm, hidden: 20 },
+            optimizer_type: MetaOptimizerType::L2L { lstm_hidden: 20 },
             learning_rate: 0.001,
             memory_size: 100,
             update_frequency: 10,
@@ -327,7 +327,7 @@ pub struct ContinualLearningConfig {
 impl Default for ContinualLearningConfig {
     fn default() -> Self {
         Self {
-            memory_strategy: MemoryStrategy::Rehearsal { buffer, size: 1000 },
+            memory_strategy: MemoryStrategy::Rehearsal { buffer_size: 1000 },
             forgetting_prevention: ForgettingPreventionMethod::EWC { lambda: 1000.0 },
             boundary_detection: BoundaryDetectionMethod::Entropy { threshold: 0.1 },
             plasticity_stability: 0.5,

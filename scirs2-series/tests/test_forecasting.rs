@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__series::forecasting::{auto_arima, auto_arima_with_options, AutoArimaOptions};
+use scirs2_series::forecasting::{auto_arima, auto_arima_with_options, AutoArimaOptions};
 
 #[test]
 #[allow(dead_code)]

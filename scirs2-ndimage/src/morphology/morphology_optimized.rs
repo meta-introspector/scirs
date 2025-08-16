@@ -1301,7 +1301,7 @@ where
     T: Float + FromPrimitive + Debug + 'static,
 {
     // Simplified implementation - use median as _threshold
-    let mut values: Vec<T> = input.iter().copied().collect();
+    let mut values: Vec<T> = _input.iter().copied().collect();
     values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let median_idx = values.len() / 2;

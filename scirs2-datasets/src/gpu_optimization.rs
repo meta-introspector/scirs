@@ -538,7 +538,7 @@ impl AdvancedGpuOptimizer {
     /// Simulate GPU memory coalescing optimization
     fn apply_gpu_memory_coalescing_optimization(&self, data: &mut Array2<f64>) {
         // Simulate memory access pattern optimization that would occur on GPU
-        let (_rows_cols) = data.dim();
+        let _rows_cols = data.dim();
 
         // For GPU efficiency, ensure data access patterns are optimized
         // This is a simulation of what actual GPU kernels would achieve
@@ -787,7 +787,7 @@ impl AdvancedGpuOptimizer {
         let (rows, cols) = data.dim();
 
         // Simulate OpenCL local memory optimization
-        let optimal_tile_size = work_group_size.min(16); // Typical tile _size for OpenCL
+        let optimal_tile_size = work_groupsize.min(16); // Typical tile _size for OpenCL
 
         // Process in tiles that fit OpenCL work group _size
         for row_chunk in (0..rows).step_by(optimal_tile_size) {
@@ -824,10 +824,10 @@ impl AdvancedGpuOptimizer {
         cols: usize,
         distribution: &str,
     ) -> Result<Array2<f64>> {
-        use rand::{thread_rng, Rng};
+        use rand::{rng, Rng};
         use rand_distr::{Distribution, Normal, Uniform};
 
-        let _rng = thread_rng();
+        let _rng = rng();
         let total_elements = rows * cols;
 
         // Generate data in parallel chunks
@@ -837,7 +837,7 @@ impl AdvancedGpuOptimizer {
             .into_par_iter()
             .chunks(chunk_size)
             .flat_map(|chunk| {
-                let mut local_rng = thread_rng();
+                let mut local_rng = rng();
                 chunk
                     .into_iter()
                     .map(|_| match distribution {
@@ -1091,7 +1091,7 @@ impl AIPerformancePredictor {
 
     /// Add training data point
     pub fn add_training_data(&mut self, datapoint: PerformanceDataPoint) {
-        self.training_data.push(data_point);
+        self.training_data.push(datapoint);
 
         // Retrain model if we have enough data
         if self.training_data.len() % 100 == 0 && self.training_data.len() > 50 {

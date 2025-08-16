@@ -41,7 +41,7 @@ pub(crate) fn parallel_hierarchical_clustering<
     let mut linkage_matrix = Array2::zeros((n_samples - 1, 4));
 
     // Initialize active clusters (all clusters are initially active)
-    let mut active_clusters: Vec<usize> = (0..n_samples).collect();
+    let mut activeclusters: Vec<usize> = (0..n_samples).collect();
 
     // For method-specific calculations
     let mut centroids: Option<Array2<F>> = None;
@@ -56,8 +56,8 @@ pub(crate) fn parallel_hierarchical_clustering<
     // Main loop - merge clusters until only one remains
     for i in 0..(n_samples - 1) {
         // Find the two closest clusters using parallel computation
-        let (cluster1_idx, cluster2_idx, min_dist) = parallel_find_closest_clusters(
-            &active_clusters,
+        let (cluster1_idx, cluster2_idx, min_dist) = parallel_find_closestclusters(
+            &activeclusters,
             &clusters,
             distances,
             method,
@@ -65,9 +65,9 @@ pub(crate) fn parallel_hierarchical_clustering<
             n_samples,
         )?;
 
-        // Get the actual cluster indices (original indices, not positions in active_clusters)
-        let cluster1 = active_clusters[cluster1_idx];
-        let cluster2 = active_clusters[cluster2_idx];
+        // Get the actual cluster indices (original indices, not positions in activeclusters)
+        let cluster1 = activeclusters[cluster1_idx];
+        let cluster2 = activeclusters[cluster2_idx];
 
         // Ensure cluster1 < cluster2 for consistency
         let (cluster1, cluster2) = if cluster1 < cluster2 {
@@ -95,9 +95,9 @@ pub(crate) fn parallel_hierarchical_clustering<
         clusters.push(new_cluster);
 
         // Remove the merged clusters and add the new one
-        active_clusters.remove(cluster1_idx.max(cluster2_idx));
-        active_clusters.remove(cluster1_idx.min(cluster2_idx));
-        active_clusters.push(new_cluster_id);
+        activeclusters.remove(cluster1_idx.max(cluster2_idx));
+        activeclusters.remove(cluster1_idx.min(cluster2_idx));
+        activeclusters.push(new_cluster_id);
 
         // Update the linkage matrix
         // [cluster1, cluster2, distance, size]
@@ -112,10 +112,10 @@ pub(crate) fn parallel_hierarchical_clustering<
 
 /// Parallel version of finding the two closest clusters
 #[allow(dead_code)]
-fn parallel_find_closest_clusters<
+fn parallel_find_closestclusters<
     F: Float + FromPrimitive + Debug + PartialOrd + Send + Sync + std::iter::Sum,
 >(
-    active_clusters: &[usize],
+    activeclusters: &[usize],
     clusters: &[ParallelCluster],
     distances: &Array1<F>,
     method: LinkageMethod,
@@ -124,8 +124,8 @@ fn parallel_find_closest_clusters<
 ) -> Result<(usize, usize, F)> {
     // Create pairs to process
     let mut pairs = Vec::new();
-    for i in 0..active_clusters.len() {
-        for j in (i + 1)..active_clusters.len() {
+    for i in 0..activeclusters.len() {
+        for j in (i + 1)..activeclusters.len() {
             pairs.push((i, j));
         }
     }
@@ -140,32 +140,32 @@ fn parallel_find_closest_clusters<
     let results: Result<Vec<(usize, usize, F)>> = pairs
         .par_iter()
         .map(|&(i, j)| {
-            let cluster_i = active_clusters[i];
-            let cluster_j = active_clusters[j];
+            let cluster_i = activeclusters[i];
+            let cluster_j = activeclusters[j];
 
-            // Calculate distance between _clusters based on the linkage method
+            // Calculate distance between clusters based on the linkage method
             let dist = match method {
                 LinkageMethod::Single => parallel_single_linkage(
-                    &_clusters[cluster_i],
-                    &_clusters[cluster_j],
+                    &clusters[cluster_i],
+                    &clusters[cluster_j],
                     distances,
                     n_samples,
                 ),
                 LinkageMethod::Complete => parallel_complete_linkage(
-                    &_clusters[cluster_i],
-                    &_clusters[cluster_j],
+                    &clusters[cluster_i],
+                    &clusters[cluster_j],
                     distances,
                     n_samples,
                 ),
                 LinkageMethod::Average => parallel_average_linkage(
-                    &_clusters[cluster_i],
-                    &_clusters[cluster_j],
+                    &clusters[cluster_i],
+                    &clusters[cluster_j],
                     distances,
                     n_samples,
                 ),
                 LinkageMethod::Ward => parallel_ward_linkage(
-                    &_clusters[cluster_i],
-                    &_clusters[cluster_j],
+                    &clusters[cluster_i],
+                    &clusters[cluster_j],
                     distances,
                     n_samples,
                 ),
@@ -176,8 +176,8 @@ fn parallel_find_closest_clusters<
                     Ok(median_linkage(cluster_i, cluster_j, centroids.unwrap()))
                 }
                 LinkageMethod::Weighted => parallel_weighted_linkage(
-                    &_clusters[cluster_i],
-                    &_clusters[cluster_j],
+                    &clusters[cluster_i],
+                    &clusters[cluster_j],
                     distances,
                     n_samples,
                 ),

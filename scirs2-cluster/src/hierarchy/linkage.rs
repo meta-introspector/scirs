@@ -42,7 +42,7 @@ pub(crate) fn hierarchical_clustering<F: Float + FromPrimitive + Debug + Partial
     let mut linkage_matrix = Array2::zeros((n_samples - 1, 4));
 
     // Initialize active clusters (all clusters are initially active)
-    let mut active_clusters: Vec<usize> = (0..n_samples).collect();
+    let mut activeclusters: Vec<usize> = (0..n_samples).collect();
 
     // For method-specific calculations
     let mut centroids: Option<Array2<F>> = None;
@@ -57,8 +57,8 @@ pub(crate) fn hierarchical_clustering<F: Float + FromPrimitive + Debug + Partial
     // Main loop - merge clusters until only one remains
     for i in 0..(n_samples - 1) {
         // Find the two closest clusters
-        let (cluster1_idx, cluster2_idx, min_dist) = find_closest_clusters(
-            &active_clusters,
+        let (cluster1_idx, cluster2_idx, min_dist) = find_closestclusters(
+            &activeclusters,
             &clusters,
             distances,
             method,
@@ -66,9 +66,9 @@ pub(crate) fn hierarchical_clustering<F: Float + FromPrimitive + Debug + Partial
             n_samples,
         )?;
 
-        // Get the actual cluster indices (original indices, not positions in active_clusters)
-        let cluster1 = active_clusters[cluster1_idx];
-        let cluster2 = active_clusters[cluster2_idx];
+        // Get the actual cluster indices (original indices, not positions in activeclusters)
+        let cluster1 = activeclusters[cluster1_idx];
+        let cluster2 = activeclusters[cluster2_idx];
 
         // Ensure cluster1 < cluster2 for consistency
         let (cluster1, cluster2) = if cluster1 < cluster2 {
@@ -96,9 +96,9 @@ pub(crate) fn hierarchical_clustering<F: Float + FromPrimitive + Debug + Partial
         clusters.push(new_cluster);
 
         // Remove the merged clusters and add the new one
-        active_clusters.remove(cluster1_idx.max(cluster2_idx));
-        active_clusters.remove(cluster1_idx.min(cluster2_idx));
-        active_clusters.push(new_cluster_id);
+        activeclusters.remove(cluster1_idx.max(cluster2_idx));
+        activeclusters.remove(cluster1_idx.min(cluster2_idx));
+        activeclusters.push(new_cluster_id);
 
         // Update the linkage matrix
         // [cluster1, cluster2, distance, size]
@@ -113,8 +113,8 @@ pub(crate) fn hierarchical_clustering<F: Float + FromPrimitive + Debug + Partial
 
 /// Finds the two closest clusters based on the given linkage method
 #[allow(dead_code)]
-fn find_closest_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
-    active_clusters: &[usize],
+fn find_closestclusters<F: Float + FromPrimitive + Debug + PartialOrd>(
+    activeclusters: &[usize],
     clusters: &[Cluster],
     distances: &Array1<F>,
     method: LinkageMethod,
@@ -125,36 +125,36 @@ fn find_closest_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
     let mut min_i = 0;
     let mut min_j = 0;
 
-    // Loop through all pairs of active _clusters
-    for (i, &cluster_i) in active_clusters.iter().enumerate() {
-        for (j, &cluster_j) in active_clusters.iter().enumerate() {
+    // Loop through all pairs of active clusters
+    for (i, &cluster_i) in activeclusters.iter().enumerate() {
+        for (j, &cluster_j) in activeclusters.iter().enumerate() {
             if i >= j {
                 continue; // Only need to check each pair once
             }
 
-            // Calculate distance between _clusters based on the linkage method
+            // Calculate distance between clusters based on the linkage method
             let dist = match method {
                 LinkageMethod::Single => single_linkage(
-                    &_clusters[cluster_i],
-                    &_clusters[cluster_j],
+                    &clusters[cluster_i],
+                    &clusters[cluster_j],
                     distances,
                     n_samples,
                 )?,
                 LinkageMethod::Complete => complete_linkage(
-                    &_clusters[cluster_i],
-                    &_clusters[cluster_j],
+                    &clusters[cluster_i],
+                    &clusters[cluster_j],
                     distances,
                     n_samples,
                 )?,
                 LinkageMethod::Average => average_linkage(
-                    &_clusters[cluster_i],
-                    &_clusters[cluster_j],
+                    &clusters[cluster_i],
+                    &clusters[cluster_j],
                     distances,
                     n_samples,
                 )?,
                 LinkageMethod::Ward => ward_linkage(
-                    &_clusters[cluster_i],
-                    &_clusters[cluster_j],
+                    &clusters[cluster_i],
+                    &clusters[cluster_j],
                     distances,
                     n_samples,
                 )?,
@@ -163,8 +163,8 @@ fn find_closest_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
                 }
                 LinkageMethod::Median => median_linkage(cluster_i, cluster_j, centroids.unwrap()),
                 LinkageMethod::Weighted => weighted_linkage(
-                    &_clusters[cluster_i],
-                    &_clusters[cluster_j],
+                    &clusters[cluster_i],
+                    &clusters[cluster_j],
                     distances,
                     n_samples,
                 )?,
@@ -181,7 +181,7 @@ fn find_closest_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     if min_dist == F::infinity() {
         return Err(ClusteringError::ComputationError(
-            "Could not find minimum distance between _clusters".into(),
+            "Could not find minimum distance between clusters".into(),
         ));
     }
 

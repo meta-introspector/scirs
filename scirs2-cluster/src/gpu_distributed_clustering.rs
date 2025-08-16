@@ -4,7 +4,7 @@
 //! for Advanced clustering, enabling massive scalability and performance
 //! improvements for large-scale clustering tasks.
 
-use crate::advanced__clustering::{AdvancedClusterer, AdvancedClusteringResult};
+use crate::advanced_clustering::{AdvancedClusterer, AdvancedClusteringResult};
 use crate::error::{ClusteringError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use std::collections::HashMap;
@@ -216,9 +216,9 @@ impl GpuAdvancedClusterer {
     pub fn new(_gpuconfig: GpuAccelerationConfig) -> Self {
         Self {
             base_clusterer: AdvancedClusterer::new(),
-            gpu_config: gpu_config.clone(),
-            memory_manager: GpuMemoryManager::new(&_gpu_config),
-            kernel_executor: GpuKernelExecutor::new(&_gpu_config),
+            gpu_config: _gpuconfig.clone(),
+            memory_manager: GpuMemoryManager::new(&_gpuconfig),
+            kernel_executor: GpuKernelExecutor::new(&_gpuconfig),
             performance_monitor: GpuPerformanceMonitor::new(),
         }
     }
@@ -309,7 +309,7 @@ impl GpuAdvancedClusterer {
         // This would normally integrate with the base clusterer
 
         // For demonstration, create a basic result structure
-        use crate::advanced__clustering::AdvancedPerformanceMetrics;
+        use crate::advanced_clustering::AdvancedPerformanceMetrics;
 
         let performance = AdvancedPerformanceMetrics {
             silhouette_score: self.calculate_gpu_silhouette_score(
@@ -634,7 +634,7 @@ impl DistributedAdvancedClusterer {
             .sum::<f64>()
             / worker_results.len() as f64;
 
-        use crate::advanced__clustering::AdvancedPerformanceMetrics;
+        use crate::advanced_clustering::AdvancedPerformanceMetrics;
 
         let aggregated_performance = AdvancedPerformanceMetrics {
             silhouette_score: 0.82, // Would be calculated from aggregated data
@@ -740,7 +740,7 @@ impl GpuMemoryManager {
 
     pub fn transfer_to_cpu(&self, gputensor: &GpuTensor) -> Result<Array2<f64>> {
         // Simulate CPU memory transfer
-        Ok(Array2::zeros(gpu_tensor.shape))
+        Ok(Array2::zeros(gputensor.shape))
     }
 
     pub fn get_memory_stats(&self) -> GpuMemoryStats {
@@ -771,7 +771,7 @@ impl GpuKernelExecutor {
         }
     }
 
-    pub fn initialize_kernels(&mut selfdatashape: (usize, usize)) -> Result<()> {
+    pub fn initialize_kernels(&mut self, datashape: (usize, usize)) -> Result<()> {
         // Initialize GPU kernels based on data shape and configuration
         self.kernel_stats.kernels_initialized = true;
         Ok(())
@@ -780,7 +780,7 @@ impl GpuKernelExecutor {
     pub fn preprocess_data(&mut self, gpudata: &GpuTensor) -> Result<GpuTensor> {
         // GPU-accelerated _data preprocessing
         self.kernel_stats.preprocessing_kernel_calls += 1;
-        Ok(gpu_data.clone())
+        Ok(gpudata.clone())
     }
 
     pub fn execute_clustering(&mut self, data: &GpuTensor) -> Result<(GpuTensor, GpuTensor)> {
@@ -855,7 +855,7 @@ pub struct DistributedLoadBalancer {
 impl DistributedLoadBalancer {
     pub fn new(_workerconfigs: &[WorkerNodeConfig]) -> Self {
         Self {
-            worker_configs: worker_configs.to_vec(),
+            worker_configs: _workerconfigs.to_vec(),
         }
     }
 

@@ -33,7 +33,7 @@ impl TimeSeriesMethods {
     /// use ndarray::{Array1, Array2};
     /// use scirs2__series::feature_selection::TimeSeriesMethods;
     ///
-    /// let features = Array2::fromshape_vec((100, 5), (0..500).map(|x| x as f64).collect()).unwrap();
+    /// let features = Array2::from_shape_vec((100, 5), (0..500).map(|x| x as f64).collect()).unwrap();
     /// let target = Array1::from_vec((0..100).map(|x| x as f64).collect());
     ///
     /// let result = TimeSeriesMethods::lag_based_selection(&features, &target, 5, Some(3)).unwrap();
@@ -56,7 +56,7 @@ impl TimeSeriesMethods {
 
         if n_samples <= max_lag + 1 {
             return Err(TimeSeriesError::InsufficientData {
-                message: "Insufficient samples for _lag-based selection".to_string(),
+                message: "Insufficient samples for lag-based selection".to_string(),
                 required: max_lag + 2,
                 actual: n_samples,
             });
@@ -69,10 +69,10 @@ impl TimeSeriesMethods {
             let mut max_correlation = 0.0f64;
 
             // Test correlations at different lags
-            for _lag in 1..=max_lag {
-                if n_samples > _lag {
-                    let lagged_feature = "feature_col".slice(ndarray::s![..n_samples - _lag]);
-                    let future_target = target.slice(ndarray::s![_lag..]);
+            for lag in 1..=max_lag {
+                if n_samples > lag {
+                    let lagged_feature = feature_col.slice(ndarray::s![..n_samples - lag]);
+                    let future_target = target.slice(ndarray::s![lag..]);
 
                     let correlation =
                         Self::calculate_correlation_arrays(&lagged_feature, &future_target)?;
@@ -96,7 +96,7 @@ impl TimeSeriesMethods {
         let selected_features: Vec<usize> = indexed_scores
             .into_iter()
             .take(n_to_select)
-            .map(|(idx_)| idx)
+            .map(|(idx_, _)| idx_)
             .collect();
 
         let mut metadata = HashMap::new();
@@ -161,7 +161,7 @@ impl TimeSeriesMethods {
         let selected_features: Vec<usize> = indexed_scores
             .into_iter()
             .take(n_to_select)
-            .map(|(idx_)| idx)
+            .map(|(idx_, _)| idx_)
             .collect();
 
         let mut metadata = HashMap::new();
@@ -357,7 +357,7 @@ impl TimeSeriesMethods {
         // Calculate seasonal differences
         let mut seasonal_diff = Vec::new();
         for i in period..n {
-            seasonal_diff.push(_ts[i] - ts[i - period]);
+            seasonal_diff.push(ts[i] - ts[i - period]);
         }
 
         if seasonal_diff.is_empty() {
@@ -405,9 +405,9 @@ impl TimeSeriesMethods {
         for i in 0..effective_n {
             y_current[i] = y[i + max_lag];
 
-            for _lag in 0..max_lag {
-                y_lagged[[i_lag]] = y[i + max_lag - _lag - 1];
-                x_lagged[[i_lag]] = x[i + max_lag - _lag - 1];
+            for lag in 0..max_lag {
+                y_lagged[[i, lag]] = y[i + max_lag - lag - 1];
+                x_lagged[[i, lag]] = x[i + max_lag - lag - 1];
             }
         }
 
@@ -448,7 +448,7 @@ impl TimeSeriesMethods {
     }
 
     fn fit_autoregressive_model(features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
-        let predictions = WrapperMethods::fit_predict_linear(_features, target)?;
+        let predictions = WrapperMethods::fit_predict_linear(features, target)?;
 
         let rss = target
             .iter()

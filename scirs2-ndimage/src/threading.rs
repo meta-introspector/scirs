@@ -39,7 +39,7 @@ impl Default for ThreadPoolConfig {
 #[allow(dead_code)]
 pub fn init_thread_pool(config: ThreadPoolConfig) -> Result<(), String> {
     THREAD_POOL_CONFIG
-        .set(Arc::new(Mutex::new(_config)))
+        .set(Arc::new(Mutex::new(config)))
         .map_err(|_| "Thread pool already initialized".to_string())
 }
 
@@ -60,7 +60,7 @@ where
 {
     if let Some(config) = THREAD_POOL_CONFIG.get() {
         let mut config = config.lock().unwrap();
-        _update_fn(&mut *config);
+        _updatefn(&mut *config);
         Ok(())
     } else {
         Err("Thread pool not initialized".to_string())
@@ -92,7 +92,7 @@ pub fn current_worker_info() -> Option<WorkerInfo> {
 #[allow(dead_code)]
 pub fn set_worker_info(info: WorkerInfo) {
     WORKER_INFO.with(|cell| {
-        *cell.borrow_mut() = Some(_info);
+        *cell.borrow_mut() = Some(info);
     });
 }
 
@@ -173,8 +173,8 @@ pub struct AdaptiveThreadPool {
 impl AdaptiveThreadPool {
     pub fn new(_min_threads: usize, maxthreads: usize) -> Self {
         Self {
-            min_threads,
-            max_threads,
+            min_threads: _min_threads,
+            max_threads: maxthreads,
             current_threads: Arc::new(Mutex::new(_min_threads)),
             load_threshold: 0.8,
         }
@@ -184,9 +184,9 @@ impl AdaptiveThreadPool {
     pub fn adjust_threads(&self, currentload: f64) {
         let mut threads = self.current_threads.lock().unwrap();
 
-        if current_load > self.load_threshold && *threads < self.max_threads {
+        if currentload > self.load_threshold && *threads < self.max_threads {
             *threads = (*threads + 1).min(self.max_threads);
-        } else if current_load < self.load_threshold * 0.5 && *threads > self.min_threads {
+        } else if currentload < self.load_threshold * 0.5 && *threads > self.min_threads {
             *threads = (*threads - 1).max(self.min_threads);
         }
     }
@@ -205,16 +205,16 @@ pub struct WorkStealingQueue<T> {
 
 impl<T: Send> WorkStealingQueue<T> {
     pub fn new(_numqueues: usize) -> Self {
-        let _queues = (0.._num_queues)
+        let _queues = (0.._numqueues)
             .map(|_| Arc::new(Mutex::new(Vec::new())))
             .collect();
 
-        Self { _queues }
+        Self { queues: _queues }
     }
 
     /// Push work to a specific queue
     pub fn push(&self, queueid: usize, item: T) {
-        if let Some(queue) = self.queues.get(queue_id) {
+        if let Some(queue) = self.queues.get(queueid) {
             queue.lock().unwrap().push(item);
         }
     }
@@ -222,7 +222,7 @@ impl<T: Send> WorkStealingQueue<T> {
     /// Try to pop from a queue, stealing from others if empty
     pub fn pop(&self, queueid: usize) -> Option<T> {
         // Try own queue first
-        if let Some(queue) = self.queues.get(queue_id) {
+        if let Some(queue) = self.queues.get(queueid) {
             if let Some(item) = queue.lock().unwrap().pop() {
                 return Some(item);
             }
@@ -230,7 +230,7 @@ impl<T: Send> WorkStealingQueue<T> {
 
         // Try to steal from other queues
         for (i, queue) in self.queues.iter().enumerate() {
-            if i != queue_id {
+            if i != queueid {
                 if let Some(item) = queue.lock().unwrap().pop() {
                     return Some(item);
                 }

@@ -239,7 +239,7 @@ impl DatasetRegistry {
     }
 
     /// Register a toy dataset (built-in datasets don't need URLs or hashes)
-    fn register_toy_dataset(&mut self, name: &str, description: &str) {
+    fn register_toy_dataset(&mut self, name: &str, _description: &str) {
         let url = match name {
             "iris" => "builtin://iris",
             "boston" => "builtin://boston",
@@ -365,7 +365,7 @@ fn load_local_dataset(
 #[cfg(not(feature = "download"))]
 /// Load a dataset by name from the registry (stub for when download feature is disabled)
 #[allow(dead_code)]
-pub fn load_dataset_byname(name: &str, _forcedownload: bool) -> Result<crate::utils::Dataset> {
+pub fn load_dataset_byname(_name: &str, _forcedownload: bool) -> Result<crate::utils::Dataset> {
     Err(DatasetsError::Other(
         "Download feature is not enabled. Recompile with --features _download".to_string(),
     ))

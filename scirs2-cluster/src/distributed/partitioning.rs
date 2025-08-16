@@ -127,8 +127,8 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
             ));
         }
 
-        let base_size = total_size / self.config.n_workers;
-        let remainder = total_size % self.config.n_workers;
+        let base_size = totalsize / self.config.n_workers;
+        let remainder = totalsize % self.config.n_workers;
 
         let mut sizes = vec![base_size; self.config.n_workers];
 
@@ -140,7 +140,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
         // Ensure minimum partition size constraints
         for size in &mut sizes {
             if *size < self.config.min_partition_size {
-                *size = self.config.min_partition_size.min(total_size);
+                *size = self.config.min_partition_size.min(totalsize);
             }
             if let Some(max_size) = self.config.max_partition_size {
                 if *size > max_size {
@@ -292,8 +292,8 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
         let mut point_indices: Vec<usize> = (0..n_samples).collect();
         point_indices.shuffle(&mut rng);
 
-        let mut centroids = Array2::zeros((n_strata, n_features));
-        for (i, &point_idx) in point_indices.iter().take(n_strata).enumerate() {
+        let mut centroids = Array2::zeros((nstrata, n_features));
+        for (i, &point_idx) in point_indices.iter().take(nstrata).enumerate() {
             centroids.row_mut(i).assign(&data.row(point_idx));
         }
 
@@ -328,7 +328,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
 
             // Update centroids
             centroids.fill(F::zero());
-            let mut counts = vec![0; n_strata];
+            let mut counts = vec![0; nstrata];
 
             for (point_idx, point) in data.rows().into_iter().enumerate() {
                 let cluster_id = assignments[point_idx];
@@ -339,7 +339,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
             }
 
             // Compute averages
-            for i in 0..n_strata {
+            for i in 0..nstrata {
                 if counts[i] > 0 {
                     for j in 0..n_features {
                         centroids[[i, j]] = centroids[[i, j]] / F::from(counts[i]).unwrap();
@@ -380,7 +380,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
                     partition_id: worker_id,
                     data: partition_data,
                     labels: None,
-                    worker_id,
+                    workerid: worker_id,
                     weight: row_indices.len() as f64 / data.nrows() as f64,
                 });
             }
@@ -599,7 +599,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
     /// Update partitioning statistics
     fn update_statistics(&mut self, partitions: &[DataPartition<F>], partitioning_timems: u64) {
         self.partition_stats.partition_sizes = partitions.iter().map(|p| p.data.nrows()).collect();
-        self.partition_stats.partitioning_time_ms = partitioning_time_ms;
+        self.partition_stats.partitioning_time_ms = partitioning_timems;
 
         // Calculate load balance score (1.0 = perfectly balanced, 0.0 = completely imbalanced)
         if !self.partition_stats.partition_sizes.is_empty() {

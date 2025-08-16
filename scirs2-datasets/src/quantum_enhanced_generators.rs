@@ -6,7 +6,7 @@
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
-use rand::{rngs::StdRng, thread_rng, Rng, SeedableRng};
+use rand::{rng, rngs::StdRng, Rng, SeedableRng};
 use std::f64::consts::PI;
 
 /// Quantum-enhanced dataset generator using quantum-inspired algorithms
@@ -36,7 +36,7 @@ impl Default for QuantumDatasetGenerator {
 
 impl QuantumDatasetGenerator {
     /// Create a new quantum dataset generator
-    pub fn new(_n_qubits: usize, gatefidelity: f64) -> Self {
+    pub fn new(n_qubits: usize, gate_fidelity: f64) -> Self {
         Self {
             coherence_time: 1000.0,
             n_qubits,
@@ -62,7 +62,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut thread_rng()),
+            None => StdRng::from_rng(&mut rng()),
         };
 
         // Initialize quantum state vectors for each sample
@@ -111,7 +111,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut thread_rng()),
+            None => StdRng::from_rng(&mut rng()),
         };
 
         let mut data = Array2::zeros((n_samples, n_features));
@@ -165,7 +165,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut thread_rng()),
+            None => StdRng::from_rng(&mut rng()),
         };
 
         let mut data = Array2::zeros((n_samples, n_features));
@@ -220,7 +220,7 @@ impl QuantumDatasetGenerator {
         Ok(matrix)
     }
 
-    fn quantum_class_assignment(&self, nclasses: usize, rng: &mut StdRng) -> usize {
+    fn quantum_class_assignment(&self, n_classes: usize, rng: &mut StdRng) -> usize {
         // Simulate quantum measurement collapse
         let quantum_probability = rng.random::<f64>();
         let normalized_prob = (quantum_probability * self.gate_fidelity).abs();
@@ -280,7 +280,7 @@ impl QuantumDatasetGenerator {
         n_features: usize,
         rng: &mut StdRng,
     ) -> Result<Array1<f64>> {
-        let mut _features = Array1::zeros(n_features);
+        let mut features = Array1::zeros(n_features);
 
         for i in 0..n_features {
             // Quantum feature generation using Bloch sphere parameterization
@@ -289,7 +289,7 @@ impl QuantumDatasetGenerator {
             features[i] = theta.sin() * phi.cos() + theta.cos();
         }
 
-        Ok(_features)
+        Ok(features)
     }
 
     fn apply_quantum_rotations(
@@ -341,7 +341,7 @@ impl QuantumDatasetGenerator {
         n_features: usize,
         rng: &mut StdRng,
     ) -> Result<Vec<Array1<f64>>> {
-        let mut _centers = Vec::with_capacity(n_centers);
+        let mut centers = Vec::with_capacity(n_centers);
 
         for center_idx in 0..n_centers {
             let mut center = Array1::zeros(n_features);
@@ -358,7 +358,7 @@ impl QuantumDatasetGenerator {
             centers.push(center);
         }
 
-        Ok(_centers)
+        Ok(centers)
     }
 
     fn quantum_cluster_assignment(

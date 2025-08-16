@@ -22,13 +22,13 @@ pub struct FaultToleranceCoordinator<F: Float> {
     pub failed_workers: Vec<usize>,
     pub fault_config: FaultToleranceConfig,
     pub checkpoints: Vec<ClusteringCheckpoint<F>>,
-    pub replication_map: HashMap<usize, Vec<usize>>, // worker_id -> replica_workers
+    pub replication_map: HashMap<usize, Vec<usize>>, // workerid -> replica_workers
 }
 
 /// Worker health information
 #[derive(Debug, Clone)]
 pub struct WorkerHealthInfo {
-    pub worker_id: usize,
+    pub workerid: usize,
     pub status: WorkerStatus,
     pub last_heartbeat: u64,
     pub consecutive_failures: u32,
@@ -116,7 +116,7 @@ pub struct DataPartition<F: Float> {
     pub partition_id: usize,
     pub data: Array2<F>,
     pub labels: Option<Vec<usize>>,
-    pub worker_id: usize,
+    pub workerid: usize,
     pub weight: f64,
 }
 
@@ -127,7 +127,7 @@ impl<F: Float> DataPartition<F> {
             partition_id,
             data,
             labels: None,
-            worker_id,
+            workerid,
             weight,
         }
     }
@@ -148,7 +148,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
     /// Register a new worker for health monitoring
     pub fn register_worker(&mut self, workerid: usize) {
         let health_info = WorkerHealthInfo {
-            worker_id,
+            workerid,
             status: WorkerStatus::Healthy,
             last_heartbeat: SystemTime::now()
                 .duration_since(UNIX_EPOCH)
@@ -162,13 +162,13 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
             throughput_history: Vec::new(),
         };
 
-        self.worker_health.insert(worker_id, health_info);
+        self.worker_health.insert(workerid, health_info);
     }
 
     /// Update worker heartbeat
     pub fn update_heartbeat(
         &mut self,
-        worker_id: usize,
+        workerid: usize,
         cpu_usage: f64,
         memory_usage: f64,
         response_time_ms: u64,
@@ -178,7 +178,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
             .unwrap_or_default()
             .as_millis() as u64;
 
-        if let Some(health) = self.worker_health.get_mut(&worker_id) {
+        if let Some(health) = self.worker_health.get_mut(&workerid) {
             health.last_heartbeat = current_time;
             health.cpu_usage_history.push(cpu_usage);
             health.memory_usage_history.push(memory_usage);
@@ -196,11 +196,11 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
             }
 
             // Update worker status based on metrics
-            self.update_worker_status(worker_id)?;
+            self.update_worker_status(workerid)?;
         } else {
             return Err(ClusteringError::InvalidInput(format!(
                 "Worker {} not registered",
-                worker_id
+                workerid
             )));
         }
 
@@ -216,7 +216,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
 
         let mut newly_failed_workers = Vec::new();
 
-        for (&worker_id, health) in &mut self.worker_health {
+        for (&workerid, health) in &mut self.worker_health {
             let time_since_heartbeat = current_time.saturating_sub(health.last_heartbeat);
 
             if time_since_heartbeat > self.fault_config.worker_timeout_ms {
@@ -224,10 +224,10 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
                     health.status = WorkerStatus::Failed;
                     health.consecutive_failures += 1;
                     health.total_failures += 1;
-                    newly_failed_workers.push(worker_id);
+                    newly_failed_workers.push(workerid);
 
-                    if !self.failed_workers.contains(&worker_id) {
-                        self.failed_workers.push(worker_id);
+                    if !self.failed_workers.contains(&workerid) {
+                        self.failed_workers.push(workerid);
                     }
                 }
             }
@@ -238,8 +238,13 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
 
     /// Update worker status based on performance metrics
     fn update_worker_status(&mut self, workerid: usize) -> Result<()> {
-        if let Some(health) = self.worker_health.get_mut(&worker_id) {
-            let performance_score = self.calculate_performance_score(health);
+        let performance_score = if let Some(health) = self.worker_health.get(&workerid) {
+            self.calculate_performance_score(health)
+        } else {
+            return Ok(());
+        };
+
+        if let Some(health) = self.worker_health.get_mut(&workerid) {
 
             let new_status = if performance_score >= self.fault_config.degraded_threshold {
                 WorkerStatus::Healthy
@@ -256,14 +261,14 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
                     | (WorkerStatus::Degraded, WorkerStatus::Failed) => {
                         health.consecutive_failures += 1;
                         health.total_failures += 1;
-                        if !self.failed_workers.contains(&worker_id) {
-                            self.failed_workers.push(worker_id);
+                        if !self.failed_workers.contains(&workerid) {
+                            self.failed_workers.push(workerid);
                         }
                     }
                     (WorkerStatus::Failed, WorkerStatus::Healthy)
                     | (WorkerStatus::Failed, WorkerStatus::Degraded) => {
                         health.consecutive_failures = 0;
-                        self.failed_workers.retain(|&id| id != worker_id);
+                        self.failed_workers.retain(|&id| id != workerid);
                     }
                     _ => {}
                 }
@@ -334,7 +339,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
     /// Handle worker failure with configured recovery strategy
     pub fn handle_worker_failure(
         &mut self,
-        failed_worker_id: usize,
+        failed_workerid: usize,
         partitions: &mut Vec<DataPartition<F>>,
     ) -> Result<()> {
         if !self.fault_config.enabled {
@@ -351,10 +356,10 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
 
         match self.fault_config.recovery_strategy {
             RecoveryStrategy::Redistribute => {
-                self.redistribute_failed_worker_data(failed_worker_id, partitions)?;
+                self.redistribute_failed_worker_data(failed_workerid, partitions)?;
             }
             RecoveryStrategy::Replace => {
-                self.replace_failed_worker(failed_worker_id)?;
+                self.replace_failed_worker(failed_workerid)?;
             }
             RecoveryStrategy::Checkpoint => {
                 self.restore_from_checkpoint()?;
@@ -375,7 +380,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
     /// Redistribute data from failed worker to healthy workers
     fn redistribute_failed_worker_data(
         &mut self,
-        failed_worker_id: usize,
+        failed_workerid: usize,
         partitions: &mut Vec<DataPartition<F>>,
     ) -> Result<()> {
         let healthy_workers: Vec<usize> = self
@@ -395,14 +400,14 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
         let failed_partitions: Vec<usize> = partitions
             .iter()
             .enumerate()
-            .filter(|(_, p)| p.worker_id == failed_worker_id)
+            .filter(|(_, p)| p.workerid == failed_workerid)
             .map(|(i, _)| i)
             .collect();
 
         // Redistribute to healthy workers using round-robin
         for (idx, &partition_idx) in failed_partitions.iter().enumerate() {
             let new_worker = healthy_workers[idx % healthy_workers.len()];
-            partitions[partition_idx].worker_id = new_worker;
+            partitions[partition_idx].workerid = new_worker;
         }
 
         Ok(())
@@ -418,11 +423,11 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
 
         // In a real implementation, this would spawn a new worker process
         // For now, we'll simulate by creating a new worker ID
-        let new_worker_id = self.worker_health.keys().max().unwrap_or(&0) + 1;
-        self.register_worker(new_worker_id);
+        let new_workerid = self.worker_health.keys().max().unwrap_or(&0) + 1;
+        self.register_worker(new_workerid);
 
         // Mark the new worker as healthy
-        if let Some(health) = self.worker_health.get_mut(&new_worker_id) {
+        if let Some(health) = self.worker_health.get_mut(&new_workerid) {
             health.mark_success();
         }
 
@@ -513,7 +518,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
 
         // Setup replicas for each partition
         for partition in partitions.iter_mut() {
-            let primary_worker = partition.worker_id;
+            let primary_worker = partition.workerid;
             let mut replica_workers = Vec::new();
 
             // Select replica workers (excluding primary)
@@ -551,7 +556,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
 
     /// Get worker health status
     pub fn get_worker_status(&self, workerid: usize) -> Option<WorkerStatus> {
-        self.worker_health.get(&worker_id).map(|h| h.status)
+        self.worker_health.get(&workerid).map(|h| h.status)
     }
 
     /// Get comprehensive health report
@@ -597,7 +602,7 @@ impl WorkerHealthInfo {
             .as_millis() as u64;
 
         let time_since_heartbeat = current_time.saturating_sub(self.last_heartbeat);
-        self.status != WorkerStatus::Failed && time_since_heartbeat <= timeout_ms
+        self.status != WorkerStatus::Failed && time_since_heartbeat <= timeoutms
     }
 
     /// Mark worker as successful (reset failure counters)
@@ -681,7 +686,7 @@ mod tests {
     #[test]
     fn test_worker_health_info() {
         let mut health = WorkerHealthInfo {
-            worker_id: 1,
+            workerid: 1,
             status: WorkerStatus::Healthy,
             last_heartbeat: 0,
             consecutive_failures: 0,

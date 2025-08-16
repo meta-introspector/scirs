@@ -5,8 +5,8 @@
 //! and advanced quantum state visualizations without external dependencies.
 
 use crate::error::{ClusteringError, Result};
-use crate::advanced__clustering::{AdvancedClusteringResult, AdvancedPerformanceMetrics};
-use crate::advanced__visualization::{AdvancedVisualizationOutput, QuantumCoherencePlot, NeuromorphicAdaptationPlot};
+use crate::advanced_clustering::{AdvancedClusteringResult, AdvancedPerformanceMetrics};
+use crate::advanced_visualization::{AdvancedVisualizationOutput, QuantumCoherencePlot, NeuromorphicAdaptationPlot};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use std::collections::HashMap;
 use std::f64::consts::PI;

@@ -22,7 +22,7 @@ use crate::error::{ClusteringError, Result};
 pub enum ClusteringMessage<F: Float> {
     /// Initialize worker with partition data
     InitializeWorker {
-        worker_id: usize,
+        workerid: usize,
         partition_data: Array2<F>,
         initial_centroids: Array2<F>,
     },
@@ -32,7 +32,7 @@ pub enum ClusteringMessage<F: Float> {
     ComputeLocal { round: usize, max_iterations: usize },
     /// Local computation result
     LocalResult {
-        worker_id: usize,
+        workerid: usize,
         round: usize,
         local_centroids: Array2<F>,
         local_labels: Array1<usize>,
@@ -41,7 +41,7 @@ pub enum ClusteringMessage<F: Float> {
     },
     /// Heartbeat for health monitoring
     Heartbeat {
-        worker_id: usize,
+        workerid: usize,
         timestamp: u64,
         cpu_usage: f64,
         memory_usage: f64,
@@ -63,14 +63,14 @@ pub enum ClusteringMessage<F: Float> {
     CreateCheckpoint { round: usize },
     /// Checkpoint data
     CheckpointData {
-        worker_id: usize,
+        workerid: usize,
         round: usize,
         centroids: Array2<F>,
         labels: Array1<usize>,
     },
     /// Recovery request
     RecoveryRequest {
-        failed_worker_id: usize,
+        failed_workerid: usize,
         recovery_strategy: RecoveryStrategy,
     },
     /// Load balancing request
@@ -84,7 +84,7 @@ pub enum ClusteringMessage<F: Float> {
         data_subset: Array2<F>,
     },
     /// Acknowledgment message
-    Acknowledgment { worker_id: usize, message_id: u64 },
+    Acknowledgment { workerid: usize, message_id: u64 },
 }
 
 /// Recovery strategies for failed workers
@@ -193,7 +193,7 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
         let (coordinator_sender, coordinator_receiver) = mpsc::channel();
 
         Self {
-            coordinator_id,
+            coordinator_id: coordinatorid,
             worker_channels: HashMap::new(),
             coordinator_receiver,
             coordinator_sender,
@@ -209,15 +209,15 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
     /// Register a new worker with the coordinator
     pub fn register_worker(&mut self, workerid: usize) -> Receiver<MessageEnvelope<F>> {
         let (sender, receiver) = mpsc::channel();
-        self.worker_channels.insert(worker_id, sender);
-        self.worker_status.insert(worker_id, WorkerStatus::Active);
+        self.worker_channels.insert(workerid, sender);
+        self.worker_status.insert(workerid, WorkerStatus::Active);
         receiver
     }
 
     /// Send message to a specific worker
     pub fn send_message_to_worker(
         &mut self,
-        worker_id: usize,
+        workerid: usize,
         message: ClusteringMessage<F>,
         priority: MessagePriority,
     ) -> Result<u64> {
@@ -230,7 +230,7 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
         let envelope = MessageEnvelope {
             message_id,
             sender_id: self.coordinator_id,
-            receiver_id: worker_id,
+            receiver_id: workerid,
             priority,
             timestamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -241,9 +241,9 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
             message,
         };
 
-        if let Some(sender) = self.worker_channels.get(&worker_id) {
+        if let Some(sender) = self.worker_channels.get(&workerid) {
             sender.send(envelope.clone()).map_err(|_| {
-                ClusteringError::InvalidInput(format!("Worker {} unavailable", worker_id))
+                ClusteringError::InvalidInput(format!("Worker {} unavailable", workerid))
             })?;
 
             self.pending_messages.insert(message_id, envelope);
@@ -252,7 +252,7 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
         } else {
             Err(ClusteringError::InvalidInput(format!(
                 "Worker {} not registered",
-                worker_id
+                workerid
             )))
         }
     }
@@ -263,11 +263,11 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
         message: ClusteringMessage<F>,
         priority: MessagePriority,
     ) -> Result<Vec<u64>> {
-        let worker_ids: Vec<usize> = self.worker_channels.keys().copied().collect();
+        let workerids: Vec<usize> = self.worker_channels.keys().copied().collect();
         let mut message_ids = Vec::new();
 
-        for worker_id in worker_ids {
-            let message_id = self.send_message_to_worker(worker_id, message.clone(), priority)?;
+        for workerid in workerids {
+            let message_id = self.send_message_to_worker(workerid, message.clone(), priority)?;
             message_ids.push(message_id);
         }
 
@@ -350,7 +350,7 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
     /// Register worker arrival at synchronization barrier
     pub fn register_barrier_arrival(&mut self, round: usize, workerid: usize) -> Result<()> {
         if let Some(barrier) = self.sync_barriers.get_mut(&round) {
-            barrier.arrived_participants.insert(worker_id);
+            barrier.arrived_participants.insert(workerid);
             Ok(())
         } else {
             Err(ClusteringError::InvalidInput(format!(
@@ -396,12 +396,12 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
 
     /// Get worker status
     pub fn get_worker_status(&self, workerid: usize) -> Option<WorkerStatus> {
-        self.worker_status.get(&worker_id).copied()
+        self.worker_status.get(&workerid).copied()
     }
 
     /// Update worker status
     pub fn update_worker_status(&mut self, workerid: usize, status: WorkerStatus) {
-        self.worker_status.insert(worker_id, status);
+        self.worker_status.insert(workerid, status);
     }
 
     /// Get active workers

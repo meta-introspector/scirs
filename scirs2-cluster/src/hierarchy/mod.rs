@@ -7,7 +7,7 @@
 //!
 //! ```
 //! use ndarray::{Array2, ArrayView2};
-//! use scirs2__cluster::hierarchy::{linkage, fcluster, LinkageMethod, Metric};
+//! use scirs2_cluster::hierarchy::{linkage, fcluster, LinkageMethod, Metric};
 //!
 //! // Example data
 //! let data = Array2::fromshape_vec((6, 2), vec![
@@ -51,19 +51,19 @@ pub mod visualization;
 
 // Re-exports
 pub use self::agglomerative::{cut_tree_by_distance, cut_tree_by_inconsistency};
-pub use self::cluster__extraction::{
+pub use self::cluster_extraction::{
     estimate_optimal_clusters, extract_clusters_multi_criteria, prune_clusters,
 };
-pub use self::condensed__matrix::{
+pub use self::condensed_matrix::{
     condensed_size, condensed_to_square, get_distance, points_from_condensed_size,
     square_to_condensed, validate_condensed_matrix,
 };
 pub use self::dendrogram::{cophenet, dendrogram, inconsistent, optimal_leaf_ordering};
-pub use self::disjoint__set::DisjointSet;
-pub use self::leaf__ordering::{
+pub use self::disjoint_set::DisjointSet;
+pub use self::leaf_ordering::{
     apply_leaf_ordering, optimal_leaf_ordering_exact, optimal_leaf_ordering_heuristic,
 };
-pub use self::optimized__ward::{
+pub use self::optimized_ward::{
     lance_williams_ward_update, memory_efficient_ward_linkage, optimized_ward_linkage,
 };
 pub use self::validation::{
@@ -71,7 +71,7 @@ pub use self::validation::{
     validate_linkage_matrix, validate_monotonic_distances, validate_square_distance_matrix,
 };
 pub use self::visualization::{
-    create_dendrogram_plot, get_color_palette, Branch, ColorScheme, ColorThreshold,
+    create_dendrogramplot, get_color_palette, Branch, ColorScheme, ColorThreshold,
     DendrogramConfig, DendrogramOrientation, DendrogramPlot, Leaf, LegendEntry, TruncateMode,
 };
 
@@ -156,7 +156,7 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                     // Manhattan distance
                     let mut sum = F::zero();
                     for k in 0..n_features {
-                        let diff = (_data[[i, k]] - data[[j, k]]).abs();
+                        let diff = (data[[i, k]] - data[[j, k]]).abs();
                         sum = sum + diff;
                     }
                     sum
@@ -165,7 +165,7 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                     // Chebyshev distance
                     let mut max_diff = F::zero();
                     for k in 0..n_features {
-                        let diff = (_data[[i, k]] - data[[j, k]]).abs();
+                        let diff = (data[[i, k]] - data[[j, k]]).abs();
                         if diff > max_diff {
                             max_diff = diff;
                         }
@@ -331,7 +331,7 @@ pub fn linkage<
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2__cluster::hierarchy::{parallel_linkage, LinkageMethod, Metric};
+/// use scirs2_cluster::hierarchy::{parallel_linkage, LinkageMethod, Metric};
 ///
 /// // Example data
 /// let data = Array2::fromshape_vec((6, 2), vec![
@@ -464,7 +464,7 @@ pub fn fcluster<F: Float + FromPrimitive + PartialOrd + Debug>(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__cluster::hierarchy::{linkage, fcluster_generic, LinkageMethod, Metric, ClusterCriterion};
+/// use scirs2_cluster::hierarchy::{linkage, fcluster_generic, LinkageMethod, Metric, ClusterCriterion};
 ///
 /// let data = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.2, 1.8, 0.8, 1.9,

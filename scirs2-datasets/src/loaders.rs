@@ -39,7 +39,7 @@ pub fn load_json<P: AsRef<Path>>(path: P) -> Result<Dataset> {
 pub fn save_json<P: AsRef<Path>>(dataset: &Dataset, path: P) -> Result<()> {
     let file = File::create(path).map_err(DatasetsError::IoError)?;
 
-    serde_json::to_writer_pretty(file_dataset)
+    serde_json::to_writer_pretty(file, dataset)
         .map_err(|e| DatasetsError::SerdeError(format!("Failed to write JSON: {e}")))?;
 
     Ok(())
@@ -98,13 +98,13 @@ impl CsvConfig {
 
     /// Set whether the CSV has headers
     pub fn with_header(mut self, hasheader: bool) -> Self {
-        self.has_header = has_header;
+        self.has_header = hasheader;
         self
     }
 
     /// Set the target column index
     pub fn with_target_column(mut self, targetcolumn: Option<usize>) -> Self {
-        self.target_column = target_column;
+        self.target_column = targetcolumn;
         self
     }
 
@@ -156,7 +156,7 @@ impl StreamingConfig {
 
     /// Set the chunk size
     pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
-        self.chunk_size = chunk_size;
+        self.chunk_size = chunksize;
         self
     }
 
@@ -168,19 +168,19 @@ impl StreamingConfig {
 
     /// Set the number of threads
     pub fn with_num_threads(mut self, numthreads: usize) -> Self {
-        self.num_threads = num_threads;
+        self.num_threads = numthreads;
         self
     }
 
     /// Set maximum memory usage
     pub fn with_max_memory(mut self, maxmemory: usize) -> Self {
-        self.max_memory = max_memory;
+        self.max_memory = maxmemory;
         self
     }
 
     /// Enable or disable memory mapping
     pub fn with_mmap(mut self, usemmap: bool) -> Self {
-        self.use_mmap = use_mmap;
+        self.use_mmap = usemmap;
         self
     }
 }
@@ -237,7 +237,7 @@ impl DatasetChunkIterator {
 
         Ok(Self {
             reader,
-            chunk_size,
+            chunk_size: chunksize,
             target_column: csv_config.target_column,
             featurenames,
             n_features,
@@ -274,7 +274,7 @@ impl Iterator for DatasetChunkIterator {
                     let values: Vec<f64> = match record
                         .iter()
                         .map(|s| s.parse::<f64>())
-                        .collect::<std::result::Result<Vec<f64>>>()
+                        .collect::<std::result::Result<Vec<f64>, _>>()
                     {
                         Ok(vals) => vals,
                         Err(e) => {
@@ -578,7 +578,7 @@ fn process_csv_chunk<P: AsRef<Path>>(
             let values: Vec<f64> = record
                 .iter()
                 .map(|s| s.parse::<f64>())
-                .collect::<std::result::Result<Vec<f64>>>()
+                .collect::<std::result::Result<Vec<f64>, _>>()
                 .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to parse value: {e}")))?;
 
             // Write to shared arrays
@@ -636,7 +636,7 @@ fn load_csv_sequential<P: AsRef<Path>>(
         let values: Vec<f64> = record
             .iter()
             .map(|s| s.parse::<f64>())
-            .collect::<std::result::Result<Vec<f64>>>()
+            .collect::<std::result::Result<Vec<f64>, _>>()
             .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to parse value: {e}")))?;
 
         {
@@ -717,7 +717,7 @@ pub fn load_csv<P: AsRef<Path>>(path: P, config: CsvConfig) -> Result<Dataset> {
     let n_rows = records.len();
     let n_cols = records[0].len();
 
-    let (data, target, featurenames_targetname) = if let Some(idx) = config.target_column {
+    let (data, target, featurenames, _targetname) = if let Some(idx) = config.target_column {
         if idx >= n_cols {
             return Err(DatasetsError::InvalidFormat(format!(
                 "Target column index {idx} is out of bounds (max: {})",

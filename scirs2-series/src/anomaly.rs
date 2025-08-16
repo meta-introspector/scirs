@@ -196,7 +196,7 @@ where
     // Apply seasonal adjustment if requested
     let adjusted_ts = if options.seasonal_adjustment {
         if let Some(period) = options.seasonal_period {
-            seasonally_adjust(_ts, period)?
+            seasonally_adjust(ts, period)?
         } else {
             ts.clone()
         }
@@ -424,7 +424,7 @@ where
         threshold,
         method: AnomalyMethod::IsolationForest,
         method_info: Some(MethodInfo::IsolationForest {
-            average_path_length: path_lengths.mean().unwrap_or(0.0),
+            average_path_length: path_lengths.mean(),
         }),
     })
 }
@@ -437,7 +437,7 @@ where
 {
     let n = ts.len();
     let mean = ts.mean().unwrap_or(F::zero()).to_f64().unwrap_or(0.0);
-    let std_dev = calculate_std_dev(_ts).to_f64().unwrap_or(1.0);
+    let std_dev = calculate_std_dev(ts).to_f64().unwrap_or(1.0);
 
     let threshold = options.threshold.unwrap_or(3.0);
 
@@ -714,7 +714,7 @@ where
 {
     let n = ts.len();
     if n < period * 2 {
-        return Ok(_ts.clone());
+        return Ok(ts.clone());
     }
 
     let mut adjusted = ts.clone();
@@ -725,7 +725,7 @@ where
         let mut indices = Vec::new();
 
         for i in (season..n).step_by(period) {
-            seasonal_values.push(_ts[i]);
+            seasonal_values.push(ts[i]);
             indices.push(i);
         }
 
@@ -747,21 +747,21 @@ fn create_sliding_windows<F>(_ts: &Array1<F>, windowsize: usize) -> Result<Array
 where
     F: Float + FromPrimitive + Debug + NumCast,
 {
-    let n = ts.len();
-    if n < window_size {
+    let n = _ts.len();
+    if n < windowsize {
         return Err(TimeSeriesError::InsufficientData {
             message: "Time series too short for windowing".to_string(),
-            required: window_size,
+            required: windowsize,
             actual: n,
         });
     }
 
-    let n_windows = n - window_size + 1;
-    let mut windows = Array2::zeros((n_windows, window_size));
+    let n_windows = n - windowsize + 1;
+    let mut windows = Array2::zeros((n_windows, windowsize));
 
     for i in 0..n_windows {
-        for j in 0..window_size {
-            windows[[i, j]] = ts[i + j].to_f64().unwrap_or(0.0);
+        for j in 0..windowsize {
+            windows[[i, j]] = _ts[i + j].to_f64().unwrap_or(0.0);
         }
     }
 
@@ -810,7 +810,7 @@ fn calculate_isolation_path_length(
     // Randomly select a feature and split value
     let feature_idx = rng.gen_range(0..data.ncols());
     let feature_values: Vec<f64> = data.column(feature_idx).to_vec();
-    let min_val = feature_values.iter().copied().fold(f64::INFINITY..f64::min);
+    let min_val = feature_values.iter().copied().fold(f64::INFINITY, f64::min);
     let max_val = feature_values
         .iter()
         .copied()

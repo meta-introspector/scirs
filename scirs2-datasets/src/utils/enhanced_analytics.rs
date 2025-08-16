@@ -82,13 +82,13 @@ impl AdvancedDatasetAnalyzer {
     }
 
     /// Configure GPU usage
-    pub fn with_gpu(mut self, usegpu: bool) -> Self {
+    pub fn with_gpu(mut self, use_gpu: bool) -> Self {
         self.use_gpu = use_gpu;
         self
     }
 
     /// Configure advanced-precision mode
-    pub fn with_advanced_precision(mut self, advancedprecision: bool) -> Self {
+    pub fn with_advanced_precision(mut self, advanced_precision: bool) -> Self {
         self.advanced_precision = advanced_precision;
         self
     }
@@ -150,7 +150,7 @@ impl AdvancedDatasetAnalyzer {
         let complexity_scores = (0..n_features)
             .into_par_iter()
             .map(|i| {
-                let feature = "data".column(i);
+                let feature = data.column(i);
                 self.calculate_feature_complexity(feature)
             })
             .collect::<Result<Vec<_>>>()?;
@@ -208,7 +208,7 @@ impl AdvancedDatasetAnalyzer {
         let feature_entropies: Vec<f64> = (0..n_features)
             .into_par_iter()
             .map(|i| {
-                let feature = "data".column(i);
+                let feature = data.column(i);
                 self.calculate_feature_complexity(feature).unwrap_or(0.0)
             })
             .collect();
@@ -289,7 +289,7 @@ impl AdvancedDatasetAnalyzer {
         let mut mi = 0.0;
 
         for i in 0..n_bins {
-            for (j_) in y_hist.iter().enumerate().take(n_bins) {
+            for (j, _) in y_hist.iter().enumerate().take(n_bins) {
                 if joint_hist[i][j] > 0 && x_hist[i] > 0 && y_hist[j] > 0 {
                     let p_xy = joint_hist[i][j] as f64 / n_total;
                     let p_x = x_hist[i] as f64 / n_total;
@@ -443,7 +443,7 @@ impl AdvancedDatasetAnalyzer {
         // Calculate overall normality as weighted average
         let overall_normality = {
             let mean_shapiro = {
-                let val = shapiro_wilk_scores.mean();
+                let val = shapiro_wilk_scores.view().mean();
                 if val.is_nan() {
                     0.0
                 } else {
@@ -451,7 +451,7 @@ impl AdvancedDatasetAnalyzer {
                 }
             };
             let mean_anderson = {
-                let val = anderson_darling_scores.mean();
+                let val = anderson_darling_scores.view().mean();
                 if val.is_nan() {
                     0.0
                 } else {
@@ -459,7 +459,7 @@ impl AdvancedDatasetAnalyzer {
                 }
             };
             let mean_jarque = {
-                let val = jarque_bera_scores.mean();
+                let val = jarque_bera_scores.view().mean();
                 if val.is_nan() {
                     0.0
                 } else {
@@ -782,14 +782,14 @@ impl AdvancedDatasetAnalyzer {
 #[allow(dead_code)]
 pub fn analyze_dataset_advanced(dataset: &Dataset) -> Result<AdvancedQualityMetrics> {
     let analyzer = AdvancedDatasetAnalyzer::new();
-    analyzer.analyze_dataset_quality(_dataset)
+    analyzer.analyze_dataset_quality(dataset)
 }
 
 /// Convenience function for quick quality assessment
 #[allow(dead_code)]
 pub fn quick_quality_assessment(dataset: &Dataset) -> Result<f64> {
     let analyzer = AdvancedDatasetAnalyzer::new().with_advanced_precision(false);
-    let metrics = analyzer.analyze_dataset_quality(_dataset)?;
+    let metrics = analyzer.analyze_dataset_quality(dataset)?;
     Ok(metrics.ml_quality_score)
 }
 

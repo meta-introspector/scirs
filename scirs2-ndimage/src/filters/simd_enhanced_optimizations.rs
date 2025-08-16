@@ -239,37 +239,37 @@ pub fn simdimage_moments<T>(_input: ArrayView2<T>, maxorder: usize) -> NdimageRe
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
 {
-    let (height, width) = input.dim();
-    let total_orders = (max_order + 1) * (max_order + 1);
-    let mut moments = Array::zeros((max_order + 1, max_order + 1));
+    let (height, width) = _input.dim();
+    let total_orders = (maxorder + 1) * (maxorder + 1);
+    let mut moments = Array::zeros((maxorder + 1, maxorder + 1));
 
     // Pre-compute coordinate powers for SIMD efficiency
-    let mut x_powers = Array::zeros((max_order + 1, width));
-    let mut y_powers = Array::zeros((max_order + 1, height));
+    let mut x_powers = Array::zeros((maxorder + 1, width));
+    let mut y_powers = Array::zeros((maxorder + 1, height));
 
     // Compute x coordinate powers
-    for p in 0..=max_order {
+    for p in 0..=maxorder {
         for x in 0..width {
             x_powers[(p, x)] = T::from_usize(x).unwrap().powi(p as i32);
         }
     }
 
     // Compute y coordinate powers
-    for p in 0..=max_order {
+    for p in 0..=maxorder {
         for y in 0..height {
             y_powers[(p, y)] = T::from_usize(y).unwrap().powi(p as i32);
         }
     }
 
     // Compute moments using SIMD operations
-    for i in 0..=max_order {
-        for j in 0..=max_order {
+    for i in 0..=maxorder {
+        for j in 0..=maxorder {
             let mut moment = T::zero();
 
             // Process rows with SIMD
             for y in 0..height {
                 let y_power = y_powers[(j, y)];
-                let input_row = input.slice(s![y, ..]);
+                let input_row = _input.slice(s![y, ..]);
                 let x_power_row = x_powers.slice(s![i, ..]);
 
                 // SIMD dot product of (_input * x_power) * y_power

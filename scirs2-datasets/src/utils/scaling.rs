@@ -36,14 +36,14 @@ pub fn normalize(data: &mut Array2<f64>) {
 
         // Calculate mean and std
         let mean = {
-            let val = column.mean();
+            let val = column.view().mean();
             if val.is_nan() {
                 0.0
             } else {
                 val
             }
         };
-        let std = column.std(0.0);
+        let std = column.view().std(0.0);
 
         // Avoid division by zero
         if std > 1e-10 {
@@ -74,11 +74,11 @@ pub fn normalize(data: &mut Array2<f64>) {
 /// ```
 #[allow(dead_code)]
 pub fn min_max_scale(_data: &mut Array2<f64>, featurerange: (f64, f64)) {
-    let (range_min, range_max) = feature_range;
+    let (range_min, range_max) = featurerange;
     let range_size = range_max - range_min;
 
     for j in 0.._data.ncols() {
-        let mut column = data.column_mut(j);
+        let mut column = _data.column_mut(j);
 
         // Find min and max values in the column
         let col_min = column.iter().fold(f64::INFINITY, |a, &b| a.min(b));
@@ -116,7 +116,7 @@ pub fn min_max_scale(_data: &mut Array2<f64>, featurerange: (f64, f64)) {
 /// ```
 #[allow(dead_code)]
 pub fn robust_scale(data: &mut Array2<f64>) {
-    for j in 0.._data.ncols() {
+    for j in 0..data.ncols() {
         let mut column_values: Vec<f64> = data.column(j).to_vec();
         column_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -194,11 +194,9 @@ impl StatsExt for ndarray::ArrayView1<'_, f64> {
 
         let n = self.len() as f64;
         let mean = {
-            let val = self.mean();
-            if val.is_nan() {
-                0.0
-            } else {
-                val
+            match self.mean() {
+                Some(val) if !val.is_nan() => val,
+                _ => 0.0,
             }
         };
 

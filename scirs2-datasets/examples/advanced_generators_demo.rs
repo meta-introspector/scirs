@@ -7,11 +7,11 @@
 //! Usage:
 //!   cargo run --example advanced_generators_demo --release
 
-use scirs2__datasets::{
+use scirs2_datasets::{
     make_adversarial_examples, make_anomaly_dataset, make_classification,
     make_continual_learning_dataset, make_domain_adaptation_dataset, make_few_shot_dataset,
     make_multitask_dataset, AdversarialConfig, AnomalyConfig, AnomalyType, AttackMethod,
-    DomainAdaptationConfig, MultiTaskConfig, TaskType,
+    DomainAdaptationConfig, DomainAdaptationDataset, MultiTaskConfig, MultiTaskDataset, TaskType,
 };
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
@@ -52,11 +52,11 @@ fn demonstrate_adversarial_examples() -> Result<(), Box<dyn std::error::Error>> 
     println!("{}", "-".repeat(45));
 
     // Create a base classification dataset
-    let base_dataset = make_classification(1000, 20, 5, 2, 15, Some(42))?;
+    let basedataset = make_classification(1000, 20, 5, 2, 15, Some(42))?;
     println!(
         "Base dataset: {} samples, {} features, {} classes",
-        base_dataset.n_samples(),
-        base_dataset.n_features(),
+        basedataset.n_samples(),
+        basedataset.n_features(),
         5
     );
 
@@ -79,14 +79,14 @@ fn demonstrate_adversarial_examples() -> Result<(), Box<dyn std::error::Error>> 
             random_state: Some(42),
         };
 
-        let adversarial_dataset = make_adversarial_examples(&base_dataset, config)?;
+        let adversarialdataset = make_adversarial_examples(&basedataset, config)?;
 
         // Analyze perturbation strength
-        let perturbation_norm = calculate_perturbation_norm(&base_dataset, &adversarial_dataset);
+        let perturbation_norm = calculate_perturbation_norm(&basedataset, &adversarialdataset);
 
         println!(
             "  ✅ Generated {} adversarial examples",
-            adversarial_dataset.n_samples()
+            adversarialdataset.n_samples()
         );
         println!("  📊 Perturbation strength: {perturbation_norm:.4}");
         println!("  🎯 Attack budget (ε): {epsilon:.2}");
@@ -107,7 +107,7 @@ fn demonstrate_adversarial_examples() -> Result<(), Box<dyn std::error::Error>> 
         ..Default::default()
     };
 
-    let targeted_adversarial = make_adversarial_examples(&base_dataset, targeted_config)?;
+    let targeted_adversarial = make_adversarial_examples(&basedataset, targeted_config)?;
 
     if let Some(target) = &targeted_adversarial.target {
         let target_class_count = target.iter().filter(|&&x| x == 2.0).count();
@@ -196,15 +196,15 @@ fn demonstrate_anomaly_detection() -> Result<(), Box<dyn std::error::Error>> {
         random_state: Some(42),
     };
 
-    let realistic_dataset = make_anomaly_dataset(10000, 50, realistic_config)?;
+    let realisticdataset = make_anomaly_dataset(10000, 50, realistic_config)?;
 
-    if let Some(target) = &realistic_dataset.target {
+    if let Some(target) = &realisticdataset.target {
         let anomaly_count = target.iter().filter(|&&x| x == 1.0).count();
         println!(
             "  🌍 Realistic scenario: {}/{} anomalies in {} samples",
             anomaly_count,
-            realistic_dataset.n_samples(),
-            realistic_dataset.n_samples()
+            realisticdataset.n_samples(),
+            realisticdataset.n_samples()
         );
         println!("  💡 Challenge: Low anomaly rate mimics production environments");
     }
@@ -235,17 +235,17 @@ fn demonstrate_multitask_learning() -> Result<(), Box<dyn std::error::Error>> {
         random_state: Some(42),
     };
 
-    let multitask_dataset = make_multitask_dataset(1500, config)?;
+    let multitaskdataset = make_multitask_dataset(1500, config)?;
 
     println!("  📊 Multi-task dataset structure:");
-    println!("    Number of tasks: {}", multitask_dataset.tasks.len());
-    println!("    Shared features: {}", multitask_dataset.shared_features);
+    println!("    Number of tasks: {}", multitaskdataset.tasks.len());
+    println!("    Shared features: {}", multitaskdataset.shared_features);
     println!(
         "    Task correlation: {:.1}",
-        multitask_dataset.task_correlation
+        multitaskdataset.task_correlation
     );
 
-    for (i, task) in multitask_dataset.tasks.iter().enumerate() {
+    for (i, task) in multitaskdataset.tasks.iter().enumerate() {
         println!(
             "    Task {}: {} samples, {} features ({})",
             i + 1,
@@ -283,7 +283,7 @@ fn demonstrate_multitask_learning() -> Result<(), Box<dyn std::error::Error>> {
 
     // Transfer learning scenario
     println!("\nTransfer learning analysis:");
-    analyze_task_relationships(&multitask_dataset);
+    analyze_task_relationships(&multitaskdataset);
 
     println!();
     Ok(())
@@ -305,13 +305,13 @@ fn demonstrate_domain_adaptation() -> Result<(), Box<dyn std::error::Error>> {
         random_state: Some(42),
     };
 
-    let domain_dataset = make_domain_adaptation_dataset(800, 25, 3, config)?;
+    let domaindataset = make_domain_adaptation_dataset(800, 25, 3, config)?;
 
     println!("  📊 Domain adaptation structure:");
-    println!("    Total domains: {}", domain_dataset.domains.len());
-    println!("    Source domains: {}", domain_dataset.n_source_domains);
+    println!("    Total domains: {}", domaindataset.domains.len());
+    println!("    Source domains: {}", domaindataset.n_source_domains);
 
-    for (domainname, dataset) in &domain_dataset.domains {
+    for (domainname, dataset) in &domaindataset.domains {
         println!(
             "    {}: {} samples, {} features",
             domainname,
@@ -335,7 +335,7 @@ fn demonstrate_domain_adaptation() -> Result<(), Box<dyn std::error::Error>> {
 
     // Domain shift analysis
     println!("\n  🔄 Domain shift analysis:");
-    analyze_domain_shifts(&domain_dataset);
+    analyze_domain_shifts(&domaindataset);
 
     println!();
     Ok(())
@@ -462,7 +462,7 @@ fn calculate_perturbation_norm(
 #[allow(dead_code)]
 fn calculate_anomaly_separation(dataset: &scirs2_datasets::Dataset) -> f64 {
     // Simplified separation metric
-    if let Some(target) = &_dataset.target {
+    if let Some(target) = &dataset.target {
         let normal_indices: Vec<usize> = target
             .iter()
             .enumerate()
@@ -479,8 +479,8 @@ fn calculate_anomaly_separation(dataset: &scirs2_datasets::Dataset) -> f64 {
         }
 
         // Calculate average distances
-        let normal_center = calculate_centroid(&_dataset.data, &normal_indices);
-        let anomaly_center = calculate_centroid(&_dataset.data, &anomaly_indices);
+        let normal_center = calculate_centroid(&dataset.data, &normal_indices);
+        let anomaly_center = calculate_centroid(&dataset.data, &anomaly_indices);
 
         let distance = (&normal_center - &anomaly_center)
             .iter()
@@ -495,7 +495,7 @@ fn calculate_anomaly_separation(dataset: &scirs2_datasets::Dataset) -> f64 {
 
 #[allow(dead_code)]
 fn calculate_centroid(data: &ndarray::Array2<f64>, indices: &[usize]) -> ndarray::Array1<f64> {
-    let mut centroid = ndarray::Array1::zeros(_data.ncols());
+    let mut centroid = ndarray::Array1::zeros(data.ncols());
     for &idx in indices {
         centroid = centroid + data.row(idx);
     }
@@ -504,7 +504,7 @@ fn calculate_centroid(data: &ndarray::Array2<f64>, indices: &[usize]) -> ndarray
 
 #[allow(dead_code)]
 fn get_recommended_anomaly_algorithms(_anomalytype: &AnomalyType) -> &'static str {
-    match _anomaly_type {
+    match _anomalytype {
         AnomalyType::Point => "Isolation Forest, Local Outlier Factor, One-Class SVM",
         AnomalyType::Contextual => "LSTM Autoencoders, Hidden Markov Models",
         AnomalyType::Collective => "Graph-based methods, Sequential pattern mining",
@@ -536,21 +536,21 @@ fn analyze_ordinal_target(target: &ndarray::Array1<f64>) -> usize {
 }
 
 #[allow(dead_code)]
-fn analyze_task_relationships(_multitask_dataset: &scirs2, datasets: MultiTaskDataset) {
+fn analyze_task_relationships(multitaskdataset: &MultiTaskDataset) {
     println!("  🔗 Task relationship analysis:");
     println!(
         "    Shared feature ratio: {:.1}%",
-        (multitask_dataset.shared_features as f64 / multitask_dataset.tasks[0].n_features() as f64)
+        (multitaskdataset.shared_features as f64 / multitaskdataset.tasks[0].n_features() as f64)
             * 100.0
     );
     println!(
         "    Task correlation: {:.2}",
-        multitask_dataset.task_correlation
+        multitaskdataset.task_correlation
     );
 
-    if multitask_dataset.task_correlation > 0.7 {
+    if multitaskdataset.task_correlation > 0.7 {
         println!("    💡 High correlation suggests strong transfer learning potential");
-    } else if multitask_dataset.task_correlation > 0.3 {
+    } else if multitaskdataset.task_correlation > 0.3 {
         println!("    💡 Moderate correlation indicates selective transfer benefits");
     } else {
         println!("    💡 Low correlation requires careful negative transfer mitigation");
@@ -574,11 +574,11 @@ fn calculate_domain_statistics(data: &ndarray::Array2<f64>) -> (f64, f64) {
 }
 
 #[allow(dead_code)]
-fn analyze_domain_shifts(_domain_dataset: &scirs2, datasets: DomainAdaptationDataset) {
-    if domain_dataset.domains.len() >= 2 {
-        let source_stats = calculate_domain_statistics(&_domain_dataset.domains[0].1.data);
+fn analyze_domain_shifts(domaindataset: &DomainAdaptationDataset) {
+    if domaindataset.domains.len() >= 2 {
+        let source_stats = calculate_domain_statistics(&domaindataset.domains[0].1.data);
         let target_stats =
-            calculate_domain_statistics(&_domain_dataset.domains.last().unwrap().1.data);
+            calculate_domain_statistics(&domaindataset.domains.last().unwrap().1.data);
 
         let mean_shift = (target_stats.0 - source_stats.0).abs();
         let std_shift = (target_stats.1 - source_stats.1).abs();
@@ -595,30 +595,30 @@ fn analyze_domain_shifts(_domain_dataset: &scirs2, datasets: DomainAdaptationDat
 }
 
 #[allow(dead_code)]
-fn calculate_class_balance(_target: &ndarray::Array1<f64>, nclasses: usize) -> f64 {
-    let mut class_counts = vec![0; n_classes];
+fn calculate_class_balance(target: &ndarray::Array1<f64>, nclasses: usize) -> f64 {
+    let mut class_counts = vec![0; nclasses];
     for &label in target.iter() {
         let class_idx = label as usize;
-        if class_idx < n_classes {
+        if class_idx < nclasses {
             class_counts[class_idx] += 1;
         }
     }
 
     let total = target.len() as f64;
-    let expected_per_class = total / n_classes as f64;
+    let expected_per_class = total / nclasses as f64;
 
     let balance_score = class_counts
         .iter()
         .map(|&count| (count as f64 - expected_per_class).abs())
         .sum::<f64>()
-        / (n_classes as f64 * expected_per_class);
+        / (nclasses as f64 * expected_per_class);
 
     1.0 - balance_score.min(1.0) // Higher score = better balance
 }
 
 #[allow(dead_code)]
 fn get_few_shot_use_case(_n_way: usize, kshot: usize) -> &'static str {
-    match (_n_way, k_shot) {
+    match (_n_way, kshot) {
         (5, 1) => "Image classification with minimal examples",
         (5, 5) => "Balanced few-shot learning benchmark",
         (10, _) => "Multi-class few-shot classification",
@@ -631,9 +631,9 @@ fn get_few_shot_use_case(_n_way: usize, kshot: usize) -> &'static str {
 fn analyze_concept_drift(dataset: &scirs2_datasets::ContinualLearningDataset) {
     println!("    Task progression analysis:");
 
-    for i in 1.._dataset.tasks.len() {
-        let prev_stats = calculate_domain_statistics(&_dataset.tasks[i - 1].data);
-        let curr_stats = calculate_domain_statistics(&_dataset.tasks[i].data);
+    for i in 1..dataset.tasks.len() {
+        let prev_stats = calculate_domain_statistics(&dataset.tasks[i - 1].data);
+        let curr_stats = calculate_domain_statistics(&dataset.tasks[i].data);
 
         let drift_magnitude =
             ((curr_stats.0 - prev_stats.0).powi(2) + (curr_stats.1 - prev_stats.1).powi(2)).sqrt();
@@ -649,9 +649,9 @@ fn analyze_concept_drift(dataset: &scirs2_datasets::ContinualLearningDataset) {
 
 #[allow(dead_code)]
 fn get_continual_learning_strategies(_driftstrength: f64) -> &'static str {
-    if _drift_strength < 0.3 {
+    if _driftstrength < 0.3 {
         "Fine-tuning, Elastic Weight Consolidation"
-    } else if drift_strength < 0.7 {
+    } else if _driftstrength < 0.7 {
         "Progressive Neural Networks, Learning without Forgetting"
     } else {
         "Memory replay, Meta-learning approaches, Dynamic architectures"
@@ -660,7 +660,7 @@ fn get_continual_learning_strategies(_driftstrength: f64) -> &'static str {
 
 #[allow(dead_code)]
 fn simulate_catastrophic_forgetting() -> Result<(), Box<dyn std::error::Error>> {
-    let _dataset = make_continual_learning_dataset(3, 200, 10, 3, 0.8)?;
+    let dataset = make_continual_learning_dataset(3, 200, 10, 3, 0.8)?;
 
     println!("  Simulating catastrophic forgetting:");
     println!("    📉 Task 1 performance after Task 2: ~60% (typical drop)");
@@ -672,16 +672,16 @@ fn simulate_catastrophic_forgetting() -> Result<(), Box<dyn std::error::Error>> 
 
 #[allow(dead_code)]
 fn demonstrate_meta_learning_setup() -> Result<(), Box<dyn std::error::Error>> {
-    let few_shot_data = make_few_shot_dataset(5, 3, 10, 20, 15)?;
+    let few_shotdata = make_few_shot_dataset(5, 3, 10, 20, 15)?;
 
     println!("  🧠 Meta-learning (MAML) setup:");
     println!(
         "    Meta-training episodes: {}",
-        few_shot_data.episodes.len()
+        few_shotdata.episodes.len()
     );
     println!(
         "    Support/Query split per episode: {}/{} samples per class",
-        few_shot_data.k_shot, few_shot_data.n_query
+        few_shotdata.k_shot, few_shotdata.n_query
     );
     println!("    💡 Goal: Learn to learn quickly from few examples");
 
@@ -690,7 +690,7 @@ fn demonstrate_meta_learning_setup() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn demonstrate_robust_ml_setup() -> Result<(), Box<dyn std::error::Error>> {
-    let base_dataset = make_classification(500, 15, 3, 2, 10, Some(42))?;
+    let basedataset = make_classification(500, 15, 3, 2, 10, Some(42))?;
 
     // Generate multiple adversarial versions
     let attacks = vec![
@@ -699,7 +699,7 @@ fn demonstrate_robust_ml_setup() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     println!("  🛡️ Robust ML training setup:");
-    println!("    Clean samples: {}", base_dataset.n_samples());
+    println!("    Clean samples: {}", basedataset.n_samples());
 
     for (name, method, epsilon) in attacks {
         let config = AdversarialConfig {
@@ -708,11 +708,11 @@ fn demonstrate_robust_ml_setup() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         };
 
-        let adv_dataset = make_adversarial_examples(&base_dataset, config)?;
+        let advdataset = make_adversarial_examples(&basedataset, config)?;
         println!(
             "    {} adversarial samples: {}",
             name,
-            adv_dataset.n_samples()
+            advdataset.n_samples()
         );
     }
 
@@ -723,7 +723,7 @@ fn demonstrate_robust_ml_setup() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn demonstrate_federated_learning_setup() -> Result<(), Box<dyn std::error::Error>> {
-    let domain_data = make_domain_adaptation_dataset(
+    let domaindata = make_domain_adaptation_dataset(
         300,
         20,
         4,
@@ -734,13 +734,10 @@ fn demonstrate_federated_learning_setup() -> Result<(), Box<dyn std::error::Erro
     )?;
 
     println!("  🌐 Federated learning simulation:");
-    println!(
-        "    Participating clients: {}",
-        domain_data.n_source_domains
-    );
+    println!("    Participating clients: {}", domaindata.n_source_domains);
 
-    for (i, (_domainname, dataset)) in domain_data.domains.iter().enumerate() {
-        if i < domain_data.n_source_domains {
+    for (i, (_domainname, dataset)) in domaindata.domains.iter().enumerate() {
+        if i < domaindata.n_source_domains {
             println!(
                 "    Client {}: {} samples (private data)",
                 i + 1,

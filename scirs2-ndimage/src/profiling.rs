@@ -597,7 +597,7 @@ impl BenchmarkComparison {
             .iter()
             .enumerate()
             .min_by_key(|(_, v)| v.median)
-            .map(|(i_)| i)
+            .map(|(i, _)| i)
             .unwrap_or(0);
 
         let fastest = variants[fastest_idx]._name.clone();

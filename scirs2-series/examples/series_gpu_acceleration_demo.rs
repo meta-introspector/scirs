@@ -4,7 +4,7 @@
 //! and demonstrates advanced machine learning integration capabilities.
 
 use ndarray::Array1;
-use scirs2__series::{
+use scirs2_series::{
     forecasting::neural::{LSTMConfig, LSTMForecaster, NeuralForecaster},
     gpu_acceleration::{
         algorithms::{
@@ -109,8 +109,7 @@ fn gpu_device_management_demo() {
                             "  Active device supports GPU: {}",
                             !matches!(
                                 caps.backend,
-                                scirs2_series::gpu,
-                                _acceleration::GpuBackend::CpuFallback
+                                scirs2_series::gpu_acceleration::GpuBackend::CpuFallback
                             )
                         );
                     }
@@ -341,7 +340,7 @@ fn gpu_feature_extraction_demo() {
                     // Compute feature statistics
                     for j in 0..feature_matrix.ncols().min(5) {
                         let column = feature_matrix.column(j);
-                        let mean = column.mean().unwrap_or(0.0);
+                        let mean = column.mean();
                         let std = column.variance().sqrt();
                         println!("    Feature {}: mean={:.3}, std={:.3}", j, mean, std);
                     }
@@ -363,7 +362,7 @@ fn generate_pattern_series(pattern: &str, length: usize, seed: f64) -> Array1<f6
 
     for i in 0..length {
         let t = i as f64;
-        let value = match _pattern {
+        let value = match pattern {
             "linear" => 10.0 + 0.5 * t + seed,
             "sinusoidal" => 50.0 + 20.0 * (0.2 * t + seed).sin(),
             "exponential" => 10.0 * (0.02 * t).exp() + seed,
@@ -505,8 +504,7 @@ fn advanced_ml_demo() {
         (
             "Small LSTM",
             LSTMConfig {
-                base: scirs2,
-                series: forecasting::neural::NeuralConfig {
+                base: scirs2_series::forecasting::neural::NeuralConfig {
                     lookback_window: 12,
                     forecast_horizon: 5,
                     epochs: 20,
@@ -525,8 +523,7 @@ fn advanced_ml_demo() {
         (
             "Medium LSTM",
             LSTMConfig {
-                base: scirs2,
-                series: forecasting::neural::NeuralConfig {
+                base: scirs2_series::forecasting::neural::NeuralConfig {
                     lookback_window: 24,
                     forecast_horizon: 10,
                     epochs: 30,

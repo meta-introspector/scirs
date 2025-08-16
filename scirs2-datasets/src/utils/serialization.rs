@@ -34,7 +34,7 @@ where
     vec.push(shape[1] as f64);
 
     // Store data
-    vec.extend(_array.iter().cloned());
+    vec.extend(array.iter().cloned());
 
     vec.serialize(serializer)
 }
@@ -57,7 +57,7 @@ pub fn deserialize_array2<'de, D>(deserializer: D) -> Result<Array2<f64>, D::Err
 where
     D: Deserializer<'de>,
 {
-    let vec = Vec::<f64>::deserialize(_deserializer)?;
+    let vec = Vec::<f64>::deserialize(deserializer)?;
     if vec.len() < 2 {
         return Err(serde::de::Error::custom("Invalid array2 serialization"));
     }
@@ -126,7 +126,7 @@ pub fn deserialize_array1<'de, D>(deserializer: D) -> Result<Array1<f64>, D::Err
 where
     D: Deserializer<'de>,
 {
-    let vec = Vec::<f64>::deserialize(_deserializer)?;
+    let vec = Vec::<f64>::deserialize(deserializer)?;
     Ok(Array1::from(vec))
 }
 
@@ -161,7 +161,7 @@ pub mod optional_array1 {
     where
         S: Serializer,
     {
-        match _array_opt {
+        match _arrayopt {
             Some(array) => {
                 #[derive(Serialize)]
                 struct Wrapper<'a> {
@@ -213,8 +213,7 @@ pub mod optional_array1 {
             value: Array1<f64>,
         }
 
-        Option::<Wrapper>::deserialize(_deserializer)
-            .map(|opt_wrapper| opt_wrapper.map(|w| w.value))
+        Option::<Wrapper>::deserialize(deserializer).map(|opt_wrapper| opt_wrapper.map(|w| w.value))
     }
 }
 

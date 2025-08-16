@@ -11,6 +11,7 @@ use scirs2_optim::benchmarking::regression_tester::{
 use scirs2_optim::benchmarking::{BenchmarkResult, OptimizerBenchmark};
 use scirs2_optim::error::{OptimError, Result};
 use std::fs;
+use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
@@ -123,7 +124,7 @@ fn main() -> Result<()> {
                 .into_iter()
                 .next()
                 .unwrap_or_else(|| BenchmarkResult {
-                    optimizer_name: name.to_string(),
+                    optimizername: name.to_string(),
                     function_name: "comprehensive_benchmark".to_string(),
                     converged: false,
                     convergence_step: None,
@@ -148,7 +149,7 @@ fn main() -> Result<()> {
         println!("Generating report to: {}", outputpath.display());
     }
 
-    let cireport = tester.generate_cireport(&regression_results)?;
+    let cireport = tester.generate_ci_report(&regression_results)?;
     fs::write(&outputpath, cireport)?;
 
     // Check for critical regressions
@@ -203,7 +204,7 @@ fn parse_config(matches: &ArgMatches) -> Result<RegressionConfig> {
             "sliding_window".to_string(),
             "change_point".to_string(),
         ],
-        cireport_format: parsereport_format(matches.get_one::<String>("format").unwrap())
+        ci_report_format: parsereport_format(matches.get_one::<String>("format").unwrap())
             .unwrap_or(CiReportFormat::Json),
     })
 }

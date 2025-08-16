@@ -14,7 +14,7 @@ use crate::utils::safe_f64_to_float;
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(_value).ok_or_else(|| {
+    T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
@@ -134,7 +134,7 @@ where
                         .clamp(0, width as isize - 1) as usize;
                     sum = sum + input[(_y, src_x)] * k_val;
                 }
-                temp[(_y, x)] = sum;
+                temp[(_y, _x)] = sum;
             }
         }
     }
@@ -157,7 +157,7 @@ where
                         let src_y = (_y as isize + k_idx as isize - kernel_half as isize)
                             .clamp(0, height as isize - 1)
                             as usize;
-                        sum = sum + temp[(src_y, x)] * k_val;
+                        sum = sum + temp[(src_y, _x)] * k_val;
                     }
                     col[[_y, 0]] = sum;
                 }
@@ -174,9 +174,9 @@ where
                 for (k_idx, &k_val) in kernel_y.iter().enumerate() {
                     let src_y = (_y as isize + k_idx as isize - kernel_half as isize)
                         .clamp(0, height as isize - 1) as usize;
-                    sum = sum + temp[(src_y, x)] * k_val;
+                    sum = sum + temp[(src_y, _x)] * k_val;
                 }
-                output[(_y, x)] = sum;
+                output[(_y, _x)] = sum;
             }
         }
     }
@@ -705,7 +705,7 @@ where
         })?;
 
     // Calculate starts for center region
-    let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
+    let center_starts: Vec<usize> = pad_width.iter().map(|(before, _)| *before).collect();
 
     // Copy the input to the center of the output
     copy_nd_array(&mut output_dyn, &input_dyn, &center_starts)?;
@@ -746,8 +746,8 @@ fn pad_along_axis<T, D>(
     _output: &mut Array<T, D>,
     _input: &Array<T, D>,
     _axis: usize,
-    _dest_idx: usizesrc,
-    _idx: usize,
+    _dest_idx: usize,
+    _src_idx: usize,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Debug + Clone,
@@ -776,7 +776,7 @@ pub fn get_window<T, D>(
     input: &Array<T, D>,
     center: &[usize],
     window_size: &[usize],
-    _mode: &BorderMode_constant,
+    _mode: &BorderMode,
     value: Option<T>,
 ) -> NdimageResult<Array<T, D>>
 where
@@ -964,19 +964,19 @@ where
     // Initialize temporary vectors for indices
     let mut out_indices = vec![0; input.ndim()];
     let mut in_indices = vec![0; input.ndim()];
-    let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
+    let center_starts: Vec<usize> = pad_width.iter().map(|(before, _)| *before).collect();
 
     // Helper function to get reflected index
     fn get_reflect_idx(idx: isize, len: usize) -> usize {
-        if _idx < 0 {
+        if idx < 0 {
             // Reflect from the start
-            (-_idx - 1) as usize % len
-        } else if _idx >= len as isize {
+            (-idx - 1) as usize % len
+        } else if idx >= len as isize {
             // Reflect from the end
-            (2 * len as isize - _idx - 1) as usize % len
+            (2 * len as isize - idx - 1) as usize % len
         } else {
             // Within bounds
-            _idx as usize
+            idx as usize
         }
     }
 
@@ -1017,7 +1017,8 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts_pad_width,
+                center_starts,
+                _pad_width,
             )?;
         } else {
             // Calculate reflected index
@@ -1032,7 +1033,8 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts_pad_width,
+                center_starts,
+                _pad_width,
             )?;
         }
 
@@ -1150,19 +1152,19 @@ where
     // Initialize temporary vectors for indices
     let mut out_indices = vec![0; input.ndim()];
     let mut in_indices = vec![0; input.ndim()];
-    let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
+    let center_starts: Vec<usize> = pad_width.iter().map(|(before, _)| *before).collect();
 
     // Helper function to get mirrored index
     fn get_mirror_idx(idx: isize, len: usize) -> usize {
-        if _idx < 0 {
+        if idx < 0 {
             // Mirror from the start
             idx.unsigned_abs() % len
-        } else if _idx >= len as isize {
+        } else if idx >= len as isize {
             // Mirror from the end
-            (len as isize - 1 - (_idx - len as isize) % (len as isize)) as usize
+            (len as isize - 1 - (idx - len as isize) % (len as isize)) as usize
         } else {
             // Within bounds
-            _idx as usize
+            idx as usize
         }
     }
 
@@ -1203,7 +1205,8 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts_pad_width,
+                center_starts,
+                _pad_width,
             )?;
         } else {
             // Calculate mirrored index
@@ -1218,7 +1221,8 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts_pad_width,
+                center_starts,
+                _pad_width,
             )?;
         }
 
@@ -1317,12 +1321,12 @@ where
     // Initialize temporary vectors for indices
     let mut out_indices = vec![0; input.ndim()];
     let mut in_indices = vec![0; input.ndim()];
-    let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
+    let center_starts: Vec<usize> = pad_width.iter().map(|(before, _)| *before).collect();
 
     // Helper function to get wrapped index
     fn get_wrap_idx(idx: isize, len: usize) -> usize {
         let len_i = len as isize;
-        (((_idx % len_i) + len_i) % len_i) as usize
+        (((idx % len_i) + len_i) % len_i) as usize
     }
 
     // Recursive function to pad each region
@@ -1362,7 +1366,8 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts_pad_width,
+                center_starts,
+                _pad_width,
             )?;
         } else {
             // Calculate wrapped index
@@ -1377,7 +1382,8 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts_pad_width,
+                center_starts,
+                _pad_width,
             )?;
         }
 
@@ -1495,19 +1501,19 @@ where
     // Initialize temporary vectors for indices
     let mut out_indices = vec![0; input.ndim()];
     let mut in_indices = vec![0; input.ndim()];
-    let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
+    let center_starts: Vec<usize> = pad_width.iter().map(|(before, _)| *before).collect();
 
     // Helper function to get nearest index
     fn get_nearest_idx(idx: isize, len: usize) -> usize {
-        if _idx < 0 {
+        if idx < 0 {
             // Use first element
             0
-        } else if _idx >= len as isize {
+        } else if idx >= len as isize {
             // Use last element
             len - 1
         } else {
             // Within bounds
-            _idx as usize
+            idx as usize
         }
     }
 
@@ -1548,7 +1554,8 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts_pad_width,
+                center_starts,
+                _pad_width,
             )?;
         } else {
             // Calculate nearest index
@@ -1563,7 +1570,8 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts_pad_width,
+                center_starts,
+                _pad_width,
             )?;
         }
 
@@ -1673,7 +1681,7 @@ where
 pub fn apply_window_function<T, D, F>(
     input: &Array<T, D>,
     window_size: &[usize],
-    _mode: &BorderMode_constant,
+    _mode: &BorderMode,
     value: Option<T>,
     _func: F,
 ) -> NdimageResult<Array<T, D>>
@@ -1841,7 +1849,8 @@ mod tests {
     #[test]
     fn test_copy_nd_array() {
         // Create a 3D source array
-        let source = Array3::<f64>::fromshape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
+        let source =
+            Array3::<f64>::from_shape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
         let dest = Array3::<f64>::zeros((4, 4, 4));
 
         // Convert to dynamic dimensionality
@@ -1881,7 +1890,7 @@ mod tests {
     #[test]
     fn test_pad_array_3d() {
         // Create a 3D array (2x2x2)
-        let array = Array3::<f64>::fromshape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
+        let array = Array3::<f64>::from_shape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
 
         // Test padding with constant mode
         let pad_width = vec![(1, 1), (1, 1), (1, 1)];
@@ -1911,7 +1920,7 @@ mod tests {
     #[test]
     fn test_pad_array_reflect_3d() {
         // Create a 3D array (2x2x2)
-        let array = Array3::<f64>::fromshape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
+        let array = Array3::<f64>::from_shape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
 
         // Print array values for debugging
         println!("3D Array values for reflection test:");
@@ -1965,7 +1974,7 @@ mod tests {
     #[test]
     fn test_pad_array_wrap_3d() {
         // Create a 3D array (2x2x2)
-        let array = Array3::<f64>::fromshape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
+        let array = Array3::<f64>::from_shape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
 
         // Print array values for debugging
         println!("3D Array values for wrap test:");
@@ -2019,7 +2028,7 @@ mod tests {
     #[test]
     fn test_pad_array_nearest_3d() {
         // Create a 3D array (2x2x2)
-        let array = Array3::<f64>::fromshape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
+        let array = Array3::<f64>::from_shape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
 
         // Print array values for debugging
         println!("3D Array values for nearest test:");

@@ -21,7 +21,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// Helper function for safe conversion from numeric values to float
 #[allow(dead_code)]
 fn safe_to_float<T: Float + FromPrimitive>(value: f64) -> T {
-    T::from_f64(_value).unwrap_or_else(|| T::zero())
+    T::from_f64(value).unwrap_or_else(|| T::zero())
 }
 
 /// Apply a generic filter to an n-dimensional array
@@ -57,7 +57,7 @@ fn safe_to_float<T: Float + FromPrimitive>(value: f64) -> T {
 ///     max - min
 /// };
 ///
-/// let input = Array2::fromshape_fn((5, 5), |(i, j)| (i + j) as f64);
+/// let input = Array2::from_shape_fn((5, 5), |(i, j)| (i + j) as f64);
 /// let result = generic_filter(&input, range_func, &[3, 3], None, None).unwrap();
 /// ```
 #[allow(dead_code)]
@@ -410,7 +410,7 @@ pub mod filter_functions {
             return T::zero();
         }
         let sum = values.iter().fold(T::zero(), |acc, &x| acc + x);
-        sum / T::from_usize(_values.len()).unwrap_or(T::one())
+        sum / T::from_usize(values.len()).unwrap_or(T::one())
     }
 
     /// Calculate the standard deviation of values
@@ -419,12 +419,12 @@ pub mod filter_functions {
             return T::zero();
         }
 
-        let mean_val = mean(_values);
-        let variance = _values
+        let mean_val = mean(values);
+        let variance = values
             .iter()
             .map(|&x| (x - mean_val).powi(2))
             .fold(T::zero(), |acc, x| acc + x)
-            / T::from_usize(_values.len() - 1).unwrap_or(T::one());
+            / T::from_usize(values.len() - 1).unwrap_or(T::one());
 
         variance.sqrt()
     }
@@ -446,12 +446,12 @@ pub mod filter_functions {
             return T::zero();
         }
 
-        let mean_val = mean(_values);
-        _values
+        let mean_val = mean(values);
+        values
             .iter()
             .map(|&x| (x - mean_val).powi(2))
             .fold(T::zero(), |acc, x| acc + x)
-            / T::from_usize(_values.len()).unwrap_or(T::one())
+            / T::from_usize(values.len()).unwrap_or(T::one())
     }
 
     /// Calculate the maximum value
@@ -475,16 +475,16 @@ pub mod filter_functions {
         if values.is_empty() {
             return T::zero();
         }
-        let mut sorted_values: Vec<T> = values.to_vec();
-        sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        let mut sortedvalues: Vec<T> = values.to_vec();
+        sortedvalues.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-        let len = sorted_values.len();
+        let len = sortedvalues.len();
         if len % 2 == 0 {
-            let mid1 = sorted_values[len / 2 - 1];
-            let mid2 = sorted_values[len / 2];
+            let mid1 = sortedvalues[len / 2 - 1];
+            let mid2 = sortedvalues[len / 2];
             (mid1 + mid2) / T::from_f64(2.0).unwrap_or(T::one())
         } else {
-            sorted_values[len / 2]
+            sortedvalues[len / 2]
         }
     }
 }
@@ -504,13 +504,13 @@ pub mod simd_filter_functions_f32 {
 
         // Use SIMD for larger arrays
         if values.len() >= 8 {
-            let arr = Array1::from(_values.to_vec());
+            let arr = Array1::from(values.to_vec());
             let view = arr.view();
             let sum = simd_scalar_sum_f32(&view);
             sum / values.len() as f32
         } else {
             // Fallback to regular calculation for small arrays
-            super::filter_functions::mean(_values)
+            super::filter_functions::mean(values)
         }
     }
 
@@ -537,13 +537,13 @@ pub mod simd_filter_functions_f64 {
 
         // Use SIMD for larger arrays
         if values.len() >= 4 {
-            let arr = Array1::from(_values.to_vec());
+            let arr = Array1::from(values.to_vec());
             let view = arr.view();
             let sum = simd_scalar_sum_f64(&view);
             sum / values.len() as f64
         } else {
             // Fallback to regular calculation for small arrays
-            super::filter_functions::mean(_values)
+            super::filter_functions::mean(values)
         }
     }
 
@@ -647,7 +647,7 @@ mod tests {
     #[test]
     fn test_parallel_generic_filter() {
         // Create a large enough array to trigger parallel processing
-        let input = Array2::fromshape_fn((200, 200), |(i, j)| (i * j) as f64);
+        let input = Array2::from_shape_fn((200, 200), |(i, j)| (i * j) as f64);
 
         // Test with mean function
         let result = generic_filter(&input, filter_functions::mean, &[3, 3], None, None)

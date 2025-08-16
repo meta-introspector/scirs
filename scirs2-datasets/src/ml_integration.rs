@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use ndarray::{Array1, Array2, Axis};
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
-use rand::{thread_rng, SeedableRng};
+use rand::{rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 
 use crate::error::{DatasetsError, Result};
@@ -392,7 +392,7 @@ impl MLPipeline {
         }
     }
 
-    fn random_undersample(&self, dataset: &Dataset_random, state: Option<u64>) -> Result<Dataset> {
+    fn random_undersample(&self, dataset: &Dataset, _randomstate: Option<u64>) -> Result<Dataset> {
         let target = dataset.target.as_ref().ok_or_else(|| {
             DatasetsError::InvalidFormat("Target required for balancing".to_string())
         })?;
@@ -410,12 +410,12 @@ impl MLPipeline {
         // Sample min_count samples from each class
         let mut selected_indices = Vec::new();
 
-        for (class_) in class_counts {
+        for (class_, _count) in class_counts {
             let class_indices: Vec<usize> = target
                 .iter()
                 .enumerate()
-                .filter(|(_, &val)| !val.is_nan() && val as i64 == class)
-                .map(|(idx_)| idx)
+                .filter(|(_, &val)| !val.is_nan() && val as i64 == class_)
+                .map(|(idx, _)| idx)
                 .collect();
 
             let mut sampled_indices = class_indices;
@@ -476,9 +476,9 @@ impl MLPipeline {
         }
 
         // Create RNG
-        let mut rng: Box<dyn RngCore> = match random_state {
+        let mut rng: Box<dyn RngCore> = match randomstate {
             Some(seed) => Box::new(StdRng::seed_from_u64(seed)),
-            None => Box::new(thread_rng()),
+            None => Box::new(rng()),
         };
 
         // Collect all indices for the oversampled dataset
@@ -495,7 +495,7 @@ impl MLPipeline {
 
             if samples_needed > 0 {
                 for _ in 0..samples_needed {
-                    let random_idx = rng.gen_range(0..indices.len());
+                    let random_idx = rng.random_range(0..indices.len());
                     all_indices.push(indices[random_idx]);
                 }
             }
@@ -505,7 +505,7 @@ impl MLPipeline {
         all_indices.shuffle(&mut *rng);
 
         // Create the oversampled dataset
-        let oversampled_data = dataset.data.select(Axis(0)..&all_indices);
+        let oversampled_data = dataset.data.select(Axis(0), &all_indices);
         let oversampled_target = target.select(Axis(0), &all_indices);
 
         Ok(Dataset {
@@ -687,7 +687,7 @@ impl MLPipeline {
         Ok(())
     }
 
-    fn percentile(_sortedvalues: &[f64], p: f64) -> Option<f64> {
+    fn percentile(sorted_values: &[f64], p: f64) -> Option<f64> {
         if sorted_values.is_empty() {
             return None;
         }
@@ -704,7 +704,7 @@ impl MLPipeline {
         }
     }
 
-    fn compute_mad(_sortedvalues: &[f64], median: f64) -> f64 {
+    fn compute_mad(sorted_values: &[f64], median: f64) -> f64 {
         let deviations: Vec<f64> = sorted_values.iter().map(|&x| (x - median).abs()).collect();
 
         let mut sorted_deviations = deviations;
@@ -732,7 +732,7 @@ impl MLPipeline {
                     indices.shuffle(&mut rng);
                 }
                 None => {
-                    let mut rng = thread_rng();
+                    let mut rng = rng();
                     indices.shuffle(&mut rng);
                 }
             }
@@ -759,7 +759,7 @@ impl MLPipeline {
                     class_group.shuffle(&mut rng);
                 }
                 None => {
-                    let mut rng = thread_rng();
+                    let mut rng = rng();
                     class_group.shuffle(&mut rng);
                 }
             }
@@ -831,8 +831,8 @@ pub mod convenience {
     /// Quick train/test split with default configuration
     pub fn train_test_split(_dataset: &Dataset, testsize: Option<f64>) -> Result<DataSplit> {
         let mut config = MLPipelineConfig::default();
-        if let Some(_size) = test_size {
-            config.test_size = size;
+        if let Some(_size) = testsize {
+            config.test_size = _size;
         }
 
         let pipeline = MLPipeline::new(config);
@@ -852,7 +852,7 @@ pub mod convenience {
         }
 
         let mut pipeline = MLPipeline::new(config);
-        pipeline.prepare_dataset(_dataset)
+        pipeline.prepare_dataset(dataset)
     }
 
     /// Generate cross-validation folds
@@ -864,7 +864,7 @@ pub mod convenience {
         let mut config = MLPipelineConfig::default();
 
         if let Some(_folds) = n_folds {
-            config.cv_folds = folds;
+            config.cv_folds = _folds;
         }
 
         if let Some(strat) = stratify {

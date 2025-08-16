@@ -30,7 +30,7 @@ impl FilterMethods {
     /// use ndarray::Array2;
     /// use scirs2__series::feature_selection::FilterMethods;
     ///
-    /// let features = Array2::fromshape_vec((100, 5), (0..500).map(|x| x as f64).collect()).unwrap();
+    /// let features = Array2::from_shape_vec((100, 5), (0..500).map(|x| x as f64).collect()).unwrap();
     /// let result = FilterMethods::variance_threshold(&features, 0.1).unwrap();
     /// println!("Selected {} features", result.selected_features.len());
     /// ```
@@ -200,7 +200,7 @@ impl FilterMethods {
         let selected_features: Vec<usize> = indexed_scores
             .into_iter()
             .take(n_to_select)
-            .map(|(idx_)| idx)
+            .map(|(idx_, _)| idx_)
             .collect();
 
         let mut metadata = HashMap::new();
@@ -424,12 +424,12 @@ impl FilterMethods {
         // Calculate mutual information
         let mut mi = 0.0;
 
-        for (i_) in x_counts.iter().enumerate().take(n_bins) {
-            for (j_) in y_counts.iter().enumerate().take(n_bins) {
-                if joint_counts[i][j] > 0 && x_counts[i] > 0 && y_counts[j] > 0 {
-                    let p_xy = joint_counts[i][j] as f64 / n as f64;
-                    let p_x = x_counts[i] as f64 / n as f64;
-                    let p_y = y_counts[j] as f64 / n as f64;
+        for (i_, _) in x_counts.iter().enumerate().take(n_bins) {
+            for (j_, _) in y_counts.iter().enumerate().take(n_bins) {
+                if joint_counts[i_][j_] > 0 && x_counts[i_] > 0 && y_counts[j_] > 0 {
+                    let p_xy = joint_counts[i_][j_] as f64 / n as f64;
+                    let p_x = x_counts[i_] as f64 / n as f64;
+                    let p_y = y_counts[j_] as f64 / n as f64;
 
                     mi += p_xy * (p_xy / (p_x * p_y)).ln();
                 }
@@ -488,7 +488,7 @@ impl FilterMethods {
     fn f_critical_value(alpha: f64, n: usize) -> f64 {
         // Simplified approximation for F(1, n-2) critical values
         // In practice, use proper F-distribution tables or functions
-        match _alpha {
+        match alpha {
             a if a <= 0.01 => 6.635 + 10.0 / (n as f64),
             a if a <= 0.05 => 3.841 + 5.0 / (n as f64),
             a if a <= 0.10 => 2.706 + 3.0 / (n as f64),

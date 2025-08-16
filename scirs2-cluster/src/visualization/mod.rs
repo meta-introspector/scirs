@@ -290,7 +290,7 @@ pub fn create_scatter_plot_2d<F: Float + FromPrimitive + Debug>(
     }
 
     // Reduce dimensionality if needed
-    let plot_data =
+    let plotdata =
         if n_features == 2 && config.dimensionality_reduction == DimensionalityReduction::None {
             data.mapv(|x| x.to_f64().unwrap_or(0.0))
         } else {
@@ -334,13 +334,13 @@ pub fn create_scatter_plot_2d<F: Float + FromPrimitive + Debug>(
     let sizes = vec![config.point_size; n_samples];
 
     // Calculate plot bounds
-    let bounds = calculate_2d_bounds(&plot_data);
+    let bounds = calculate_2d_bounds(&plotdata);
 
     // Create legend
     let legend = create_legend(&unique_labels, &cluster_colors, labels);
 
     Ok(ScatterPlot2D {
-        points: plot_data,
+        points: plotdata,
         labels: labels.clone(),
         centroids: plot_centroids,
         colors: point_colors,
@@ -380,7 +380,7 @@ pub fn create_scatter_plot_3d<F: Float + FromPrimitive + Debug>(
     }
 
     // Reduce dimensionality if needed
-    let plot_data =
+    let plotdata =
         if n_features == 3 && config.dimensionality_reduction == DimensionalityReduction::None {
             data.mapv(|x| x.to_f64().unwrap_or(0.0))
         } else {
@@ -424,13 +424,13 @@ pub fn create_scatter_plot_3d<F: Float + FromPrimitive + Debug>(
     let sizes = vec![config.point_size; n_samples];
 
     // Calculate plot bounds
-    let bounds = calculate_3d_bounds(&plot_data);
+    let bounds = calculate_3d_bounds(&plotdata);
 
     // Create legend
     let legend = create_legend(&unique_labels, &cluster_colors, labels);
 
     Ok(ScatterPlot3D {
-        points: plot_data,
+        points: plotdata,
         labels: labels.clone(),
         centroids: plot_centroids,
         colors: point_colors,
@@ -520,9 +520,9 @@ fn apply_pca_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
         ));
     }
 
-    // Center the _data
+    // Center the data
     let mean = data.mean_axis(Axis(0)).unwrap();
-    let centered = _data - &mean;
+    let centered = data - &mean;
 
     // Compute covariance matrix
     let cov = centered.t().dot(&centered) / (n_samples - 1) as f64;
@@ -530,8 +530,8 @@ fn apply_pca_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     // Simplified eigenvalue/eigenvector computation (using power iteration for largest eigenvalues)
     let (eigenvectors_) = compute_top_eigenvectors(&cov, 2)?;
 
-    // Project _data onto first 2 principal components
-    let projected = centered.dot(&eigenvectors);
+    // Project data onto first 2 principal components
+    let projected = centered.dot(&eigenvectors_);
 
     Ok(projected)
 }
@@ -548,9 +548,9 @@ fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
         ));
     }
 
-    // Center the _data
+    // Center the data
     let mean = data.mean_axis(Axis(0)).unwrap();
-    let centered = _data - &mean;
+    let centered = data - &mean;
 
     // Compute covariance matrix
     let cov = centered.t().dot(&centered) / (n_samples - 1) as f64;
@@ -558,8 +558,8 @@ fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
     // Compute top 3 eigenvectors
     let (eigenvectors_) = compute_top_eigenvectors(&cov, 3)?;
 
-    // Project _data onto first 3 principal components
-    let projected = centered.dot(&eigenvectors);
+    // Project data onto first 3 principal components
+    let projected = centered.dot(&eigenvectors_);
 
     Ok(projected)
 }
@@ -569,19 +569,19 @@ fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
 #[allow(dead_code)]
 fn apply_tsne_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     // For now, fall back to PCA
-    apply_pca_2d(_data)
+    apply_pca_2d(data)
 }
 
 #[allow(dead_code)]
 fn apply_umap_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     // For now, fall back to PCA
-    apply_pca_2d(_data)
+    apply_pca_2d(data)
 }
 
 #[allow(dead_code)]
 fn apply_mds_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     // For now, fall back to PCA
-    apply_pca_2d(_data)
+    apply_pca_2d(data)
 }
 
 /// Compute top eigenvectors using power iteration
@@ -673,12 +673,12 @@ fn calculate_2d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64) {
     }
 
     let x_min = data.column(0).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let x_max = _data
+    let x_max = data
         .column(0)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
     let y_min = data.column(1).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let y_max = _data
+    let y_max = data
         .column(1)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -704,17 +704,17 @@ fn calculate_3d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64, f64, f64) {
     }
 
     let x_min = data.column(0).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let x_max = _data
+    let x_max = data
         .column(0)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
     let y_min = data.column(1).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let y_max = _data
+    let y_max = data
         .column(1)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
     let z_min = data.column(2).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let z_max = _data
+    let z_max = data
         .column(2)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -744,7 +744,7 @@ fn create_legend(
 ) -> Vec<LegendEntry> {
     let mut legend = Vec::new();
 
-    for &label in _labels {
+    for &label in labels {
         let count = data_labels.iter().filter(|&&l| l == label).count();
         let color = colors
             .get(&label)

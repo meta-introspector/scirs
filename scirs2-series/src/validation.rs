@@ -12,10 +12,10 @@ use statrs::statistics::Statistics;
 /// Validate that a value is positive
 #[allow(dead_code)]
 pub fn check_positive<F: Float + Display>(value: F, name: &str) -> Result<()> {
-    if _value <= F::zero() {
+    if value <= F::zero() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
-            message: format!("Must be positive, got {_value}"),
+            message: format!("Must be positive, got {value}"),
         });
     }
     Ok(())
@@ -24,10 +24,10 @@ pub fn check_positive<F: Float + Display>(value: F, name: &str) -> Result<()> {
 /// Validate that a value is non-negative
 #[allow(dead_code)]
 pub fn check_non_negative<F: Float + Display>(value: F, name: &str) -> Result<()> {
-    if _value < F::zero() {
+    if value < F::zero() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
-            message: format!("Must be non-negative, got {_value}"),
+            message: format!("Must be non-negative, got {value}"),
         });
     }
     Ok(())
@@ -39,7 +39,7 @@ pub fn check_probability<F: Float + Display>(value: F, name: &str) -> Result<()>
     if value < F::zero() || value > F::one() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
-            message: format!("Must be in [0, 1], got {_value}"),
+            message: format!("Must be in [0, 1], got {value}"),
         });
     }
     Ok(())
@@ -48,10 +48,10 @@ pub fn check_probability<F: Float + Display>(value: F, name: &str) -> Result<()>
 /// Validate that a value is in a given range
 #[allow(dead_code)]
 pub fn check_in_range<F: Float + Display>(value: F, min: F, max: F, name: &str) -> Result<()> {
-    if _value < min || _value > max {
+    if value < min || value > max {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
-            message: format!("Must be in [{min}, {max}], got {_value}"),
+            message: format!("Must be in [{min}, {max}], got {value}"),
         });
     }
     Ok(())
@@ -181,7 +181,7 @@ pub fn validate_forecast_horizon(_steps: usize, maxreasonable: Option<usize>) ->
         });
     }
 
-    let max = max_reasonable.unwrap_or(10000);
+    let max = maxreasonable.unwrap_or(10000);
     if _steps > max {
         return Err(TimeSeriesError::InvalidParameter {
             name: "_steps".to_string(),
@@ -202,10 +202,10 @@ pub fn validate_window_size(_window: usize, datalength: usize) -> Result<()> {
         });
     }
 
-    if _window > data_length {
+    if _window > datalength {
         return Err(TimeSeriesError::InvalidParameter {
             name: "_window".to_string(),
-            message: format!("Window size {_window} exceeds data _length {data_length}"),
+            message: format!("Window size {_window} exceeds data _length {datalength}"),
         });
     }
 
@@ -215,10 +215,10 @@ pub fn validate_window_size(_window: usize, datalength: usize) -> Result<()> {
 /// Validate lag for time series operations
 #[allow(dead_code)]
 pub fn validate_lag(_lag: usize, datalength: usize) -> Result<()> {
-    if _lag >= data_length {
+    if _lag >= datalength {
         return Err(TimeSeriesError::InvalidParameter {
             name: "_lag".to_string(),
-            message: format!("Lag {_lag} must be less than data _length {data_length}"),
+            message: format!("Lag {_lag} must be less than data _length {datalength}"),
         });
     }
     Ok(())
@@ -248,7 +248,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive,
 {
-    check_array_length(_data, 10, "stationarity check")?;
+    check_array_length(data, 10, "stationarity check")?;
 
     // Split _data into two halves
     let mid = data.len() / 2;

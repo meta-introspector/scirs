@@ -414,11 +414,11 @@ pub struct ChunkedDistanceMatrix<F: Float> {
 
 impl<F: Float + FromPrimitive> ChunkedDistanceMatrix<F> {
     /// Create a new chunked distance matrix
-    pub fn new(_n_samples: usize, max_memorymb: usize) -> Self {
+    pub fn new(n_samples: usize, max_memory_mb: usize) -> Self {
         // Estimate chunk size based on memory limit
         let memory_per_float = std::mem::size_of::<F>();
         let max_elements = (max_memory_mb * 1024 * 1024) / memory_per_float;
-        let chunk_size = (max_elements / n_samples).max(1).min(_n_samples);
+        let chunk_size = (max_elements / n_samples).max(1).min(n_samples);
 
         Self {
             chunk_size,
@@ -563,10 +563,10 @@ pub mod memory_management {
 
     impl AdaptiveMemoryManager {
         /// Create a new adaptive memory manager
-        pub fn new(_max_memorymb: usize) -> Self {
+        pub fn new(max_memory_mb: usize) -> Self {
             Self {
                 current_usage: 0,
-                max_memory: _max_memory_mb * 1024 * 1024,
+                max_memory: max_memory_mb * 1024 * 1024,
                 pressure_threshold: 0.8,
                 enable_disk_storage: true,
                 temp_dir: std::env::temp_dir().into(),
@@ -588,7 +588,7 @@ pub mod memory_management {
         }
 
         /// Allocate memory for data
-        pub fn allocate<F: Float>(&mut self, n_samples: usize, nfeatures: usize) -> Result<()> {
+        pub fn allocate<F: Float>(&mut self, n_samples: usize, n_features: usize) -> Result<()> {
             let required = self.estimate_memory_usage::<F>(n_samples, n_features);
 
             if self.current_usage + required > self.max_memory {
@@ -617,7 +617,7 @@ pub mod memory_management {
         }
 
         /// Get optimal batch size based on available memory
-        pub fn optimal_batch_size<F: Float>(&self, nfeatures: usize) -> usize {
+        pub fn optimal_batch_size<F: Float>(&self, n_features: usize) -> usize {
             let available = self.available_memory();
             let bytes_per_sample = std::mem::size_of::<F>() * n_features;
 
@@ -640,13 +640,14 @@ pub mod memory_management {
 
     impl<F: Float + FromPrimitive> DiskBackedStorage<F> {
         /// Create a new disk-backed storage
-        pub fn new(_temp_dir: Option<PathBuf>, buffersize: usize) -> Self {
-            let _temp_dir = temp_dir.unwrap_or_else(std::env::_temp_dir);
+        pub fn new(temp_dir: Option<PathBuf>, buffer_size: usize) -> Self {
+            let temp_dir = temp_dir.unwrap_or_else(std::env::temp_dir);
 
             Self {
                 temp_files: Vec::new(),
                 temp_dir,
-                buffer_size_phantom: std::marker::PhantomData,
+                buffer_size,
+                _phantom: std::marker::PhantomData,
             }
         }
 
@@ -691,7 +692,7 @@ pub mod memory_management {
         }
 
         /// Read data chunk from disk
-        pub fn read_chunk(&self, chunkid: usize) -> Result<Array2<F>> {
+        pub fn read_chunk(&self, chunk_id: usize) -> Result<Array2<F>> {
             if chunk_id >= self.temp_files.len() {
                 return Err(ClusteringError::InvalidInput(
                     "Invalid chunk ID".to_string(),
@@ -824,13 +825,13 @@ pub mod advanced_streaming {
         }
 
         /// Simple hash function
-        fn hash(&self, item: u64, tableidx: usize) -> u64 {
+        fn hash(&self, item: u64, table_idx: usize) -> u64 {
             let (a, b) = self.hash_params[table_idx];
             a.wrapping_mul(item).wrapping_add(b)
         }
 
         /// Get heavy hitters (items with frequency above threshold)
-        pub fn heavy_hitters(&selfthreshold: u64) -> Vec<u64> {
+        pub fn heavy_hitters(&self, threshold: u64) -> Vec<u64> {
             // This is a simplified implementation
             // In practice, you'd need to track candidates more carefully
             Vec::new()
@@ -849,7 +850,7 @@ pub mod advanced_streaming {
         /// Create a new reservoir sampler
         pub fn new(capacity: usize) -> Self {
             Self {
-                reservoir: Vec::with_capacity(_capacity),
+                reservoir: Vec::with_capacity(capacity),
                 capacity,
                 seen_count: 0,
             }
@@ -900,7 +901,7 @@ pub mod advanced_streaming {
 
     impl<F: Float + FromPrimitive + std::fmt::Debug> ProgressiveLearner<F> {
         /// Create a new progressive learner
-        pub fn new(_initiallr: F, decay: F, momentum: F) -> Self {
+        pub fn new(initial_lr: F, decay: F, momentum: F) -> Self {
             Self {
                 model_state: HashMap::new(),
                 learning_rate: initial_lr,
@@ -912,7 +913,7 @@ pub mod advanced_streaming {
         }
 
         /// Update model parameters with gradient
-        pub fn update(&mut self, paramname: &str, gradient: &[F]) -> Result<()> {
+        pub fn update(&mut self, param_name: &str, gradient: &[F]) -> Result<()> {
             self.update_count += 1;
 
             // Update learning rate with decay
@@ -941,7 +942,7 @@ pub mod advanced_streaming {
         }
 
         /// Get current parameter values
-        pub fn get_parameters(&self, paramname: &str) -> Option<&[F]> {
+        pub fn get_parameters(&self, param_name: &str) -> Option<&[F]> {
             self.model_state.get(param_name).map(|v| v.as_slice())
         }
 
@@ -980,11 +981,11 @@ pub mod intelligent_loading {
 
     impl AdaptiveDataLoader {
         /// Create a new adaptive data loader
-        pub fn new(_initial_batch_size: usize, target_timeseconds: f64) -> Self {
+        pub fn new(initial_batch_size: usize, target_time_seconds: f64) -> Self {
             Self {
                 current_batch_size: initial_batch_size,
-                min_batch_size: _initial_batch_size / 10,
-                max_batch_size: _initial_batch_size * 10,
+                min_batch_size: initial_batch_size / 10,
+                max_batch_size: initial_batch_size * 10,
                 performance_history: VecDeque::with_capacity(10),
                 target_time: target_time_seconds,
                 adjustment_factor: 0.1,
@@ -992,7 +993,7 @@ pub mod intelligent_loading {
         }
 
         /// Report batch processing time and adjust batch size
-        pub fn report_batch_time(&mut self, processingtime: f64) {
+        pub fn report_batch_time(&mut self, processing_time: f64) {
             self.performance_history.push_back(processing_time);
             if self.performance_history.len() > 10 {
                 self.performance_history.pop_front();
@@ -1064,7 +1065,7 @@ pub mod intelligent_loading {
 
     impl<F: Float + FromPrimitive + std::fmt::Debug> StreamingPreprocessor<F> {
         /// Create a new streaming preprocessor
-        pub fn new(_normalize: bool, outlierthreshold: F) -> Self {
+        pub fn new(normalize: bool, outlier_threshold: F) -> Self {
             Self {
                 running_mean: None,
                 running_var: None,
@@ -1424,7 +1425,7 @@ pub mod online_algorithms {
         }
 
         /// Update performance metrics
-        fn update_metrics(&mut self, cluster_idx: usize, distance: F, processingtime: f64) {
+        fn update_metrics(&mut self, cluster_idx: usize, distance: F, processing_time: f64) {
             self.metrics.samples_processed += 1;
 
             // Update WCSS estimate
@@ -1468,7 +1469,7 @@ pub mod online_algorithms {
 
             for (i, sample) in samples.rows().into_iter().enumerate() {
                 let (cluster_) = self.find_nearest_cluster(sample)?;
-                predictions[i] = cluster;
+                predictions[i] = cluster_;
             }
 
             Ok(predictions)

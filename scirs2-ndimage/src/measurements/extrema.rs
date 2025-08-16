@@ -18,7 +18,7 @@ fn generate_offsets(offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[i
     for offset in -radius..=radius {
         let mut next = current.to_vec();
         next.push(offset);
-        generate_offsets(_offsets, sizes, &next, dim + 1);
+        generate_offsets(offsets, sizes, &next, dim + 1);
     }
 }
 
@@ -605,7 +605,7 @@ pub type PeakWidthsResult<T> = (Vec<T>, Vec<T>, Vec<T>, Vec<T>);
 /// use scirs2_ndimage::{local_extrema, peak_widths, peak_prominences};
 ///
 /// // Generate test signal
-/// let signal = Array1::<f64>::fromshape_fn(50, |i| {
+/// let signal = Array1::<f64>::from_shape_fn(50, |i| {
 ///     let x = i as f64;
 ///     (-(x - 25.0).powi(2) / 10.0).exp() // Gaussian peak
 /// });

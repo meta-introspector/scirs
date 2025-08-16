@@ -25,7 +25,7 @@ pub fn uniform_filter<T, D>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync + 'static,
     D: Dimension + 'static,
 {
     let _border_mode = mode.unwrap_or(BorderMode::Reflect);
@@ -602,11 +602,15 @@ where
 
             // Get padded value
             let value = get_padded_value_nd(input, &input_coords, mode);
-            let weight = weights[weight_indices];
+            // Convert weights to dynamic view for safer indexing
+            let weights_dyn = weights.view().into_dyn();
+            let weight = weights_dyn[weight_indices];
             sum += value * weight;
         }
 
-        output[out_indices] = sum;
+        // Convert output to dynamic view for safer indexing
+        let mut output_dyn = output.view_mut().into_dyn();
+        output_dyn[out_indices] = sum;
     }
 
     Ok(output)
@@ -634,12 +638,17 @@ where
     }
 
     if in_bounds {
-        return input[ndarray::IxDyn(&clamped_coords)];
+        // Convert to dynamic dimension for safe indexing
+        let input_dyn = input.view().into_dyn();
+        return input_dyn[ndarray::IxDyn(&clamped_coords)];
     }
 
     match mode {
         BorderMode::Constant => T::zero(),
-        BorderMode::Nearest => input[ndarray::IxDyn(&clamped_coords)],
+        BorderMode::Nearest => {
+            let input_dyn = input.view().into_dyn();
+            input_dyn[ndarray::IxDyn(&clamped_coords)]
+        }
         BorderMode::Reflect => {
             let mut reflected_coords = vec![0usize; ndim];
             for d in 0..ndim {
@@ -651,7 +660,8 @@ where
                     coords[d] as usize
                 };
             }
-            input[ndarray::IxDyn(&reflected_coords)]
+            let input_dyn = input.view().into_dyn();
+            input_dyn[ndarray::IxDyn(&reflected_coords)]
         }
         BorderMode::Wrap => {
             let mut wrapped_coords = vec![0usize; ndim];
@@ -659,7 +669,8 @@ where
                 wrapped_coords[d] = ((coords[d] % shape[d] as isize + shape[d] as isize)
                     % shape[d] as isize) as usize;
             }
-            input[ndarray::IxDyn(&wrapped_coords)]
+            let input_dyn = input.view().into_dyn();
+            input_dyn[ndarray::IxDyn(&wrapped_coords)]
         }
         BorderMode::Mirror => {
             let mut mirrored_coords = vec![0usize; ndim];
@@ -672,7 +683,8 @@ where
                     coords[d] as usize
                 };
             }
-            input[ndarray::IxDyn(&mirrored_coords)]
+            let input_dyn = input.view().into_dyn();
+            input_dyn[ndarray::IxDyn(&mirrored_coords)]
         }
     }
 }

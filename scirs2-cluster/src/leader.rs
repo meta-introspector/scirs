@@ -141,7 +141,7 @@ pub struct LeaderClustering<F: Float> {
 impl<F: Float + Debug> LeaderClustering<F> {
     /// Create a new Leader clustering instance
     pub fn new(threshold: F) -> Result<Self> {
-        if _threshold <= F::zero() {
+        if threshold <= F::zero() {
             return Err(ClusteringError::InvalidInput(
                 "Threshold must be positive".to_string(),
             ));
@@ -266,7 +266,7 @@ impl<F: Float + Debug> LeaderTree<F> {
 
         // Start with the largest threshold
         let current_threshold = thresholds[0];
-        let (leaders, labels) = leader_clustering(_data, current_threshold, euclidean_distance)?;
+        let (leaders, labels) = leader_clustering(data, current_threshold, euclidean_distance)?;
 
         // Build root nodes
         let mut roots = Vec::new();
@@ -288,7 +288,7 @@ impl<F: Float + Debug> LeaderTree<F> {
         // Build lower levels if more thresholds provided
         if thresholds.len() > 1 {
             for root in &mut roots {
-                Self::build_subtree(_data, root, &thresholds[1..])?;
+                Self::build_subtree(data, root, &thresholds[1..])?;
             }
         }
 
@@ -350,7 +350,7 @@ impl<F: Float + Debug> LeaderTree<F> {
     }
 
     fn count_nodes(node: &LeaderNode<F>) -> usize {
-        1 + _node
+        1 + node
             .children
             .iter()
             .map(|child| Self::count_nodes(child))

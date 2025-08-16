@@ -112,7 +112,7 @@ struct KDNode {
 
 impl<F: Float + FromPrimitive + Debug> KDTree<F> {
     /// Create a new KD-Tree
-    pub fn new(_leafsize: usize) -> Self {
+    pub fn new(leaf_size: usize) -> Self {
         Self {
             data: None,
             tree: None,
@@ -523,7 +523,7 @@ struct BallNode {
 
 impl<F: Float + FromPrimitive + Debug> BallTree<F> {
     /// Create a new Ball Tree
-    pub fn new(_leafsize: usize) -> Self {
+    pub fn new(leaf_size: usize) -> Self {
         Self {
             data: None,
             tree: None,

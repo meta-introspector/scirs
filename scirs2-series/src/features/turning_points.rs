@@ -1121,13 +1121,13 @@ where
         };
 
         // Detect turning points at this scale
-        let (tp__) = detect_turning_points(&smoothed, &smoothed_config)?;
-        multiscale_turning_points.push(tp.len());
+        let (tp__, _, _) = detect_turning_points(&smoothed, &smoothed_config)?;
+        multiscale_turning_points.push(tp__.len());
 
         // Calculate scale consistency (similarity with original scale)
         if !multiscale_turning_points.is_empty() {
             let original_count = multiscale_turning_points[0] as f64;
-            let current_count = tp.len() as f64;
+            let current_count = tp__.len() as f64;
             let consistency =
                 1.0 - (original_count - current_count).abs() / original_count.max(current_count);
             scale_consistencies.push(F::from(consistency).unwrap());
@@ -1190,19 +1190,19 @@ fn apply_moving_average<F>(_ts: &Array1<F>, windowsize: usize) -> Result<Array1<
 where
     F: Float + FromPrimitive + Clone,
 {
-    let n = ts.len();
-    if window_size >= n {
+    let n = _ts.len();
+    if windowsize >= n {
         return Ok(_ts.clone());
     }
 
     let mut smoothed = Array1::zeros(n);
-    let half_window = window_size / 2;
+    let half_window = windowsize / 2;
 
     for i in 0..n {
         let start = i.saturating_sub(half_window);
         let end = (i + half_window + 1).min(n);
 
-        let window_sum = ts.slice(s![start..end]).sum();
+        let window_sum = _ts.slice(s![start..end]).sum();
         let window_len = F::from(end - start).unwrap();
         smoothed[i] = window_sum / window_len;
     }
@@ -1222,9 +1222,9 @@ where
 
     // Simple clustering measure: variance of interval ratios
     let mut ratios = Vec::new();
-    for i in 1.._intervals.len() {
+    for i in 1..intervals.len() {
         if intervals[i] > F::zero() && intervals[i - 1] > F::zero() {
-            ratios.push(_intervals[i] / intervals[i - 1]);
+            ratios.push(intervals[i] / intervals[i - 1]);
         }
     }
 
@@ -1253,7 +1253,7 @@ where
     }
 
     // Simple periodicity measure: autocorrelation at lag 1
-    calculate_autocorrelation_at_lag(_intervals, 1)
+    calculate_autocorrelation_at_lag(intervals, 1)
 }
 
 /// Calculate autocorrelation at specific lag
@@ -1271,7 +1271,7 @@ where
         return Ok(F::zero());
     }
 
-    let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(_data.len()).unwrap();
+    let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
 
     let mut numerator = F::zero();
     let mut denominator = F::zero();
@@ -1298,7 +1298,7 @@ where
 {
     // Simplified: count consecutive peak pairs
     let mut count = 0;
-    for window in local_maxima.windows(3) {
+    for window in localmaxima.windows(3) {
         let spacing1 = window[1] - window[0];
         let spacing2 = window[2] - window[1];
 
@@ -1320,7 +1320,7 @@ where
 {
     // Simplified: count consecutive valley pairs
     let mut count = 0;
-    for window in local_minima.windows(3) {
+    for window in localminima.windows(3) {
         let spacing1 = window[1] - window[0];
         let spacing2 = window[2] - window[1];
 

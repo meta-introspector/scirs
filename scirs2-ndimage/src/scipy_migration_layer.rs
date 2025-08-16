@@ -366,7 +366,7 @@ impl SciPyCompatLayer {
         let _distances = crate::morphology::distance_transform_edt(binary_input.view())?;
 
         // Convert back to original type
-        let result_array = distances.mapv(|v| T::from_f64(v).unwrap_or(T::zero()));
+        let result_array = _distances.mapv(|v| T::from_f64(v).unwrap_or(T::zero()));
 
         Ok(DistanceTransformResult {
             _distances: Some(result_array),

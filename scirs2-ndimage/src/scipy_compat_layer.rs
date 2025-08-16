@@ -661,14 +661,14 @@ impl ScipyCompatWrapper {
         F: Fn(T) -> T,
     {
         // This would wrap functions to handle parameter conversions automatically
-        _scipy_func
+        _scipyfunc
     }
 
     /// Auto-detect and convert SciPy-style parameters
     pub fn convert_parameters(params: &HashMap<String, String>) -> HashMap<String, String> {
         let mut converted = HashMap::new();
 
-        for (key, value) in _params {
+        for (key, value) in params {
             match key.as_str() {
                 "mode" => {
                     let border_mode = match value.as_str() {

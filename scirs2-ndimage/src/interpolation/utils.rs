@@ -10,7 +10,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// Helper function for safe conversion from usize to float
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(_value).ok_or_else(|| {
+    T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
@@ -19,7 +19,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 #[allow(dead_code)]
 fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
     value.to_usize().ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert float _value to usize"))
+        NdimageError::ComputationError(format!("Failed to convert float {} to usize", value))
     })
 }
 
@@ -43,8 +43,8 @@ where
     let size_t = safe_usize_to_float(size)?;
 
     // Handle within-bounds case
-    if _coord >= T::zero() && _coord < size_t {
-        return Ok(_coord);
+    if coord >= T::zero() && coord < size_t {
+        return Ok(coord);
     }
 
     // Handle out-of-bounds according to mode
@@ -58,7 +58,7 @@ where
             )))
         }
         BoundaryMode::Nearest => {
-            if _coord < T::zero() {
+            if coord < T::zero() {
                 Ok(T::zero())
             } else {
                 Ok(size_t - T::one())
@@ -333,9 +333,9 @@ where
 pub fn apply_boundary_condition(_coord: isize, dimsize: isize, mode: &BoundaryMode) -> usize {
     match mode {
         BoundaryMode::Constant => {
-            if _coord < 0 || _coord >= dim_size {
+            if _coord < 0 || _coord >= dimsize {
                 // Return a value that will be caught as out of bounds
-                dim_size as usize
+                dimsize as usize
             } else {
                 _coord as usize
             }
@@ -343,28 +343,28 @@ pub fn apply_boundary_condition(_coord: isize, dimsize: isize, mode: &BoundaryMo
         BoundaryMode::Nearest => {
             if _coord < 0 {
                 0
-            } else if _coord >= dim_size {
-                (dim_size - 1) as usize
+            } else if _coord >= dimsize {
+                (dimsize - 1) as usize
             } else {
                 _coord as usize
             }
         }
         BoundaryMode::Wrap => {
-            if dim_size == 0 {
+            if dimsize == 0 {
                 0
             } else {
-                let wrapped = ((_coord % dim_size) + dim_size) % dim_size;
+                let wrapped = ((_coord % dimsize) + dimsize) % dimsize;
                 wrapped as usize
             }
         }
         BoundaryMode::Reflect => {
-            if dim_size <= 1 {
+            if dimsize <= 1 {
                 0
             } else {
                 let reflected = if _coord < 0 {
-                    (-_coord - 1) % dim_size
-                } else if _coord >= dim_size {
-                    (2 * dim_size - _coord - 1) % dim_size
+                    (-_coord - 1) % dimsize
+                } else if _coord >= dimsize {
+                    (2 * dimsize - _coord - 1) % dimsize
                 } else {
                     _coord
                 };
@@ -372,18 +372,18 @@ pub fn apply_boundary_condition(_coord: isize, dimsize: isize, mode: &BoundaryMo
             }
         }
         BoundaryMode::Mirror => {
-            if dim_size <= 1 {
+            if dimsize <= 1 {
                 0
             } else {
-                let period = 2 * (dim_size - 1);
+                let period = 2 * (dimsize - 1);
                 let mirrored = if _coord < 0 {
                     (-_coord) % period
-                } else if _coord >= dim_size {
-                    period - ((_coord - dim_size + 1) % period) - 1
+                } else if _coord >= dimsize {
+                    period - ((_coord - dimsize + 1) % period) - 1
                 } else {
                     _coord
                 };
-                (mirrored.min(dim_size - 1)) as usize
+                (mirrored.min(dimsize - 1)) as usize
             }
         }
     }

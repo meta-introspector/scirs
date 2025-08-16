@@ -78,7 +78,7 @@ pub fn get_cachedir() -> Result<PathBuf> {
     }
 
     // Fallback to home directory
-    let homedir = dirs::homedir()
+    let homedir = dirs::home_dir()
         .ok_or_else(|| DatasetsError::CacheError("Could not find home directory".to_string()))?;
     let cachedir = homedir.join(format!(".{CACHE_DIR_NAME}"));
     ensuredirectory_exists(&cachedir)?;
@@ -91,11 +91,11 @@ pub fn get_cachedir() -> Result<PathBuf> {
 fn get_platform_cachedir() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
     {
-        dirs::data_localdir().map(|dir| dir.join(CACHE_DIR_NAME))
+        dirs::data_local_dir().map(|dir| dir.join(CACHE_DIR_NAME))
     }
     #[cfg(target_os = "macos")]
     {
-        dirs::homedir().map(|dir| dir.join("Library").join("Caches").join(CACHE_DIR_NAME))
+        dirs::home_dir().map(|dir| dir.join("Library").join("Caches").join(CACHE_DIR_NAME))
     }
     #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     {
@@ -103,7 +103,7 @@ fn get_platform_cachedir() -> Option<PathBuf> {
         if let Ok(xdg_cache) = std::env::var("XDG_CACHE_HOME") {
             Some(PathBuf::from(xdg_cache).join(CACHE_DIR_NAME))
         } else {
-            dirs::homedir().map(|home| home.join(".cache").join(CACHE_DIR_NAME))
+            dirs::home_dir().map(|home| home.join(".cache").join(CACHE_DIR_NAME))
         }
     }
 }
@@ -112,7 +112,7 @@ fn get_platform_cachedir() -> Option<PathBuf> {
 #[allow(dead_code)]
 fn ensuredirectory_exists(dir: &Path) -> Result<()> {
     if !dir.exists() {
-        fs::createdir_all(dir).map_err(|e| {
+        fs::create_dir_all(dir).map_err(|e| {
             DatasetsError::CacheError(format!("Failed to create cache directory: {e}"))
         })?;
     }
@@ -154,9 +154,9 @@ pub fn fetch_data(
     }
 
     // If not in cache, fetch from the URL
-    let _entry = match registry_entry {
-        Some(_entry) => entry,
-        None => return Err(format!("No registry _entry found for {filename}")),
+    let entry = match registry_entry {
+        Some(entry) => entry,
+        None => return Err(format!("No registry entry found for {filename}")),
     };
 
     // Create a temporary file to download to
@@ -164,7 +164,7 @@ pub fn fetch_data(
     let temp_file = tempdir.path().join(filename);
 
     // Download the file
-    let response = ureq::get(_entry.url)
+    let response = ureq::get(entry.url)
         .call()
         .map_err(|e| format!("Failed to download {filename}: {e}"))?;
 
@@ -175,7 +175,7 @@ pub fn fetch_data(
     std::io::copy(&mut reader, &mut file).map_err(|e| format!("Failed to download file: {e}"))?;
 
     // Verify the SHA256 hash of the downloaded file if provided
-    if !_entry.sha256.is_empty() {
+    if !entry.sha256.is_empty() {
         let computed_hash = sha256_hash_file(&temp_file)?;
         if computed_hash != entry.sha256 {
             return Err(format!(
@@ -186,9 +186,9 @@ pub fn fetch_data(
     }
 
     // Move the file to the cache
-    fs::createdir_all(&cachedir).map_err(|e| format!("Failed to create cache dir: {e}"))?;
+    fs::create_dir_all(&cachedir).map_err(|e| format!("Failed to create cache dir: {e}"))?;
     if let Some(parent) = cachepath.parent() {
-        fs::createdir_all(parent).map_err(|e| format!("Failed to create cache dir: {e}"))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Failed to create cache dir: {e}"))?;
     }
 
     fs::copy(&temp_file, &cachepath).map_err(|e| format!("Failed to copy to cache: {e}"))?;
@@ -280,7 +280,7 @@ impl Default for DatasetCache {
 
 impl DatasetCache {
     /// Create a new dataset cache with the given cache directory and default memory cache
-    pub fn new(_cachedir: PathBuf) -> Self {
+    pub fn new(cachedir: PathBuf) -> Self {
         let mem_cache = RefCell::new(
             CacheBuilder::new()
                 .with_size(DEFAULT_CACHE_SIZE)
@@ -301,7 +301,7 @@ impl DatasetCache {
     }
 
     /// Create a new dataset cache with custom settings
-    pub fn with_config(_cachedir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
+    pub fn with_config(cachedir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
         let mem_cache = RefCell::new(
             CacheBuilder::new()
                 .with_size(cache_size)
@@ -347,7 +347,7 @@ impl DatasetCache {
     /// Create the cache directory if it doesn't exist
     pub fn ensure_cachedir(&self) -> Result<()> {
         if !self.cachedir.exists() {
-            fs::createdir_all(&self.cachedir).map_err(|e| {
+            fs::create_dir_all(&self.cachedir).map_err(|e| {
                 DatasetsError::CacheError(format!("Failed to create cache directory: {e}"))
             })?;
         }
@@ -437,7 +437,7 @@ impl DatasetCache {
     pub fn clear_cache(&self) -> Result<()> {
         // Clear file system cache
         if self.cachedir.exists() {
-            fs::removedir_all(&self.cachedir)
+            fs::remove_dir_all(&self.cachedir)
                 .map_err(|e| DatasetsError::CacheError(format!("Failed to clear cache: {e}")))?;
         }
 
@@ -475,7 +475,7 @@ impl DatasetCache {
         let mut total_size = 0u64;
 
         if self.cachedir.exists() {
-            let entries = fs::readdir(&self.cachedir).map_err(|e| {
+            let entries = fs::read_dir(&self.cachedir).map_err(|e| {
                 DatasetsError::CacheError(format!("Failed to read cache directory: {e}"))
             })?;
 
@@ -518,7 +518,7 @@ impl DatasetCache {
         let mut files_with_times = Vec::new();
 
         if self.cachedir.exists() {
-            let entries = fs::readdir(&self.cachedir).map_err(|e| {
+            let entries = fs::read_dir(&self.cachedir).map_err(|e| {
                 DatasetsError::CacheError(format!("Failed to read cache directory: {e}"))
             })?;
 
@@ -538,17 +538,17 @@ impl DatasetCache {
         }
 
         // Sort by modification time (oldest first)
-        files_with_times.sort_by_key(|(__, modified)| *modified);
+        files_with_times.sort_by_key(|(_path, _size, modified)| *modified);
 
         // Remove files until we've freed enough space
         let mut freed_size = 0u64;
-        for (path, size_) in files_with_times {
+        for (path, size, _modified) in files_with_times {
             if freed_size >= size_to_free {
                 break;
             }
 
             // Remove from memory cache first
-            if let Some(filename) = path.filename().and_then(|n| n.to_str()) {
+            if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
                 let key = FileCacheKey(filename.to_string());
                 self.mem_cache.borrow_mut().remove(&key);
             }
@@ -575,7 +575,7 @@ impl DatasetCache {
     }
 
     /// Set maximum cache size in bytes (0 for unlimited)
-    pub fn set_max_cache_size(&mut self, maxsize: u64) {
+    pub fn set_max_cache_size(&mut self, max_size: u64) {
         self.max_cache_size = max_size;
     }
 
@@ -596,7 +596,7 @@ impl DatasetCache {
         let mut files = Vec::new();
 
         if self.cachedir.exists() {
-            let entries = fs::readdir(&self.cachedir).map_err(|e| {
+            let entries = fs::read_dir(&self.cachedir).map_err(|e| {
                 DatasetsError::CacheError(format!("Failed to read cache directory: {e}"))
             })?;
 
@@ -611,7 +611,7 @@ impl DatasetCache {
                         total_size += size;
                         file_count += 1;
 
-                        if let Some(filename) = entry.filename().to_str() {
+                        if let Some(filename) = entry.file_name().to_str() {
                             files.push(CacheFileInfo {
                                 name: filename.to_string(),
                                 size_bytes: size,
@@ -640,7 +640,7 @@ impl DatasetCache {
 /// Downloads data from a URL and returns it as bytes, using the cache when possible
 #[cfg(feature = "download")]
 #[allow(dead_code)]
-pub fn download_data(_url: &str, forcedownload: bool) -> Result<Vec<u8>> {
+pub fn download_data(_url: &str, force_download: bool) -> Result<Vec<u8>> {
     let cache = DatasetCache::default();
     let cache_key = DatasetCache::hash_filename(_url);
 
@@ -651,12 +651,12 @@ pub fn download_data(_url: &str, forcedownload: bool) -> Result<Vec<u8>> {
 
     // Download the data
     let response = reqwest::blocking::get(_url).map_err(|e| {
-        DatasetsError::DownloadError(format!("Failed to _download from {_url}: {e}"))
+        DatasetsError::DownloadError(format!("Failed to download from {_url}: {e}"))
     })?;
 
     if !response.status().is_success() {
         return Err(DatasetsError::DownloadError(format!(
-            "Failed to _download from {_url}: HTTP status {}",
+            "Failed to download from {_url}: HTTP status {}",
             response.status()
         )));
     }
@@ -689,9 +689,9 @@ pub fn download_data(_url: &str, forcedownload: bool) -> Result<Vec<u8>> {
 ///
 /// * An error indicating that the download feature is not enabled
 #[allow(dead_code)]
-pub fn download_data(_url: &str, _forcedownload: bool) -> Result<Vec<u8>> {
+pub fn download_data(_url: &str, _force_download: bool) -> Result<Vec<u8>> {
     Err(DatasetsError::Other(
-        "Download feature is not enabled. Recompile with --features _download".to_string(),
+        "Download feature is not enabled. Recompile with --features download".to_string(),
     ))
 }
 
@@ -710,9 +710,9 @@ impl CacheManager {
     }
 
     /// Create a new cache manager with custom settings
-    pub fn with_config(_cachedir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
+    pub fn with_config(cachedir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
         Self {
-            cache: DatasetCache::with_config(_cachedir, cache_size, ttl_seconds),
+            cache: DatasetCache::with_config(cachedir, cache_size, ttl_seconds),
         }
     }
 
@@ -785,7 +785,7 @@ impl CacheManager {
         let mut file_count = 0usize;
 
         if cachedir.exists() {
-            if let Ok(entries) = fs::readdir(cachedir) {
+            if let Ok(entries) = fs::read_dir(cachedir) {
                 for entry in entries.flatten() {
                     if let Ok(metadata) = entry.metadata() {
                         if metadata.is_file() {
@@ -820,7 +820,7 @@ impl CacheManager {
     }
 
     /// Set maximum cache size in bytes (0 for unlimited)
-    pub fn set_max_cache_size(&mut self, maxsize: u64) {
+    pub fn set_max_cache_size(&mut self, max_size: u64) {
         self.cache.set_max_cache_size(max_size);
     }
 
@@ -840,7 +840,7 @@ impl CacheManager {
     }
 
     /// Remove old files to free up space
-    pub fn cleanup_old_files(&self, targetsize: u64) -> Result<()> {
+    pub fn cleanup_old_files(&self, target_size: u64) -> Result<()> {
         self.cache.cleanup_cache_to_fit(target_size)
     }
 
@@ -850,7 +850,7 @@ impl CacheManager {
         let mut files = Vec::new();
 
         if cachedir.exists() {
-            let entries = fs::readdir(cachedir).map_err(|e| {
+            let entries = fs::read_dir(cachedir).map_err(|e| {
                 DatasetsError::CacheError(format!("Failed to read cache directory: {e}"))
             })?;
 
@@ -859,7 +859,7 @@ impl CacheManager {
                     DatasetsError::CacheError(format!("Failed to read directory entry: {e}"))
                 })?;
 
-                if let Some(filename) = entry.filename().to_str() {
+                if let Some(filename) = entry.file_name().to_str() {
                     files.push(filename.to_string());
                 }
             }
@@ -1032,7 +1032,7 @@ impl CacheFileInfo {
 /// Format bytes as human-readable string
 #[allow(dead_code)]
 fn format_bytes(bytes: u64) -> String {
-    let size = _bytes as f64;
+    let size = bytes as f64;
     if size < 1024.0 {
         format!("{size} B")
     } else if size < 1024.0 * 1024.0 {
@@ -1301,7 +1301,7 @@ impl BatchOperations {
         let start_time = std::time::Instant::now();
         let mut result = BatchResult::new();
 
-        for &(filename, expected_hash) in files_and_hashes {
+        for &(filename, expected_hash) in files_andhashes {
             match self.cache.cache.get_cachedpath(filename).exists() {
                 true => match sha256_hash_file(&self.cache.cache.get_cachedpath(filename)) {
                     Ok(actual_hash) => {
@@ -1596,7 +1596,7 @@ fn matches_glob_pattern(filename: &str, pattern: &str) -> bool {
         }
     }
 
-    _filename == pattern
+    filename == pattern
 }
 
 #[cfg(test)]
@@ -1625,7 +1625,7 @@ mod tests {
     #[test]
     fn test_batch_operations_creation() {
         let tempdir = TempDir::new().unwrap();
-        let cache_manager = CacheManager::with_config(tempdir.path().topath_buf(), 10, 3600);
+        let cache_manager = CacheManager::with_config(tempdir.path().to_path_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager)
             .with_parallel(false)
             .with_retry_config(2, std::time::Duration::from_millis(500));
@@ -1637,7 +1637,7 @@ mod tests {
     #[test]
     fn test_selective_cleanup() {
         let tempdir = TempDir::new().unwrap();
-        let cache_manager = CacheManager::with_config(tempdir.path().topath_buf(), 10, 3600);
+        let cache_manager = CacheManager::with_config(tempdir.path().to_path_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager);
 
         // Create some test files
@@ -1670,7 +1670,7 @@ mod tests {
     #[test]
     fn test_batch_process() {
         let tempdir = TempDir::new().unwrap();
-        let cache_manager = CacheManager::with_config(tempdir.path().topath_buf(), 10, 3600);
+        let cache_manager = CacheManager::with_config(tempdir.path().to_path_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager).with_parallel(false);
 
         // Create test files
@@ -1690,7 +1690,7 @@ mod tests {
         let files = vec!["file1.dat".to_string(), "file2.dat".to_string()];
 
         // Process files (verify they're non-empty)
-        let result = batch_ops.batch_process(&files, |name, data| {
+        let result = batch_ops.batch_process(&files, |_name, data| {
             if data.is_empty() {
                 Err("Empty file")
             } else {
@@ -1706,7 +1706,7 @@ mod tests {
     #[test]
     fn test_get_cache_statistics() {
         let tempdir = TempDir::new().unwrap();
-        let cache_manager = CacheManager::with_config(tempdir.path().topath_buf(), 10, 3600);
+        let cache_manager = CacheManager::with_config(tempdir.path().to_path_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager);
 
         // Start with empty cache
@@ -1745,7 +1745,7 @@ mod tests {
     #[test]
     fn test_cache_manager_creation() {
         let tempdir = TempDir::new().unwrap();
-        let manager = CacheManager::with_config(tempdir.path().topath_buf(), 10, 3600);
+        let manager = CacheManager::with_config(tempdir.path().to_path_buf(), 10, 3600);
         let stats = manager.get_stats();
         assert_eq!(stats.file_count, 0);
     }
@@ -1756,7 +1756,7 @@ mod tests {
         let stats = CacheStats {
             total_size_bytes: 1024,
             file_count: 1,
-            cachedir: tempdir.path().topath_buf(),
+            cachedir: tempdir.path().to_path_buf(),
         };
 
         assert_eq!(stats.formatted_size(), "1.0 KB");
@@ -1764,14 +1764,14 @@ mod tests {
         let stats_large = CacheStats {
             total_size_bytes: 1024 * 1024 * 1024,
             file_count: 1,
-            cachedir: tempdir.path().topath_buf(),
+            cachedir: tempdir.path().to_path_buf(),
         };
 
         assert_eq!(stats_large.formatted_size(), "1.0 GB");
     }
 
     #[test]
-    fn test_hash_filename() {
+    fn test_hash_file_name() {
         let hash1 = DatasetCache::hash_filename("test.csv");
         let hash2 = DatasetCache::hash_filename("test.csv");
         let hash3 = DatasetCache::hash_filename("different.csv");
@@ -1796,7 +1796,7 @@ mod tests {
     fn test_cache_size_management() {
         let tempdir = TempDir::new().unwrap();
         let cache = DatasetCache::with_full_config(
-            tempdir.path().topath_buf(),
+            tempdir.path().to_path_buf(),
             10,
             3600,
             2048, // 2KB limit
@@ -1828,7 +1828,7 @@ mod tests {
     #[test]
     fn test_offline_mode() {
         let tempdir = TempDir::new().unwrap();
-        let mut cache = DatasetCache::new(tempdir.path().topath_buf());
+        let mut cache = DatasetCache::new(tempdir.path().to_path_buf());
 
         assert!(!cache.is_offline());
         cache.set_offline_mode(true);
@@ -1838,7 +1838,7 @@ mod tests {
     #[test]
     fn test_detailed_stats() {
         let tempdir = TempDir::new().unwrap();
-        let cache = DatasetCache::new(tempdir.path().topath_buf());
+        let cache = DatasetCache::new(tempdir.path().to_path_buf());
 
         let test_data = vec![1, 2, 3, 4, 5];
         cache.write_cached("test.dat", &test_data).unwrap();
@@ -1854,13 +1854,13 @@ mod tests {
     #[test]
     fn test_cache_manager() {
         let tempdir = TempDir::new().unwrap();
-        let manager = CacheManager::with_config(tempdir.path().topath_buf(), 10, 3600);
+        let manager = CacheManager::with_config(tempdir.path().to_path_buf(), 10, 3600);
 
         let stats = manager.get_stats();
         assert_eq!(stats.file_count, 0);
         assert_eq!(stats.total_size_bytes, 0);
 
-        assert_eq!(manager.cachedir(), &tempdir.path().topath_buf());
+        assert_eq!(manager.cachedir(), &tempdir.path().to_path_buf());
     }
 
     #[test]

@@ -341,17 +341,17 @@ where
     let trend_strength = F::one() - (diff_var / ts_var);
 
     // Seasonality strength (if seasonal _period is provided)
-    let seasonality_strength = if let Some(_period) = seasonal_period {
-        if n <= _period {
+    let seasonality_strength = if let Some(period) = seasonal_period {
+        if n <= period {
             return Err(TimeSeriesError::FeatureExtractionError(
-                "Time series length must be greater than seasonal _period".to_string(),
+                "Time series length must be greater than seasonal period".to_string(),
             ));
         }
 
         // Calculate seasonal differences
         let mut seasonal_diff = Vec::with_capacity(n - period);
         for i in period..n {
-            seasonal_diff.push(ts[i] - ts[i - _period]);
+            seasonal_diff.push(ts[i] - ts[i - period]);
         }
 
         // Variance of seasonal differences
@@ -720,7 +720,7 @@ fn calculate_interquartile_mean<F>(ts: &Array1<F>, q1: F, q3: F) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    let values_in_iqr: Vec<F> = _ts
+    let values_in_iqr: Vec<F> = ts
         .iter()
         .filter(|&&x| x >= q1 && x <= q3)
         .cloned()
@@ -744,7 +744,7 @@ where
     let n = ts.len();
     let n_f = F::from(n).unwrap();
 
-    let sum = _ts
+    let sum = ts
         .iter()
         .fold(F::zero(), |acc, &x| acc + (x - center).abs());
     Ok(sum / n_f)

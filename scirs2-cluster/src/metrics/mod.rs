@@ -88,7 +88,7 @@ where
             let cluster_idx = unique_labels.iter().position(|&l| l == label).unwrap();
             centers
                 .row_mut(cluster_idx)
-                .scaled_add(F::one(), &_data.row(i));
+                .scaled_add(F::one(), &data.row(i));
             cluster_sizes[cluster_idx] += 1;
         }
     }
@@ -108,7 +108,7 @@ where
         if label >= 0 {
             let cluster_idx = unique_labels.iter().position(|&l| l == label).unwrap();
             let center = centers.row(cluster_idx);
-            let diff = &_data.row(i) - &center;
+            let diff = &data.row(i) - &center;
             let distance = diff.dot(&diff).sqrt();
             scatter[cluster_idx] = scatter[cluster_idx] + distance;
         }
@@ -224,7 +224,7 @@ where
 
     for (i, &label) in labels.iter().enumerate() {
         if label >= 0 {
-            overall_mean.scaled_add(F::one(), &_data.row(i));
+            overall_mean.scaled_add(F::one(), &data.row(i));
             valid_samples += 1;
         }
     }
@@ -240,7 +240,7 @@ where
             let cluster_idx = unique_labels.iter().position(|&l| l == label).unwrap();
             centers
                 .row_mut(cluster_idx)
-                .scaled_add(F::one(), &_data.row(i));
+                .scaled_add(F::one(), &data.row(i));
             cluster_sizes[cluster_idx] += 1;
         }
     }
@@ -268,7 +268,7 @@ where
     for (i, &label) in labels.iter().enumerate() {
         if label >= 0 {
             let cluster_idx = unique_labels.iter().position(|&l| l == label).unwrap();
-            let diff = &_data.row(i) - &centers.row(cluster_idx);
+            let diff = &data.row(i) - &centers.row(cluster_idx);
             ssw = ssw + diff.dot(&diff);
         }
     }
@@ -310,7 +310,7 @@ pub fn mean_silhouette_score<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) ->
 where
     F: Float + FromPrimitive + 'static,
 {
-    silhouette_score(_data, labels)
+    silhouette_score(data, labels)
 }
 
 /// Adjusted Rand Index for comparing two clusterings.
@@ -378,12 +378,12 @@ where
     let n_pred = pred_labels.len();
 
     // Create mapping from labels to indices
-    let true_label_map: std::collections::HashMap<__> = true_labels
+    let true_label_map: std::collections::HashMap<i32, usize> = true_labels
         .iter()
         .enumerate()
         .map(|(i, &label)| (label, i))
         .collect();
-    let pred_label_map: std::collections::HashMap<__> = pred_labels
+    let pred_label_map: std::collections::HashMap<i32, usize> = pred_labels
         .iter()
         .enumerate()
         .map(|(i, &label)| (label, i))
@@ -521,12 +521,12 @@ where
 
 /// Compute mutual information between two label assignments.
 #[allow(dead_code)]
-fn mutual_info<F>(_labels_true: ArrayView1<i32>, labelspred: ArrayView1<i32>) -> Result<F>
+fn mutual_info<F>(labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
     let n = labels_true.len() as f64;
-    let contingency = build_contingency_matrix(_labels_true, labels_pred)?;
+    let contingency = build_contingency_matrix(labels_true, labels_pred)?;
 
     let mut mi = F::zero();
     let n_rows = contingency.shape()[0];
@@ -591,12 +591,12 @@ fn build_contingency_matrix(
         pred_labels.insert(label);
     }
 
-    let true_label_map: std::collections::HashMap<__> = true_labels
+    let true_label_map: std::collections::HashMap<i32, usize> = true_labels
         .iter()
         .enumerate()
         .map(|(i, &label)| (label, i))
         .collect();
-    let pred_label_map: std::collections::HashMap<__> = pred_labels
+    let pred_label_map: std::collections::HashMap<i32, usize> = pred_labels
         .iter()
         .enumerate()
         .map(|(i, &label)| (label, i))
@@ -704,12 +704,12 @@ where
 
 /// Compute conditional entropy H(X|Y).
 #[allow(dead_code)]
-fn conditional_entropy<F>(_labels_x: ArrayView1<i32>, labelsy: ArrayView1<i32>) -> Result<F>
+fn conditional_entropy<F>(labels_x: ArrayView1<i32>, labels_y: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
     let n = labels_x.len() as f64;
-    let contingency = build_contingency_matrix(_labels_x, labels_y)?;
+    let contingency = build_contingency_matrix(labels_x, labels_y)?;
 
     let mut h_xy = F::zero();
     let col_sums = contingency.sum_axis(Axis(0));
@@ -834,7 +834,7 @@ pub mod information_theory {
     ///
     /// The information-theoretic quality score (higher is better)
     pub fn information_cluster_quality<F>(
-        _data: ArrayView2<F>,
+        data: ArrayView2<F>,
         labels: ArrayView1<i32>,
     ) -> Result<F>
     where
@@ -867,7 +867,7 @@ pub mod information_theory {
         let mut valid_samples = 0;
 
         for &cluster_label in &unique_labels {
-            let cluster_data: Vec<_> = _data
+            let clusterdata: Vec<_> = data
                 .rows()
                 .into_iter()
                 .zip(labels.iter())
@@ -880,9 +880,9 @@ pub mod information_theory {
                 })
                 .collect();
 
-            if cluster_data.len() > 1 {
-                let cluster_entropy = compute_data_entropy(&cluster_data)?;
-                let cluster_size = cluster_data.len();
+            if clusterdata.len() > 1 {
+                let cluster_entropy = computedata_entropy(&clusterdata)?;
+                let cluster_size = clusterdata.len();
                 total_within_cluster_entropy += F::from(cluster_size).unwrap() * cluster_entropy;
                 valid_samples += cluster_size;
             }
@@ -892,9 +892,9 @@ pub mod information_theory {
             total_within_cluster_entropy /= F::from(valid_samples).unwrap();
         }
 
-        // Compute overall _data entropy
-        let all_data: Vec<_> = data.rows().into_iter().collect();
-        let overall_entropy = compute_data_entropy(&all_data)?;
+        // Compute overall data entropy
+        let alldata: Vec<_> = data.rows().into_iter().collect();
+        let overall_entropy = computedata_entropy(&alldata)?;
 
         // Information gain (reduction in entropy due to clustering)
         let information_gain = overall_entropy - total_within_cluster_entropy;
@@ -903,7 +903,7 @@ pub mod information_theory {
     }
 
     /// Compute entropy of a dataset based on feature variance.
-    fn compute_data_entropy<F>(data: &[ndarray::ArrayView1<F>]) -> Result<F>
+    fn computedata_entropy<F>(data: &[ndarray::ArrayView1<F>]) -> Result<F>
     where
         F: Float + FromPrimitive + Debug + 'static,
     {
@@ -1066,14 +1066,14 @@ pub mod stability {
             indices.sort();
 
             // Extract _bootstrap sample
-            let bootstrap_data = data.select(ndarray::Axis(0), &indices);
+            let bootstrapdata = data.select(ndarray::Axis(0), &indices);
 
             // Perform clustering (using k-means as default)
             let max_iter = 100;
             let thresh = F::from(1e-6).unwrap();
 
             match kmeans2(
-                bootstrap_data.view(),
+                bootstrapdata.view(),
                 n_clusters,
                 Some(max_iter),
                 Some(thresh),
@@ -1137,14 +1137,14 @@ pub mod stability {
     }
 
     /// Find indices that appear in both bootstrap samples.
-    fn find_common_indices(_indices_a: &[usize], indicesb: &[usize]) -> Vec<usize> {
+    fn find_common_indices(indices_a: &[usize], indices_b: &[usize]) -> Vec<usize> {
         let mut common = Vec::new();
         let mut i = 0;
         let mut j = 0;
 
         while i < indices_a.len() && j < indices_b.len() {
             if indices_a[i] == indices_b[j] {
-                common.push(_indices_a[i]);
+                common.push(indices_a[i]);
                 i += 1;
                 j += 1;
             } else if indices_a[i] < indices_b[j] {
@@ -1278,7 +1278,7 @@ pub mod advanced {
         for i in 0..n_samples {
             for j in (i + 1)..n_samples {
                 if labels[i] >= 0 && labels[j] >= 0 && labels[i] != labels[j] {
-                    let distance = euclidean_distance(_data.row(i), data.row(j));
+                    let distance = euclidean_distance(data.row(i), data.row(j));
                     if distance < min_inter_cluster {
                         min_inter_cluster = distance;
                     }
@@ -1327,7 +1327,7 @@ pub mod advanced {
     where
         F: Float + FromPrimitive + Debug + 'static,
     {
-        let diff = &_point1 - &point2;
+        let diff = &point1 - &point2;
         diff.dot(&diff).sqrt()
     }
 
@@ -1375,7 +1375,7 @@ pub mod advanced {
         let mut total_variance = 0.0;
 
         for &cluster_label in &unique_labels {
-            let cluster_data: Vec<_> = _data
+            let clusterdata: Vec<_> = data
                 .rows()
                 .into_iter()
                 .zip(labels.iter())
@@ -1388,13 +1388,13 @@ pub mod advanced {
                 })
                 .collect();
 
-            if cluster_data.len() > 1 {
+            if clusterdata.len() > 1 {
                 // Compute cluster variance
-                let n_cluster = cluster_data.len() as f64;
-                let mean = compute_cluster_mean(&cluster_data);
+                let n_cluster = clusterdata.len() as f64;
+                let mean = compute_cluster_mean(&clusterdata);
 
                 let mut cluster_variance = 0.0;
-                for row in &cluster_data {
+                for row in &clusterdata {
                     let diff = row.to_owned() - &mean;
                     cluster_variance += diff.dot(&diff).to_f64().unwrap();
                 }
@@ -1419,22 +1419,22 @@ pub mod advanced {
     }
 
     /// Compute mean of cluster data points.
-    fn compute_cluster_mean<F>(_clusterdata: &[ndarray::ArrayView1<F>]) -> ndarray::Array1<F>
+    fn compute_cluster_mean<F>(clusterdata: &[ndarray::ArrayView1<F>]) -> ndarray::Array1<F>
     where
         F: Float + FromPrimitive + Debug + 'static,
     {
-        if cluster_data.is_empty() {
+        if clusterdata.is_empty() {
             return ndarray::Array1::zeros(0);
         }
 
-        let n_features = cluster_data[0].len();
+        let n_features = clusterdata[0].len();
         let mut mean = ndarray::Array1::zeros(n_features);
 
-        for row in cluster_data {
+        for row in clusterdata {
             mean = mean + row;
         }
 
-        mean / F::from(cluster_data.len()).unwrap()
+        mean / F::from(clusterdata.len()).unwrap()
     }
 }
 
@@ -1551,9 +1551,9 @@ pub mod ensemble {
         F: Float + FromPrimitive + Debug + PartialOrd + 'static,
     {
         // Compute individual metrics
-        let silhouette = silhouette_score(_data, labels)?;
-        let davies_bouldin = davies_bouldin_score(_data, labels)?;
-        let calinski_harabasz = calinski_harabasz_score(_data, labels)?;
+        let silhouette = silhouette_score(data, labels)?;
+        let davies_bouldin = davies_bouldin_score(data, labels)?;
+        let calinski_harabasz = calinski_harabasz_score(data, labels)?;
 
         // Normalize Davies-Bouldin score (lower is better -> higher is better)
         let db_normalized = F::one() / (F::one() + davies_bouldin);
@@ -1626,14 +1626,14 @@ pub mod ensemble {
             }
 
             // Extract training data
-            let train_data = data.select(ndarray::Axis(0), &train_indices);
+            let traindata = data.select(ndarray::Axis(0), &train_indices);
 
             // Perform clustering on training data
             let max_iter = 100;
             let thresh = F::from(1e-6).unwrap();
 
             match kmeans2(
-                train_data.view(),
+                traindata.view(),
                 n_clusters,
                 Some(max_iter),
                 Some(thresh),
@@ -1642,7 +1642,7 @@ pub mod ensemble {
                 Some(true),
                 None,
             ) {
-                Ok((centers_)) => {
+                Ok((centers)) => {
                     // Predict labels for test fold
                     let mut test_labels = Vec::new();
                     for i in start_idx..end_idx {
@@ -1661,11 +1661,11 @@ pub mod ensemble {
 
                     // Extract test data
                     let test_indices: Vec<usize> = (start_idx..end_idx).collect();
-                    let test_data = data.select(ndarray::Axis(0), &test_indices);
+                    let testdata = data.select(ndarray::Axis(0), &test_indices);
                     let test_labels_array = Array1::from_vec(test_labels);
 
                     // Compute silhouette score for test fold
-                    if let Ok(score) = silhouette_score(test_data.view(), test_labels_array.view())
+                    if let Ok(score) = silhouette_score(testdata.view(), test_labels_array.view())
                     {
                         cv_scores.push(score);
                     }
@@ -1735,7 +1735,7 @@ pub mod ensemble {
                 .unwrap_or(F::zero());
 
         // 3. Consensus clustering
-        let _consensus =
+        let consensus =
             consensus_clustering_score(data, n_clusters, n_consensus).unwrap_or(F::zero());
 
         // 4. Cross-validation score
@@ -1802,19 +1802,19 @@ pub mod ensemble {
             indices.shuffle(&mut rng);
 
             // Sample with replacement
-            let _bootstrap_indices: Vec<usize> = (0..n_samples)
+            let bootstrap_indices: Vec<usize> = (0..n_samples)
                 .map(|_| indices[rng.gen_range(0..n_samples)])
                 .collect();
 
             // Extract _bootstrap sample
-            let bootstrap_data = data.select(ndarray::Axis(0)..&bootstrap_indices);
-            let _bootstrap_labels: Vec<i32> =
+            let bootstrapdata = data.select(ndarray::Axis(0)..&bootstrap_indices);
+            let bootstrap_labels: Vec<i32> =
                 bootstrap_indices.iter().map(|&i| labels[i]).collect();
             let bootstrap_labels_array = Array1::from_vec(bootstrap_labels);
 
             // Compute metric (using silhouette score as example)
             if let Ok(score) =
-                silhouette_score(bootstrap_data.view(), bootstrap_labels_array.view())
+                silhouette_score(bootstrapdata.view(), bootstrap_labels_array.view())
             {
                 bootstrap_scores.push(score);
             }
@@ -1978,7 +1978,7 @@ pub mod advanced_stability {
             indices.truncate(subsample_size);
             indices.sort();
 
-            let bootstrap_data = data.select(ndarray::Axis(0), &indices);
+            let bootstrapdata = data.select(ndarray::Axis(0), &indices);
 
             // Enhanced clustering with multiple initialization attempts
             let mut best_labels = None;
@@ -1986,7 +1986,7 @@ pub mod advanced_stability {
 
             for seed in 0..3 {
                 if let Ok((_, labels)) = kmeans2(
-                    bootstrap_data.view(),
+                    bootstrapdata.view(),
                     n_clusters,
                     Some(150),
                     Some(F::from(1e-6).unwrap()),
@@ -1996,7 +1996,7 @@ pub mod advanced_stability {
                     Some(seed),
                 ) {
                     // Compute inertia to select best clustering
-                    let inertia = compute_clustering_inertia(&bootstrap_data, &labels)?;
+                    let inertia = compute_clustering_inertia(&bootstrapdata, &labels)?;
                     if inertia < best_inertia {
                         best_inertia = inertia;
                         best_labels = Some(labels);
@@ -2134,15 +2134,15 @@ pub mod advanced_stability {
 
             for _trial in 0..n_trials {
                 // Add noise to data
-                let mut noisy_data = data.to_owned();
-                for element in noisy_data.iter_mut() {
+                let mut noisydata = data.to_owned();
+                for element in noisydata.iter_mut() {
                     let noise = rng.gen_range(-current_noise..current_noise);
                     *element = *element + F::from(noise).unwrap();
                 }
 
                 // Cluster noisy data
                 if let Ok((_, noisy_labels)) = kmeans2(
-                    noisy_data.view(),
+                    noisydata.view(),
                     n_clusters,
                     Some(100),
                     Some(F::from(1e-6).unwrap()),
@@ -2225,11 +2225,11 @@ pub mod advanced_stability {
                 feature_indices.sort();
 
                 // Extract feature subset
-                let subset_data = data.select(ndarray::Axis(1), &feature_indices);
+                let subsetdata = data.select(ndarray::Axis(1), &feature_indices);
 
                 // Cluster on feature subset
                 if let Ok((_, subset_labels)) = kmeans2(
-                    subset_data.view(),
+                    subsetdata.view(),
                     n_clusters,
                     Some(100),
                     Some(F::from(1e-6).unwrap()),
@@ -2274,7 +2274,7 @@ pub mod advanced_stability {
     }
 
     /// Connectivity-based stability analysis
-    fn connectivity_stability_analysis<F>(_data: ArrayView2<F>, nclusters: usize) -> Result<F>
+    fn connectivity_stability_analysis<F>(data: ArrayView2<F>, nclusters: usize) -> Result<F>
     where
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
@@ -2288,12 +2288,12 @@ pub mod advanced_stability {
             }
 
             // Build k-NN connectivity matrix
-            let connectivity_matrix = build_knn_connectivity_matrix(_data, k)?;
+            let connectivity_matrix = build_knn_connectivity_matrix(data, k)?;
 
             // Perform clustering
             let (_, labels) = kmeans2(
                 data,
-                n_clusters,
+                nclusters,
                 Some(100),
                 Some(F::from(1e-6).unwrap()),
                 Some(MinitMethod::PlusPlus),
@@ -2458,7 +2458,7 @@ pub mod advanced_stability {
         let mut cluster_counts = vec![0; n_clusters];
 
         for (i, &label) in labels.iter().enumerate() {
-            centers.row_mut(label).scaled_add(F::one(), &_data.row(i));
+            centers.row_mut(label).scaled_add(F::one(), &data.row(i));
             cluster_counts[label] += 1;
         }
 
@@ -2473,21 +2473,21 @@ pub mod advanced_stability {
         // Compute inertia
         let mut inertia = F::zero();
         for (i, &label) in labels.iter().enumerate() {
-            let diff = &_data.row(i) - &centers.row(label);
+            let diff = &data.row(i) - &centers.row(label);
             inertia = inertia + diff.dot(&diff);
         }
 
         Ok(inertia)
     }
 
-    fn find_common_indices(_indices_a: &[usize], indicesb: &[usize]) -> Vec<usize> {
+    fn find_common_indices(indices_a: &[usize], indices_b: &[usize]) -> Vec<usize> {
         let mut common = Vec::new();
         let mut i = 0;
         let mut j = 0;
 
         while i < indices_a.len() && j < indices_b.len() {
             if indices_a[i] == indices_b[j] {
-                common.push(_indices_a[i]);
+                common.push(indices_a[i]);
                 i += 1;
                 j += 1;
             } else if indices_a[i] < indices_b[j] {
@@ -2542,7 +2542,7 @@ pub mod advanced_stability {
         }
     }
 
-    fn compute_co_association_stability(_comatrix: &Array2<f64>) -> f64 {
+    fn compute_co_association_stability(co_matrix: &Array2<f64>) -> f64 {
         if co_matrix.is_empty() {
             return 0.0;
         }
@@ -2568,14 +2568,14 @@ pub mod advanced_stability {
         for i in 0..n_samples {
             let mut distances: Vec<(usize, F)> = (0..n_samples)
                 .map(|j| {
-                    let diff = &_data.row(i) - &_data.row(j);
+                    let diff = &data.row(i) - &data.row(j);
                     (j, diff.dot(&diff).sqrt())
                 })
                 .collect();
 
             distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
 
-            for &(neighbor_idx_) in distances.iter().take(k + 1).skip(1) {
+            for &(neighbor_idx, _) in distances.iter().take(k + 1).skip(1) {
                 connectivity[[i, neighbor_idx]] = true;
                 connectivity[[neighbor_idx, i]] = true; // Make symmetric
             }
@@ -2648,7 +2648,7 @@ pub mod advanced_stability {
 
         // Build k-NN graph
         let k = (n_samples as f64).sqrt() as usize;
-        let adjacency = build_knn_connectivity_matrix(_data, k)?;
+        let adjacency = build_knn_connectivity_matrix(data, k)?;
 
         // Compute modularity
         let modularity = compute_modularity(&adjacency, &labels)?;
@@ -2703,7 +2703,7 @@ pub mod advanced_stability {
             let mut internal_edges = 0;
 
             for &i in &cluster_indices {
-                for j in 0.._adjacency.shape()[1] {
+                for j in 0..adjacency.shape()[1] {
                     if adjacency[[i, j]] {
                         if cluster_indices.contains(&j) {
                             internal_edges += 1;

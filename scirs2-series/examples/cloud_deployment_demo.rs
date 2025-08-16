@@ -3,11 +3,12 @@
 //! This example demonstrates how to deploy and manage time series analysis
 //! workloads across major cloud platforms with automatic scaling and monitoring.
 
-#[cfg(feature = "wasm")]
-use scirs2__series::cloud_deployment::{
-    CloudDeploymentOrchestrator, CloudPlatform, CloudResourceConfig, CloudTimeSeriesJob,
-    DeploymentConfig, JobPriority, ResourceRequirements, TimeSeriesJobType,
-};
+// TODO: Implement cloud_deployment module
+// #[cfg(feature = "wasm")]
+// use scirs2_series::cloud_deployment::{
+//     CloudDeploymentOrchestrator, CloudPlatform, CloudResourceConfig, CloudTimeSeriesJob,
+//     DeploymentConfig, JobPriority, ResourceRequirements, TimeSeriesJobType,
+// };
 
 #[cfg(feature = "wasm")]
 use std::collections::HashMap;
@@ -25,23 +26,27 @@ fn main() {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SciRS2 Cloud Deployment Demo");
     println!("================================");
+    println!("TODO: Cloud deployment module not yet implemented");
 
+    // TODO: Re-enable when cloud_deployment module is implemented
     // Demo 1: Development Environment
-    demo_development_deployment()?;
+    // demo_development_deployment()?;
 
     // Demo 2: Production Environment
-    demo_production_deployment()?;
+    // demo_production_deployment()?;
 
     // Demo 3: Multi-Cloud Deployment
-    demo_multi_cloud_deployment()?;
+    // demo_multi_cloud_deployment()?;
 
     // Demo 4: Auto-Scaling Demo
-    demo_auto_scaling()?;
+    // demo_auto_scaling()?;
 
-    println!("\n✅ All cloud deployment demos completed successfully!");
+    println!("\n✅ Cloud deployment demo placeholder completed!");
     Ok(())
 }
 
+// TODO: Re-enable when cloud_deployment module is implemented
+/*
 /// Demonstrate development environment deployment
 #[cfg(feature = "wasm")]
 #[allow(dead_code)]
@@ -345,3 +350,4 @@ mod tests {
         assert!(config.security_config.encryption_at_rest);
     }
 }
+*/

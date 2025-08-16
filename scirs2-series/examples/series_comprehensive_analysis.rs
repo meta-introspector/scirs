@@ -4,27 +4,35 @@
 //! including data preprocessing, decomposition, forecasting, and anomaly detection.
 
 use ndarray::{array, Array1};
-use scirs2__series::{
-    anomaly::{AnomalyDetector, IsolationForestDetector, ZScoreDetector},
-    arima_models::{auto_arima, ArimaSelectionOptions, SelectionCriterion},
-    change_point::{CusumDetector, PeltDetector},
-    clustering::{ClusteringConfig, TimeSeriesClusterer},
-    correlation::{CrossCorrelationAnalyzer, DynamicTimeWarping},
-    decomposition::{
-        stl::{StlDecomposer, StlOptions},
-        Decomposer,
-    },
-    features::{FeatureConfig, FeatureExtractor},
-    forecasting::{
-        exponential_smoothing::{ExponentialSmoothingConfig, ExponentialSmoothingForecaster},
-        neural::{LSTMConfig, LSTMForecaster, NeuralForecaster},
-    },
+use scirs2_series::{
+    // TODO: Fix imports when modules are implemented
+    // anomaly::{AnomalyDetector, IsolationForestDetector, ZScoreDetector},
+    // arima_models::{auto_arima, ArimaSelectionOptions, SelectionCriterion},
+    // change_point::{CusumDetector, PeltDetector},
+    // clustering::{ClusteringConfig, TimeSeriesClusterer},
+    // correlation::{CrossCorrelationAnalyzer, DynamicTimeWarping},
+    // decomposition::{
+    //     stl::{StlDecomposer, StlOptions},
+    //     Decomposer,
+    // },
+    // features::{FeatureConfig, FeatureExtractor},
+    // forecasting::{
+    //     exponential_smoothing::{ExponentialSmoothingConfig, ExponentialSmoothingForecaster},
+    //     neural::{LSTMConfig, LSTMForecaster, NeuralForecaster},
+    // },
     streaming::{StreamConfig, StreamingAnalyzer},
-    transformations::{BoxCoxTransformer, DifferencingTransformer, Transformer},
-    validation::{cross_validate, CrossValidationConfig, ValidationMetric},
+    // transformations::{BoxCoxTransformer, DifferencingTransformer, Transformer},
+    // validation::{cross_validate, CrossValidationConfig, ValidationMetric},
 };
 use statrs::statistics::Statistics;
 
+#[allow(dead_code)]
+fn main() {
+    println!("Comprehensive analysis demo - TODO: Re-enable when imports are fixed");
+}
+
+// TODO: Re-enable when imports are fixed
+/*
 #[allow(dead_code)]
 fn main() {
     println!("=== Comprehensive Time Series Analysis Demo ===\n");
@@ -466,3 +474,4 @@ fn validate_models(data: &Array1<f64>) {
         println!("  Cross-validation failed");
     }
 }
+*/

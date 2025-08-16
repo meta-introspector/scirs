@@ -91,18 +91,18 @@ where
                         for kx in 0..3 {
                             let kernel_val = kernel_flat[ky * 3 + kx];
                             let input_y = y as isize + ky as isize - 1;
-                            let mut input_values = vec![T::zero(); simd_width];
+                            let mut inputvalues = vec![T::zero(); simd_width];
 
                             // Gather input values with boundary handling
                             for i in 0..simd_width {
                                 let input_x = x as isize + i as isize + kx as isize - 1;
-                                input_values[i] =
+                                inputvalues[i] =
                                     get_boundary_value_safe(&input, input_y, input_x, mode)?;
                             }
 
                             // SIMD multiply-accumulate
                             let kernel_vec = vec![kernel_val; simd_width];
-                            let products = T::simd_mul(&input_values, &kernel_vec);
+                            let products = T::simd_mul(&inputvalues, &kernel_vec);
                             results = T::simd_add(&results, &products);
                         }
                     }
@@ -175,16 +175,16 @@ where
                         for kx in 0..5 {
                             let kernel_val = kernel_flat[ky * 5 + kx];
                             let input_y = y as isize + ky as isize - 2;
-                            let mut input_values = vec![T::zero(); simd_width];
+                            let mut inputvalues = vec![T::zero(); simd_width];
 
                             for i in 0..simd_width {
                                 let input_x = x as isize + i as isize + kx as isize - 2;
-                                input_values[i] =
+                                inputvalues[i] =
                                     get_boundary_value_safe(&input, input_y, input_x, mode)?;
                             }
 
                             let kernel_vec = vec![kernel_val; simd_width];
-                            let products = T::simd_mul(&input_values, &kernel_vec);
+                            let products = T::simd_mul(&inputvalues, &kernel_vec);
                             results = T::simd_add(&results, &products);
                         }
                     }
@@ -256,17 +256,17 @@ where
                         for kx in 0..kernel_width {
                             let kernel_val = kernel[(ky, kx)];
                             let input_y = y as isize + ky as isize - kernel_center_y as isize;
-                            let mut input_values = vec![T::zero(); simd_width];
+                            let mut inputvalues = vec![T::zero(); simd_width];
 
                             for i in 0..simd_width {
                                 let input_x = x as isize + i as isize + kx as isize
                                     - kernel_center_x as isize;
-                                input_values[i] =
+                                inputvalues[i] =
                                     get_boundary_value_safe(&input, input_y, input_x, mode)?;
                             }
 
                             let kernel_vec = vec![kernel_val; simd_width];
-                            let products = T::simd_mul(&input_values, &kernel_vec);
+                            let products = T::simd_mul(&inputvalues, &kernel_vec);
                             results = T::simd_add(&results, &products);
                         }
                     }
@@ -352,15 +352,15 @@ where
 
             // Apply kernel horizontally with SIMD
             for (kx, &kernel_val) in kernel.iter().enumerate() {
-                let mut input_values = vec![T::zero(); simd_width];
+                let mut inputvalues = vec![T::zero(); simd_width];
 
                 for i in 0..simd_width {
                     let input_x = x as isize + i as isize + kx as isize - kernel_center as isize;
-                    input_values[i] = get_boundary_value_safe(&input, y as isize, input_x, mode)?;
+                    inputvalues[i] = get_boundary_value_safe(&input, y as isize, input_x, mode)?;
                 }
 
                 let kernel_vec = vec![kernel_val; simd_width];
-                let products = T::simd_mul(&input_values, &kernel_vec);
+                let products = T::simd_mul(&inputvalues, &kernel_vec);
                 results = T::simd_add(&results, &products);
             }
 
@@ -416,15 +416,15 @@ where
             // Apply kernel vertically with SIMD
             for (ky, &kernel_val) in kernel.iter().enumerate() {
                 let input_y = y as isize + ky as isize - kernel_center as isize;
-                let mut input_values = vec![T::zero(); simd_width];
+                let mut inputvalues = vec![T::zero(); simd_width];
 
                 for i in 0..simd_width {
-                    input_values[i] =
+                    inputvalues[i] =
                         get_boundary_value_safe(&input, input_y, x as isize + i as isize, mode)?;
                 }
 
                 let kernel_vec = vec![kernel_val; simd_width];
-                let products = T::simd_mul(&input_values, &kernel_vec);
+                let products = T::simd_mul(&inputvalues, &kernel_vec);
                 results = T::simd_add(&results, &products);
             }
 
@@ -644,12 +644,12 @@ where
 #[allow(dead_code)]
 fn reflect_coordinate(coord: isize, size: usize) -> usize {
     let size_i = size as isize;
-    if _coord < 0 {
-        (-_coord - 1).min(size_i - 1) as usize
-    } else if _coord >= size_i {
-        (2 * size_i - _coord - 1).max(0) as usize
+    if coord < 0 {
+        (-coord - 1).min(size_i - 1) as usize
+    } else if coord >= size_i {
+        (2 * size_i - coord - 1).max(0) as usize
     } else {
-        _coord as usize
+        coord as usize
     }
 }
 
@@ -661,7 +661,7 @@ fn clamp_coordinate(coord: isize, size: usize) -> usize {
 #[allow(dead_code)]
 fn wrap_coordinate(coord: isize, size: usize) -> usize {
     let size_i = size as isize;
-    ((_coord % size_i + size_i) % size_i) as usize
+    ((coord % size_i + size_i) % size_i) as usize
 }
 
 #[allow(dead_code)]
@@ -672,7 +672,7 @@ fn mirror_coordinate(coord: isize, size: usize) -> usize {
     }
 
     let period = 2 * (size_i - 1);
-    let wrapped = ((_coord % period + period) % period) as usize;
+    let wrapped = ((coord % period + period) % period) as usize;
 
     if wrapped < size {
         wrapped
@@ -694,7 +694,7 @@ where
         return None;
     }
 
-    Some(quickselect(_values, target).clone())
+    Some(quickselect(values, target).clone())
 }
 
 #[allow(dead_code)]
@@ -703,13 +703,13 @@ where
     T: PartialOrd,
 {
     if values.len() == 1 {
-        return &_values[0];
+        return &values[0];
     }
 
-    let pivot_index = partition(_values);
+    let pivot_index = partition(values);
 
     if k == pivot_index {
-        &_values[pivot_index]
+        &values[pivot_index]
     } else if k < pivot_index {
         quickselect(&mut values[..pivot_index], k)
     } else {
@@ -753,7 +753,7 @@ where
     values[6..9].sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     // Find median of medians
-    let mut medians = [_values[1].clone(), values[4].clone(), values[7].clone()];
+    let mut medians = [values[1].clone(), values[4].clone(), values[7].clone()];
     medians.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     medians[1].clone()
@@ -835,8 +835,8 @@ mod tests {
         let median = quickselect_median(&mut values);
         assert_eq!(median, Some(5.0));
 
-        let mut even_values = vec![4.0, 2.0, 7.0, 1.0];
-        let median_even = quickselect_median(&mut even_values);
+        let mut evenvalues = vec![4.0, 2.0, 7.0, 1.0];
+        let median_even = quickselect_median(&mut evenvalues);
         // For even length, this returns the "upper median"
         assert!(median_even == Some(4.0) || median_even == Some(2.0));
     }

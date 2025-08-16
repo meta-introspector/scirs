@@ -126,7 +126,7 @@ use scirs2_ndimage::filters::{median_filter, BorderMode};
 use ndarray::Array2;
 
 // Create image with impulse noise
-let mut image_with_impulses = Array2::fromshape_fn((50, 50), |(i, j)| {
+let mut image_with_impulses = Array2::from_shape_fn((50, 50), |(i, j)| {
     // Create some structure
     if (i as i32 - 25).pow(2) + (j as i32 - 25).pow(2) < 100 {
         1.0
@@ -178,7 +178,7 @@ use scirs2_ndimage::filters::{sobel, laplace, gaussian_filter};
 use ndarray::Array2;
 
 // Create test image with clear edges
-let image = Array2::fromshape_fn((60, 60), |(i, j)| {
+let image = Array2::from_shape_fn((60, 60), |(i, j)| {
     if i > 30 && j > 30 {
         1.0
     } else if i < 20 || j < 20 {
@@ -200,7 +200,7 @@ let edges_magnitude = sobel(&smoothed, None, None, None)?; // Gradient magnitude
 let laplacian_edges = laplace(&smoothed, None)?;
 
 // Combine for comprehensive edge detection
-let combined_edges = Array2::fromshape_fn(image.dim(), |(i, j)| {
+let combined_edges = Array2::from_shape_fn(image.dim(), |(i, j)| {
     let sobel_val = edges_magnitude[[i, j]];
     let laplacian_val = laplacian_edges[[i, j]].abs();
     (sobel_val + 0.5 * laplacian_val).min(1.0)
@@ -311,7 +311,7 @@ use scirs2_ndimage::morphology::{
 use ndarray::Array2;
 
 // Create grayscale test image
-let image = Array2::fromshape_fn((60, 60), |(i, j)| {
+let image = Array2::from_shape_fn((60, 60), |(i, j)| {
     let center_i = 30.0;
     let center_j = 30.0;
     let distance = ((i as f64 - center_i).powi(2) + (j as f64 - center_j).powi(2)).sqrt();
@@ -339,7 +339,7 @@ let black_hat = black_tophat(&image, None, None, None, None, None)?; // Dark fea
 let gradient = morphological_gradient(&image, None, None, None, None, None)?;
 
 // Enhance contrast by combining operations
-let enhanced = Array2::fromshape_fn(image.dim(), |(i, j)| {
+let enhanced = Array2::from_shape_fn(image.dim(), |(i, j)| {
     let original = image[[i, j]];
     let white_feature = "white_hat"[[i, j]];
     let black_feature = "black_hat"[[i, j]];
@@ -384,7 +384,7 @@ use scirs2_ndimage::interpolation::{
 use ndarray::{Array2, Array1};
 
 // Create test image with clear features
-let image = Array2::fromshape_fn((40, 40), |(i, j)| {
+let image = Array2::from_shape_fn((40, 40), |(i, j)| {
     let x = i as f64 - 20.0;
     let y = j as f64 - 20.0;
     
@@ -427,7 +427,7 @@ let transformed = affine_transform(
 )?;
 
 // Custom coordinate mapping
-let coords = Array2::fromshape_fn((2, 40 * 40), |(axis, idx)| {
+let coords = Array2::from_shape_fn((2, 40 * 40), |(axis, idx)| {
     let i = idx / 40;
     let j = idx % 40;
     match axis {
@@ -515,7 +515,7 @@ println!("Min value: {} at {:?}", min_val, min_pos);
 println!("Max value: {} at {:?}", max_val, max_pos);
 
 // Label connected components for individual object analysis
-let binary_image = Array2::fromshape_fn(image.dim(), |(i, j)| image[[i, j]] > 0.0);
+let binary_image = Array2::from_shape_fn(image.dim(), |(i, j)| image[[i, j]] > 0.0);
 let (labeled, num_labels) = label(&binary_image, None)?;
 
 println!("Found {} connected objects", num_labels);
@@ -586,7 +586,7 @@ use scirs2_ndimage::morphology::{binary_erosion, label};
 use ndarray::Array2;
 
 // Create test image with multiple regions
-let image = Array2::fromshape_fn((80, 80), |(i, j)| {
+let image = Array2::from_shape_fn((80, 80), |(i, j)| {
     let x = i as f64 - 40.0;
     let y = j as f64 - 40.0;
     let distance = (x * x + y * y).sqrt();
@@ -600,7 +600,7 @@ let image = Array2::fromshape_fn((80, 80), |(i, j)| {
     } else {
         0.1  // Dark background
     }
-}) + Array2::fromshape_fn((80, 80), |(i, j)| {
+}) + Array2::from_shape_fn((80, 80), |(i, j)| {
     0.05 * ((i as f64 * 0.2).sin() + (j as f64 * 0.3).cos())  // Add some texture
 });
 
@@ -654,7 +654,7 @@ println!("- Basic watershed found {} regions", watershed_result.iter().max().unw
 println!("- Marker-controlled watershed with {} markers", num_markers);
 
 // Combine different segmentation results
-let combined_segmentation = Array2::fromshape_fn(image.dim(), |(i, j)| {
+let combined_segmentation = Array2::from_shape_fn(image.dim(), |(i, j)| {
     let otsu_val = if binary_otsu[[i, j]] { 1 } else { 0 };
     let adaptive_val = if binary_adaptive_gaussian[[i, j]] { 2 } else { 0 };
     let watershed_val = watershed_result[[i, j]] * 3;
@@ -697,7 +697,7 @@ use scirs2_ndimage::filters::gaussian_filter;
 use ndarray::Array2;
 
 // Create test image with corners and edges
-let image = Array2::fromshape_fn((60, 60), |(i, j)| {
+let image = Array2::from_shape_fn((60, 60), |(i, j)| {
     // Create a rectangular structure with internal features
     if (i > 15 && i < 45 && j > 15 && j < 45) {
         if (i > 25 && i < 35 && j > 25 && j < 35) {
@@ -708,7 +708,7 @@ let image = Array2::fromshape_fn((60, 60), |(i, j)| {
     } else {
         0.1  // Background (dark)
     }
-}) + Array2::fromshape_fn((60, 60), |(i, j)| {
+}) + Array2::from_shape_fn((60, 60), |(i, j)| {
     // Add some texture and additional features
     if (i as i32 - 20).pow(2) + (j as i32 - 40).pow(2) < 25 {
         0.2  // Small circle
@@ -788,7 +788,7 @@ let fast_corners_result = fast_corners(
 println!("FAST corner detection found {} corners", fast_corners_result.len());
 
 // Combine edge and corner information
-let feature_map = Array2::fromshape_fn(image.dim(), |(i, j)| {
+let feature_map = Array2::from_shape_fn(image.dim(), |(i, j)| {
     let edge_val = if canny_edges[[i, j]] { 0.5 } else { 0.0 };
     let harris_val = harris_response[[i, j]] * 2.0;
     let fast_val = if fast_corners_result.iter().any(|&(r, c)| r == i && c == j) { 0.3 } else { 0.0 };
@@ -829,7 +829,7 @@ use statrs::statistics::Statistics;
 // Analyzing cellular structures in microscopy images
 
 // Create synthetic microscopy image
-let image = Array2::fromshape_fn((100, 100), |(i, j)| {
+let image = Array2::from_shape_fn((100, 100), |(i, j)| {
     let mut intensity = 0.1; // Background
     
     // Add several "cells" with varying intensities
@@ -927,7 +927,7 @@ println!("   Image quality (SNR): {:.2}", signal_to_noise);
 println!("   Edge density: {:.1}%", edge_count as f64 / (100.0 * 100.0) * 100.0);
 
 // Create analysis result visualization
-let visualization = Array2::fromshape_fn(image.dim(), |(i, j)| {
+let visualization = Array2::from_shape_fn(image.dim(), |(i, j)| {
     let original = image[[i, j]];
     let has_edge = edges[[i, j]];
     let label_val = labeled[[i, j]] as f64 / num_objects as f64;

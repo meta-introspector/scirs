@@ -8,9 +8,9 @@ use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::Array1;
 use rand::prelude::*;
+use rand::rng;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
-use rand::thread_rng;
 use std::collections::HashMap;
 
 /// Cross-validation fold indices
@@ -73,7 +73,7 @@ pub fn train_test_split(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -170,14 +170,14 @@ pub fn k_fold_split(
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
             None => {
-                let mut r = thread_rng();
+                let mut r = rng();
                 StdRng::seed_from_u64(r.next_u64())
             }
         };
         indices.shuffle(&mut rng);
     }
 
-    let mut _folds = Vec::new();
+    let mut folds = Vec::new();
     let fold_size = n_samples / n_folds;
     let remainder = n_samples % n_folds;
 
@@ -193,7 +193,7 @@ pub fn k_fold_split(
         folds.push((train_indices, validation_indices));
     }
 
-    Ok(_folds)
+    Ok(folds)
 }
 
 /// Performs stratified K-fold cross-validation splitting
@@ -261,7 +261,7 @@ pub fn stratified_k_fold_split(
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
             None => {
-                let mut r = thread_rng();
+                let mut r = rng();
                 StdRng::seed_from_u64(r.next_u64())
             }
         };
@@ -272,7 +272,7 @@ pub fn stratified_k_fold_split(
     }
 
     // Create _folds while maintaining class proportions
-    let mut _folds = vec![Vec::new(); n_folds];
+    let mut folds = vec![Vec::new(); n_folds];
 
     for (_, indices) in class_indices {
         let class_size = indices.len();

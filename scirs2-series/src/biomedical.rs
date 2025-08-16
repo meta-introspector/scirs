@@ -92,7 +92,7 @@ impl ECGAnalysis {
 
         // Initialize thresholds
         if integrated.len() > 100 {
-            signal_level = integrated.slice(ndarray::s![0..100]).mean().unwrap() * 4.0;
+            signal_level = integrated.slice(ndarray::s![0..100]).mean() * 4.0;
             noise_level = signal_level / 4.0;
             threshold1 = noise_level + 0.25 * (signal_level - noise_level);
             threshold2 = 0.5 * threshold1;
@@ -156,13 +156,13 @@ impl ECGAnalysis {
                 metrics.insert("RMSSD".to_string(), rmssd);
 
                 // SDNN: Standard deviation of NN intervals
-                let _mean_rr = rr_intervals.mean().unwrap();
+                let _mean_rr = rr_intervals.clone().mean();
                 let sdnn = rr_intervals.std(0.0) * 1000.0; // ms
                 metrics.insert("SDNN".to_string(), sdnn);
 
                 // Heart rate statistics
                 let heart_rates: Array1<f64> = rr_intervals.iter().map(|&rr| 60.0 / rr).collect();
-                let mean_hr = heart_rates.mean().unwrap();
+                let mean_hr = heart_rates.clone().mean();
                 let std_hr = heart_rates.std(0.0);
                 metrics.insert("Mean_HR".to_string(), mean_hr);
                 metrics.insert("Std_HR".to_string(), std_hr);
@@ -245,7 +245,7 @@ impl ECGAnalysis {
         let mut tachycardia = Vec::new();
         let mut irregular_beats = Vec::new();
 
-        let mean_rr = rr_intervals.mean().unwrap();
+        let mean_rr = rr_intervals.clone().mean();
         let std_rr = rr_intervals.std(0.0);
 
         for (i, &rr) in rr_intervals.iter().enumerate() {
@@ -279,7 +279,7 @@ impl ECGAnalysis {
         // Simplified butterworth bandpass filter
         let nyquist = self.fs / 2.0;
         let low_norm = low_freq / nyquist;
-        let high_norm = high_freq / nyquist;
+        let high_norm = highfreq / nyquist;
 
         if low_norm <= 0.0 || high_norm >= 1.0 || low_norm >= high_norm {
             return Err(TimeSeriesError::InvalidInput(
@@ -301,7 +301,7 @@ impl ECGAnalysis {
             let window = self
                 .signal
                 .slice(ndarray::s![i - effective_window..i + effective_window]);
-            filtered[i] = window.mean().unwrap();
+            filtered[i] = window.mean();
         }
 
         Ok(filtered)
@@ -320,7 +320,7 @@ pub struct EEGAnalysis {
 
 impl EEGAnalysis {
     /// Create new EEG analysis
-    pub fn new(_signals: Array2<f64>, fs: f64, channelnames: Vec<String>) -> Result<Self> {
+    pub fn new(signals: Array2<f64>, fs: f64, channelnames: Vec<String>) -> Result<Self> {
         // Check if all signal values are finite
         if signals.iter().any(|x| !x.is_finite()) {
             return Err(TimeSeriesError::InvalidInput(
@@ -329,7 +329,7 @@ impl EEGAnalysis {
         }
         check_positive(fs, "sampling_frequency")?;
 
-        if signals.nrows() != channel_names.len() {
+        if signals.nrows() != channelnames.len() {
             return Err(TimeSeriesError::InvalidInput(
                 "Number of channels must match signal dimensions".to_string(),
             ));
@@ -338,7 +338,7 @@ impl EEGAnalysis {
         Ok(Self {
             signals,
             fs,
-            channel_names,
+            channel_names: channelnames,
         })
     }
 
@@ -398,9 +398,9 @@ impl EEGAnalysis {
             }
 
             // Detect anomalous windows
-            let mean_feature = "features".mean().unwrap();
-            let std_feature = "features".std(0.0);
-            let threshold = mean_feature + threshold_multiplier * std_feature;
+            let mean_feature = features.clone().mean();
+            let std_feature = features.std(0.0);
+            let threshold = mean_feature + thresholdmultiplier * std_feature;
 
             let mut in_seizure = false;
             let mut seizure_start = 0;
@@ -533,19 +533,17 @@ impl EMGAnalysis {
 
     /// Calculate muscle activation envelope
     pub fn muscle_activation_envelope(&self, windowsize: usize) -> Result<Array1<f64>> {
-        check_positive(window_size, "window_size")?;
+        check_positive(windowsize, "window_size")?;
 
         // Rectify signal (absolute value)
         let rectified: Array1<f64> = self.signal.iter().map(|&x| x.abs()).collect();
 
         // Apply smoothing filter (moving average)
-        let mut envelope = Array1::zeros(rectified.len() - window_size + 1);
+        let mut envelope = Array1::zeros(rectified.len() - windowsize + 1);
 
         for i in 0..envelope.len() {
-            envelope[i] = rectified
-                .slice(ndarray::s![i..i + window_size])
-                .mean()
-                .unwrap();
+            let slice = rectified.slice(ndarray::s![i..i + windowsize]);
+            envelope[i] = slice.mean();
         }
 
         Ok(envelope)
@@ -582,7 +580,7 @@ impl EMGAnalysis {
 
         // Calculate slope of median frequency over time (fatigue indicator)
         let time_points: Array1<f64> = (0..n_windows).map(|i| i as f64).collect();
-        let (slope_intercept, r_squared) = self.linear_regression(&time_points, &median_freqs)?;
+        let (slope, _intercept, r_squared) = self.linear_regression(&time_points, &median_freqs)?;
 
         fatigue_metrics.insert("Median_Freq_Slope".to_string(), slope);
         fatigue_metrics.insert("Fatigue_R_Squared".to_string(), r_squared);
@@ -603,7 +601,7 @@ impl EMGAnalysis {
             envelope.iter().take(envelope.len() / 10).sum::<f64>() / (envelope.len() / 10) as f64;
         let std_baseline = envelope.slice(ndarray::s![0..envelope.len() / 10]).std(0.0);
 
-        let threshold = baseline + threshold_factor * std_baseline;
+        let threshold = baseline + thresholdfactor * std_baseline;
 
         let mut onsets = Vec::new();
         let mut above_threshold = false;
@@ -834,7 +832,7 @@ mod tests {
 
     #[test]
     fn test_eeg_analysis() {
-        let signals = Array2::fromshape_vec((2, 1000), vec![0.1; 2000]).unwrap();
+        let signals = Array2::from_shape_vec((2, 1000), vec![0.1; 2000]).unwrap();
         let channel_names = vec!["C3".to_string(), "C4".to_string()];
 
         let eeg = EEGAnalysis::new(signals, 250.0, channel_names).unwrap();

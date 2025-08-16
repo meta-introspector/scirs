@@ -716,7 +716,7 @@ fn create_center_surround_filters() -> NdimageResult<Vec<Array2<f64>>> {
     let mut filters = Vec::new();
 
     // Create ON-center filter
-    let on_center = Array2::fromshape_fn((5, 5), |(y, x)| {
+    let on_center = Array2::from_shape_fn((5, 5), |(y, x)| {
         let dy = y as f64 - 2.0;
         let dx = x as f64 - 2.0;
         let distance = (dy * dy + dx * dx).sqrt();
@@ -731,7 +731,7 @@ fn create_center_surround_filters() -> NdimageResult<Vec<Array2<f64>>> {
     });
 
     // Create OFF-center filter
-    let off_center = Array2::fromshape_fn((5, 5), |(y, x)| {
+    let off_center = Array2::from_shape_fn((5, 5), |(y, x)| {
         let dy = y as f64 - 2.0;
         let dx = x as f64 - 2.0;
         let distance = (dy * dy + dx * dx).sqrt();
@@ -943,7 +943,7 @@ where
 
 #[allow(dead_code)]
 fn update_ommatidia_responses<T>(
-    _compound_eye: &mut CompoundEyeModel_current,
+    _compound_eye: &mut CompoundEyeModel,
     _frame: &ArrayView2<T>,
     _previous_frame: &ArrayView2<T>,
     _config: &BiologicalVisionConfig,
@@ -1064,7 +1064,7 @@ fn adapt_to_prediction_errors(
 
 #[allow(dead_code)]
 fn estimate_illumination<T>(
-    _color_system: &mut ColorConstancySystem_color,
+    _color_system: &mut ColorConstancySystem,
     image: &Array3<T>,
     _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
@@ -1084,7 +1084,7 @@ fn adapt_to_illumination(
 
 #[allow(dead_code)]
 fn compute_surface_reflectance<T>(
-    _color_system: &mut ColorConstancySystem_color,
+    _color_system: &mut ColorConstancySystem,
     image: &Array3<T>,
 ) -> NdimageResult<()>
 where
@@ -1095,7 +1095,7 @@ where
 
 #[allow(dead_code)]
 fn update_color_memory<T>(
-    _color_system: &mut ColorConstancySystem_color,
+    _color_system: &mut ColorConstancySystem,
     image: &Array3<T>,
     _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
@@ -1702,7 +1702,7 @@ where
 pub fn circadian_vision_processing<T>(
     image: ArrayView2<T>,
     illumination_estimate: f64,
-    circadian_phase: f64,
+    circadianphase: f64,
     config: &BiologicalVisionConfig,
 ) -> NdimageResult<Array2<T>>
 where
@@ -1713,10 +1713,10 @@ where
 
     // Circadian modulation of visual sensitivity
     let circadian_sensitivity =
-        compute_circadian_sensitivity(illumination_estimate, circadian_phase)?;
+        compute_circadian_sensitivity(illumination_estimate, circadianphase)?;
 
     // Melanopsin-driven adaptation (ipRGC influence)
-    let melanopsin_response = compute_melanopsin_response(illumination_estimate, circadian_phase)?;
+    let melanopsin_response = compute_melanopsin_response(illumination_estimate, circadianphase)?;
 
     // Process image with circadian modulation
     for y in 0..height {
@@ -1730,12 +1730,12 @@ where
             let contrast_adapted = apply_melanopsin_contrast_adaptation(
                 modulated_value,
                 melanopsin_response,
-                circadian_phase,
+                circadianphase,
             )?;
 
             // Color temperature adjustment based on circadian _phase
             let color_adjusted =
-                apply_circadian_color_adjustment(contrast_adapted, circadian_phase)?;
+                apply_circadian_color_adjustment(contrast_adapted, circadianphase)?;
 
             circadian_processed[(y, x)] = T::from_f64(color_adjusted).ok_or_else(|| {
                 NdimageError::ComputationError("Circadian processing conversion failed".to_string())
@@ -2406,7 +2406,7 @@ fn apply_memory_decay(
 #[allow(dead_code)]
 fn compute_circadian_sensitivity(_illumination: f64, circadianphase: f64) -> NdimageResult<f64> {
     // Circadian modulation of visual sensitivity
-    let circadian_factor = (circadian_phase * 2.0 * PI).cos() * 0.3 + 0.7;
+    let circadian_factor = (circadianphase * 2.0 * PI).cos() * 0.3 + 0.7;
     let illumination_factor = 1.0 / (1.0 + (-_illumination * 5.0).exp());
 
     Ok(circadian_factor * illumination_factor)
@@ -2415,7 +2415,7 @@ fn compute_circadian_sensitivity(_illumination: f64, circadianphase: f64) -> Ndi
 #[allow(dead_code)]
 fn compute_melanopsin_response(_illumination: f64, circadianphase: f64) -> NdimageResult<f64> {
     // Melanopsin response (ipRGCs) - sluggish, sustained response to light
-    let melanopsin_sensitivity = 0.1 + 0.3 * (circadian_phase * 2.0 * PI + PI).cos().max(0.0);
+    let melanopsin_sensitivity = 0.1 + 0.3 * (circadianphase * 2.0 * PI + PI).cos().max(0.0);
     let response = _illumination * melanopsin_sensitivity;
 
     Ok(response.min(1.0))
@@ -2425,7 +2425,7 @@ fn compute_melanopsin_response(_illumination: f64, circadianphase: f64) -> Ndima
 fn apply_melanopsin_contrast_adaptation(
     pixel_value: f64,
     melanopsin_response: f64,
-    circadian_phase: f64,
+    circadianphase: f64,
 ) -> NdimageResult<f64> {
     // Melanopsin-driven contrast adaptation
     let adaptation_strength = melanopsin_response * 0.5;
@@ -2437,7 +2437,7 @@ fn apply_melanopsin_contrast_adaptation(
 #[allow(dead_code)]
 fn apply_circadian_color_adjustment(_pixel_value: f64, circadianphase: f64) -> NdimageResult<f64> {
     // Simplified color temperature adjustment
-    let color_shift = (circadian_phase * 2.0 * PI).sin() * 0.1;
+    let color_shift = (circadianphase * 2.0 * PI).sin() * 0.1;
     let adjusted_value = _pixel_value + color_shift;
 
     Ok(adjusted_value.max(0.0).min(1.0))

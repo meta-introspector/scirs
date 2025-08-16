@@ -6,7 +6,7 @@
 
 use ndarray::{s, Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
-use scirs2__linalg::{eigh, smallest_k_eigh};
+use scirs2_linalg::{eigh, smallest_k_eigh};
 use std::fmt::Debug;
 
 use crate::error::{ClusteringError, Result};
@@ -39,11 +39,11 @@ pub enum AffinityMode {
 ///
 /// * The estimated number of clusters
 #[allow(dead_code)]
-fn eigengap_heuristic<F>(_eigenvalues: &[F], maxclusters: usize) -> usize
+fn eigengap_heuristic<F>(eigenvalues: &[F], max_clusters: usize) -> usize
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    // Find the largest eigengap among the first max_clusters _eigenvalues
+    // Find the largest eigengap among the first max_clusters eigenvalues
     let n = eigenvalues.len();
     let mut max_gap = F::zero();
     let mut max_gap_idx = 1; // Default to 1 cluster
@@ -112,7 +112,7 @@ where
                 laplacian[[i, j]] = F::one() - affinity[[i, j]] * d_inv_sqrt[i] * d_inv_sqrt[j];
             } else {
                 // Off-diagonal elements are the negative normalized _affinity
-                laplacian[[i, j]] = -_affinity[[i, j]] * d_inv_sqrt[i] * d_inv_sqrt[j];
+                laplacian[[i, j]] = -affinity[[i, j]] * d_inv_sqrt[i] * d_inv_sqrt[j];
             }
         }
     }
@@ -131,7 +131,7 @@ where
 ///
 /// * Affinity matrix where each row has at most n_neighbors non-zero entries
 #[allow(dead_code)]
-fn knn_affinity<F>(_data: ArrayView2<F>, nneighbors: usize) -> Result<Array2<F>>
+fn knn_affinity<F>(data: ArrayView2<F>, n_neighbors: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
@@ -176,8 +176,8 @@ where
         // Sort by distance
         distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Select k nearest _neighbors
-        for (j_) in distances.iter().take(n_neighbors.min(distances.len())) {
+        // Select k nearest neighbors
+        for (j, _) in distances.iter().take(n_neighbors.min(distances.len())) {
             // Create binary adjacency matrix (1 for neighbors, 0 otherwise)
             affinity[[i, *j]] = F::one();
             // Make it symmetric
@@ -357,7 +357,7 @@ where
     let n_samples = data.shape()[0];
 
     // Use unified validation
-    crate::validation::validate_clustering_data(&data, "Spectral clustering", false, Some(2))
+    scirs2_core::validation::clustering::validate_clustering_data(&data, "Spectral clustering", false, Some(2))
         .map_err(|e| ClusteringError::InvalidInput(format!("Spectral clustering: {}", e)))?;
 
     // Spectral clustering requires at least 2 _clusters
@@ -368,7 +368,7 @@ where
         )));
     }
 
-    crate::validation::check_n_clusters_bounds(&data, n_clusters, "Spectral clustering")
+    scirs2_core::validation::clustering::check_n_clusters_bounds(&data, n_clusters, "Spectral clustering")
         .map_err(|e| ClusteringError::InvalidInput(format!("{}", e)))?;
 
     // Step 1: Create the affinity matrix

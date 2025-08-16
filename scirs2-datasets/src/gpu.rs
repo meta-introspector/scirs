@@ -71,7 +71,7 @@ pub struct GpuConfig {
 impl Default for GpuConfig {
     fn default() -> Self {
         Self {
-            backend: GpuBackend::Cuda { device, id: 0 },
+            backend: GpuBackend::Cuda { device_id: 0 },
             memory: GpuMemoryConfig::default(),
             threads_per_block: 256,
             enable_double_precision: true,
@@ -112,13 +112,13 @@ impl GpuContext {
     /// Create a new GPU context
     pub fn new(config: GpuConfig) -> Result<Self> {
         // Initialize GPU backend
-        let device_info = Self::query_device_info(&_config.backend)?;
+        let device_info = Self::query_device_info(&config.backend)?;
 
         // Validate configuration
-        Self::validate_config(&_config, &device_info)?;
+        Self::validate_config(&config, &device_info)?;
 
         // Initialize memory pool
-        let memory_pool = Arc::new(Mutex::new(GpuMemoryPool::new(&_config.memory)?));
+        let memory_pool = Arc::new(Mutex::new(GpuMemoryPool::new(&config.memory)?));
 
         Ok(Self {
             config,
@@ -279,7 +279,7 @@ impl GpuContext {
     // Private methods for different backends
 
     fn query_device_info(backend: &GpuBackend) -> Result<GpuDeviceInfo> {
-        match _backend {
+        match backend {
             GpuBackend::Cuda { device_id } => Self::query_cuda_device_info(*device_id),
             GpuBackend::OpenCl {
                 platform_id,
@@ -297,7 +297,7 @@ impl GpuContext {
         }
     }
 
-    fn validate_config(_config: &GpuConfig, deviceinfo: &GpuDeviceInfo) -> Result<()> {
+    fn validate_config(config: &GpuConfig, device_info: &GpuDeviceInfo) -> Result<()> {
         // Check memory requirements
         if let Some(max_memory) = config.memory.max_memory_mb {
             if max_memory > device_info.available_memory_mb {
@@ -420,7 +420,7 @@ impl GpuContext {
     fn query_cuda_device_info(_deviceid: u32) -> Result<GpuDeviceInfo> {
         // Simulate CUDA device query
         Ok(GpuDeviceInfo {
-            name: format!("NVIDIA GPU {_device_id}"),
+            name: format!("NVIDIA GPU {_deviceid}"),
             total_memory_mb: 8192,
             available_memory_mb: 7168,
             compute_units: 80,
@@ -515,7 +515,7 @@ impl GpuContext {
     ) -> Result<Dataset> {
         println!("Generating blobs on CUDA device: {}", self.device_info.name);
 
-        let start_time = _std::time::Instant::now();
+        let start_time = std::time::Instant::now();
         let dataset = crate::generators::make_blobs(
             n_samples,
             n_features,
@@ -526,7 +526,7 @@ impl GpuContext {
         let cpu_time = start_time.elapsed();
 
         let simulated_gpu_time = cpu_time / 25;
-        _std::thread::sleep(simulated_gpu_time);
+        std::thread::sleep(simulated_gpu_time);
 
         println!(
             "CUDA blobs completed in {:.2}ms (estimated)",
@@ -573,7 +573,7 @@ impl GpuContext {
     fn query_opencl_device_info(_platform_id: u32, deviceid: u32) -> Result<GpuDeviceInfo> {
         // Simulate OpenCL device query
         Ok(GpuDeviceInfo {
-            name: format!("OpenCL Device P{_platform_id}.D{device_id}"),
+            name: format!("OpenCL Device P{_platform_id}.D{deviceid}"),
             total_memory_mb: 4096,
             available_memory_mb: 3584,
             compute_units: 40,
@@ -666,7 +666,7 @@ impl GpuContext {
             self.device_info.name
         );
 
-        let start_time = _std::time::Instant::now();
+        let start_time = std::time::Instant::now();
         let dataset = crate::generators::make_blobs(
             n_samples,
             n_features,
@@ -677,7 +677,7 @@ impl GpuContext {
         let cpu_time = start_time.elapsed();
 
         let simulated_gpu_time = cpu_time / 18;
-        _std::thread::sleep(simulated_gpu_time);
+        std::thread::sleep(simulated_gpu_time);
 
         println!(
             "OpenCL blobs completed in {:.2}ms (estimated)",
@@ -728,7 +728,7 @@ struct GpuMemoryPool {
 impl GpuMemoryPool {
     fn new(config: &GpuMemoryConfig) -> Result<Self> {
         Ok(Self {
-            _config: config.clone(),
+            config: config.clone(),
         })
     }
 }
@@ -741,7 +741,7 @@ pub struct GpuBenchmark {
 impl GpuBenchmark {
     /// Create a new GPU benchmark
     pub fn new(config: GpuConfig) -> Result<Self> {
-        let context = GpuContext::new(_config)?;
+        let context = GpuContext::new(config)?;
         Ok(Self { context })
     }
 
@@ -846,10 +846,10 @@ impl GpuBenchmarkResults {
         let mut speedups = Vec::new();
 
         for (size, operation, gpu_duration) in &self.results {
-            if let Some((__, cpu_duration)) = baseline
+            if let Some((_, _, cpu_duration)) = baseline
                 .results
                 .iter()
-                .find(|(s, op_)| s == size && op == operation)
+                .find(|(s, op_, _)| s == size && op_ == operation)
             {
                 let speedup = cpu_duration.as_secs_f64() / gpu_duration.as_secs_f64();
                 speedups.push((format!("{operation} ({size})"), speedup));
@@ -949,7 +949,7 @@ pub fn is_opencl_available() -> bool {
 pub fn get_optimal_gpu_config() -> GpuConfig {
     if is_cuda_available() {
         GpuConfig {
-            backend: GpuBackend::Cuda { device, id: 0 },
+            backend: GpuBackend::Cuda { device_id: 0 },
             threads_per_block: 256,
             enable_double_precision: true,
             use_fast_math: false,
@@ -1072,7 +1072,7 @@ mod tests {
     #[test]
     fn test_gpu_config_default() {
         let config = GpuConfig::default();
-        assert!(matches!(config.backend, GpuBackend::Cuda { deviceid: 0 }));
+        assert!(matches!(config.backend, GpuBackend::Cuda { device_id: 0 }));
         assert_eq!(config.threads_per_block, 256);
         assert!(config.enable_double_precision);
     }

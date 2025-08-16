@@ -4,7 +4,7 @@
 //! time series processing, including online statistics, change detection, and forecasting.
 
 use ndarray::Array1;
-use scirs2__series::streaming::{
+use scirs2_series::streaming::{
     advanced::{
         CircularBuffer, ModelState, StreamingAnomalyDetector, StreamingForecaster,
         StreamingPatternMatcher,
@@ -147,11 +147,11 @@ fn generate_streaming_value(time: f64, pattern: i32) -> f64 {
     match pattern {
         0 => {
             // Sinusoidal pattern with trend
-            base + 0.1 * _time + 10.0 * (0.2 * time).sin() + 2.0 * rand_noise()
+            base + 0.1 * time + 10.0 * (0.2 * time).sin() + 2.0 * rand_noise()
         }
         1 => {
             // Step function with noise
-            let step = if (_time as i32) % 40 < 20 {
+            let step = if (time as i32) % 40 < 20 {
                 10.0
             } else {
                 -10.0
@@ -160,7 +160,7 @@ fn generate_streaming_value(time: f64, pattern: i32) -> f64 {
         }
         2 => {
             // Random walk
-            base + 0.5 * time.sin() + 3.0 * ((_time * 0.1).cos() + rand_noise())
+            base + 0.5 * time.sin() + 3.0 * ((time * 0.1).cos() + rand_noise())
         }
         _ => base + rand_noise(),
     }

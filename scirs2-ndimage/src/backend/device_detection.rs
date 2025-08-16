@@ -103,7 +103,7 @@ impl DeviceManager {
         #[cfg(feature = "cuda")]
         {
             for (idx, device) in self.cuda_devices.iter().enumerate() {
-                if device.available_memory >= required_memory {
+                if device.available_memory >= requiredmemory {
                     let score = self.calculate_device_score(device);
                     if score > best_score {
                         best_score = score;
@@ -116,7 +116,7 @@ impl DeviceManager {
         #[cfg(feature = "opencl")]
         {
             for (idx, device) in self.opencl_devices.iter().enumerate() {
-                if device.available_memory >= required_memory {
+                if device.available_memory >= requiredmemory {
                     let score = self.calculate_device_score(device) * 0.9; // Slight preference for CUDA
                     if score > best_score {
                         best_score = score;
@@ -129,7 +129,7 @@ impl DeviceManager {
         #[cfg(all(target_os = "macos", feature = "metal"))]
         {
             for (idx, device) in self.metal_devices.iter().enumerate() {
-                if device.available_memory >= required_memory {
+                if device.available_memory >= requiredmemory {
                     let score = self.calculate_device_score(device) * 0.8; // Lower preference for Metal
                     if score > best_score {
                         best_score = score;

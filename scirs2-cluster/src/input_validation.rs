@@ -113,7 +113,7 @@ impl ValidationConfig {
 /// let data = Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
 /// let config = ValidationConfig::for_kmeans();
 ///
-/// assert!(crate::validation::validate_clustering_data(data.view(), &config).is_ok());
+/// assert!(validate_clustering_data(data.view(), &config).is_ok());
 /// ```
 #[allow(dead_code)]
 pub fn validate_clustering_data<F: Float + FromPrimitive + Debug + PartialOrd>(
@@ -201,18 +201,18 @@ fn validate_finite_values<F: Float + Debug>(data: ArrayView2<F>, prefix: &str) -
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
 #[allow(dead_code)]
-pub fn validate_n_clusters(_n_clusters: usize, nsamples: usize, algorithm: &str) -> Result<()> {
-    if _n_clusters == 0 {
+pub fn validate_n_clusters(n_clusters: usize, nsamples: usize, algorithm: &str) -> Result<()> {
+    if n_clusters == 0 {
         return Err(ClusteringError::InvalidInput(format!(
-            "{}: Number of _clusters must be positive, got 0",
+            "{}: Number of clusters must be positive, got 0",
             algorithm
         )));
     }
 
-    if n_clusters > n_samples {
+    if n_clusters > nsamples {
         return Err(ClusteringError::InvalidInput(format!(
-            "{}: Number of _clusters ({}) cannot exceed number of _samples ({})",
-            algorithm, n_clusters, n_samples
+            "{}: Number of clusters ({}) cannot exceed number of samples ({})",
+            algorithm, n_clusters, nsamples
         )));
     }
 
@@ -242,27 +242,27 @@ pub fn validate_distance_parameter<F: Float + FromPrimitive + Debug + PartialOrd
     max_value: Option<F>,
     algorithm: &str,
 ) -> Result<()> {
-    if !_value.is_finite() {
+    if !value.is_finite() {
         return Err(ClusteringError::InvalidInput(format!(
             "{}: {} must be finite, got {:?}",
-            algorithm, param_name, _value
+            algorithm, param_name, value
         )));
     }
 
     if let Some(min_val) = min_value {
-        if _value < min_val {
+        if value < min_val {
             return Err(ClusteringError::InvalidInput(format!(
                 "{}: {} must be >= {:?}, got {:?}",
-                algorithm, param_name, min_val, _value
+                algorithm, param_name, min_val, value
             )));
         }
     }
 
     if let Some(max_val) = max_value {
-        if _value > max_val {
+        if value > max_val {
             return Err(ClusteringError::InvalidInput(format!(
                 "{}: {} must be <= {:?}, got {:?}",
-                algorithm, param_name, max_val, _value
+                algorithm, param_name, max_val, value
             )));
         }
     }
@@ -294,19 +294,19 @@ pub fn validate_integer_parameter(
     algorithm: &str,
 ) -> Result<()> {
     if let Some(min_val) = min_value {
-        if _value < min_val {
+        if value < min_val {
             return Err(ClusteringError::InvalidInput(format!(
                 "{}: {} must be >= {}, got {}",
-                algorithm, param_name, min_val, _value
+                algorithm, param_name, min_val, value
             )));
         }
     }
 
     if let Some(max_val) = max_value {
-        if _value > max_val {
+        if value > max_val {
             return Err(ClusteringError::InvalidInput(format!(
                 "{}: {} must be <= {}, got {}",
-                algorithm, param_name, max_val, _value
+                algorithm, param_name, max_val, value
             )));
         }
     }
@@ -335,7 +335,7 @@ pub fn validate_sample_weights<F: Float + FromPrimitive + Debug + PartialOrd>(
 ) -> Result<()> {
     if weights.len() != n_samples {
         return Err(ClusteringError::InvalidInput(format!(
-            "{}: Sample weights length ({}) must match number of _samples ({})",
+            "{}: Sample weights length ({}) must match number of samples ({})",
             algorithm,
             weights.len(),
             n_samples
@@ -512,7 +512,7 @@ pub fn suggest_clustering_algorithm<F: Float + FromPrimitive + Debug + PartialOr
 
     // Validate data first
     let config = ValidationConfig::default();
-    crate::validation::validate_clustering_data(data, &config)?;
+    validate_clustering_data(data, &config)?;
 
     let mut suggestions = Vec::new();
 
@@ -540,7 +540,7 @@ pub fn suggest_clustering_algorithm<F: Float + FromPrimitive + Debug + PartialOr
     if let Some(k) = n_clusters {
         if k <= 10 {
             suggestions.push(
-                "Small number of _clusters: K-means with k-means++ initialization recommended",
+                "Small number of clusters: K-means with k-means++ initialization recommended",
             );
         } else {
             suggestions.push("Many clusters: Consider hierarchical clustering or DBSCAN");
@@ -575,16 +575,16 @@ mod tests {
         // Valid data
         let data = Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let config = ValidationConfig::default();
-        assert!(crate::validation::validate_clustering_data(data.view(), &config).is_ok());
+        assert!(validate_clustering_data(data.view(), &config).is_ok());
 
         // Too few samples
         let small_data = Array2::fromshape_vec((1, 3), vec![1.0, 2.0, 3.0]).unwrap();
-        assert!(crate::validation::validate_clustering_data(small_data.view(), &config).is_err());
+        assert!(validate_clustering_data(small_data.view(), &config).is_err());
 
         // Non-finite values
         let invalid_data =
             Array2::fromshape_vec((3, 2), vec![1.0, 2.0, f64::NAN, 4.0, 5.0, 6.0]).unwrap();
-        assert!(crate::validation::validate_clustering_data(invalid_data.view(), &config).is_err());
+        assert!(validate_clustering_data(invalid_data.view(), &config).is_err());
     }
 
     #[test]
@@ -607,7 +607,7 @@ mod tests {
         assert!(validate_sample_weights(weights.view(), 3, "Test").is_ok());
 
         let negative_weights = Array1::from_vec(vec![1.0, -2.0, 3.0]);
-        assert!(validate_sample_weights(negativeweights.view(), 3, "Test").is_err());
+        assert!(validate_sample_weights(negative_weights.view(), 3, "Test").is_err());
 
         let wrong_size = Array1::from_vec(vec![1.0, 2.0]);
         assert!(validate_sample_weights(wrong_size.view(), 3, "Test").is_err());

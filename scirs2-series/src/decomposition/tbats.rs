@@ -186,15 +186,15 @@ where
     }
 
     // Step 1: Apply Box-Cox transformation if requested
-    let (transformed_ts_lambda) = if options.use_box_cox {
+    let (transformed_ts, lambda) = if options.use_box_cox {
         let lambda = options.box_cox_lambda.unwrap_or_else(|| {
             // Estimate optimal lambda using profile likelihood (simplified)
-            estimate_box_cox_lambda(_ts)
+            estimate_box_cox_lambda(ts)
         });
-        let transformed = box_cox_transform(_ts, lambda)?;
+        let transformed = box_cox_transform(ts, lambda)?;
         (transformed, Some(lambda))
     } else {
-        (_ts.clone(), None)
+        (ts.clone(), None)
     };
 
     // Step 2: Determine number of Fourier terms for each seasonal component
@@ -280,7 +280,7 @@ where
 
 /// Calculate the size of the state vector
 #[allow(dead_code)]
-fn calculate_state_size(_options: &TBATSOptions, fourierterms: &[usize]) -> usize {
+fn calculate_state_size(options: &TBATSOptions, fourierterms: &[usize]) -> usize {
     let mut size = 1; // Level
 
     if options.use_trend {
@@ -288,7 +288,7 @@ fn calculate_state_size(_options: &TBATSOptions, fourierterms: &[usize]) -> usiz
     }
 
     // Seasonal components (2 states per Fourier term: sin and cos)
-    for &k in fourier_terms {
+    for &k in fourierterms {
         size += 2 * k;
     }
 

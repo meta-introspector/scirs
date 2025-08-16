@@ -219,7 +219,7 @@ impl PerformanceMonitor {
     /// Register worker for monitoring
     pub fn register_worker(&mut self, workerid: usize) {
         let worker_metrics = WorkerMetrics {
-            worker_id,
+            worker_id: workerid,
             cpu_usage_history: VecDeque::new(),
             memory_usage_history: VecDeque::new(),
             throughput_history: VecDeque::new(),
@@ -229,7 +229,7 @@ impl PerformanceMonitor {
             health_score: 1.0,
         };
 
-        self.worker_metrics.insert(worker_id, worker_metrics);
+        self.worker_metrics.insert(workerid, worker_metrics);
     }
 
     /// Record performance metrics
@@ -299,8 +299,14 @@ impl PerformanceMonitor {
                 metrics.latency_history.pop_front();
             }
 
-            // Update health score
-            metrics.health_score = self.calculate_worker_health_score(metrics);
+        }
+        
+        // Update health score after all metrics updates
+        if let Some(metrics) = self.worker_metrics.get(&worker_id) {
+            let health_score = self.calculate_worker_health_score(metrics);
+            if let Some(metrics_mut) = self.worker_metrics.get_mut(&worker_id) {
+                metrics_mut.health_score = health_score;
+            }
         }
 
         Ok(())
@@ -631,7 +637,7 @@ impl PerformanceMonitor {
 
     /// Analyze performance trends
     fn analyze_trends(&self, metricshistory: &VecDeque<PerformanceMetrics>) -> PerformanceTrends {
-        if metrics_history.len() < 5 {
+        if metricshistory.len() < 5 {
             return PerformanceTrends {
                 throughput_trend: TrendDirection::Unknown,
                 latency_trend: TrendDirection::Unknown,
@@ -641,8 +647,8 @@ impl PerformanceMonitor {
             };
         }
 
-        let recent_metrics: Vec<_> = metrics_history.iter().rev().take(10).collect();
-        let older_metrics: Vec<_> = metrics_history.iter().rev().skip(5).take(10).collect();
+        let recent_metrics: Vec<_> = metricshistory.iter().rev().take(10).collect();
+        let older_metrics: Vec<_> = metricshistory.iter().rev().skip(5).take(10).collect();
 
         // Calculate trend for worker efficiency
         let recent_efficiency = recent_metrics

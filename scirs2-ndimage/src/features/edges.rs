@@ -114,18 +114,18 @@ impl Default for EdgeDetectionConfig {
 /// let edge_magnitudes = edge_detector(&image, custom_config).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Array<f32, Ix2> {
+pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> NdimageResult<Array<f32, Ix2>> {
     match config.algorithm {
         EdgeDetectionAlgorithm::Canny => {
             // Already returns f32 values, so we just return it as is
-            canny_impl(
+            Ok(canny_impl(
                 image,
                 config.sigma,
                 config.low_threshold,
                 config.high_threshold,
                 config.gradient_method,
                 config.border_mode,
-            )
+            ))
         }
         EdgeDetectionAlgorithm::LoG => {
             let edges = laplacian_edges_impl(
@@ -133,15 +133,15 @@ pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Ar
                 config.sigma,
                 config.low_threshold,
                 config.border_mode,
-            );
+            )?;
 
             if !config.return_magnitude {
                 // Threshold to binary edges
-                edges
+                Ok(edges
                     .mapv(|v| v.abs() > config.low_threshold)
-                    .mapv(|v| if v { 1.0 } else { 0.0 })
+                    .mapv(|v| if v { 1.0 } else { 0.0 }))
             } else {
-                edges
+                Ok(edges)
             }
         }
         EdgeDetectionAlgorithm::Gradient => {
@@ -150,15 +150,15 @@ pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Ar
                 config.gradient_method,
                 config.sigma,
                 config.border_mode,
-            );
+            )?;
 
             if !config.return_magnitude {
                 // Threshold to binary edges
-                edges
+                Ok(edges
                     .mapv(|v| v > config.low_threshold)
-                    .mapv(|v| if v { 1.0 } else { 0.0 })
+                    .mapv(|v| if v { 1.0 } else { 0.0 }))
             } else {
-                edges
+                Ok(edges)
             }
         }
     }
@@ -292,14 +292,14 @@ fn calculate_magnitude_and_direction(
     gradient_y: &ArrayD<f32>,
     shape: Ix2,
 ) -> (Array<f32, Ix2>, Array<f32, Ix2>) {
-    let magnitude = Array::<f32>::zeros(shape);
-    let mut direction = Array::<f32>::zeros(shape);
+    let magnitude = Array::<f32, Ix2>::zeros(shape);
+    let mut direction = Array::<f32, Ix2>::zeros(shape);
 
     // Create a copy to avoid mutable borrow conflict
-    let mut mag_copy = Array::<f32>::zeros(shape);
+    let mut mag_copy = Array::<f32, Ix2>::zeros(shape);
 
     // Calculate gradient magnitude and direction
-    for (pos_) in magnitude.indexed_iter() {
+    for (pos, _) in magnitude.indexed_iter() {
         let idx_d = [pos.0, pos.1];
         let gx = gradient_x[idx_d.as_ref()];
         let gy = gradient_y[idx_d.as_ref()];
@@ -455,9 +455,9 @@ fn get_gradient_neighbors(
 fn is_connected_to_strong_edge(row: usize, col: usize, edges: &Array<f32, Ix2>) -> bool {
     let shape = edges.dim();
 
-    for i in (_row.saturating_sub(1))..=(_row + 1).min(shape.0 - 1) {
+    for i in (row.saturating_sub(1))..=(row + 1).min(shape.0 - 1) {
         for j in (col.saturating_sub(1))..=(col + 1).min(shape.1 - 1) {
-            if !(i == _row && j == col) && edges[(i, j)] > 0.0 {
+            if !(i == row && j == col) && edges[(i, j)] > 0.0 {
                 return true;
             }
         }
@@ -511,7 +511,7 @@ pub fn laplacian_edges(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<f32, Ix2>> {
     let mode = mode.unwrap_or(BorderMode::Reflect);
-    laplacian_edges_impl(image, sigma, threshold.unwrap_or(0.0), mode)
+    Ok(laplacian_edges_impl(image, sigma, threshold.unwrap_or(0.0), mode)?)
 }
 
 // Internal implementation of Laplacian of Gaussian edge detection
@@ -521,7 +521,7 @@ fn laplacian_edges_impl(
     sigma: f32,
     threshold: f32,
     mode: BorderMode,
-) -> Array<f32, Ix2> {
+) -> NdimageResult<Array<f32, Ix2>> {
     // Convert to dynamic array for processing with our filter functions
     let image_d = image.clone().into_dyn();
 
@@ -576,10 +576,10 @@ fn laplacian_edges_impl(
 
     // Apply thresholding if requested
     if threshold > 0.0 {
-        return result_copy.mapv(|v| if v.abs() > threshold { v } else { 0.0 });
+        return Ok(result_copy.mapv(|v| if v.abs() > threshold { v } else { 0.0 }));
     }
 
-    result_copy
+    Ok(result_copy)
 }
 
 /// Gradient-based edge detection
@@ -630,7 +630,7 @@ pub fn gradient_edges(
     let method = method.unwrap_or(GradientMethod::Sobel);
     let mode = mode.unwrap_or(BorderMode::Reflect);
 
-    gradient_edges_impl(image, method, sigma.unwrap_or(0.0), mode)
+    Ok(gradient_edges_impl(image, method, sigma.unwrap_or(0.0), mode)?)
 }
 
 // Internal implementation of gradient-based edge detection
@@ -640,7 +640,7 @@ fn gradient_edges_impl(
     method: GradientMethod,
     sigma: f32,
     mode: BorderMode,
-) -> Array<f32, Ix2> {
+) -> NdimageResult<Array<f32, Ix2>> {
     let image_d = image.clone().into_dyn();
 
     // Apply Gaussian smoothing if sigma > 0

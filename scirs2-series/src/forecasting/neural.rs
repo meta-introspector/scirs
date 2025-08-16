@@ -165,18 +165,18 @@ mod simple_nn {
         pub fn new(_input_size: usize, outputsize: usize) -> Self {
             // Initialize with small random values (simplified Xavier initialization)
             let scale = F::from(0.1).unwrap();
-            let mut weights = Array2::zeros((_input_size, output_size));
-            let mut biases = Array1::zeros(output_size);
+            let mut weights = Array2::zeros((_input_size, outputsize));
+            let mut biases = Array1::zeros(outputsize);
 
             // Simple pseudo-random initialization
             for i in 0.._input_size {
-                for j in 0..output_size {
+                for j in 0..outputsize {
                     let val = F::from((i * j + 1) as f64 * 0.001).unwrap() % scale;
                     weights[[i, j]] = val - scale / F::from(2).unwrap();
                 }
             }
 
-            for i in 0..output_size {
+            for i in 0..outputsize {
                 biases[i] = F::from(i as f64 * 0.001).unwrap() % scale;
             }
 
@@ -315,7 +315,7 @@ impl<F: Float + Debug + FromPrimitive> LSTMForecaster<F> {
 
                 for i in batch_start..batch_end {
                     let input = x_train.row(i).to_owned();
-                    let target = y_train.row(i).to_owned();
+                    let target = ytrain.row(i).to_owned();
 
                     // Forward pass (simplified LSTM as feedforward)
                     let h1 = self.input_layer.as_ref().unwrap().forward(&input);
@@ -354,7 +354,7 @@ impl<F: Float + Debug + FromPrimitive> LSTMForecaster<F> {
 
     /// Simplified weight update
     fn update_weights_simple(&mut self, learningrate: F) {
-        let adjustment = learning_rate * F::from(0.001).unwrap();
+        let adjustment = learningrate * F::from(0.001).unwrap();
 
         // Simple weight perturbation for demonstration
         if let Some(ref mut layer) = self.input_layer {
@@ -380,7 +380,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for LSTMForecaster<F>
         }
 
         // Normalize data
-        let (normalized_data_min_val_max_val) = utils::normalize_data(data)?;
+        let (normalized_data, _min_val, _max_val) = utils::normalize_data(data)?;
         let (x_norm, y_norm) = utils::create_sliding_windows(
             &normalized_data,
             self.config.base.lookback_window,
@@ -554,7 +554,7 @@ impl<F: Float + Debug + FromPrimitive> TransformerForecaster<F> {
 
             for i in 0..x_train.nrows() {
                 let input = x_train.row(i).to_owned();
-                let target = y_train.row(i).to_owned();
+                let target = ytrain.row(i).to_owned();
 
                 // Simplified transformer forward pass
                 let attention_out = self.attention_layer.as_ref().unwrap().forward(&input);
@@ -598,7 +598,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for TransformerForeca
         }
 
         // Create sliding windows and normalize
-        let (normalized_data__) = utils::normalize_data(data)?;
+        let (normalized_data, _, _) = utils::normalize_data(data)?;
         let (x_norm, y_norm) = utils::create_sliding_windows(
             &normalized_data,
             self.config.base.lookback_window,
@@ -790,7 +790,7 @@ impl<F: Float + Debug + FromPrimitive> NBeatsForecaster<F> {
 
             for i in 0..x_train.nrows() {
                 let input = x_train.row(i).to_owned();
-                let target = y_train.row(i).to_owned();
+                let target = ytrain.row(i).to_owned();
 
                 // Forward pass through N-BEATS stacks
                 let mut current_input = input.clone();
@@ -869,7 +869,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for NBeatsForecaster<
         }
 
         // Create sliding windows and normalize
-        let (normalized_data__) = utils::normalize_data(data)?;
+        let (normalized_data, _, _) = utils::normalize_data(data)?;
         let (x_norm, y_norm) = utils::create_sliding_windows(
             &normalized_data,
             self.config.base.lookback_window,
@@ -1063,8 +1063,8 @@ pub mod utils {
             ));
         }
 
-        let min_val = data.iter().cloned().fold(_data[0], F::min);
-        let max_val = data.iter().cloned().fold(_data[0], F::max);
+        let min_val = data.iter().cloned().fold(data[0], F::min);
+        let max_val = data.iter().cloned().fold(data[0], F::max);
 
         if min_val == max_val {
             return Err(TimeSeriesError::InvalidInput(
@@ -1163,8 +1163,8 @@ mod tests {
 
     #[test]
     fn test_train_val_split() {
-        let x = Array2::fromshape_vec((10, 3), (0..30).map(|i| i as f64).collect()).unwrap();
-        let y = Array2::fromshape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
+        let x = Array2::from_shape_vec((10, 3), (0..30).map(|i| i as f64).collect()).unwrap();
+        let y = Array2::from_shape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
 
         let (x_train, x_val, y_train, y_val) = utils::train_val_split(&x, &y, 0.2).unwrap();
 
@@ -1554,7 +1554,7 @@ pub mod advanced {
             let long_pred = self.long_term.predict(steps)?;
 
             // Combine predictions using learned weights
-            let weights = self.combinationweights.as_ref().unwrap();
+            let weights = self.combination_weights.as_ref().unwrap();
             let combined_forecast = &short_pred.forecast * weights[0]
                 + &medium_pred.forecast * weights[1]
                 + &long_pred.forecast * weights[2];
@@ -1585,7 +1585,7 @@ pub mod advanced {
 
         /// Get the combination weights learned during training
         pub fn get_combination_weights(&self) -> Option<&Array1<F>> {
-            self.combinationweights.as_ref()
+            self.combination_weights.as_ref()
         }
     }
 
@@ -1657,9 +1657,9 @@ pub mod advanced {
 
             Self {
                 base_model: LSTMForecaster::new(lstm_config),
-                data_buffer: VecDeque::with_capacity(_config.buffer_size),
+                data_buffer: VecDeque::with_capacity(config.buffer_size),
                 max_buffer_size: config.buffer_size,
-                incremental_lr: F::from(_config.incremental_learning_rate).unwrap(),
+                incremental_lr: F::from(config.incremental_learning_rate).unwrap(),
                 update_frequency: config.update_frequency,
                 observation_count: 0,
                 config,
@@ -1851,7 +1851,7 @@ pub mod advanced {
 
             // Store attention weights for interpretability
             self.attention_weights = Some(
-                Array2::fromshape_vec((1, attentionweights.len()), attentionweights.to_vec())
+                Array2::from_shape_vec((1, attention_weights.len()), attention_weights.to_vec())
                     .unwrap(),
             );
 
@@ -1876,7 +1876,8 @@ pub mod advanced {
 
         /// Update parameters (simplified gradient descent)
         fn update_parameters(
-            &mut self_input: &Array1<F>,
+            &mut self,
+            _input: &Array1<F>,
             _target: &Array1<F>,
             _prediction: &Array1<F>,
         ) -> Result<()> {
@@ -1927,7 +1928,7 @@ pub mod advanced {
 
         /// Get attention weights for interpretability
         pub fn get_attention_weights(&self) -> Option<&Array2<F>> {
-            self.attentionweights.as_ref()
+            self.attention_weights.as_ref()
         }
 
         /// Get training loss history
@@ -1942,7 +1943,7 @@ pub mod advanced {
                 input_dim: self.input_dim,
                 hidden_dim: self.hidden_dim,
                 output_dim: self.output_dim,
-                attention_weights: self.attentionweights.clone(),
+                attention_weights: self.attention_weights.clone(),
                 model_weights: self.model_weights.clone(),
                 config: self.config.clone(),
                 trained: self.trained,
@@ -1996,7 +1997,7 @@ pub mod advanced {
             Self {
                 forecasters: Vec::new(),
                 weights: None,
-                ensemble_method,
+                ensemble_method: _ensemblemethod,
                 model_names: Vec::new(),
                 trained: false,
             }
@@ -2457,8 +2458,9 @@ pub mod advanced {
             Self {
                 search_space,
                 best_config: None,
-                search_strategy,
-                max_evaluations_evaluations: 0,
+                search_strategy: _search_strategy,
+                max_evaluations: maxevaluations,
+                evaluations: 0,
             }
         }
 

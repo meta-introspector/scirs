@@ -28,19 +28,19 @@ struct Node {
 impl Graph {
     /// Create a new graph with specified number of nodes
     fn new(_numnodes: usize) -> Self {
-        let mut _nodes = Vec::with_capacity(_num_nodes + 2);
-        for i in 0.._num_nodes + 2 {
-            nodes.push(Node {
+        let mut _nodes = Vec::with_capacity(_numnodes + 2);
+        for i in 0.._numnodes + 2 {
+            _nodes.push(Node {
                 id: i,
                 neighbors: Vec::new(),
             });
         }
 
         Self {
-            nodes,
+            nodes: _nodes,
             edges: HashMap::new(),
-            source: num_nodes,
-            sink: num_nodes + 1,
+            source: _numnodes,
+            sink: _numnodes + 1,
         }
     }
 
@@ -350,7 +350,7 @@ fn compute_data_weights<T: Float>(
 /// Compute smoothness weight between neighboring pixels
 #[allow(dead_code)]
 fn compute_smoothness_weight<T: Float>(val1: T, val2: T, lambda: f64, sigma: f64) -> f64 {
-    let diff = (_val1 - val2).to_f64().unwrap_or(0.0);
+    let diff = (val1 - val2).to_f64().unwrap_or(0.0);
     let weight = lambda * (-diff * diff / (2.0 * sigma * sigma)).exp();
     weight
 }
@@ -358,7 +358,7 @@ fn compute_smoothness_weight<T: Float>(val1: T, val2: T, lambda: f64, sigma: f64
 /// Get neighbor offsets based on connectivity
 #[allow(dead_code)]
 fn get_neighbors(connectivity: u8) -> Vec<(i32, i32)> {
-    match _connectivity {
+    match connectivity {
         4 => vec![(0, 1), (1, 0), (0, -1), (-1, 0)],
         8 => vec![
             (0, 1),

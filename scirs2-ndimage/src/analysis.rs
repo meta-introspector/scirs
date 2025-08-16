@@ -380,7 +380,7 @@ where
 
 /// Compute local variance in a sliding window
 #[allow(dead_code)]
-pub fn compute_local_variance<T>(image: &ArrayView2<T>, windowsize: usize) -> NdimageResult<T>
+pub fn compute_local_variance<T>(image: &ArrayView2<T>, window_size: usize) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {

@@ -417,7 +417,7 @@ where
     T: Float + FromPrimitive + Copy,
 {
     // Quantum correlation using CHSH inequality concept
-    let correlation = _value1 * value2 * strength;
+    let correlation = value1 * value2 * strength;
     Ok(correlation)
 }
 
@@ -426,7 +426,7 @@ fn normalize_quantum_correlations<T>(matrix: &mut Array2<T>) -> NdimageResult<()
 where
     T: Float + FromPrimitive + Copy,
 {
-    let max_val = _matrix
+    let max_val = matrix
         .iter()
         .cloned()
         .fold(T::zero(), |a, b| if a > b { a } else { b });
@@ -440,8 +440,8 @@ where
 
 #[allow(dead_code)]
 fn calculate_quantum_distance(pos1: (usize, usize), pos2: (usize, usize)) -> NdimageResult<f64> {
-    let dx = (_pos1.0 as f64 - pos2.0 as f64).abs();
-    let dy = (_pos1.1 as f64 - pos2.1 as f64).abs();
+    let dx = (pos1.0 as f64 - pos2.0 as f64).abs();
+    let dy = (pos1.1 as f64 - pos2.1 as f64).abs();
 
     // Quantum metric includes phase factors
     let quantum_distance = (dx * dx + dy * dy).sqrt() * (1.0 + 0.1 * (dx + dy).sin());
@@ -988,14 +988,14 @@ where
     let mut generators = Vec::new();
 
     // Create Pauli-like syndrome generators
-    for i in 0.._redundancy_factor {
-        let mut generator = Array1::zeros(_redundancy_factor * 2);
+    for i in 0.._redundancyfactor {
+        let mut generator = Array1::zeros(_redundancyfactor * 2);
 
         // Create X and Z type stabilizers
-        for j in 0.._redundancy_factor {
+        for j in 0.._redundancyfactor {
             if i == j {
                 generator[j] = T::one(); // X stabilizer
-                generator[j + _redundancy_factor] = T::one(); // Z stabilizer
+                generator[j + _redundancyfactor] = T::one(); // Z stabilizer
             }
         }
 
@@ -1062,7 +1062,7 @@ where
 
     // Simple average for continuous _values
     let sum = values.iter().fold(T::zero(), |acc, &x| acc + x);
-    let average = sum / T::from_usize(_values.len()).unwrap();
+    let average = sum / T::from_usize(values.len()).unwrap();
 
     Ok(average)
 }
@@ -1157,7 +1157,7 @@ fn initialize_variational_parameters<T>(_numlayers: usize) -> NdimageResult<Arra
 where
     T: Float + FromPrimitive + Copy,
 {
-    let param_count = _num_layers * 3; // 3 parameters per layer
+    let param_count = _numlayers * 3; // 3 parameters per layer
     let mut parameters = Array1::zeros(param_count);
     let mut rng = rand::rng();
 
@@ -1415,9 +1415,9 @@ mod tests {
 
     #[test]
     fn test_quantumstate_representation() {
-        let amplitudes = Array2::zeros((2, 2));
-        let phases = Array2::zeros((2, 2));
-        let coherence = Array2::zeros((2, 2));
+        let amplitudes = Array2::<Complex<f64>>::zeros((2, 2));
+        let phases = Array2::<f64>::zeros((2, 2));
+        let coherence = Array2::<Complex<f64>>::zeros((2, 2));
 
         let quantumstate = QuantumState {
             amplitudes,

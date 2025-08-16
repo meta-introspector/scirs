@@ -564,7 +564,7 @@ where
     let dominant_frequency = find_dominant_frequency(&spectrum, &frequencies);
 
     // Calculate spectral peaks
-    let (peak_frequencies_peak_magnitudes) = find_spectral_peaks(&spectrum, &frequencies)?;
+    let (peak_frequencies, _peak_magnitudes) = find_spectral_peaks(&spectrum, &frequencies)?;
     let spectral_peaks = peak_frequencies.len();
 
     // Calculate frequency bands
@@ -934,7 +934,7 @@ where
 
     // Calculate power spectrum (simplified)
     let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).unwrap();
-    let variance = _ts
+    let variance = ts
         .iter()
         .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
         / F::from_usize(n).unwrap();
@@ -950,7 +950,7 @@ where
             let mut count = 0;
 
             for i in 0..(n - lag) {
-                autocorr = autocorr + (_ts[i] - mean) * (_ts[i + lag] - mean);
+                autocorr = autocorr + (ts[i] - mean) * (ts[i + lag] - mean);
                 count += 1;
             }
 
@@ -979,7 +979,7 @@ where
 {
     let mut window = vec![F::zero(); length];
 
-    match _window_type {
+    match _windowtype {
         "Rectangular" => {
             window.fill(F::one());
         }
@@ -1034,7 +1034,7 @@ where
         return F::zero();
     }
 
-    let weighted_sum = _spectrum
+    let weighted_sum = spectrum
         .iter()
         .zip(frequencies.iter())
         .fold(F::zero(), |acc, (&power, &freq)| acc + power * freq);
@@ -1054,7 +1054,7 @@ where
     }
 
     let weighted_variance =
-        _spectrum
+        spectrum
             .iter()
             .zip(frequencies.iter())
             .fold(F::zero(), |acc, (&power, &freq)| {
@@ -1178,11 +1178,11 @@ pub fn find_dominant_frequency<F>(spectrum: &[F], frequencies: &[F]) -> F
 where
     F: Float + FromPrimitive,
 {
-    let max_idx = _spectrum
+    let max_idx = spectrum
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(idx_)| idx)
+        .map(|(idx_, _)| idx_)
         .unwrap_or(0);
 
     frequencies[max_idx]
@@ -1202,10 +1202,10 @@ where
     }
 
     // Simple peak detection: find local maxima
-    for i in 1..(_spectrum.len() - 1) {
+    for i in 1..(spectrum.len() - 1) {
         if spectrum[i] > spectrum[i - 1] && spectrum[i] > spectrum[i + 1] {
             peak_frequencies.push(frequencies[i]);
-            peak_magnitudes.push(_spectrum[i]);
+            peak_magnitudes.push(spectrum[i]);
         }
     }
 
@@ -1479,7 +1479,7 @@ where
 
     let max_power = periodogram.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
     let avg_power = periodogram.iter().fold(F::zero(), |acc, &x| acc + x)
-        / F::from_usize(_periodogram.len()).unwrap();
+        / F::from_usize(periodogram.len()).unwrap();
 
     if avg_power == F::zero() {
         Ok(F::zero())

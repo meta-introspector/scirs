@@ -74,21 +74,21 @@ pub struct Hypervector {
 impl Hypervector {
     /// Create a new random hypervector
     pub fn random(dim: usize, sparsity: f64) -> Self {
-        let num_nonzero = (_dim as f64 * sparsity) as usize;
+        let num_nonzero = (dim as f64 * sparsity) as usize;
         let mut sparse_data = Vec::new();
         let mut rng = rand::rng();
         let mut used_indices = HashSet::new();
 
         while sparse_data.len() < num_nonzero {
-            let idx = rng.gen_range(0.._dim);
+            let idx = rng.gen_range(0..dim);
             if !used_indices.contains(&idx) {
                 used_indices.insert(idx);
                 let value = if rng.random_bool(0.5) { 1.0 } else { -1.0 };
-                sparse_data.push((idx..value));
+                sparse_data.push((idx, value));
             }
         }
 
-        sparse_data.sort_by_key(|&(idx_)| idx);
+        sparse_data.sort_by_key(|&(idx_, _)| idx_);
 
         let norm = (sparse_data.len() as f64).sqrt();
 
@@ -353,7 +353,7 @@ impl ImageHDCEncoder {
     /// Create new image encoder
     pub fn new(image_height: usize, imagewidth: usize, config: HDCConfig) -> Self {
         let mut pixel_encoders = HashMap::new();
-        let position_encoders = Array2::fromshape_fn((image_height, image_width), |_| {
+        let position_encoders = Array2::from_shape_fn((image_height, imagewidth), |_| {
             Hypervector::random(config.hypervector_dim, config.sparsity)
         });
 
@@ -425,7 +425,7 @@ impl ImageHDCEncoder {
 
     /// Add feature encoder
     pub fn add_feature_encoder(&mut self, name: String, featurehv: Hypervector) {
-        self.feature_encoders.insert(name, feature_hv);
+        self.feature_encoders.insert(name, featurehv);
     }
 }
 
@@ -857,9 +857,9 @@ where
         weight: fusion_config.visual_weight,
     }];
 
-    // Process temporal _sequence if provided
-    if let Some(_sequence) = temporal_sequence {
-        let temporal_encoding = hdc_sequence_processing(_sequence, sequence.len(), config)?;
+    // Process temporal sequence if provided
+    if let Some(sequence) = temporal_sequence {
+        let temporal_encoding = hdc_sequence_processing(sequence, sequence.len(), config)?;
         fusion_components.push(FusionComponent {
             modality: "temporal".to_string(),
             encoding: temporal_encoding,
@@ -867,9 +867,9 @@ where
         });
     }
 
-    // Process semantic _concepts if provided
-    if let Some(_concepts) = semantic_concepts {
-        let semantic_encoding = encode_semantic_concepts(_concepts_config)?;
+    // Process semantic concepts if provided
+    if let Some(concepts) = semantic_concepts {
+        let semantic_encoding = encode_semantic_concepts(concepts, config)?;
         fusion_components.push(FusionComponent {
             modality: "semantic".to_string(),
             encoding: semantic_encoding,
@@ -889,8 +889,11 @@ where
     };
 
     // Perform multi-modal fusion
-    let fused_representation =
-        perform_weighted_fusion(&fusion_components, attentionweights.as_ref(), fusion_config)?;
+    let fused_representation = perform_weighted_fusion(
+        &fusion_components,
+        attention_weights.as_ref(),
+        fusion_config,
+    )?;
 
     // Cross-modal coherence analysis
     let coherence_analysis = analyze_cross_modal_coherence(&fusion_components, config)?;
@@ -935,7 +938,7 @@ where
     // Update _system based on feedback (if available)
     let update_result = if let Some(_label) = true_label {
         // Compare prediction with ground truth
-        let prediction_error = calculate_prediction_error(&prediction_result, label);
+        let prediction_error = calculate_prediction_error(&prediction_result, _label);
 
         // Adaptive learning rate based on error
         let adaptive_lr = learning_system.compute_adaptive_learning_rate(prediction_error);
@@ -943,7 +946,7 @@ where
         // Update memories with adaptive mechanism
         learning_system.update_with_feedback(
             &current_encoding,
-            label,
+            _label,
             adaptive_lr,
             prediction_error,
         )?
@@ -1152,7 +1155,7 @@ impl ContinualLearningMemory {
             core_memories: HashMap::new(),
             episodic_buffer: VecDeque::new(),
             importance_tracker: HashMap::new(),
-            interference_matrix: Array2::zeros((_config.hypervector_dim, config.hypervector_dim)),
+            interference_matrix: Array2::zeros((config.hypervector_dim, config.hypervector_dim)),
             current_time: 0,
             meta_parameters: MetaLearningParameters::default(),
         }
@@ -1183,7 +1186,7 @@ impl ContinualLearningMemory {
         Ok(())
     }
 
-    pub fn update_meta_learning_parameters(&mut selfstats: &ContinualLearningStats) {
+    pub fn update_meta_learning_parameters(&mut self, stats: &ContinualLearningStats) {
         // Update meta-learning parameters based on learning statistics
         self.meta_parameters.adaptation_rate *= 1.01; // Slight increase
     }
@@ -1325,7 +1328,7 @@ pub struct OnlineLearningSystem {
 impl OnlineLearningSystem {
     pub fn new(config: &HDCConfig) -> Self {
         Self {
-            memory: HDCMemory::new(_config.clone()),
+            memory: HDCMemory::new(config.clone()),
             adaptation_parameters: AdaptationParameters::default(),
             performance_tracker: PerformanceTracker::new(),
             maintenance_cycle_count: 0,
@@ -1389,7 +1392,7 @@ impl OnlineLearningSystem {
         })
     }
 
-    pub fn perform_maintenance_cycle(&mut selfconfig: &HDCConfig) -> NdimageResult<()> {
+    pub fn perform_maintenance_cycle(&mut self, config: &HDCConfig) -> NdimageResult<()> {
         self.maintenance_cycle_count += 1;
 
         // Perform periodic cleanup and optimization
@@ -1471,7 +1474,7 @@ impl PerformanceTracker {
     pub fn record_update(&mut self, error: f64, learningrate: f64) {
         let accuracy = 1.0 - error.min(1.0);
         self.accuracyhistory.push_back(accuracy);
-        self.learning_speedhistory.push_back(learning_rate);
+        self.learning_speedhistory.push_back(learningrate);
         self.update_count += 1;
 
         // Keep only recent history
@@ -1558,7 +1561,7 @@ pub struct OnlineLearningResult {
 
 #[allow(dead_code)]
 fn weight_hypervector(hv: &Hypervector, weight: f64) -> Hypervector {
-    let weighted_data = _hv
+    let weighted_data = hv
         .sparse_data
         .iter()
         .map(|&(idx, value)| (idx, value * weight))
@@ -1597,7 +1600,7 @@ fn assess_reasoning_confidence(_reasoningchains: &[ReasoningChain]) -> MetaCogni
 
 #[allow(dead_code)]
 fn apply_interference_resistant_encoding(
-    encoding: &Hypervector_memory,
+    encoding: &Hypervector,
     system: &ContinualLearningMemory,
     _config: &HDCConfig,
 ) -> NdimageResult<Hypervector> {
@@ -1608,7 +1611,7 @@ fn apply_interference_resistant_encoding(
 
 #[allow(dead_code)]
 fn calculate_experience_importance(
-    _encoding: &Hypervector_memory,
+    _encoding: &Hypervector,
     system: &ContinualLearningMemory,
 ) -> f64 {
     // Simplified importance calculation
@@ -1632,7 +1635,7 @@ fn perform_memory_consolidation(
 fn encode_semantic_concepts(concepts: &[String], config: &HDCConfig) -> NdimageResult<Hypervector> {
     let mut result = Hypervector::random(config.hypervector_dim, 0.0);
 
-    for concept in _concepts {
+    for concept in concepts {
         // Create a simple hash-based encoding for _concepts
         let mut hasher = DefaultHasher::new();
         concept.hash(&mut hasher);
@@ -1716,10 +1719,10 @@ fn analyze_cross_modal_coherence(
 
 #[allow(dead_code)]
 fn calculate_prediction_error(_prediction: &PredictionResult, truelabel: &str) -> f64 {
-    if prediction.predicted_label == true_label {
+    if _prediction.predicted_label == truelabel {
         0.0
     } else {
-        1.0 - prediction.confidence
+        1.0 - _prediction.confidence
     }
 }
 

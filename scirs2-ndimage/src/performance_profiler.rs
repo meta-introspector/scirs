@@ -318,7 +318,7 @@ impl PerformanceProfiler {
         D: Dimension,
     {
         let timing = OperationTiming {
-            _name: operation_name.to_string(),
+            name: operation_name.to_string(),
             input_dimensions: input.shape().to_vec(),
             data_type: std::any::type_name::<T>().to_string(),
             execution_time,
@@ -440,19 +440,19 @@ impl PerformanceProfiler {
         // This would integrate with actual SIMD performance counters in a real implementation
         // For now, provide estimates based on operation characteristics
         match operation_name {
-            _name if name.contains("simd") => 0.85,
-            _name if name.contains("convolution") => 0.70,
-            _name if name.contains("filter") => 0.60,
+            name if name.contains("simd") => 0.85,
+            name if name.contains("convolution") => 0.70,
+            name if name.contains("filter") => 0.60,
             _ => 0.30,
         }
     }
 
     fn estimate_cache_hit_ratio(&self, arraysize: usize) -> f64 {
         // Simple heuristic: smaller arrays have better cache hit ratios
-        if array_size < 1024 * 1024 {
+        if arraysize < 1024 * 1024 {
             // < 1MB for f64
             0.95
-        } else if array_size < 16 * 1024 * 1024 {
+        } else if arraysize < 16 * 1024 * 1024 {
             // < 16MB
             0.80
         } else {
@@ -560,7 +560,7 @@ impl MetricsAggregator {
         self.systemmetrics.total_memory_allocated = total_memory_allocated;
     }
 
-    fn update_trends(&mut selfrecords: &HashMap<String, Vec<OperationTiming>>) {
+    fn update_trends(&mut self, _records: &HashMap<String, Vec<OperationTiming>>) {
         // Simple trend analysis based on recent vs. older measurements
         // In a full implementation, this would use more sophisticated time series analysis
         self.trends.execution_time_trend = 0.0; // Placeholder
@@ -593,7 +593,7 @@ impl MemoryTracker {
         while self
             .usagehistory
             .front()
-            .map_or(false, |&(time_)| time < cutoff)
+            .map_or(false, |&(time, _)| time < cutoff)
         {
             self.usagehistory.pop_front();
         }
@@ -769,9 +769,9 @@ fn get_current_memory_usage() -> usize {
 }
 
 #[allow(dead_code)]
-fn calculate_throughput(_array_size: &[usize], executiontime: Duration) -> f64 {
+fn calculate_throughput(array_size: &[usize], executiontime: Duration) -> f64 {
     let total_elements: usize = array_size.iter().product();
-    let time_seconds = execution_time.as_secs_f64();
+    let time_seconds = executiontime.as_secs_f64();
 
     if time_seconds > 0.0 {
         total_elements as f64 / time_seconds

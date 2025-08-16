@@ -2006,7 +2006,7 @@ fn get_algorithm_adjustments(
     let algorithm_name = format!("{:?}", algorithm);
     adjustments
         .iter()
-        .filter(|(key_)| key_.starts_with(&algorithm_name))
+        .filter(|(key_, _)| key_.starts_with(&algorithm_name))
         .map(|(key, &value)| (key.clone(), value))
         .collect()
 }

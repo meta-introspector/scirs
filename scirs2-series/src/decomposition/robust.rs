@@ -480,7 +480,7 @@ where
                 .to_usize()
                 .unwrap_or(1)
             {
-                weighted_values.push(_ts[j]);
+                weighted_values.push(ts[j]);
             }
         }
 
@@ -519,7 +519,7 @@ where
     // Calculate Tukey bisquare weights
     let c = F::from_f64(4.685).unwrap(); // Tukey constant
     for i in 0..n {
-        let u = (_residuals[i] - median_residual).abs() / mad;
+        let u = (residuals[i] - median_residual).abs() / mad;
         if u <= c {
             let ratio = u / c;
             weights[i] = (F::one() - ratio * ratio).powi(2);
@@ -631,7 +631,7 @@ where
 }
 
 #[allow(dead_code)]
-fn m_estimator<F>(_values: &[F], losstype: RobustLossType) -> Result<F>
+fn m_estimator<F>(values: &[F], losstype: RobustLossType) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -639,10 +639,10 @@ where
         return Ok(F::zero());
     }
 
-    match loss_type {
-        RobustLossType::Huber => huber_estimator(_values),
-        RobustLossType::TukeyBisquare => tukey_estimator(_values),
-        RobustLossType::Andrews => andrews_estimator(_values),
+    match losstype {
+        RobustLossType::Huber => huber_estimator(values),
+        RobustLossType::TukeyBisquare => tukey_estimator(values),
+        RobustLossType::Andrews => andrews_estimator(values),
     }
 }
 
@@ -679,7 +679,7 @@ where
         let mut sum_weighted = F::zero();
         let mut sum_weights = F::zero();
 
-        for &value in _values {
+        for &value in values {
             let residual = (value - estimate).abs();
             let weight = if residual <= threshold {
                 F::one()
@@ -741,7 +741,7 @@ where
         let mut sum_weighted = F::zero();
         let mut sum_weights = F::zero();
 
-        for &value in _values {
+        for &value in values {
             let u = (value - estimate).abs() / mad;
             let weight = if u <= c {
                 let ratio = u / c;
@@ -804,7 +804,7 @@ where
         let mut sum_weighted = F::zero();
         let mut sum_weights = F::zero();
 
-        for &value in _values {
+        for &value in values {
             let u = (value - estimate).abs() / mad;
             let weight = if u <= c {
                 let pi_val = F::from_f64(std::f64::consts::PI).unwrap();

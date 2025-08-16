@@ -2048,7 +2048,7 @@ where
 
 #[allow(dead_code)]
 fn calculate_causal_connections(
-    _phi_calculator: &mut PhiCalculator_causal,
+    _phi_calculator: &mut PhiCalculator,
     _analyzer: &CausalStructureAnalyzer,
 ) -> NdimageResult<()> {
     Ok(())
@@ -2063,7 +2063,7 @@ fn compute_phi_partitions(
 
 #[allow(dead_code)]
 fn find_main_complex(
-    _phi_calculator: &mut PhiCalculator_phi,
+    _phi_calculator: &mut PhiCalculator,
     _values: &HashMap<String, f64>,
 ) -> NdimageResult<f64> {
     Ok(0.85) // High consciousness level
@@ -2099,13 +2099,13 @@ fn run_workspace_competition(
 ) -> NdimageResult<CompetitionResult> {
     Ok(CompetitionResult {
         winners: vec!["visual_processor".to_string()],
-        _competition_strength: 0.9,
+        competition_strength: 0.9,
     })
 }
 
 #[allow(dead_code)]
 fn broadcast_conscious_content(
-    _broadcaster: &mut BroadcastingSystem_competition,
+    _broadcaster: &mut BroadcastingSystem,
     result: &CompetitionResult,
 ) -> NdimageResult<BroadcastResult> {
     Ok(BroadcastResult {
@@ -2127,8 +2127,8 @@ fn form_processor_coalitions(
 
 #[allow(dead_code)]
 fn update_global_workspace(
-    _workspace: &mut GlobalWorkspace_broadcast,
-    result: &BroadcastResult_phi,
+    _workspace: &mut GlobalWorkspace,
+    result: &BroadcastResult,
     _result: &PhiCalculationResult,
 ) -> NdimageResult<()> {
     Ok(())
@@ -2150,7 +2150,7 @@ where
 
 #[allow(dead_code)]
 fn apply_dynamic_attention_control(
-    _dynamic_control: &mut DynamicAttentionControl_multiscale,
+    _dynamic_control: &mut DynamicAttentionControl,
     _result: &MultiscaleResult,
 ) -> NdimageResult<ControlResult> {
     Ok(ControlResult {
@@ -2161,7 +2161,7 @@ fn apply_dynamic_attention_control(
 
 #[allow(dead_code)]
 fn bind_consciousness_attention(
-    _consciousness_interface: &mut AttentionConsciousnessInterface_gwt,
+    _consciousness_interface: &mut AttentionConsciousnessInterface,
     _result: &GlobalWorkspaceResult,
 ) -> NdimageResult<BindingResult> {
     Ok(BindingResult {
@@ -2172,7 +2172,7 @@ fn bind_consciousness_attention(
 
 #[allow(dead_code)]
 fn apply_predictive_attention(
-    _predictive_attention: &mut PredictiveAttention_control,
+    _predictive_attention: &mut PredictiveAttention,
     _result: &ControlResult,
 ) -> NdimageResult<PredictionResult> {
     Ok(PredictionResult {
@@ -2183,7 +2183,7 @@ fn apply_predictive_attention(
 
 #[allow(dead_code)]
 fn calculate_attention_coherence(
-    _multiscale_result: &MultiscaleResult_control,
+    _multiscale_result: &MultiscaleResult,
     _result: &ControlResult,
 ) -> NdimageResult<f64> {
     Ok(0.88)
@@ -2191,9 +2191,9 @@ fn calculate_attention_coherence(
 
 #[allow(dead_code)]
 fn extract_enhanced_insights(
-    _phi_result: &PhiCalculationResult_gwt,
-    _result: &GlobalWorkspaceResult_attention,
-    result: &AdvancedAttentionResult_integrated,
+    _phi_result: &PhiCalculationResult,
+    _result: &GlobalWorkspaceResult,
+    result: &AdvancedAttentionResult,
     _integrated_result: &IntegratedConsciousnessResult,
 ) -> NdimageResult<EnhancedConsciousnessInsights> {
     Ok(EnhancedConsciousnessInsights {
@@ -2289,7 +2289,7 @@ mod tests {
         let result = quantum_ai_consciousness_processing(image.view(), &config, None);
 
         assert!(result.is_ok());
-        let (outputstate, insights) = result.unwrap();
+        let (output, _state, insights) = result.unwrap();
         assert_eq!(output.dim(), (3, 3));
         assert!(output.iter().all(|&x| x.is_finite()));
         assert!(insights.consciousness_level > 0.0);

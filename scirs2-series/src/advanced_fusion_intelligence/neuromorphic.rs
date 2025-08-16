@@ -135,7 +135,7 @@ pub struct NeuronalAdaptationSystem<F: Float + Debug> {
     homeostatic_controller: HomeostaticController<F>,
 }
 
-impl<F: Float + Debug> NeuronalAdaptationSystem<F> {
+impl<F: Float + Debug + FromPrimitive> NeuronalAdaptationSystem<F> {
     /// Create new neuronal adaptation system
     pub fn new() -> Self {
         NeuronalAdaptationSystem {
@@ -185,7 +185,7 @@ pub struct HomeostaticController<F: Float + Debug> {
     time_constant: F,
 }
 
-impl<F: Float + Debug> HomeostaticController<F> {
+impl<F: Float + Debug + FromPrimitive> HomeostaticController<F> {
     /// Create new homeostatic controller
     pub fn new() -> Self {
         HomeostaticController {
@@ -236,8 +236,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicProcessingUnit<F> {
 
         // 2. Process through spiking layers
         let mut current_spikes = spike_train;
+        let num_layers = self.spiking_layers.len();
         for layer in &mut self.spiking_layers {
-            current_spikes = self.process_through_layer(layer, &current_spikes)?;
+            // Process spikes through each layer
+            current_spikes = layer.forward(&current_spikes)?;
         }
 
         // 3. Apply plasticity updates
@@ -313,7 +315,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicProcessingUnit<F> {
     }
 }
 
-impl<F: Float + Debug> AdvancedSpikingLayer<F> {
+impl<F: Float + Debug + FromPrimitive> AdvancedSpikingLayer<F> {
     /// Create new spiking layer
     pub fn new(num_neurons: usize, numconnections: usize) -> Self {
         let neurons = (0..num_neurons)
@@ -340,8 +342,16 @@ impl<F: Float + Debug> AdvancedSpikingLayer<F> {
         }
     }
 
+    /// Forward pass through the spiking layer (Array1 interface)
+    pub fn forward(&mut self, input_spikes: &Array1<F>) -> Result<Array1<F>> {
+        // Convert Array1 to slice and call update
+        let input_slice = input_spikes.as_slice().unwrap();
+        let output_vec = self.update(input_slice)?;
+        Ok(Array1::from_vec(output_vec))
+    }
+
     /// Update layer state with input spikes
-    pub fn update(&mut self, inputspikes: &[F]) -> Result<Vec<F>> {
+    pub fn update(&mut self, input_spikes: &[F]) -> Result<Vec<F>> {
         let mut output_spikes = vec![F::zero(); self.neurons.len()];
 
         for (i, neuron) in self.neurons.iter_mut().enumerate() {
@@ -368,7 +378,7 @@ impl<F: Float + Debug> AdvancedSpikingLayer<F> {
     }
 }
 
-impl<F: Float + Debug> SpikingNeuron<F> {
+impl<F: Float + Debug + FromPrimitive> SpikingNeuron<F> {
     /// Create new spiking neuron
     pub fn new() -> Self {
         SpikingNeuron {
@@ -380,7 +390,7 @@ impl<F: Float + Debug> SpikingNeuron<F> {
     }
 
     /// Update neuron state
-    pub fn update(&mut self, inputcurrent: F, dt: F) -> bool {
+    pub fn update(&mut self, input_current: F, dt: F) -> bool {
         // Leaky integrate-and-fire dynamics
         let decay_factor = (-dt / self.tau_membrane).exp();
         self.potential = self.potential * decay_factor + input_current * dt;
@@ -395,7 +405,7 @@ impl<F: Float + Debug> SpikingNeuron<F> {
     }
 }
 
-impl<F: Float + Debug> AdvancedDendriticTree<F> {
+impl<F: Float + Debug + FromPrimitive> AdvancedDendriticTree<F> {
     /// Create new dendritic tree
     pub fn new(numbranches: usize) -> Self {
         let branches = (0..numbranches)

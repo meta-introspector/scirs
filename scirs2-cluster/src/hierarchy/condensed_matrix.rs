@@ -307,13 +307,13 @@ pub fn condensed_size(n: usize) -> usize {
 /// * `Result<usize>` - Number of points, or error if size is invalid
 #[allow(dead_code)]
 pub fn points_from_condensed_size(_condensedlen: usize) -> Result<usize> {
-    let n_float = (1.0 + (1.0 + 8.0 * _condensed_len as f64).sqrt()) / 2.0;
+    let n_float = (1.0 + (1.0 + 8.0 * _condensedlen as f64).sqrt()) / 2.0;
     let n = n_float as usize;
 
-    if n * (n - 1) / 2 != _condensed_len {
+    if n * (n - 1) / 2 != _condensedlen {
         return Err(ClusteringError::InvalidInput(format!(
             "Invalid condensed matrix size: {} elements doesn't correspond to n*(n-1)/2 for any integer n",
-            condensed_len
+            _condensedlen
         )));
     }
 

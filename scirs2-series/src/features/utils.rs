@@ -137,7 +137,7 @@ where
         sorted[lower_index]
     } else {
         let fraction = F::from(index - lower_index as f64).unwrap();
-        sorted[lower_index] + fraction * (_sorted[upper_index] - sorted[lower_index])
+        sorted[lower_index] + fraction * (sorted[upper_index] - sorted[lower_index])
     }
 }
 
@@ -234,12 +234,12 @@ where
 {
     let (min_val, max_val) = find_min_max(_ts);
     if min_val == max_val {
-        return Ok(vec![F::one(); n_bins]);
+        return Ok(vec![F::one(); nbins]);
     }
 
-    let mut counts = vec![0; n_bins];
-    for &value in ts.iter() {
-        let bin = discretize_value(value, min_val, max_val, n_bins);
+    let mut counts = vec![0; nbins];
+    for &value in _ts.iter() {
+        let bin = discretize_value(value, min_val, max_val, nbins);
         counts[bin] += 1;
     }
 
@@ -264,10 +264,10 @@ where
     }
 
     let normalized = (_value - min_val) / range;
-    let bin = (normalized * F::from(n_bins).unwrap())
+    let bin = (normalized * F::from(nbins).unwrap())
         .to_usize()
         .unwrap_or(0);
-    bin.min(n_bins - 1)
+    bin.min(nbins - 1)
 }
 
 /// Coarse grain time series for multiscale analysis
@@ -277,7 +277,7 @@ where
     F: Float + FromPrimitive + Debug + Clone,
 {
     if scale == 1 {
-        return Ok(_ts.clone());
+        return Ok(ts.clone());
     }
 
     let n = ts.len() / scale;
@@ -285,7 +285,7 @@ where
 
     for i in 0..n {
         let start = i * scale;
-        let end = (start + scale).min(_ts.len());
+        let end = (start + scale).min(ts.len());
         let sum = (start..end).fold(F::zero(), |acc, j| acc + ts[j]);
         coarse_grained.push(sum / F::from(end - start).unwrap());
     }
@@ -330,7 +330,7 @@ where
     F: Float + Clone,
 {
     if factor <= 1 {
-        return Ok(_ts.clone());
+        return Ok(ts.clone());
     }
 
     let downsampled: Vec<F> = ts.iter().step_by(factor).cloned().collect();
@@ -345,7 +345,7 @@ where
     F: Float + FromPrimitive + Debug + Clone,
 {
     if factor == 1 {
-        return Ok(_ts.clone());
+        return Ok(ts.clone());
     }
 
     let downsampled: Vec<F> = ts.iter().step_by(factor).cloned().collect();
@@ -362,8 +362,8 @@ pub fn get_ordinal_pattern<F>(window: &ArrayView1<F>) -> Vec<usize>
 where
     F: Float + FromPrimitive,
 {
-    let mut indices: Vec<usize> = (0.._window.len()).collect();
-    indices.sort_by(|&i, &j| window[i].partial_cmp(&_window[j]).unwrap());
+    let mut indices: Vec<usize> = (0..window.len()).collect();
+    indices.sort_by(|&i, &j| window[i].partial_cmp(&window[j]).unwrap());
     indices
 }
 
@@ -373,7 +373,7 @@ pub fn find_local_extrema<F>(_signal: &Array1<F>, findmaxima: bool) -> Result<(V
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = signal.len();
+    let n = _signal.len();
     let mut indices = Vec::new();
     let mut values = Vec::new();
 
@@ -384,10 +384,10 @@ where
 
     // Check for extrema in the interior
     for i in 1..(n - 1) {
-        let is_extremum = if find_maxima {
-            signal[i] > signal[i - 1] && signal[i] > signal[i + 1]
+        let is_extremum = if findmaxima {
+            _signal[i] > _signal[i - 1] && _signal[i] > _signal[i + 1]
         } else {
-            signal[i] < signal[i - 1] && signal[i] < signal[i + 1]
+            _signal[i] < _signal[i - 1] && _signal[i] < _signal[i + 1]
         };
 
         if is_extremum {
@@ -542,7 +542,7 @@ where
 /// Get Gaussian breakpoints for SAX conversion
 #[allow(dead_code)]
 pub fn gaussian_breakpoints(_alphabetsize: usize) -> Vec<f64> {
-    match _alphabet_size {
+    match _alphabetsize {
         2 => vec![0.0],
         3 => vec![-0.43, 0.43],
         4 => vec![-0.67, 0.0, 0.67],
@@ -553,8 +553,8 @@ pub fn gaussian_breakpoints(_alphabetsize: usize) -> Vec<f64> {
         _ => {
             // For larger alphabets, use normal distribution inverse CDF
             let mut breakpoints = Vec::new();
-            for i in 1.._alphabet_size {
-                let p = i as f64 / _alphabet_size as f64;
+            for i in 1.._alphabetsize {
+                let p = i as f64 / _alphabetsize as f64;
                 // Calculate the z-score for cumulative probability p
                 let z = standard_normal_quantile(p);
                 breakpoints.push(z);
@@ -628,13 +628,13 @@ pub fn standard_normal_quantile(p: f64) -> f64 {
 /// Calculate entropy from class counts
 #[allow(dead_code)]
 pub fn calculate_entropy(_class1_count: usize, class2count: usize) -> f64 {
-    let total = _class1_count + class2_count;
+    let total = _class1_count + class2count;
     if total == 0 {
         return 0.0;
     }
 
-    let p1 = class1_count as f64 / total as f64;
-    let p2 = class2_count as f64 / total as f64;
+    let p1 = _class1_count as f64 / total as f64;
+    let p2 = class2count as f64 / total as f64;
 
     let mut entropy = 0.0;
     if p1 > 0.0 {
@@ -678,15 +678,15 @@ pub fn calculate_trimmed_mean<F>(_ts: &Array1<F>, trimfraction: f64) -> Result<F
 where
     F: Float + FromPrimitive,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n == 0 {
         return Ok(F::zero());
     }
 
-    let mut sorted = ts.to_vec();
+    let mut sorted = _ts.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-    let trim_count = (n as f64 * trim_fraction).floor() as usize;
+    let trim_count = (n as f64 * trimfraction).floor() as usize;
     let start = trim_count;
     let end = n - trim_count;
 
@@ -706,15 +706,15 @@ pub fn calculate_winsorized_mean<F>(_ts: &Array1<F>, winsorfraction: f64) -> Res
 where
     F: Float + FromPrimitive,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n == 0 {
         return Ok(F::zero());
     }
 
-    let mut sorted = ts.to_vec();
+    let mut sorted = _ts.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-    let winsor_count = (n as f64 * winsor_fraction).floor() as usize;
+    let winsor_count = (n as f64 * winsorfraction).floor() as usize;
 
     // Winsorize: replace extreme values
     let lower_bound = sorted[winsor_count];

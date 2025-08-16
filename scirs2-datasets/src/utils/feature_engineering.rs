@@ -237,7 +237,7 @@ pub fn statistical_features(data: &Array2<f64>) -> Result<Array2<f64>> {
 
 /// Calculates a specific quantile from sorted data
 #[allow(dead_code)]
-fn calculate_quantile(_sorteddata: &[f64], quantile: f64) -> f64 {
+fn calculate_quantile(sorted_data: &[f64], quantile: f64) -> f64 {
     if sorted_data.is_empty() {
         return 0.0;
     }
@@ -385,12 +385,12 @@ fn calculate_bin_edges(
 /// Find the bin index for a given value
 #[allow(dead_code)]
 fn find_bin_index(_value: f64, binedges: &[f64]) -> usize {
-    for (i, &edge) in bin_edges.iter().enumerate().skip(1) {
+    for (i, &edge) in binedges.iter().enumerate().skip(1) {
         if _value <= edge {
             return i - 1;
         }
     }
-    bin_edges.len() - 2 // Last bin
+    binedges.len() - 2 // Last bin
 }
 
 #[cfg(test)]

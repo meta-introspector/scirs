@@ -222,7 +222,8 @@ where
     /// Create a new ensemble clusterer
     pub fn new(config: EnsembleConfig) -> Self {
         Self {
-            _config_phantom: std::marker::PhantomData,
+            config,
+            phantom: std::marker::PhantomData,
         }
     }
 
@@ -335,12 +336,12 @@ where
             }
             SamplingStrategy::RandomSubspace { feature_ratio } => {
                 let n_selected_features = (n_features as f64 * feature_ratio) as usize;
-                let mut feature_indices: Vec<usize> = (0..n_features).collect();
-                feature_indices.shuffle(rng);
-                feature_indices.truncate(n_selected_features);
+                let mut featureindices: Vec<usize> = (0..n_features).collect();
+                featureindices.shuffle(rng);
+                featureindices.truncate(n_selected_features);
 
                 let sample_indices: Vec<usize> = (0..n_samples).collect();
-                let sampled_data = self.extract_features(data, &feature_indices)?;
+                let sampled_data = self.extract_features(data, &featureindices)?;
                 Ok((sampled_data, sample_indices))
             }
             SamplingStrategy::BootstrapSubspace {
@@ -357,13 +358,12 @@ where
 
                 // Then apply feature sampling
                 let n_selected_features = (n_features as f64 * feature_ratio) as usize;
-                let mut feature_indices: Vec<usize> = (0..n_features).collect();
-                feature_indices.shuffle(rng);
-                feature_indices.truncate(n_selected_features);
+                let mut featureindices: Vec<usize> = (0..n_features).collect();
+                featureindices.shuffle(rng);
+                featureindices.truncate(n_selected_features);
 
                 let bootstrap_data = self.extract_samples(data..&sample_indices)?;
-                let sampled_data =
-                    self.extract_features(bootstrap_data.view(), &feature_indices)?;
+                let sampled_data = self.extract_features(bootstrap_data.view(), &featureindices)?;
 
                 Ok((sampled_data, sample_indices))
             }
@@ -474,15 +474,11 @@ where
     }
 
     /// Extract features based on indices
-    fn extract_features(
-        &self,
-        data: ArrayView2<F>,
-        feature_indices: &[usize],
-    ) -> Result<Array2<F>> {
+    fn extract_features(&self, data: ArrayView2<F>, featureindices: &[usize]) -> Result<Array2<F>> {
         let n_samples = data.nrows();
-        let mut feature_data = Array2::zeros((n_samples, feature_indices.len()));
+        let mut feature_data = Array2::zeros((n_samples, featureindices.len()));
 
-        for (new_idx, &orig_idx) in feature_indices.iter().enumerate() {
+        for (new_idx, &orig_idx) in featureindices.iter().enumerate() {
             if orig_idx >= data.ncols() {
                 return Err(ClusteringError::InvalidInput(
                     "Feature index out of bounds".to_string(),
@@ -544,7 +540,7 @@ where
                 let most_voted_cluster = votes
                     .iter()
                     .max_by_key(|(_, &count)| count)
-                    .map(|(&cluster_)| cluster)
+                    .map(|(&cluster_)| cluster_)
                     .unwrap_or(0);
                 consensus_labels[sample_idx] = most_voted_cluster;
             }
@@ -594,7 +590,7 @@ where
                 let most_voted_cluster = votes
                     .iter()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                    .map(|(&cluster_)| cluster)
+                    .map(|(&cluster_)| cluster_)
                     .unwrap_or(0);
                 consensus_labels[sample_idx] = most_voted_cluster;
             }
@@ -955,7 +951,7 @@ where
             _ => {
                 // Default to K-means with random k
                 let k = rng.gen_range(2..=10);
-                let algorithm = ClusteringAlgorithm::KMeans { k_range: (k..k) };
+                let algorithm = ClusteringAlgorithm::KMeans { k_range: (k, k) };
                 let mut parameters = HashMap::new();
                 parameters.insert("k".to_string(), k.to_string());
                 Ok((algorithm, parameters))
@@ -1221,11 +1217,11 @@ where
         let mut max_gap = 0.0;
         let mut optimal_clusters = 2;
 
-        for i in 1..linkage_matrix.nrows() {
-            let gap = linkage_matrix[[i, 2]] - linkage_matrix[[i - 1, 2]];
+        for i in 1..linkagematrix.nrows() {
+            let gap = linkagematrix[[i, 2]] - linkagematrix[[i - 1, 2]];
             if gap > max_gap {
                 max_gap = gap;
-                optimal_clusters = linkage_matrix.nrows() - i + 1;
+                optimal_clusters = linkagematrix.nrows() - i + 1;
             }
         }
 
@@ -1239,10 +1235,10 @@ where
         results: &[ClusteringResult],
     ) -> Result<DiversityMetrics> {
         Ok(DiversityMetrics {
-            pairwise_diversity: 0.5, // Stub implementation
             average_diversity: 0.5,  // Stub implementation
-            max_diversity: 0.8,      // Stub implementation
-            min_diversity: 0.2,      // Stub implementation
+            diversity_matrix: Array2::eye(results.len()),  // Stub implementation
+            algorithm_distribution: HashMap::new(),  // Stub implementation
+            parameter_diversity: HashMap::new(),  // Stub implementation
         })
     }
 
@@ -1261,7 +1257,7 @@ fn extract_samples<F: Float>(data: ArrayView2<F>, indices: &[usize]) -> Result<A
 
     for (new_idx, &old_idx) in indices.iter().enumerate() {
         if old_idx < data.nrows() {
-            sampled_data.row_mut(new_idx).assign(&_data.row(old_idx));
+            sampled_data.row_mut(new_idx).assign(&data.row(old_idx));
         }
     }
 
@@ -1272,13 +1268,13 @@ fn extract_samples<F: Float>(data: ArrayView2<F>, indices: &[usize]) -> Result<A
 #[allow(dead_code)]
 fn extract_features<F: Float>(data: ArrayView2<F>, featureindices: &[usize]) -> Result<Array2<F>> {
     let n_samples = data.nrows();
-    let mut sampled_data = Array2::zeros((n_samples, feature_indices.len()));
+    let mut sampled_data = Array2::zeros((n_samples, featureindices.len()));
 
-    for (new_feat_idx, &old_feat_idx) in feature_indices.iter().enumerate() {
+    for (new_feat_idx, &old_feat_idx) in featureindices.iter().enumerate() {
         if old_feat_idx < data.ncols() {
             sampled_data
                 .column_mut(new_feat_idx)
-                .assign(&_data.column(old_feat_idx));
+                .assign(&data.column(old_feat_idx));
         }
     }
 
@@ -1290,7 +1286,7 @@ impl Default for EnsembleConfig {
     fn default() -> Self {
         Self {
             n_estimators: 10,
-            sampling_strategy: SamplingStrategy::Bootstrap { sample, ratio: 0.8 },
+            sampling_strategy: SamplingStrategy::Bootstrap { sample_ratio: 0.8 },
             consensus_method: ConsensusMethod::MajorityVoting,
             random_seed: None,
             diversity_strategy: Some(DiversityStrategy::AlgorithmDiversity {
@@ -1327,7 +1323,7 @@ pub mod convenience {
     {
         let config = EnsembleConfig::default();
         let ensemble = EnsembleClusterer::new(config);
-        ensemble.fit(_data)
+        ensemble.fit(data)
     }
 
     /// Bootstrap ensemble clustering
@@ -1386,8 +1382,8 @@ pub mod convenience {
     /// using the clustering assignments as features for a meta-clustering algorithm.
     pub fn meta_clustering_ensemble<F>(
         data: ArrayView2<F>,
-        base_configs: Vec<EnsembleConfig>,
-        meta_config: EnsembleConfig,
+        baseconfigs: Vec<EnsembleConfig>,
+        metaconfig: EnsembleConfig,
     ) -> Result<EnsembleResult>
     where
         F: Float
@@ -1404,8 +1400,8 @@ pub mod convenience {
         let n_samples = data.shape()[0];
 
         // Step 1: Generate diverse base clusterings
-        for _config in base_configs {
-            let ensemble = EnsembleClusterer::new(_config);
+        for config in baseconfigs {
+            let ensemble = EnsembleClusterer::new(config);
             let result = ensemble.fit(data)?;
             base_results.extend(result.individual_results);
         }
@@ -1419,7 +1415,7 @@ pub mod convenience {
         }
 
         // Step 3: Apply meta-clustering
-        let meta_ensemble = EnsembleClusterer::new(meta_config);
+        let meta_ensemble = EnsembleClusterer::new(metaconfig);
         let mut meta_result = meta_ensemble.fit(meta_features.view())?;
 
         // Step 4: Combine with original base results
@@ -1435,7 +1431,7 @@ pub mod convenience {
     pub fn adaptive_ensemble<F>(
         data: ArrayView2<F>,
         config: &EnsembleConfig,
-        adaptation_config: AdaptationConfig,
+        adaptationconfig: AdaptationConfig,
     ) -> Result<EnsembleResult>
     where
         F: Float
@@ -1448,9 +1444,9 @@ pub mod convenience {
             + Sync,
         f64: From<F>,
     {
-        let mut ensemble = EnsembleClusterer::new(_config.clone());
+        let mut ensemble = EnsembleClusterer::new(config.clone());
         let mut current_results = Vec::new();
-        let chunk_size = adaptation_config.chunk_size;
+        let chunk_size = adaptationconfig.chunk_size;
 
         // Process data in chunks for adaptive learning
         for chunk_start in (0..data.shape()[0]).step_by(chunk_size) {
@@ -1461,13 +1457,13 @@ pub mod convenience {
             let chunk_result = ensemble.fit(chunk_data)?;
 
             // Evaluate performance and adapt
-            if current_results.len() >= adaptation_config.min_evaluations {
+            if current_results.len() >= adaptationconfig.min_evaluations {
                 let performance = evaluate_ensemble_performance(&current_results);
 
-                if performance < adaptation_config.performance_threshold {
+                if performance < adaptationconfig.performance_threshold {
                     // Poor performance - adapt ensemble
                     ensemble =
-                        adapt_ensemble_composition(ensemble, &current_results, &adaptation_config)?;
+                        adapt_ensemble_composition(ensemble, &current_results, &adaptationconfig)?;
                 }
             }
 
@@ -1475,7 +1471,7 @@ pub mod convenience {
         }
 
         // Combine all chunk results into final consensus
-        combine_chunk_results(current_results)
+        combine__chunkresults(current_results)
     }
 
     /// Federated ensemble clustering for distributed data
@@ -1485,7 +1481,7 @@ pub mod convenience {
     pub fn federated_ensemble<F>(
         data_sources: Vec<ArrayView2<F>>,
         config: &EnsembleConfig,
-        federation_config: FederationConfig,
+        federationconfig: FederationConfig,
     ) -> Result<EnsembleResult>
     where
         F: Float
@@ -1502,12 +1498,12 @@ pub mod convenience {
 
         // Step 1: Local clustering at each data source
         for data_source in data_sources {
-            let local_ensemble = EnsembleClusterer::new(_config.clone());
+            let local_ensemble = EnsembleClusterer::new(config.clone());
             let result = local_ensemble.fit(data_source)?;
 
             // Apply differential privacy if configured
-            let private_result = if federation_config.differential_privacy {
-                apply_differential_privacy(result, federation_config.privacy_budget)?
+            let private_result = if federationconfig.differential_privacy {
+                apply_differential_privacy(result, federationconfig.privacy_budget)?
             } else {
                 result
             };
@@ -1516,7 +1512,7 @@ pub mod convenience {
         }
 
         // Step 2: Secure aggregation of results
-        let aggregated_result = secure_aggregate_results(local_results, &federation_config)?;
+        let aggregated_result = secure_aggregate_results(local_results, &federationconfig)?;
 
         Ok(aggregated_result)
     }
@@ -1592,9 +1588,9 @@ pub mod advanced_ensemble {
         /// Genetic algorithm optimization configuration
         pub genetic_optimization: GeneticOptimizationConfig,
         /// Boosting configuration for clustering
-        pub boosting_config: BoostingConfig,
+        pub boostingconfig: BoostingConfig,
         /// Stacking configuration
-        pub stacking_config: StackingConfig,
+        pub stackingconfig: StackingConfig,
         /// Enable uncertainty quantification
         pub uncertainty_quantification: bool,
     }
@@ -1796,10 +1792,10 @@ pub mod advanced_ensemble {
         f64: From<F>,
     {
         /// Create new advanced ensemble clusterer
-        pub fn new(_config: AdvancedEnsembleConfig, baseconfig: EnsembleConfig) -> Self {
+        pub fn new(config: AdvancedEnsembleConfig, baseconfig: EnsembleConfig) -> Self {
             Self {
                 config,
-                base_ensemble: EnsembleClusterer::new(base_config),
+                base_ensemble: EnsembleClusterer::new(baseconfig),
                 meta_learner: None,
                 bayesian_weights: None,
                 genetic_optimizer: None,
@@ -1887,7 +1883,7 @@ pub mod advanced_ensemble {
             let mut weak_learners = Vec::new();
             let mut learner_weights = Vec::new();
 
-            for _round in 0..self.config.boosting_config.n_rounds {
+            for _round in 0..self.config.boostingconfig.n_rounds {
                 // Sample data based on current weights
                 let weighted_data = self.weighted_sample(data, &sample_weights)?;
 
@@ -1903,7 +1899,7 @@ pub mod advanced_ensemble {
                 }
 
                 // Calculate learner weight
-                let learner_weight = self.config.boosting_config.learning_rate
+                let learner_weight = self.config.boostingconfig.learning_rate
                     * ((1.0 - error_rate) / error_rate).ln();
 
                 // Update sample weights
@@ -1915,7 +1911,7 @@ pub mod advanced_ensemble {
                 )?;
 
                 weak_learners.push(weak_result);
-                learnerweights.push(learner_weight);
+                learner_weights.push(learner_weight);
             }
 
             // Combine weak learners
@@ -1924,13 +1920,13 @@ pub mod advanced_ensemble {
 
         /// Perform stacking ensemble clustering
         pub fn fit_with_stacking(&mut self, data: ArrayView2<F>) -> Result<EnsembleResult> {
-            let cv_folds = self.config.stacking_config.cv_folds;
+            let cv_folds = self.config.stackingconfig.cv_folds;
             let n_samples = data.nrows();
             let fold_size = n_samples / cv_folds;
 
             // Stage 1: Generate base predictions using cross-validation
             let mut base_predictions =
-                Array2::zeros((n_samples, self.config.stacking_config.base_algorithms.len()));
+                Array2::zeros((n_samples, self.config.stackingconfig.base_algorithms.len()));
 
             for fold in 0..cv_folds {
                 let start_idx = fold * fold_size;
@@ -1950,7 +1946,7 @@ pub mod advanced_ensemble {
                 // Train base algorithms on fold training data
                 for (alg_idx, algorithm) in self
                     .config
-                    .stacking_config
+                    .stackingconfig
                     .base_algorithms
                     .iter()
                     .enumerate()
@@ -2004,7 +2000,7 @@ pub mod advanced_ensemble {
             // Statistical meta-features
             meta_features[[0, 0]] = n_samples.ln();
             meta_features[[0, 1]] = n_dims.ln();
-            meta_features[[0, 2]] = data_f64.variance();
+            meta_features[[0, 2]] = data_f64.clone().variance();
             meta_features[[0, 3]] = calculate_intrinsic_dimensionality(&data_f64);
             meta_features[[0, 4]] = calculate_clustering_tendency(&data_f64);
             meta_features[[0, 5]] = results.diversity_metrics.average_diversity;
@@ -2024,7 +2020,8 @@ pub mod advanced_ensemble {
         ) -> Result<Array1<f64>> {
             match &self.config.meta_learning.algorithm {
                 MetaLearningAlgorithm::NeuralNetwork { hidden_layers } => {
-                    self.train_neural_meta_learner(meta_features, base_results, hidden_layers)
+                    let hidden_layers = hidden_layers.clone();
+                    self.train_neural_meta_learner(meta_features, base_results, &hidden_layers)
                 }
                 MetaLearningAlgorithm::RandomForest { n_trees, max_depth } => self
                     .train_forest_meta_learner(meta_features, base_results, *n_trees, *max_depth),
@@ -2155,7 +2152,7 @@ pub mod advanced_ensemble {
                     .max_by(|(_, score_a), (_, score_b)| {
                         score_a.partial_cmp(score_b).unwrap_or(Ordering::Equal)
                     })
-                    .map(|(label_)| label)
+                    .map(|(label_)| label_)
                     .unwrap_or(0);
 
                 consensus[i] = best_label;
@@ -2171,25 +2168,25 @@ pub mod advanced_ensemble {
             data: ArrayView2<F>,
         ) -> Result<Array1<f64>> {
             // Simplified MCMC update (Metropolis-Hastings)
-            let mut new_weights = currentweights.clone();
+            let mut new_weights = current_weights.clone();
             let mut rng = rand::rng();
 
             // Propose new _weights with small random perturbations
-            for weight in newweights.iter_mut() {
+            for weight in new_weights.iter_mut() {
                 let perturbation = rng.gen_range(-0.05..0.05);
                 *weight = (*weight + perturbation).max(0.01).min(0.99);
             }
 
             // Normalize
-            let sum = newweights.sum();
-            newweights.mapv_inplace(|w| w / sum);
+            let sum = new_weights.sum();
+            new_weights.mapv_inplace(|w| w / sum);
 
             // Accept/reject based on simplified likelihood (in practice..would compute proper likelihood)
             let accept_prob = rng.random::<f64>();
             if accept_prob > 0.5 {
                 Ok(new_weights)
             } else {
-                Ok(currentweights.clone())
+                Ok(current_weights.clone())
             }
         }
 
@@ -2366,7 +2363,7 @@ pub mod advanced_ensemble {
                     .iter()
                     .enumerate()
                     .filter(|(_, &l)| l == label)
-                    .map(|(i_)| i)
+                    .map(|(i_)| i_)
                     .collect();
 
                 if !cluster_points.is_empty() {
@@ -2390,7 +2387,7 @@ pub mod advanced_ensemble {
                 let sample_point = data_f64.row(i);
 
                 if let Some((_, centroid)) =
-                    centroids.iter().find(|(label_)| *label == assigned_label)
+                    centroids.iter().find(|(label_)| *label_ == assigned_label)
                 {
                     let distance: f64 = sample_point
                         .iter()
@@ -2412,7 +2409,7 @@ pub mod advanced_ensemble {
             }
 
             // Update weights using AdaBoost-style exponential weighting
-            match self.config.boosting_config.reweighting_strategy {
+            match self.config.boostingconfig.reweighting_strategy {
                 ReweightingStrategy::Exponential => {
                     for i in 0..n_samples {
                         let error = sample_errors[i];
@@ -2442,7 +2439,7 @@ pub mod advanced_ensemble {
             }
 
             // Normalize weights to sum to 1
-            let _weight_sum: f64 = weights.sum();
+            let weight_sum: f64 = weights.sum();
             if weight_sum > 0.0 {
                 weights.mapv_inplace(|w| w / weight_sum);
             } else {
@@ -2603,7 +2600,7 @@ pub mod advanced_ensemble {
             let mut min_distance = f64::INFINITY;
             for j in 0..n_samples {
                 if i != j {
-                    let distance = euclidean_distance_f64(&_data.row(i), &_data.row(j));
+                    let distance = euclidean_distance_f64(&data.row(i), &data.row(j));
                     min_distance = min_distance.min(distance);
                 }
             }
@@ -2614,15 +2611,15 @@ pub mod advanced_ensemble {
         (total_distance / sample_size as f64).tanh()
     }
 
-    fn calculate_advanced_meta_feature(_data: &Array2<f64>, featureidx: usize) -> f64 {
-        match feature_idx {
-            0 => data.mean().unwrap_or(0.0),           // Overall mean
-            1 => data.std(0.0),                        // Overall std
-            2 => calculate_skewness(_data),            // Skewness
-            3 => calculate_kurtosis(_data),            // Kurtosis
-            4 => calculate_outlier_ratio(_data),       // Outlier ratio
-            5 => calculate_feature_correlation(_data), // Feature correlation
-            _ => 0.0,                                  // Default
+    fn calculate_advanced_meta_feature(data: &Array2<f64>, featureidx: usize) -> f64 {
+        match featureidx {
+            0 => data.mean().unwrap_or(0.0),          // Overall mean
+            1 => data.std(0.0),                       // Overall std
+            2 => calculate_skewness(data),            // Skewness
+            3 => calculate_kurtosis(data),            // Kurtosis
+            4 => calculate_outlier_ratio(data),       // Outlier ratio
+            5 => calculate_feature_correlation(data), // Feature correlation
+            _ => 0.0,                                 // Default
         }
     }
 
@@ -2687,7 +2684,7 @@ pub mod advanced_ensemble {
         let mut correlations = Vec::new();
         for i in 0..n_features {
             for j in (i + 1)..n_features {
-                let corr = pearson_correlation(&_data.column(i), &_data.column(j));
+                let corr = pearson_correlation(&data.column(i), &data.column(j));
                 correlations.push(corr.abs());
             }
         }
@@ -2777,8 +2774,8 @@ where
 }
 
 #[allow(dead_code)]
-fn combine_chunk_results(_chunkresults: Vec<EnsembleResult>) -> Result<EnsembleResult> {
-    if chunk_results.is_empty() {
+fn combine__chunkresults(_chunkresults: Vec<EnsembleResult>) -> Result<EnsembleResult> {
+    if _chunkresults.is_empty() {
         return Err(ClusteringError::InvalidInput(
             "No chunk _results to combine".to_string(),
         ));
@@ -2786,7 +2783,7 @@ fn combine_chunk_results(_chunkresults: Vec<EnsembleResult>) -> Result<EnsembleR
 
     // For simplicity, return the first result
     // A real implementation would intelligently combine all chunk _results
-    Ok(chunk_results.into_iter().next().unwrap())
+    Ok(_chunkresults.into_iter().next().unwrap())
 }
 
 #[allow(dead_code)]
@@ -2812,7 +2809,7 @@ fn apply_differential_privacy(
 #[allow(dead_code)]
 fn secure_aggregate_results(
     local_results: Vec<EnsembleResult>,
-    _config: &FederationConfig,
+    config: &FederationConfig,
 ) -> Result<EnsembleResult> {
     if local_results.is_empty() {
         return Err(ClusteringError::InvalidInput(
@@ -2835,7 +2832,7 @@ fn secure_aggregate_results(
         let majority_label = votes
             .into_iter()
             .max_by_key(|(_, count)| *count)
-            .map(|(label_)| label)
+            .map(|(label_)| label_)
             .unwrap_or(0);
 
         consensus_labels[i] = majority_label;
@@ -2854,7 +2851,7 @@ mod tests {
     use ndarray::Array2;
 
     #[test]
-    fn test_ensemble_config_default() {
+    fn test_ensembleconfig_default() {
         let config = EnsembleConfig::default();
         assert_eq!(config.n_estimators, 10);
         assert!(matches!(
@@ -2878,7 +2875,7 @@ mod tests {
     #[test]
     fn test_sampling_strategies() {
         let config = EnsembleConfig {
-            sampling_strategy: SamplingStrategy::Bootstrap { sample, ratio: 0.8 },
+            sampling_strategy: SamplingStrategy::Bootstrap { sample_ratio: 0.8 },
             ..Default::default()
         };
 

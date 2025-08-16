@@ -4,7 +4,7 @@
 //! features including deep learning integration, quantum-inspired algorithms,
 //! and advanced ensemble methods for superior clustering performance.
 
-use crate::advanced__clustering::{
+use crate::advanced_clustering::{
     AdvancedClusterer, AdvancedClusteringResult, QuantumNeuromorphicMetrics,
 };
 use crate::error::{ClusteringError, Result};
@@ -338,7 +338,7 @@ impl TransformerClusterEmbedder {
         head: usize,
         head_dim: usize,
     ) -> Result<Array2<f64>> {
-        let (seq_len_) = embeddings._dim();
+        let seq_len = embeddings.nrows();
 
         // Simplified attention computation
         // Q, K, V projections (using simplified linear transformations)
@@ -418,8 +418,8 @@ impl TransformerClusterEmbedder {
         let (seq_len, embed_dim) = embeddings.dim();
         let mut normalized = embeddings.clone();
 
-        if norm_idx < self.layer_norm_params.len() {
-            let (gamma, beta) = &self.layer_norm_params[norm_idx];
+        if normidx < self.layer_norm_params.len() {
+            let (gamma, beta) = &self.layer_norm_params[normidx];
 
             // Layer normalization across embedding dimension
             for i in 0..seq_len {
@@ -465,14 +465,14 @@ impl TransformerClusterEmbedder {
         }
 
         let ffn_weights = &self.ffn_layers[layer_idx];
-        let hidden_dim = ffnweights.ncols();
+        let hidden_dim = ffn_weights.ncols();
 
         // First linear layer with ReLU activation
         let mut hidden = Array2::zeros((seq_len, hidden_dim));
         for i in 0..seq_len {
             for j in 0..hidden_dim {
                 for k in 0..embed_dim {
-                    if k < ffnweights.nrows() {
+                    if k < ffn_weights.nrows() {
                         hidden[[i, j]] += embeddings[[i, k]] * ffn_weights[[k, j]];
                     }
                 }
@@ -487,12 +487,12 @@ impl TransformerClusterEmbedder {
             for j in 0..embed_dim {
                 for k in 0..hidden_dim {
                     // Simplified projection (using transpose-like operation)
-                    let weight_idx = (k * embed_dim + j) % ffnweights.len();
+                    let weight_idx = (k * embed_dim + j) % ffn_weights.len();
                     let (wi, wj) = (
-                        weight_idx / ffnweights.ncols(),
-                        weight_idx % ffnweights.ncols(),
+                        weight_idx / ffn_weights.ncols(),
+                        weight_idx % ffn_weights.ncols(),
                     );
-                    if wi < ffnweights.nrows() && wj < ffnweights.ncols() {
+                    if wi < ffn_weights.nrows() && wj < ffn_weights.ncols() {
                         output[[i, j]] += hidden[[i, k]] * ffn_weights[[wi, wj]];
                     }
                 }
@@ -823,10 +823,10 @@ impl ReinforcementLearningAgent {
         let n_samples = data.nrows();
 
         for i in 0..n_samples {
-            if i != point_idx {
+            if i != pointidx {
                 let mut dist = 0.0;
                 for j in 0..data.ncols() {
-                    let diff = data[[point_idx, j]] - data[[i, j]];
+                    let diff = data[[pointidx, j]] - data[[i, j]];
                     dist += diff * diff;
                 }
                 density += (-dist.sqrt()).exp();
@@ -840,7 +840,7 @@ impl ReinforcementLearningAgent {
         // Simple quality metric based on embedding norm and distribution
         let mut norm = 0.0;
         for j in 0..embeddings.ncols() {
-            norm += embeddings[[point_idx, j]] * embeddings[[point_idx, j]];
+            norm += embeddings[[pointidx, j]] * embeddings[[pointidx, j]];
         }
         norm.sqrt()
     }
@@ -895,12 +895,12 @@ impl NeuralArchitectureSearchEngine {
         // Compute variance of embedding values
         let mut mean = 0.0;
         for j in 0..embed_dim {
-            mean += embeddings[[sample_idx, j]];
+            mean += embeddings[[sampleidx, j]];
         }
         mean /= embed_dim as f64;
 
         for j in 0..embed_dim {
-            let diff = embeddings[[sample_idx, j]] - mean;
+            let diff = embeddings[[sampleidx, j]] - mean;
             variance += diff * diff;
         }
 
@@ -911,15 +911,15 @@ impl NeuralArchitectureSearchEngine {
         &self,
         data: &ArrayView2<f64>,
         embeddings: &Array2<f64>,
-        sample_idx: usize,
+        sampleidx: usize,
     ) -> f64 {
         // Simple reconstruction quality based on information preservation
         let data_norm = (0..data.ncols())
-            .map(|j| data[[sample_idx, j]] * data[[sample_idx, j]])
+            .map(|j| data[[sampleidx, j]] * data[[sampleidx, j]])
             .sum::<f64>()
             .sqrt();
         let embed_norm = (0..embeddings.ncols())
-            .map(|j| embeddings[[sample_idx, j]] * embeddings[[sample_idx, j]])
+            .map(|j| embeddings[[sampleidx, j]] * embeddings[[sampleidx, j]])
             .sum::<f64>()
             .sqrt();
 
@@ -1080,10 +1080,10 @@ impl DeepEnsembleCoordinator {
         let mut local_density = 0.0;
 
         for i in 0..n_samples {
-            if i != point_idx {
+            if i != pointidx {
                 let mut dist = 0.0;
                 for j in 0..data.ncols() {
-                    let diff = data[[point_idx, j]] - data[[i, j]];
+                    let diff = data[[pointidx, j]] - data[[i, j]];
                     dist += diff * diff;
                 }
                 local_density += (-dist.sqrt() / 2.0).exp();

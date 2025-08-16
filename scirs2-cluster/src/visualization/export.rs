@@ -128,7 +128,7 @@ pub fn export_scatter_2d_to_file<P: AsRef<Path>>(
     output_path: P,
     config: &ExportConfig,
 ) -> Result<()> {
-    let _path = output_path.as_ref();
+    let path = output_path.as_ref();
 
     match config.format {
         ExportFormat::JSON => export_scatter_2d_to_json(plot, path, config),
@@ -162,7 +162,7 @@ pub fn export_scatter_3d_to_file<P: AsRef<Path>>(
     output_path: P,
     config: &ExportConfig,
 ) -> Result<()> {
-    let _path = output_path.as_ref();
+    let path = output_path.as_ref();
 
     match config.format {
         ExportFormat::JSON => export_scatter_3d_to_json(plot, path, config),
@@ -196,7 +196,7 @@ pub fn export_animation_to_file<P: AsRef<Path>>(
     output_path: P,
     config: &ExportConfig,
 ) -> Result<()> {
-    let _path = output_path.as_ref();
+    let path = output_path.as_ref();
 
     match config.format {
         ExportFormat::GIF => export_animation_to_gif(frames, path, config),
@@ -320,7 +320,7 @@ pub fn save_visualization_to_file<P: AsRef<Path>>(
     output_path: P,
     mut config: ExportConfig,
 ) -> Result<()> {
-    let _path = output_path.as_ref();
+    let path = output_path.as_ref();
 
     // Auto-detect format from file extension if not specified
     if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
@@ -356,7 +356,7 @@ pub fn save_visualization_to_file<P: AsRef<Path>>(
 /// Generate HTML content for 2D scatter plot
 #[allow(dead_code)]
 fn generate_scatter_2d_html(plot: &ScatterPlot2D, config: &ExportConfig) -> Result<String> {
-    let plot_data_json = serde_json::to_string(_plot).map_err(|e| {
+    let plot_data_json = serde_json::to_string(plot).map_err(|e| {
         ClusteringError::ComputationError(format!("JSON serialization failed: {}", e))
     })?;
 
@@ -491,7 +491,7 @@ fn generate_scatter_2d_html(plot: &ScatterPlot2D, config: &ExportConfig) -> Resu
         .replace("{height}", &config.dimensions.1.to_string())
         .replace(
             "{point_size}",
-            &_plot.sizes.get(0).unwrap_or(&5.0).to_string(),
+            &plot.sizes.get(0).unwrap_or(&5.0).to_string(),
         )
         .replace("{opacity}", &(config.quality as f32 / 100.0).to_string())
         .replace("{interactive}", &config.interactive.to_string())
@@ -506,7 +506,7 @@ fn generate_scatter_2d_html(plot: &ScatterPlot2D, config: &ExportConfig) -> Resu
 /// Generate HTML content for 3D scatter plot with Three.js
 #[allow(dead_code)]
 fn generate_scatter_3d_html(plot: &ScatterPlot3D, config: &ExportConfig) -> Result<String> {
-    let plot_data_json = serde_json::to_string(_plot).map_err(|e| {
+    let plot_data_json = serde_json::to_string(plot).map_err(|e| {
         ClusteringError::ComputationError(format!("JSON serialization failed: {}", e))
     })?;
 
@@ -723,7 +723,7 @@ fn export_scatter_2d_to_csv<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_2d_to_plotly<P: AsRef<Path>>(
-    _plot: &ScatterPlot2D_output,
+    _plot: &ScatterPlot2D,
     path: P,
     _config: &ExportConfig,
 ) -> Result<()> {
@@ -734,7 +734,7 @@ fn export_scatter_2d_to_plotly<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_2d_to_d3<P: AsRef<Path>>(
-    _plot: &ScatterPlot2D_output,
+    _plot: &ScatterPlot2D,
     path: P,
     _config: &ExportConfig,
 ) -> Result<()> {
@@ -745,7 +745,7 @@ fn export_scatter_2d_to_d3<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_2d_to_svg<P: AsRef<Path>>(
-    _plot: &ScatterPlot2D_output,
+    _plot: &ScatterPlot2D,
     path: P,
     _config: &ExportConfig,
 ) -> Result<()> {
@@ -756,7 +756,7 @@ fn export_scatter_2d_to_svg<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_2d_to_png<P: AsRef<Path>>(
-    _plot: &ScatterPlot2D_output,
+    _plot: &ScatterPlot2D,
     path: P,
     _config: &ExportConfig,
 ) -> Result<()> {
@@ -767,7 +767,7 @@ fn export_scatter_2d_to_png<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_threejs<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output,
+    _plot: &ScatterPlot3D,
     path: P,
     _config: &ExportConfig,
 ) -> Result<()> {
@@ -778,7 +778,7 @@ fn export_scatter_3d_to_threejs<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_gltf<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output,
+    _plot: &ScatterPlot3D,
     path: P,
     _config: &ExportConfig,
 ) -> Result<()> {
@@ -789,7 +789,7 @@ fn export_scatter_3d_to_gltf<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_webgl<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output,
+    _plot: &ScatterPlot3D,
     path: P,
     _config: &ExportConfig,
 ) -> Result<()> {
@@ -800,7 +800,7 @@ fn export_scatter_3d_to_webgl<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_unity<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output,
+    _plot: &ScatterPlot3D,
     path: P,
     _config: &ExportConfig,
 ) -> Result<()> {
@@ -811,7 +811,7 @@ fn export_scatter_3d_to_unity<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_blender<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output,
+    _plot: &ScatterPlot3D,
     path: P,
     _config: &ExportConfig,
 ) -> Result<()> {

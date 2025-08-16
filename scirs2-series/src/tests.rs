@@ -2,7 +2,7 @@
 //!
 //! Implements various hypothesis tests for time series
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, ScalarOperand};
+use ndarray::{s, Array1, Array2, ArrayBase, Data, Ix1, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
 
@@ -84,7 +84,7 @@ where
 
     // Create regression variables
     let y_diff = difference(data);
-    let y_lag1 = _lag(data, 1)?;
+    let y_lag1 = Array1::from_vec(data.slice(s![..data.len() - 1]).to_vec());
 
     // Build regression matrix
     let (x_mat, y_vec) =
@@ -178,7 +178,7 @@ where
     });
 
     // Detrend the series
-    let (residuals_) = match test_type {
+    let (residuals_, _) = match test_type {
         KPSSType::Constant => {
             let (res, mean) = detrend_constant(data)?;
             (res, Array1::from_elem(1, mean))
@@ -190,12 +190,12 @@ where
     let mut partial_sums = Array1::zeros(n);
     let mut cum_sum = F::zero();
     for i in 0..n {
-        cum_sum = cum_sum + residuals[i];
+        cum_sum = cum_sum + residuals_[i];
         partial_sums[i] = cum_sum;
     }
 
     // Calculate test statistic
-    let s2 = newey_west_variance(&residuals, lags)?;
+    let s2 = newey_west_variance(&residuals_, lags)?;
     let test_statistic = partial_sums.dot(&partial_sums) / (F::from(n * n).unwrap() * s2);
 
     // Get critical values
@@ -452,7 +452,7 @@ where
 
     for lag_idx in 0..=max_lag.min(data.len() / 4) {
         let y_diff = difference(data);
-        let y_lag1 = _lag(data, 1)?;
+        let y_lag1 = Array1::from_vec(data.slice(s![..data.len() - 1]).to_vec());
 
         if let Ok((x_mat, y_vec)) =
             build_regression_matrix(&y_diff, &y_lag1, lag_idx, &data.to_owned(), regression)
@@ -508,9 +508,9 @@ where
         x_mat[[i, 1]] = F::from(i).unwrap();
     }
 
-    let coeffs = ols_regression(&x_mat, &_data.to_owned())?;
+    let coeffs = ols_regression(&x_mat, &data.to_owned())?;
     let fitted = x_mat.dot(&coeffs);
-    let residuals = _data - &fitted;
+    let residuals = data - &fitted;
 
     Ok((residuals, coeffs))
 }
@@ -529,7 +529,7 @@ where
     // Add autocovariance terms with Bartlett weights
     for lag in 1..=lags {
         let weight = F::one() - F::from(lag).unwrap() / F::from(lags + 1).unwrap();
-        if let Ok(acov) = autocovariance(&_residuals.to_owned(), lag) {
+        if let Ok(acov) = autocovariance(&residuals.to_owned(), lag) {
             variance = variance + F::from(2.0).unwrap() * weight * acov;
         }
     }
@@ -575,11 +575,11 @@ where
     // In practice would use MacKinnon (1994) approximation
     let critical_values = get_adf_critical_values(n, regression)?;
 
-    if _test_stat < critical_values.cv_1_percent {
+    if _teststat < critical_values.cv_1_percent {
         Ok(F::from(0.001).unwrap())
-    } else if test_stat < critical_values.cv_5_percent {
+    } else if _teststat < critical_values.cv_5_percent {
         Ok(F::from(0.025).unwrap())
-    } else if test_stat < critical_values.cv_10_percent {
+    } else if _teststat < critical_values.cv_10_percent {
         Ok(F::from(0.075).unwrap())
     } else {
         Ok(F::from(0.15).unwrap())
@@ -592,7 +592,7 @@ fn get_kpss_critical_values<F>(_testtype: KPSSType) -> Result<CriticalValues<F>>
 where
     F: Float + FromPrimitive,
 {
-    let cv = match _test_type {
+    let cv = match _testtype {
         KPSSType::Constant => CriticalValues {
             cv_1_percent: F::from(0.739).unwrap(),
             cv_5_percent: F::from(0.463).unwrap(),
@@ -614,13 +614,13 @@ fn calculate_kpss_pvalue<F>(_test_stat: F, testtype: KPSSType) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    let critical_values = get_kpss_critical_values(test_type)?;
+    let critical_values = get_kpss_critical_values(testtype)?;
 
     if _test_stat > critical_values.cv_1_percent {
         Ok(F::from(0.001).unwrap())
-    } else if test_stat > critical_values.cv_5_percent {
+    } else if _test_stat > critical_values.cv_5_percent {
         Ok(F::from(0.025).unwrap())
-    } else if test_stat > critical_values.cv_10_percent {
+    } else if _test_stat > critical_values.cv_10_percent {
         Ok(F::from(0.075).unwrap())
     } else {
         Ok(F::from(0.15).unwrap())

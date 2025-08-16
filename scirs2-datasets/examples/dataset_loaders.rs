@@ -1,5 +1,5 @@
-use scirs2__datasets::loaders;
-use scirs2__datasets::utils::{train_test_split, Dataset};
+use scirs2_datasets::loaders;
+use scirs2_datasets::utils::{train_test_split, Dataset};
 use std::env;
 use std::path::Path;
 
@@ -9,7 +9,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         println!("Usage: {} <path_to_csv_file>", args[0]);
-        println!("Example: {} examples/sample_data.csv", args[0]);
+        println!("Example: {} examples/sampledata.csv", args[0]);
         return;
     }
 
@@ -70,7 +70,7 @@ fn print_dataset_info(dataset: &Dataset, name: &str) {
     println!("Number of samples: {}", dataset.n_samples());
     println!("Number of features: {}", dataset.n_features());
 
-    if let Some(featurenames) = &_dataset.featurenames {
+    if let Some(featurenames) = &dataset.featurenames {
         println!(
             "Features: {:?}",
             &featurenames[0..std::cmp::min(5, featurenames.len())]
@@ -80,15 +80,15 @@ fn print_dataset_info(dataset: &Dataset, name: &str) {
         }
     }
 
-    if let Some(target) = &_dataset.target {
+    if let Some(target) = &dataset.target {
         println!("Target shape: {}", target.len());
 
-        if let Some(targetnames) = &_dataset.targetnames {
+        if let Some(targetnames) = &dataset.targetnames {
             println!("Target classes: {targetnames:?}");
         }
     }
 
-    for (key, value) in &_dataset.metadata {
+    for (key, value) in &dataset.metadata {
         println!("Metadata - {key}: {value}");
     }
 }

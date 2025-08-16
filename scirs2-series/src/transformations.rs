@@ -313,7 +313,7 @@ where
         }
 
         let seasonal_diff =
-            Array1::fromshape_fn(result.len() - lag, |i| result[i + _lag] - result[i]);
+            Array1::from_shape_fn(result.len() - _lag, |i| result[i + _lag] - result[i]);
         result = seasonal_diff;
     }
 
@@ -327,7 +327,7 @@ where
             });
         }
 
-        let diff = Array1::fromshape_fn(result.len() - 1, |i| result[i + 1] - result[i]);
+        let diff = Array1::from_shape_fn(result.len() - 1, |i| result[i + 1] - result[i]);
         result = diff;
     }
 
@@ -627,10 +627,10 @@ where
         .min((n - 1) / 3);
 
     // Prepare regression data
-    let y_diff = Array1::fromshape_fn(n - 1, |i| ts[i + 1] - ts[i]);
-    let y_lag = Array1::fromshape_fn(n - 1, |i| ts[i]);
+    let y_diff = Array1::from_shape_fn(n - 1, |i| ts[i + 1] - ts[i]);
+    let y_lag = Array1::from_shape_fn(n - 1, |i| ts[i]);
 
-    let start_idx = lags;
+    let start_idx = _lags;
     let regression_length = n - 1 - start_idx;
 
     if regression_length < 5 {
@@ -649,7 +649,7 @@ where
     if regression_type.contains('t') {
         n_regressors += 1;
     } // trend
-    n_regressors += lags; // lagged differences
+    n_regressors += _lags; // lagged differences
 
     let mut x_matrix = Array2::zeros((regression_length, n_regressors));
     let mut y_vector = Array1::zeros(regression_length);
@@ -826,7 +826,7 @@ where
     F: Float + FromPrimitive,
 {
     // Simplified critical values - in practice these would be more sophisticated
-    match _regression_type {
+    match _regressiontype {
         "nc" => vec![
             (F::from(0.01).unwrap(), F::from(-2.58).unwrap()),
             (F::from(0.05).unwrap(), F::from(-1.95).unwrap()),
@@ -852,16 +852,16 @@ where
 
 /// Approximate p-value for ADF test (simplified)
 #[allow(dead_code)]
-fn approximate_adf_p_value<F>(_t_stat: F_regression, test_type: &str) -> F
+fn approximate_adf_p_value<F>(_t_stat: F, test_type: &str) -> F
 where
     F: Float + FromPrimitive,
 {
     // Very simplified p-value approximation
     if _t_stat < F::from(-3.0).unwrap() {
         F::from(0.01).unwrap()
-    } else if t_stat < F::from(-2.5).unwrap() {
+    } else if _t_stat < F::from(-2.5).unwrap() {
         F::from(0.05).unwrap()
-    } else if t_stat < F::from(-2.0).unwrap() {
+    } else if _t_stat < F::from(-2.0).unwrap() {
         F::from(0.10).unwrap()
     } else {
         F::from(0.20).unwrap()
@@ -888,7 +888,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + Clone,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < 10 {
         return Err(TimeSeriesError::InsufficientData {
             message: "KPSS test requires at least 10 observations".to_string(),
@@ -898,7 +898,7 @@ where
     }
 
     // Determine regression _type
-    let include_trend = regression_type.contains('t');
+    let include_trend = regressiontype.contains('t');
 
     // Detrend the series
     let detrended = if include_trend {
@@ -906,8 +906,8 @@ where
         detrend_linear(_ts)?
     } else {
         // Remove mean (level)
-        let mean = ts.sum() / F::from(n).unwrap();
-        ts.mapv(|x| x - mean)
+        let mean = _ts.sum() / F::from(n).unwrap();
+        _ts.mapv(|x| x - mean)
     };
 
     // Calculate partial sums
@@ -963,7 +963,7 @@ where
     let sum_tt = time_index.mapv(|t| t * t).sum();
     let sum_ty = time_index
         .iter()
-        .zip(_ts.iter())
+        .zip(ts.iter())
         .map(|(&t, &y)| t * y)
         .fold(F::zero(), |acc, x| acc + x);
 
@@ -983,7 +983,7 @@ where
     // Remove trend
     let detrended = time_index
         .iter()
-        .zip(_ts.iter())
+        .zip(ts.iter())
         .map(|(&t, &y)| y - (intercept + slope * t))
         .collect();
 
@@ -1026,7 +1026,7 @@ fn get_kpss_critical_values<F>(_includetrend: bool) -> Vec<(F, F)>
 where
     F: Float + FromPrimitive,
 {
-    if _include_trend {
+    if _includetrend {
         vec![
             (F::from(0.01).unwrap(), F::from(0.216).unwrap()),
             (F::from(0.05).unwrap(), F::from(0.146).unwrap()),
@@ -1047,13 +1047,13 @@ fn approximate_kpss_p_value<F>(_lm_stat: F, includetrend: bool) -> F
 where
     F: Float + FromPrimitive,
 {
-    let critical_vals = get_kpss_critical_values::<F>(include_trend);
+    let critical_vals = get_kpss_critical_values::<F>(includetrend);
 
     if _lm_stat > critical_vals[0].1 {
         F::from(0.01).unwrap()
-    } else if lm_stat > critical_vals[1].1 {
+    } else if _lm_stat > critical_vals[1].1 {
         F::from(0.05).unwrap()
-    } else if lm_stat > critical_vals[2].1 {
+    } else if _lm_stat > critical_vals[2].1 {
         F::from(0.10).unwrap()
     } else {
         F::from(0.20).unwrap()
@@ -1108,7 +1108,7 @@ mod tests {
         assert_eq!(params.seasonal_lag, None);
 
         // Second differences
-        let (diff2_) = difference_transform(&ts, 2, None).unwrap();
+        let (diff2, _) = difference_transform(&ts, 2, None).unwrap();
         let expected_diff2 = array![1.0, 1.0, 1.0, 1.0];
 
         assert_eq!(diff2, expected_diff2);

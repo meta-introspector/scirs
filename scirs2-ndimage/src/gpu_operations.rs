@@ -490,7 +490,7 @@ impl GpuOperations {
         mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
-        T: Float + FromPrimitive + Clone + Send + Sync,
+        T: Float + FromPrimitive + Clone + Send + Sync + std::ops::DivAssign,
     {
         // Use existing CPU implementation
         crate::convolve(input, kernel, mode)
@@ -503,7 +503,7 @@ impl GpuOperations {
         mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
-        T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
+        T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd + std::ops::DivAssign,
     {
         // Use existing CPU implementation
         crate::grey_erosion(input, structuring_element, mode, None, None)
@@ -516,7 +516,7 @@ impl GpuOperations {
         mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
-        T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
+        T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd + std::ops::DivAssign,
     {
         // Use existing CPU implementation
         crate::grey_dilation(input, structuring_element, mode, None, None)

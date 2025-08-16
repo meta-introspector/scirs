@@ -388,7 +388,7 @@ where
     }
 
     /// Calculate gradient for MA coefficient
-    fn ma_gradient(selfdata: &Array1<F>, residuals: &Array1<F>, idx: usize) -> Result<F> {
+    fn ma_gradient(&self, data: &Array1<F>, residuals: &Array1<F>, idx: usize) -> Result<F> {
         let n = residuals.len();
         let mut grad = F::zero();
 
@@ -627,15 +627,15 @@ where
         (0, d, 2),
     ];
 
-    for (p_, q) in candidates {
+    for (p, d_val, q) in candidates {
         if p <= options.max_p && q <= options.max_q {
-            if let Ok(mut model) = ArimaModel::new(p, d, q) {
+            if let Ok(mut model) = ArimaModel::new(p, d_val, q) {
                 if model.fit(data).is_ok() {
                     let ic = model.get_ic(options.criterion);
                     if ic < best_ic {
                         best_ic = ic;
                         best_model = model;
-                        best_params.pdq = (p, d, q);
+                        best_params.pdq = (p, d_val, q);
                     }
                 }
             }
@@ -643,7 +643,7 @@ where
     }
 
     // Expand search around best model
-    let (best_p_, best_q) = best_params.pdq;
+    let (best_p, _, best_q) = best_params.pdq;
     for dp in -1i32..=1 {
         for dq in -1i32..=1 {
             let new_p = (best_p as i32 + dp).max(0) as usize;
@@ -672,7 +672,7 @@ where
 
 /// Determine optimal differencing order
 #[allow(dead_code)]
-fn determine_differencing_order<S, F>(_data: &ArrayBase<S, Ix1>, maxd: usize) -> Result<usize>
+fn determine_differencing_order<S, F>(data: &ArrayBase<S, Ix1>, max_d: usize) -> Result<usize>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
@@ -680,18 +680,18 @@ where
     // Use ADF test to determine optimal differencing order
     let alpha = F::from(0.05).unwrap();
 
-    for _d in 0..=max_d {
-        let diff_data = apply_single_differencing(_data_d)?;
+    for d in 0..=max_d {
+        let diff_data = apply_single_differencing(data, d)?;
 
         // If the series has too few observations after differencing, stop
         if diff_data.len() < 10 {
-            return Ok(_d.saturating_sub(1));
+            return Ok(d.saturating_sub(1));
         }
 
         // Perform ADF test
         if let Ok(test) = adf_test(&diff_data, None, ADFRegression::ConstantAndTrend, alpha) {
             if test.is_stationary {
-                return Ok(_d);
+                return Ok(d);
             }
         }
     }
@@ -713,18 +713,18 @@ where
 {
     let alpha = F::from(0.05).unwrap();
 
-    for _d in 0..=max_d {
+    for d in 0..=max_d {
         let diff_data = apply_seasonal_differencing(data, period, d)?;
 
         // If the series has too few observations after differencing, stop
         if diff_data.len() < 10 {
-            return Ok(_d.saturating_sub(1));
+            return Ok(d.saturating_sub(1));
         }
 
         // Perform ADF test on seasonally differenced data
         if let Ok(test) = adf_test(&diff_data, None, ADFRegression::ConstantAndTrend, alpha) {
             if test.is_stationary {
-                return Ok(_d);
+                return Ok(d);
             }
         }
     }
@@ -744,7 +744,7 @@ where
     for _ in 0..d {
         if result.len() <= 1 {
             return Err(TimeSeriesError::InvalidInput(
-                "Insufficient _data for differencing".to_string(),
+                "Insufficient data for differencing".to_string(),
             ));
         }
 
@@ -800,7 +800,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive,
 {
-    let mut result = apply_single_differencing(data_d)?;
+    let mut result = apply_single_differencing(data, d)?;
 
     if seasonal_d > 0 && period.is_some() {
         result = apply_seasonal_differencing(&result, period.unwrap(), seasonal_d)?;

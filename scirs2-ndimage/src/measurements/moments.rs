@@ -100,7 +100,7 @@ use crate::utils::safe_usize_to_float;
 /// use scirs2_ndimage::measurements::center_of_mass;
 ///
 /// // Binary image (0.0 and 1.0 values only)
-/// let binary = Array2::fromshape_fn((50, 50), |(i, j)| {
+/// let binary = Array2::from_shape_fn((50, 50), |(i, j)| {
 ///     if ((i as f64 - 25.0).powi(2) + (j as f64 - 25.0).powi(2)).sqrt() < 10.0 {
 ///         1.0
 ///     } else {
@@ -238,7 +238,7 @@ where
     // For 2D case (most common), calculate standard 2D moments
     if ndim == 2 {
         let mut moments_vec = Vec::new();
-        let input_2d = _input
+        let input_2d = input
             .clone()
             .into_dimensionality::<ndarray::Ix2>()
             .map_err(|_| NdimageError::DimensionError("Expected 2D array for 2D moments".into()))?;
@@ -251,8 +251,8 @@ where
                 for (row, col) in ndarray::indices(input_2d.dim()) {
                     let value = input_2d[[row, col]];
                     if value != T::zero() {
-                        let x = safe_usizeto_float::<T>(col)?;
-                        let y = safe_usizeto_float::<T>(row)?;
+                        let x = safe_usize_to_float::<T>(col)?;
+                        let y = safe_usize_to_float::<T>(row)?;
 
                         // M_pq = sum(x^p * y^q * I(x,y))
                         let x_power = if p == 0 { T::one() } else { x.powi(p as i32) };
@@ -276,10 +276,10 @@ where
         let mut moments_vec = Vec::new();
 
         // M_00...0 = total mass
-        moments_vec.push(_input.sum());
+        moments_vec.push(input.sum());
 
         // First moments for each dimension
-        let center = center_of_mass(_input)?;
+        let center = center_of_mass(input)?;
         let total_mass = input.sum();
 
         for dim in 0..ndim {
@@ -367,8 +367,8 @@ where
                 for (row, col) in ndarray::indices(input_2d.dim()) {
                     let value = input_2d[[row, col]];
                     if value != T::zero() {
-                        let x = safe_usizeto_float::<T>(col)?;
-                        let y = safe_usizeto_float::<T>(row)?;
+                        let x = safe_usize_to_float::<T>(col)?;
+                        let y = safe_usize_to_float::<T>(row)?;
 
                         // μ_pq = sum((x-cx)^p * (y-cy)^q * I(x,y))
                         let dx = x - cx;
@@ -414,8 +414,8 @@ where
 
                     for (idx, &value) in input_dyn.indexed_iter() {
                         if value != T::zero() {
-                            let coord1 = safe_usizeto_float::<T>(idx.as_array_view()[dim1])?;
-                            let coord2 = safe_usizeto_float::<T>(idx.as_array_view()[dim2])?;
+                            let coord1 = safe_usize_to_float::<T>(idx.as_array_view()[dim1])?;
+                            let coord2 = safe_usize_to_float::<T>(idx.as_array_view()[dim2])?;
 
                             let dc1 = coord1 - center_coords[dim1];
                             let dc2 = coord2 - center_coords[dim2];

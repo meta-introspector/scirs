@@ -44,7 +44,7 @@ where
 {
     /// Create wavelet filter coefficients for a given family
     pub fn new(family: WaveletFamily) -> NdimageResult<Self> {
-        match _family {
+        match family {
             WaveletFamily::Haar => Self::haar(),
             WaveletFamily::Daubechies(n) => Self::daubechies(n),
             WaveletFamily::Coiflets(n) => Self::coiflets(n),
@@ -455,7 +455,7 @@ where
 
     /// Biorthogonal wavelet coefficients
     fn biorthogonal(nr: usize, nd: usize) -> NdimageResult<Self> {
-        match (_nr, nd) {
+        match (nr, nd) {
             (1, 1) => {
                 // Biorthogonal 1.1 (Haar)
                 Self::haar()
@@ -1396,9 +1396,9 @@ fn upsample_filter<T>(filter: &[T], factor: usize) -> Vec<T>
 where
     T: Float + FromPrimitive + Clone,
 {
-    let mut upsampled = Vec::with_capacity(_filter.len() * factor);
+    let mut upsampled = Vec::with_capacity(filter.len() * factor);
 
-    for &coeff in _filter {
+    for &coeff in filter {
         upsampled.push(coeff);
         for _ in 1..factor {
             upsampled.push(T::zero());

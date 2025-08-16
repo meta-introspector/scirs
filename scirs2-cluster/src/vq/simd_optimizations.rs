@@ -77,7 +77,8 @@ where
         )));
     }
 
-    let config = config.unwrap_or(&SimdOptimizationConfig::default());
+    let default_config = SimdOptimizationConfig::default();
+    let config = config.unwrap_or(&default_config);
     let caps = PlatformCapabilities::detect();
     let optimizer = AutoOptimizer::new();
 
@@ -112,13 +113,14 @@ where
 /// * Whitened array with the same shape as input
 #[allow(dead_code)]
 pub fn whiten_simd<F>(
-    _obs: &Array2<F>,
+    obs: &Array2<F>,
     config: Option<&SimdOptimizationConfig>,
 ) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
 {
-    let config = config.unwrap_or(&SimdOptimizationConfig::default());
+    let default_config = SimdOptimizationConfig::default();
+    let config = config.unwrap_or(&default_config);
     let n_samples = obs.shape()[0];
     let n_features = obs.shape()[1];
 
@@ -134,11 +136,11 @@ where
         && (optimizer.should_use_simd(n_samples * n_features) || config.force_simd);
 
     if use_simd && config.enable_parallel && n_features > config.parallel_chunk_size {
-        whiten_simd_parallel(_obs, config)
+        whiten_simd_parallel(obs, config)
     } else if use_simd {
-        whiten_simd_sequential(_obs)
+        whiten_simd_sequential(obs)
     } else {
-        whiten_scalar_fallback(_obs)
+        whiten_scalar_fallback(obs)
     }
 }
 
@@ -166,7 +168,7 @@ where
         let mean_array = Array1::from_elem(n_samples, means[j]);
         let diff = F::simd_sub(&column, &mean_array.view());
         let squared_diff = F::simd_mul(&diff.view(), &diff.view());
-        let variance = F::simd_sum(&squared_diff) / F::from(n_samples - 1).unwrap();
+        let variance = F::simd_sum(&squared_diff.view()) / F::from(n_samples - 1).unwrap();
         stds[j] = variance.sqrt();
 
         // Avoid division by zero
@@ -231,7 +233,7 @@ where
                 let mean_array = Array1::from_elem(n_samples, means[j]);
                 let diff = F::simd_sub(&column, &mean_array.view());
                 let squared_diff = F::simd_mul(&diff.view(), &diff.view());
-                let variance = F::simd_sum(&squared_diff) / F::from(n_samples - 1).unwrap();
+                let variance = F::simd_sum(&squared_diff.view()) / F::from(n_samples - 1).unwrap();
                 let std = variance.sqrt();
 
                 // Avoid division by zero
@@ -244,10 +246,10 @@ where
             .collect::<Vec<_>>()
             .into()
     } else {
-        whiten_simd_sequential(_obs)?
-            .intoshape((n_samples, n_features))
+        whiten_simd_sequential(obs)?
+            .into_shape((n_samples, n_features))
             .unwrap();
-        return whiten_simd_sequential(_obs);
+        return whiten_simd_sequential(obs);
     };
 
     // Parallel whitening
@@ -334,7 +336,7 @@ where
     let mut whitened = Array2::<F>::zeros((n_samples, n_features));
     for i in 0..n_samples {
         for j in 0..n_features {
-            whitened[[i, j]] = (_obs[[i, j]] - means[j]) / stds[j];
+            whitened[[i, j]] = (obs[[i, j]] - means[j]) / stds[j];
         }
     }
 
@@ -373,7 +375,8 @@ where
         )));
     }
 
-    let config = config.unwrap_or(&SimdOptimizationConfig::default());
+    let default_config = SimdOptimizationConfig::default();
+    let config = config.unwrap_or(&default_config);
     let n_samples = data.shape()[0];
     let n_centroids = centroids.shape()[0];
 
@@ -523,7 +526,8 @@ pub fn compute_centroids_simd<F>(
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps + std::iter::Sum,
 {
-    let config = config.unwrap_or(&SimdOptimizationConfig::default());
+    let default_config = SimdOptimizationConfig::default();
+    let config = config.unwrap_or(&default_config);
     let n_samples = data.shape()[0];
     let n_features = data.shape()[1];
 
@@ -575,7 +579,7 @@ where
         if use_simd {
             let point = data.slice(s![i, ..]);
             let centroid_row = centroids.slice_mut(s![cluster, ..]);
-            let updated_centroid = F::simd_add(&centroid_row, &point);
+            let updated_centroid = F::simd_add(&centroid_row.view(), &point);
             for j in 0..n_features {
                 centroids[[cluster, j]] = updated_centroid[j];
             }
@@ -716,7 +720,8 @@ pub fn calculate_distortion_simd<F>(
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps + std::iter::Sum,
 {
-    let config = config.unwrap_or(&SimdOptimizationConfig::default());
+    let default_config = SimdOptimizationConfig::default();
+    let config = config.unwrap_or(&default_config);
     let n_samples = data.shape()[0];
 
     if labels.len() != n_samples {
@@ -765,7 +770,7 @@ where
         let squared_distance = if use_simd {
             let diff = F::simd_sub(&point, &centroid);
             let squared_diff = F::simd_mul(&diff.view(), &diff.view());
-            F::simd_sum(&squared_diff)
+            F::simd_sum(&squared_diff.view())
         } else {
             // Scalar fallback
             let mut sum = F::zero();
@@ -817,7 +822,7 @@ where
             if use_simd {
                 let diff = F::simd_sub(&point, &centroid);
                 let squared_diff = F::simd_mul(&diff.view(), &diff.view());
-                F::simd_sum(&squared_diff)
+                F::simd_sum(&squared_diff.view())
             } else {
                 // Scalar fallback
                 let mut sum = F::zero();

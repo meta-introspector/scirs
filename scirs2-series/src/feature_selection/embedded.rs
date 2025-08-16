@@ -32,7 +32,7 @@ impl EmbeddedMethods {
     /// use ndarray::{Array1, Array2};
     /// use scirs2__series::feature_selection::EmbeddedMethods;
     ///
-    /// let features = Array2::fromshape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
+    /// let features = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
     /// let target = Array1::from_vec((0..100).map(|x| x as f64).collect());
     ///
     /// let result = EmbeddedMethods::lasso_selection(&features, &target, 1.0, 1000).unwrap();
@@ -54,7 +54,8 @@ impl EmbeddedMethods {
         }
 
         // Normalize features
-        let (normalized_features_feature_means_feature_stds) = Self::normalize_features(features);
+        let (normalized_features, _feature_means, _feature_stds) =
+            Self::normalize_features(features);
         let target_mean = target.sum() / n_samples as f64;
         let normalized_target = target.mapv(|x| x - target_mean);
 
@@ -149,8 +150,8 @@ impl EmbeddedMethods {
             });
         }
 
-        // Normalize _features
-        let (normalized_features__) = Self::normalize_features(_features);
+        // Normalize features
+        let (normalized_features, _, _) = Self::normalize_features(features);
         let target_mean = target.sum() / n_samples as f64;
         let normalized_target = target.mapv(|x| x - target_mean);
 
@@ -183,7 +184,7 @@ impl EmbeddedMethods {
         let selected_features: Vec<usize> = indexed_scores
             .into_iter()
             .take(n_to_select)
-            .map(|(idx_)| idx)
+            .map(|(idx_, _)| idx_)
             .collect();
 
         let mut metadata = HashMap::new();
@@ -229,7 +230,7 @@ impl EmbeddedMethods {
 
         // Calculate feature importance based on variance reduction
         for i in 0..n_feat {
-            let importance = Self::calculate_feature_importance_tree(&_features.column(i), target)?;
+            let importance = Self::calculate_feature_importance_tree(&features.column(i), target)?;
             feature_scores[i] = importance;
         }
 
@@ -246,7 +247,7 @@ impl EmbeddedMethods {
         let selected_features: Vec<usize> = indexed_scores
             .into_iter()
             .take(n_to_select)
-            .map(|(idx_)| idx)
+            .map(|(idx_, _)| idx_)
             .collect();
 
         let mut metadata = HashMap::new();
@@ -278,7 +279,7 @@ impl EmbeddedMethods {
             stds[j] = std;
 
             for i in 0..n_samples {
-                normalized[[i, j]] = (_features[[i, j]] - mean) / std;
+                normalized[[i, j]] = (features[[i, j]] - mean) / std;
             }
         }
 

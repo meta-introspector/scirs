@@ -421,7 +421,7 @@ impl AdaptiveAdvancedOptimizer {
         // Get ML prediction for performance
         let mut optimized_config = base_config.clone();
 
-        if self._config.enable_prediction {
+        if self.config.enable_prediction {
             let ml_predictor = self.ml_predictor.lock().map_err(|_| {
                 NdimageError::ComputationError("Failed to acquire ML predictor lock".into())
             })?;

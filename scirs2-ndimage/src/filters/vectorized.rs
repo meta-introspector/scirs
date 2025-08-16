@@ -19,7 +19,7 @@ use crate::utils::safe_f64_to_float;
 /// Helper function for safe i32 conversion
 #[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
-    T::from_i32(_value).ok_or_else(|| {
+    T::from_i32(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
     })
 }
@@ -35,7 +35,7 @@ fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 /// Helper function for safe float to f64 conversion
 #[allow(dead_code)]
 fn safe_float_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
-    _value
+    value
         .to_f64()
         .ok_or_else(|| NdimageError::ComputationError("Failed to convert float to f64".to_string()))
 }
@@ -142,7 +142,7 @@ pub fn median_filter_batch<T>(
     config: Option<BatchConfig>,
 ) -> NdimageResult<Array3<T>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + PartialOrd + 'static,
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + PartialOrd + std::ops::DivAssign + 'static,
 {
     let config = config.unwrap_or_default();
     let (batch_size, height, width) = batch.dim();
@@ -424,7 +424,7 @@ where
 {
     let mut kernel = Array2::zeros((size, size));
     let center = (size / 2) as f64;
-    let sigma_f64 = safe_float_to_f64(_sigma)?;
+    let sigma_f64 = safe_float_to_f64(sigma)?;
     let two_sigma_sq = 2.0 * sigma_f64 * sigma_f64;
 
     let mut sum = 0.0;

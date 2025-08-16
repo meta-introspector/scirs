@@ -188,19 +188,19 @@ impl SciPyBenchmarkSuite {
     /// Create a new benchmark suite
     pub fn new(config: BenchmarkConfig) -> NdimageResult<Self> {
         // Create temporary directory for Python scripts
-        fs::create_dir_all(&_config.temp_dir).map_err(|e| {
+        fs::create_dir_all(&config.temp_dir).map_err(|e| {
             NdimageError::InvalidInput(format!("Failed to create temp directory: {}", e))
         })?;
 
         // Initialize profiler
-        let profiler_config = ProfilerConfig {
+        let profilerconfig = ProfilerConfig {
             max_records_per_operation: 1000,
             enable_simd_profiling: true,
             enable_cache_analysis: true,
             ..Default::default()
         };
 
-        let profiler = PerformanceProfiler::new(profiler_config);
+        let profiler = PerformanceProfiler::new(profilerconfig);
 
         // Try to find Python executable
         let python_path = Self::find_python_executable()?;
@@ -564,7 +564,7 @@ if __name__ == "__main__":
         array_len: usize,
     ) -> NdimageResult<PerformanceMetrics> {
         let parts: Vec<&str> = output.trim().split(',').collect();
-        if parts._len() != 4 {
+        if parts.len() != 4 {
             return Err(NdimageError::InvalidInput(
                 "Invalid Python output format".to_string(),
             ));
@@ -662,7 +662,7 @@ if __name__ == "__main__":
         memory_usages: Vec<usize>,
         array_len: usize,
     ) -> PerformanceMetrics {
-        let avg_time = timings.iter().sum::<Duration>() / timings._len() as u32;
+        let avg_time = timings.iter().sum::<Duration>() / timings.len() as u32;
         let min_time = *timings.iter().min().unwrap();
         let max_time = *timings.iter().max().unwrap();
 
@@ -672,7 +672,7 @@ if __name__ == "__main__":
             .iter()
             .map(|t| (t.as_nanos() as f64 - mean_nanos).powi(2))
             .sum::<f64>()
-            / timings._len() as f64;
+            / timings.len() as f64;
         let std_dev = Duration::from_nanos(variance.sqrt() as u64);
 
         let throughput = array_len as f64 / avg_time.as_secs_f64();
@@ -950,7 +950,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_benchmark_config_creation() {
+    fn test_benchmarkconfig_creation() {
         let config = BenchmarkConfig::default();
         assert!(!config.array_sizes.is_empty());
         assert!(config.iterations > 0);

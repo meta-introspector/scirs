@@ -71,7 +71,7 @@ where
     let op = processor.create_processor();
 
     // Check if we should use memory-mapped array
-    let input_size = input.len() * std::mem::size__of::<T>();
+    let input_size = input.len() * std::mem::size_of::<T>();
 
     if let Some(threshold) = config.use_mmap_threshold {
         if input_size > threshold {
@@ -164,7 +164,7 @@ where
 pub fn uniform_filter_chunked_v2<T, D>(
     input: &Array<T, D>,
     size: &[usize],
-    border_mode: BorderMode,
+    bordermode: BorderMode,
     config: Option<ChunkConfigV2>,
 ) -> NdimageResult<Array<T, D>>
 where
@@ -181,7 +181,7 @@ where
     D: Dimension + 'static,
 {
     let config = config.unwrap_or_default();
-    let processor = UniformProcessorV2::new(size.to_vec(), border_mode);
+    let processor = UniformProcessorV2::new(size.to_vec(), bordermode);
 
     process_chunked_v2(&input.view(), &processor, &config)
 }
@@ -189,12 +189,15 @@ where
 /// Helper processor for uniform filter
 struct UniformProcessorV2 {
     size: Vec<usize>,
-    border_mode: BorderMode,
+    bordermode: BorderMode,
 }
 
 impl UniformProcessorV2 {
     fn new(_size: Vec<usize>, bordermode: BorderMode) -> Self {
-        Self { size, border_mode }
+        Self {
+            size: _size,
+            bordermode,
+        }
     }
 }
 
@@ -216,7 +219,7 @@ where
         &self,
     ) -> Box<dyn Fn(&ArrayView<T, IxDyn>) -> CoreResult<Array<T, IxDyn>> + Send + Sync> {
         let size_vec = self.size.clone();
-        let border_mode_clone = self.border_mode;
+        let bordermode_clone = self.bordermode;
 
         Box::new(
             move |chunk: &ArrayView<T, IxDyn>| -> CoreResult<Array<T, IxDyn>> {
@@ -227,7 +230,7 @@ where
                 let result = crate::filters::uniform_filter(
                     &chunk_owned,
                     &size_vec,
-                    Some(border_mode_clone),
+                    Some(bordermode_clone),
                     None,
                 )
                 .map_err(|e| {
@@ -251,7 +254,7 @@ where
 pub fn convolve_chunked_v2<T, D>(
     input: &Array<T, D>,
     kernel: &Array<T, D>,
-    border_mode: BorderMode,
+    bordermode: BorderMode,
     config: Option<ChunkConfigV2>,
 ) -> NdimageResult<Array<T, D>>
 where
@@ -268,7 +271,7 @@ where
     D: Dimension + 'static,
 {
     let config = config.unwrap_or_default();
-    let processor = ConvolveProcessorV2::new(kernel.clone(), border_mode);
+    let processor = ConvolveProcessorV2::new(kernel.clone(), bordermode);
 
     process_chunked_v2(&input.view(), &processor, &config)
 }
@@ -276,7 +279,7 @@ where
 /// Helper processor for convolution
 struct ConvolveProcessorV2<T, D> {
     kernel: Array<T, D>,
-    border_mode: BorderMode,
+    bordermode: BorderMode,
 }
 
 impl<T, D> ConvolveProcessorV2<T, D>
@@ -286,8 +289,8 @@ where
 {
     fn new(_kernel: Array<T, D>, bordermode: BorderMode) -> Self {
         Self {
-            kernel,
-            border_mode,
+            kernel: _kernel,
+            bordermode,
         }
     }
 }
@@ -310,7 +313,7 @@ where
         &self,
     ) -> Box<dyn Fn(&ArrayView<T, IxDyn>) -> CoreResult<Array<T, IxDyn>> + Send + Sync> {
         let kernel_clone = self.kernel.clone();
-        let border_mode_clone = self.border_mode;
+        let bordermode_clone = self.bordermode;
 
         Box::new(
             move |chunk: &ArrayView<T, IxDyn>| -> CoreResult<Array<T, IxDyn>> {
@@ -318,12 +321,12 @@ where
 
                 // Apply convolution to the chunk
                 let result =
-                    crate::filters::convolve(&chunk_owned, &kernel_clone, Some(border_mode_clone))
+                    crate::filters::convolve(&chunk_owned, &kernel_clone, Some(bordermode_clone))
                         .map_err(|e| {
-                            scirs2_core::error::CoreError::ComputationError(
-                                scirs2_core::error::ErrorContext::new(e.to_string()),
-                            )
-                        })?;
+                        scirs2_core::error::CoreError::ComputationError(
+                            scirs2_core::error::ErrorContext::new(e.to_string()),
+                        )
+                    })?;
 
                 Ok(result)
             },

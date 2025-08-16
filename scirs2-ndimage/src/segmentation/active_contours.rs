@@ -175,7 +175,7 @@ where
 
     // Initialize _contour
     let mut _contour = initial_contour.to_owned();
-    let mut prev_contour = contour.clone();
+    let mut prev_contour = _contour.clone();
 
     // Evolution loop
     for iteration in 0..params.max_iterations {
@@ -188,12 +188,12 @@ where
             let next_idx = if i == num_points - 1 { 0 } else { i + 1 };
 
             // Current point and neighbors
-            let x = contour[[i, 0]];
-            let y = contour[[i, 1]];
-            let x_prev = contour[[prev_idx, 0]];
-            let y_prev = contour[[prev_idx, 1]];
-            let x_next = contour[[next_idx, 0]];
-            let y_next = contour[[next_idx, 1]];
+            let x = _contour[[i, 0]];
+            let y = _contour[[i, 1]];
+            let x_prev = _contour[[prev_idx, 0]];
+            let y_prev = _contour[[prev_idx, 1]];
+            let x_next = _contour[[next_idx, 0]];
+            let y_next = _contour[[next_idx, 1]];
 
             // Internal energy (elasticity)
             let avg_x = (x_prev + x_next) / 2.0;
@@ -248,14 +248,14 @@ where
             };
 
             // Update position
-            contour[[i, 0]] +=
+            _contour[[i, 0]] +=
                 params.time_step * (internal_x + curvature_x + external_x + balloon_x);
-            contour[[i, 1]] +=
+            _contour[[i, 1]] +=
                 params.time_step * (internal_y + curvature_y + external_y + balloon_y);
 
             // Keep within image bounds
-            contour[[i, 0]] = contour[[i, 0]].max(0.0).min((image.dim().1 - 1) as f64);
-            contour[[i, 1]] = contour[[i, 1]].max(0.0).min((image.dim().0 - 1) as f64);
+            _contour[[i, 0]] = _contour[[i, 0]].max(0.0).min((image.dim().1 - 1) as f64);
+            _contour[[i, 1]] = _contour[[i, 1]].max(0.0).min((image.dim().0 - 1) as f64);
         }
 
         // Check convergence
@@ -333,7 +333,7 @@ pub fn mask_to_contour(mask: &ArrayView2<bool>) -> Vec<(f64, f64)> {
                         break;
                     }
 
-                    if !_mask[[ni as usize, nj as usize]] {
+                    if !mask[[ni as usize, nj as usize]] {
                         is_boundary = true;
                         break;
                     }
@@ -361,10 +361,10 @@ fn order_contour_points(points: &mut Vec<(f64, f64)>) {
         return;
     }
 
-    let mut ordered = vec![_points[0]];
+    let mut ordered = vec![points[0]];
     points.remove(0);
 
-    while !_points.is_empty() {
+    while !points.is_empty() {
         let last = ordered.last().unwrap();
 
         // Find nearest point
@@ -379,11 +379,11 @@ fn order_contour_points(points: &mut Vec<(f64, f64)>) {
             }
         }
 
-        ordered.push(_points[min_idx]);
+        ordered.push(points[min_idx]);
         points.remove(min_idx);
     }
 
-    *_points = ordered;
+    *points = ordered;
 }
 
 /// Smooth a contour using B-spline interpolation

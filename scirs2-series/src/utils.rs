@@ -19,7 +19,7 @@ where
 {
     if lag >= data.len() {
         return Err(TimeSeriesError::InvalidInput(
-            "Lag exceeds _data length".to_string(),
+            "Lag exceeds data length".to_string(),
         ));
     }
 
@@ -29,7 +29,7 @@ where
     // Calculate autocovariance
     let mut cov = F::zero();
     for i in lag..n {
-        cov = cov + (_data[i] - mean) * (_data[i - lag] - mean);
+        cov = cov + (data[i] - mean) * (data[i - lag] - mean);
     }
 
     Ok(cov / F::from(n - lag).unwrap())
@@ -80,9 +80,9 @@ where
     };
 
     // Create differenced series: y(t) - y(t-1)
-    let mut diff_ts = Vec::with_capacity(_ts.len() - 1);
-    for i in 1.._ts.len() {
-        diff_ts.push(_ts[i] - ts[i - 1]);
+    let mut diff_ts = Vec::with_capacity(ts.len() - 1);
+    for i in 1..ts.len() {
+        diff_ts.push(ts[i] - ts[i - 1]);
     }
     let diff_ts = Array1::from(diff_ts);
 
@@ -198,15 +198,15 @@ where
 
             if _period >= ts.len() {
                 return Err(TimeSeriesError::InvalidInput(format!(
-                    "Seasonal _period ({}) must be less than time series length ({})",
-                    period,
+                    "Seasonal period ({}) must be less than time series length ({})",
+                    _period,
                     ts.len()
                 )));
             }
 
             // Seasonal differencing: x(t) - x(t-s)
-            let mut result = Vec::with_capacity(ts.len() - period);
-            for i in period..ts.len() {
+            let mut result = Vec::with_capacity(ts.len() - _period);
+            for i in _period..ts.len() {
                 result.push(ts[i] - ts[i - _period]);
             }
             Ok(Array1::from(result))
@@ -242,38 +242,38 @@ pub fn moving_average<F>(_ts: &Array1<F>, windowsize: usize) -> Result<Array1<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if window_size < 1 {
+    if windowsize < 1 {
         return Err(TimeSeriesError::InvalidInput(
-            "Window _size must be at least 1".to_string(),
+            "Window size must be at least 1".to_string(),
         ));
     }
 
-    if window_size > ts.len() {
+    if windowsize > _ts.len() {
         return Err(TimeSeriesError::InvalidInput(format!(
-            "Window _size ({}) cannot be larger than time series length ({})",
-            window_size,
-            ts.len()
+            "Window size ({}) cannot be larger than time series length ({})",
+            windowsize,
+            _ts.len()
         )));
     }
 
-    let half_window = window_size / 2;
+    let half_window = windowsize / 2;
     let mut result = Array1::zeros(_ts.len());
 
     // For even-sized windows, handle the special case
-    let is_even = window_size % 2 == 0;
+    let is_even = windowsize % 2 == 0;
 
     // Calculate the centered moving averages
     for i in 0.._ts.len() {
         // Calculate appropriate window boundaries
         let start = i.saturating_sub(half_window);
-        let end = if i + half_window >= ts.len() {
-            ts.len() - 1
+        let end = if i + half_window >= _ts.len() {
+            _ts.len() - 1
         } else {
             i + half_window
         };
 
         // Adjust for even-sized windows (need one more point at the end)
-        let end = if is_even && (end + 1 < ts.len()) {
+        let end = if is_even && (end + 1 < _ts.len()) {
             end + 1
         } else {
             end
@@ -284,7 +284,7 @@ where
         let mut count = F::zero();
 
         for j in start..=end {
-            sum = sum + ts[j];
+            sum = sum + _ts[j];
             count = count + F::one();
         }
 
@@ -319,16 +319,16 @@ pub fn autocorrelation<F>(_ts: &Array1<F>, maxlag: Option<usize>) -> Result<Arra
 where
     F: Float + FromPrimitive + Debug,
 {
-    if ts.len() < 2 {
+    if _ts.len() < 2 {
         return Err(TimeSeriesError::InvalidInput(
             "Time series must have at least 2 points for autocorrelation".to_string(),
         ));
     }
 
-    let max_lag = std::cmp::min(max_lag.unwrap_or(_ts.len() - 1), ts.len() - 1);
+    let max_lag = std::cmp::min(maxlag.unwrap_or(_ts.len() - 1), _ts.len() - 1);
 
     // Calculate mean
-    let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(_ts.len()).unwrap();
+    let mean = _ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(_ts.len()).unwrap();
 
     // Calculate denominator (variance * n)
     let denominator = _ts
@@ -347,7 +347,7 @@ where
     for _lag in 0..=max_lag {
         let mut numerator = F::zero();
 
-        for i in 0..(_ts.len() - lag) {
+        for i in 0..(_ts.len() - _lag) {
             numerator = numerator + (_ts[i] - mean) * (_ts[i + _lag] - mean);
         }
 
@@ -408,7 +408,7 @@ where
         let mut numerator = F::zero();
         let mut count = 0;
 
-        for i in 0..(min_len - lag) {
+        for i in 0..(min_len - _lag) {
             numerator = numerator + (x[i] - x_mean) * (y[i + _lag] - y_mean);
             count += 1;
         }
@@ -446,14 +446,14 @@ pub fn partial_autocorrelation<F>(_ts: &Array1<F>, maxlag: Option<usize>) -> Res
 where
     F: Float + FromPrimitive + Debug,
 {
-    if ts.len() < 2 {
+    if _ts.len() < 2 {
         return Err(TimeSeriesError::InvalidInput(
             "Time series must have at least 2 points for partial autocorrelation".to_string(),
         ));
     }
 
     let default_max_lag = std::cmp::min(_ts.len() / 4, 10);
-    let max_lag = std::cmp::min(max_lag.unwrap_or(default_max_lag), ts.len() - 1);
+    let max_lag = std::cmp::min(maxlag.unwrap_or(default_max_lag), _ts.len() - 1);
 
     // Calculate ACF first
     let acf = autocorrelation(_ts, Some(max_lag))?;
@@ -953,10 +953,10 @@ where
 
     // Create a simple _date parser
     fn parse_date(_datestr: &str) -> Result<(i32, u32, u32)> {
-        let parts: Vec<&_str> = date_str.split('-').collect();
+        let parts: Vec<&str> = _datestr.split('-').collect();
         if parts.len() != 3 {
             return Err(TimeSeriesError::InvalidInput(format!(
-                "Invalid _date format: {_date_str}, expected YYYY-MM-DD"
+                "Invalid date format: {_datestr}, expected YYYY-MM-DD"
             )));
         }
 
@@ -994,9 +994,7 @@ where
 
         // Convert to days since year 0
         let start_days = start.0 * 365
-            + (1.._start.1)
-                .map(|m| days_in_month[m as usize])
-                .sum::<u32>() as i32
+            + (1..start.1).map(|m| days_in_month[m as usize]).sum::<u32>() as i32
             + start.2 as i32;
 
         let end_days = end.0 * 365
@@ -1073,7 +1071,7 @@ where
 
     let n = data.len() as f64;
     let mean = data.mean().unwrap_or(F::zero()).into();
-    let variance = _data
+    let variance = data
         .iter()
         .map(|x| {
             let diff = (*x).into() - mean;
@@ -1120,8 +1118,8 @@ where
     }
 
     let mut result = Vec::new();
-    for i in periods.._data.len() {
-        result.push(_data[i] - data[i - periods]);
+    for i in periods..data.len() {
+        result.push(data[i] - data[i - periods]);
     }
 
     Ok(Array1::from_vec(result))
@@ -1132,7 +1130,7 @@ pub fn seasonal_difference_series<F>(data: &Array1<F>, periods: usize) -> Result
 where
     F: Float + FromPrimitive + Clone,
 {
-    difference_series(_data, periods)
+    difference_series(data, periods)
 }
 
 #[cfg(test)]
@@ -1147,11 +1145,7 @@ mod tests {
         let detrended = detrend(&x.view(), 0, "constant", None).unwrap();
 
         // Mean should be removed
-        assert_relative_eq!(
-            detrended.mean().expect("Failed to compute mean"),
-            0.0,
-            epsilon = 1e-10
-        );
+        assert_relative_eq!(detrended.clone().mean(), 0.0, epsilon = 1e-10);
 
         // Check specific values
         assert_relative_eq!(detrended[0], -2.0, epsilon = 1e-10);
@@ -1193,11 +1187,7 @@ mod tests {
 
         // Each column should have zero mean
         for col in detrended.columns() {
-            assert_relative_eq!(
-                col.mean().expect("Failed to compute mean"),
-                0.0,
-                epsilon = 1e-10
-            );
+            assert_relative_eq!(col.mean(), 0.0, epsilon = 1e-10);
         }
     }
 

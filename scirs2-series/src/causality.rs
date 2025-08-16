@@ -181,7 +181,7 @@ impl CausalityTester {
     /// Create a new causality tester with a random seed
     pub fn with_seed(seed: u64) -> Self {
         Self {
-            random_seed: Some(_seed),
+            random_seed: Some(seed),
         }
     }
 
@@ -481,7 +481,7 @@ impl CausalityTester {
 
         // Calculate p-value using standardized effect
         let prediction_std = (&predicted_upper - &predicted_lower) / (2.0 * 1.96); // Approximate standard error
-        let standardized_effect = average_effect / (prediction_std.mean().unwrap_or(1.0));
+        let standardized_effect = average_effect / prediction_std.mean();
         let p_value = 2.0 * (1.0 - self.normal_cdf(standardized_effect.abs()));
 
         Ok(CausalImpactResult {
@@ -569,12 +569,12 @@ impl CausalityTester {
     fn f_distribution_p_value(&self, fstat: f64, df1: usize, df2: usize) -> f64 {
         // Approximation for F-distribution p-value
         // This is a simplified implementation
-        if f_stat <= 0.0 {
+        if fstat <= 0.0 {
             return 1.0;
         }
 
         // Transform to beta distribution
-        let x = (df1 as f64 * f_stat) / (df1 as f64 * f_stat + df2 as f64);
+        let x = (df1 as f64 * fstat) / (df1 as f64 * fstat + df2 as f64);
         let alpha = df1 as f64 / 2.0;
         let beta = df2 as f64 / 2.0;
 
@@ -939,7 +939,7 @@ impl CausalityTester {
             self.fisher_yates_shuffle(&mut y_shuffled);
 
             let ccm_result = self.convergent_cross_mapping(x, &y_shuffled, config)?;
-            correlations.push(ccm_result._correlation);
+            correlations.push(ccm_result.correlation);
         }
 
         // Calculate p-value
@@ -983,7 +983,7 @@ impl CausalityTester {
         // Calculate residual standard error
         let fitted = design_matrix.dot(&beta);
         let residuals = &response - &fitted;
-        let mse = residuals.mapv(|_x| _x * x).sum() / (n - 1 - beta.len()) as f64;
+        let mse = residuals.mapv(|x| x * x).sum() / (n - 1 - beta.len()) as f64;
         let std_error = mse.sqrt();
 
         // Predict post-intervention values
@@ -1199,7 +1199,7 @@ mod tests {
                 .collect(),
         );
 
-        let x = Array2::fromshape_vec((n, 1), (0..n).map(|i| i as f64).collect()).unwrap();
+        let x = Array2::from_shape_vec((n, 1), (0..n).map(|i| i as f64).collect()).unwrap();
 
         let tester = CausalityTester::new();
         let result = tester

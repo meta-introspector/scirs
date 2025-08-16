@@ -309,8 +309,8 @@ impl TimeSeriesClusterer {
     /// Create a new clusterer with random seed
     pub fn with_seed(seed: u64) -> Self {
         Self {
-            random_seed: Some(_seed),
-            correlation_analyzer: CorrelationAnalyzer::with_seed(_seed),
+            random_seed: Some(seed),
+            correlation_analyzer: CorrelationAnalyzer::with_seed(seed),
         }
     }
 
@@ -329,7 +329,7 @@ impl TimeSeriesClusterer {
         data: &Array2<f64>,
         config: &KMeansConfig,
     ) -> ClusteringResult<TimeSeriesClusteringResult> {
-        let (n_series_series_length) = data.dim();
+        let (n_series, _series_length) = data.dim();
 
         if n_series < config.n_clusters {
             return Err(TimeSeriesError::InvalidInput(
@@ -380,7 +380,7 @@ impl TimeSeriesClusterer {
                         .iter()
                         .enumerate()
                         .filter(|(_, &label)| label == k)
-                        .map(|(i_)| i)
+                        .map(|(i_, _)| i_)
                         .collect();
 
                     if !cluster_points.is_empty() {
@@ -457,7 +457,7 @@ impl TimeSeriesClusterer {
                 .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == k)
-                .map(|(i_)| i)
+                .map(|(i_, _)| i_)
                 .collect();
 
             if !cluster_points.is_empty() {
@@ -554,7 +554,7 @@ impl TimeSeriesClusterer {
                 .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == k)
-                .map(|(i_)| i)
+                .map(|(i_, _)| i_)
                 .collect();
 
             if !cluster_points.is_empty() {
@@ -642,9 +642,9 @@ impl TimeSeriesClusterer {
             let k_neighbors = distances.iter().take(config.k).cloned().collect::<Vec<_>>();
 
             // Store neighbor distances
-            for (idx, (dist_)) in k_neighbors.iter().enumerate() {
+            for (idx, (dist_, _)) in k_neighbors.iter().enumerate() {
                 if idx < neighbor_distances.ncols() {
-                    neighbor_distances[[i, idx]] = *dist;
+                    neighbor_distances[[i, idx]] = *dist_;
                 }
             }
 
@@ -681,7 +681,7 @@ impl TimeSeriesClusterer {
                 .iter()
                 .enumerate()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx_, _)| idx_)
                 .unwrap_or(0);
 
             predicted_labels[i] = predicted_class;
@@ -1050,7 +1050,7 @@ impl TimeSeriesClusterer {
             .iter()
             .enumerate()
             .filter(|(_, &label)| label != usize::MAX)
-            .map(|(i_)| i)
+            .map(|(i_, _)| i_)
             .collect();
 
         if valid_indices.len() < 2 {
@@ -1197,8 +1197,8 @@ impl TimeSeriesClusterer {
     }
 
     fn get_neighbors(&self, distancematrix: &Array2<f64>, point: usize, eps: f64) -> Vec<usize> {
-        (0..distance_matrix.nrows())
-            .filter(|&i| i != point && distance_matrix[[point, i]] <= eps)
+        (0..distancematrix.nrows())
+            .filter(|&i| i != point && distancematrix[[point, i]] <= eps)
             .collect()
     }
 

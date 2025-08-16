@@ -118,8 +118,8 @@ impl GpuMemoryPool {
         };
 
         // Pre-allocate initial buffers if pooling is enabled
-        if pool._config.enable_pooling {
-            for &size in &pool._config.initial_buffer_sizes {
+        if pool.config.enable_pooling {
+            for &size in &pool.config.initial_buffer_sizes {
                 if let Err(e) = pool.pre_allocate_buffer(size) {
                     eprintln!(
                         "Warning: Failed to pre-allocate buffer of size {}: {:?}",
@@ -518,7 +518,7 @@ impl GpuKernelCache {
         drop(stats);
 
         let compiled_kernel = CompiledKernel {
-            _id: kernel_id.to_string(),
+            id: kernel_id.to_string(),
             handle: kernel_handle,
             compiled_at: Instant::now(),
             last_used: Instant::now(),

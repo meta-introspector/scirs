@@ -44,7 +44,7 @@ use scirs2_core::{parallel_ops, CoreError};
 /// use ndarray::Array2;
 /// use scirs2_ndimage::filters::{gaussian_filter, BorderMode};
 ///
-/// let image = Array2::fromshape_fn((10, 10), |(i, j)| {
+/// let image = Array2::from_shape_fn((10, 10), |(i, j)| {
 ///     ((i * j) as f64).sin()
 /// });
 ///
@@ -60,7 +60,7 @@ use scirs2_core::{parallel_ops, CoreError};
 /// use ndarray::Array3;
 /// use scirs2_ndimage::filters::gaussian_filter;
 ///
-/// let volume = Array3::fromshape_fn((20, 20, 20), |(i, j, k)| {
+/// let volume = Array3::from_shape_fn((20, 20, 20), |(i, j, k)| {
 ///     (i + j + k) as f64
 /// });
 ///
@@ -189,7 +189,7 @@ pub fn gaussian_kernel1d_f64(sigma: f64, truncate: f64) -> NdimageResult<Array1<
     // Manual caching using lazy_static or thread_local would be ideal here
     // but for simplicity, we'll just implement the function without caching for now
 
-    if _sigma <= 0.0 {
+    if sigma <= 0.0 {
         return Err(NdimageError::InvalidInput("Sigma must be positive".into()));
     }
 
@@ -212,7 +212,7 @@ pub fn gaussian_kernel1d_f64(sigma: f64, truncate: f64) -> NdimageResult<Array1<
     }
 
     // Calculate exp(-x^2/(2*_sigma^2))
-    let two_sigma_squared = 2.0 * _sigma * sigma;
+    let two_sigma_squared = 2.0 * sigma * sigma;
 
     // Apply the Gaussian formula: exp(-x^2/(2*_sigma^2))
     for i in 0..size {
@@ -392,7 +392,7 @@ where
     // Process each position in the output array
     let indices: Vec<IxDyn> = output_dyn
         .indexed_iter()
-        .map(|(idx_)| idx.clone())
+        .map(|(idx, _)| idx.clone())
         .collect();
 
     // Helper function to convolve kernel with input at a specific position
@@ -853,7 +853,7 @@ pub fn gaussian_kernel1d_f32(sigma: f32, truncate: f32) -> NdimageResult<Array1<
     // Manual caching using lazy_static or thread_local would be ideal here
     // but for simplicity, we'll just implement the function without caching for now
 
-    if _sigma <= 0.0 {
+    if sigma <= 0.0 {
         return Err(NdimageError::InvalidInput("Sigma must be positive".into()));
     }
 
@@ -876,7 +876,7 @@ pub fn gaussian_kernel1d_f32(sigma: f32, truncate: f32) -> NdimageResult<Array1<
     }
 
     // Calculate exp(-x^2/(2*_sigma^2))
-    let two_sigma_squared = 2.0 * _sigma * sigma;
+    let two_sigma_squared = 2.0 * sigma * sigma;
 
     // Apply the Gaussian formula: exp(-x^2/(2*_sigma^2))
     for i in 0..size {

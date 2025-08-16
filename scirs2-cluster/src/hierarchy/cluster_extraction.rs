@@ -10,7 +10,7 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 
 use crate::error::{ClusteringError, Result};
-use crate::hierarchy::disjoint__set::DisjointSet;
+use crate::hierarchy::disjoint_set::DisjointSet;
 
 /// Extract flat clusters using multiple criteria simultaneously
 ///
@@ -209,7 +209,7 @@ pub fn estimate_optimal_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
     let optimal_k = counts
         .into_iter()
         .max_by_key(|(_, count)| *count)
-        .map(|(k_)| k)
+        .map(|(k_)| k_)
         .unwrap_or(2);
 
     Ok(optimal_k.max(1).min(n_observations))
@@ -262,7 +262,7 @@ fn estimate_clusters_distance_gap<F: Float + FromPrimitive + Debug + PartialOrd>
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(idx_)| idx)
+        .map(|(idx_)| idx_)
         .unwrap_or(0);
 
     // The optimal number of _clusters is n_observations - max_gap_idx
@@ -404,7 +404,7 @@ fn find_elbow_point<F: Float + FromPrimitive + Debug + PartialOrd>(values: &[F])
 
     // Calculate second derivatives
     let mut second_derivatives = Vec::new();
-    for i in 1..(_values.len() - 1) {
+    for i in 1..(values.len() - 1) {
         let second_deriv = values[i + 1] - F::from_f64(2.0).unwrap() * values[i] + values[i - 1];
         second_derivatives.push(second_deriv.abs());
     }
@@ -414,7 +414,7 @@ fn find_elbow_point<F: Float + FromPrimitive + Debug + PartialOrd>(values: &[F])
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(idx_)| idx + 1) // Adjust for offset
+        .map(|(idx_, _)| idx_ + 1) // Adjust for offset
         .unwrap_or(0)
 }
 
@@ -586,9 +586,9 @@ pub fn prune_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
                 // Calculate minimum _distance between clusters
                 for &small_point in &small_cluster_points {
                     for &large_point in &large_cluster_points {
-                        let _distance =
+                        let distance =
                             euclidean_distance(data.row(small_point), data.row(large_point));
-                        if _distance < min_distance {
+                        if distance < min_distance {
                             min_distance = distance;
                             nearest_large_cluster = Some(large_cluster_id);
                         }

@@ -770,7 +770,7 @@ fn pixel_to_quantumstate(
 
 #[allow(dead_code)]
 fn update_bio_quantum_amplitudes(
-    _neuron: &mut QuantumSpikingNeuron_quantum,
+    _neuron: &mut QuantumSpikingNeuron,
     input: &Array1<Complex<f64>>,
     _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<()> {
@@ -791,7 +791,7 @@ fn process_entangled_correlations(
 
 #[allow(dead_code)]
 fn apply_neuromorphic_quantum_dynamics(
-    _neuron: &mut QuantumSpikingNeuron_entangled,
+    _neuron: &mut QuantumSpikingNeuron,
     response: Complex<f64>,
     _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<()> {
@@ -862,7 +862,7 @@ fn apply_biological_quantum_decoherence(
 #[allow(dead_code)]
 fn bio_quantum_readout_with_attention<T>(
     states: &[Array1<Complex<f64>>],
-    _outputshape: (usize, usize),
+    outputshape: (usize, usize),
     _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Array2<T>>
 where
@@ -897,7 +897,7 @@ fn neighborhood_to_quantumstates(
 
 #[allow(dead_code)]
 fn apply_quantum_homeostatic_processing(
-    _neuron: &mut QuantumSpikingNeuron_quantum,
+    _neuron: &mut QuantumSpikingNeuron,
     neighborhood: &Array2<Complex<f64>>,
     _config: &QuantumNeuromorphicConfig,
     epoch: usize,
@@ -918,7 +918,7 @@ fn quantum_to_classical_with_homeostasis(
 
 #[allow(dead_code)]
 fn update_quantum_homeostatic_parameters(
-    _neuron: &mut QuantumSpikingNeuron_classical,
+    _neuron: &mut QuantumSpikingNeuron,
     output: f64,
     _config: &QuantumNeuromorphicConfig,
     epoch: usize,
@@ -3352,10 +3352,7 @@ where
         },
         quantum_suitability: 0.75,
         classical_suitability: 0.65,
-        strategy: ProcessingStrategy::QuantumDominant {
-            quantum,
-            ratio: 0.7,
-        },
+        strategy: ProcessingStrategy::QuantumDominant { quantum_ratio: 0.7 },
     })
 }
 
@@ -3401,7 +3398,7 @@ fn execute_hybrid_processing<T>(
     image: &ArrayView2<T>,
     _processor: &mut QuantumClassicalHybridProcessor,
     algorithm: &HybridAlgorithm,
-    _config: &QuantumNeuromorphicConfig_hybrid,
+    _config: &QuantumNeuromorphicConfig,
     config: &QuantumClassicalHybridConfig,
 ) -> NdimageResult<HybridProcessingResult>
 where
@@ -3430,7 +3427,7 @@ where
 
 #[allow(dead_code)]
 fn apply_quantum_error_correction(
-    result: &HybridProcessingResult_error,
+    result: &HybridProcessingResult,
     correction: &mut QuantumErrorCorrectionSystem,
     _config: &QuantumClassicalHybridConfig,
 ) -> NdimageResult<HybridProcessingResult> {

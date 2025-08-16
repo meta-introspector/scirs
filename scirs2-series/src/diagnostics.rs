@@ -567,7 +567,7 @@ where
     if df > 30 {
         let mean = F::from(df).unwrap();
         let std_dev = (F::from(2 * df).unwrap()).sqrt();
-        let z = (_statistic - mean) / std_dev;
+        let z = (statistic - mean) / std_dev;
 
         // Approximate p-value using standard normal
         if z > F::from(3.0).unwrap() {
@@ -594,9 +594,9 @@ where
             ),
         };
 
-        if _statistic > critical_values.1 {
+        if statistic > critical_values.1 {
             Ok(F::from(0.01).unwrap())
-        } else if _statistic > critical_values.0 {
+        } else if statistic > critical_values.0 {
             Ok(F::from(0.05).unwrap())
         } else {
             Ok(F::from(0.1).unwrap())

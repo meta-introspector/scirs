@@ -51,9 +51,9 @@ where
     let caps = PlatformCapabilities::detect();
 
     if caps.simd_available && config.cache_friendly {
-        pairwise_euclidean_blocked_simd(_data, &mut distances, &config);
+        pairwise_euclidean_blocked_simd(data, &mut distances, &config);
     } else {
-        pairwise_euclidean_standard(_data, &mut distances);
+        pairwise_euclidean_standard(data, &mut distances);
     }
 
     distances
@@ -235,9 +235,9 @@ where
     let optimizer = AutoOptimizer::new();
 
     if caps.simd_available && optimizer.should_use_simd(n_samples * n_features) {
-        pairwise_euclidean_simd_optimized(_data, &mut distances);
+        pairwise_euclidean_simd_optimized(data, &mut distances);
     } else {
-        pairwise_euclidean_standard(_data, &mut distances);
+        pairwise_euclidean_standard(data, &mut distances);
     }
 
     distances
@@ -430,7 +430,7 @@ where
         Array1::from_vec(distances)
     } else {
         // Fallback to SIMD version for small problems or when parallel is disabled
-        pairwise_euclidean_simd(_data)
+        pairwise_euclidean_simd(data)
     }
 }
 

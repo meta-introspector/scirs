@@ -119,7 +119,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MAML<F> 
 
         // Mean squared error loss
         let mut loss = F::zero();
-        let (batch_size_) = predictions.dim();
+        let (batch_size, _) = predictions.dim();
 
         for i in 0..batch_size {
             for j in 0..self.output_dim {
@@ -133,7 +133,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MAML<F> 
 
     /// Make predictions using current parameters
     fn predict(&self, params: &Array2<F>, inputs: &Array2<F>) -> Result<Array2<F>> {
-        let (batch_size_) = inputs.dim();
+        let (batch_size, _) = inputs.dim();
 
         // Extract weight matrices from flattened parameters
         let (w1, b1, w2, b2) = self.extract_weights(params);
@@ -251,12 +251,12 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MAML<F> 
     }
 
     /// Compute meta-loss on query set
-    fn compute_meta_loss(&self, adaptedparams: &Array2<F>, task: &TaskData<F>) -> Result<F> {
+    fn compute_meta_loss(&self, adapted_params: &Array2<F>, task: &TaskData<F>) -> Result<F> {
         self.forward(adapted_params, &task.query_x, &task.query_y)
     }
 
     /// Fast adaptation for new task (few-shot learning)
-    pub fn fast_adapt(&self, support_x: &Array2<F>, supporty: &Array2<F>) -> Result<Array2<F>> {
+    pub fn fast_adapt(&self, support_x: &Array2<F>, support_y: &Array2<F>) -> Result<Array2<F>> {
         let task = TaskData {
             support_x: support_x.clone(),
             support_y: support_y.clone(),
@@ -354,7 +354,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> NeuralOD
 
         // Set initial condition
         for i in 0..self.input_dim {
-            trajectory[[0, i]] = initial_state[i];
+            trajectory[[0, i]] = initialstate[i];
         }
 
         // Integrate ODE
@@ -702,7 +702,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
     pub fn generate(&self, numsamples: usize) -> Result<Vec<Array2<F>>> {
         let mut _samples = Vec::new();
 
-        for i in 0..num_samples {
+        for i in 0..numsamples {
             // Sample from prior distribution (standard normal)
             let mut latent = Array1::zeros(self.latent_dim);
             for j in 0..self.latent_dim {
@@ -711,7 +711,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
             }
 
             let generated = self.decode(&latent)?;
-            samples.push(generated);
+            _samples.push(generated);
         }
 
         Ok(_samples)
@@ -932,13 +932,13 @@ mod tests {
 
         // Create sample tasks
         let task1 = TaskData {
-            support_x: Array2::fromshape_vec((5, 4), (0..20).map(|i| i as f64 * 0.1).collect())
+            support_x: Array2::from_shape_vec((5, 4), (0..20).map(|i| i as f64 * 0.1).collect())
                 .unwrap(),
-            support_y: Array2::fromshape_vec((5, 2), (0..10).map(|i| i as f64 * 0.2).collect())
+            support_y: Array2::from_shape_vec((5, 2), (0..10).map(|i| i as f64 * 0.2).collect())
                 .unwrap(),
-            query_x: Array2::fromshape_vec((3, 4), (0..12).map(|i| i as f64 * 0.1 + 0.5).collect())
+            query_x: Array2::from_shape_vec((3, 4), (0..12).map(|i| i as f64 * 0.1 + 0.5).collect())
                 .unwrap(),
-            query_y: Array2::fromshape_vec((3, 2), (0..6).map(|i| i as f64 * 0.2 + 0.3).collect())
+            query_y: Array2::from_shape_vec((3, 2), (0..6).map(|i| i as f64 * 0.2 + 0.3).collect())
                 .unwrap(),
         };
 
@@ -975,7 +975,7 @@ mod tests {
         let vae = TimeSeriesVAE::<f64>::new(10, 3, 5, 16, 16);
 
         let input =
-            Array2::fromshape_vec((10, 3), (0..30).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::from_shape_vec((10, 3), (0..30).map(|i| i as f64 * 0.1).collect()).unwrap();
 
         // Test encoding
         let (mean, logvar) = vae.encode(&input).unwrap();
@@ -1139,13 +1139,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
 
     /// Forward pass through transformer
     pub fn forward(&self, input: &Array2<F>) -> Result<Array2<F>> {
-        let batch_size = input.nrows();
+        let batch_size_ = input.nrows();
 
         // Input embedding + positional encoding
         let mut x = self.input_embedding(input)?;
 
         // Add positional encoding
-        for i in 0..batch_size {
+        for i in 0..batch_size_ {
             for j in 0..self.seq_len {
                 for k in 0..self.d_model {
                     x[[i * self.seq_len + j, k]] =
@@ -1160,21 +1160,21 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
         }
 
         // Final projection to prediction horizon
-        self.output_projection(&x, batch_size)
+        self.output_projection(&x, batch_size_)
     }
 
     /// Input embedding layer
     fn input_embedding(&self, input: &Array2<F>) -> Result<Array2<F>> {
-        let batch_size = input.nrows();
+        let batch_size_ = input.nrows();
         let input_dim = input.ncols();
 
         // Simple linear projection to d_model
-        let mut embedded = Array2::zeros((batch_size * self.seq_len, self.d_model));
+        let mut embedded = Array2::zeros((batch_size_ * self.seq_len, self.d_model));
 
         // Extract embedding weights (simplified)
         let param_start = 0;
 
-        for i in 0..batch_size {
+        for i in 0..batch_size_ {
             for j in 0..self.seq_len.min(input_dim) {
                 for k in 0..self.d_model {
                     let weight_idx = (j * self.d_model + k) % (self.seq_len * self.d_model);
@@ -1194,18 +1194,18 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
     /// Single transformer layer
     fn transformer_layer(&self, input: &Array2<F>, layeridx: usize) -> Result<Array2<F>> {
         // Multi-head attention
-        let attention_output = self.multi_head_attention(input, layer_idx)?;
+        let attention_output = self.multi_head_attention(input, layeridx)?;
 
         // Add & Norm 1
         let norm1_output =
-            self.layer_norm(&self.add_residual(input, &attention_output)?, layer_idx, 0)?;
+            self.layer_norm(&self.add_residual(input, &attention_output)?, layeridx, 0)?;
 
         // Feed-forward
-        let ff_output = self.feed_forward(&norm1_output, layer_idx)?;
+        let ff_output = self.feed_forward(&norm1_output, layeridx)?;
 
         // Add & Norm 2
         let final_output =
-            self.layer_norm(&self.add_residual(&norm1_output, &ff_output)?, layer_idx, 1)?;
+            self.layer_norm(&self.add_residual(&norm1_output, &ff_output)?, layeridx, 1)?;
 
         Ok(final_output)
     }
@@ -1220,9 +1220,9 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
 
         for head in 0..self.num_heads {
             // Compute Q, K, V for this head (simplified)
-            let q = self.compute_qkv_projection(input, layer_idx, head, 0)?; // Query
-            let k = self.compute_qkv_projection(input, layer_idx, head, 1)?; // Key
-            let v = self.compute_qkv_projection(input, layer_idx, head, 2)?; // Value
+            let q = self.compute_qkv_projection(input, layeridx, head, 0)?; // Query
+            let k = self.compute_qkv_projection(input, layeridx, head, 1)?; // Key
+            let v = self.compute_qkv_projection(input, layeridx, head, 2)?; // Value
 
             // Attention scores
             let attention_scores = self.compute_attention_scores(&q, &k)?;
@@ -1329,7 +1329,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
                 let mut sum = F::zero();
                 for k in 0..self.d_model {
                     let weight_idx =
-                        (layer_idx * 2000 + j * self.d_model + k) % self.parameters.ncols();
+                        (layeridx * 2000 + j * self.d_model + k) % self.parameters.ncols();
                     let weight = self.parameters[[0, weight_idx]];
                     sum = sum + input[[i, k]] * weight;
                 }
@@ -1344,7 +1344,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
                 let mut sum = F::zero();
                 for k in 0..self.d_ff {
                     let weight_idx =
-                        (layer_idx * 3000 + j * self.d_ff + k) % self.parameters.ncols();
+                        (layeridx * 3000 + j * self.d_ff + k) % self.parameters.ncols();
                     let weight = self.parameters[[0, weight_idx]];
                     sum = sum + hidden[[i, k]] * weight;
                 }
@@ -1414,10 +1414,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
 
     /// Output projection to prediction horizon
     fn output_projection(&self, input: &Array2<F>, batchsize: usize) -> Result<Array2<F>> {
-        let mut output = Array2::zeros((batch_size, self.pred_len));
+        let mut output = Array2::zeros((batchsize, self.pred_len));
 
         // Use last token representation for prediction
-        for i in 0..batch_size {
+        for i in 0..batchsize {
             let last_token_idx = i * self.seq_len + self.seq_len - 1;
 
             for j in 0..self.pred_len {
@@ -1571,7 +1571,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
 
             // Evaluate objective function
             let start_time = std::time::Instant::now();
-            let score = objective_fn(&params)?;
+            let score = objectivefn(&params)?;
             let training_time = F::from(start_time.elapsed().as_secs_f64()).unwrap();
 
             // Update best parameters if improved
@@ -1637,7 +1637,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
     }
 
     /// Grid search implementation (simplified)
-    fn grid_search(&selftrial: usize) -> Result<HyperparameterSet<F>> {
+    fn grid_search(&self, trial: usize) -> Result<HyperparameterSet<F>> {
         // For simplicity, use random search with some structure
         self.random_search()
     }
@@ -1679,7 +1679,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
     }
 
     /// Predict mean performance (simplified Gaussian Process)
-    fn predict_mean(selfparams: &HyperparameterSet<F>) -> Result<F> {
+    fn predict_mean(&self, params: &HyperparameterSet<F>) -> Result<F> {
         // Simplified: return average of historical scores
         if self.history.is_empty() {
             return Ok(F::zero());
@@ -1694,7 +1694,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
     }
 
     /// Predict standard deviation (simplified)
-    fn predict_std(selfparams: &HyperparameterSet<F>) -> Result<F> {
+    fn predict_std(&self, _params: &HyperparameterSet<F>) -> Result<F> {
         // Simplified: return fixed exploration term
         Ok(F::one())
     }
@@ -1816,10 +1816,10 @@ mod advanced_tests {
         let transformer = TimeSeriesTransformer::<f64>::new(10, 5, 64, 8, 4, 256);
 
         let input =
-            Array2::fromshape_vec((2, 10), (0..20).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::from_shape_vec((2, 10), (0..20).map(|i| i as f64 * 0.1).collect()).unwrap();
 
         let output = transformer.forward(&input).unwrap();
-        assert_eq!(output.dim(), (2, 5)); // batch_size x pred_len
+        assert_eq!(output.dim(), (2, 5)); // batch_size_ x pred_len
     }
 
     #[test]
@@ -1877,10 +1877,10 @@ pub struct PrototypicalNetworks<F: Float + Debug + ndarray::ScalarOperand> {
 
 impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> PrototypicalNetworks<F> {
     /// Create new Prototypical Networks model
-    pub fn new(_input_dim: usize, feature_dim: usize, hiddendims: Vec<usize>) -> Self {
+    pub fn new(input_dim: usize, feature_dim: usize, hidden_dims: Vec<usize>) -> Self {
         // Calculate total parameters for feature extractor
         let mut total_params = 0;
-        let mut layer_sizes = vec![_input_dim];
+        let mut layer_sizes = vec![input_dim];
         layer_sizes.extend(&hidden_dims);
         layer_sizes.push(feature_dim);
 
@@ -1909,7 +1909,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Prototyp
 
     /// Extract features from input data
     pub fn extract_features(&self, input: &Array2<F>) -> Result<Array2<F>> {
-        let batch_size = input.nrows();
+        let batch_size_ = input.nrows();
         let mut current_input = input.clone();
 
         // Extract layer weights and biases
@@ -1917,10 +1917,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Prototyp
 
         // Forward pass through feature extractor
         for (weights, biases) in layer_params {
-            let mut layer_output = Array2::zeros((batch_size, biases.len()));
+            let mut layer_output = Array2::zeros((batch_size_, biases.len()));
 
             // Apply linear transformation
-            for i in 0..batch_size {
+            for i in 0..batch_size_ {
                 for j in 0..biases.len() {
                     let mut sum = biases[j];
                     for k in 0..current_input.ncols() {
@@ -1969,7 +1969,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Prototyp
                 // Compute mean of class _features
                 for j in 0..self.feature_dim {
                     let mut sum = F::zero();
-                    for _features in &class_features {
+                    for features in &class_features {
                         sum = sum + features[j];
                     }
                     prototypes[[class_idx, j]] = sum / F::from(class_features.len()).unwrap();
@@ -2277,7 +2277,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> REPTILE<
     }
 
     /// Fast adaptation for new task (few-shot learning)
-    pub fn fast_adapt(&self, support_x: &Array2<F>, supporty: &Array2<F>) -> Result<Array2<F>> {
+    pub fn fast_adapt(&self, support_x: &Array2<F>, support_y: &Array2<F>) -> Result<Array2<F>> {
         let task = TaskData {
             support_x: support_x.clone(),
             support_y: support_y.clone(),
@@ -2301,7 +2301,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> REPTILE<
 
         // Mean squared error loss
         let mut loss = F::zero();
-        let (batch_size_) = predictions.dim();
+        let (batch_size, _) = predictions.dim();
 
         for i in 0..batch_size {
             for j in 0..self.output_dim {
@@ -2315,7 +2315,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> REPTILE<
 
     /// Make predictions using current parameters
     fn predict(&self, params: &Array2<F>, inputs: &Array2<F>) -> Result<Array2<F>> {
-        let (batch_size_) = inputs.dim();
+        let (batch_size, _) = inputs.dim();
 
         // Extract weight matrices from flattened parameters
         let (w1, b1, w2, b2) = self.extract_weights(params);
@@ -2563,7 +2563,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MANN<F> 
     }
 
     /// Write to external memory
-    fn memory_write(&mut self, controlleroutput: &Array1<F>) -> Result<()> {
+    fn memory_write(&mut self, controller_output: &Array1<F>) -> Result<()> {
         // Simplified memory write - update first row with controller _output
         for i in 0..controller_output.len().min(self.memory_width) {
             self.memory[[0, i]] = controller_output[i];
@@ -2684,9 +2684,9 @@ pub struct MetaOptimizer<F: Float + Debug + ndarray::ScalarOperand> {
 
 impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MetaOptimizer<F> {
     /// Create new meta-optimizer
-    pub fn new(_input_dim: usize, hiddensize: usize) -> Self {
+    pub fn new(input_dim: usize, hidden_size: usize) -> Self {
         // Initialize LSTM parameters
-        let param_count = 4 * hidden_size * (_input_dim + hidden_size) + 4 * hidden_size; // 4 gates
+        let param_count = 4 * hidden_size * (input_dim + hidden_size) + 4 * hidden_size; // 4 gates
         let mut lstm_params = Array2::zeros((1, param_count));
 
         let scale = F::from(1.0).unwrap() / F::from(hidden_size).unwrap().sqrt();
@@ -2788,7 +2788,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MetaOpti
     }
 
     /// Train meta-optimizer on optimization tasks
-    pub fn meta_train(&mut self, optimizationproblems: &[OptimizationProblem<F>]) -> Result<F> {
+    pub fn meta_train(&mut self, optimization_problems: &[OptimizationProblem<F>]) -> Result<F> {
         let mut total_loss = F::zero();
 
         for problem in optimization_problems {
@@ -2868,10 +2868,10 @@ mod advanced_meta_learning_tests {
         let proto_net = PrototypicalNetworks::<f64>::new(10, 5, vec![8]);
 
         let support_x =
-            Array2::fromshape_vec((4, 10), (0..40).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::from_shape_vec((4, 10), (0..40).map(|i| i as f64 * 0.1).collect()).unwrap();
         let support_y = Array1::from_vec(vec![0, 0, 1, 1]);
         let query_x =
-            Array2::fromshape_vec((2, 10), (40..60).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::from_shape_vec((2, 10), (40..60).map(|i| i as f64 * 0.1).collect()).unwrap();
 
         let predictions = proto_net
             .few_shot_episode(&support_x, &support_y, &query_x)
@@ -2884,13 +2884,13 @@ mod advanced_meta_learning_tests {
         let mut reptile = REPTILE::<f64>::new(5, 8, 3, 0.01, 0.1, 5);
 
         let task = TaskData {
-            support_x: Array2::fromshape_vec((3, 5), (0..15).map(|i| i as f64 * 0.1).collect())
+            support_x: Array2::from_shape_vec((3, 5), (0..15).map(|i| i as f64 * 0.1).collect())
                 .unwrap(),
-            support_y: Array2::fromshape_vec((3, 3), (0..9).map(|i| i as f64 * 0.1).collect())
+            support_y: Array2::from_shape_vec((3, 3), (0..9).map(|i| i as f64 * 0.1).collect())
                 .unwrap(),
-            query_x: Array2::fromshape_vec((2, 5), (15..25).map(|i| i as f64 * 0.1).collect())
+            query_x: Array2::from_shape_vec((2, 5), (15..25).map(|i| i as f64 * 0.1).collect())
                 .unwrap(),
-            query_y: Array2::fromshape_vec((2, 3), (9..15).map(|i| i as f64 * 0.1).collect())
+            query_y: Array2::from_shape_vec((2, 3), (9..15).map(|i| i as f64 * 0.1).collect())
                 .unwrap(),
         };
 
@@ -2932,9 +2932,9 @@ mod advanced_meta_learning_tests {
     #[test]
     fn test_few_shot_episode_structure() {
         let episode = FewShotEpisode {
-            support_x: Array2::fromshape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+            support_x: Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
             support_y: Array1::from_vec(vec![0, 1]),
-            query_x: Array2::fromshape_vec((1, 3), vec![7.0, 8.0, 9.0]).unwrap(),
+            query_x: Array2::from_shape_vec((1, 3), vec![7.0, 8.0, 9.0]).unwrap(),
             query_y: Array1::from_vec(vec![1]),
         };
 

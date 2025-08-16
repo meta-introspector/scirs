@@ -157,7 +157,7 @@ where
 
         // Determine the label for this point
         if let Some((most_common_label_)) = neighbor_labels.iter().max_by_key(|&(_, count)| count) {
-            output[[r, c]] = *most_common_label;
+            output[[r, c]] = *most_common_label_;
 
             // Add new neighbors to the queue
             for neighbor in get_neighbors_2d(image, r, c) {
@@ -385,7 +385,7 @@ where
         if !labels.is_empty() {
             let (most_common_label_) = labels.iter().max_by_key(|&(_, count)| count).unwrap();
 
-            output[[r, c]] = *most_common_label;
+            output[[r, c]] = *most_common_label_;
 
             // Add unlabeled neighbors to the queue
             let new_neighbors = if connectivity == 1 {

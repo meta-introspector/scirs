@@ -340,7 +340,7 @@ impl InteractiveVisualizer {
     /// Handle touch input for mobile/tablet interfaces
     pub fn handle_touch_input(&mut self, touchpoints: Vec<TouchPoint>) {
         let prev_touch_count = self.state.input_state.touch_points.len();
-        self.state.input_state.touch_points = touch_points;
+        self.state.input_state.touch_points = touchpoints;
         let current_touch_count = self.state.input_state.touch_points.len();
 
         // Gesture recognition
@@ -353,7 +353,7 @@ impl InteractiveVisualizer {
     }
 
     /// Select points within a 3D region
-    pub fn select_points_in_region(&mut selfregion: BoundingBox3D) -> Vec<usize> {
+    pub fn select_points_in_region(&mut self, region: BoundingBox3D) -> Vec<usize> {
         // This would be implemented with actual 3D point-in-box testing
         // For now, return empty selection
         let selected = Vec::new();
@@ -362,7 +362,7 @@ impl InteractiveVisualizer {
     }
 
     /// Highlight points at screen coordinates
-    pub fn highlight_points_at(&mut self_screenpos: (f64, f64)) -> Vec<usize> {
+    pub fn highlight_points_at(&mut self, screenpos: (f64, f64)) -> Vec<usize> {
         // This would implement 3D picking/ray casting
         // For now, return empty highlights
         let highlighted = Vec::new();
@@ -476,7 +476,7 @@ impl InteractiveVisualizer {
                 .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == cluster_id)
-                .map(|(idx_)| idx)
+                .map(|(idx_, _)| idx_)
                 .collect();
 
             if cluster_points.is_empty() {
@@ -660,8 +660,8 @@ impl InteractiveVisualizer {
 
     /// Validate point selections after data changes
     fn validate_selections(&mut self, npoints: usize) {
-        self.state.selected_points.retain(|&idx| idx < n_points);
-        self.state.highlighted_points.retain(|&idx| idx < n_points);
+        self.state.selected_points.retain(|&idx| idx < npoints);
+        self.state.highlighted_points.retain(|&idx| idx < npoints);
     }
 
     /// Handle camera input based on mouse state
@@ -731,9 +731,9 @@ impl InteractiveVisualizer {
     }
 
     /// Update gesture recognition state
-    fn update_gesture_state(&mut self_prev_touch_count: usize, current_touchcount: usize) {
+    fn update_gesture_state(&mut self, prev_touch_count: usize, current_touchcount: usize) {
         // Detect pinch gesture
-        if current_touch_count == 2 {
+        if current_touchcount == 2 {
             let touch1 = &self.state.input_state.touch_points[0];
             let touch2 = &self.state.input_state.touch_points[1];
 

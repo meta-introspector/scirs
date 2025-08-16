@@ -182,7 +182,7 @@ where
     // Step 2: Remove trend to get detrended series
     let detrended = if is_additive {
         // Y - T for additive model
-        Array1::fromshape_fn(n, |i| {
+        Array1::from_shape_fn(n, |i| {
             if i < trend.len() {
                 ts[i] - trend[i]
             } else {
@@ -191,7 +191,7 @@ where
         })
     } else {
         // Y / T for multiplicative model
-        Array1::fromshape_fn(n, |i| {
+        Array1::from_shape_fn(n, |i| {
             if i < trend.len() && trend[i] != F::zero() {
                 ts[i] / trend[i]
             } else {
@@ -209,10 +209,10 @@ where
     // Step 5: Calculate residuals
     let residual = if is_additive {
         // R = Y - T - S for additive model
-        Array1::fromshape_fn(n, |i| ts[i] - trend[i] - seasonal[i])
+        Array1::from_shape_fn(n, |i| ts[i] - trend[i] - seasonal[i])
     } else {
         // R = Y / (T * S) for multiplicative model
-        Array1::fromshape_fn(n, |i| {
+        Array1::from_shape_fn(n, |i| {
             let denominator = trend[i] * seasonal[i];
             if denominator != F::zero() {
                 ts[i] / denominator
@@ -245,15 +245,15 @@ where
 
     if !is_additive {
         // For multiplicative model, log-transform the series
-        let log_ts = Array1::fromshape_fn(n, |i| ts[i].ln());
+        let log_ts = Array1::from_shape_fn(n, |i| ts[i].ln());
 
         // Perform STL on log-transformed series
         let decomp = stl_decomposition_inner(&log_ts, period, num_iterations, options.robust)?;
 
         // Transform back
-        let trend = Array1::fromshape_fn(n, |i| decomp.trend[i].exp());
-        let seasonal = Array1::fromshape_fn(n, |i| decomp.seasonal[i].exp());
-        let residual = Array1::fromshape_fn(n, |i| decomp.residual[i].exp());
+        let trend = Array1::from_shape_fn(n, |i| decomp.trend[i].exp());
+        let seasonal = Array1::from_shape_fn(n, |i| decomp.seasonal[i].exp());
+        let residual = Array1::from_shape_fn(n, |i| decomp.residual[i].exp());
 
         return Ok(SeasonalDecomposition {
             trend,
@@ -294,7 +294,7 @@ where
     for iter in 0..num_iterations {
         // Inner loop - cycle subseries
         // 1. Detrending
-        let detrended = Array1::fromshape_fn(n, |i| ts[i] - trend[i]);
+        let detrended = Array1::from_shape_fn(n, |i| ts[i] - trend[i]);
 
         // 2. Cycle-subseries smoothing
         for i in 0..period {
@@ -333,7 +333,7 @@ where
         }
 
         // 5. Deseasonalize
-        let deseasonalized = Array1::fromshape_fn(n, |i| ts[i] - seasonal[i]);
+        let deseasonalized = Array1::from_shape_fn(n, |i| ts[i] - seasonal[i]);
 
         // 6. Trend smoothing
         trend = loess_smooth(&deseasonalized, n_l, robust)?;
@@ -351,7 +351,7 @@ where
 
             // Apply weights to the trend estimation for next iteration
             // This implements weighted loess smoothing for full robustness
-            let deseasonalized = Array1::fromshape_fn(n, |i| ts[i] - seasonal[i]);
+            let deseasonalized = Array1::from_shape_fn(n, |i| ts[i] - seasonal[i]);
             trend = loess_smooth_weighted(&deseasonalized, n_l, &weights)?;
         }
     }
@@ -383,9 +383,9 @@ where
 
     // Step 2: Initial seasonal component
     let detrended = if is_additive {
-        Array1::fromshape_fn(n, |i| ts[i] - trend_init[i])
+        Array1::from_shape_fn(n, |i| ts[i] - trend_init[i])
     } else {
-        Array1::fromshape_fn(n, |i| {
+        Array1::from_shape_fn(n, |i| {
             if trend_init[i] != F::zero() {
                 ts[i] / trend_init[i]
             } else {
@@ -399,9 +399,9 @@ where
 
     // Step 3: Deseasonalized series
     let deseasonalized = if is_additive {
-        Array1::fromshape_fn(n, |i| ts[i] - seasonal_norm[i])
+        Array1::from_shape_fn(n, |i| ts[i] - seasonal_norm[i])
     } else {
-        Array1::fromshape_fn(n, |i| {
+        Array1::from_shape_fn(n, |i| {
             if seasonal_norm[i] != F::zero() {
                 ts[i] / seasonal_norm[i]
             } else {
@@ -415,9 +415,9 @@ where
 
     // Step 5: Refined seasonal component
     let detrended_refined = if is_additive {
-        Array1::fromshape_fn(n, |i| ts[i] - trend_refined[i])
+        Array1::from_shape_fn(n, |i| ts[i] - trend_refined[i])
     } else {
-        Array1::fromshape_fn(n, |i| {
+        Array1::from_shape_fn(n, |i| {
             if trend_refined[i] != F::zero() {
                 ts[i] / trend_refined[i]
             } else {
@@ -431,9 +431,9 @@ where
 
     // Step 6: Calculate final residuals
     let residual = if is_additive {
-        Array1::fromshape_fn(n, |i| ts[i] - trend_refined[i] - seasonal_final[i])
+        Array1::from_shape_fn(n, |i| ts[i] - trend_refined[i] - seasonal_final[i])
     } else {
-        Array1::fromshape_fn(n, |i| {
+        Array1::from_shape_fn(n, |i| {
             let denominator = trend_refined[i] * seasonal_final[i];
             if denominator != F::zero() {
                 ts[i] / denominator
@@ -539,7 +539,7 @@ where
     for i in 0..n {
         let season = i % period;
 
-        if !_detrended[i].is_nan() {
+        if !detrended[i].is_nan() {
             seasonal_factors[season] = seasonal_factors[season] + detrended[i];
             count[season] += 1;
         }
@@ -569,7 +569,7 @@ fn normalize_seasonal_component<F>(_seasonal: &Array1<F>, isadditive: bool) -> R
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = seasonal.len();
+    let n = _seasonal.len();
 
     if n == 0 {
         return Err(TimeSeriesError::InsufficientData {
@@ -579,21 +579,21 @@ where
         });
     }
 
-    let mut normalized = seasonal.clone();
+    let mut normalized = _seasonal.clone();
 
-    if is_additive {
+    if isadditive {
         // Ensure _seasonal component sums to zero
-        let mean = seasonal.sum() / F::from_usize(n).unwrap();
+        let mean = _seasonal.sum() / F::from_usize(n).unwrap();
 
         for i in 0..n {
-            normalized[i] = seasonal[i] - mean;
+            normalized[i] = _seasonal[i] - mean;
         }
     } else {
         // Ensure _seasonal component multiplies to one
         let mut product = F::one();
         let mut count = 0;
 
-        for &val in seasonal.iter() {
+        for &val in _seasonal.iter() {
             if !val.is_nan() && val != F::zero() {
                 product = product * val;
                 count += 1;
@@ -604,8 +604,8 @@ where
             let geometric_mean = product.powf(F::one() / F::from_usize(count).unwrap());
 
             for i in 0..n {
-                if !_seasonal[i].is_nan() && seasonal[i] != F::zero() {
-                    normalized[i] = seasonal[i] / geometric_mean;
+                if !_seasonal[i].is_nan() && _seasonal[i] != F::zero() {
+                    normalized[i] = _seasonal[i] / geometric_mean;
                 } else {
                     normalized[i] = F::one();
                 }
@@ -622,8 +622,8 @@ fn moving_average_filter<F>(_ts: &Array1<F>, windowsize: usize) -> Result<Array1
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = ts.len();
-    let half_window = window_size / 2;
+    let n = _ts.len();
+    let half_window = windowsize / 2;
 
     let mut filtered = Array1::<F>::zeros(n);
 
@@ -635,7 +635,7 @@ where
             n - 1
         };
 
-        let sum = (start..=end).fold(F::zero(), |acc, j| acc + ts[j]);
+        let sum = (start..=end).fold(F::zero(), |acc, j| acc + _ts[j]);
         filtered[i] = sum / F::from_usize(end - start + 1).unwrap();
     }
 
@@ -648,18 +648,18 @@ fn henderson_filter<F>(_ts: &Array1<F>, windowsize: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = ts.len();
+    let n = _ts.len();
 
-    if window_size % 2 == 0 {
+    if windowsize % 2 == 0 {
         return Err(TimeSeriesError::InvalidInput(
-            "Henderson filter window _size must be odd".to_string(),
+            "Henderson filter window size must be odd".to_string(),
         ));
     }
 
-    let half_window = window_size / 2;
+    let half_window = windowsize / 2;
 
     // Calculate Henderson weights
-    let weights = calculate_henderson_weights(window_size)?;
+    let weights = calculate_henderson_weights(windowsize)?;
 
     // Apply filter
     let mut filtered = Array1::<F>::zeros(n);
@@ -679,7 +679,7 @@ where
             let weight_idx = j + (start as i32 - (i as i32 - half_window as i32)) as usize;
 
             if weight_idx < weights.len() {
-                weighted_sum = weighted_sum + ts[k] * weights[weight_idx];
+                weighted_sum = weighted_sum + _ts[k] * weights[weight_idx];
                 weight_sum = weight_sum + weights[weight_idx];
             }
         }
@@ -687,7 +687,7 @@ where
         if weight_sum != F::zero() {
             filtered[i] = weighted_sum / weight_sum;
         } else {
-            filtered[i] = ts[i];
+            filtered[i] = _ts[i];
         }
     }
 
@@ -700,8 +700,8 @@ fn calculate_henderson_weights<F>(_windowsize: usize) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let m = (_window_size - 1) / 2;
-    let mut weights = vec![F::zero(); _window_size];
+    let m = (_windowsize - 1) / 2;
+    let mut weights = vec![F::zero(); _windowsize];
 
     // Calculate terms for the Henderson weights
     let m_f = F::from_usize(m).unwrap();
@@ -741,20 +741,20 @@ fn loess_smooth<F>(_ts: &Array1<F>, windowsize: usize, robust: bool) -> Result<A
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = ts.len();
+    let n = _ts.len();
 
-    if n < window_size {
+    if n < windowsize {
         return Err(TimeSeriesError::InsufficientData {
             message: format!(
-                "Time series too short for LOESS smoothing with window _size {window_size}"
+                "Time series too short for LOESS smoothing with window size {windowsize}"
             ),
-            required: window_size,
+            required: windowsize,
             actual: n,
         });
     }
 
     let mut smoothed = Array1::<F>::zeros(n);
-    let half_window = window_size / 2;
+    let half_window = windowsize / 2;
 
     // For each point, fit a local polynomial
     for i in 0..n {
@@ -840,9 +840,9 @@ where
 {
     let n = ts.len();
 
-    if n != externalweights.len() {
+    if n != external_weights.len() {
         return Err(TimeSeriesError::InvalidInput(
-            "Time series and _weights must have same length".to_string(),
+            "Time series and weights must have same length".to_string(),
         ));
     }
 
@@ -890,7 +890,7 @@ where
                 F::zero()
             };
 
-            weights.push(tricube_weight * external_weights[idx]);
+            _weights.push(tricube_weight * external_weights[idx]);
         }
 
         // Weighted polynomial fit
@@ -1014,7 +1014,7 @@ where
     // Calculate bisquare weights
     let mut weights = Vec::with_capacity(n);
 
-    for &r in _residuals {
+    for &r in residuals {
         let u = r.abs() / (c * scale);
 
         if u < F::one() {
@@ -1044,8 +1044,8 @@ where
     let mut last_valid = None;
 
     for i in 0..n {
-        if !_ts[i].is_nan() {
-            last_valid = Some(_ts[i]);
+        if !ts[i].is_nan() {
+            last_valid = Some(ts[i]);
         } else if let Some(val) = last_valid {
             ts[i] = val;
         }
@@ -1055,8 +1055,8 @@ where
     last_valid = None;
 
     for i in (0..n).rev() {
-        if !_ts[i].is_nan() {
-            last_valid = Some(_ts[i]);
+        if !ts[i].is_nan() {
+            last_valid = Some(ts[i]);
         } else if let Some(val) = last_valid {
             ts[i] = val;
         }

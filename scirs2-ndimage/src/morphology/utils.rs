@@ -23,7 +23,7 @@ use crate::error::{NdimageError, NdimageResult};
 pub fn pad_array<T, D>(
     input: &Array<T, D>,
     pad_width: &[(usize, usize)],
-    _mode: &MorphBorderMode_constant,
+    _mode: &MorphBorderMode,
     value: T,
 ) -> NdimageResult<Array<T, D>>
 where
@@ -77,7 +77,7 @@ where
     }
 
     // Require at least one True value
-    if !_structure.iter().any(|&x| x) {
+    if !structure.iter().any(|&x| x) {
         return Err(NdimageError::InvalidInput(
             "Structure must have at least one True value".into(),
         ));

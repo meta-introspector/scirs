@@ -122,7 +122,7 @@ where
 #[allow(dead_code)]
 fn unravel_index(_flatindex: usize, shape: &[usize]) -> Vec<usize> {
     let mut indices = vec![0; shape.len()];
-    let mut remaining = flat_index;
+    let mut remaining = _flatindex;
 
     for i in (0..shape.len()).rev() {
         let stride: usize = shape[(i + 1)..].iter().product();
@@ -355,7 +355,7 @@ where
 
     if indices.len() != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
-            "Indices must have same length as _input dimensions (got {} expected {})",
+            "Indices must have same length as input dimensions (got {} expected {})",
             indices.len(),
             input.ndim()
         )));
@@ -409,7 +409,7 @@ pub fn interpn<T, D>(
     cval: Option<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::DivAssign,
     D: ndarray::Dimension,
 {
     // Validate inputs

@@ -301,7 +301,7 @@ pub struct BenchmarkResults {
     /// Benchmark configuration used
     pub config: BenchmarkConfig,
     /// Individual algorithm results
-    pub algorithm_results: HashMap<String, AlgorithmBenchmark>,
+    pub algorithmresults: HashMap<String, AlgorithmBenchmark>,
     /// Cross-algorithm comparisons
     pub comparisons: Vec<AlgorithmComparison>,
     /// System information
@@ -409,7 +409,7 @@ impl AdvancedBenchmark {
     /// Perform comprehensive benchmarking analysis
     pub fn comprehensive_analysis(&self, data: &ArrayView2<f64>) -> Result<BenchmarkResults> {
         let start_time = Instant::now();
-        let mut algorithm_results = HashMap::new();
+        let mut algorithmresults = HashMap::new();
         let mut regression_alerts = Vec::new();
 
         // Benchmark each algorithm
@@ -424,7 +424,7 @@ impl AdvancedBenchmark {
                             regression_alerts.push(alert);
                         }
                     }
-                    algorithm_results.insert(algorithm_name, result);
+                    algorithmresults.insert(algorithm_name, result);
                 }
                 Err(e) => {
                     eprintln!("Failed to benchmark {}: {}", algorithm_name, e);
@@ -433,17 +433,17 @@ impl AdvancedBenchmark {
         }
 
         // Generate cross-algorithm comparisons
-        let comparisons = self.generate_comparisons(&algorithm_results)?;
+        let comparisons = self.generate_comparisons(&algorithmresults)?;
 
         // Collect system information
         let system_info = self.collect_system_info();
 
         // Generate overall recommendations
-        let recommendations = self.generate_recommendations(&algorithm_results);
+        let recommendations = self.generate_recommendations(&algorithmresults);
 
         Ok(BenchmarkResults {
             config: self.config.clone(),
-            algorithm_results,
+            algorithmresults,
             comparisons,
             system_info,
             timestamp: std::time::SystemTime::now(),
@@ -665,7 +665,7 @@ impl AdvancedBenchmark {
 
     /// Calculate memory profile from memory usage samples
     fn calculate_memory_profile(&self, memorysamples: &[usize]) -> MemoryProfile {
-        if memory_samples.is_empty() {
+        if memorysamples.is_empty() {
             return MemoryProfile {
                 peak_memory_mb: 0.0,
                 average_memory_mb: 0.0,
@@ -677,9 +677,9 @@ impl AdvancedBenchmark {
             };
         }
 
-        let peak_memory_mb = *memory_samples.iter().max().unwrap() as f64 / 1_048_576.0;
-        let average_memory_mb = memory_samples.iter().sum::<usize>() as f64
-            / (memory_samples.len() as f64 * 1_048_576.0);
+        let peak_memory_mb = *memorysamples.iter().max().unwrap() as f64 / 1_048_576.0;
+        let average_memory_mb =
+            memorysamples.iter().sum::<usize>() as f64 / (memorysamples.len() as f64 * 1_048_576.0);
 
         // Simplified calculations for demo
         let allocation_rate = peak_memory_mb * 0.1; // Placeholder
@@ -749,14 +749,14 @@ impl AdvancedBenchmark {
             }
             "dbscan" => {
                 let (labels_) = dbscan(data, 0.5, 5)?;
-                let n_clusters = labels
+                let n_clusters = labels_
                     .iter()
                     .filter(|&&x| x >= 0)
                     .map(|&x| x)
                     .max()
                     .unwrap_or(-1) as usize
                     + 1;
-                (labels, n_clusters, None, None)
+                (labels_, n_clusters, None, None)
             }
             _ => {
                 // Fallback to K-means for other algorithms
@@ -1140,7 +1140,7 @@ impl AdvancedBenchmark {
         let best_algo = results
             .iter()
             .min_by(|a, b| a.1.performance.mean.cmp(&b.1.performance.mean))
-            .map(|(name_)| name);
+            .map(|(name, _)| name);
 
         if let Some(best) = best_algo {
             recommendations.push(format!("Best performing algorithm: {}", best));
@@ -1150,7 +1150,7 @@ impl AdvancedBenchmark {
         let high_error_algos: Vec<&str> = results
             .iter()
             .filter(|(_, result)| result.error_rate > 0.05)
-            .map(|(name_)| name.as_str())
+            .map(|(name_)| name_.as_str())
             .collect();
 
         if !high_error_algos.is_empty() {
@@ -1170,7 +1170,7 @@ impl AdvancedBenchmark {
                     .map(|m| m.efficiency_score < 60.0)
                     .unwrap_or(false)
             })
-            .map(|(name_)| name.as_str())
+            .map(|(name_)| name_.as_str())
             .collect();
 
         if !memory_inefficient.is_empty() {
@@ -1183,10 +1183,10 @@ impl AdvancedBenchmark {
 
 /// Create a comprehensive HTML report from benchmark results
 #[allow(dead_code)]
-pub fn create_comprehensive_report(_results: &BenchmarkResults, outputpath: &str) -> Result<()> {
-    let html_content = generate_html_report(_results);
+pub fn create_comprehensive_report(results: &BenchmarkResults, outputpath: &str) -> Result<()> {
+    let html_content = generate_html_report(results);
 
-    std::fs::write(output_path, html_content)
+    std::fs::write(outputpath, html_content)
         .map_err(|e| ClusteringError::ComputationError(format!("Failed to write report: {}", e)))?;
 
     Ok(())
@@ -1265,9 +1265,9 @@ fn generate_html_report(results: &BenchmarkResults) -> String {
         results.total_duration,
         results.system_info.os,
         results.system_info.cpu_cores,
-        generate_performance_table(_results),
-        generate_regression_alerts_html(_results),
-        generate_recommendations_html(_results),
+        generate_performance_table(results),
+        generate_regression_alerts_html(results),
+        generate_recommendations_html(results),
         results.system_info.os,
         results.system_info.cpu_cores,
         results.system_info.total_memory_gb,
@@ -1279,7 +1279,7 @@ fn generate_html_report(results: &BenchmarkResults) -> String {
 /// Generate performance table HTML
 #[allow(dead_code)]
 fn generate_performance_table(results: &BenchmarkResults) -> String {
-    results.algorithm_results.iter()
+    results.algorithmresults.iter()
         .map(|(name, result)| {
             let quality = result.quality_metrics.silhouette_score
                 .map(|s| format!("{:.3}", s))
@@ -1304,7 +1304,7 @@ fn generate_regression_alerts_html(results: &BenchmarkResults) -> String {
     if results.regression_alerts.is_empty() {
         "<p class=\"success\">No performance regressions detected.</p>".to_string()
     } else {
-        _results
+        results
             .regression_alerts
             .iter()
             .map(|alert| {
@@ -1327,7 +1327,7 @@ fn generate_regression_alerts_html(results: &BenchmarkResults) -> String {
 /// Generate recommendations HTML
 #[allow(dead_code)]
 fn generate_recommendations_html(results: &BenchmarkResults) -> String {
-    _results
+    results
         .recommendations
         .iter()
         .map(|rec| format!("<li>{}</li>", rec))

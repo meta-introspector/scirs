@@ -143,7 +143,7 @@ where
     };
 
     // Combine results
-    processor.combine_chunks(resultsshape)
+    processor.combine_chunks(results, shape)
 }
 
 /// Calculate optimal chunk sizes for each dimension
@@ -168,15 +168,15 @@ fn calculate_chunk_sizes(
 
     while current_elements > target_elements * 2 {
         // Find the dimension with the largest chunk _size relative to its total _size
-        let (max_idx_) = chunk_sizes
+        let (max_idx_, _) = chunk_sizes
             .iter()
             .enumerate()
             .filter(|(i, &_size)| _size > min_chunk_size && _size < shape[*i])
             .max_by_key(|(i, &_size)| _size * 1000 / shape[*i])
             .unwrap_or((0, &1));
 
-        if chunk_sizes[max_idx] > min_chunk_size {
-            chunk_sizes[max_idx] = (chunk_sizes[max_idx] / 2).max(min_chunk_size);
+        if chunk_sizes[max_idx_] > min_chunk_size {
+            chunk_sizes[max_idx_] = (chunk_sizes[max_idx_] / 2).max(min_chunk_size);
             current_elements = chunk_sizes.iter().product();
         } else {
             break;
@@ -279,7 +279,7 @@ where
 pub struct GaussianChunkProcessor<T> {
     sigma: Vec<T>,
     truncate: Option<T>,
-    border_mode: BorderMode,
+    bordermode: BorderMode,
 }
 
 impl<T> GaussianChunkProcessor<T>
@@ -288,9 +288,9 @@ where
 {
     pub fn new(_sigma: Vec<T>, truncate: Option<T>, bordermode: BorderMode) -> Self {
         Self {
-            sigma,
+            sigma: _sigma,
             truncate,
-            border_mode,
+            bordermode,
         }
     }
 }

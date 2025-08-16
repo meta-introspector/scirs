@@ -10,7 +10,7 @@ use crate::neuromorphic_data_processor::NeuromorphicProcessor;
 use crate::quantum_enhanced_generators::QuantumDatasetGenerator;
 use crate::utils::Dataset;
 use ndarray::{s, Array1, Array2, Array3};
-use rand::{rngs::StdRng, thread_rng, Rng, SeedableRng};
+use rand::{rng, rngs::StdRng, Rng, SeedableRng};
 use statrs::statistics::Statistics;
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
@@ -125,10 +125,10 @@ impl QuantumNeuromorphicFusion {
         Self {
             quantum_engine: QuantumDatasetGenerator::default(),
             neuromorphic_engine: NeuromorphicProcessor::default(),
-            quantum_bio_coupling: quantum_coupling.clamp(0.0, 1.0),
+            quantum_bio_coupling: _quantum_coupling.clamp(0.0, 1.0),
             coherence_plasticity_factor: 0.5,
             quantum_decoherence_time: coherence_time,
-            adaptive_learning_rate: if adaptive_learning { 0.001 } else { 0.0 },
+            adaptive_learning_rate: if adaptivelearning { 0.001 } else { 0.0 },
             quantum_neural_advantage: true,
         }
     }
@@ -166,7 +166,7 @@ impl QuantumNeuromorphicFusion {
 
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut thread_rng()),
+            None => StdRng::from_rng(&mut rng()),
         };
 
         // Initialize quantum-biological hybrid network
@@ -293,7 +293,7 @@ impl QuantumNeuromorphicFusion {
 
         let mut rng = match random_seed {
             Some(_seed) => StdRng::seed_from_u64(_seed),
-            None => StdRng::from_rng(&mut thread_rng()),
+            None => StdRng::from_rng(&mut rng()),
         };
 
         // Initialize quantum-biological network for transformation
@@ -488,7 +488,7 @@ impl QuantumNeuromorphicFusion {
                 .filter(|&i| i != neuron_idx && rng.random::<f64>() < 0.1)
                 .collect();
 
-            neurons.push(QuantumNeuron {
+            _neurons.push(QuantumNeuron {
                 membrane_potential: rng.random::<f64>() - 0.5,
                 quantum_state,
                 phase_evolution: 0.0,
@@ -521,7 +521,7 @@ impl QuantumNeuromorphicFusion {
                 quantum_amplitudes: (amplitude_real, amplitude_imag),
                 quantum_phase,
                 entangled_partner: if rng.random::<f64>() < 0.3 {
-                    Some(rng.gen_range(0..n_synapses))
+                    Some(rng.random_range(0..n_synapses))
                 } else {
                     None
                 },
@@ -538,7 +538,7 @@ impl QuantumNeuromorphicFusion {
         neurons: &mut [QuantumNeuron],
         _synapses: &[QuantumSynapse],
         _time: f64,
-        step: usize,
+        _step: usize,
         rng: &mut StdRng,
     ) -> Result<()> {
         for neuron in neurons.iter_mut() {

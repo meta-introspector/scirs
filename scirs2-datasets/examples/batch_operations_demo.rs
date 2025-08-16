@@ -3,7 +3,7 @@
 //! This example demonstrates the batch processing utilities and selective cache management
 //! features of the scirs2-datasets caching system.
 
-use scirs2__datasets::{BatchOperations, CacheManager};
+use scirs2_datasets::{BatchOperations, CacheManager};
 use std::time::Duration;
 
 #[allow(dead_code)]
@@ -25,7 +25,7 @@ fn main() {
 
     // Demonstrate cache setup with sample data
     println!("\n=== Sample Data Setup ========================");
-    setup_sample_cache_data(&batch_ops);
+    setup_sample_cachedata(&batch_ops);
 
     // Demonstrate batch statistics
     println!("\n=== Cache Statistics ==========================");
@@ -51,18 +51,18 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn setup_sample_cache_data(_batchops: &BatchOperations) {
+fn setup_sample_cachedata(batch_ops: &BatchOperations) {
     println!("Creating sample cached datasets...");
 
     // Create various types of sample data
     let sample_datasets = [
-        ("iris_processed.csv", create_csv_data()),
-        ("experiment_001.json", create_json_data()),
-        ("temp_file_001.tmp", create_binary_data(100)),
-        ("temp_file_002.tmp", create_binary_data(200)),
-        ("large_dataset.dat", create_binary_data(1024)),
-        ("model_weights.bin", create_binary_data(512)),
-        ("results_summary.txt", createtext_data()),
+        ("iris_processed.csv", create_csvdata()),
+        ("experiment_001.json", create_jsondata()),
+        ("temp_file_001.tmp", create_binarydata(100)),
+        ("temp_file_002.tmp", create_binarydata(200)),
+        ("largedataset.dat", create_binarydata(1024)),
+        ("model_weights.bin", create_binarydata(512)),
+        ("results_summary.txt", createtextdata()),
     ];
 
     for (name, data) in sample_datasets {
@@ -75,13 +75,13 @@ fn setup_sample_cache_data(_batchops: &BatchOperations) {
 }
 
 #[allow(dead_code)]
-fn demonstrate_cache_statistics(_batchops: &BatchOperations) {
+fn demonstrate_cache_statistics(batch_ops: &BatchOperations) {
     match batch_ops.get_cache_statistics() {
         Ok(result) => {
             println!("{}", result.summary());
             println!("Cache analysis:");
             println!("  - Files processed: {}", result.success_count);
-            println!("  - Total cache size: {}", format_bytes(result.total_bytes));
+            println!("  - Total cache size: {}", formatbytes(result.total_bytes));
             println!(
                 "  - Analysis time: {:.2}ms",
                 result.elapsed_time.as_millis()
@@ -99,7 +99,7 @@ fn demonstrate_cache_statistics(_batchops: &BatchOperations) {
 }
 
 #[allow(dead_code)]
-fn demonstrate_batch_processing(_batchops: &BatchOperations) {
+fn demonstrate_batch_processing(batch_ops: &BatchOperations) {
     println!("Processing multiple cached files in batch...");
 
     // Get list of cached files
@@ -157,7 +157,7 @@ fn demonstrate_batch_processing(_batchops: &BatchOperations) {
 }
 
 #[allow(dead_code)]
-fn demonstrate_selective_cleanup(_batchops: &BatchOperations) {
+fn demonstrate_selective_cleanup(batch_ops: &BatchOperations) {
     println!("Demonstrating selective cache cleanup...");
 
     // Show current cache state
@@ -165,7 +165,7 @@ fn demonstrate_selective_cleanup(_batchops: &BatchOperations) {
     println!(
         "Before cleanup: {} files, {}",
         initial_stats.success_count,
-        format_bytes(initial_stats.total_bytes)
+        formatbytes(initial_stats.total_bytes)
     );
 
     // Example 1: Clean up temporary files
@@ -195,19 +195,19 @@ fn demonstrate_selective_cleanup(_batchops: &BatchOperations) {
     println!(
         "\nAfter cleanup: {} files, {}",
         final_stats.success_count,
-        format_bytes(final_stats.total_bytes)
+        formatbytes(final_stats.total_bytes)
     );
 
     let freed_space = initial_stats
         .total_bytes
         .saturating_sub(final_stats.total_bytes);
     if freed_space > 0 {
-        println!("Space freed: {}", format_bytes(freed_space));
+        println!("Space freed: {}", formatbytes(freed_space));
     }
 }
 
 #[allow(dead_code)]
-fn show_final_cache_state(_batchops: &BatchOperations) {
+fn show_final_cache_state(batch_ops: &BatchOperations) {
     println!("Final cache contents:");
 
     match batch_ops.list_cached_files() {
@@ -264,7 +264,7 @@ fn demonstrate_performance_features() {
 // Helper functions for creating sample data
 
 #[allow(dead_code)]
-fn create_csv_data() -> Vec<u8> {
+fn create_csvdata() -> Vec<u8> {
     "sepal_length,sepal_width,petal_length,petal_width,species\n\
      5.1,3.5,1.4,0.2,setosa\n\
      4.9,3.0,1.4,0.2,setosa\n\
@@ -274,18 +274,18 @@ fn create_csv_data() -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn create_json_data() -> Vec<u8> {
+fn create_jsondata() -> Vec<u8> {
     r#"{"experiment_id": "001", "results": {"accuracy": 0.95, "precision": 0.92}, "timestamp": "2024-01-01T12:00:00Z"}"#
         .as_bytes().to_vec()
 }
 
 #[allow(dead_code)]
-fn create_binary_data(size: usize) -> Vec<u8> {
-    (0.._size).map(|i| (i % 256) as u8).collect()
+fn create_binarydata(size: usize) -> Vec<u8> {
+    (0..size).map(|i| (i % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
-fn createtext_data() -> Vec<u8> {
+fn createtextdata() -> Vec<u8> {
     "Experimental Results Summary\n\
      ============================\n\
      Total samples: 1000\n\
@@ -311,8 +311,8 @@ fn detect_content_type(name: &str, data: &[u8]) -> String {
 }
 
 #[allow(dead_code)]
-fn format_bytes(bytes: u64) -> String {
-    let size = _bytes as f64;
+fn formatbytes(bytes: u64) -> String {
+    let size = bytes as f64;
     if size < 1024.0 {
         format!("{size} B")
     } else if size < 1024.0 * 1024.0 {

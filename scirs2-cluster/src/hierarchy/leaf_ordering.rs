@@ -36,7 +36,7 @@ impl TreeNode {
             left: None,
             right: None,
             height: 0.0,
-            leaves: vec![_id],
+            leaves: vec![id],
         }
     }
 

@@ -438,7 +438,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicInterface<F> {
             let spike_probability = amplitude * correlation_factor;
 
             // Quantum superposition-based fusion
-            spike_pattern[i] = spike_probability * F::from_f64(phase.cos()).unwrap();
+            spike_pattern[i] = spike_probability * phase.cos();
         }
 
         Ok(spike_pattern)
@@ -545,7 +545,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedQuantumCoordinator<F> 
 
 impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicCore<F> {
     /// Create new quantum-neuromorphic fusion core
-    pub fn new(coreid: usize, qubits: usize) -> Result<Self> {
+    pub fn new(core_id: usize, qubits: usize) -> Result<Self> {
         Ok(QuantumNeuromorphicCore {
             core_id,
             quantum_unit: QuantumProcessingUnit::new(qubits)?,

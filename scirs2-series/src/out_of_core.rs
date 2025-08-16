@@ -106,7 +106,7 @@ impl ProcessingConfig {
 
     /// Set number of worker threads
     pub fn with_threads(mut self, numthreads: usize) -> Self {
-        self.num_threads = num_threads;
+        self.num_threads = numthreads;
         self
     }
 }
@@ -268,7 +268,7 @@ pub struct MmapTimeSeriesReader {
 impl MmapTimeSeriesReader {
     /// Create new memory-mapped reader for binary f64 data
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(_path.as_ref())
+        let file = File::open(path.as_ref())
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {e}")))?;
 
         let file_size = file
@@ -311,7 +311,7 @@ impl MmapTimeSeriesReader {
             ));
         }
 
-        let end_idx = (start_idx + chunk_size).min(self.num_points);
+        let end_idx = (start_idx + chunksize).min(self.num_points);
         let actual_size = end_idx - start_idx;
 
         let mut chunk = Array1::zeros(actual_size);
@@ -335,7 +335,7 @@ impl MmapTimeSeriesReader {
 
     /// Read a range of data with optional overlap
     pub fn read_range(&self, start_idx: usize, endidx: usize) -> Result<Array1<f64>> {
-        let end_idx = end_idx.min(self.num_points);
+        let end_idx = endidx.min(self.num_points);
 
         if start_idx >= end_idx {
             return Ok(Array1::zeros(0));
@@ -370,7 +370,7 @@ impl CsvTimeSeriesReader {
             file_path,
             total_lines: None,
             column_index,
-            has_header,
+            has_header: hasheader,
         })
     }
 
@@ -412,7 +412,7 @@ impl CsvTimeSeriesReader {
 
         for _line in reader.lines() {
             let _line =
-                line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {e}")))?;
+                _line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {e}")))?;
 
             // Skip header
             if current_line == 0 && self.has_header {
@@ -422,7 +422,7 @@ impl CsvTimeSeriesReader {
 
             // Check if we've reached the start of our chunk
             if data_line >= start_line {
-                let fields: Vec<&str> = line.split(',').collect();
+                let fields: Vec<&str> = _line.split(',').collect();
 
                 if self.column_index >= fields.len() {
                     return Err(TimeSeriesError::InvalidInput(format!(
@@ -439,7 +439,7 @@ impl CsvTimeSeriesReader {
                 data.push(value);
 
                 // Stop if we've read enough data
-                if data.len() >= chunk_size {
+                if data.len() >= chunksize {
                     break;
                 }
             }
@@ -515,15 +515,15 @@ impl ChunkedProcessor {
         F: Fn(usize, usize) -> Result<Array1<f64>> + Send + Sync + 'static,
     {
         self.start_time = Instant::now();
-        self.progress.total_points = total_points as u64;
-        self.progress.total_chunks = total_points.div_ceil(self.config.chunk_size);
+        self.progress.total_points = totalpoints as u64;
+        self.progress.total_chunks = totalpoints.div_ceil(self.config.chunk_size);
 
         let reader = Arc::new(reader);
 
         if self.config.parallel_processing {
-            self.process_parallel(reader, total_points)
+            self.process_parallel(reader, totalpoints)
         } else {
-            self.process_sequential(reader, total_points)
+            self.process_sequential(reader, totalpoints)
         }
     }
 
@@ -576,9 +576,9 @@ impl ChunkedProcessor {
         let mut chunk_starts = Vec::new();
         let mut start_idx = 0;
 
-        while start_idx < total_points {
+        while start_idx < totalpoints {
             chunk_starts.push(start_idx);
-            let current_chunk_size = chunk_size.min(total_points - start_idx);
+            let current_chunk_size = chunk_size.min(totalpoints - start_idx);
             start_idx += current_chunk_size - overlap.min(current_chunk_size);
         }
 
@@ -591,6 +591,7 @@ impl ChunkedProcessor {
             let reader = Arc::clone(&reader);
             let chunk_starts = Arc::clone(&chunk_starts);
             let chunk_size = self.config.chunk_size;
+            let total_points = totalpoints;
 
             thread::spawn(move || {
                 for (chunk_idx, &start_idx) in chunk_starts.iter().enumerate() {
@@ -632,9 +633,8 @@ impl ChunkedProcessor {
                     completed_chunks += 1;
 
                     self.progress.chunk_number = completed_chunks;
-                    self.progress.points_processed = (completed_chunks as f64 / total_chunks as f64
-                        * total_points as f64)
-                        as u64;
+                    self.progress.points_processed =
+                        (completed_chunks as f64 / total_chunks as f64 * totalpoints as f64) as u64;
                     self.update_progress();
 
                     if self.config.report_progress {
@@ -707,11 +707,11 @@ pub struct OutOfCoreMovingAverage {
 impl OutOfCoreMovingAverage {
     /// Create new moving average calculator
     pub fn new(_windowsize: usize) -> Result<Self> {
-        check_positive(_window_size, "_window_size")?;
+        check_positive(_windowsize, "_windowsize")?;
 
         Ok(Self {
-            window_size,
-            buffer: VecDeque::with_capacity(_window_size),
+            window_size: _windowsize,
+            buffer: VecDeque::with_capacity(_windowsize),
             current_sum: 0.0,
         })
     }
@@ -771,7 +771,7 @@ pub struct OutOfCoreQuantileEstimator {
 impl OutOfCoreQuantileEstimator {
     /// Create new quantile estimator
     pub fn new(quantile: f64) -> Result<Self> {
-        if !(0.0..=1.0).contains(&_quantile) {
+        if !(0.0..=1.0).contains(&quantile) {
             return Err(TimeSeriesError::InvalidInput(
                 "Quantile must be between 0 and 1".to_string(),
             ));

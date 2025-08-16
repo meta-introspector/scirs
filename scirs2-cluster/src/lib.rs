@@ -23,8 +23,8 @@
 //!
 //! ```
 //! use ndarray::{Array2, ArrayView2};
-//! use scirs2__cluster::vq::kmeans;
-//! use scirs2__cluster::preprocess::standardize;
+//! use scirs2_cluster::vq::kmeans;
+//! use scirs2_cluster::preprocess::standardize;
 //!
 //! // Example data with two clusters
 //! let data = Array2::fromshape_vec((6, 2), vec![
@@ -313,18 +313,18 @@ pub use advanced::{
 };
 
 // Re-export quantum clustering from quantum_clustering module
-pub use quantum__clustering::{
+pub use quantum_clustering::{
     quantum_annealing_clustering, CoolingSchedule, QuantumAnnealingClustering,
     QuantumAnnealingConfig,
 };
 
 // Re-export advanced clustering capabilities
-pub use advanced__clustering::{
+pub use advanced_clustering::{
     AdvancedClusterer, AdvancedClusteringResult, AdvancedConfig, AdvancedPerformanceMetrics,
 };
 
 // Re-export advanced visualization capabilities
-pub use advanced__visualization::{
+pub use advanced_visualization::{
     create_advanced_visualization_report, visualize_advanced_results, AISelectionPlot,
     AdvancedVisualizationConfig, AdvancedVisualizationOutput, AdvancedVisualizer, ClusterPlot,
     NeuromorphicAdaptationPlot, PerformanceDashboard, QuantumCoherencePlot, QuantumColorScheme,
@@ -332,7 +332,7 @@ pub use advanced__visualization::{
 };
 
 // Re-export enhanced advanced features
-pub use enhanced_clustering__features::{
+pub use enhanced_clustering_features::{
     DeepAdvancedClusterer, DeepAdvancedResult, DeepEnsembleCoordinator, EnsembleConsensus,
     GraphNeuralNetworkProcessor, GraphStructureInsights, NeuralArchitectureSearchEngine,
     OptimalArchitecture, ReinforcementLearningAgent, SpectralProperties,
@@ -340,7 +340,7 @@ pub use enhanced_clustering__features::{
 };
 
 // Re-export GPU and distributed advanced features
-pub use gpu_distributed__clustering::{
+pub use gpu_distributed_clustering::{
     CommunicationOverhead, CoordinationStrategy, DistributedAdvancedClusterer,
     DistributedAdvancedResult, DistributedProcessingMetrics, GpuAccelerationConfig,
     GpuAccelerationMetrics, GpuAdvancedClusterer, GpuAdvancedResult, GpuDeviceSelection,
@@ -349,7 +349,7 @@ pub use gpu_distributed__clustering::{
 };
 
 // Re-export advanced benchmarking capabilities
-pub use advanced__benchmarking::{
+pub use advanced_benchmarking::{
     create_comprehensive_report, AdvancedBenchmark, AlgorithmBenchmark, AlgorithmComparison,
     BenchmarkConfig, BenchmarkResults, ComplexityClass, GpuVsCpuComparison, MemoryProfile,
     OptimizationCategory, OptimizationPriority, OptimizationSuggestion, PerformanceStatistics,
@@ -377,7 +377,7 @@ pub use graph::{
     GraphClusteringConfig,
 };
 pub use hierarchy::*;
-pub use input__validation::{
+pub use input_validation::{
     check_duplicate_points, suggest_clustering_algorithm, validate_clustering_data,
     validate_convergence_parameters, validate_distance_parameter, validate_integer_parameter,
     validate_n_clusters, validate_sample_weights, ValidationConfig,
@@ -401,7 +401,7 @@ pub use metrics::ensemble::{
 
 // Re-export information-theoretic methods
 pub use metrics::information_theoretic::{
-    information_cluster_quality, jensen_shannon_divergence, variation_of_information,
+    jensen_shannon_divergence, normalized_variation_of_information,
 };
 
 // Re-export stability-based methods
@@ -409,7 +409,7 @@ pub use metrics::stability::{cluster_stability_bootstrap, optimal_clusters_stabi
 
 // Re-export advanced metrics
 pub use metrics::advanced::{bic_score, dunn_index};
-pub use neighbor__search::{
+pub use neighbor_search::{
     create_neighbor_searcher, BallTree, BruteForceSearch, KDTree, NeighborResult,
     NeighborSearchAlgorithm, NeighborSearchConfig, NeighborSearcher,
 };
@@ -423,7 +423,7 @@ pub use serialization::{
     hierarchy_to_model,
     kmeans_to_model,
     leader_to_model,
-    leader_tree_to_model,
+    leadertree_to_model,
     meanshift_to_model,
     save_affinity_propagation,
     save_birch,
@@ -431,7 +431,7 @@ pub use serialization::{
     save_hierarchy,
     save_kmeans,
     save_leader,
-    save_leader_tree,
+    save_leadertree,
     save_spectral_clustering,
     spectral_clustering_to_model,
     AdvancedExport,
@@ -505,12 +505,12 @@ pub use stability::{
 pub use streaming::{
     ChunkedDistanceMatrix, ProgressiveHierarchical, StreamingConfig, StreamingKMeans,
 };
-pub use text__clustering::{
+pub use text_clustering::{
     semantic_hierarchical, semantic_kmeans, topic_clustering, SemanticClusteringConfig,
     SemanticHierarchical, SemanticKMeans, SemanticSimilarity, TextPreprocessing,
     TextRepresentation, TopicBasedClustering,
 };
-pub use time__series::{
+pub use time_series::{
     dtw_barycenter_averaging, dtw_distance, dtw_distance_custom, dtw_hierarchical_clustering,
     dtw_k_means, dtw_k_medoids, soft_dtw_distance, time_series_clustering, TimeSeriesAlgorithm,
     TimeSeriesClusteringConfig,

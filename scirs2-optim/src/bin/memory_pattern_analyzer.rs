@@ -128,11 +128,11 @@ enum ImplementationEffort {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct RiskAssessment {
-    leak_risk: RiskLevel,
-    performance_risk: RiskLevel,
-    stability_risk: RiskLevel,
-    scalability_risk: RiskLevel,
-    overall_risk: RiskLevel,
+    leakrisk: RiskLevel,
+    performancerisk: RiskLevel,
+    stabilityrisk: RiskLevel,
+    scalabilityrisk: RiskLevel,
+    overallrisk: RiskLevel,
     risk_factors: Vec<String>,
     mitigation_strategies: Vec<String>,
 }
@@ -206,23 +206,23 @@ fn main() -> Result<()> {
 
     // Perform pattern analysis
     println!("🔬 Analyzing memory patterns...");
-    let analysis_result = analyze_memory_patterns(&analysis_input, detailed)?;
+    let analysisresult = analyze_memory_patterns(&analysis_input, detailed)?;
 
     // Display summary
-    display_analysis_summary(&analysis_result);
+    display_analysis_summary(&analysisresult);
 
     // Generate output
     match output_format.as_str() {
         "json" => {
-            let json_output = serde_json::to_string_pretty(&analysis_result)?;
+            let json_output = serde_json::to_string_pretty(&analysisresult)?;
             fs::write(output_file, json_output)?;
         }
         "markdown" => {
-            let markdown_output = generate_markdownreport(&analysis_result);
+            let markdown_output = generate_markdownreport(&analysisresult);
             fs::write(output_file, markdown_output)?;
         }
         "html" => {
-            let html_output = generate_htmlreport(&analysis_result);
+            let html_output = generate_htmlreport(&analysisresult);
             fs::write(output_file, html_output)?;
         }
         _ => unreachable!(),
@@ -234,7 +234,7 @@ fn main() -> Result<()> {
 
 #[allow(dead_code)]
 fn load_analysis_input(_inputdir: &str) -> Result<AnalysisInput> {
-    let inputpath = Path::new(_input_dir);
+    let inputpath = Path::new(_inputdir);
 
     // Try to find relevant files
     let mut snapshots = Vec::new();
@@ -296,8 +296,8 @@ fn load_analysis_input(_inputdir: &str) -> Result<AnalysisInput> {
             allocation_events = serde_json::from_value(events_array.clone())?;
         }
 
-        if let Some(metadata) = data.get("metadata") {
-            metadata = Some(serde_json::from_value(metadata.clone())?);
+        if let Some(metadata_data) = data.get("metadata") {
+            metadata = Some(serde_json::from_value(metadata_data.clone())?);
         }
     }
 
@@ -341,7 +341,7 @@ fn analyze_memory_patterns(input: &AnalysisInput, detailed: bool) -> Result<Patt
     );
 
     println!("  🎯 Assessing risks...");
-    let risk_assessment = assess_risks(
+    let risk_assessment = assessrisks(
         &allocation_statistics,
         &memory_trends,
         &detected_patterns,
@@ -469,7 +469,7 @@ fn analyze_memory_trends(snapshots: &[MemoryUsageSnapshot]) -> MemoryTrends {
     let duration_seconds = (last_timestamp - first_timestamp) as f64 / 1000.0;
 
     let growth_rate_bytes_per_second = if duration_seconds > 0.0 {
-        (_snapshots.last().unwrap().total_memory as f64
+        (snapshots.last().unwrap().total_memory as f64
             - snapshots.first().unwrap().total_memory as f64)
             / duration_seconds
     } else {
@@ -506,10 +506,10 @@ fn calculate_trend(values: &[f64]) -> (TrendDirection, f64) {
 
     // Simple linear regression for trend analysis
     let n = values.len() as f64;
-    let x_sum: f64 = (0.._values.len()).map(|i| i as f64).sum();
+    let x_sum: f64 = (0..values.len()).map(|i| i as f64).sum();
     let y_sum: f64 = values.iter().sum();
     let xy_sum: f64 = values.iter().enumerate().map(|(i, &y)| i as f64 * y).sum();
-    let x2_sum: f64 = (0.._values.len()).map(|i| (i as f64).powi(2)).sum();
+    let x2_sum: f64 = (0..values.len()).map(|i| (i as f64).powi(2)).sum();
 
     let slope = (n * xy_sum - x_sum * y_sum) / (n * x2_sum - x_sum.powi(2));
 
@@ -534,7 +534,7 @@ fn calculate_std_dev(values: &[f64]) -> f64 {
 
     let mean = values.iter().sum::<f64>() / values.len() as f64;
     let variance =
-        values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (_values.len() - 1) as f64;
+        values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (values.len() - 1) as f64;
     variance.sqrt()
 }
 
@@ -630,7 +630,7 @@ fn generate_optimization_suggestions(
 }
 
 #[allow(dead_code)]
-fn assess_risks(
+fn assessrisks(
     stats: &AllocationStatistics,
     trends: &MemoryTrends,
     patterns: &[MemoryPattern],
@@ -640,7 +640,7 @@ fn assess_risks(
     let mut mitigation_strategies = Vec::new();
 
     // Assess leak risk
-    let leak_risk = if trends.growth_rate_bytes_per_second > 10240.0 {
+    let leakrisk = if trends.growth_rate_bytes_per_second > 10240.0 {
         risk_factors.push("High memory growth rate detected".to_string());
         mitigation_strategies.push("Implement comprehensive leak detection".to_string());
         RiskLevel::High
@@ -651,7 +651,7 @@ fn assess_risks(
     };
 
     // Assess performance risk
-    let performance_risk = if stats.allocation_rate_per_second > 5000.0 {
+    let performancerisk = if stats.allocation_rate_per_second > 5000.0 {
         risk_factors.push("Very high allocation rate".to_string());
         mitigation_strategies.push("Implement memory pooling and object reuse".to_string());
         RiskLevel::High
@@ -662,7 +662,7 @@ fn assess_risks(
     };
 
     // Assess stability risk
-    let stability_risk = if trends.memory_usage_stability < 0.7 {
+    let stabilityrisk = if trends.memory_usage_stability < 0.7 {
         risk_factors.push("High memory usage variability".to_string());
         mitigation_strategies.push("Stabilize allocation _patterns".to_string());
         RiskLevel::Medium
@@ -671,7 +671,7 @@ fn assess_risks(
     };
 
     // Assess scalability risk
-    let scalability_risk = if stats.peak_active_allocations > 100000 {
+    let scalabilityrisk = if stats.peak_active_allocations > 100000 {
         risk_factors.push("Very high number of concurrent allocations".to_string());
         mitigation_strategies
             .push("Optimize data structures and reduce memory fragmentation".to_string());
@@ -682,12 +682,12 @@ fn assess_risks(
 
     // Overall risk assessment
     let risk_levels = [
-        &leak_risk,
-        &performance_risk,
-        &stability_risk,
-        &scalability_risk,
+        &leakrisk,
+        &performancerisk,
+        &stabilityrisk,
+        &scalabilityrisk,
     ];
-    let overall_risk = if risk_levels.iter().any(|r| matches!(r, RiskLevel::High)) {
+    let overallrisk = if risk_levels.iter().any(|r| matches!(r, RiskLevel::High)) {
         RiskLevel::High
     } else if risk_levels.iter().any(|r| matches!(r, RiskLevel::Medium)) {
         RiskLevel::Medium
@@ -702,11 +702,11 @@ fn assess_risks(
     }
 
     RiskAssessment {
-        leak_risk,
-        performance_risk,
-        stability_risk,
-        scalability_risk,
-        overall_risk,
+        leakrisk,
+        performancerisk,
+        stabilityrisk,
+        scalabilityrisk,
+        overallrisk,
         risk_factors,
         mitigation_strategies,
     }
@@ -761,14 +761,14 @@ fn display_analysis_summary(result: &PatternAnalysisResult) {
     );
 
     println!("\n🎯 Risk Assessment:");
-    println!("  Overall risk: {:?}", result.risk_assessment.overall_risk);
-    println!("  Leak risk: {:?}", result.risk_assessment.leak_risk);
+    println!("  Overall risk: {:?}", result.risk_assessment.overallrisk);
+    println!("  Leak risk: {:?}", result.risk_assessment.leakrisk);
     println!(
         "  Performance risk: {:?}",
-        result.risk_assessment.performance_risk
+        result.risk_assessment.performancerisk
     );
 
-    if !_result.optimization_suggestions.is_empty() {
+    if !result.optimization_suggestions.is_empty() {
         println!("\n💡 Top Optimization Suggestions:");
         for (i, suggestion) in result.optimization_suggestions.iter().take(3).enumerate() {
             println!(
@@ -834,11 +834,11 @@ fn generate_markdownreport(result: &PatternAnalysisResult) -> String {
         result.memory_trends.growth_rate_bytes_per_second / 1024.0,
         result.memory_trends.peak_memory_usage as f64 / (1024.0 * 1024.0),
         result.memory_trends.memory_usage_stability * 100.0,
-        result.risk_assessment.overall_risk,
-        result.risk_assessment.leak_risk,
-        result.risk_assessment.performance_risk,
-        result.risk_assessment.stability_risk,
-        _result
+        result.risk_assessment.overallrisk,
+        result.risk_assessment.leakrisk,
+        result.risk_assessment.performancerisk,
+        result.risk_assessment.stabilityrisk,
+        result
             .optimization_suggestions
             .iter()
             .map(|s| format!(
@@ -854,14 +854,14 @@ fn generate_markdownreport(result: &PatternAnalysisResult) -> String {
             ))
             .collect::<Vec<_>>()
             .join("\n"),
-        _result
+        result
             .risk_assessment
             .risk_factors
             .iter()
             .map(|f| format!("- {f}"))
             .collect::<Vec<_>>()
             .join("\n"),
-        _result
+        result
             .risk_assessment
             .mitigation_strategies
             .iter()
@@ -938,13 +938,13 @@ fn generate_htmlreport(result: &PatternAnalysisResult) -> String {
         result.memory_trends.growth_rate_bytes_per_second / 1024.0,
         result.memory_trends.peak_memory_usage as f64 / (1024.0 * 1024.0),
         result.memory_trends.memory_usage_stability * 100.0,
-        risk_level_to_css_class(&_result.risk_assessment.overall_risk),
-        result.risk_assessment.overall_risk,
-        risk_level_to_css_class(&_result.risk_assessment.leak_risk),
-        result.risk_assessment.leak_risk,
-        risk_level_to_css_class(&_result.risk_assessment.performance_risk),
-        result.risk_assessment.performance_risk,
-        _result
+        risk_level_to_css_class(&result.risk_assessment.overallrisk),
+        result.risk_assessment.overallrisk,
+        risk_level_to_css_class(&result.risk_assessment.leakrisk),
+        result.risk_assessment.leakrisk,
+        risk_level_to_css_class(&result.risk_assessment.performancerisk),
+        result.risk_assessment.performancerisk,
+        result
             .optimization_suggestions
             .iter()
             .map(|s| format!(
@@ -958,7 +958,7 @@ fn generate_htmlreport(result: &PatternAnalysisResult) -> String {
 
 #[allow(dead_code)]
 fn risk_level_to_css_class(risk: &RiskLevel) -> &'static str {
-    match _risk {
+    match risk {
         RiskLevel::High | RiskLevel::Critical => "high",
         RiskLevel::Medium => "medium",
         RiskLevel::Low => "low",

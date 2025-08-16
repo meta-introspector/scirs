@@ -88,7 +88,7 @@ pub struct CloudClient {
 impl CloudClient {
     /// Create a new cloud client
     pub fn new(config: CloudConfig) -> Result<Self> {
-        let cachedir = dirs::cachedir()
+        let cachedir = dirs::cache_dir()
             .ok_or_else(|| DatasetsError::Other("Could not determine cache directory".to_string()))?
             .join("scirs2-datasets");
         let cache = DatasetCache::new(cachedir);
@@ -280,8 +280,8 @@ impl CloudClient {
     #[allow(dead_code)]
     fn get_gcs_token(&self, keyfile: &str) -> Result<String> {
         // Load service account key _file
-        let key_data = std::fs::read_to_string(key_file).map_err(|e| {
-            DatasetsError::LoadingError(format!("Failed to read key _file {key_file}: {e}"))
+        let key_data = std::fs::read_to_string(keyfile).map_err(|e| {
+            DatasetsError::LoadingError(format!("Failed to read key file {keyfile}: {e}"))
         })?;
 
         let service_account: serde_json::Value = serde_json::from_str(&key_data)
@@ -344,7 +344,7 @@ impl CloudClient {
         let timestamp = format_azure_timestamp(now.as_secs());
 
         // Validate account _key format (should be base64)
-        let account_key_bytes = base64_decode(account_key).map_err(|_| {
+        let account_key_bytes = base64_decode(accountkey).map_err(|_| {
             DatasetsError::AuthenticationError("Invalid base64 account _key".to_string())
         })?;
 
@@ -390,12 +390,12 @@ impl CloudClient {
         if key.len() > BLOCK_SIZE {
             // If _key is longer than block size, hash it first
             let mut hasher = Sha256::new();
-            hasher.update(_key);
+            hasher.update(key);
             let hashed_key = hasher.finalize();
             padded_key[..hashed_key.len()].copy_from_slice(&hashed_key);
         } else {
             // If _key is shorter or equal, pad with zeros
-            padded_key[.._key.len()].copy_from_slice(_key);
+            padded_key[..key.len()].copy_from_slice(key);
         }
 
         // Step 2: Create inner and outer padded keys
@@ -591,7 +591,7 @@ impl CloudClient {
         };
 
         // Validate Azure credentials
-        let (accountname_account_key) = match &self.config.credentials {
+        let _accountname_account_key = match &self.config.credentials {
             CloudCredentials::AzureKey {
                 accountname,
                 account_key,
@@ -744,7 +744,7 @@ impl CloudClient {
             data.len(),
             key,
             url,
-            content_type
+            contenttype
         );
 
         // Simulate successful upload
@@ -891,13 +891,13 @@ pub mod presets {
     }
 
     /// Create a GCS client with service account credentials
-    pub fn gcs_client(_bucket: &str, keyfile: &str) -> Result<CloudClient> {
+    pub fn gcs_client(bucket: &str, keyfile: &str) -> Result<CloudClient> {
         let config = CloudConfig {
             provider: CloudProvider::GCS,
             region: None,
             bucket: bucket.to_string(),
             credentials: CloudCredentials::ServiceAccount {
-                key_file: key_file.to_string(),
+                key_file: keyfile.to_string(),
             },
             endpoint: None,
             path_style: false,
@@ -958,7 +958,7 @@ pub mod presets {
     pub fn public_s3_client(region: &str, bucket: &str) -> Result<CloudClient> {
         let config = CloudConfig {
             provider: CloudProvider::S3,
-            region: Some(_region.to_string()),
+            region: Some(region.to_string()),
             bucket: bucket.to_string(),
             credentials: CloudCredentials::Anonymous,
             endpoint: None,
@@ -1006,12 +1006,12 @@ pub mod public_datasets {
     impl GCPPublicData {
         /// Load BigQuery public datasets (requires authentication)
         pub fn bigquery_samples(_keyfile: &str) -> Result<CloudClient> {
-            gcs_client("bigquery-public-data", key_file)
+            gcs_client("bigquery-public-data", _keyfile)
         }
 
         /// Load Google Books Ngrams
         pub fn books_ngrams(_keyfile: &str) -> Result<CloudClient> {
-            gcs_client("books", key_file)
+            gcs_client("books", _keyfile)
         }
     }
 
@@ -1021,12 +1021,12 @@ pub mod public_datasets {
     impl AzureOpenData {
         /// Load COVID-19 tracking data
         pub fn covid19_tracking(_accountname: &str, accountkey: &str) -> Result<CloudClient> {
-            azure_client(_accountname, account_key, "covid19-tracking")
+            azure_client(_accountname, accountkey, "covid19-tracking")
         }
 
         /// Load US Census data
         pub fn us_census(_accountname: &str, accountkey: &str) -> Result<CloudClient> {
-            azure_client(_accountname, account_key, "us-census")
+            azure_client(_accountname, accountkey, "us-census")
         }
     }
 }

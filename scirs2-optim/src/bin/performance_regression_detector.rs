@@ -7,11 +7,12 @@ use clap::{Arg, Command};
 use scirs2_optim::benchmarking::performance_regression_detector::{
     AlertThresholds, BaselineStrategy, CiCdConfig, EnvironmentInfo, MetricType, MetricValue,
     PerformanceMeasurement, PerformanceRegressionDetector, RegressionConfig, RegressionSensitivity,
-    StatisticalTest, TestConfiguration,
+    ReportFormat, StatisticalTest, TestConfiguration,
 };
 use scirs2_optim::error::{OptimError, Result};
 use serde_json;
 use std::fs;
+use std::path::PathBuf;
 use std::process;
 
 #[allow(dead_code)]
@@ -177,8 +178,7 @@ fn main() {
             enabled: true,
             fail_on_regression,
             generate_reports: true,
-            report_format: scirs2,
-            _optim: benchmarking::performance_regression_detector::ReportFormat::Json,
+            report_format: ReportFormat::Json,
             report_path: PathBuf::from(outputreport),
             webhook_urls: vec![],
             slack_config: None,
@@ -424,7 +424,7 @@ fn convert_benchmarkdata_to_measurements(
             // Create measurement
             let measurement = PerformanceMeasurement {
                 timestamp: SystemTime::now(),
-                commit_hash: benchmark
+                commithash: benchmark
                     .get("commit_hash")
                     .and_then(|v| v.as_str())
                     .unwrap_or("unknown")

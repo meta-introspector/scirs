@@ -167,7 +167,7 @@ where
         }
 
         // Perform mini-batch step
-        let (batch_inertia..has_converged) =
+        let (batch_inertia, has_converged) =
             mini_batch_step(&data, &batch_indices, &mut centroids, &mut counts, &opts)?;
 
         // If this is the last iteration, assign all points to clusters for final labeling
@@ -226,7 +226,7 @@ where
     }
 
     // Final label assignment
-    let (final_labels_) = assign_labels(data, centroids.view())?;
+    let (final_labels, _) = assign_labels(data, centroids.view())?;
 
     Ok((centroids, final_labels))
 }

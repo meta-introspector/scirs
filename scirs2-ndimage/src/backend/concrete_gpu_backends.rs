@@ -335,7 +335,7 @@ impl CudaBackend {
         // Placeholder: would initialize CUDA context and stream
         Ok(CudaContext {
             context: 0x1000, // Dummy context handle
-            device_id,
+            device_id: _deviceid,
             stream: 0x2000, // Dummy stream handle
         })
     }

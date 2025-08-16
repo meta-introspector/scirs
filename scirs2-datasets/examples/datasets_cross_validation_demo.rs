@@ -4,7 +4,7 @@
 //! cross-validation utilities provided by scirs2-datasets.
 
 use ndarray::{Array1, Array2};
-use scirs2__datasets::{k_fold_split, stratified_k_fold_split, time_series_split, Dataset};
+use scirs2_datasets::{k_fold_split, stratified_k_fold_split, time_series_split, Dataset};
 
 #[allow(dead_code)]
 fn main() {
@@ -97,26 +97,26 @@ fn main() {
     let (train_indices, val_indices) = first_fold;
 
     // Create training subset
-    let train_data = data.select(ndarray::Axis(0), train_indices);
+    let traindata = data.select(ndarray::Axis(0), train_indices);
     let train_target = target.select(ndarray::Axis(0), train_indices);
-    let train_dataset = Dataset::new(train_data, Some(train_target))
+    let traindataset = Dataset::new(traindata, Some(train_target))
         .with_description("Training fold from K-fold CV".to_string());
 
     // Create validation subset
-    let val_data = data.select(ndarray::Axis(0), val_indices);
+    let valdata = data.select(ndarray::Axis(0), val_indices);
     let val_target = target.select(ndarray::Axis(0), val_indices);
-    let val_dataset = Dataset::new(val_data, Some(val_target))
+    let valdataset = Dataset::new(valdata, Some(val_target))
         .with_description("Validation fold from K-fold CV".to_string());
 
     println!(
         "Training dataset: {} samples, {} features",
-        train_dataset.n_samples(),
-        train_dataset.n_features()
+        traindataset.n_samples(),
+        traindataset.n_features()
     );
     println!(
         "Validation dataset: {} samples, {} features",
-        val_dataset.n_samples(),
-        val_dataset.n_features()
+        valdataset.n_samples(),
+        valdataset.n_features()
     );
 
     println!("\n=== Cross-Validation Demo Complete ===");

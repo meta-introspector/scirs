@@ -621,7 +621,7 @@ where
         return F::zero();
     }
 
-    let n = F::from_usize(_segment.len()).unwrap();
+    let n = F::from_usize(segment.len()).unwrap();
     let sum_sq_deviations: F = segment.iter().map(|&x| (x - mean) * (x - mean)).sum();
 
     sum_sq_deviations / (n - F::one())

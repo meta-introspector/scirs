@@ -65,7 +65,7 @@ struct WardCluster<F: Float> {
 impl<F: Float + FromPrimitive + ScalarOperand + 'static> WardCluster<F> {
     /// Create a new cluster from a single point
     fn new(point: &Array1<F>, timestamp: usize) -> Self {
-        let sum_squared = point.dot(_point);
+        let sum_squared = point.dot(point);
         Self {
             size: 1,
             sum_coords: point.clone(),

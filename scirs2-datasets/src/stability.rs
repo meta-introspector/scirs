@@ -186,7 +186,7 @@ impl CompatibilityMatrix {
     pub fn is_compatible(current: &str, required: &str) -> bool {
         // Simple semantic version compatibility check
         // In a real implementation, this would use a proper semver library
-        let _current_parts: Vec<&str> = current.split('.').collect();
+        let current_parts: Vec<&str> = current.split('.').collect();
         let required_parts: Vec<&str> = required.split('.').collect();
 
         if current_parts.len() < 2 || required_parts.len() < 2 {
@@ -199,7 +199,7 @@ impl CompatibilityMatrix {
 
     /// Get the compatibility level between two versions
     pub fn compatibility_level(current: &str, required: &str) -> CompatibilityLevel {
-        if Self::is_compatible(_current, required) {
+        if Self::is_compatible(current, required) {
             CompatibilityLevel::Compatible
         } else {
             CompatibilityLevel::Incompatible
@@ -223,13 +223,13 @@ pub struct StabilityChecker;
 
 impl StabilityChecker {
     /// Check if the current crate version supports a required API version
-    pub fn supports_api_version(_requiredversion: &str) -> bool {
+    pub fn supports_api_version(required_version: &str) -> bool {
         CompatibilityMatrix::is_compatible(ApiVersion::CURRENT, required_version)
     }
 
     /// Get the stability level of a specific API component
-    pub fn get_stability_level(_apiname: &str) -> StabilityLevel {
-        match _apiname {
+    pub fn get_stability_level(api_name: &str) -> StabilityLevel {
+        match api_name {
             // Core stable APIs
             "Dataset"
             | "load_iris"
@@ -259,16 +259,16 @@ impl StabilityChecker {
     }
 
     /// Validate that experimental APIs are being used appropriately
-    pub fn validate_experimental_usage(_apiname: &str) -> Result<(), String> {
-        match Self::get_stability_level(_apiname) {
+    pub fn validate_experimental_usage(api_name: &str) -> Result<(), String> {
+        match Self::get_stability_level(api_name) {
             StabilityLevel::Experimental => {
                 eprintln!(
-                    "Warning: '{_apiname}' is an experimental API and may change in future versions"
+                    "Warning: '{api_name}' is an experimental API and may change in future versions"
                 );
                 Ok(())
             }
             StabilityLevel::Internal => Err(format!(
-                "Error: '{apiname}' is an internal API and should not be used directly"
+                "Error: '{api_name}' is an internal API and should not be used directly"
             )),
             StabilityLevel::Stable => Ok(()),
         }

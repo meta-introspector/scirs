@@ -9,7 +9,7 @@ use std::str::FromStr;
 
 use super::{euclidean_distance, vq};
 use crate::error::{ClusteringError, Result};
-// use scirs2_core::validation::{clustering::*, parameters::*};
+use scirs2_core::validation::{clustering::*, parameters::*};
 
 /// Initialization methods for kmeans2
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -86,7 +86,7 @@ pub enum MissingMethod {
 /// * `minit` - Initialization method (None if k is a centroid array)
 /// * `missing` - Method to handle empty clusters
 /// * `check_finite` - Whether to check input validity
-/// * `random_seed` - Optional random seed
+/// * `randomseed` - Optional random seed
 ///
 /// # Returns
 ///
@@ -103,7 +103,7 @@ pub fn kmeans2<F>(
     minit: Option<MinitMethod>,
     missing: Option<MissingMethod>,
     check_finite: Option<bool>,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<(Array2<F>, Array1<usize>)>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display,
@@ -116,10 +116,10 @@ where
     let check_finite_flag = check_finite.unwrap_or(true);
 
     // Use unified validation
-    crate::validation::validate_clustering_data(&data, "K-means", check_finite_flag, Some(k))
+    validate_clustering_data(&data, "K-means", check_finite_flag, Some(k))
         .map_err(|e| ClusteringError::InvalidInput(format!("K-means: {}", e)))?;
 
-    crate::validation::check_n_clusters_bounds(&data, k, "K-means")
+    check_n_clusters_bounds(&data, k, "K-means")
         .map_err(|e| ClusteringError::InvalidInput(format!("{}", e)))?;
 
     check_iteration_params(iterations, threshold, "K-means")
@@ -128,9 +128,9 @@ where
     // Initialize centroids
     let init_method = minit.unwrap_or(MinitMethod::PlusPlus); // Default to k-means++
     let mut centroids = match init_method {
-        MinitMethod::Random => krandinit(data, k, random_seed)?,
-        MinitMethod::Points => kpoints(data, k, random_seed)?,
-        MinitMethod::PlusPlus => kmeans_plus_plus(data, k, random_seed)?,
+        MinitMethod::Random => krandinit(data, k, randomseed)?,
+        MinitMethod::Points => kpoints(data, k, randomseed)?,
+        MinitMethod::PlusPlus => kmeans_plus_plus(data, k, randomseed)?,
     };
 
     let mut labels;
@@ -141,7 +141,7 @@ where
         let prev_centroids = centroids.clone();
 
         // Assign samples to nearest centroid
-        let (new_labels_distances) = vq(data, centroids.view())?;
+        let (new_labels, _distances) = vq(data, centroids.view())?;
         labels = new_labels;
 
         // Compute new centroids
@@ -221,7 +221,7 @@ where
     }
 
     // Final assignment
-    let (final_labels_) = vq(data, centroids.view())?;
+    let (final_labels, _distances) = vq(data, centroids.view())?;
 
     Ok((centroids, final_labels))
 }
@@ -240,7 +240,7 @@ where
 /// * `minit` - Initialization method as string ('random', 'points', 'k-means++')
 /// * `missing` - Method to handle empty clusters ('warn', 'raise')
 /// * `check_finite` - Whether to check input validity
-/// * `random_seed` - Optional random seed
+/// * `randomseed` - Optional random seed
 ///
 /// # Returns
 ///
@@ -274,7 +274,7 @@ pub fn kmeans2_str<F>(
     minit: Option<&str>,
     missing: Option<&str>,
     check_finite: Option<bool>,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<(Array2<F>, Array1<usize>)>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display,
@@ -310,14 +310,14 @@ where
         minit_method,
         missing_method,
         check_finite,
-        random_seed,
+        randomseed,
     )
 }
 
 /// Random initialization: generate k centroids from a Gaussian with mean and
 /// variance estimated from the data
 #[allow(dead_code)]
-fn krandinit<F>(_data: ArrayView2<F>, k: usize, randomseed: Option<u64>) -> Result<Array2<F>>
+fn krandinit<F>(data: ArrayView2<F>, k: usize, randomseed: Option<u64>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
 {
@@ -346,7 +346,7 @@ where
     // Generate random centroids from Gaussian distribution
     let mut centroids = Array2::<F>::zeros((k, n_features));
 
-    let mut rng: Box<dyn RngCore> = if let Some(_seed) = random_seed {
+    let mut rng: Box<dyn RngCore> = if let Some(_seed) = randomseed {
         Box::new(StdRng::seed_from_u64([_seed as u8; 32]))
     } else {
         Box::new(rand::rng())
@@ -373,14 +373,14 @@ where
 
 /// Points initialization: choose k observations (rows) at random from data
 #[allow(dead_code)]
-fn kpoints<F>(_data: ArrayView2<F>, k: usize, randomseed: Option<u64>) -> Result<Array2<F>>
+fn kpoints<F>(data: ArrayView2<F>, k: usize, randomseed: Option<u64>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
     let n_samples = data.shape()[0];
     let n_features = data.shape()[1];
 
-    let mut rng: Box<dyn RngCore> = if let Some(_seed) = random_seed {
+    let mut rng: Box<dyn RngCore> = if let Some(_seed) = randomseed {
         Box::new(StdRng::seed_from_u64([_seed as u8; 32]))
     } else {
         Box::new(rand::rng())
@@ -410,9 +410,9 @@ where
 /// K-means++ initialization
 #[allow(dead_code)]
 fn kmeans_plus_plus<F>(
-    _data: ArrayView2<F>,
+    data: ArrayView2<F>,
     k: usize,
-    random_seed: Option<u64>,
+    randomseed: Option<u64>,
 ) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -420,7 +420,7 @@ where
     let n_samples = data.shape()[0];
     let n_features = data.shape()[1];
 
-    let mut rng: Box<dyn RngCore> = if let Some(_seed) = random_seed {
+    let mut rng: Box<dyn RngCore> = if let Some(_seed) = randomseed {
         Box::new(StdRng::seed_from_u64([_seed as u8; 32]))
     } else {
         Box::new(rand::rng())
@@ -442,7 +442,7 @@ where
         for j in 0..n_samples {
             let mut min_dist = F::infinity();
             for c in 0..i {
-                let dist = euclidean_distance(_data.slice(s![j, ..]), centroids.slice(s![c, ..]));
+                let dist = euclidean_distance(data.slice(s![j, ..]), centroids.slice(s![c, ..]));
                 if dist < min_dist {
                     min_dist = dist;
                 }

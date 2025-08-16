@@ -243,7 +243,7 @@ impl LearnedEdgeDetector {
         edge_map.mapv_inplace(|x| x.sqrt());
 
         // Apply non-maximum suppression
-        let suppressed = self.non_max_suppression(&edge_map)?;
+        let suppressed = self.non_max_suppression(&edge_map.view())?;
 
         Ok(suppressed)
     }
@@ -282,15 +282,16 @@ impl LearnedEdgeDetector {
 
     /// Non-maximum suppression for edge thinning
     fn non_max_suppression(&self, edgemap: &ArrayView2<f64>) -> NdimageResult<Array2<f64>> {
-        let (height, width) = edge_map.dim();
+        let (height, width) = edgemap.dim();
         let mut suppressed = Array2::zeros((height, width));
 
         // Compute gradients
-        let (gx, gy) = crate::filters::sobel(edge_map, None)?;
+        let gx = crate::filters::sobel(&edgemap.to_owned(), 1, None)?; // axis 1 for x-direction
+        let gy = crate::filters::sobel(&edgemap.to_owned(), 0, None)?; // axis 0 for y-direction
 
         for i in 1..height - 1 {
             for j in 1..width - 1 {
-                let mag = edge_map[[i, j]];
+                let mag = edgemap[[i, j]];
 
                 if mag < self.config.confidence_threshold {
                     continue;
@@ -313,8 +314,8 @@ impl LearnedEdgeDetector {
                     _ => (0, -1, 0, 1),
                 };
 
-                let neighbor1 = edge_map[[(i as i32 + di1) as usize, (j as i32 + dj1) as usize]];
-                let neighbor2 = edge_map[[(i as i32 + di2) as usize, (j as i32 + dj2) as usize]];
+                let neighbor1 = edgemap[[(i as i32 + di1) as usize, (j as i32 + dj1) as usize]];
+                let neighbor2 = edgemap[[(i as i32 + di2) as usize, (j as i32 + dj2) as usize]];
 
                 // Keep only if local maximum
                 if mag >= neighbor1 && mag >= neighbor2 {
@@ -336,10 +337,10 @@ pub struct LearnedKeypointDescriptor {
 
 impl LearnedKeypointDescriptor {
     /// Create a new learned keypoint descriptor
-    pub fn new(_patch_size: usize, descriptorsize: usize) -> Self {
+    pub fn new(patch_size: usize, descriptor_size: usize) -> Self {
         // Initialize with random projection matrix (simplified)
         let weights =
-            Array2::fromshape_fn((descriptor_size, _patch_size * patch_size), |(i, j)| {
+            Array2::from_shape_fn((descriptor_size, patch_size * patch_size), |(i, j)| {
                 // Simple deterministic "random" weights
                 ((i * 7 + j * 13) % 11) as f64 / 11.0 - 0.5
             });
@@ -385,7 +386,7 @@ impl LearnedKeypointDescriptor {
             }
 
             // Normalize patch
-            let mean = patch.mean().unwrap_or(0.0);
+            let mean = patch.mean();
             let std = patch.std(0.0);
             if std > 0.0 {
                 patch = (patch - mean) / std;
@@ -420,7 +421,7 @@ impl SemanticFeatureExtractor {
     pub fn new(config: Option<MLDetectorConfig>) -> Self {
         Self {
             feature_maps: HashMap::new(),
-            _config: config.unwrap_or_default(),
+            config: config.unwrap_or_default(),
         }
     }
 
@@ -507,7 +508,7 @@ impl SemanticFeatureExtractor {
                 }
 
                 // Apply filter
-                let response = convolve(&img_f64, &filter.view(), None)?;
+                let response = convolve(&img_f64, &filter, None)?;
                 features
                     .slice_mut(ndarray::s![.., .., feature_idx])
                     .assign(&response);
@@ -529,28 +530,29 @@ impl SemanticFeatureExtractor {
 
         // Convert to binary for shape analysis
         let img_f64 = image.mapv(|x| x.to_f64().unwrap_or(0.0));
-        let threshold = img_f64.mean().unwrap_or(0.5);
+        let threshold = img_f64.mean();
         let binary = img_f64.mapv(|x| if x > threshold { 1.0 } else { 0.0 });
 
         // Feature 1: Distance to nearest edge
-        let edges = crate::filters::sobel(&binary.view(), None)?;
-        let edge_magnitude = (edges.0.mapv(|x| x * x) + edges.1.mapv(|x| x * x)).mapv(|x| x.sqrt());
+        let edges_x = crate::filters::sobel(&binary, 1, None)?; // x-direction gradient
+        let edges_y = crate::filters::sobel(&binary, 0, None)?; // y-direction gradient
+        let edge_magnitude = (edges_x.mapv(|x| x * x) + edges_y.mapv(|x| x * x)).mapv(|x| x.sqrt());
         features
             .slice_mut(ndarray::s![.., .., 0])
             .assign(&edge_magnitude);
 
         // Feature 2: Local curvature (using Laplacian)
-        let curvature = crate::filters::laplace(binary, None)?;
+        let curvature = crate::filters::laplace(&binary, None, None)?;
         features
             .slice_mut(ndarray::s![.., .., 1])
             .assign(&curvature.mapv(|x| x.abs()));
 
         // Feature 3: Local thickness (simplified)
-        let smoothed = gaussian_filter(&binary, &[3.0, 3.0], None, None, None)?;
+        let smoothed = gaussian_filter(&binary, 3.0, None, None)?;
         features.slice_mut(ndarray::s![.., .., 2]).assign(&smoothed);
 
         // Feature 4: Orientation strength
-        let (gx, gy) = edges;
+        let (gx, gy) = (&edges_x, &edges_y);
         let orientation_strength = gx.mapv(|x| x.abs()) + gy.mapv(|x| x.abs());
         features
             .slice_mut(ndarray::s![.., .., 3])
@@ -591,9 +593,10 @@ impl SemanticFeatureExtractor {
                     j - window_size / 2..=j + window_size / 2
                 ]);
 
-                let local_mean = window.mean().unwrap_or(0.0);
+                let local_mean = window.mean();
                 let local_std = window.std(0.0);
-                contrast[[i, j]] = local_std / (local_mean + 1e-6);
+                let epsilon = T::from_f64(1e-6).unwrap_or_else(|| T::zero());
+                contrast[[i, j]] = local_std / (local_mean + epsilon.to_f64().unwrap_or(1e-6));
             }
         }
         features.slice_mut(ndarray::s![.., .., 1]).assign(&contrast);
@@ -636,7 +639,7 @@ impl ObjectProposalGenerator {
             max_size: 256,
             stride: 8,
             aspect_ratios: vec![0.5, 1.0, 2.0],
-            _config: config.unwrap_or_default(),
+            config: config.unwrap_or_default(),
         }
     }
 
@@ -673,9 +676,11 @@ impl ObjectProposalGenerator {
             }
 
             let scaled_edges = zoom(
-                &edges.view(),
-                &[1.0 / scale_factor, 1.0 / scale_factor],
-                InterpolationOrder::Linear,
+                &edges,
+                1.0 / scale_factor,
+                Some(InterpolationOrder::Linear),
+                None,
+                None,
                 None,
             )?;
 

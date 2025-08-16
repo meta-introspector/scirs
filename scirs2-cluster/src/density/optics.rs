@@ -77,7 +77,7 @@ pub struct OPTICSResult {
 ///
 /// # Arguments
 ///
-/// * `optics_result` - The result from the OPTICS algorithm
+/// * `_opticsresult` - The result from the OPTICS algorithm
 /// * `eps` - The maximum distance to consider for extracting clusters
 ///
 /// # Returns
@@ -85,18 +85,18 @@ pub struct OPTICSResult {
 /// * `Array1<i32>` - Cluster labels starting from 0, with -1 for noise points
 #[allow(dead_code)]
 pub fn extract_dbscan_clustering(_opticsresult: &OPTICSResult, eps: f64) -> Array1<i32> {
-    let n_samples = optics_result.ordering.len();
+    let n_samples = _opticsresult.ordering.len();
     let mut labels = vec![-1; n_samples];
     let mut cluster_label = 0;
 
     for i in 0..n_samples {
-        let point_idx = optics_result.ordering[i];
-        let reachability = optics_result.reachability[i];
+        let point_idx = _opticsresult.ordering[i];
+        let reachability = _opticsresult.reachability[i];
 
         // Points with reachability distance > eps are noise
         if reachability.is_none() || reachability.unwrap() > eps {
             // Could be the start of a new cluster if it's a core point
-            if let Some(core_dist) = optics_result.core_distances[point_idx] {
+            if let Some(core_dist) = _opticsresult.core_distances[point_idx] {
                 if core_dist <= eps {
                     // Start a new cluster
                     labels[point_idx] = cluster_label;
@@ -106,7 +106,7 @@ pub fn extract_dbscan_clustering(_opticsresult: &OPTICSResult, eps: f64) -> Arra
         } else {
             // Point is density-reachable from previous points in the ordering
             // Assign it to the same cluster as its predecessor
-            if let Some(pred_idx) = optics_result.predecessor[point_idx] {
+            if let Some(pred_idx) = _opticsresult.predecessor[point_idx] {
                 if labels[pred_idx] != -1 {
                     labels[point_idx] = labels[pred_idx];
                 } else {
@@ -188,7 +188,7 @@ pub fn optics<F: Float + FromPrimitive + Debug + PartialOrd>(
                     "max_eps must be positive".into(),
                 ));
             }
-            eps.to_f64().unwrap()
+            _eps.to_f64().unwrap()
         }
         None => f64::INFINITY,
     };
@@ -353,7 +353,7 @@ fn get_neighbors(_point_idx: usize, distance_matrix: &Array2<f64>, maxeps: f64) 
     let mut neighbors = Vec::new();
 
     for j in 0..n_samples {
-        if _point_idx != j && distance_matrix[[_point_idx, j]] <= max_eps {
+        if _point_idx != j && distance_matrix[[_point_idx, j]] <= maxeps {
             neighbors.push(j);
         }
     }
@@ -416,7 +416,7 @@ fn update_seeds(
 ///
 /// # Arguments
 ///
-/// * `optics_result` - The result from the OPTICS algorithm
+/// * `_opticsresult` - The result from the OPTICS algorithm
 /// * `xi` - The steepness threshold (between 0 and 1) for detecting cluster boundaries
 /// * `min_cluster_size` - Minimum number of points needed for a cluster
 ///
@@ -425,7 +425,7 @@ fn update_seeds(
 /// * `Array1<i32>` - Cluster labels starting from 0, with -1 for noise points
 #[allow(dead_code)]
 pub fn extract_xi_clusters(
-    optics_result: &OPTICSResult,
+    _opticsresult: &OPTICSResult,
     xi: f64,
     min_cluster_size: usize,
 ) -> Result<Array1<i32>> {
@@ -441,13 +441,13 @@ pub fn extract_xi_clusters(
         ));
     }
 
-    let n_samples = optics_result.ordering.len();
+    let n_samples = _opticsresult.ordering.len();
 
     // Initialize all points as noise
     let mut labels = vec![-1; n_samples];
 
     // Get reachability distances, handling None values
-    let reachability: Vec<f64> = optics_result
+    let reachability: Vec<f64> = _opticsresult
         .reachability
         .iter()
         .map(|&r| r.unwrap_or(f64::INFINITY))
@@ -474,7 +474,7 @@ pub fn extract_xi_clusters(
                     if end_idx - start_idx + 1 >= min_cluster_size {
                         // Valid cluster, assign points to it
                         for k in start_idx..=end_idx {
-                            let point_idx = optics_result.ordering[k];
+                            let point_idx = _opticsresult.ordering[k];
                             labels[point_idx] = cluster_id;
                         }
                         cluster_id += 1;

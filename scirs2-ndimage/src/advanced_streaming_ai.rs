@@ -282,7 +282,7 @@ where
         let content_chunk = ContentAwareChunk {
             data: chunk_data,
             boundary,
-            metadata: chunk_metadata,
+            metadata: chunk_metadata.clone(),
             processing_priority: compute_processing_priority(&chunk_metadata)?,
             overlap_strategy: determine_overlap_strategy(&chunk_metadata, config)?,
         };

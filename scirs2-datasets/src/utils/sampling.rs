@@ -8,9 +8,9 @@
 use crate::error::{DatasetsError, Result};
 use ndarray::Array1;
 use rand::prelude::*;
+use rand::rng;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
-use rand::thread_rng;
 use std::collections::HashMap;
 
 /// Performs random sampling with or without replacement
@@ -71,7 +71,7 @@ pub fn random_sample(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -81,7 +81,7 @@ pub fn random_sample(
     if replace {
         // Bootstrap sampling (with replacement)
         for _ in 0..sample_size {
-            indices.push(rng.gen_range(0..n_samples));
+            indices.push(rng.random_range(0..n_samples));
         }
     } else {
         // Sampling without replacement
@@ -162,7 +162,7 @@ pub fn stratified_sample(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -293,7 +293,7 @@ pub fn importance_sample(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -303,19 +303,19 @@ pub fn importance_sample(
     let mut available_indices: Vec<usize> = (0..weights.len()).collect();
 
     for _ in 0..sample_size {
-        let current_sum = availableweights.sum();
+        let current_sum = available_weights.sum();
         if current_sum <= 0.0 {
             break;
         }
 
         // Generate random number between 0 and current_sum
-        let random_value = rng.gen_range(0.0..current_sum);
+        let random_value = rng.random_range(0.0..current_sum);
 
         // Find the index corresponding to this random value
         let mut cumulative_weight = 0.0;
         let mut selected_idx = 0;
 
-        for (i, &weight) in availableweights.iter().enumerate() {
+        for (i, &weight) in available_weights.iter().enumerate() {
             cumulative_weight += weight;
             if random_value <= cumulative_weight {
                 selected_idx = i;
@@ -332,7 +332,7 @@ pub fn importance_sample(
                 available_weights
                     .iter()
                     .enumerate()
-                    .filter(|(i_)| *i != selected_idx)
+                    .filter(|(i_, _)| *i_ != selected_idx)
                     .map(|(_, &w)| w),
             );
             available_indices.remove(selected_idx);
@@ -422,7 +422,7 @@ pub fn multiple_bootstrap_samples(
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

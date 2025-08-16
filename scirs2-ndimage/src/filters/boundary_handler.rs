@@ -205,7 +205,7 @@ where
     let mut indices = vec![0usize; input.ndim()];
 
     fn increment_indices(indices: &mut [usize], shape: &[usize]) -> bool {
-        for i in (0.._indices.len()).rev() {
+        for i in (0..indices.len()).rev() {
             indices[i] += 1;
             if indices[i] < shape[i] {
                 return true;
@@ -217,7 +217,7 @@ where
 
     loop {
         // Apply filter at current position
-        let _value = filter_fn(&handler, &indices);
+        let value = filter_fn(&handler, &indices);
 
         // Convert output to dynamic for assignment
         let mut output_dyn = output.view_mut().into_dyn();
@@ -263,7 +263,7 @@ where
 
             // Helper function to increment kernel indices
             fn increment_kernel_indices(indices: &mut [usize], shape: &[usize]) -> bool {
-                for i in (0.._indices.len()).rev() {
+                for i in (0..indices.len()).rev() {
                     indices[i] += 1;
                     if indices[i] < shape[i] {
                         return true;

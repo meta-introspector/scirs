@@ -6,6 +6,7 @@
 
 use ndarray::Array1;
 use num_traits::{Float, FromPrimitive};
+use rand::SeedableRng;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
@@ -209,7 +210,7 @@ pub enum CrossoverType {
 
 impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
     /// Create new evolution engine
-    pub fn new(population_size: usize, selectionstrategy: SelectionStrategy) -> Self {
+    pub fn new(population_size: usize, selection_strategy: SelectionStrategy) -> Self {
         let mut population = Vec::with_capacity(population_size);
 
         // Initialize random population
@@ -227,7 +228,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
     }
 
     /// Evolve population for one generation
-    pub fn evolve_generation(&mut self, fitnessevaluator: &FitnessEvaluator<F>) -> Result<()> {
+    pub fn evolve_generation(&mut self, fitness_evaluator: &FitnessEvaluator<F>) -> Result<()> {
         // 1. Evaluate fitness for all individuals
         self.evaluate_population(fitness_evaluator)?;
 
@@ -272,7 +273,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
     }
 
     /// Evaluate fitness for entire population
-    fn evaluate_population(&mut self, fitnessevaluator: &FitnessEvaluator<F>) -> Result<()> {
+    fn evaluate_population(&mut self, fitness_evaluator: &FitnessEvaluator<F>) -> Result<()> {
         for individual in &mut self.population {
             individual.fitness_score = fitness_evaluator.evaluate(individual)?;
         }
@@ -293,13 +294,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
     fn tournament_selection(&self) -> Result<Vec<Architecture<F>>> {
         let tournament_size = 3;
         let mut selected = Vec::new();
+        let mut rng = rand::rngs::StdRng::seed_from_u64(42);
 
         for _ in 0..self.population.len() {
             let mut tournament = Vec::new();
 
             // Select random individuals for tournament
             for _ in 0..tournament_size {
-                let idx = rand::random::<usize>() % self.population.len();
+                let idx = rand::Rng::random_range(&mut rng, 0..self.population.len());
                 tournament.push(&self.population[idx]);
             }
 
@@ -394,8 +396,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
         parent1: &Architecture<F>,
         parent2: &Architecture<F>,
     ) -> Result<(Architecture<F>, Architecture<F>)> {
-        let crossover_point =
-            rand::random::<usize>() % parent1.layers.len().min(parent2.layers.len());
+        let mut rng = rand::rngs::StdRng::seed_from_u64(42);
+        let max_len = parent1.layers.len().min(parent2.layers.len());
+        let crossover_point = if max_len > 0 {
+            rand::Rng::random_range(&mut rng, 0..max_len)
+        } else {
+            0
+        };
 
         let mut child1 = parent1.clone();
         let mut child2 = parent2.clone();
@@ -479,14 +486,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
 impl<F: Float + Debug + Clone + FromPrimitive> Architecture<F> {
     /// Create random architecture
     pub fn random() -> Self {
-        let num_layers = 3 + rand::random::<usize>() % 5; // 3-7 layers
+        let mut rng = rand::rngs::StdRng::seed_from_u64(42);
+        let num_layers = 3 + rand::Rng::random_range(&mut rng, 0..5); // 3-7 layers
         let mut layers = Vec::new();
 
         for i in 0..num_layers {
             let layer = LayerConfig {
-                layer_type: LayerType::Dense,             // Simplified to Dense for now
-                size: 32 + rand::random::<usize>() % 256, // 32-287 neurons
-                activation: ActivationFunction::ReLU,     // Simplified to ReLU
+                layer_type: LayerType::Dense, // Simplified to Dense for now
+                size: 32 + rand::Rng::random_range(&mut rng, 0..256), // 32-287 neurons
+                activation: ActivationFunction::ReLU, // Simplified to ReLU
                 parameters: vec![F::from_f64(rand::random::<f64>()).unwrap(); 4],
             };
             layers.push(layer);
@@ -545,7 +553,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> Architecture<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> FitnessEvaluator<F> {
     /// Create new fitness evaluator
-    pub fn new(evaluationfunction: EvaluationFunction) -> Self {
+    pub fn new(evaluation_function: EvaluationFunction) -> Self {
         FitnessEvaluator {
             evaluation_function,
             weights: vec![F::from_f64(1.0).unwrap(); 4], // Default weights
@@ -624,7 +632,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FitnessEvaluator<F> {
 
 impl MutationOperator {
     /// Create new mutation operator
-    pub fn new(mutationtype: MutationType, probability: f64, intensity: f64) -> Self {
+    pub fn new(mutation_type: MutationType, probability: f64, intensity: f64) -> Self {
         MutationOperator {
             mutation_type,
             probability,
@@ -633,7 +641,7 @@ impl MutationOperator {
     }
 
     /// Apply mutation to architecture
-    pub fn apply<F: Float + Debug + Clone>(
+    pub fn apply<F: Float + Debug + Clone + FromPrimitive>(
         &self,
         architecture: &mut Architecture<F>,
     ) -> Result<()> {
@@ -651,7 +659,7 @@ impl MutationOperator {
     }
 
     /// Mutate layer parameters
-    fn mutate_parameters<F: Float + Debug + Clone>(
+    fn mutate_parameters<F: Float + Debug + Clone + FromPrimitive>(
         &self,
         architecture: &mut Architecture<F>,
     ) -> Result<()> {
@@ -677,13 +685,14 @@ impl MutationOperator {
     }
 
     /// Add new layer to architecture
-    fn add_layer<F: Float + Debug + Clone>(
+    fn add_layer<F: Float + Debug + Clone + FromPrimitive>(
         &self,
         architecture: &mut Architecture<F>,
     ) -> Result<()> {
+        let mut rng = rand::rngs::StdRng::seed_from_u64(42);
         let new_layer = LayerConfig {
             layer_type: LayerType::Dense,
-            size: 32 + rand::random::<usize>() % 128,
+            size: 32 + rand::Rng::random_range(&mut rng, 0..128),
             activation: ActivationFunction::ReLU,
             parameters: vec![F::from_f64(rand::random::<f64>()).unwrap(); 4],
         };
@@ -699,14 +708,15 @@ impl MutationOperator {
     ) -> Result<()> {
         if architecture.layers.len() > 2 {
             // Keep at least 2 layers
-            let remove_idx = rand::random::<usize>() % architecture.layers.len();
+            let mut rng = rand::rngs::StdRng::seed_from_u64(42);
+            let remove_idx = rand::Rng::random_range(&mut rng, 0..architecture.layers.len());
             architecture.layers.remove(remove_idx);
         }
         Ok(())
     }
 
     /// Mutate connections
-    fn mutate_connections<F: Float + Debug + Clone>(
+    fn mutate_connections<F: Float + Debug + Clone + FromPrimitive>(
         &self,
         architecture: &mut Architecture<F>,
     ) -> Result<()> {
@@ -722,7 +732,7 @@ impl MutationOperator {
 
 impl CrossoverOperator {
     /// Create new crossover operator
-    pub fn new(crossovertype: CrossoverType, probability: f64) -> Self {
+    pub fn new(crossover_type: CrossoverType, probability: f64) -> Self {
         CrossoverOperator {
             crossover_type,
             probability,
@@ -753,8 +763,13 @@ impl CrossoverOperator {
         parent1: &Architecture<F>,
         parent2: &Architecture<F>,
     ) -> Result<(Architecture<F>, Architecture<F>)> {
-        let crossover_point =
-            rand::random::<usize>() % parent1.layers.len().min(parent2.layers.len());
+        let mut rng = rand::rngs::StdRng::seed_from_u64(42);
+        let max_len = parent1.layers.len().min(parent2.layers.len());
+        let crossover_point = if max_len > 0 {
+            rand::Rng::random_range(&mut rng, 0..max_len)
+        } else {
+            0
+        };
 
         let mut child1 = parent1.clone();
         let mut child2 = parent2.clone();
@@ -780,8 +795,9 @@ impl CrossoverOperator {
             return Ok((parent1.clone(), parent2.clone()));
         }
 
-        let point1 = rand::random::<usize>() % len;
-        let point2 = rand::random::<usize>() % len;
+        let mut rng = rand::rngs::StdRng::seed_from_u64(42);
+        let point1 = rand::Rng::random_range(&mut rng, 0..len);
+        let point2 = rand::Rng::random_range(&mut rng, 0..len);
         let (start, end) = if point1 < point2 {
             (point1, point2)
         } else {

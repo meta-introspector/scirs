@@ -123,7 +123,7 @@ pub struct LoadBalanceDecision {
 pub struct DataMigration {
     pub from_worker: usize,
     pub to_worker: usize,
-    pub data_size: usize,
+    pub datasize: usize,
     pub priority: MigrationPriority,
 }
 
@@ -182,10 +182,10 @@ impl LoadBalancingCoordinator {
     pub fn evaluate_balance(
         &mut self,
         current_assignments: &HashMap<usize, usize>,
-        data_size: usize,
+        datasize: usize,
     ) -> Result<LoadBalanceDecision> {
         // Calculate current load distribution
-        let current_loads = self.calculate_current_loads(current_assignments, data_size);
+        let current_loads = self.calculate_current_loads(current_assignments, datasize);
         let load_variance = self.calculate_load_variance(&current_loads);
 
         // Record current state
@@ -210,10 +210,10 @@ impl LoadBalancingCoordinator {
         let should_rebalance = self.should_trigger_rebalance(load_variance);
 
         if should_rebalance {
-            let new_assignments = self.compute_optimal_assignments(data_size)?;
+            let new_assignments = self.compute_optimal_assignments(datasize)?;
             let migrations = self.plan_data_migrations(current_assignments, &new_assignments);
             let expected_improvement =
-                self.estimate_improvement(&current_loads, &new_assignments, data_size);
+                self.estimate_improvement(&current_loads, &new_assignments, datasize);
 
             Ok(LoadBalanceDecision {
                 should_rebalance: true,
@@ -235,7 +235,7 @@ impl LoadBalancingCoordinator {
     fn calculate_current_loads(
         &self,
         assignments: &HashMap<usize, usize>,
-        total_data: usize,
+        totaldata: usize,
     ) -> HashMap<usize, f64> {
         let mut loads = HashMap::new();
 
@@ -246,8 +246,8 @@ impl LoadBalancingCoordinator {
 
         // Calculate actual loads
         for (&worker_id, &assigned_data) in assignments {
-            if total_data > 0 {
-                loads.insert(worker_id, assigned_data as f64 / total_data as f64);
+            if totaldata > 0 {
+                loads.insert(worker_id, assigned_data as f64 / totaldata as f64);
             }
         }
 
@@ -303,26 +303,26 @@ impl LoadBalancingCoordinator {
             }
         }
 
-        load_variance > self.config.rebalance_threshold
+        loadvariance > self.config.rebalance_threshold
     }
 
     /// Compute optimal work assignments using selected strategy
-    fn compute_optimal_assignments(&self, datasize: usize) -> Result<HashMap<usize, usize>> {
+    fn compute_optimal_assignments(&mut self, datasize: usize) -> Result<HashMap<usize, usize>> {
         match &self.current_strategy {
             LoadBalancingStrategy::ProportionalCapacity => {
-                self.proportional_capacity_balancing(data_size)
+                self.proportional_capacity_balancing(datasize)
             }
             LoadBalancingStrategy::GameTheoretic {
                 convergence_threshold,
                 max_iterations,
-            } => self.game_theoretic_balancing(data_size, *convergence_threshold, *max_iterations),
+            } => self.game_theoretic_balancing(datasize, *convergence_threshold, *max_iterations),
             LoadBalancingStrategy::AdaptiveLearning {
                 learning_rate,
                 exploration_rate,
             } => {
                 let current_assignments = HashMap::new(); // Would get from state
                 self.adaptive_balancing(
-                    data_size,
+                    datasize,
                     &current_assignments,
                     *learning_rate,
                     *exploration_rate,
@@ -331,11 +331,11 @@ impl LoadBalancingCoordinator {
             LoadBalancingStrategy::MultiObjective {
                 objectives,
                 weights,
-            } => self.multi_objective_balancing(data_size, objectives, weights),
+            } => self.multi_objective_balancing(datasize, objectives, weights),
             LoadBalancingStrategy::WeightedRoundRobin => {
-                self.weighted_round_robin_balancing(data_size)
+                self.weighted_round_robin_balancing(datasize)
             }
-            LoadBalancingStrategy::LeastLoaded => self.least_loaded_balancing(data_size),
+            LoadBalancingStrategy::LeastLoaded => self.least_loaded_balancing(datasize),
         }
     }
 
@@ -358,14 +358,14 @@ impl LoadBalancingCoordinator {
 
         let mut new_assignments = HashMap::new();
         let total_efficiency: f64 = worker_efficiency.iter().map(|(_, eff)| eff).sum();
-        let mut remaining_data = data_size;
+        let mut remaining_data = datasize;
 
         for (i, (worker_id, efficiency)) in worker_efficiency.iter().enumerate() {
             let assignment = if i == worker_efficiency.len() - 1 {
                 remaining_data // Last worker gets remaining data
             } else {
                 let proportion = efficiency / total_efficiency;
-                let assignment = (data_size as f64 * proportion).round() as usize;
+                let assignment = (datasize as f64 * proportion).round() as usize;
                 assignment.min(remaining_data)
             };
 
@@ -379,7 +379,7 @@ impl LoadBalancingCoordinator {
     /// Game theoretic load balancing using Nash equilibrium
     fn game_theoretic_balancing(
         &self,
-        data_size: usize,
+        datasize: usize,
         convergence_threshold: f64,
         max_iterations: usize,
     ) -> Result<HashMap<usize, usize>> {
@@ -387,8 +387,8 @@ impl LoadBalancingCoordinator {
         let worker_ids: Vec<usize> = self.worker_profiles.keys().copied().collect();
 
         // Initialize with equal distribution
-        let base_assignment = data_size / worker_ids.len();
-        let remainder = data_size % worker_ids.len();
+        let base_assignment = datasize / worker_ids.len();
+        let remainder = datasize % worker_ids.len();
 
         for (i, &worker_id) in worker_ids.iter().enumerate() {
             let assignment = base_assignment + if i < remainder { 1 } else { 0 };
@@ -402,7 +402,7 @@ impl LoadBalancingCoordinator {
 
             // Each worker adjusts their load based on others' decisions
             for &worker_id in &worker_ids {
-                let optimal_load = self.compute_best_response(worker_id, &assignments, data_size);
+                let optimal_load = self.compute_best_response(worker_id, &assignments, datasize);
                 let current_load = assignments[&worker_id];
 
                 if (optimal_load as f64 - current_load as f64).abs() / current_load as f64
@@ -413,10 +413,10 @@ impl LoadBalancingCoordinator {
                 }
             }
 
-            // Normalize to ensure total equals data_size
+            // Normalize to ensure total equals datasize
             let total_assigned: usize = assignments.values().sum();
-            if total_assigned != data_size {
-                let adjustment_factor = data_size as f64 / total_assigned as f64;
+            if total_assigned != datasize {
+                let adjustment_factor = datasize as f64 / total_assigned as f64;
                 for assignment in assignments.values_mut() {
                     *assignment = (*assignment as f64 * adjustment_factor).round() as usize;
                 }
@@ -435,7 +435,7 @@ impl LoadBalancingCoordinator {
         &self,
         worker_id: usize,
         current_assignments: &HashMap<usize, usize>,
-        total_data: usize,
+        totaldata: usize,
     ) -> usize {
         let _profile = self.worker_profiles.get(&worker_id).unwrap();
 
@@ -452,7 +452,7 @@ impl LoadBalancingCoordinator {
             .map(|(_, &assignment)| assignment)
             .sum();
 
-        let max_possible = total_data.saturating_sub(others_total);
+        let max_possible = totaldata.saturating_sub(others_total);
 
         for test_assignment in 0..=max_possible.min(current * 2) {
             let utility =
@@ -494,7 +494,7 @@ impl LoadBalancingCoordinator {
     /// Adaptive balancing using reinforcement learning principles
     fn adaptive_balancing(
         &mut self,
-        data_size: usize,
+        datasize: usize,
         current_assignments: &HashMap<usize, usize>,
         learning_rate: f64,
         exploration_rate: f64,
@@ -514,7 +514,7 @@ impl LoadBalancingCoordinator {
             } else {
                 // Exploit: use learned policy
                 let optimal_assignment =
-                    self.compute_learned_optimal_assignment(worker_id, data_size);
+                    self.compute_learned_optimal_assignment(worker_id, datasize);
 
                 // Apply learning rate to smooth transitions
                 let adjusted_assignment = current_assignment as f64
@@ -525,8 +525,8 @@ impl LoadBalancingCoordinator {
 
         // Normalize assignments to match total data size
         let total_assigned: usize = new_assignments.values().sum();
-        if total_assigned != data_size && total_assigned > 0 {
-            let scale_factor = data_size as f64 / total_assigned as f64;
+        if total_assigned != datasize && total_assigned > 0 {
+            let scale_factor = datasize as f64 / total_assigned as f64;
             for assignment in new_assignments.values_mut() {
                 *assignment = (*assignment as f64 * scale_factor).round() as usize;
             }
@@ -538,7 +538,7 @@ impl LoadBalancingCoordinator {
     /// Multi-objective optimization for load balancing
     fn multi_objective_balancing(
         &self,
-        data_size: usize,
+        datasize: usize,
         objectives: &[OptimizationObjective],
         weights: &[f64],
     ) -> Result<HashMap<usize, usize>> {
@@ -553,7 +553,7 @@ impl LoadBalancingCoordinator {
         for _ in 0..1000 {
             // Monte Carlo sampling
             let mut trial_assignment = HashMap::new();
-            let mut remaining_data = data_size;
+            let mut remaining_data = datasize;
 
             // Random assignment generation
             let mut rng = rand::thread_rng();
@@ -561,7 +561,7 @@ impl LoadBalancingCoordinator {
                 let assignment = if i == worker_ids.len() - 1 {
                     remaining_data
                 } else {
-                    let max_assignment = remaining_data.min(data_size / 2);
+                    let max_assignment = remaining_data.min(datasize / 2);
                     let assignment = rng.gen_range(0..=max_assignment);
                     assignment.min(remaining_data)
                 };
@@ -580,7 +580,7 @@ impl LoadBalancingCoordinator {
 
         if best_assignment.is_empty() {
             // Fallback to proportional balancing
-            return self.proportional_capacity_balancing(data_size);
+            return self.proportional_capacity_balancing(datasize);
         }
 
         Ok(best_assignment)
@@ -605,14 +605,14 @@ impl LoadBalancingCoordinator {
         }
 
         let total_weight: f64 = worker_weights.iter().map(|(_, w)| w).sum();
-        let mut remaining_data = data_size;
+        let mut remaining_data = datasize;
 
         for (i, (worker_id, weight)) in worker_weights.iter().enumerate() {
             let assignment = if i == worker_weights.len() - 1 {
                 remaining_data
             } else {
                 let proportion = weight / total_weight;
-                let assignment = (data_size as f64 * proportion).round() as usize;
+                let assignment = (datasize as f64 * proportion).round() as usize;
                 assignment.min(remaining_data)
             };
 
@@ -634,7 +634,7 @@ impl LoadBalancingCoordinator {
         }
 
         // Distribute data one unit at a time to least loaded worker
-        for _ in 0..data_size {
+        for _ in 0..datasize {
             // Find worker with minimum current load (considering capacity)
             let mut min_normalized_load = f64::INFINITY;
             let mut best_worker = worker_ids[0];
@@ -670,9 +670,9 @@ impl LoadBalancingCoordinator {
             let efficiency_factor = profile.processing_efficiency * profile.reliability_score;
             let optimal_ratio = capacity_ratio * efficiency_factor;
 
-            (total_data as f64 * optimal_ratio / self.worker_profiles.len() as f64).round() as usize
+            (totaldata as f64 * optimal_ratio / self.worker_profiles.len() as f64).round() as usize
         } else {
-            total_data / self.worker_profiles.len()
+            totaldata / self.worker_profiles.len()
         }
     }
 
@@ -852,7 +852,7 @@ impl LoadBalancingCoordinator {
                 migrations.push(DataMigration {
                     from_worker: surplus_worker,
                     to_worker: deficit_worker,
-                    data_size: migration_size,
+                    datasize: migration_size,
                     priority,
                 });
 
@@ -883,11 +883,11 @@ impl LoadBalancingCoordinator {
         &self,
         current_loads: &HashMap<usize, f64>,
         new_assignments: &HashMap<usize, usize>,
-        total_data: usize,
+        totaldata: usize,
     ) -> f64 {
         let current_variance = self.calculate_load_variance(current_loads);
 
-        let new_loads = self.calculate_current_loads(new_assignments, total_data);
+        let new_loads = self.calculate_current_loads(new_assignments, totaldata);
         let new_variance = self.calculate_load_variance(&new_loads);
 
         let current_throughput = self.calculate_total_throughput(current_loads);

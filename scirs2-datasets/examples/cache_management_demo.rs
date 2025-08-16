@@ -4,7 +4,7 @@
 //! platform-specific cache directories, cache size limits, offline mode, and
 //! detailed cache statistics.
 
-use scirs2__datasets::{get_cachedir, CacheManager, DatasetCache};
+use scirs2_datasets::{get_cachedir, CacheManager, DatasetCache};
 
 #[allow(dead_code)]
 fn main() {
@@ -61,13 +61,13 @@ fn main() {
     let cache = DatasetCache::with_full_config(demo_cachedir.clone(), 50, 3600, 1024 * 1024, false);
 
     // Write several files of different sizes
-    let small_data = vec![0u8; 1024]; // 1KB
-    let medium_data = vec![1u8; 10240]; // 10KB
-    let large_data = vec![2u8; 102400]; // 100KB
+    let smalldata = vec![0u8; 1024]; // 1KB
+    let mediumdata = vec![1u8; 10240]; // 10KB
+    let largedata = vec![2u8; 102400]; // 100KB
 
-    cache.write_cached("small_file.dat", &small_data).unwrap();
-    cache.write_cached("medium_file.dat", &medium_data).unwrap();
-    cache.write_cached("large_file.dat", &large_data).unwrap();
+    cache.write_cached("small_file.dat", &smalldata).unwrap();
+    cache.write_cached("medium_file.dat", &mediumdata).unwrap();
+    cache.write_cached("large_file.dat", &largedata).unwrap();
 
     println!("Added test files to cache");
     println!();
@@ -168,9 +168,9 @@ fn main() {
     );
 
     // Add a large file that would exceed the new limit
-    let very_large_data = vec![3u8; 400 * 1024]; // 400KB
+    let very_largedata = vec![3u8; 400 * 1024]; // 400KB
     cache
-        .write_cached("very_large_file.dat", &very_large_data)
+        .write_cached("very_large_file.dat", &very_largedata)
         .unwrap();
 
     let final_stats = cache_manager.get_detailed_stats().unwrap();

@@ -434,7 +434,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedTaskScheduler<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> DistributedTask<F> {
     /// Create new distributed task
-    pub fn new(task_id: usize, tasktype: TaskType, priority: F) -> Self {
+    pub fn new(task_id: usize, task_type: TaskType, priority: F) -> Self {
         DistributedTask {
             task_id,
             task_type,
@@ -445,7 +445,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedTask<F> {
     }
 
     /// Update task status
-    pub fn update_status(&mut self, newstatus: TaskStatus) {
+    pub fn update_status(&mut self, new_status: TaskStatus) {
         self.completion_status = new_status;
     }
 
@@ -508,12 +508,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedResourceManager<F> {
     /// Allocate resources for a task
     pub fn allocate_resources(&mut self, task: &DistributedTask<F>) -> Result<Option<usize>> {
         // Find suitable node for the task
-        for (node_id, node_resources) in &mut self.available_resources {
+        let node_ids: Vec<usize> = self.available_resources.keys().cloned().collect();
+        for node_id in node_ids {
+            let node_resources = self.available_resources.get(&node_id).unwrap();
             if self.can_accommodate_task(node_resources, task) {
                 // Allocate resources
-                self.allocate_task_to_node(*node_id, task.task_id)?;
-                self.update_node_utilization(*node_id, task)?;
-                return Ok(Some(*node_id));
+                self.allocate_task_to_node(node_id, task.task_id)?;
+                self.update_node_utilization(node_id, task)?;
+                return Ok(Some(node_id));
             }
         }
 
@@ -528,7 +530,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedResourceManager<F> {
     }
 
     /// Allocate task to specific node
-    fn allocate_task_to_node(&mut self, node_id: usize, taskid: usize) -> Result<()> {
+    fn allocate_task_to_node(&mut self, node_id: usize, task_id: usize) -> Result<()> {
         let task_list = self
             .resource_allocation
             .entry(node_id)
@@ -538,7 +540,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedResourceManager<F> {
     }
 
     /// Update node utilization after task allocation
-    fn update_node_utilization(&mut self, nodeid: usize, task: &DistributedTask<F>) -> Result<()> {
+    fn update_node_utilization(&mut self, node_id: usize, task: &DistributedTask<F>) -> Result<()> {
         if let Some(node) = self.available_resources.get_mut(&node_id) {
             node.available_memory = node.available_memory - task.resource_requirements.memory_gb;
 
@@ -570,7 +572,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LoadBalancer<F> {
     }
 
     /// Balance load across nodes
-    pub fn balance_load(&mut self, nodeloads: &HashMap<usize, F>) -> Result<Vec<(usize, usize)>> {
+    pub fn balance_load(&mut self, node_loads: &HashMap<usize, F>) -> Result<Vec<(usize, usize)>> {
         let mut rebalancing_actions = Vec::new();
 
         // Find overloaded and underloaded nodes
@@ -599,7 +601,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LoadBalancer<F> {
     }
 
     /// Update load metrics
-    pub fn update_metrics(&mut self, nodeid: usize, metrics: LoadMetric<F>) {
+    pub fn update_metrics(&mut self, node_id: usize, metrics: LoadMetric<F>) {
         // Remove old metrics for this node
         self.load_metrics.retain(|m| m.node_id != node_id);
         // Add new metrics
@@ -650,7 +652,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedIntelligenceCoordinato
         // Create tasks based on data chunks
         let chunk_size = (data.len() / 4).max(1); // Distribute across 4 nodes
 
-        for (i, chunk) in data.chunks(chunk_size).enumerate() {
+        for (i, chunk) in data
+            .axis_chunks_iter(ndarray::Axis(0), chunk_size)
+            .enumerate()
+        {
             let task = DistributedTask::new(i, TaskType::DataProcessing, F::from_f64(1.0).unwrap());
             tasks.push(task);
         }
@@ -698,7 +703,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> CommunicationLayer<F> {
     }
 
     /// Allocate bandwidth to nodes
-    pub fn allocate_bandwidth(&mut self, nodeid: usize, bandwidth: F) {
+    pub fn allocate_bandwidth(&mut self, node_id: usize, bandwidth: F) {
         self.bandwidth_allocation.insert(node_id, bandwidth);
     }
 }
@@ -753,7 +758,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FailureDetection<F> {
     }
 
     /// Detect failures in distributed system
-    pub fn detect_failures(&mut self, nodestatuses: &HashMap<usize, bool>) -> Result<Vec<usize>> {
+    pub fn detect_failures(&mut self, node_statuses: &HashMap<usize, bool>) -> Result<Vec<usize>> {
         let mut failed_nodes = Vec::new();
 
         for (&node_id, &is_responsive) in node_statuses {
@@ -768,7 +773,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FailureDetection<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> RecoveryMechanism<F> {
     /// Create new recovery mechanism
-    pub fn new(mechanismtype: RecoveryType) -> Self {
+    pub fn new(mechanism_type: RecoveryType) -> Self {
         let (recovery_time, success_rate, resource_overhead) = match mechanism_type {
             RecoveryType::Restart => (
                 F::from_f64(10.0).unwrap(),

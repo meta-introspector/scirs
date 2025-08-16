@@ -133,7 +133,7 @@ pub struct OptionContract {
     /// Time to expiration (in years)
     pub maturity: f64,
     /// Risk-free rate
-    pub risk_free_rate: f64,
+    pub risk_freerate: f64,
     /// Dividend yield
     pub dividend_yield: f64,
     /// Option type
@@ -211,13 +211,13 @@ pub struct RiskMetrics<F: Float + Debug + std::iter::Sum + num_traits::FromPrimi
     returns: Array1<F>,
     /// Confidence levels for VaR/CVaR
     #[allow(dead_code)]
-    confidence_levels: Vec<F>,
+    confidencelevels: Vec<F>,
 }
 
 impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> RiskMetrics<F> {
     /// Create new risk metrics calculator
     pub fn new(returns: Array1<F>) -> Self {
-        let confidence_levels = vec![
+        let confidencelevels = vec![
             F::from(0.90).unwrap(),
             F::from(0.95).unwrap(),
             F::from(0.99).unwrap(),
@@ -225,7 +225,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
 
         Self {
             returns,
-            confidence_levels,
+            confidencelevels,
         }
     }
 
@@ -242,7 +242,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
         let mut sorted_returns = self.returns.to_vec();
         sorted_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-        let percentile = F::one() - confidence_level;
+        let percentile = F::one() - confidencelevel;
         let index = (percentile * F::from(sorted_returns.len()).unwrap())
             .to_usize()
             .unwrap();
@@ -261,7 +261,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
             });
         }
 
-        let var = self.value_at_risk(confidence_level)?;
+        let var = self.value_at_risk(confidencelevel)?;
         let var_threshold = -var; // Convert back to actual return value
 
         let tail_losses: Vec<F> = self
@@ -324,7 +324,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
         }
 
         let meanreturn = self.returns.mean().unwrap();
-        let excessreturn = meanreturn - risk_free_rate;
+        let excessreturn = meanreturn - risk_freerate;
         let volatility = self.volatility()?;
 
         if volatility == F::zero() {
@@ -345,15 +345,15 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
         }
 
         let meanreturn = self.returns.mean().unwrap();
-        let excessreturn = meanreturn - risk_free_rate;
+        let excessreturn = meanreturn - risk_freerate;
 
         // Calculate downside deviation
         let negative_returns: Vec<F> = self
             .returns
             .iter()
             .map(|&r| {
-                if r < risk_free_rate {
-                    (r - risk_free_rate) * (r - risk_free_rate)
+                if r < risk_freerate {
+                    (r - risk_freerate) * (r - risk_freerate)
                 } else {
                     F::zero()
                 }
@@ -390,7 +390,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
 
     /// Calculate Calmar Ratio (annual return / maximum drawdown)
     pub fn calmar_ratio(&self, periods_peryear: F) -> Result<F> {
-        let annualreturn = self.returns.mean().unwrap() * periods_per_year;
+        let annualreturn = self.returns.mean().unwrap() * periods_peryear;
         let max_dd = self.maximum_drawdown()?;
 
         if max_dd == F::zero() {
@@ -414,11 +414,11 @@ impl HFTIndicators {
             });
         }
 
-        let mut vwap = Array1::zeros(_prices.len());
+        let mut vwap = Array1::zeros(prices.len());
         let mut cumulative_pv = F::zero();
         let mut cumulative_volume = F::zero();
 
-        for i in 0.._prices.len() {
+        for i in 0..prices.len() {
             cumulative_pv = cumulative_pv + prices[i] * volumes[i];
             cumulative_volume = cumulative_volume + volumes[i];
 
@@ -442,7 +442,7 @@ impl HFTIndicators {
             });
         }
 
-        let mut twap = Array1::zeros(_prices.len() - window + 1);
+        let mut twap = Array1::zeros(prices.len() - window + 1);
         let window_f = F::from(window).unwrap();
 
         for i in 0..twap.len() {
@@ -470,7 +470,7 @@ impl HFTIndicators {
         let beta = F::from(0.5).unwrap(); // Square-root law exponent
         let gamma = F::from(0.1).unwrap(); // Market impact coefficient
 
-        let relative_volume = _volume / average_daily_volume;
+        let relative_volume = volume / average_daily_volume;
         let impact = gamma * volatility * relative_volume.powf(beta) * participation_rate.sqrt();
 
         Ok(impact)
@@ -501,12 +501,12 @@ impl HFTIndicators {
         let mut noise = Array1::zeros(prices.len() - window);
 
         for i in 0..noise.len() {
-            let window_prices = prices.slice(s![i..i + window + 1]);
+            let windowprices = prices.slice(s![i..i + window + 1]);
 
             // Calculate first differences
             let mut diffs = Vec::with_capacity(window);
-            for j in 1..window_prices.len() {
-                diffs.push(window_prices[j] - window_prices[j - 1]);
+            for j in 1..windowprices.len() {
+                diffs.push(windowprices[j] - windowprices[j - 1]);
             }
 
             // Calculate variance of first differences
@@ -534,7 +534,7 @@ impl BlackScholes {
         let s = contract.spot;
         let k = contract.strike;
         let t = contract.maturity;
-        let r = contract.risk_free_rate;
+        let r = contract.risk_freerate;
         let q = contract.dividend_yield;
         let sigma = volatility;
 
@@ -551,6 +551,38 @@ impl BlackScholes {
                 OptionType::Put => Ok(OptionPrice {
                     price: (k - s).max(0.0),
                     delta: if s < k { -1.0 } else { 0.0 },
+                    gamma: 0.0,
+                    theta: 0.0,
+                    vega: 0.0,
+                    rho: 0.0,
+                }),
+                OptionType::AmericanCall => Ok(OptionPrice {
+                    price: (s - k).max(0.0),
+                    delta: if s > k { 1.0 } else { 0.0 },
+                    gamma: 0.0,
+                    theta: 0.0,
+                    vega: 0.0,
+                    rho: 0.0,
+                }),
+                OptionType::AmericanPut => Ok(OptionPrice {
+                    price: (k - s).max(0.0),
+                    delta: if s < k { -1.0 } else { 0.0 },
+                    gamma: 0.0,
+                    theta: 0.0,
+                    vega: 0.0,
+                    rho: 0.0,
+                }),
+                OptionType::Barrier { .. } => Ok(OptionPrice {
+                    price: 0.0,
+                    delta: 0.0,
+                    gamma: 0.0,
+                    theta: 0.0,
+                    vega: 0.0,
+                    rho: 0.0,
+                }),
+                OptionType::Asian { .. } => Ok(OptionPrice {
+                    price: 0.0,
+                    delta: 0.0,
                     gamma: 0.0,
                     theta: 0.0,
                     vega: 0.0,
@@ -669,8 +701,8 @@ impl BlackScholes {
         let mut vol = initial_guess.max(0.001);
 
         for _ in 0..max_iterations {
-            let option_price = Self::_price(contract, vol)?;
-            let price_diff = option_price._price - market_price;
+            let option_price = Self::price(contract, vol)?;
+            let price_diff = option_price.price - market_price;
 
             if price_diff.abs() < tolerance {
                 return Ok(vol);
@@ -782,11 +814,11 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> RegimeSw
     fn gaussian_likelihood(&self, x: F, mean: F, stddev: F) -> F {
         let two_pi = F::from(2.0 * std::f64::consts::PI).unwrap();
         let sqrt_two_pi = two_pi.sqrt();
-        let variance = std_dev * std_dev;
+        let variance = stddev * stddev;
         let diff = x - mean;
         let exponent = -(diff * diff) / (F::from(2).unwrap() * variance);
 
-        exponent.exp() / (sqrt_two_pi * std_dev)
+        exponent.exp() / (sqrt_two_pi * stddev)
     }
 
     /// Get current most likely regime
@@ -860,7 +892,7 @@ mod tests {
             spot: 100.0,
             strike: 100.0,
             maturity: 0.25, // 3 months
-            risk_free_rate: 0.05,
+            risk_freerate: 0.05,
             dividend_yield: 0.0,
             option_type: OptionType::Call,
         };
@@ -880,7 +912,7 @@ mod tests {
             spot: 100.0,
             strike: 100.0,
             maturity: 0.25,
-            risk_free_rate: 0.05,
+            risk_freerate: 0.05,
             dividend_yield: 0.0,
             option_type: OptionType::Put,
         };
@@ -917,7 +949,7 @@ mod tests {
 
     #[test]
     fn test_regime_switching_model() {
-        let transition_probs = Array2::fromshape_vec((2, 2), vec![0.8, 0.2, 0.3, 0.7]).unwrap();
+        let transition_probs = Array2::from_shape_vec((2, 2), vec![0.8, 0.2, 0.3, 0.7]).unwrap();
 
         let regime_params = vec![
             RegimeParameters {
@@ -950,7 +982,7 @@ mod tests {
             spot: 100.0,
             strike: 100.0,
             maturity: 0.25,
-            risk_free_rate: 0.05,
+            risk_freerate: 0.05,
             dividend_yield: 0.0,
             option_type: OptionType::Call,
         };

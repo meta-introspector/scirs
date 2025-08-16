@@ -6,7 +6,7 @@
 //! Usage:
 //!   cargo run --example gpu_acceleration --release
 
-use scirs2__datasets::{
+use scirs2_datasets::{
     get_optimal_gpu_config, is_cuda_available, is_opencl_available, list_gpu_devices,
     make_blobs_auto_gpu, make_classification, make_classification_auto_gpu,
     make_regression_auto_gpu, GpuBackend, GpuBenchmark, GpuConfig, GpuContext, GpuMemoryConfig,
@@ -139,15 +139,15 @@ fn demonstrate_backend_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ GPU BACKEND COMPARISON");
     println!("{}", "-".repeat(40));
 
-    let test_size = 50_000;
+    let testsize = 50_000;
     let features = 20;
 
-    println!("Comparing backends for {test_size} samples with {features} features:");
+    println!("Comparing backends for {testsize} samples with {features} features:");
 
     // Test different backends
     let backends = vec![
         ("CPU Fallback", GpuBackend::Cpu),
-        ("CUDA", GpuBackend::Cuda { deviceid: 0 }),
+        ("CUDA", GpuBackend::Cuda { device_id: 0 }),
         (
             "OpenCL",
             GpuBackend::OpenCl {
@@ -175,7 +175,7 @@ fn demonstrate_backend_comparison() -> Result<(), Box<dyn std::error::Error>> {
                     // Test classification generation
                     let start = Instant::now();
                     let dataset =
-                        context.make_classification_gpu(test_size, features, 5, 2, 15, Some(42))?;
+                        context.make_classification_gpu(testsize, features, 5, 2, 15, Some(42))?;
                     let duration = start.elapsed();
 
                     results.insert(name.to_string(), duration);
@@ -251,12 +251,12 @@ fn demonstrate_cpu_gpu_comparison() -> Result<(), Box<dyn std::error::Error>> {
     for &size in &dataset_sizes {
         // CPU benchmark
         let cpu_start = Instant::now();
-        let _cpu_dataset = make_classification(size, 20, 5, 2, 15, Some(42))?;
+        let _cpudataset = make_classification(size, 20, 5, 2, 15, Some(42))?;
         let cpu_time = cpu_start.elapsed();
 
         // GPU benchmark
         let gpu_start = Instant::now();
-        let _gpu_dataset = make_classification_auto_gpu(size, 20, 5, 2, 15, Some(42))?;
+        let _gpudataset = make_classification_auto_gpu(size, 20, 5, 2, 15, Some(42))?;
         let gpu_time = gpu_start.elapsed();
 
         let speedup = cpu_time.as_secs_f64() / gpu_time.as_secs_f64();

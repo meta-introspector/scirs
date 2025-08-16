@@ -6,7 +6,7 @@
 //! Usage:
 //!   cargo run --example streaming_demo --release
 
-use scirs2__datasets::{
+use scirs2_datasets::{
     make_classification, stream_classification, stream_regression, utils::train_test_split,
     DataChunk, StreamConfig, StreamProcessor, StreamTransformer,
 };
@@ -134,18 +134,18 @@ fn demonstrate_memory_efficient_processing() -> Result<(), Box<dyn std::error::E
     println!("{}", "-".repeat(40));
 
     // Compare memory usage: streaming vs. in-memory
-    let dataset_size = 50_000;
+    let datasetsize = 50_000;
     let n_features = 50;
 
-    println!("Comparing memory usage for {dataset_size} samples with {n_features} features");
+    println!("Comparing memory usage for {datasetsize} samples with {n_features} features");
 
     // In-memory approach (for comparison)
     println!("\n1. In-memory approach:");
     let start_mem = get_memory_usage();
     let start_time = Instant::now();
 
-    let in_memory_dataset = make_classification(dataset_size, n_features, 5, 2, 25, Some(42))?;
-    let (train, test) = train_test_split(&in_memory_dataset, 0.2, Some(42))?;
+    let in_memorydataset = make_classification(datasetsize, n_features, 5, 2, 25, Some(42))?;
+    let (train, test) = train_test_split(&in_memorydataset, 0.2, Some(42))?;
 
     let in_memory_time = start_time.elapsed();
     let in_memory_mem = get_memory_usage() - start_mem;
@@ -168,7 +168,7 @@ fn demonstrate_memory_efficient_processing() -> Result<(), Box<dyn std::error::E
         ..Default::default()
     };
 
-    let mut stream = stream_classification(dataset_size, n_features, 5, config)?;
+    let mut stream = stream_classification(datasetsize, n_features, 5, config)?;
 
     let mut total_processed = 0;
     let mut train_samples = 0;
@@ -178,9 +178,9 @@ fn demonstrate_memory_efficient_processing() -> Result<(), Box<dyn std::error::E
         total_processed += chunk.n_samples();
 
         // Simulate train/test split on chunk level
-        let chunk_train_size = (chunk.n_samples() as f64 * 0.8) as usize;
-        train_samples += chunk_train_size;
-        test_samples += chunk.n_samples() - chunk_train_size;
+        let chunk_trainsize = (chunk.n_samples() as f64 * 0.8) as usize;
+        train_samples += chunk_trainsize;
+        test_samples += chunk.n_samples() - chunk_trainsize;
 
         // Process chunk (simulate some computation)
         let _mean = chunk.data.mean_axis(ndarray::Axis(0));
@@ -396,20 +396,20 @@ fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>
     println!("Comparing streaming performance across different configurations:");
     println!();
 
-    for &dataset_size in &dataset_sizes {
-        println!("Dataset size: {dataset_size} samples");
+    for &datasetsize in &dataset_sizes {
+        println!("Dataset size: {datasetsize} samples");
 
-        for &chunk_size in &chunk_sizes {
+        for &chunksize in &chunk_sizes {
             let config = StreamConfig {
-                chunk_size,
+                chunk_size: chunksize,
                 buffer_size: 3,
                 num_workers: 2,
-                max_chunks: Some(dataset_size / chunk_size),
+                max_chunks: Some(datasetsize / chunksize),
                 ..Default::default()
             };
 
             let start_time = Instant::now();
-            let mut stream = stream_regression(dataset_size, 20, config)?;
+            let mut stream = stream_regression(datasetsize, 20, config)?;
 
             let mut processed_samples = 0;
             let mut processed_chunks = 0;
@@ -421,7 +421,7 @@ fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>
                 // Simulate minimal processing
                 let _stats = chunk.data.mean_axis(ndarray::Axis(0));
 
-                if chunk.is_last || processed_samples >= dataset_size {
+                if chunk.is_last || processed_samples >= datasetsize {
                     break;
                 }
             }
@@ -431,7 +431,7 @@ fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>
 
             println!(
                 "  Chunk size {}: {:.2}s ({:.1} samples/s, {} chunks)",
-                chunk_size,
+                chunksize,
                 duration.as_secs_f64(),
                 throughput,
                 processed_chunks
@@ -492,13 +492,13 @@ fn simulate_training_scenario() -> Result<(), Box<dyn std::error::Error>> {
 
     while let Some(chunk) = stream.next_chunk()? {
         // Simulate training on mini-batch
-        let batch_size = chunk.n_samples();
+        let batchsize = chunk.n_samples();
 
         // Simulate gradient computation time
         std::thread::sleep(std::time::Duration::from_millis(20));
 
         total_batches += 1;
-        total_samples += batch_size;
+        total_samples += batchsize;
 
         if total_batches % 3 == 0 {
             println!("    Processed {total_batches} batches ({total_samples} samples)");
@@ -543,14 +543,14 @@ fn simulate_preprocessing_pipeline() -> Result<(), Box<dyn std::error::Error>> {
         transformer.transform_chunk(&mut chunk)?;
 
         // Step 2: Feature selection (simulate by keeping first 30 features)
-        let selected_data = chunk.data.slice(ndarray::s![.., ..30]).to_owned();
+        let selecteddata = chunk.data.slice(ndarray::s![.., ..30]).to_owned();
 
         processed_chunks += 1;
         println!(
             "    Chunk {}: {} → {} features",
             processed_chunks,
             chunk.n_features(),
-            selected_data.ncols()
+            selecteddata.ncols()
         );
 
         if chunk.is_last {
@@ -666,8 +666,8 @@ fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
     #[repr(C)]
     struct TaskBasicInfo {
         suspend_count: u32,
-        virtual_size: u32,
-        resident_size: u32,
+        virtualsize: u32,
+        residentsize: u32,
         user_time: u64,
         system_time: u64,
     }
@@ -684,7 +684,7 @@ fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
         );
 
         if result == 0 {
-            Ok(info.resident_size as f64 / (1024.0 * 1024.0)) // Convert bytes to MB
+            Ok(info.residentsize as f64 / (1024.0 * 1024.0)) // Convert bytes to MB
         } else {
             Err(format!("task_info failed with code {}", result).into())
         }
@@ -711,8 +711,8 @@ fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
     struct ProcessMemoryCounters {
         cb: u32,
         page_fault_count: u32,
-        peak_working_set_size: usize,
-        working_set_size: usize,
+        peak_working_setsize: usize,
+        working_setsize: usize,
         quota_peak_paged_pool_usage: usize,
         quota_paged_pool_usage: usize,
         quota_peak_non_paged_pool_usage: usize,
@@ -728,7 +728,7 @@ fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
         let result = GetProcessMemoryInfo(GetCurrentProcess(), &mut counters, counters.cb);
 
         if result != 0 {
-            Ok(counters.working_set_size as f64 / (1024.0 * 1024.0)) // Convert bytes to MB
+            Ok(counters.working_setsize as f64 / (1024.0 * 1024.0)) // Convert bytes to MB
         } else {
             Err("GetProcessMemoryInfo failed".into())
         }

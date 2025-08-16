@@ -718,7 +718,7 @@ where
     /// Create a buffer from existing data
     pub fn from_slice(data: &[T]) -> NdimageResult<Self> {
         Ok(Self {
-            _data: data.to_vec(),
+            data: data.to_vec(),
         })
     }
 
@@ -829,8 +829,8 @@ where
     let params = vec![
         sigma[0],
         sigma[1],
-        safe_usizeto_float::<T>(h)?,
-        safe_usizeto_float::<T>(w)?,
+        safe_usize_to_float::<T>(h)?,
+        safe_usize_to_float::<T>(w)?,
     ];
 
     // Get kernel from registry
@@ -875,10 +875,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usizeto_float::<T>(ih)?,
-        safe_usizeto_float::<T>(iw)?,
-        safe_usizeto_float::<T>(kh)?,
-        safe_usizeto_float::<T>(kw)?,
+        safe_usize_to_float::<T>(ih)?,
+        safe_usize_to_float::<T>(iw)?,
+        safe_usize_to_float::<T>(kh)?,
+        safe_usize_to_float::<T>(kw)?,
     ];
 
     // Get kernel from registry
@@ -921,10 +921,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usizeto_float::<T>(h)?,
-        safe_usizeto_float::<T>(w)?,
-        safe_usizeto_float::<T>(size[0])?,
-        safe_usizeto_float::<T>(size[1])?,
+        safe_usize_to_float::<T>(h)?,
+        safe_usize_to_float::<T>(w)?,
+        safe_usize_to_float::<T>(size[0])?,
+        safe_usize_to_float::<T>(size[1])?,
     ];
 
     // Get kernel from registry
@@ -975,10 +975,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usizeto_float::<T>(h)?,
-        safe_usizeto_float::<T>(w)?,
-        safe_usizeto_float::<T>(sh)?,
-        safe_usizeto_float::<T>(sw)?,
+        safe_usize_to_float::<T>(h)?,
+        safe_usize_to_float::<T>(w)?,
+        safe_usize_to_float::<T>(sh)?,
+        safe_usize_to_float::<T>(sw)?,
     ];
 
     // Get kernel from registry
@@ -1064,11 +1064,11 @@ where
 
     // Horizontal pass (direction = 0)
     let params_h = vec![
-        safe_usizeto_float::<T>(h * w)?,
-        safe_usizeto_float::<T>(radius_x)?,
+        safe_usize_to_float::<T>(h * w)?,
+        safe_usize_to_float::<T>(radius_x)?,
         T::zero(), // direction = 0 for horizontal
-        safe_usizeto_float::<T>(w)?,
-        safe_usizeto_float::<T>(h)?,
+        safe_usize_to_float::<T>(w)?,
+        safe_usize_to_float::<T>(h)?,
     ];
 
     executor.execute_kernel(
@@ -1081,11 +1081,11 @@ where
 
     // Vertical pass (direction = 1)
     let params_v = vec![
-        safe_usizeto_float::<T>(h * w)?,
-        safe_usizeto_float::<T>(radius_y)?,
+        safe_usize_to_float::<T>(h * w)?,
+        safe_usize_to_float::<T>(radius_y)?,
         T::one(), // direction = 1 for vertical
-        safe_usizeto_float::<T>(w)?,
-        safe_usizeto_float::<T>(h)?,
+        safe_usize_to_float::<T>(w)?,
+        safe_usize_to_float::<T>(h)?,
     ];
 
     executor.execute_kernel(
@@ -1125,9 +1125,9 @@ where
     let params = vec![
         sigma_spatial,
         sigma_intensity,
-        safe_usizeto_float::<T>(radius)?,
-        safe_usizeto_float::<T>(w)?,
-        safe_usizeto_float::<T>(h)?,
+        safe_usize_to_float::<T>(radius)?,
+        safe_usize_to_float::<T>(w)?,
+        safe_usize_to_float::<T>(h)?,
     ];
 
     // Get kernel from registry
@@ -1174,7 +1174,7 @@ where
     let mut magnitude_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
 
     // Prepare kernel parameters
-    let params = vec![safe_usizeto_float::<T>(w)?, safe_usizeto_float::<T>(h)?];
+    let params = vec![safe_usize_to_float::<T>(w)?, safe_usize_to_float::<T>(h)?];
 
     // Get kernel from registry
     let registry = KernelRegistry::new();
@@ -1229,9 +1229,9 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usizeto_float::<T>(w)?,
-        safe_usizeto_float::<T>(h)?,
-        safe_usizeto_float::<T>(connectivity)?,
+        safe_usize_to_float::<T>(w)?,
+        safe_usize_to_float::<T>(h)?,
+        safe_usize_to_float::<T>(connectivity)?,
     ];
 
     // Get kernel from registry

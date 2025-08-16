@@ -99,9 +99,9 @@ const NVRTC_SUCCESS: i32 = 0;
 #[allow(dead_code)]
 fn cuda_error_string(error: i32) -> String {
     unsafe {
-        let error_ptr = cudaGetErrorString(_error);
+        let error_ptr = cudaGetErrorString(error);
         if error_ptr.is_null() {
-            format!("Unknown CUDA error: {_error}")
+            format!("Unknown CUDA error: {error}")
         } else {
             CStr::from_ptr(error_ptr).to_string_lossy().into_owned()
         }
@@ -122,7 +122,7 @@ unsafe impl<T> Sync for CudaBuffer<T> {}
 impl<T> CudaBuffer<T> {
     pub fn new(size: usize) -> NdimageResult<Self> {
         let mut device_ptr: *mut c_void = ptr::null_mut();
-        let byte_size = _size * std::mem::size_of::<T>();
+        let byte_size = size * std::mem::size_of::<T>();
 
         unsafe {
             let result = cudaMalloc(&mut device_ptr, byte_size);
@@ -141,8 +141,8 @@ impl<T> CudaBuffer<T> {
     }
 
     pub fn from_host_data(data: &[T]) -> NdimageResult<Self> {
-        let buffer = Self::new(_data.len())?;
-        buffer.copy_from_host(_data)?;
+        let buffer = Self::new(data.len())?;
+        buffer.copy_from_host(data)?;
         Ok(buffer)
     }
 }
@@ -229,7 +229,7 @@ pub struct CudaContext {
 
 impl CudaContext {
     pub fn new(_deviceid: Option<usize>) -> NdimageResult<Self> {
-        let _device_id = device_id.unwrap_or(0) as i32;
+        let device_id = _deviceid.unwrap_or(0) as i32;
 
         // Check if device exists
         let mut device_count: i32 = 0;
@@ -272,7 +272,7 @@ impl CudaContext {
     fn get_device_properties(_deviceid: i32) -> NdimageResult<((i32, i32), i32, usize)> {
         // For now, return sensible defaults based on common GPU architectures
         // In a full implementation, this would query actual device properties
-        let compute_capability = match _device_id {
+        let compute_capability = match _deviceid {
             0 => (7, 5), // Assume Turing architecture for first device
             1 => (8, 0), // Assume Ampere architecture for second device
             _ => (7, 0), // Default to Volta for others
@@ -340,7 +340,7 @@ impl CudaContext {
             let cache = KERNEL_CACHE.lock().map_err(|_| {
                 NdimageError::ComputationError("Failed to acquire kernel cache lock".into())
             })?;
-            if let Some(kernel) = cache.get(kernel_name) {
+            if let Some(kernel) = cache.get(kernelname) {
                 return Ok(CudaKernel {
                     _name: kernel._name.clone(),
                     module: kernel.module,
@@ -355,7 +355,7 @@ impl CudaContext {
         let c_source = CString::new(cuda_source).map_err(|_| {
             NdimageError::ComputationError("Failed to create C string for kernel source".into())
         })?;
-        let c_name = CString::new(kernel_name).map_err(|_| {
+        let c_name = CString::new(kernelname).map_err(|_| {
             NdimageError::ComputationError("Failed to create C string for kernel _name".into())
         })?;
 
@@ -434,7 +434,7 @@ impl CudaContext {
             }
 
             let kernel = CudaKernel {
-                _name: kernel_name.to_string(),
+                _name: kernelname.to_string(),
                 module,
                 function,
                 ptx_code: ptx_code[..ptx_size - 1].to_vec(), // Remove null terminator
@@ -448,7 +448,7 @@ impl CudaContext {
                     )
                 })?;
                 cache.insert(
-                    kernel_name.to_string(),
+                    kernelname.to_string(),
                     CudaKernel {
                         _name: kernel._name.clone(),
                         module: kernel.module,
@@ -646,7 +646,7 @@ pub struct CudaOperations {
 
 impl CudaOperations {
     pub fn new(_deviceid: Option<usize>) -> NdimageResult<Self> {
-        let context = Arc::new(CudaContext::new(_device_id)?);
+        let context = Arc::new(CudaContext::new(_deviceid)?);
         let executor = CudaExecutor::new(context.clone())?;
 
         Ok(Self { context, executor })
@@ -707,7 +707,7 @@ pub fn allocate_gpu_buffer<T>(data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>
 where
     T: 'static,
 {
-    Ok(Box::new(CudaBuffer::from_host_data(_data)?))
+    Ok(Box::new(CudaBuffer::from_host_data(data)?))
 }
 
 /// Helper function to allocate empty GPU buffer
@@ -716,7 +716,7 @@ pub fn allocate_gpu_buffer_empty<T>(size: usize) -> NdimageResult<Box<dyn GpuBuf
 where
     T: 'static,
 {
-    Ok(Box::new(CudaBuffer::<T>::new(_size)?))
+    Ok(Box::new(CudaBuffer::<T>::new(size)?))
 }
 
 /// Advanced CUDA memory manager with buffer pooling
@@ -731,7 +731,7 @@ impl CudaMemoryManager {
         Self {
             buffer_pools: std::collections::HashMap::new(),
             total_allocated: 0,
-            max_pool_size,
+            max_pool_size: _max_poolsize,
         }
     }
 

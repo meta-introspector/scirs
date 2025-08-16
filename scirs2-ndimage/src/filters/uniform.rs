@@ -695,8 +695,8 @@ where
         coords
     }
 
-    // Iterate through each position in the _input array
-    for linear_idx in 0.._input.len() {
+    // Iterate through each position in the input array
+    for linear_idx in 0..input.len() {
         let coords = index_to_coords(linear_idx, inputshape);
 
         // Initialize sum
@@ -813,7 +813,7 @@ where
         .collect();
 
     // Convert results back to n-dimensional array
-    let output = Array::from_shape_vec(_input.raw_dim(), results)
+    let output = Array::from_shape_vec(input.raw_dim(), results)
         .map_err(|_| NdimageError::DimensionError("Failed to create output array".into()))?;
 
     Ok(output)
@@ -1153,8 +1153,8 @@ where
     let mut output = Array2::zeros((rows, cols));
 
     // Calculate number of chunks
-    let num_row_chunks = (rows + _chunk_size - 1) / chunk_size;
-    let num_col_chunks = (cols + _chunk_size - 1) / chunk_size;
+    let num_row_chunks = (rows + _chunk_size - 1) / _chunk_size;
+    let num_col_chunks = (cols + _chunk_size - 1) / _chunk_size;
 
     // Process chunks in parallel using scirs2-core's parallel operations
     let chunk_indices: Vec<(usize, usize)> = (0..num_row_chunks)
@@ -1163,10 +1163,10 @@ where
 
     let process_chunk = |&(chunk_row, chunk_col): &(usize, usize)| -> Result<((usize, usize), Array2<T>), crate::error::NdimageError> {
         // Calculate chunk boundaries
-        let row_start = chunk_row * chunk_size;
-        let row_end = std::cmp::min(row_start + chunk_size, rows);
-        let col_start = chunk_col * chunk_size;
-        let col_end = std::cmp::min(col_start + chunk_size, cols);
+        let row_start = chunk_row * _chunk_size;
+        let row_end = std::cmp::min(row_start + _chunk_size, rows);
+        let col_start = chunk_col * _chunk_size;
+        let col_end = std::cmp::min(col_start + _chunk_size, cols);
 
         // Extract chunk with padding for boundary conditions
         let padded_row_start = row_start.saturating_sub(pad_rows);
@@ -1203,10 +1203,10 @@ where
 
     // Reassemble the results
     for ((chunk_row, chunk_col), chunk_result) in chunk_results {
-        let row_start = chunk_row * chunk_size;
-        let row_end = std::cmp::min(row_start + chunk_size, rows);
-        let col_start = chunk_col * chunk_size;
-        let col_end = std::cmp::min(col_start + chunk_size, cols);
+        let row_start = chunk_row * _chunk_size;
+        let row_end = std::cmp::min(row_start + _chunk_size, rows);
+        let col_start = chunk_col * _chunk_size;
+        let col_end = std::cmp::min(col_start + _chunk_size, cols);
 
         let mut output_slice = output.slice_mut(s![row_start..row_end, col_start..col_end]);
         output_slice.assign(&chunk_result);
@@ -1242,7 +1242,7 @@ where
         if let Some(orig) = origin {
             orig.to_vec()
         } else {
-            vec![(_size[0] / 2) as isize, (_size[1] / 2) as isize]
+            vec![(size[0] / 2) as isize, (size[1] / 2) as isize]
         }
     })
 }

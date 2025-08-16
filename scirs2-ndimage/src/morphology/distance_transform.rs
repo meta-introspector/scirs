@@ -82,7 +82,7 @@ where
     };
 
     // Initialize: background pixels have distance 0, foreground have infinity
-    for idx in ndarray::_indices(shape) {
+    for idx in ndarray::indices(shape) {
         let idx_vec: Vec<_> = idx.slice().to_vec();
         if input[idx_vec.as_slice()] {
             // Foreground pixel - initialize with infinity
@@ -103,13 +103,13 @@ where
 
     // Apply 1D distance transform along each dimension
     for dim in 0..ndim {
-        felzenszwalb_1d_edt(&mut dist_sq, indices.as_mut(), dim, sampling[dim]);
+        felzenszwalb_1d_edt(&mut dist_sq, _indices.as_mut(), dim, sampling[dim]);
     }
 
     // Convert squared _distances to actual _distances if requested
     let _distances = if return_distances {
         let mut final_dist = Array::<f64, D>::zeros(input.raw_dim());
-        for idx in ndarray::_indices(shape) {
+        for idx in ndarray::indices(shape) {
             let idx_vec: Vec<_> = idx.slice().to_vec();
             final_dist[idx_vec.as_slice()] = dist_sq[idx_vec.as_slice()].sqrt();
         }
@@ -118,7 +118,7 @@ where
         None
     };
 
-    (_distances, indices)
+    (_distances, _indices)
 }
 
 /// Apply 1D Euclidean distance transform along a specific dimension using
@@ -145,7 +145,7 @@ fn felzenszwalb_1d_edt<D>(
     let total_slices = shape
         .iter()
         .enumerate()
-        .filter(|(i_)| *i != dim)
+        .filter(|(i, _)| *i != dim)
         .map(|(_, &s)| s)
         .product::<usize>();
 
@@ -286,8 +286,8 @@ fn intersection_point(p: usize, q: usize, f: &[f64], samplingsq: f64) -> f64 {
     let p_f = p as f64;
     let q_f = q as f64;
 
-    ((f[q] + q_f * q_f * sampling_sq) - (f[p] + p_f * p_f * sampling_sq))
-        / (2.0 * sampling_sq * (q_f - p_f))
+    ((f[q] + q_f * q_f * samplingsq) - (f[p] + p_f * p_f * samplingsq))
+        / (2.0 * samplingsq * (q_f - p_f))
 }
 
 /// Apply 1D distance transform along a specific dimension
@@ -298,8 +298,8 @@ where
     D: Dimension,
     for<'a> &'a [usize]: ndarray::NdIndex<D>,
 {
-    let shape_vec: Vec<usize> = distance_squared.shape().to_vec();
-    let ndim = distance_squared.ndim();
+    let shape_vec: Vec<usize> = _distancesquared.shape().to_vec();
+    let ndim = _distancesquared.ndim();
 
     // Process each 1D slice along the specified dimension
     let mut axis_indices = vec![0; ndim];
@@ -308,7 +308,7 @@ where
         let mut slice_data = Vec::new();
         for i in 0..shape_vec[dim] {
             axis_indices[dim] = i;
-            slice_data.push(distance_squared[axis_indices.as_slice()]);
+            slice_data.push(_distancesquared[axis_indices.as_slice()]);
         }
 
         // Apply 1D distance transform
@@ -317,7 +317,7 @@ where
         // Write back the transformed data
         for (i, &value) in transformed.iter().enumerate() {
             axis_indices[dim] = i;
-            distance_squared[axis_indices.as_slice()] = value;
+            _distancesquared[axis_indices.as_slice()] = value;
         }
 
         // Move to next slice
@@ -372,17 +372,17 @@ fn distance_transform_1d(input: &[f64], sampling: f64) -> Vec<f64> {
 /// Helper function to increment multi-dimensional indices, skipping the specified dimension
 /// NOTE: Currently unused as we fall back to brute force for correctness
 #[allow(dead_code)]
-fn increment_indices(_indices: &mut [usize], shape: &[usize], skipdim: usize) -> bool {
+fn increment_indices(_indices: &mut [usize], shape: &[usize], skip_dim: usize) -> bool {
     for i in (0.._indices.len()).rev() {
         if i == skip_dim {
             continue;
         }
 
-        indices[i] += 1;
-        if indices[i] < shape[i] {
+        _indices[i] += 1;
+        if _indices[i] < shape[i] {
             return true;
         }
-        indices[i] = 0;
+        _indices[i] = 0;
     }
     false
 }
@@ -420,7 +420,7 @@ where
     };
 
     // Brute force computation (original algorithm)
-    for idx in ndarray::_indices(shape) {
+    for idx in ndarray::indices(shape) {
         let idx_vec: Vec<_> = idx.slice().to_vec();
         if !input[idx_vec.as_slice()] {
             // Background pixels have distance 0
@@ -442,7 +442,7 @@ where
             let mut closest_idx = vec![0; ndim];
 
             // Scan the entire image to find the nearest background pixel
-            for bg_idx in ndarray::_indices(shape) {
+            for bg_idx in ndarray::indices(shape) {
                 let bg_idx_vec: Vec<_> = bg_idx.slice().to_vec();
                 if !input[bg_idx_vec.as_slice()] {
                     // Calculate the Euclidean distance
@@ -475,7 +475,7 @@ where
         }
     }
 
-    (_distances, indices)
+    (_distances, _indices)
 }
 
 /// Calculate the Euclidean distance transform of a binary image.
@@ -626,6 +626,12 @@ where
                 metric
             )))
         }
+        _ => {
+            return Err(NdimageError::InvalidInput(format!(
+                "Metric must be one of 'cityblock' or 'chessboard', got '{}'",
+                metric
+            )))
+        }
     };
 
     // Initialize output arrays
@@ -651,7 +657,7 @@ where
     let shape = input.shape();
 
     // For each point in the array
-    for idx in ndarray::_indices(shape) {
+    for idx in ndarray::indices(shape) {
         let idx_vec: Vec<_> = idx.slice().to_vec();
         if !input[idx_vec.as_slice()] {
             // Background pixels have distance 0
@@ -673,7 +679,7 @@ where
             let mut closest_idx = vec![0; ndim];
 
             // Scan the entire image to find the nearest background pixel
-            for bg_idx in ndarray::_indices(shape) {
+            for bg_idx in ndarray::indices(shape) {
                 let bg_idx_vec: Vec<_> = bg_idx.slice().to_vec();
                 if !input[bg_idx_vec.as_slice()] {
                     // Calculate the distance based on the metric
@@ -720,7 +726,7 @@ where
         }
     }
 
-    Ok((_distances, indices))
+    Ok((_distances, _indices))
 }
 
 /// Calculate the distance transform of a binary image using a brute force algorithm.
@@ -791,6 +797,12 @@ where
                 metric
             )))
         }
+        _ => {
+            return Err(NdimageError::InvalidInput(format!(
+                "Metric must be one of 'euclidean', 'cityblock', or 'chessboard', got '{}'",
+                metric
+            )))
+        }
     };
 
     // Handle sampling
@@ -828,7 +840,7 @@ where
     let shape = input.shape();
 
     // For each point in the array
-    for idx in ndarray::_indices(shape) {
+    for idx in ndarray::indices(shape) {
         let idx_vec: Vec<_> = idx.slice().to_vec();
         if !input[idx_vec.as_slice()] {
             // Background pixels have distance 0
@@ -850,7 +862,7 @@ where
             let mut closest_idx = vec![0; ndim];
 
             // Scan the entire image to find the nearest background pixel
-            for bg_idx in ndarray::_indices(shape) {
+            for bg_idx in ndarray::indices(shape) {
                 let bg_idx_vec: Vec<_> = bg_idx.slice().to_vec();
                 if !input[bg_idx_vec.as_slice()] {
                     // Calculate the distance based on the metric
@@ -910,7 +922,7 @@ where
         }
     }
 
-    Ok((_distances, indices))
+    Ok((_distances, _indices))
 }
 
 #[cfg(test)]
@@ -935,7 +947,7 @@ mod tests {
             .clone()
             .into_dimensionality::<IxDyn>()
             .expect("into_dimensionality should succeed for test");
-        let (distances_option_) = distance_transform_edt(&input_dyn, None, true, false)
+        let (distances_option, _) = distance_transform_edt(&input_dyn, None, true, false)
             .expect("Distance transform should succeed");
         let distances = distances_option
             .expect("Expected distances")
@@ -972,7 +984,7 @@ mod tests {
             .clone()
             .into_dimensionality::<IxDyn>()
             .expect("into_dimensionality should succeed for test");
-        let (distances_option_) = distance_transform_cdt(&input_dyn, "cityblock", true, false)
+        let (distances_option, _) = distance_transform_cdt(&input_dyn, "cityblock", true, false)
             .expect("Distance transform should succeed");
         let distances = distances_option
             .expect("Expected distances")
@@ -1011,9 +1023,9 @@ mod tests {
         let sampling = vec![1.0, 1.0];
 
         // Get results from both algorithms
-        let (optimized_dist_) =
+        let (optimized_dist, _) =
             distance_transform_edt_optimized(&input_dyn, &sampling, true, false);
-        let (brute_force_dist_) =
+        let (brute_force_dist, _) =
             distance_transform_edt_brute_force(&input_dyn, &sampling, true, false);
 
         let opt_dist = optimized_dist
@@ -1051,21 +1063,23 @@ mod tests {
             .into_dimensionality::<IxDyn>()
             .expect("into_dimensionality should succeed for test");
 
-        let (euclidean_option_) = distance_transform_bf(&input_dyn, "euclidean", None, true, false)
-            .expect("Distance transform should succeed");
+        let (euclidean_option, _) =
+            distance_transform_bf(&input_dyn, "euclidean", None, true, false)
+                .expect("Distance transform should succeed");
         let euclidean = euclidean_option
             .expect("Expected euclidean distances")
             .into_dimensionality::<ndarray::Ix2>()
             .expect("Failed to convert back to Ix2");
 
-        let (cityblock_option_) = distance_transform_bf(&input_dyn, "cityblock", None, true, false)
-            .expect("Distance transform should succeed");
+        let (cityblock_option, _) =
+            distance_transform_bf(&input_dyn, "cityblock", None, true, false)
+                .expect("Distance transform should succeed");
         let cityblock = cityblock_option
             .expect("Expected cityblock distances")
             .into_dimensionality::<ndarray::Ix2>()
             .expect("Failed to convert back to Ix2");
 
-        let (chessboard_option_) =
+        let (chessboard_option, _) =
             distance_transform_bf(&input_dyn, "chessboard", None, true, false)
                 .expect("Distance transform should succeed");
         let chessboard = chessboard_option

@@ -370,7 +370,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             ));
         }
 
-        let base_model_wrappers: Vec<BaseModelWrapper<F>> = base_models
+        let base_modelwrappers: Vec<BaseModelWrapper<F>> = base_models
             .into_iter()
             .map(|model_type| BaseModelWrapper {
                 model_type,
@@ -393,7 +393,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
         };
 
         Ok(Self {
-            base_models: base_model_wrappers,
+            base_models: base_modelwrappers,
             strategy,
             performance_history: VecDeque::with_capacity(validation_window),
             training_buffer: VecDeque::with_capacity(max_buffer_size),
@@ -406,7 +406,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
     /// Create meta-model from specification
     fn create_meta_model(_metalearner: MetaLearner) -> Result<Box<dyn MetaModel<F>>> {
-        match _meta_learner {
+        match _metalearner {
             MetaLearner::LinearRegression => Ok(Box::new(LinearRegressionMeta::new())),
             MetaLearner::RidgeRegression { alpha: _alpha } => {
                 // For simplicity, use linear regression with regularization
@@ -572,42 +572,38 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
     /// Train a single model
     #[allow(dead_code)]
-    fn train_single_model(
-        &self,
-        model_wrapper: &mut BaseModelWrapper<F>,
-        data: &[F],
-    ) -> Result<()> {
-        match &model_wrapper.model_type {
+    fn train_single_model(&self, modelwrapper: &mut BaseModelWrapper<F>, data: &[F]) -> Result<()> {
+        match &modelwrapper.model_type {
             BaseModel::ARIMA { p, d, q } => {
-                self.train_arima_model(model_wrapper, data, *p, *d, *q)?;
+                self.train_arima_model(modelwrapper, data, *p, *d, *q)?;
             }
             BaseModel::ExponentialSmoothing { alpha, beta, gamma } => {
-                self.train_exponential_smoothing(model_wrapper, data, *alpha, *beta, *gamma)?;
+                self.train_exponential_smoothing(modelwrapper, data, *alpha, *beta, *gamma)?;
             }
             BaseModel::LinearTrend => {
-                self.train_linear_trend(model_wrapper, data)?;
+                self.train_linear_trend(modelwrapper, data)?;
             }
             BaseModel::SeasonalNaive { period } => {
-                self.train_seasonal_naive(model_wrapper, data, *period)?;
+                self.train_seasonal_naive(modelwrapper, data, *period)?;
             }
             BaseModel::MovingAverage { window } => {
-                self.train_moving_average(model_wrapper, data, *window)?;
+                self.train_moving_average(modelwrapper, data, *window)?;
             }
             BaseModel::LSTM {
                 hidden_units: hidden,
                 num_layers: layers,
             } => {
-                self.train_lstm_model(model_wrapper, data)?;
+                self.train_lstm_model(modelwrapper, data)?;
             }
             BaseModel::Prophet {
                 seasonality_prior_scale: s,
                 changepoint_prior_scale: c,
             } => {
-                self.train_prophet_model(model_wrapper, data)?;
+                self.train_prophet_model(modelwrapper, data)?;
             }
         }
 
-        model_wrapper.is_trained = true;
+        modelwrapper.is_trained = true;
         Ok(())
     }
 
@@ -615,7 +611,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     #[allow(dead_code)]
     fn train_arima_model(
         &self,
-        model_wrapper: &mut BaseModelWrapper<F>,
+        modelwrapper: &mut BaseModelWrapper<F>,
         data: &[F],
         p: usize,
         d: usize,
@@ -657,19 +653,19 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
         // Store parameters
         for (i, &coeff) in ar_coeffs.iter().enumerate() {
-            model_wrapper
+            modelwrapper
                 .model_state
                 .parameters
                 .insert(format!("ar_{i}"), coeff);
         }
         for (i, &coeff) in ma_coeffs.iter().enumerate() {
-            model_wrapper
+            modelwrapper
                 .model_state
                 .parameters
                 .insert(format!("ma_{i}"), coeff);
         }
 
-        model_wrapper.model_state.state_variables.insert(
+        modelwrapper.model_state.state_variables.insert(
             "recent_data".to_string(),
             Array1::from_vec(
                 processed_data
@@ -689,17 +685,17 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     #[allow(dead_code)]
     fn compute_autocorrelations(&self, data: &[F], maxlag: usize) -> Result<Vec<F>> {
         let n = data.len();
-        let mut autocorrs = vec![F::zero(); max_lag + 1];
+        let mut autocorrs = vec![F::zero(); maxlag + 1];
 
-        for _lag in 0..=max_lag {
+        for _lag in 0..=maxlag {
             if _lag >= n {
                 break;
             }
 
             let mut sum = F::zero();
-            let count = n - lag;
+            let count = n - _lag;
 
-            for i in lag..n {
+            for i in _lag..n {
                 sum = sum + data[i] * data[i - _lag];
             }
 
@@ -713,7 +709,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     #[allow(dead_code)]
     fn train_exponential_smoothing(
         &self,
-        model_wrapper: &mut BaseModelWrapper<F>,
+        modelwrapper: &mut BaseModelWrapper<F>,
         data: &[F],
         alpha: f64,
         beta: Option<f64>,
@@ -724,20 +720,20 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
         }
 
         let alpha_f = F::from(alpha).unwrap();
-        model_wrapper
+        modelwrapper
             .model_state
             .parameters
             .insert("alpha".to_string(), alpha_f);
 
         if let Some(beta_val) = beta {
-            model_wrapper
+            modelwrapper
                 .model_state
                 .parameters
                 .insert("beta".to_string(), F::from(beta_val).unwrap());
         }
 
         if let Some(gamma_val) = gamma {
-            model_wrapper
+            modelwrapper
                 .model_state
                 .parameters
                 .insert("gamma".to_string(), F::from(gamma_val).unwrap());
@@ -751,11 +747,11 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             F::zero()
         };
 
-        model_wrapper
+        modelwrapper
             .model_state
             .parameters
             .insert("level".to_string(), level);
-        model_wrapper
+        modelwrapper
             .model_state
             .parameters
             .insert("trend".to_string(), trend);
@@ -765,11 +761,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
     /// Train linear trend model
     #[allow(dead_code)]
-    fn train_linear_trend(
-        &self,
-        model_wrapper: &mut BaseModelWrapper<F>,
-        data: &[F],
-    ) -> Result<()> {
+    fn train_linear_trend(&self, modelwrapper: &mut BaseModelWrapper<F>, data: &[F]) -> Result<()> {
         if data.len() < 2 {
             return Ok(());
         }
@@ -796,11 +788,11 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
         let intercept = y_mean - slope * x_mean;
 
-        model_wrapper
+        modelwrapper
             .model_state
             .parameters
             .insert("slope".to_string(), slope);
-        model_wrapper
+        modelwrapper
             .model_state
             .parameters
             .insert("intercept".to_string(), intercept);
@@ -812,7 +804,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     #[allow(dead_code)]
     fn train_seasonal_naive(
         &self,
-        model_wrapper: &mut BaseModelWrapper<F>,
+        modelwrapper: &mut BaseModelWrapper<F>,
         data: &[F],
         period: usize,
     ) -> Result<()> {
@@ -820,7 +812,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             return Ok(());
         }
 
-        model_wrapper
+        modelwrapper
             .model_state
             .parameters
             .insert("period".to_string(), F::from(period).unwrap());
@@ -828,7 +820,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
         // Store last seasonal cycle
         let last_cycle: Array1<F> =
             Array1::from_vec(data.iter().rev().take(period).rev().cloned().collect());
-        model_wrapper
+        modelwrapper
             .model_state
             .state_variables
             .insert("last_cycle".to_string(), last_cycle);
@@ -840,7 +832,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     #[allow(dead_code)]
     fn train_moving_average(
         &self,
-        model_wrapper: &mut BaseModelWrapper<F>,
+        modelwrapper: &mut BaseModelWrapper<F>,
         data: &[F],
         window: usize,
     ) -> Result<()> {
@@ -848,7 +840,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             return Ok(());
         }
 
-        model_wrapper
+        modelwrapper
             .model_state
             .parameters
             .insert("window".to_string(), F::from(window).unwrap());
@@ -856,7 +848,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
         // Store recent data for prediction
         let recent_data: Array1<F> =
             Array1::from_vec(data.iter().rev().take(window).rev().cloned().collect());
-        model_wrapper
+        modelwrapper
             .model_state
             .state_variables
             .insert("recent_data".to_string(), recent_data);
@@ -869,11 +861,11 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     fn train_lstm_model(&self, modelwrapper: &mut BaseModelWrapper<F>, data: &[F]) -> Result<()> {
         // Placeholder for LSTM training
         // In practice, would use neural network framework
-        model_wrapper
+        modelwrapper
             .model_state
             .parameters
             .insert("hidden_state".to_string(), F::zero());
-        model_wrapper
+        modelwrapper
             .model_state
             .parameters
             .insert("cell_state".to_string(), F::zero());
@@ -881,7 +873,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
         // Store recent data
         let recent_data: Array1<F> =
             Array1::from_vec(data.iter().rev().take(10).rev().cloned().collect());
-        model_wrapper
+        modelwrapper
             .model_state
             .state_variables
             .insert("recent_data".to_string(), recent_data);
@@ -893,7 +885,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     #[allow(dead_code)]
     fn train_prophet_model(
         &self,
-        model_wrapper: &mut BaseModelWrapper<F>,
+        modelwrapper: &mut BaseModelWrapper<F>,
         data: &[F],
     ) -> Result<()> {
         // Placeholder for Prophet-like model
@@ -904,13 +896,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
         // Simple trend estimation
         let trend = (data[data.len() - 1] - data[0]) / F::from(data.len() - 1).unwrap();
-        model_wrapper
+        modelwrapper
             .model_state
             .parameters
             .insert("trend".to_string(), trend);
 
         let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
-        model_wrapper
+        modelwrapper
             .model_state
             .parameters
             .insert("base_level".to_string(), mean);
@@ -927,63 +919,63 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
         }
 
         // Get predictions from all base models
-        let mut model_predictions = Array2::zeros((steps, self.base_models.len()));
+        let mut modelpredictions = Array2::zeros((steps, self.base_models.len()));
 
-        for (model_idx, model_wrapper) in self.base_models.iter().enumerate() {
-            if model_wrapper.is_trained {
-                let predictions = self.predict_with_model(model_wrapper, steps)?;
+        for (model_idx, modelwrapper) in self.base_models.iter().enumerate() {
+            if modelwrapper.is_trained {
+                let predictions = self.predict_with_model(modelwrapper, steps)?;
                 for step in 0..steps {
-                    model_predictions[[step, model_idx]] = predictions[step];
+                    modelpredictions[[step, model_idx]] = predictions[step];
                 }
             }
         }
 
         // Combine predictions using ensemble strategy
-        self.combine_predictions(&model_predictions)
+        self.combine_predictions(&modelpredictions)
     }
 
     /// Predict with a single model
     fn predict_with_model(
         &self,
-        model_wrapper: &BaseModelWrapper<F>,
+        modelwrapper: &BaseModelWrapper<F>,
         steps: usize,
     ) -> Result<Array1<F>> {
-        match &model_wrapper.model_type {
-            BaseModel::ARIMA { p, d: d, q } => self.predict_arima(model_wrapper, steps, *p, *q),
+        match &modelwrapper.model_type {
+            BaseModel::ARIMA { p, d: d, q } => self.predict_arima(modelwrapper, steps, *p, *q),
             BaseModel::ExponentialSmoothing {
                 alpha: alpha,
                 beta,
                 gamma: gamma,
-            } => self.predict_exponential_smoothing(model_wrapper, steps, beta.is_some()),
-            BaseModel::LinearTrend => self.predict_linear_trend(model_wrapper, steps),
+            } => self.predict_exponential_smoothing(modelwrapper, steps, beta.is_some()),
+            BaseModel::LinearTrend => self.predict_linear_trend(modelwrapper, steps),
             BaseModel::SeasonalNaive { period: _period } => {
-                self.predict_seasonal_naive(model_wrapper, steps)
+                self.predict_seasonal_naive(modelwrapper, steps)
             }
             BaseModel::MovingAverage { window: _window } => {
-                self.predict_moving_average(model_wrapper, steps)
+                self.predict_moving_average(modelwrapper, steps)
             }
             BaseModel::LSTM {
                 hidden_units: hidden,
                 num_layers: layers,
-            } => self.predict_lstm(model_wrapper, steps),
+            } => self.predict_lstm(modelwrapper, steps),
             BaseModel::Prophet {
                 seasonality_prior_scale: s,
                 changepoint_prior_scale: c,
-            } => self.predict_prophet(model_wrapper, steps),
+            } => self.predict_prophet(modelwrapper, steps),
         }
     }
 
     /// Predict with ARIMA model
     fn predict_arima(
         &self,
-        model_wrapper: &BaseModelWrapper<F>,
+        modelwrapper: &BaseModelWrapper<F>,
         steps: usize,
         p: usize,
         q: usize,
     ) -> Result<Array1<F>> {
         let mut forecasts = Array1::zeros(steps);
 
-        if let Some(recent_data) = model_wrapper.model_state.state_variables.get("recent_data") {
+        if let Some(recent_data) = modelwrapper.model_state.state_variables.get("recent_data") {
             let mut extended_data = recent_data.to_vec();
 
             for step in 0..steps {
@@ -992,7 +984,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                 // AR component
                 for i in 0..p {
                     if let Some(&ar_coeff) =
-                        model_wrapper.model_state.parameters.get(&format!("ar_{i}"))
+                        modelwrapper.model_state.parameters.get(&format!("ar_{i}"))
                     {
                         if i < extended_data.len() {
                             let lag_index = extended_data.len() - 1 - i;
@@ -1004,7 +996,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                 // MA component (simplified - assume zero residuals for future)
                 for i in 0..q {
                     if let Some(&ma_coeff) =
-                        model_wrapper.model_state.parameters.get(&format!("ma_{i}"))
+                        modelwrapper.model_state.parameters.get(&format!("ma_{i}"))
                     {
                         // Simplified: assume residuals decay to zero
                         let residual_weight = F::from(0.95_f64.powi(i as i32 + 1)).unwrap();
@@ -1028,15 +1020,15 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     /// Predict with exponential smoothing
     fn predict_exponential_smoothing(
         &self,
-        model_wrapper: &BaseModelWrapper<F>,
+        modelwrapper: &BaseModelWrapper<F>,
         steps: usize,
         has_trend: bool,
     ) -> Result<Array1<F>> {
         let mut forecasts = Array1::zeros(steps);
 
         if let (Some(&level), trend_opt) = (
-            model_wrapper.model_state.parameters.get("level"),
-            model_wrapper.model_state.parameters.get("_trend"),
+            modelwrapper.model_state.parameters.get("level"),
+            modelwrapper.model_state.parameters.get("_trend"),
         ) {
             let _trend = trend_opt.cloned().unwrap_or(F::zero());
 
@@ -1052,14 +1044,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     /// Predict with linear trend
     fn predict_linear_trend(
         &self,
-        model_wrapper: &BaseModelWrapper<F>,
+        modelwrapper: &BaseModelWrapper<F>,
         steps: usize,
     ) -> Result<Array1<F>> {
         let mut forecasts = Array1::zeros(steps);
 
         if let (Some(&slope), Some(&intercept)) = (
-            model_wrapper.model_state.parameters.get("slope"),
-            model_wrapper.model_state.parameters.get("intercept"),
+            modelwrapper.model_state.parameters.get("slope"),
+            modelwrapper.model_state.parameters.get("intercept"),
         ) {
             let data_length = F::from(self.training_buffer.len()).unwrap();
 
@@ -1075,14 +1067,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     /// Predict with seasonal naive
     fn predict_seasonal_naive(
         &self,
-        model_wrapper: &BaseModelWrapper<F>,
+        modelwrapper: &BaseModelWrapper<F>,
         steps: usize,
     ) -> Result<Array1<F>> {
         let mut forecasts = Array1::zeros(steps);
 
         if let (Some(&period_f), Some(last_cycle)) = (
-            model_wrapper.model_state.parameters.get("period"),
-            model_wrapper.model_state.state_variables.get("last_cycle"),
+            modelwrapper.model_state.parameters.get("period"),
+            modelwrapper.model_state.state_variables.get("last_cycle"),
         ) {
             let period = period_f.to_usize().unwrap_or(1);
 
@@ -1100,12 +1092,12 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     /// Predict with moving average
     fn predict_moving_average(
         &self,
-        model_wrapper: &BaseModelWrapper<F>,
+        modelwrapper: &BaseModelWrapper<F>,
         steps: usize,
     ) -> Result<Array1<F>> {
         let mut forecasts = Array1::zeros(steps);
 
-        if let Some(recent_data) = model_wrapper.model_state.state_variables.get("recent_data") {
+        if let Some(recent_data) = modelwrapper.model_state.state_variables.get("recent_data") {
             let avg = recent_data.sum() / F::from(recent_data.len()).unwrap();
 
             for step in 0..steps {
@@ -1121,7 +1113,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
         let mut forecasts = Array1::zeros(steps);
 
         // Placeholder prediction - in practice would use neural network
-        if let Some(recent_data) = model_wrapper.model_state.state_variables.get("recent_data") {
+        if let Some(recent_data) = modelwrapper.model_state.state_variables.get("recent_data") {
             let last_value = recent_data[recent_data.len() - 1];
             let trend = if recent_data.len() > 1 {
                 (recent_data[recent_data.len() - 1] - recent_data[recent_data.len() - 2])
@@ -1142,14 +1134,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     /// Predict with Prophet (placeholder)
     fn predict_prophet(
         &self,
-        model_wrapper: &BaseModelWrapper<F>,
+        modelwrapper: &BaseModelWrapper<F>,
         steps: usize,
     ) -> Result<Array1<F>> {
         let mut forecasts = Array1::zeros(steps);
 
         if let (Some(&trend), Some(&base_level)) = (
-            model_wrapper.model_state.parameters.get("trend"),
-            model_wrapper.model_state.parameters.get("base_level"),
+            modelwrapper.model_state.parameters.get("trend"),
+            modelwrapper.model_state.parameters.get("base_level"),
         ) {
             let data_length = F::from(self.training_buffer.len()).unwrap();
 
@@ -1171,7 +1163,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
     /// Combine predictions using ensemble strategy
     fn combine_predictions(&self, modelpredictions: &Array2<F>) -> Result<Array1<F>> {
-        let (steps, n_models) = model_predictions.dim();
+        let (steps, n_models) = modelpredictions.dim();
         let mut ensemble_forecast = Array1::zeros(steps);
 
         match &self.strategy {
@@ -1179,7 +1171,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                 for step in 0..steps {
                     let mut sum = F::zero();
                     for model_idx in 0..n_models {
-                        sum = sum + model_predictions[[step, model_idx]];
+                        sum = sum + modelpredictions[[step, model_idx]];
                     }
                     ensemble_forecast[step] = sum / F::from(n_models).unwrap();
                 }
@@ -1191,13 +1183,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                     let mut total_weight = F::zero();
 
                     for model_idx in 0..n_models {
-                        let weight = if model_idx < self.ensembleweights.len() {
+                        let weight = if model_idx < self.ensemble_weights.len() {
                             self.ensemble_weights[model_idx]
                         } else {
                             F::one() / F::from(n_models).unwrap()
                         };
 
-                        weighted_sum = weighted_sum + weight * model_predictions[[step, model_idx]];
+                        weighted_sum = weighted_sum + weight * modelpredictions[[step, model_idx]];
                         total_weight = total_weight + weight;
                     }
 
@@ -1211,7 +1203,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             EnsembleStrategy::Median => {
                 for step in 0..steps {
                     let mut step_predictions: Vec<F> = (0..n_models)
-                        .map(|model_idx| model_predictions[[step, model_idx]])
+                        .map(|model_idx| modelpredictions[[step, model_idx]])
                         .collect();
 
                     step_predictions
@@ -1228,7 +1220,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             }
             EnsembleStrategy::Stacking { meta_learner: meta } => {
                 if let Some(ref meta_model) = self.meta_model {
-                    ensemble_forecast = meta_model.predict(model_predictions)?;
+                    ensemble_forecast = meta_model.predict(modelpredictions)?;
                 } else {
                     return Err(TimeSeriesError::InvalidModel(
                         "Meta-model not initialized for stacking".to_string(),
@@ -1248,7 +1240,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                             F::one()
                         };
 
-                        weighted_sum = weighted_sum + weight * model_predictions[[step, model_idx]];
+                        weighted_sum = weighted_sum + weight * modelpredictions[[step, model_idx]];
                         total_weight = total_weight + weight;
                     }
 
@@ -1259,7 +1251,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                 // Use _predictions from the best performing model
                 let best_model_idx = self.find_best_model_index();
                 for step in 0..steps {
-                    ensemble_forecast[step] = model_predictions[[step, best_model_idx]];
+                    ensemble_forecast[step] = modelpredictions[[step, best_model_idx]];
                 }
             }
         }
@@ -1301,13 +1293,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
                 // Normalize weights
                 if total_inverse_mse > F::zero() {
-                    for weight in newweights.iter_mut() {
+                    for weight in new_weights.iter_mut() {
                         *weight = *weight / total_inverse_mse;
                     }
                 } else {
                     // Equal weights fallback
                     let equal_weight = F::one() / F::from(n_models).unwrap();
-                    newweights.fill(equal_weight);
+                    new_weights.fill(equal_weight);
                 }
 
                 self.ensemble_weights = new_weights;
@@ -1600,7 +1592,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> AutoML
         // Simplified random generation - in practice would use proper random sampling
         let mut seed: u32 = 42;
 
-        for _i in 0..n_iterations {
+        for _i in 0..niterations {
             // Simple LCG for pseudo-random numbers
             seed = (seed.wrapping_mul(1103515245).wrapping_add(12345)) & 0x7fffffff;
             let rand_val = (seed as f64) / (i32::MAX as f64);
@@ -1800,13 +1792,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> AutoML
         let max_models = 5; // Maximum models in ensemble
 
         // Select top performing models
-        for (model_score) in model_scores.iter().take(max_models) {
+        for (model, _score) in modelscores.iter().take(max_models) {
             selected_models.push(model.clone());
         }
 
         // Ensure we have at least one model
-        if selected_models.is_empty() && !model_scores.is_empty() {
-            selected_models.push(model_scores[0].0.clone());
+        if selected_models.is_empty() && !modelscores.is_empty() {
+            selected_models.push(modelscores[0].0.clone());
         }
 
         Ok(selected_models)
@@ -1854,14 +1846,14 @@ mod tests {
         let mut meta_model = LinearRegressionMeta::<f64>::new();
 
         let predictions =
-            Array2::fromshape_vec((10, 3), (0..30).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::from_shape_vec((10, 3), (0..30).map(|i| i as f64 * 0.1).collect()).unwrap();
         let targets = Array1::from_vec((0..10).map(|i| i as f64).collect());
 
         let result = meta_model.train(&predictions, &targets);
         assert!(result.is_ok());
 
         let test_predictions =
-            Array2::fromshape_vec((5, 3), (0..15).map(|i| i as f64 * 0.2).collect()).unwrap();
+            Array2::from_shape_vec((5, 3), (0..15).map(|i| i as f64 * 0.2).collect()).unwrap();
         let forecast = meta_model.predict(&test_predictions);
         assert!(forecast.is_ok());
         assert_eq!(forecast.unwrap().len(), 5);

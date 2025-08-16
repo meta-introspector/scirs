@@ -348,7 +348,7 @@ pub struct LegendEntry {
 ///
 /// * `Result<DendrogramPlot<F>>` - The dendrogram plot data
 #[allow(dead_code)]
-pub fn create_dendrogram_plot<F: Float + FromPrimitive + PartialOrd + Debug>(
+pub fn create_dendrogramplot<F: Float + FromPrimitive + PartialOrd + Debug>(
     linkage_matrix: ArrayView2<F>,
     labels: Option<&[String]>,
     config: DendrogramConfig<F>,
@@ -387,7 +387,7 @@ pub fn create_dendrogram_plot<F: Float + FromPrimitive + PartialOrd + Debug>(
     let legend = create_legend(&config, actual_threshold);
 
     // Calculate plot bounds
-    let bounds = calculate_plot_bounds(&branches, &leaves);
+    let bounds = calculateplot_bounds(&branches, &leaves);
 
     Ok(DendrogramPlot {
         branches,
@@ -520,13 +520,13 @@ fn calculate_positions_recursive<F: Float + FromPrimitive>(
         x
     } else {
         let left_x = if let Some(ref left) = node.left {
-            calculate_positions_recursive(left, positions, leaf_counter_n_samples, orientation)
+            calculate_positions_recursive(left, positions, leaf_counter, orientation)
         } else {
             F::zero()
         };
 
         let right_x = if let Some(ref right) = node.right {
-            calculate_positions_recursive(right, positions, leaf_counter_n_samples, orientation)
+            calculate_positions_recursive(right, positions, leaf_counter, orientation)
         } else {
             F::zero()
         };
@@ -597,7 +597,7 @@ fn create_branches_recursive<F: Float + FromPrimitive + PartialOrd>(
             above_threshold,
         });
 
-        create_branches_recursive(left, positions, branches, threshold_config);
+        create_branches_recursive(left, positions, branches, threshold, config);
     }
 
     if let Some(ref right) = node.right {
@@ -621,7 +621,7 @@ fn create_branches_recursive<F: Float + FromPrimitive + PartialOrd>(
             above_threshold,
         });
 
-        create_branches_recursive(right, positions, branches, threshold_config);
+        create_branches_recursive(right, positions, branches, threshold, config);
     }
 }
 
@@ -694,13 +694,13 @@ fn calculate_auto_threshold<F: Float + FromPrimitive + PartialOrd>(
     target_clusters: Option<usize>,
 ) -> Result<F> {
     let n_samples = linkage_matrix.shape()[0] + 1;
-    let _clusters = target_clusters.unwrap_or(4).min(n_samples);
+    let clusters = target_clusters.unwrap_or(4).min(n_samples);
 
-    if _clusters <= 1 || _clusters > n_samples {
+    if clusters <= 1 || clusters > n_samples {
         return Ok(F::zero());
     }
 
-    // Find the threshold that gives us the desired number of _clusters
+    // Find the threshold that gives us the desired number of clusters
     // This is the distance at the (n_samples - clusters)th merge
     let merge_index = n_samples - clusters;
 
@@ -713,14 +713,14 @@ fn calculate_auto_threshold<F: Float + FromPrimitive + PartialOrd>(
 
 /// Calculate plot bounds
 #[allow(dead_code)]
-fn calculate_plot_bounds<F: Float>(branches: &[Branch<F>], leaves: &[Leaf]) -> (F, F, F, F) {
+fn calculateplot_bounds<F: Float>(branches: &[Branch<F>], leaves: &[Leaf]) -> (F, F, F, F) {
     let mut min_x = F::infinity();
     let mut max_x = F::neg_infinity();
     let mut min_y = F::infinity();
     let mut max_y = F::neg_infinity();
 
     // Check branch bounds
-    for branch in _branches {
+    for branch in branches {
         let points = [branch.start, branch.end];
         for (x, y) in points.iter() {
             if *x < min_x {
@@ -764,11 +764,11 @@ fn calculate_plot_bounds<F: Float>(branches: &[Branch<F>], leaves: &[Leaf]) -> (
 #[allow(dead_code)]
 pub fn get_color_palette(_scheme: ColorScheme, ncolors: usize) -> Vec<String> {
     match _scheme {
-        ColorScheme::Default => get_default_colors(n_colors),
-        ColorScheme::HighContrast => get_high_contrast_colors(n_colors),
-        ColorScheme::Viridis => get_viridis_colors(n_colors),
-        ColorScheme::Plasma => get_plasma_colors(n_colors),
-        ColorScheme::Grayscale => get_grayscale_colors(n_colors),
+        ColorScheme::Default => get_default_colors(ncolors),
+        ColorScheme::HighContrast => get_high_contrast_colors(ncolors),
+        ColorScheme::Viridis => get_viridis_colors(ncolors),
+        ColorScheme::Plasma => get_plasma_colors(ncolors),
+        ColorScheme::Grayscale => get_grayscale_colors(ncolors),
     }
 }
 
@@ -783,7 +783,7 @@ fn get_default_colors(_ncolors: usize) -> Vec<String> {
     base_colors
         .into_iter()
         .cycle()
-        .take(_n_colors)
+        .take(_ncolors)
         .map(|s| s.to_string())
         .collect()
 }
@@ -799,7 +799,7 @@ fn get_high_contrast_colors(_ncolors: usize) -> Vec<String> {
     base_colors
         .into_iter()
         .cycle()
-        .take(_n_colors)
+        .take(_ncolors)
         .map(|s| s.to_string())
         .collect()
 }
@@ -815,7 +815,7 @@ fn get_viridis_colors(_ncolors: usize) -> Vec<String> {
     base_colors
         .into_iter()
         .cycle()
-        .take(_n_colors)
+        .take(_ncolors)
         .map(|s| s.to_string())
         .collect()
 }
@@ -831,7 +831,7 @@ fn get_plasma_colors(_ncolors: usize) -> Vec<String> {
     base_colors
         .into_iter()
         .cycle()
-        .take(_n_colors)
+        .take(_ncolors)
         .map(|s| s.to_string())
         .collect()
 }
@@ -839,9 +839,9 @@ fn get_plasma_colors(_ncolors: usize) -> Vec<String> {
 /// Grayscale color palette
 #[allow(dead_code)]
 fn get_grayscale_colors(_ncolors: usize) -> Vec<String> {
-    (0.._n_colors)
+    (0.._ncolors)
         .map(|i| {
-            let intensity = 255 * i / n_colors.max(1);
+            let intensity = 255 * i / _ncolors.max(1);
             format!("#{:02x}{:02x}{:02x}", intensity, intensity, intensity)
         })
         .collect()
@@ -854,14 +854,14 @@ mod tests {
     use ndarray::Array2;
 
     #[test]
-    fn test_create_dendrogram_plot() {
+    fn test_create_dendrogramplot() {
         let data =
             Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0]).unwrap();
 
         let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
         let config = DendrogramConfig::default();
 
-        let plot = create_dendrogram_plot(linkage_matrix.view(), None, config).unwrap();
+        let plot = create_dendrogramplot(linkage_matrix.view(), None, config).unwrap();
 
         // Should have branches and leaves
         assert!(!plot.branches.is_empty());
@@ -934,7 +934,7 @@ mod tests {
                 ..Default::default()
             };
 
-            let plot = create_dendrogram_plot(linkage_matrix.view(), None, config).unwrap();
+            let plot = create_dendrogramplot(linkage_matrix.view(), None, config).unwrap();
 
             // Should create valid plot for each orientation
             assert!(!plot.branches.is_empty());
@@ -951,7 +951,7 @@ mod tests {
         let config = DendrogramConfig::default();
 
         let labels = vec!["A".to_string(), "B".to_string(), "C".to_string()];
-        let plot = create_dendrogram_plot(linkage_matrix.view(), Some(&labels), config).unwrap();
+        let plot = create_dendrogramplot(linkage_matrix.view(), Some(&labels), config).unwrap();
 
         // Should use custom labels
         assert_eq!(plot.leaves.len(), 3);
@@ -992,7 +992,7 @@ mod tests {
             },
         ];
 
-        let bounds = calculate_plot_bounds(&branches, &leaves);
+        let bounds = calculateplot_bounds(&branches, &leaves);
 
         // Should encompass all points
         assert_eq!(bounds.0, -1.0); // min_x
@@ -1111,7 +1111,7 @@ pub mod interactive {
             labels: Option<&[String]>,
             config: InteractiveDendrogramConfig<F>,
         ) -> Result<Self> {
-            let plot = create_dendrogram_plot(linkage_matrix, labels, config.base_config.clone())?;
+            let plot = create_dendrogramplot(linkage_matrix, labels, config.base_config.clone())?;
             let tooltips = Self::generate_tooltips(&linkage_matrix, &plot)?;
 
             Ok(Self {
@@ -1125,7 +1125,7 @@ pub mod interactive {
         /// Generate tooltip information for each node
         fn generate_tooltips(
             linkage_matrix: &ArrayView2<F>,
-            _plot: &DendrogramPlot<F>,
+            plot: &DendrogramPlot<F>,
         ) -> Result<Vec<TooltipInfo>> {
             let mut tooltips = Vec::new();
             let n_samples = linkage_matrix.shape()[0] + 1;
@@ -1317,7 +1317,7 @@ pub mod animation {
                 (normalized_time - before_frame.time) / (after_frame.time - before_frame.time);
             let eased_time = apply_easing(local_time, after_frame.easing);
 
-            self.interpolate_plots(&before_frame.plot, &after_frame.plot, eased_time)
+            self.interpolateplots(&before_frame.plot, &after_frame.plot, eased_time)
         }
 
         fn find_surrounding_keyframes(&self, time: f64) -> (usize, usize) {
@@ -1329,7 +1329,7 @@ pub mod animation {
             (self.keyframes.len() - 1, self.keyframes.len() - 1)
         }
 
-        fn interpolate_plots(
+        fn interpolateplots(
             &self,
             plot1: &DendrogramPlot<F>,
             plot2: &DendrogramPlot<F>,
@@ -1699,7 +1699,7 @@ pub mod export {
 
     /// Export to SVG format
     fn export_to_svg<F: Float + FromPrimitive + Debug>(plot: &DendrogramPlot<F>) -> Result<String> {
-        let config = &_plot.config;
+        let config = &plot.config;
         let mut svg = String::new();
         let (min_x, max_x, min_y, max_y) = plot.bounds;
 
@@ -1809,7 +1809,7 @@ pub mod export {
 
         for (i, branch) in plot.branches.iter().enumerate() {
             let color = if i < plot.colors.len() {
-                &_plot.colors[i]
+                &plot.colors[i]
             } else {
                 "#000000"
             };
@@ -1835,7 +1835,7 @@ pub mod export {
 
         // Add node markers
         if config.styling.node_markers.show_leaf_nodes {
-            for leaf in &_plot.leaves {
+            for leaf in &plot.leaves {
                 let marker_svg = match config.styling.node_markers.markershape {
                     MarkerShape::Circle => format!(
                         "<circle cx=\"{}\" cy=\"{}\" r=\"{}\" fill=\"{}\"/>\n",
@@ -1865,7 +1865,7 @@ pub mod export {
         }
 
         // Add leaves with enhanced label styling
-        for leaf in &_plot.leaves {
+        for leaf in &plot.leaves {
             let font_weight = match config.styling.label_style.font_weight {
                 FontWeight::Normal => "normal",
                 FontWeight::Bold => "bold",
@@ -1912,7 +1912,7 @@ pub mod export {
 
     /// Export to HTML format
     fn export_to_html<F: Float + FromPrimitive + Debug>(
-        _plot: &DendrogramPlot<F>,
+        plot: &DendrogramPlot<F>,
     ) -> Result<String> {
         Ok("<html><body>HTML export not yet implemented</body></html>".to_string())
     }
@@ -1998,7 +1998,7 @@ pub mod export {
             })
             .collect();
 
-        let json_plot = JsonPlot {
+        let jsonplot = JsonPlot {
             branches: json_branches,
             leaves: plot.leaves.clone(),
             colors: plot.colors.clone(),
@@ -2010,7 +2010,7 @@ pub mod export {
             ),
         };
 
-        serde_json::to_string_pretty(&json_plot)
+        serde_json::to_string_pretty(&jsonplot)
             .map_err(|e| ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e)))
     }
 
@@ -2044,7 +2044,7 @@ pub mod export {
         csv.push_str("type,start_x,start_y,end_x,end_y,height,cluster_id,label\n");
 
         // Add branches
-        for branch in &_plot.branches {
+        for branch in &plot.branches {
             csv.push_str(&format!(
                 "branch,{},{},{},{},{},{},\n",
                 branch.start.0.to_f64().unwrap(),
@@ -2057,7 +2057,7 @@ pub mod export {
         }
 
         // Add leaves
-        for leaf in &_plot.leaves {
+        for leaf in &plot.leaves {
             csv.push_str(&format!(
                 "leaf,{},{},,,,,{}\n",
                 leaf.position.0, leaf.position.1, leaf.label
@@ -2093,7 +2093,7 @@ pub mod realtime {
     #[derive(Debug)]
     pub struct RealtimeDendrogram<F: Float> {
         /// Current dendrogram state
-        current_plot: Arc<Mutex<Option<DendrogramPlot<F>>>>,
+        currentplot: Arc<Mutex<Option<DendrogramPlot<F>>>>,
         /// Configuration for real-time updates
         config: RealtimeConfig,
         /// Update callback function
@@ -2133,7 +2133,7 @@ pub mod realtime {
         /// Create a new real-time dendrogram
         pub fn new(config: RealtimeConfig) -> Self {
             Self {
-                current_plot: Arc::new(Mutex::new(None)),
+                currentplot: Arc::new(Mutex::new(None)),
                 config,
                 update_callback: None,
                 is_active: Arc::new(Mutex::new(false)),
@@ -2153,7 +2153,7 @@ pub mod realtime {
             let mut is_active = self.is_active.lock().unwrap();
             *is_active = true;
 
-            let plot_ref = Arc::clone(&self.current_plot);
+            let plot_ref = Arc::clone(&self.currentplot);
             let callback_ref = self.update_callback.clone();
             let active_ref = Arc::clone(&self.is_active);
             let update_interval = Duration::from_millis(self.config.update_interval_ms);
@@ -2183,14 +2183,14 @@ pub mod realtime {
         }
 
         /// Update the dendrogram with new data
-        pub fn update_plot(&self, newplot: DendrogramPlot<F>) {
-            let mut current = self.current_plot.lock().unwrap();
-            *current = Some(new_plot);
+        pub fn updateplot(&self, newplot: DendrogramPlot<F>) {
+            let mut current = self.currentplot.lock().unwrap();
+            *current = Some(newplot);
         }
 
         /// Get current plot snapshot
-        pub fn get_current_plot(&self) -> Option<DendrogramPlot<F>> {
-            self.current_plot.lock().unwrap().clone()
+        pub fn get_currentplot(&self) -> Option<DendrogramPlot<F>> {
+            self.currentplot.lock().unwrap().clone()
         }
     }
 
@@ -2313,7 +2313,7 @@ pub mod realtime {
             buffer
                 .iter()
                 .filter_map(|m| {
-                    m.values.get(&metric_type).map(|&value| {
+                    m.values.get(&metrictype).map(|&value| {
                         let time_sec = m.timestamp.duration_since(self.start_time).as_secs_f64();
                         (time_sec, value)
                     })

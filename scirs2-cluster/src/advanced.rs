@@ -82,7 +82,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
     pub fn new(_nclusters: usize, config: QuantumConfig) -> Self {
         Self {
             config,
-            n_clusters,
+            n_clusters: _nclusters,
             quantum_centroids: None,
             quantum_amplitudes: None,
             classical_centroids: None,
@@ -505,13 +505,13 @@ impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
     /// Create a new adaptive online clustering instance
     pub fn new(config: AdaptiveOnlineConfig) -> Self {
         Self {
-            _config: config.clone(),
+            config: config.clone(),
             clusters: Vec::new(),
             learning_rate: config.initial_learning_rate,
             samples_processed: 0,
-            recent_distances: VecDeque::with_capacity(_config.concept_drift_window),
+            recent_distances: VecDeque::with_capacity(config.concept_drift_window),
             drift_detector: ConceptDriftDetector {
-                recent_errors: VecDeque::with_capacity(_config.concept_drift_window),
+                recent_errors: VecDeque::with_capacity(config.concept_drift_window),
                 baseline_error: 1.0,
                 window_size: config.concept_drift_window,
             },
@@ -592,7 +592,7 @@ impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
 
     /// Update an existing cluster with a new point
     fn update_cluster(&mut self, clusteridx: usize, point: ArrayView1<F>) -> Result<()> {
-        let cluster = &mut self.clusters[cluster_idx];
+        let cluster = &mut self.clusters[clusteridx];
 
         // Update weight with forgetting factor
         cluster.weight = cluster.weight * self.config.forgetting_factor + 1.0;
@@ -760,7 +760,7 @@ impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
     pub fn predict(&self, point: ArrayView1<F>) -> Result<usize> {
         let (nearest_cluster_idx_) = self.find_nearest_cluster(point);
 
-        nearest_cluster_idx.ok_or_else(|| {
+        nearest_cluster_idx_.ok_or_else(|| {
             ClusteringError::InvalidInput("No clusters available for prediction".to_string())
         })
     }
@@ -940,7 +940,7 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
 
             // Episode simulation
             for step in 0..n_samples {
-                let state = self.encode_state(&current_assignments..step);
+                let state = self.encode_state(&current_assignments[..step]);
 
                 // Choose action (cluster assignment)
                 let action = if rng.random::<f64>() < exploration_rate {
@@ -956,7 +956,7 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
                 current_assignments[step] = action;
 
                 // Calculate reward
-                let reward = self.calculate_reward(data..&current_assignments)?;
+                let reward = self.calculate_reward(data, &current_assignments)?;
 
                 // Update Q-table
                 let current_q = *self.q_table.get(&(state, action)).unwrap_or(&0.0);
@@ -993,13 +993,13 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
         // Simple state encoding: hash of recent assignments
         let mut hash = 0;
         let window = 5.min(assignments.len());
-        let start = if current_point >= window {
-            current_point - window
+        let start = if currentpoint >= window {
+            currentpoint - window
         } else {
             0
         };
 
-        for i in start..current_point {
+        for i in start..currentpoint {
             hash = hash * 10 + assignments[i];
         }
         hash % 10000 // Limit state space size
@@ -1292,7 +1292,7 @@ pub struct TransferLearningClustering<F: Float> {
     trained: bool,
 }
 
-impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
+impl<F: Float + FromPrimitive + Debug + 'static> TransferLearningClustering<F> {
     /// Create a new transfer learning clustering instance
     pub fn new(config: TransferLearningConfig) -> Self {
         Self {
@@ -1306,7 +1306,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
 
     /// Set source domain knowledge
     pub fn set_source_knowledge(&mut self, sourcecentroids: Array2<F>) {
-        self.source_centroids = Some(source_centroids);
+        self.source_centroids = Some(sourcecentroids);
     }
 
     /// Fit on target domain with transfer from source
@@ -1320,11 +1320,12 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
         }
 
         // Initialize target centroids
-        let mut target_centroids = Array2::zeros((n_clusters, n_features));
+        let mut target_centroids = Array2::zeros((nclusters, n_features));
 
         if let Some(ref source_centroids) = self.source_centroids {
             // Transfer learning from source
-            self.transfer_from_source(&mut target_centroids, source_centroids, target_data)?;
+            let source_centroids = source_centroids.clone();
+            self.transfer_from_source(&mut target_centroids, &source_centroids, target_data)?;
         } else {
             // No source knowledge, use random initialization
             self.initialize_target_centroids(&mut target_centroids, target_data)?;
@@ -1428,7 +1429,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
     fn compute_pca_alignment(
         &self,
         _source_centroids: &Array2<F>,
-        _target_data: ArrayView2<F>,
+        target_data: ArrayView2<F>,
     ) -> Result<Array2<F>> {
         // Simplified: return identity matrix
         // In a full implementation, this would compute PCA on both domains
@@ -1441,7 +1442,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
     fn compute_correlation_alignment(
         &self,
         _source_centroids: &Array2<F>,
-        _target_data: ArrayView2<F>,
+        target_data: ArrayView2<F>,
     ) -> Result<Array2<F>> {
         // Simplified: return identity matrix
         // In a full implementation, this would align feature correlations
@@ -1588,7 +1589,7 @@ pub fn rl_clustering<F: Float + FromPrimitive + Debug>(
 
 /// Convenience function for transfer learning clustering
 #[allow(dead_code)]
-pub fn transfer_learning_clustering<F: Float + FromPrimitive + Debug>(
+pub fn transfer_learning_clustering<F: Float + FromPrimitive + Debug + 'static>(
     source_centroids: Option<Array2<F>>,
     target_data: ArrayView2<F>,
     n_clusters: usize,
@@ -1697,12 +1698,12 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
         let mut rng = rand::rng();
 
         // Initialize encoder
-        let mut prev_dim = input_dim;
-        for &_dim in &self.config.encoder_dims {
+        let mut prev_dim = inputdim;
+        for &dim in &self.config.encoder_dims {
             let weight = Array2::fromshape_fn((prev_dim, dim), |_| {
                 F::from(rng.gen_range(-0.1..0.1)).unwrap()
             });
-            let bias = Array1::zeros(_dim);
+            let bias = Array1::zeros(dim);
 
             self.encoderweights.push(weight);
             self.encoder_biases.push(bias);
@@ -1719,11 +1720,11 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
 
         // Initialize decoder (reverse of encoder)
         prev_dim = self.config.embedding_dim;
-        for &_dim in &self.config.decoder_dims {
-            let weight = Array2::fromshape_fn((prev_dim.._dim), |_| {
+        for &dim in &self.config.decoder_dims {
+            let weight = Array2::fromshape_fn((prev_dim, dim), |_| {
                 F::from(rng.gen_range(-0.1..0.1)).unwrap()
             });
-            let bias = Array1::zeros(_dim);
+            let bias = Array1::zeros(dim);
 
             self.decoderweights.push(weight);
             self.decoder_biases.push(bias);
@@ -1731,10 +1732,10 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
         }
 
         // Add final reconstruction layer
-        let output_weight = Array2::fromshape_fn((prev_dim..input_dim), |_| {
+        let output_weight = Array2::fromshape_fn((prev_dim, inputdim), |_| {
             F::from(rng.gen_range(-0.1..0.1)).unwrap()
         });
-        let output_bias = Array1::zeros(input_dim);
+        let output_bias = Array1::zeros(inputdim);
         self.decoderweights.push(output_weight);
         self.decoder_biases.push(output_bias);
 
@@ -1906,7 +1907,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
             None,
         ) {
             Ok((centers_f64_)) => {
-                let centers = centers_f64.mapv(|x| F::from(x).unwrap_or(F::zero()));
+                let centers = centers_f64_.mapv(|x| F::from(x).unwrap_or(F::zero()));
                 self.cluster_centers = Some(centers);
                 Ok(())
             }
@@ -2180,7 +2181,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
 
         Self {
             config,
-            n_clusters,
+            n_clusters: _nclusters,
             gamma_params,
             beta_params,
             adjacency_matrix: None,
@@ -2220,7 +2221,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
 
     /// Initialize quantum state (uniform superposition)
     fn initialize_quantum_state(&mut self, nqubits: usize) -> Result<()> {
-        let n_states = 1 << n_qubits; // 2^n_qubits
+        let n_states = 1 << nqubits; // 2^nqubits
         let amplitude = F::one() / F::from(n_states as f64).unwrap().sqrt();
         let state = Array1::from_elem(n_states, amplitude);
         self.quantum_state = Some(state);
@@ -2232,7 +2233,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
         if let (Some(ref adj_matrix), Some(ref mut state)) =
             (&self.adjacency_matrix, &mut self.quantum_state)
         {
-            let n_qubits = (adj_matrix.nrows() as f64).log2() as usize;
+            let nqubits = (adj_matrix.nrows() as f64).log2() as usize;
             let n_states = state.len();
 
             // Apply cost function based on adjacency matrix
@@ -2241,8 +2242,8 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
                 let mut cost = F::zero();
 
                 // Calculate cost based on bit string representation
-                for j in 0..n_qubits {
-                    for k in (j + 1)..n_qubits {
+                for j in 0..nqubits {
+                    for k in (j + 1)..nqubits {
                         if j < adj_matrix.nrows() && k < adj_matrix.ncols() {
                             let bit_j = (i >> j) & 1;
                             let bit_k = (i >> k) & 1;
@@ -2267,12 +2268,12 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
     /// Apply QAOA mixer unitary (X rotations)
     fn apply_mixer_unitary(&mut self, beta: F) -> Result<()> {
         if let Some(ref mut state) = &mut self.quantum_state {
-            let n_qubits = (state.len() as f64).log2() as usize;
+            let nqubits = (state.len() as f64).log2() as usize;
             let mut new_state = Array1::zeros(state.len());
 
             // Apply mixer Hamiltonian (sum of X gates)
             for i in 0..state.len() {
-                for qubit in 0..n_qubits {
+                for qubit in 0..nqubits {
                     let flipped_state = i ^ (1 << qubit); // Flip qubit
                     let cos_beta = beta.cos();
                     let sin_beta = beta.sin();
@@ -2293,8 +2294,8 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
     /// Execute QAOA circuit
     fn execute_qaoa_circuit(&mut self) -> Result<F> {
         if let Some(ref adj_matrix) = &self.adjacency_matrix {
-            let n_qubits = adj_matrix.nrows().min(20); // Limit for classical simulation
-            self.initialize_quantum_state(n_qubits)?;
+            let nqubits = adj_matrix.nrows().min(20); // Limit for classical simulation
+            self.initialize_quantum_state(nqubits)?;
 
             // Apply QAOA layers
             for layer in 0..self.config.p_layers {
@@ -2319,7 +2320,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
         if let (Some(ref state), Some(ref adj_matrix)) =
             (&self.quantum_state, &self.adjacency_matrix)
         {
-            let n_qubits = (state.len() as f64).log2() as usize;
+            let nqubits = (state.len() as f64).log2() as usize;
             let mut expectation = F::zero();
 
             for i in 0..state.len() {
@@ -2327,8 +2328,8 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
                 let mut cost = F::zero();
 
                 // Calculate cost for this bit string
-                for j in 0..n_qubits {
-                    for k in (j + 1)..n_qubits {
+                for j in 0..nqubits {
+                    for k in (j + 1)..nqubits {
                         if j < adj_matrix.nrows() && k < adj_matrix.ncols() {
                             let bit_j = (i >> j) & 1;
                             let bit_k = (i >> k) & 1;
@@ -2411,8 +2412,8 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
     /// Sample cluster assignments from final quantum state
     fn sample_assignments(&mut self) -> Result<Array1<usize>> {
         if let Some(ref state) = &self.quantum_state {
-            let n_qubits = (state.len() as f64).log2() as usize;
-            let mut assignments = Array1::zeros(n_qubits);
+            let nqubits = (state.len() as f64).log2() as usize;
+            let mut assignments = Array1::zeros(nqubits);
             let mut rng = rand::rng();
 
             // Sample from probability distribution
@@ -2426,7 +2427,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
 
                     if random_val < cumulative_prob {
                         // Convert bit string to cluster assignments
-                        for j in 0..n_qubits {
+                        for j in 0..nqubits {
                             let bit = (i >> j) & 1;
                             assignments[j] = bit % self.n_clusters;
                         }
@@ -2569,7 +2570,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
 
         Self {
             config,
-            n_clusters,
+            n_clusters: _nclusters,
             variational_params: params,
             hamiltonian_matrix: None,
             eigenvalues: None,
@@ -2626,7 +2627,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
 
     /// Prepare variational quantum state using ansatz
     fn prepare_variational_state(&self, nqubits: usize) -> Result<Array1<F>> {
-        let n_states = 1 << n_qubits;
+        let n_states = 1 << nqubits;
         let mut state = Array1::zeros(n_states);
         state[0] = F::one(); // Start with |0...0>
 
@@ -2634,7 +2635,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
             VQEAnsatz::HardwareEfficient => {
                 // Apply hardware-efficient ansatz
                 for (i, &param) in self.variational_params.iter().enumerate() {
-                    let qubit = i % n_qubits;
+                    let qubit = i % nqubits;
                     // Apply RY rotation (simplified)
                     let cos_half = (param / F::from(2.0).unwrap()).cos();
                     let sin_half = (param / F::from(2.0).unwrap()).sin();
@@ -2658,7 +2659,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
             _ => {
                 // Simplified ansatz
                 for (i, &param) in self.variational_params.iter().enumerate() {
-                    let qubit = i % n_qubits;
+                    let qubit = i % nqubits;
                     // Apply parameterized gate
                     state[1 << qubit] = param.sin();
                     state[0] = param.cos();
@@ -2682,8 +2683,8 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
     /// Compute expectation value of Hamiltonian
     fn compute_expectation_value(&self) -> Result<F> {
         if let Some(ref hamiltonian) = &self.hamiltonian_matrix {
-            let n_qubits = hamiltonian.nrows().min(10); // Limit for simulation
-            let state = self.prepare_variational_state(n_qubits)?;
+            let nqubits = hamiltonian.nrows().min(10); // Limit for simulation
+            let state = self.prepare_variational_state(nqubits)?;
 
             let mut expectation = F::zero();
 

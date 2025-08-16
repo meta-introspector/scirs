@@ -8,10 +8,10 @@
 //!
 //! Note: This requires scikit-learn to be installed for Python comparison benchmarks
 
-use scirs2__datasets::{
+use scirs2_datasets::{
     benchmarks::{BenchmarkRunner, BenchmarkSuite},
     load_boston, load_breast_cancer, load_digits, load_iris, load_wine, make_classification,
-    make_regression,
+    make_regression, Dataset,
 };
 use std::collections::HashMap;
 use std::process::Command;
@@ -28,23 +28,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_memory_measurement(false);
 
     // Run comprehensive SciRS2 benchmarks
-    let scirs2_suites = runner.run_comprehensive_benchmarks();
+    let scirs2suites = runner.run_comprehensive_benchmarks();
 
     println!("{}", "\n".to_owned() + &"=".repeat(60));
     println!("DETAILED ANALYSIS");
     println!("{}", "=".repeat(60));
 
     // Analyze toy dataset performance
-    analyze_toy_dataset_performance(&scirs2_suites);
+    analyze_toy_dataset_performance(&scirs2suites);
 
     // Analyze data generation performance
-    analyze_data_generation_performance(&scirs2_suites);
+    analyze_data_generation_performance(&scirs2suites);
 
     // Run Python comparison benchmarks (if available)
     run_python_comparison_benchmarks();
 
     // Generate performance report
-    generate_performance_report(&scirs2_suites);
+    generate_performance_report(&scirs2suites);
 
     println!("\n🎉 Benchmark suite completed successfully!");
     println!("Check the generated performance report for detailed analysis.");
@@ -60,18 +60,18 @@ fn analyze_toy_dataset_performance(suites: &[BenchmarkSuite]) {
 
         let mut total_loading_time = Duration::ZERO;
         let mut total_samples = 0;
-        let mut fastest_dataset = ("", Duration::MAX);
-        let mut slowest_dataset = ("", Duration::ZERO);
+        let mut fastestdataset = ("", Duration::MAX);
+        let mut slowestdataset = ("", Duration::ZERO);
 
         for result in toy_suite.successful_results() {
             total_loading_time += result.duration;
             total_samples += result.samples;
 
-            if result.duration < fastest_dataset.1 {
-                fastest_dataset = (&result.operation, result.duration);
+            if result.duration < fastestdataset.1 {
+                fastestdataset = (&result.operation, result.duration);
             }
-            if result.duration > slowest_dataset.1 {
-                slowest_dataset = (&result.operation, result.duration);
+            if result.duration > slowestdataset.1 {
+                slowestdataset = (&result.operation, result.duration);
             }
 
             println!(
@@ -95,13 +95,13 @@ fn analyze_toy_dataset_performance(suites: &[BenchmarkSuite]) {
         );
         println!(
             "    Fastest: {} ({})",
-            fastest_dataset.0,
-            format_duration(fastest_dataset.1)
+            fastestdataset.0,
+            format_duration(fastestdataset.1)
         );
         println!(
             "    Slowest: {} ({})",
-            slowest_dataset.0,
-            format_duration(slowest_dataset.1)
+            slowestdataset.0,
+            format_duration(slowestdataset.1)
         );
     }
 }
@@ -206,11 +206,11 @@ fn analyze_scaling_performance(suite: &BenchmarkSuite) {
 
     // Calculate scaling efficiency
     if sizes.len() >= 2 {
-        let small_size = sizes[0];
-        let large_size = sizes[sizes.len() - 1];
+        let smallsize = sizes[0];
+        let largesize = sizes[sizes.len() - 1];
 
         if let (Some(small_results), Some(large_results)) =
-            (size_groups.get(small_size), size_groups.get(large_size))
+            (size_groups.get(smallsize), size_groups.get(largesize))
         {
             let small_avg = small_results.iter().map(|r| r.throughput).sum::<f64>()
                 / small_results.len() as f64;
@@ -218,7 +218,7 @@ fn analyze_scaling_performance(suite: &BenchmarkSuite) {
                 / large_results.len() as f64;
 
             let efficiency = large_avg / small_avg;
-            let size_ratio = *large_size as f64 / *small_size as f64;
+            let size_ratio = *largesize as f64 / *smallsize as f64;
 
             println!("    Scaling efficiency: {efficiency:.2}x (size increased {size_ratio:.1}x)");
 
@@ -354,14 +354,14 @@ fn run_sklearn_generation_comparison() {
     ];
 
     for (n_samples, n_features, gen_type) in configs {
-        let (python_code, scirs2_fn): (&str, Box<dyn Fn() -> Result<__>>) = match gen_type {
+        let (python_code, scirs2_fn): (&str, Box<dyn Fn() -> Result<Dataset, Box<dyn std::error::Error>>>) = match gen_type {
             "classification" => (
                 &format!("from sklearn.datasets import make_classification; make_classification(n_samples={n_samples}, n_features={n_features}, random_state=42)"),
-                Box::new(move || make_classification(n_samples, n_features, 3, 2, 4, Some(42)))
+                Box::new(move || make_classification(n_samples, n_features, 3, 2, 4, Some(42)).map_err(|e| Box::new(e) as Box<dyn std::error::Error>))
             ),
             "regression" => (
                 &format!("from sklearn.datasets import make_regression; make_regression(n_samples={n_samples}, n_features={n_features}, random_state=42)"),
-                Box::new(move || make_regression(n_samples, n_features, 3, 0.1, Some(42)))
+                Box::new(move || make_regression(n_samples, n_features, 3, 0.1, Some(42)).map_err(|e| Box::new(e) as Box<dyn std::error::Error>))
             ),
             _ => continue,
         };
@@ -424,7 +424,7 @@ fn generate_performance_report(suites: &[BenchmarkSuite]) {
     let mut total_samples = 0;
     let mut total_duration = Duration::ZERO;
 
-    for suite in _suites {
+    for suite in suites {
         total_operations += suite.results.len();
         total_samples += suite.total_samples();
         total_duration += suite.total_duration;

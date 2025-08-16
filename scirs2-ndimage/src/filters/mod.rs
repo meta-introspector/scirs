@@ -15,34 +15,34 @@ pub use bilateral::{bilateral_filter_simd_f32, bilateral_filter_simd_f64};
 
 // SIMD specialized exports
 #[cfg(feature = "simd")]
-pub use simd__specialized::{
+pub use simd_specialized::{
     simd_anisotropic_diffusion, simd_bilateral_filter, simd_non_local_means,
 };
 
 // Advanced SIMD optimized exports
 #[cfg(feature = "simd")]
-pub use advanced_simd__optimized::{
+pub use advanced_simd_optimized::{
     advanced_simd_gaussian_pyramid, advanced_simd_morphological_erosion_2d,
     advanced_simd_template_matching,
 };
 
 // Advanced SIMD enhanced exports
 #[cfg(feature = "simd")]
-pub use advanced_simd__enhanced::{
+pub use advanced_simd_enhanced::{
     advanced_simd_convolution_2d, advanced_simd_median_filter,
     advanced_simd_separable_convolution_2d,
 };
 
 // Advanced SIMD extensions exports
 #[cfg(feature = "simd")]
-pub use advanced_simd__extensions::{
+pub use advanced_simd_extensions::{
     advanced_simd_advanced_edge_detection, advanced_simd_multi_scale_lbp,
     advanced_simd_wavelet_pyramid, WaveletPyramid, WaveletType,
 };
 
 // Enhanced SIMD optimizations exports
 #[cfg(feature = "simd")]
-pub use simd_enhanced__optimizations::{
+pub use simd_enhanced_optimizations::{
     simd_gradient_magnitude, simd_histogram, simd_local_binary_pattern,
     simd_morphological_operation, simdimage_moments, GradientOperator, MorphologicalOperation,
 };

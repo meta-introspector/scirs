@@ -144,10 +144,10 @@ impl RgbColor {
 /// Create a color map for visualization
 #[allow(dead_code)]
 pub fn create_colormap(_colormap: ColorMap, numcolors: usize) -> Vec<RgbColor> {
-    let mut _colors = Vec::with_capacity(num_colors);
+    let mut _colors = Vec::with_capacity(numcolors);
 
-    for i in 0..num_colors {
-        let t = i as f64 / (num_colors - 1) as f64;
+    for i in 0..numcolors {
+        let t = i as f64 / (numcolors - 1) as f64;
         let color = match _colormap {
             ColorMap::Gray => {
                 let val = (t * 255.0) as u8;
@@ -164,7 +164,7 @@ pub fn create_colormap(_colormap: ColorMap, numcolors: usize) -> Vec<RgbColor> {
             ColorMap::Autumn => autumn_colormap(t),
             ColorMap::Winter => winter_colormap(t),
         };
-        colors.push(color);
+        _colors.push(color);
     }
 
     _colors
@@ -1316,7 +1316,7 @@ where
     }
 
     // Calculate contour _levels
-    let mut _levels = Vec::new();
+    let mut levels = Vec::new();
     for i in 0..num_levels {
         let t = i as f64 / (num_levels - 1) as f64;
         let level = min_val + (max_val - min_val) * safe_f64_to_float::<T>(t)?;

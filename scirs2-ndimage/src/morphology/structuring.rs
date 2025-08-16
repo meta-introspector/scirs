@@ -219,7 +219,7 @@ pub fn box_structure(shape: &[usize]) -> NdimageResult<Array<bool, IxDyn>> {
 #[allow(dead_code)]
 pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Array<bool, IxDyn>> {
     // Validate inputs
-    if _radius <= 0.0 {
+    if radius <= 0.0 {
         return Err(NdimageError::InvalidInput(
             "Radius must be greater than 0".into(),
         ));
@@ -249,7 +249,7 @@ pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Ar
                     let dx = i as f64 - center;
                     let dy = j as f64 - center;
                     let distance = (dx * dx + dy * dy).sqrt();
-                    if distance <= _radius {
+                    if distance <= radius {
                         structure[[i, j]] = true;
                     }
                 }
@@ -275,7 +275,7 @@ pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Ar
                     let dx = i as f64 - center;
                     let dy = j as f64 - center;
                     let distance = (dx * dx + dy * dy).sqrt();
-                    if distance <= _radius {
+                    if distance <= radius {
                         structure[[i, j]] = true;
                     }
                 }
@@ -295,7 +295,7 @@ pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Ar
 ///
 /// Creates a default cross-shaped structure for each rank
 pub(crate) fn generate_binary_structure_dyn(rank: usize) -> NdimageResult<Array<bool, IxDyn>> {
-    generate_binary_structure(_rank, Connectivity::Face)
+    generate_binary_structure(rank, Connectivity::Face)
 }
 
 #[cfg(test)]

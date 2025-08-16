@@ -6,7 +6,7 @@
 //! Usage:
 //!   cargo run --example real_world_datasets --release
 
-use scirs2__datasets::{
+use scirs2_datasets::{
     list_real_world_datasets, load_adult, load_california_housing, load_heart_disease,
     load_red_wine_quality, load_titanic,
     utils::{k_fold_split, train_test_split},
@@ -203,7 +203,7 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
 
     // Analyze target distribution
     if let Some(target) = &housing.target {
-        let mean = target.mean().unwrap();
+        let mean = target.mean().unwrap_or(0.0);
         let std = target.std(0.0);
         let min = target.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max = target.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -229,7 +229,7 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Features: {}", wine.n_features());
 
     if let Some(target) = &wine.target {
-        let mean_quality = target.mean().unwrap();
+        let mean_quality = target.mean().unwrap_or(0.0);
         println!("  Average wine quality: {mean_quality:.1}/10");
 
         // Quality distribution
@@ -290,7 +290,7 @@ fn demonstrate_healthcare_datasets() -> Result<(), Box<dyn std::error::Error>> {
     // Demonstrate feature analysis
     println!("  Sample clinical parameter ranges:");
     let age_col = heart.data.column(0);
-    let age_mean = age_col.mean().unwrap();
+    let age_mean = age_col.mean();
     let age_std = age_col.std(0.0);
     println!("    Age: {age_mean:.1} ± {age_std:.1} years");
 

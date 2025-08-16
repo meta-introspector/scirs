@@ -137,7 +137,7 @@ pub enum TaskPriority {
 #[derive(Debug, Clone)]
 pub struct TaskResult<F: Float> {
     /// Task identifier
-    pub task_id: String,
+    pub taskid: String,
     /// Execution status
     pub status: TaskStatus,
     /// Result data
@@ -315,10 +315,10 @@ impl<
             }
         }
 
-        // Add to queue with priority ordering
+        // Add to queue with priority ordering (higher priority first)
         let insert_pos = self
             .task_queue
-            .binary_search_by(|t| task.priority.cmp(&t.priority).reverse())
+            .binary_search_by(|t| t.priority.cmp(&task.priority).reverse())
             .unwrap_or_else(|pos| pos);
 
         self.task_queue.insert(insert_pos, task);
@@ -431,7 +431,7 @@ impl<
                 info.status == NodeStatus::Available
                     && info.running_tasks < self.config.max_concurrent_tasks
             })
-            .map(|(address)| address)
+            .map(|(address, _)| address)
             .collect();
 
         if available_nodes.is_empty() {
@@ -543,7 +543,7 @@ impl<
         }
 
         Ok(TaskResult {
-            task_id: task.id.clone(),
+            taskid: task.id.clone(),
             status: TaskStatus::Completed,
             data: Some(result_data),
             metrics: TaskMetrics {
@@ -650,13 +650,13 @@ impl<
         let mut chunk_indices = Vec::new();
 
         // Collect all forecast results
-        for (task_id, result) in &self.completed_tasks {
-            if task_id.starts_with("forecast_chunk_") && result.status == TaskStatus::Completed {
+        for (taskid, result) in &self.completed_tasks {
+            if taskid.starts_with("forecast_chunk_") && result.status == TaskStatus::Completed {
                 if let Some(data) = &result.data {
                     all_forecasts.push(data.clone());
 
                     // Extract chunk index for proper ordering
-                    if let Some(chunk_str) = task_id.strip_prefix("forecast_chunk_") {
+                    if let Some(chunk_str) = taskid.strip_prefix("forecast_chunk_") {
                         if let Ok(index) = chunk_str.parse::<usize>() {
                             chunk_indices.push(index);
                         }
@@ -672,7 +672,7 @@ impl<
         // Sort forecasts by chunk index
         let mut indexed_forecasts: Vec<(usize, Array1<F>)> =
             chunk_indices.into_iter().zip(all_forecasts).collect();
-        indexed_forecasts.sort_by_key(|(index_)| *index);
+        indexed_forecasts.sort_by_key(|(index_, _)| *index_);
 
         // Aggregate by averaging (simple ensemble approach)
         let mut final_forecast = Array1::zeros(horizon);
@@ -699,13 +699,13 @@ impl<
         let mut window_indices = Vec::new();
 
         // Collect all feature results
-        for (task_id, result) in &self.completed_tasks {
-            if task_id.starts_with("features_window_") && result.status == TaskStatus::Completed {
+        for (taskid, result) in &self.completed_tasks {
+            if taskid.starts_with("features_window_") && result.status == TaskStatus::Completed {
                 if let Some(data) = &result.data {
                     all_features.push(data.clone());
 
                     // Extract window index
-                    if let Some(window_str) = task_id.strip_prefix("features_window_") {
+                    if let Some(window_str) = taskid.strip_prefix("features_window_") {
                         if let Ok(index) = window_str.parse::<usize>() {
                             window_indices.push(index);
                         }
@@ -715,17 +715,17 @@ impl<
         }
 
         if all_features.is_empty() {
-            return Ok(Array2::zeros((0, num_features)));
+            return Ok(Array2::zeros((0, numfeatures)));
         }
 
         // Sort by window index
         let mut indexed_features: Vec<(usize, Array1<F>)> =
             window_indices.into_iter().zip(all_features).collect();
-        indexed_features.sort_by_key(|(index_)| *index);
+        indexed_features.sort_by_key(|(index_, _)| *index_);
 
         // Combine into matrix
         let num_windows = indexed_features.len();
-        let feature_size = indexed_features[0].1.len().min(num_features);
+        let feature_size = indexed_features[0].1.len().min(numfeatures);
         let mut result = Array2::zeros((num_windows, feature_size));
 
         for (row, (_, features)) in indexed_features.iter().enumerate() {
@@ -780,12 +780,12 @@ impl<
 
     /// Cancel a running task
     pub fn cancel_task(&mut self, taskid: &str) -> Result<()> {
-        if let Some(_task) = self.running_tasks.remove(task_id) {
+        if let Some(_task) = self.running_tasks.remove(taskid) {
             // Add cancelled result
             self.completed_tasks.insert(
-                task_id.to_string(),
+                taskid.to_string(),
                 TaskResult {
-                    task_id: task_id.to_string(),
+                    taskid: taskid.to_string(),
                     status: TaskStatus::Cancelled,
                     data: None,
                     metrics: TaskMetrics::default(),
@@ -795,7 +795,7 @@ impl<
             Ok(())
         } else {
             Err(TimeSeriesError::InvalidInput(format!(
-                "Task {task_id} not found in running tasks"
+                "Task {taskid} not found in running tasks"
             )))
         }
     }

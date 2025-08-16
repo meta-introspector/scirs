@@ -85,9 +85,9 @@ where
 
     // Apply the selected filtering method
     match options.method {
-        RobustFilterMethod::HodrickPrescott => robust_hodrick_prescott(_ts, options),
-        RobustFilterMethod::L1Filter => l1_trend_filter(_ts, options),
-        RobustFilterMethod::Whittaker => robust_whittaker_smoother(_ts, options),
+        RobustFilterMethod::HodrickPrescott => robust_hodrick_prescott(ts, options),
+        RobustFilterMethod::L1Filter => l1_trend_filter(ts, options),
+        RobustFilterMethod::Whittaker => robust_whittaker_smoother(ts, options),
     }
 }
 
@@ -337,7 +337,7 @@ where
 
         // x-update: solve (I + D'D)x = y + D'(z - u)
         let dt_zu = d.t().dot(&(z.clone() - u.clone()));
-        let rhs = _ts + &dt_zu;
+        let rhs = ts + &dt_zu;
 
         // Forward substitution
         let mut y_temp = Array1::<F>::zeros(n);
@@ -529,12 +529,12 @@ where
     F: Float + FromPrimitive + Debug + 'static,
 {
     // First, compute the main trend estimate
-    let trend = robust_trend_filter(ts_options)?;
+    let trend = robust_trend_filter(ts, options)?;
 
     // Then compute confidence intervals
     let (lower, upper) =
         super::confidence::compute_trend_confidence_interval(ts, &trend, ci_options, |data| {
-            robust_trend_filter(data_options)
+            robust_trend_filter(data, options)
         })?;
 
     Ok(TrendWithConfidenceInterval {

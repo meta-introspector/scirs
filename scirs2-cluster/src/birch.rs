@@ -27,10 +27,10 @@ struct ClusteringFeature<F: Float> {
 impl<F: Float + FromPrimitive + ScalarOperand> ClusteringFeature<F> {
     /// Create a new CF from a single data point
     fn new(_datapoint: ArrayView1<F>) -> Self {
-        let squared_sum = data_point.dot(&_data_point);
+        let squared_sum = _datapoint.dot(&_datapoint);
         Self {
             n: 1,
-            linear_sum: data_point.to_owned(),
+            linear_sum: _datapoint.to_owned(),
             squared_sum,
         }
     }
@@ -39,7 +39,7 @@ impl<F: Float + FromPrimitive + ScalarOperand> ClusteringFeature<F> {
     fn empty(_nfeatures: usize) -> Self {
         Self {
             n: 0,
-            linear_sum: Array1::zeros(_n_features),
+            linear_sum: Array1::zeros(_nfeatures),
             squared_sum: F::zero(),
         }
     }
@@ -211,23 +211,23 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
 
     /// Insert a single point into the CF-tree
     fn insert_point(&mut self, point: ArrayView1<F>) -> Result<()> {
-        let new_cf = ClusteringFeature::new(point);
+        let newcf = ClusteringFeature::new(point);
 
         if self.leaf_entries.is_empty() {
             // First point - create initial CF
-            self.leaf_entries.push(new_cf);
+            self.leaf_entries.push(newcf);
             return Ok(());
         }
 
         // Find the closest leaf entry
-        let (_leaf_idx, cf_idx) = self.find_closest_leaf(&new_cf)?;
+        let (_leaf_idx, cf_idx) = self.find_closest_leaf(&newcf)?;
 
         // Try to absorb the point into the closest CF
         if cf_idx < self.leaf_entries.len() {
             let closest_cf = &self.leaf_entries[cf_idx];
 
             // Create a temporary merged CF to check if it would satisfy the threshold
-            let merged_cf = closest_cf.merge(&new_cf);
+            let merged_cf = closest_cf.merge(&newcf);
 
             // Check if the merged CF would have an acceptable radius
             if merged_cf.radius() <= self.options.threshold {
@@ -237,11 +237,11 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
                 // Cannot absorb - check if we can add a new CF
                 if self.leaf_entries.len() < self.options.branching_factor {
                     // Add as new CF
-                    self.leaf_entries.push(new_cf);
+                    self.leaf_entries.push(newcf);
                 } else {
                     // Need to split or merge existing CFs
                     // For now, replace the furthest CF or merge with closest
-                    self.handle_overflow(new_cf)?;
+                    self.handle_overflow(newcf)?;
                 }
             }
         }
@@ -253,7 +253,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
     fn handle_overflow(&mut self, newcf: ClusteringFeature<F>) -> Result<()> {
         // Simple strategy: find the two closest CFs and merge them, then add the new CF
         if self.leaf_entries.len() < 2 {
-            self.leaf_entries.push(new_cf);
+            self.leaf_entries.push(newcf);
             return Ok(());
         }
 
@@ -298,7 +298,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
 
         // Add the merged CF and the new CF
         self.leaf_entries.push(merged);
-        self.leaf_entries.push(new_cf);
+        self.leaf_entries.push(newcf);
 
         Ok(())
     }
@@ -578,7 +578,7 @@ where
     F: Float + FromPrimitive + Debug + ScalarOperand,
 {
     let mut model = Birch::new(options);
-    model.fit(_data)?;
+    model.fit(data)?;
     model.extract_clusters()
 }
 
