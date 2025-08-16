@@ -581,7 +581,7 @@ impl AsyncDifferentialEvolution {
             // Select three random individuals (different from current)
             let mut indices = Vec::new();
             while indices.len() < 3 {
-                let idx = rng.gen_range(0..self.population_size);
+                let idx = rng.random_range(0..self.population_size);
                 if idx != i && !indices.contains(&idx) {
                     indices.push(idx);
                 }
@@ -605,7 +605,7 @@ impl AsyncDifferentialEvolution {
 
             // Crossover
             let mut trial = current_population.row(i).to_owned();
-            let r = rng.gen_range(0..self.dimensions);
+            let r = rng.random_range(0..self.dimensions);
 
             for j in 0..self.dimensions {
                 if j == r || rng.gen::<f64>() < self.crossover_probability {
@@ -669,7 +669,7 @@ mod tests {
         // Function with varying evaluation times
         let objective = |x: Array1<f64>| async move {
             // Simulate varying computation times (10ms to 100ms)
-            let delay = rand::rng().gen_range(10..=100);
+            let delay = rand::rng().random_range(10..=100);
             sleep(Duration::from_millis(delay)).await;
 
             // Rosenbrock function (2D)

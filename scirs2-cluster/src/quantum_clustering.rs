@@ -147,6 +147,7 @@ pub struct QAOAClustering<F: Float> {
     beta_params: Array1<f64>,
     quantum_state: Array1<f64>, // Probability amplitudes
     cost_hamiltonian: Array2<f64>,
+    _phantom: std::marker::PhantomData<F>,
     mixer_hamiltonian: Array2<f64>,
     fitted: bool,
     final_assignments: Option<Array1<usize>>,
@@ -168,6 +169,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
             fitted: false,
             final_assignments: None,
             final_energy: None,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -368,8 +370,8 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
         let mut rng = rand::rng();
 
         for i in 0..self.config.p_layers {
-            self.gamma_params[i] = rng.gen_range(0.0..PI);
-            self.beta_params[i] = rng.gen_range(0.0..PI / 2.0);
+            self.gamma_params[i] = rng.random_range(0.0..PI);
+            self.beta_params[i] = rng.random_range(0.0..PI / 2.0);
         }
     }
 
@@ -637,6 +639,7 @@ pub struct VQEClustering<F: Float> {
     ground_state_energy: Option<f64>,
     optimal_parameters: Option<Array1<f64>>,
     fitted: bool,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
@@ -651,6 +654,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
             ground_state_energy: None,
             optimal_parameters: None,
             fitted: false,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -705,7 +709,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
         let mut rng = rand::rng();
 
         for i in 0..self.circuit_parameters.len() {
-            self.circuit_parameters[i] = rng.gen_range(-PI..PI);
+            self.circuit_parameters[i] = rng.random_range(-PI..PI);
         }
     }
 
@@ -1165,6 +1169,7 @@ pub struct QuantumAnnealingClustering<F: Float> {
     best_energy: Option<f64>,
     temperature_schedule: Vec<f64>,
     fitted: bool,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
@@ -1179,6 +1184,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
             best_energy: None,
             temperature_schedule: Vec::new(),
             fitted: false,
+            _phantom: std::marker::PhantomData,
         }
     }
 

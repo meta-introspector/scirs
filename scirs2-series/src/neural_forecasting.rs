@@ -4392,8 +4392,8 @@ mod tests {
         )
         .unwrap();
 
-        let input =
-            Array2::from_shape_vec((20, 64), (0..1280).map(|i| i as f64 * 0.001).collect()).unwrap();
+        let input = Array2::from_shape_vec((20, 64), (0..1280).map(|i| i as f64 * 0.001).collect())
+            .unwrap();
 
         let output = flash_attn.forward(&input).unwrap();
         assert_eq!(output.dim(), (20, 64));
@@ -4659,8 +4659,9 @@ mod tests {
         let mqa = MultiQueryAttention::<f64>::new(64, 8).unwrap();
         let mha = MultiHeadAttention::<f64>::new(64, 8).unwrap();
 
-        let input = Array2::from_shape_vec((16, 64), (0..1024).map(|i| i as f64 * 0.0005).collect())
-            .unwrap();
+        let input =
+            Array2::from_shape_vec((16, 64), (0..1024).map(|i| i as f64 * 0.0005).collect())
+                .unwrap();
 
         let mqa_output = mqa.forward(&input).unwrap();
         let mha_output = mha.forward(&input).unwrap();

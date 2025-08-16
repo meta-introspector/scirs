@@ -5,6 +5,8 @@
 
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, Zero};
+use rand::prelude::*;
+use rand::seq::SliceRandom;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
@@ -361,9 +363,10 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                         "Custom centroids dimensions don't match".to_string(),
                     ));
                 }
-                let converted_centroids = Array2::fromshape_fn((self.k, data.ncols()), |(i, j)| {
-                    F::from(centroids[[i, j]]).unwrap_or_else(F::zero)
-                });
+                let converted_centroids =
+                    Array2::from_shape_fn((self.k, data.ncols()), |(i, j)| {
+                        F::from(centroids[[i, j]]).unwrap_or_else(F::zero)
+                    });
                 Ok(converted_centroids)
             }
         }
@@ -376,6 +379,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         let mut rng = rand::thread_rng();
         let data_indices: Vec<usize> = (0..data.nrows()).collect();
         let selected_indices: Vec<_> = data_indices
+            .as_slice()
             .choose_multiple(&mut rng, self.k)
             .cloned()
             .collect();
@@ -396,7 +400,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         let mut centroids = Array2::zeros((self.k, data.ncols()));
 
         // Choose first centroid randomly
-        let first_idx = rng.gen_range(0..data.nrows());
+        let first_idx = rng.random_range(0..data.nrows());
         centroids.row_mut(0).assign(&data.row(first_idx));
 
         // Choose remaining centroids using K-means++ method
@@ -419,7 +423,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             let total_dist: f64 = distances.iter().map(|&d| d * d).sum();
             if total_dist <= 0.0 {
                 // Fallback to random selection
-                let random_idx = rng.gen_range(0..data.nrows());
+                let random_idx = rng.random_range(0..data.nrows());
                 centroids.row_mut(k).assign(&data.row(random_idx));
             } else {
                 let mut cumulative = 0.0;
@@ -773,7 +777,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                 let end_offset = offset + partition_labels.len();
                 labels
                     .slice_mut(s![offset..end_offset])
-                    .assign(partition_labels);
+                    .assign(&partition_labels.view());
                 offset = end_offset;
             }
         }

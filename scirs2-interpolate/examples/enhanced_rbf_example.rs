@@ -208,8 +208,8 @@ fn main() {
     use rand::Rng;
 
     for _ in 0..n_noisy {
-        let x = rng.gen_range(-2.0..2.0);
-        let y = rng.gen_range(-2.0..2.0);
+        let x = rng.random_range(-2.0..2.0);
+        let y = rng.random_range(-2.0..2.0);
 
         noisy_points.push(x);
         noisy_points.push(y);
@@ -217,7 +217,7 @@ fn main() {
         // Function with noise
         let f = f64::exp(-x * x - y * y)
             + 0.5 * f64::exp(-(x - 1.0) * (x - 1.0) - (y - 1.0) * (y - 1.0));
-        let noise = rng.gen_range(-0.05..0.05);
+        let noise = rng.random_range(-0.05..0.05);
         noisy_values.push(f + noise);
     }
 
@@ -276,8 +276,8 @@ fn main() {
     let mut complex_values = Vec::with_capacity(n_complex);
 
     for _ in 0..n_complex {
-        let x = rng.gen_range(-3.0..3.0);
-        let y = rng.gen_range(-3.0..3.0);
+        let x = rng.random_range(-3.0..3.0);
+        let y = rng.random_range(-3.0..3.0);
 
         complex_points.push(x);
         complex_points.push(y);

@@ -970,7 +970,7 @@ impl AdvancedVisualizer {
             .performance_dashboard
             .improvement_factors
             .iter()
-            .find(|(name_)| name_.contains("Neuromorphic"))
+            .find(|(name_, _)| name_.contains("Neuromorphic"))
             .map(|(_, value)| *value)
             .unwrap_or(1.0)
     }
@@ -981,7 +981,7 @@ impl AdvancedVisualizer {
             .performance_dashboard
             .improvement_factors
             .iter()
-            .find(|(name_)| name_.contains("AI"))
+            .find(|(name_, _)| name_.contains("AI"))
             .map(|(_, value)| *value)
             .unwrap_or(1.0)
     }

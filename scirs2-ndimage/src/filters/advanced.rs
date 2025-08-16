@@ -125,7 +125,15 @@ pub fn gabor_filter<T>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
 
@@ -231,7 +239,15 @@ pub fn gabor_filter_bank<T>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Vec<Array2<T>>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     let mut results = Vec::with_capacity(num_orientations);
     let pi = safe_f64_to_float::<T>(std::f64::consts::PI)?;
@@ -569,7 +585,15 @@ pub fn steerable_filter<T>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     if filter_order == 0 || filter_order > 3 {
         return Err(NdimageError::InvalidInput(

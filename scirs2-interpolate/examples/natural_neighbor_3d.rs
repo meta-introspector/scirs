@@ -19,9 +19,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Create points in a 3D domain
     let mut points_vec = Vec::with_capacity(n_points * 3);
     for _ in 0..n_points {
-        let x = rng.gen_range(0.0..=10.0);
-        let y = rng.gen_range(0.0..=10.0);
-        let z = rng.gen_range(0.0..=10.0);
+        let x = rng.random_range(0.0..=10.0);
+        let y = rng.random_range(0.0..=10.0);
+        let z = rng.random_range(0.0..=10.0);
         points_vec.push(x);
         points_vec.push(y);
         points_vec.push(z);

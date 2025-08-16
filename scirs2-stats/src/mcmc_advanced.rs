@@ -673,7 +673,7 @@ where
         } else {
             let accept_prob = (-energydiff).exp();
             let mut rng = rand::rng();
-            let u: f64 = rng.gen_range(0.0..1.0);
+            let u: f64 = rng.random_range(0.0..1.0);
             F::from(u).unwrap() < accept_prob
         }
     }

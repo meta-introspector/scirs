@@ -66,7 +66,7 @@ fn generate_sinusoid_signal() -> Array1<f64> {
     let noise_level = 0.2;
     let mut rng = rand::rng();
     let noise = Array1::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..,
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.random_range(0.0..1.0) - 1.0))..,
     );
 
     &sinusoid1 + &sinusoid2 + &noise
@@ -90,12 +90,12 @@ fn generate_ar_signal() -> Array1<f64> {
 
     // Initialize with random values
     for _ in 0..4 {
-        signal.push(rng.gen_range(-0.1..0.1));
+        signal.push(rng.random_range(-0.1..0.1));
     }
 
     // Generate AR samples
     for i in 4..(n_samples + n_warmup) {
-        let mut sample = rng.gen_range(-0.1..0.1);
+        let mut sample = rng.random_range(-0.1..0.1);
         for j in 1..=4 {
             sample -= ar_coeffs[j] * signal[i - j];
         }
@@ -315,14 +315,14 @@ fn demonstrate_arma_model() {
 
     // Initialize with random values
     for _ in 0..2 {
-        signal.push(rng.gen_range(-0.1..0.1));
-        noise_history.push(rng.gen_range(-0.1..0.1));
+        signal.push(rng.random_range(-0.1..0.1));
+        noise_history.push(rng.random_range(-0.1..0.1));
     }
 
     // Generate ARMA samples
     for i in 2..(n_samples + n_warmup) {
         // Generate white noise
-        let noise = rng.gen_range(-0.5..0.5);
+        let noise = rng.random_range(-0.5..0.5);
         noise_history.push(noise);
 
         // AR component

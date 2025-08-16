@@ -158,8 +158,8 @@ pub trait HardwareAbstractionLayer: Send + Sync {
     /// Execute sparse FFT on accelerator
     fn execute_sparse_fft(
         &mut self,
-        input_handle: u64,
-        output_handle: u64,
+        _input_handle: u64,
+        _output_handle: u64,
         config: &SparseFFTConfig,
     ) -> FFTResult<Duration>;
 
@@ -323,8 +323,8 @@ impl HardwareAbstractionLayer for FPGAAccelerator {
 
     fn execute_sparse_fft(
         &mut self,
-        input_handle: u64,
-        output_handle: u64,
+        _input_handle: u64,
+        _output_handle: u64,
         config: &SparseFFTConfig,
     ) -> FFTResult<Duration> {
         let start = Instant::now();
@@ -453,7 +453,7 @@ impl HardwareAbstractionLayer for ASICAccelerator {
         &self.info
     }
 
-    fn allocate_memory(&mut self, size: usize) -> FFTResult<u64> {
+    fn allocate_memory(&mut self, _size: usize) -> FFTResult<u64> {
         if !self.initialized {
             return Err(FFTError::ComputationError(
                 "ASIC not initialized".to_string(),
@@ -462,18 +462,18 @@ impl HardwareAbstractionLayer for ASICAccelerator {
         Ok(1) // ASIC has fixed memory layout
     }
 
-    fn free_memory(&mut self, handle: u64) -> FFTResult<()> {
+    fn free_memory(&mut self, _handle: u64) -> FFTResult<()> {
         Ok(()) // ASIC manages memory internally
     }
 
-    fn transfer_to_device(&mut self, handle: u64, data: &[u8]) -> FFTResult<()> {
+    fn transfer_to_device(&mut self, _handle: u64, data: &[u8]) -> FFTResult<()> {
         // Optimized dedicated interface
         let transfer_time_ns = data.len() as f64 / self.info.capabilities.memory_bandwidth_gb_s;
         std::thread::sleep(Duration::from_nanos(transfer_time_ns as u64));
         Ok(())
     }
 
-    fn transfer_from_device(&mut self, handle: u64, data: &mut [u8]) -> FFTResult<()> {
+    fn transfer_from_device(&mut self, _handle: u64, data: &mut [u8]) -> FFTResult<()> {
         let transfer_time_ns = data.len() as f64 / self.info.capabilities.memory_bandwidth_gb_s;
         std::thread::sleep(Duration::from_nanos(transfer_time_ns as u64));
         data.fill(0); // Simulate result data
@@ -482,8 +482,8 @@ impl HardwareAbstractionLayer for ASICAccelerator {
 
     fn execute_sparse_fft(
         &mut self,
-        input_handle: u64,
-        output_handle: u64,
+        _input_handle: u64,
+        _output_handle: u64,
         config: &SparseFFTConfig,
     ) -> FFTResult<Duration> {
         let start = Instant::now();

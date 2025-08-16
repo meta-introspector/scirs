@@ -854,11 +854,14 @@ where
     let temp_2d = flat_input
         .view()
         .into_shape((side_len, flat_input.len() / side_len))?;
-    let filtered_2d = fourier_ellipsoid_2d(&temp_2d, size_1d, size_1d, is_lowpass)?;
+    let filtered_2d = fourier_ellipsoid_2d(&temp_2d.to_owned(), size_1d, size_1d, is_lowpass)?;
     let filtered_1d = filtered_2d.into_shape(input.len())?;
 
     // Reshape back to original dimensions
-    let result = filtered_1d.into_shape(shape)?;
+    let result_dyn = filtered_1d.into_shape(shape)?;
+    let result = result_dyn.into_dimensionality::<D>().map_err(|_| {
+        NdimageError::DimensionError("Failed to convert result back to original dimensions".into())
+    })?;
     Ok(result)
 }
 
@@ -1193,10 +1196,13 @@ where
     };
 
     // Apply 1D shift
-    let shifted_1d = fourier_shift_1d(&flat_input, shift_1d)?;
+    let shifted_1d = fourier_shift_1d(&flat_input.to_owned(), shift_1d)?;
 
     // Reshape back to original dimensions
-    let result = shifted_1d.into_shape(shape)?;
+    let result_dyn = shifted_1d.into_shape(shape)?;
+    let result = result_dyn.into_dimensionality::<D>().map_err(|_| {
+        NdimageError::DimensionError("Failed to convert result back to original dimensions".into())
+    })?;
     Ok(result)
 }
 
@@ -1509,10 +1515,30 @@ where
 
     // Dynamic dispatch based on dimensionality
     match shape.len() {
-        1 => processor.process_file::<ndarray::Ix1>(input_path, output_path, shape, op),
-        2 => processor.process_file::<ndarray::Ix2>(input_path, output_path, shape, op),
-        3 => processor.process_file::<ndarray::Ix3>(input_path, output_path, shape, op),
-        _ => processor.process_file::<ndarray::IxDyn>(input_path, output_path, shape, op),
+        1 => processor.process_file::<ndarray::Ix1, StreamingFourierGaussian<T>>(
+            input_path,
+            output_path,
+            shape,
+            op,
+        ),
+        2 => processor.process_file::<ndarray::Ix2, StreamingFourierGaussian<T>>(
+            input_path,
+            output_path,
+            shape,
+            op,
+        ),
+        3 => processor.process_file::<ndarray::Ix3, StreamingFourierGaussian<T>>(
+            input_path,
+            output_path,
+            shape,
+            op,
+        ),
+        _ => processor.process_file::<ndarray::IxDyn, StreamingFourierGaussian<T>>(
+            input_path,
+            output_path,
+            shape,
+            op,
+        ),
     }
 }
 
@@ -1533,7 +1559,12 @@ where
     D: Dimension,
 {
     fn apply_chunk(&self, chunk: &ArrayView<T, D>) -> NdimageResult<Array<T, D>> {
-        fourier_uniform(&chunk.to_owned(), &self.size)
+        let size_usize: Vec<usize> = self
+            .size
+            .iter()
+            .map(|&s| s.to_usize().unwrap_or(1))
+            .collect();
+        fourier_uniform(&chunk.to_owned(), &size_usize)
     }
 
     fn required_overlap(&self) -> Vec<usize> {
@@ -1570,9 +1601,29 @@ where
     let processor = StreamProcessor::<T>::new(config);
 
     match shape.len() {
-        1 => processor.process_file::<ndarray::Ix1>(input_path, output_path, shape, op),
-        2 => processor.process_file::<ndarray::Ix2>(input_path, output_path, shape, op),
-        3 => processor.process_file::<ndarray::Ix3>(input_path, output_path, shape, op),
-        _ => processor.process_file::<ndarray::IxDyn>(input_path, output_path, shape, op),
+        1 => processor.process_file::<ndarray::Ix1, StreamingFourierUniform<T>>(
+            input_path,
+            output_path,
+            shape,
+            op,
+        ),
+        2 => processor.process_file::<ndarray::Ix2, StreamingFourierUniform<T>>(
+            input_path,
+            output_path,
+            shape,
+            op,
+        ),
+        3 => processor.process_file::<ndarray::Ix3, StreamingFourierUniform<T>>(
+            input_path,
+            output_path,
+            shape,
+            op,
+        ),
+        _ => processor.process_file::<ndarray::IxDyn, StreamingFourierUniform<T>>(
+            input_path,
+            output_path,
+            shape,
+            op,
+        ),
     }
 }

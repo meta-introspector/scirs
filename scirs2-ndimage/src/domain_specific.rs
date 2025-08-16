@@ -12,7 +12,7 @@ use crate::utils::{safe_f64_to_float, safe_float_to_f64, safe_usize_to_float};
 
 use crate::filters::{gaussian_filter, median_filter};
 use crate::interpolation::{zoom, InterpolationOrder};
-use crate::measurements::{center_of_mass, moments, central_moments};
+use crate::measurements::{center_of_mass, central_moments, moments};
 use crate::morphology::label;
 use crate::morphology::{binary_closing, binary_opening, grey_opening};
 
@@ -641,12 +641,22 @@ pub mod microscopy {
             if area >= params.min_area && area <= params.max_area {
                 // Compute cell properties
                 let com = center_of_mass(&image.to_owned())?;
-                let central_moments_result = central_moments(&mask.mapv(|x| if x { safe_f64_to_float::<T>(1.0).unwrap_or(T::one()) } else { T::zero() }), 2, None)?;
+                let central_moments_result = central_moments(
+                    &mask.mapv(|x| {
+                        if x {
+                            safe_f64_to_float::<T>(1.0).unwrap_or(T::one())
+                        } else {
+                            T::zero()
+                        }
+                    }),
+                    2,
+                    None,
+                )?;
 
                 // Compute eccentricity from central moments
                 // For 2D with order=2: indices are M_00(0), M_01(1), M_02(2), M_10(3), M_11(4), M_12(5), M_20(6), M_21(7), M_22(8)
                 let m00 = central_moments_result[0]; // μ_00 (total mass)
-                let m20 = central_moments_result[6]; // μ_20 
+                let m20 = central_moments_result[6]; // μ_20
                 let m02 = central_moments_result[2]; // μ_02
                 let m11 = central_moments_result[4]; // μ_11
 
@@ -680,7 +690,10 @@ pub mod microscopy {
                 }
 
                 let center_tuple = if com.len() >= 2 {
-                    (safe_float_to_f64(com[0]).unwrap_or(0.0), safe_float_to_f64(com[1]).unwrap_or(0.0))
+                    (
+                        safe_float_to_f64(com[0]).unwrap_or(0.0),
+                        safe_float_to_f64(com[1]).unwrap_or(0.0),
+                    )
                 } else {
                     (0.0, 0.0)
                 };
@@ -722,7 +735,15 @@ pub mod microscopy {
         max_size: usize,
     ) -> NdimageResult<(Array2<i32>, usize)>
     where
-        T: Float + FromPrimitive + Debug + Send + Sync + std::ops::AddAssign + std::ops::DivAssign + num_traits::NumAssign + 'static,
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Send
+            + Sync
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + num_traits::NumAssign
+            + 'static,
     {
         // Preprocess with median filter to reduce noise
         let denoised = median_filter(&dapi_channel.to_owned(), &[3, 3], None)?;
@@ -735,7 +756,7 @@ pub mod microscopy {
 
         // Threshold using Otsu's method
         let (binary_t, threshold_value) = crate::segmentation::otsu_threshold(&enhanced, 256)?;
-        
+
         // Convert to bool array
         let binary = binary_t.mapv(|x| x > threshold_value);
 
@@ -751,7 +772,7 @@ pub mod microscopy {
         // Convert usize labels to i32 and filter by size
         let mut labels = Array2::<i32>::zeros(labels_usize.dim());
         let mut valid_count = 0;
-        
+
         for i in 1..=num_features {
             let nucleus_size = labels_usize.iter().filter(|&&x| x == i).count();
             if nucleus_size >= min_size && nucleus_size <= max_size {

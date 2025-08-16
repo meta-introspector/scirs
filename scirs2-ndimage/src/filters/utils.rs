@@ -26,11 +26,10 @@ pub fn calculate_kernel_size<T: Float + FromPrimitive>(
     truncate: Option<T>,
 ) -> NdimageResult<usize> {
     let truncate_val = truncate.unwrap_or_else(|| {
-        safe_f64_to_float::<T>(4.0)?
-            .unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::zero()))
+        T::from_f64(4.0).unwrap_or_else(|| T::zero())
     });
-    let size = safe_usize_to_float::<T>(1)?
-        + (sigma * truncate_val * safe_f64_to_float::<T>(2.0)?)
+    let size = (T::from_usize(1).unwrap_or(T::one())
+        + (sigma * truncate_val * T::from_f64(2.0).unwrap_or(T::one() + T::one())))
             .ceil()
             .to_usize()
             .ok_or_else(|| {
@@ -63,13 +62,13 @@ pub fn generate_gaussian_kernel<T: Float + FromPrimitive>(
     let half = kernel_size / 2;
     let mut kernel = Array::zeros(kernel_size);
     let sigma_sq = sigma * sigma;
-    let norm_factor = safe_f64_to_float::<T>(1.0)?
-        / (sigma * safe_f64_to_float::<T>(std::f64::consts::TAU.sqrt())?);
-    let exp_factor = safe_f64_to_float::<T>(-0.5)? / sigma_sq;
+    let norm_factor = T::from_f64(1.0).unwrap_or(T::one())
+        / (sigma * T::from_f64(std::f64::consts::TAU.sqrt()).unwrap_or(T::one()));
+    let exp_factor = T::from_f64(-0.5).unwrap_or(-T::one() / (T::one() + T::one())) / sigma_sq;
 
     let mut sum = T::zero();
     for (i, k) in kernel.iter_mut().enumerate() {
-        let x = safe_usize_to_float(i)? - safe_usize_to_float(half)?;
+        let x = T::from_usize(i).unwrap_or(T::zero()) - T::from_usize(half).unwrap_or(T::zero());
         *k = norm_factor * (exp_factor * x * x).exp();
         sum = sum + *k;
     }
@@ -349,7 +348,7 @@ where
 
     // Create output array with default constant _value
     let const_val = constant_value.unwrap_or_else(|| T::zero());
-    let dimension = D::from_dimension(&ndarray::IxDyn(&newshape)).map_err(|_| {
+    let dimension = D::from_dimension(&ndarray::IxDyn(&newshape)).ok_or_else(|| {
         NdimageError::DimensionError("Could not create dimension from shape".into())
     })?;
     let mut output = Array::<T, D>::from_elem(dimension, const_val);
@@ -691,7 +690,7 @@ where
     // Convert to dynamic dimensionality for flexible indexing
     let input_dyn = input
         .clone()
-        .into__dimensionality::<ndarray::IxDyn>()
+        .into_dimensionality::<ndarray::IxDyn>()
         .map_err(|_| {
             NdimageError::DimensionError("Failed to convert input to dynamic dimensionality".into())
         })?;

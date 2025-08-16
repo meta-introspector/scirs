@@ -204,7 +204,7 @@ where
 
     // Placeholder implementation
     let dim = input.ndim();
-    Ok(Array::<T>::zeros((dim, dim)))
+    Ok(Array2::<T>::zeros((dim, dim)))
 }
 
 /// Calculate image moments
@@ -267,8 +267,8 @@ where
         }
 
         let total_moments = (order + 1) * (order + 1);
-        Array::<T>::from_vec(moments_vec)
-            .intoshape((total_moments,))
+        Array1::<T>::from_vec(moments_vec)
+            .into_shape((total_moments,))
             .map_err(|_| NdimageError::ComputationError("Failed to reshape moments array".into()))
     } else {
         // For nD case, return simplified implementation
@@ -293,8 +293,8 @@ where
             moments_vec.push(T::zero());
         }
 
-        Array::<T>::from_vec(moments_vec)
-            .intoshape((expected_size,))
+        Array1::<T>::from_vec(moments_vec)
+            .into_shape((expected_size,))
             .map_err(|_| NdimageError::ComputationError("Failed to reshape moments array".into()))
     }
 }
@@ -386,8 +386,8 @@ where
         }
 
         let total_moments = (order + 1) * (order + 1);
-        Array::<T>::from_vec(central_moments_vec)
-            .intoshape((total_moments,))
+        Array1::<T>::from_vec(central_moments_vec)
+            .into_shape((total_moments,))
             .map_err(|_| {
                 NdimageError::ComputationError("Failed to reshape central moments array".into())
             })
@@ -435,8 +435,8 @@ where
             central_moments_vec.push(T::zero());
         }
 
-        Array::<T>::from_vec(central_moments_vec)
-            .intoshape((expected_size,))
+        Array1::<T>::from_vec(central_moments_vec)
+            .into_shape((expected_size,))
             .map_err(|_| {
                 NdimageError::ComputationError("Failed to reshape central moments array".into())
             })
@@ -484,7 +484,7 @@ where
         if mu_00 == T::zero() {
             // If total mass is zero, return zeros
             let total_moments = (order + 1) * (order + 1);
-            return Ok(Array::<T>::zeros(total_moments));
+            return Ok(Array1::<T>::zeros(total_moments));
         }
 
         // Calculate normalized moments η_pq = μ_pq / μ_00^((p+q)/2+1)
@@ -517,8 +517,8 @@ where
         }
 
         let total_moments = (order + 1) * (order + 1);
-        Array::<T>::from_vec(normalized_moments_vec)
-            .intoshape((total_moments,))
+        Array1::<T>::from_vec(normalized_moments_vec)
+            .into_shape((total_moments,))
             .map_err(|_| {
                 NdimageError::ComputationError("Failed to reshape normalized moments array".into())
             })
@@ -530,7 +530,7 @@ where
 
         if mu_00 == T::zero() {
             let expected_size = (order + 1).pow(ndim as u32);
-            return Ok(Array::<T>::zeros(expected_size));
+            return Ok(Array1::<T>::zeros(expected_size));
         }
 
         // Normalize available central moments
@@ -559,8 +559,8 @@ where
             normalized_moments_vec.push(T::zero());
         }
 
-        Array::<T>::from_vec(normalized_moments_vec)
-            .intoshape((expected_size,))
+        Array1::<T>::from_vec(normalized_moments_vec)
+            .into_shape((expected_size,))
             .map_err(|_| {
                 NdimageError::ComputationError("Failed to reshape normalized moments array".into())
             })

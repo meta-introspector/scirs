@@ -27,7 +27,7 @@ impl Default for Random {
 
 impl Random {
     fn random_range(&mut self, range: std::ops::Range<f64>) -> f64 {
-        self.rng.gen_range(range)
+        self.rng.random_range(range)
     }
 }
 

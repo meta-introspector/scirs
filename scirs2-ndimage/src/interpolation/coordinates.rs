@@ -409,7 +409,7 @@ pub fn interpn<T, D>(
     cval: Option<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::DivAssign,
+    T: Float + FromPrimitive + Debug + std::ops::DivAssign + std::ops::AddAssign,
     D: ndarray::Dimension,
 {
     // Validate inputs
@@ -459,8 +459,8 @@ where
     let order_usize = match order.unwrap_or(InterpolationOrder::Linear) {
         InterpolationOrder::Nearest => 0,
         InterpolationOrder::Linear => 1,
-        InterpolationOrder::Quadratic => 2,
         InterpolationOrder::Cubic => 3,
+        InterpolationOrder::Spline => 5,
     };
 
     let result = map_coordinates(
@@ -473,7 +473,7 @@ where
     )?;
 
     // Convert result to 1D array
-    Ok(result.intoshape((n_points,)).unwrap())
+    Ok(result.into_shape((n_points,)).unwrap())
 }
 
 #[cfg(test)]

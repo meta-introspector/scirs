@@ -44,7 +44,7 @@ impl FftContext {
     }
 
     /// Set number of workers for this context
-    pub fn with_workers(mut self, numworkers: usize) -> Self {
+    pub fn with_workers(mut self, _numworkers: usize) -> Self {
         self.previous_workers = Some(self.worker_pool.get_workers());
         // Note: Due to static reference limitation, we can't actually change _workers
         // This is a design limitation that would need a different architecture

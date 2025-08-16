@@ -110,8 +110,8 @@ fn pairwise_euclidean_blocked_simd<F>(
 /// This function computes distances in streaming fashion, suitable for
 /// datasets that don't fit in memory.
 #[allow(dead_code)]
-pub fn pairwise_euclidean_streaming<F>(
-    data_chunks: impl Iterator<Item = ArrayView2<F>>,
+pub fn pairwise_euclidean_streaming<'a, F>(
+    data_chunks: impl Iterator<Item = ArrayView2<'a, F>>,
     chunk_size: usize,
 ) -> Array1<F>
 where

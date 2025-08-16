@@ -270,11 +270,11 @@ mod tests {
         // The second call should be much faster due to memoization
         let start = Instant::now();
         let fib20_again = fibonacci(20);
-        let std::time::Duration::from_secs(1) = start.elapsed();
+        let _elapsed = start.elapsed();
 
         assert_eq!(fib20_again, 6765);
 
         // The second call should be very fast (less than 1ms)
-        assert!(std::time::Duration::from_secs(1).as_millis() < 10);
+        assert!(_elapsed.as_millis() < 10);
     }
 }

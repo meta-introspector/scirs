@@ -221,7 +221,7 @@ where
     T: NumCast + Copy + Debug + 'static,
 {
     let (n_rows, n_cols) = x.dim();
-    let (n_rows_out, n_cols_out) = shape.unwrap_or((n_rows, n_cols));
+    let (n_rows_out, _n_cols_out) = shape.unwrap_or((n_rows, n_cols));
 
     // Compute 2D FFT, then extract the relevant portion for real input
     let full_fft = crate::fft::fft2(&x.to_owned(), shape, None, None)?;
@@ -822,7 +822,7 @@ where
     fn mark_processed(
         idx: &mut Vec<usize>,
         dim: usize,
-        shape: &[usize],
+        _shape: &[usize],
         xshape: &[usize],
         processed: &mut std::collections::HashSet<Vec<usize>>,
     ) {
@@ -846,7 +846,7 @@ where
         // Recursive case: iterate through the current dimension
         for i in 0..xshape[dim] {
             idx[dim] = i;
-            mark_processed(idx, dim + 1, shape, xshape, processed);
+            mark_processed(idx, dim + 1, _shape, xshape, processed);
         }
     }
 

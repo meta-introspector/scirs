@@ -195,7 +195,7 @@ where
 
 // Helper function to check Lanczos convergence
 #[allow(dead_code)]
-fn check_lanczos_convergence<F: Float>(alpha: &[F], beta: &[F], k: usize, tol: F) -> bool {
+fn check_lanczos_convergence<F: Float>(_alpha: &[F], beta: &[F], k: usize, tol: F) -> bool {
     // Simple convergence check based on beta values
     if beta.len() < k {
         return false;
@@ -745,7 +745,7 @@ fn apply_householder_right_complex<F: Float + NumAssign>(
     tau: Complex<F>,
     k: usize,
 ) {
-    let (m, n) = matrix.dim();
+    let (m, _n) = matrix.dim();
     let house_len = house_vec.len();
 
     for i in 0..m {

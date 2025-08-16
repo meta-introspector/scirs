@@ -936,8 +936,11 @@ mod tests {
                 .unwrap(),
             support_y: Array2::from_shape_vec((5, 2), (0..10).map(|i| i as f64 * 0.2).collect())
                 .unwrap(),
-            query_x: Array2::from_shape_vec((3, 4), (0..12).map(|i| i as f64 * 0.1 + 0.5).collect())
-                .unwrap(),
+            query_x: Array2::from_shape_vec(
+                (3, 4),
+                (0..12).map(|i| i as f64 * 0.1 + 0.5).collect(),
+            )
+            .unwrap(),
             query_y: Array2::from_shape_vec((3, 2), (0..6).map(|i| i as f64 * 0.2 + 0.3).collect())
                 .unwrap(),
         };

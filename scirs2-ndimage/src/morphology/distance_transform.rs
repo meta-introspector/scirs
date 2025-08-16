@@ -25,7 +25,7 @@
 //! # Usage Notes
 //!
 //! - Input must be a binary array where `false` represents background and `true` represents foreground
-//! - All functions require input arrays to be in IxDyn format (use array.into__dimensionality::<IxDyn>())
+//! - All functions require input arrays to be in IxDyn format (use array.into_dimensionality::<IxDyn>())
 //! - Optional sampling parameter allows for non-uniform pixel spacing
 //!
 

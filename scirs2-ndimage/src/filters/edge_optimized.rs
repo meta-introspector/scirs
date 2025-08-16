@@ -252,23 +252,27 @@ where
                             Some(T::zero()),
                         ) * k3;
 
-                    let right =
-                        get_pixel_value(input_ref, i as isize - 1, j as isize + 1, &mode_clone, Some(T::zero()))
-                            * k1
-                            + get_pixel_value(
-                                input_ref,
-                                i as isize,
-                                j as isize + 1,
-                                &mode_clone,
-                                Some(T::zero()),
-                            ) * k2
-                            + get_pixel_value(
-                                input_ref,
-                                i as isize + 1,
-                                j as isize + 1,
-                                &mode_clone,
-                                Some(T::zero()),
-                            ) * k3;
+                    let right = get_pixel_value(
+                        input_ref,
+                        i as isize - 1,
+                        j as isize + 1,
+                        &mode_clone,
+                        Some(T::zero()),
+                    ) * k1
+                        + get_pixel_value(
+                            input_ref,
+                            i as isize,
+                            j as isize + 1,
+                            &mode_clone,
+                            Some(T::zero()),
+                        ) * k2
+                        + get_pixel_value(
+                            input_ref,
+                            i as isize + 1,
+                            j as isize + 1,
+                            &mode_clone,
+                            Some(T::zero()),
+                        ) * k3;
 
                     right - left
                 };

@@ -170,10 +170,10 @@ fn parallel_find_closestclusters<
                     n_samples,
                 ),
                 LinkageMethod::Centroid => {
-                    Ok(centroid_linkage(cluster_i, cluster_j, centroids.unwrap()))
+                    Ok(centroid_linkage(cluster_i, cluster_i, cluster_j, centroids.unwrap()))
                 }
                 LinkageMethod::Median => {
-                    Ok(median_linkage(cluster_i, cluster_j, centroids.unwrap()))
+                    Ok(median_linkage(cluster_i, cluster_i, cluster_j, centroids.unwrap()))
                 }
                 LinkageMethod::Weighted => parallel_weighted_linkage(
                     &clusters[cluster_i],

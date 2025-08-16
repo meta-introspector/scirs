@@ -157,13 +157,13 @@ fn generate_synthetic_data(
             .map(|i| {
                 let bin_width = 1.0 / (n_points as f64);
                 let bin_min = i as f64 * bin_width;
-                bin_min + rng.gen_range(0.0..bin_width)
+                bin_min + rng.random_range(0.0..bin_width)
             })
             .collect();
 
         // Shuffle the dimension values
         for i in (1..values.len()).rev() {
-            let j = rng.gen_range(0usize..i + 1);
+            let j = rng.random_range(0usize..i + 1);
             values.swap(i, j);
         }
 

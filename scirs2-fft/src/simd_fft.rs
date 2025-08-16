@@ -37,7 +37,7 @@ pub fn apply_simd_normalization(data: &mut [Complex64], scale: f64) {
 
 /// SIMD-accelerated 1D FFT
 #[allow(dead_code)]
-pub fn fft_simd<T>(x: &[T], norm: Option<&str>) -> FFTResult<Vec<Complex64>>
+pub fn fft_simd<T>(x: &[T], _norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -46,7 +46,7 @@ where
 
 /// SIMD-accelerated 1D inverse FFT
 #[allow(dead_code)]
-pub fn ifft_simd<T>(x: &[T], norm: Option<&str>) -> FFTResult<Vec<Complex64>>
+pub fn ifft_simd<T>(x: &[T], _norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -104,7 +104,7 @@ where
 #[allow(dead_code)]
 pub fn ifft2_simd<T>(
     _x: &[T],
-    shape: Option<(usize, usize)>,
+    _shape: Option<(usize, usize)>,
     _norm: Option<&str>,
 ) -> FFTResult<Array2<Complex64>>
 where
@@ -163,7 +163,7 @@ where
 #[allow(dead_code)]
 pub fn ifftn_simd<T>(
     _x: &[T],
-    shape: Option<&[usize]>,
+    _shape: Option<&[usize]>,
     _axes: Option<&[usize]>,
     _norm: Option<&str>,
 ) -> FFTResult<ArrayD<Complex64>>

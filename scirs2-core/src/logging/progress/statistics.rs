@@ -243,7 +243,7 @@ mod tests {
 
         // Simulate some processing
         thread::sleep(Duration::from_millis(10));
-        stats.update_model(25, now + Duration::from_millis(10));
+        stats.update(25, now + Duration::from_millis(10));
 
         assert_eq!(stats.processed, 25);
         assert_eq!(stats.percentage, 25.0);

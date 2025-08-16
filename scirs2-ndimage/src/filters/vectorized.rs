@@ -106,8 +106,11 @@ where
 
         let processimage = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
             let img = batch.index_axis(Axis(0), idx).to_owned();
-            convolve2d_optimized(&img, &kernel, mode, cval)
-                .map_err(|e| scirs2_core::CoreError::Parallel(e.to_string()))
+            convolve2d_optimized(&img, &kernel, mode, cval).map_err(|e| {
+                scirs2_core::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(
+                    e.to_string(),
+                ))
+            })
         };
 
         let results = parallel_map_result(&indices, processimage)?;
@@ -142,7 +145,16 @@ pub fn median_filter_batch<T>(
     config: Option<BatchConfig>,
 ) -> NdimageResult<Array3<T>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + PartialOrd + std::ops::DivAssign + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + PartialOrd
+        + std::ops::DivAssign
+        + std::ops::AddAssign
+        + 'static,
 {
     let config = config.unwrap_or_default();
     let (batch_size, height, width) = batch.dim();
@@ -167,8 +179,11 @@ where
 
         let processimage = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
             let img = batch.index_axis(Axis(0), idx).to_owned();
-            crate::filters::median::median_filter(&img, size, Some(mode))
-                .map_err(|e| scirs2_core::CoreError::Parallel(e.to_string()))
+            crate::filters::median::median_filter(&img, size, Some(mode)).map_err(|e| {
+                scirs2_core::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(
+                    e.to_string(),
+                ))
+            })
         };
 
         let results = parallel_map_result(&indices, processimage)?;
@@ -264,8 +279,11 @@ where
 
         let processimage = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
             let img = chunk.index_axis(Axis(0), idx).to_owned();
-            convolve2d_optimized(&img, kernel, mode, cval)
-                .map_err(|e| scirs2_core::CoreError::Parallel(e.to_string()))
+            convolve2d_optimized(&img, kernel, mode, cval).map_err(|e| {
+                scirs2_core::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(
+                    e.to_string(),
+                ))
+            })
         };
 
         let results = parallel_map_result(&indices, processimage)?;
@@ -337,7 +355,11 @@ where
 
         let processimage = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
             let img = batch.index_axis(Axis(0), idx).to_owned();
-            process_fn(&img).map_err(|e| scirs2_core::CoreError::Parallel(e.to_string()))
+            process_fn(&img).map_err(|e| {
+                scirs2_core::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(
+                    e.to_string(),
+                ))
+            })
         };
 
         let results = parallel_map_result(&indices, processimage)?;
@@ -389,7 +411,11 @@ where
 
         let processimage = |&idx: &usize| -> Result<Array2<T>, scirs2_core::CoreError> {
             let img = batch.index_axis(Axis(0), idx).to_owned();
-            filter_fn(&img).map_err(|e| scirs2_core::CoreError::Parallel(e.to_string()))
+            filter_fn(&img).map_err(|e| {
+                scirs2_core::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(
+                    e.to_string(),
+                ))
+            })
         };
 
         let results = parallel_map_result(&indices, processimage)?;

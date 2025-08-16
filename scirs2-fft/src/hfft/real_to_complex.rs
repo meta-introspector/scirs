@@ -110,7 +110,7 @@ where
 
 /// Internal implementation for f64 input
 #[allow(dead_code)]
-fn _ihfft_real(x: &[f64], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>> {
+fn _ihfft_real(x: &[f64], n: Option<usize>, _norm: Option<&str>) -> FFTResult<Vec<Complex64>> {
     let n_input = x.len();
     let n_fft = n.unwrap_or(n_input);
 

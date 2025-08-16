@@ -111,7 +111,7 @@ impl WorkerPool {
 
     /// Execute a function with a specific number of workers
     /// Simplified to use core parallel abstractions
-    pub fn execute_with_workers<F, R>(&self, numworkers: usize, f: F) -> R
+    pub fn execute_with_workers<F, R>(&self, _numworkers: usize, f: F) -> R
     where
         F: FnOnce() -> R + Send,
         R: Send,
@@ -208,7 +208,7 @@ impl Drop for WorkerContext {
 
 /// Set the number of workers globally
 #[allow(dead_code)]
-pub fn set_workers(n: usize) -> Result<(), &'static str> {
+pub fn set_workers(_n: usize) -> Result<(), &'static str> {
     let _pool = get_global_pool();
     // Note: This is a limitation of the current design - we can't modify a static reference
     // In practice, you'd want a different approach or accept this limitation

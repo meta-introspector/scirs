@@ -75,7 +75,8 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
     /// Create a new bootstrap validator
     pub fn new(config: StabilityConfig) -> Self {
         Self {
-            _config_phantom: std::marker::PhantomData,
+            config,
+            phantom: std::marker::PhantomData,
         }
     }
 
@@ -282,7 +283,8 @@ impl<F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display> Cons
     /// Create a new consensus clusterer
     pub fn new(config: StabilityConfig) -> Self {
         Self {
-            _config_phantom: std::marker::PhantomData,
+            config,
+            phantom: std::marker::PhantomData,
         }
     }
 
@@ -456,7 +458,8 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
     /// Create a new optimal k selector
     pub fn new(config: StabilityConfig) -> Self {
         Self {
-            _config_phantom: std::marker::PhantomData,
+            config,
+            phantom: std::marker::PhantomData,
         }
     }
 
@@ -635,7 +638,9 @@ pub mod advanced {
         pub fn new(config: StabilityConfig, nfolds: usize) -> Self {
             Self {
                 config,
-                n_folds_phantom: std::marker::PhantomData,
+                config,
+                n_folds,
+                _phantom: std::marker::PhantomData,
             }
         }
 
@@ -669,7 +674,7 @@ pub mod advanced {
 
                 // Create training data
                 let train_data =
-                    Array2::fromshape_fn((train_indices.len(), data.shape()[1]), |(i, j)| {
+                    Array2::from_shape_fn((train_indices.len(), data.shape()[1]), |(i, j)| {
                         data[[train_indices[i], j]]
                     });
 
@@ -683,7 +688,7 @@ pub mod advanced {
                 )?;
 
                 // Assign test data to nearest centroids
-                let test_labels = Array1::fromshape_fn(end_idx - start_idx, |i| {
+                let test_labels = Array1::from_shape_fn(end_idx - start_idx, |i| {
                     let test_point = data.row(start_idx + i);
                     let mut min_dist = F::infinity();
                     let mut closest_cluster = 0;
@@ -905,8 +910,8 @@ pub mod advanced {
                     let n_outliers = (n_samples as f64 * outlier_rate) as usize;
 
                     for _ in 0..n_outliers {
-                        let sample_idx = rng.gen_range(0..n_samples);
-                        let feature_idx = rng.gen_range(0..data.shape()[1]);
+                        let sample_idx = rng.random_range(0..n_samples);
+                        let feature_idx = rng.random_range(0..data.shape()[1]);
                         let outlier_value = rng.random::<f64>() * outlier_magnitude;
                         perturbed[[sample_idx..feature_idx]] = F::from(outlier_value).unwrap();
                     }
@@ -1050,7 +1055,8 @@ pub mod advanced {
         /// Create a new prediction strength validator
         pub fn new(config: PredictionStrengthConfig) -> Self {
             Self {
-                _config_phantom: std::marker::PhantomData,
+                config,
+            phantom: std::marker::PhantomData,
             }
         }
 
@@ -1391,7 +1397,8 @@ pub mod advanced {
         /// Create a new cluster-specific stability validator
         pub fn new(config: StabilityConfig) -> Self {
             Self {
-                _config_phantom: std::marker::PhantomData,
+                config,
+            phantom: std::marker::PhantomData,
             }
         }
 

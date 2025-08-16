@@ -15,11 +15,11 @@ use std::fmt::Debug;
 pub struct CUDAWindowKernel;
 
 impl CUDAWindowKernel {
-    pub fn new(window: WindowFunction) -> Self {
+    pub fn new(_window: WindowFunction) -> Self {
         Self
     }
 
-    pub fn apply(&self, data: &mut [Complex64]) -> FFTResult<()> {
+    pub fn apply(&self, _data: &mut [Complex64]) -> FFTResult<()> {
         Err(FFTError::NotImplementedError(MIGRATION_MESSAGE.to_string()))
     }
 }
@@ -28,11 +28,11 @@ impl CUDAWindowKernel {
 pub struct CUDASublinearSparseFFTKernel;
 
 impl CUDASublinearSparseFFTKernel {
-    pub fn new(algorithm: SparseFFTAlgorithm) -> Self {
+    pub fn new(_algorithm: SparseFFTAlgorithm) -> Self {
         Self
     }
 
-    pub fn execute<T>(&self, input: &[T], k: usize) -> FFTResult<SparseFFTResult>
+    pub fn execute<T>(&self, _input: &[T], _k: usize) -> FFTResult<SparseFFTResult>
     where
         T: NumCast + Copy + Debug,
     {
@@ -61,7 +61,7 @@ impl CUDACompressedSensingSparseFFTKernel {
         Self
     }
 
-    pub fn execute<T>(&self, input: &[T], k: usize) -> FFTResult<SparseFFTResult>
+    pub fn execute<T>(&self, _input: &[T], _k: usize) -> FFTResult<SparseFFTResult>
     where
         T: NumCast + Copy + Debug,
     {

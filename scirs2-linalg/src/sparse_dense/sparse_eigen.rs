@@ -66,7 +66,7 @@ where
     // Start with random initial vector
     let mut rng = rand::rng();
     for i in 0..n {
-        v[[i, 0]] = T::from(rng.gen_range(-0.5..0.5)).unwrap();
+        v[[i, 0]] = T::from(rng.random_range(-0.5..0.5)).unwrap();
     }
     
     // Normalize initial vector
@@ -210,7 +210,7 @@ where
     // Start with random initial vector
     let mut rng = rand::rng();
     for i in 0..n {
-        v[[i, 0]] = T::from(rng.gen_range(-0.5..0.5)).unwrap();
+        v[[i, 0]] = T::from(rng.random_range(-0.5..0.5)).unwrap();
     }
     
     // Normalize initial vector

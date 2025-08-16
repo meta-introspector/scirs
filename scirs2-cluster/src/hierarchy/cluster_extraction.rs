@@ -262,7 +262,7 @@ fn estimate_clusters_distance_gap<F: Float + FromPrimitive + Debug + PartialOrd>
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(idx_)| idx_)
+        .map(|(idx, _)| idx)
         .unwrap_or(0);
 
     // The optimal number of _clusters is n_observations - max_gap_idx

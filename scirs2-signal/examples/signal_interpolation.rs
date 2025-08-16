@@ -499,8 +499,8 @@ fn interpolate_2d_data() -> SignalResult<()> {
     // Remove scattered points
     let mut rng = rand::rng();
     for _ in 0..500 {
-        let i = rng.gen_range(0..n_rows);
-        let j = rng.gen_range(0..n_cols);
+        let i = rng.random_range(0..n_rows);
+        let j = rng.random_range(0..n_cols);
         missing_image[[i..j]] = f64::NAN;
     }
 

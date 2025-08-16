@@ -357,8 +357,13 @@ where
     let n_samples = data.shape()[0];
 
     // Use unified validation
-    scirs2_core::validation::clustering::validate_clustering_data(&data, "Spectral clustering", false, Some(2))
-        .map_err(|e| ClusteringError::InvalidInput(format!("Spectral clustering: {}", e)))?;
+    scirs2_core::validation::clustering::validate_clustering_data(
+        &data,
+        "Spectral clustering",
+        false,
+        Some(2),
+    )
+    .map_err(|e| ClusteringError::InvalidInput(format!("Spectral clustering: {}", e)))?;
 
     // Spectral clustering requires at least 2 _clusters
     if n_clusters < 2 {
@@ -368,8 +373,12 @@ where
         )));
     }
 
-    scirs2_core::validation::clustering::check_n_clusters_bounds(&data, n_clusters, "Spectral clustering")
-        .map_err(|e| ClusteringError::InvalidInput(format!("{}", e)))?;
+    scirs2_core::validation::clustering::check_n_clusters_bounds(
+        &data,
+        n_clusters,
+        "Spectral clustering",
+    )
+    .map_err(|e| ClusteringError::InvalidInput(format!("{}", e)))?;
 
     // Step 1: Create the affinity matrix
     let affinity = match opts.affinity {

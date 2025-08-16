@@ -94,7 +94,7 @@ fn demo_advanced_wavelet_denoising() -> SignalResult<()> {
     let noise_level = 0.2;
     let mut rng = rand::rng();
     let noisy_image = Array2::fromshape_fn((image_size, image_size), |(i, j)| {
-        clean_image[[i, j]] + noise_level * rng.gen_range(-1.0..1.0)
+        clean_image[[i, j]] + noise_level * rng.random_range(-1.0..1.0)
     });
 
     println!(

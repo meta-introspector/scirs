@@ -68,7 +68,7 @@ fn generate_test_data(
     let cluster_std = 0.3;
 
     for _ in 0..n_points {
-        let cluster_id = rng.gen_range(0..n_clusters);
+        let cluster_id = rng.random_range(0..n_clusters);
         let cluster_center = cluster_id as f64 * 2.0;
 
         for _ in 0..n_dims {

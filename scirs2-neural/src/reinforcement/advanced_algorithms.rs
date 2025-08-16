@@ -677,7 +677,7 @@ use rand::rng;
 use ndarray::ArrayView1;
 use statrs::statistics::Statistics;
                     let mut rng = rng();
-                    Ok(rng.gen_range(0..q_values.len()))
+                    Ok(rng.random_range(0..q_values.len()))
                 } else {
                     // Greedy action
                     Ok(q_values.iter()

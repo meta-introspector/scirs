@@ -416,7 +416,7 @@ fn test_algorithm(
             let mut sum = 0.0;
             if let Ok(coefficients) = measures::clustering_coefficient(graph) {
                 for _ in 0..config.sample_size.min(graph.node_count()) {
-                    let node = rng.gen_range(0..graph.node_count());
+                    let node = rng.random_range(0..graph.node_count());
                     if let Some(cc) = coefficients.get(&node) {
                         sum += cc;
                     }

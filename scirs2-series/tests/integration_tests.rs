@@ -381,7 +381,7 @@ fn test_biomedical_signal_processing() {
     let mut ecg_analysis = ECGAnalysis::new(ecg_signal.clone(), fs).unwrap();
     let r_peaks = ecg_analysis.detect_r_peaks().unwrap();
     let r_peaks_len = r_peaks.len(); // Store length to avoid borrow conflicts
-    
+
     let hrv = ecg_analysis
         .heart_rate_variability(scirs2_series::biomedical::HRVMethod::TimeDomain)
         .unwrap();

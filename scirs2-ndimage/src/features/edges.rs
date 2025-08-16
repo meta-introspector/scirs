@@ -114,7 +114,10 @@ impl Default for EdgeDetectionConfig {
 /// let edge_magnitudes = edge_detector(&image, custom_config).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> NdimageResult<Array<f32, Ix2>> {
+pub fn edge_detector(
+    image: &Array<f32, Ix2>,
+    config: EdgeDetectionConfig,
+) -> NdimageResult<Array<f32, Ix2>> {
     match config.algorithm {
         EdgeDetectionAlgorithm::Canny => {
             // Already returns f32 values, so we just return it as is
@@ -511,7 +514,12 @@ pub fn laplacian_edges(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<f32, Ix2>> {
     let mode = mode.unwrap_or(BorderMode::Reflect);
-    Ok(laplacian_edges_impl(image, sigma, threshold.unwrap_or(0.0), mode)?)
+    Ok(laplacian_edges_impl(
+        image,
+        sigma,
+        threshold.unwrap_or(0.0),
+        mode,
+    )?)
 }
 
 // Internal implementation of Laplacian of Gaussian edge detection
@@ -630,7 +638,12 @@ pub fn gradient_edges(
     let method = method.unwrap_or(GradientMethod::Sobel);
     let mode = mode.unwrap_or(BorderMode::Reflect);
 
-    Ok(gradient_edges_impl(image, method, sigma.unwrap_or(0.0), mode)?)
+    Ok(gradient_edges_impl(
+        image,
+        method,
+        sigma.unwrap_or(0.0),
+        mode,
+    )?)
 }
 
 // Internal implementation of gradient-based edge detection

@@ -151,11 +151,7 @@ fn generate_streaming_value(time: f64, pattern: i32) -> f64 {
         }
         1 => {
             // Step function with noise
-            let step = if (time as i32) % 40 < 20 {
-                10.0
-            } else {
-                -10.0
-            };
+            let step = if (time as i32) % 40 < 20 { 10.0 } else { -10.0 };
             base + step + 5.0 * rand_noise()
         }
         2 => {

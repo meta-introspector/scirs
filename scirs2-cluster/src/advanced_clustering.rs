@@ -354,7 +354,7 @@ impl AdvancedClusterer {
                     continue;
                 }
                 let other_point = data.row(j);
-                let distance = euclidean_distance(&point, &other_point);
+                let distance = euclidean_distance(point, other_point);
 
                 if clusters[j] == clusterid {
                     intra_distances.push(distance);
@@ -446,7 +446,7 @@ impl AdvancedClusterer {
             let mut best_cluster = 0;
 
             for (clusterid, centroid) in centroids.outer_iter().enumerate() {
-                let distance = euclidean_distance(&point, &centroid);
+                let distance = euclidean_distance(point, centroid);
                 if distance < min_distance {
                     min_distance = distance;
                     best_cluster = clusterid;
@@ -500,7 +500,7 @@ impl AIClusteringSelector {
         let best_algorithm = predicted_performance
             .iter()
             .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(alg_)| alg_.clone())
+            .map(|(alg_, _)| alg_.clone())
             .unwrap_or_else(|| "quantum_neuromorphic_kmeans".to_string());
 
         Ok(best_algorithm)
@@ -563,7 +563,7 @@ impl AIClusteringSelector {
                 for j in 0..data.nrows() {
                     if i != j {
                         let other_point = data.row(j);
-                        let distance = euclidean_distance(&point, &other_point);
+                        let distance = euclidean_distance(point, other_point);
                         if distance < min_distance {
                             min_distance = distance;
                         }
@@ -584,7 +584,7 @@ impl AIClusteringSelector {
                 let mut min_random_distance = f64::INFINITY;
                 for j in 0..data.nrows() {
                     let data_point = data.row(j);
-                    let distance = euclidean_distance(&random_point.view(), &data_point);
+                    let distance = euclidean_distance(random_point.view(), data_point);
                     if distance < min_random_distance {
                         min_random_distance = distance;
                     }
@@ -1000,7 +1000,7 @@ impl QuantumNeuromorphicProcessor {
 
                 for j in 0..i {
                     let centroid = centroids.row(j);
-                    let dist = euclidean_distance(&point, &centroid);
+                    let dist = euclidean_distance(point, centroid);
 
                     // Apply quantum enhancement to distance
                     let quantum_factor = self.quantum_spiking_neurons[j].quantum_state.norm();
@@ -1042,7 +1042,7 @@ impl QuantumNeuromorphicProcessor {
         clusterid: usize,
         point_idx: usize,
     ) -> Result<f64> {
-        let base_distance = euclidean_distance(point, centroid);
+        let base_distance = euclidean_distance(point.view(), centroid.view());
 
         // Quantum enhancement factors
         let quantum_factor = self.quantum_spiking_neurons[clusterid]
@@ -1181,7 +1181,7 @@ impl QuantumNeuromorphicProcessor {
         let mut total_weight = 0.0;
 
         for i in 0..current.nrows() {
-            let centroid_shift = euclidean_distance(&current.row(i), &previous.row(i));
+            let centroid_shift = euclidean_distance(current.row(i), previous.row(i));
 
             // Weight shift by quantum coherence
             let weight = if let Some(neuron) = self.quantum_spiking_neurons.get(i) {
@@ -1486,7 +1486,7 @@ impl MetaLearningClusterOptimizer {
         self.task_embeddings
             .iter()
             .filter_map(|(task_id, embedding)| {
-                let similarity = self.cosine_similarity(taskembedding);
+                let similarity = self.cosine_similarity(taskembedding, embedding);
                 if similarity > 0.8 {
                     Some(task_id.clone())
                 } else {
@@ -1642,7 +1642,8 @@ impl ContinualAdaptationEngine {
         Self
     }
     pub fn adapt_to_results(
-        &mut self_data: &ArrayView2<f64>,
+        &mut self,
+        _data: &ArrayView2<f64>,
         _clusters: &Array1<usize>,
         _metrics: &QuantumNeuromorphicMetrics,
     ) -> Result<()> {

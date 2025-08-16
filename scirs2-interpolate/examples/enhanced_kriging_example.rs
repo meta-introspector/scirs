@@ -60,8 +60,8 @@ fn generate_anisotropic_data() -> (Array2<f64>, Array1<f64>) {
 
     // Create points with non-uniform spacing
     for i in 0..n_samples {
-        points[[i, 0]] = rng.gen_range(0.0..10.0);
-        points[[i, 1]] = rng.gen_range(0.0..10.0);
+        points[[i, 0]] = rng.random_range(0.0..10.0);
+        points[[i, 1]] = rng.random_range(0.0..10.0);
 
         // Generate values with anisotropic spatial correlation
         let x = points[[i, 0]];
@@ -69,7 +69,7 @@ fn generate_anisotropic_data() -> (Array2<f64>, Array1<f64>) {
 
         // Different length scales in x and y
         let base_value = 5.0 * f64::sin(x / 3.0) * f64::cos(y / 1.5);
-        let noise = rng.gen_range(-0.5..0.5);
+        let noise = rng.random_range(-0.5..0.5);
 
         values[i] = base_value + noise;
     }

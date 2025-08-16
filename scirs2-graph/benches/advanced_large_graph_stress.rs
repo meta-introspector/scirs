@@ -47,8 +47,8 @@ fn generate_large_random_graph(_num_nodes: usize, edgeprobability: f64) -> Graph
     println!("  🔗 Adding approximately {} edges...", target_edges);
 
     while edges_added < target_edges {
-        let source = rng.gen_range(0..num_nodes);
-        let target = rng.gen_range(0..num_nodes);
+        let source = rng.random_range(0..num_nodes);
+        let target = rng.random_range(0..num_nodes);
 
         if source != target {
             let weight = rng.random::<f64>();
@@ -106,7 +106,7 @@ fn generate_scale_free_graph(_num_nodes: usize, initialedges: usize) -> Graph<us
             // Select target node based on degree probability
             let mut target = 0;
             if degree_sum > 0 {
-                let random_degree = rng.gen_range(0..degree_sum);
+                let random_degree = rng.random_range(0..degree_sum);
                 let mut cumulative_degree = 0;
 
                 for (&node, &degree) in &node_degrees {
@@ -117,7 +117,7 @@ fn generate_scale_free_graph(_num_nodes: usize, initialedges: usize) -> Graph<us
                     }
                 }
             } else {
-                target = rng.gen_range(0..i);
+                target = rng.random_range(0..i);
             }
 
             let weight = rng.random::<f64>();
@@ -157,12 +157,12 @@ fn generate_memory_efficient_graph(_numnodes: usize) -> Graph<usize, f64> {
         // Add edges within and between batches with locality
         for i in batch_start..batch_end {
             // Connect to nearby _nodes for spatial locality
-            let num_local_connections = rng.gen_range(2..=4);
+            let num_local_connections = rng.random_range(2..=4);
             for _ in 0..num_local_connections {
                 if i > 0 {
                     let local_range = (i.saturating_sub(1000)).max(0)..=i.saturating_sub(1);
                     if !local_range.is_empty() {
-                        let target = rng.gen_range(local_range);
+                        let target = rng.random_range(local_range);
                         let weight = rng.random::<f64>();
                         let _ = graph.add_edge(i..target, weight);
                     }
@@ -170,10 +170,10 @@ fn generate_memory_efficient_graph(_numnodes: usize) -> Graph<usize, f64> {
             }
 
             // Connect to some random distant _nodes
-            let num_random_connections = rng.gen_range(1..=2);
+            let num_random_connections = rng.random_range(1..=2);
             for _ in 0..num_random_connections {
                 if i > 100 {
-                    let target = rng.gen_range(0..(i.saturating_sub(100)));
+                    let target = rng.random_range(0..(i.saturating_sub(100)));
                     let weight = rng.random::<f64>();
                     let _ = graph.add_edge(i..target, weight);
                 }
@@ -275,10 +275,11 @@ fn generate_social_network(_numnodes: usize) -> Graph<usize, f64> {
         if cluster_id > 0 {
             for _ in 0..5 {
                 // 5 inter-cluster connections per cluster
-                let source = rng.gen_range(cluster_start..cluster_end);
-                let target_cluster = rng.gen_range(0..cluster_id);
-                let target = rng
-                    .gen_range(target_cluster * CLUSTER_SIZE..(target_cluster + 1) * CLUSTER_SIZE);
+                let source = rng.random_range(cluster_start..cluster_end);
+                let target_cluster = rng.random_range(0..cluster_id);
+                let target = rng.random_range(
+                    target_cluster * CLUSTER_SIZE..(target_cluster + 1) * CLUSTER_SIZE,
+                );
                 let weight = rng.random::<f64>() * 0.3 + 0.2; // Weaker inter-cluster weights
                 let _ = graph.add_edge(source, target, weight);
             }
@@ -1115,7 +1116,7 @@ fn bench_memory_usage_analysis(c: &mut Criterion) {
                             // Random access simulation
                             let mut rng = rand::thread_rng();
                             for _ in 0..1000 {
-                                let idx = rng.gen_range(0..memory_data.len());
+                                let idx = rng.random_range(0..memory_data.len());
                                 memory_data[idx] *= 1.1;
                             }
 

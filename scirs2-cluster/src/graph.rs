@@ -27,7 +27,7 @@ pub struct Graph<F: Float> {
     pub node_features: Option<Array2<F>>,
 }
 
-impl<F: Float + FromPrimitive + Debug> Graph<F> {
+impl<F: Float + FromPrimitive + Debug + std::iter::Sum> Graph<F> {
     /// Create a new empty graph with specified number of nodes
     pub fn new(_nnodes: usize) -> Self {
         Self {

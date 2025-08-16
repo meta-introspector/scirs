@@ -68,7 +68,9 @@ struct CacheKey {
     offset: i32, // Quantized to 1/1000th precision
 }
 
-impl<T: Float + FromPrimitive + Debug + Clone> CoefficientCache<T> {
+impl<T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign>
+    CoefficientCache<T>
+{
     pub fn new(max_entries: usize) -> Self {
         Self {
             cache: Arc::new(RwLock::new(HashMap::new())),
@@ -215,7 +217,9 @@ pub struct Interpolator1D<T> {
     order: InterpolationOrder,
 }
 
-impl<T: Float + FromPrimitive + Debug + Clone> Interpolator1D<T> {
+impl<T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign>
+    Interpolator1D<T>
+{
     pub fn new(order: InterpolationOrder) -> Self {
         Self {
             cache: CoefficientCache::new(1000),
@@ -303,7 +307,18 @@ pub struct Interpolator2D<T> {
     order: InterpolationOrder,
 }
 
-impl<T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static> Interpolator2D<T> {
+impl<
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Clone
+            + Send
+            + Sync
+            + 'static
+            + std::ops::AddAssign
+            + std::ops::DivAssign,
+    > Interpolator2D<T>
+{
     pub fn new(order: InterpolationOrder) -> Self {
         Self {
             cache: CoefficientCache::new(2000),

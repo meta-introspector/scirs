@@ -46,10 +46,7 @@ use scirs2_core::Rng;
 /// assert!(mi > 0.0);
 /// ```
 #[allow(dead_code)]
-pub fn mutual_info_score<F>(
-    labels_true: ArrayView1<i32>,
-    labelspred: ArrayView1<i32>,
-) -> Result<F>
+pub fn mutual_info_score<F>(labels_true: ArrayView1<i32>, labelspred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -118,9 +115,9 @@ pub fn normalized_mutual_info_score<F>(
 where
     F: Float + FromPrimitive + Debug,
 {
-    let mi = mutual_info_score(labels_true, labelspred)?;
-    let h_true = entropy(labels_true)?;
-    let h_pred = entropy(labelspred)?;
+    let mi = mutual_info_score::<F>(labels_true, labelspred)?;
+    let h_true = entropy::<F>(labels_true)?;
+    let h_pred = entropy::<F>(labelspred)?;
 
     if h_true == F::zero() && h_pred == F::zero() {
         return Ok(F::one());
@@ -156,10 +153,10 @@ pub fn adjusted_mutual_info_score<F>(
 where
     F: Float + FromPrimitive + Debug,
 {
-    let mi = mutual_info_score(labels_true, labelspred)?;
-    let emi = expected_mutual_info(labels_true, labelspred)?;
-    let h_true = entropy(labels_true)?;
-    let h_pred = entropy(labelspred)?;
+    let mi = mutual_info_score::<F>(labels_true, labelspred)?;
+    let emi = expected_mutual_info::<F>(labels_true, labelspred)?;
+    let h_true = entropy::<F>(labels_true)?;
+    let h_pred = entropy::<F>(labelspred)?;
 
     let max_entropy = if h_true > h_pred { h_true } else { h_pred };
 
@@ -290,20 +287,17 @@ where
 ///
 /// The homogeneity score (0 to 1, higher is better)
 #[allow(dead_code)]
-pub fn homogeneity_score<F>(
-    labels_true: ArrayView1<i32>,
-    labelspred: ArrayView1<i32>,
-) -> Result<F>
+pub fn homogeneity_score<F>(labels_true: ArrayView1<i32>, labelspred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let h_true = entropy(labels_true)?;
+    let h_true = entropy::<F>(labels_true)?;
 
     if h_true == F::zero() {
         return Ok(F::one());
     }
 
-    let h_true_given_pred = conditional_entropy(labels_true, labelspred)?;
+    let h_true_given_pred = conditional_entropy::<F>(labels_true, labelspred)?;
     Ok((h_true - h_true_given_pred) / h_true)
 }
 
@@ -322,20 +316,17 @@ where
 ///
 /// The completeness score (0 to 1, higher is better)
 #[allow(dead_code)]
-pub fn completeness_score<F>(
-    labels_true: ArrayView1<i32>,
-    labelspred: ArrayView1<i32>,
-) -> Result<F>
+pub fn completeness_score<F>(labels_true: ArrayView1<i32>, labelspred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let h_pred = entropy(labelspred)?;
+    let h_pred = entropy::<F>(labelspred)?;
 
     if h_pred == F::zero() {
         return Ok(F::one());
     }
 
-    let h_pred_given_true = conditional_entropy(labelspred, labels_true)?;
+    let h_pred_given_true = conditional_entropy::<F>(labelspred, labels_true)?;
     Ok((h_pred - h_pred_given_true) / h_pred)
 }
 
@@ -495,8 +486,8 @@ fn hypergeometric_pmf(k: usize, n_total: usize, row_sum: usize, colsum: usize) -
     }
 
     // Use log space to avoid overflow
-    let log_prob = log_comb(row_sum, k) + log_comb(n_total - row_sum, colsum - k)
-        - log_comb(n_total, colsum);
+    let log_prob =
+        log_comb(row_sum, k) + log_comb(n_total - row_sum, colsum - k) - log_comb(n_total, colsum);
     log_prob.exp()
 }
 
@@ -708,10 +699,10 @@ pub fn normalized_variation_of_information<F>(
 where
     F: Float + FromPrimitive + Debug,
 {
-    let h_true = entropy(labels_true)?;
-    let h_pred = entropy(labelspred)?;
-    let h_cond_true_pred = conditional_entropy(labels_true, labelspred)?;
-    let h_cond_pred_true = conditional_entropy(labelspred, labels_true)?;
+    let h_true = entropy::<F>(labels_true)?;
+    let h_pred = entropy::<F>(labelspred)?;
+    let h_cond_true_pred = conditional_entropy::<F>(labels_true, labelspred)?;
+    let h_cond_pred_true = conditional_entropy::<F>(labelspred, labels_true)?;
 
     let vi = h_cond_true_pred + h_cond_pred_true;
     let joint_entropy = h_true + h_cond_pred_true;
@@ -1046,11 +1037,11 @@ pub mod advanced_validation {
                     // Create bootstrap sample indices
                     let mut rng = rand::rng();
                     let indices: Vec<usize> = (0..sample_size)
-                        .map(|_| rng.gen_range(0..n_samples))
+                        .map(|_| rng.random_range(0..n_samples))
                         .collect();
 
                     // Extract bootstrap sample
-                    let mut bootstrapdata = Array2::zeros((sample_size..data.ncols()));
+                    let mut bootstrapdata = Array2::zeros((sample_size, data.ncols()));
                     for (i, &idx) in indices.iter().enumerate() {
                         bootstrapdata.row_mut(i).assign(&data.row(idx));
                     }
@@ -1155,10 +1146,10 @@ pub mod advanced_validation {
                             let mut rng = rand::rng();
 
                             let indices: Vec<usize> = (0..sample_size)
-                                .map(|_| rng.gen_range(0..n_samples))
+                                .map(|_| rng.random_range(0..n_samples))
                                 .collect();
 
-                            let mut bootstrapdata = Array2::zeros((sample_size..data.ncols()));
+                            let mut bootstrapdata = Array2::zeros((sample_size, data.ncols()));
                             for (i, &idx) in indices.iter().enumerate() {
                                 bootstrapdata.row_mut(i).assign(&data.row(idx));
                             }
@@ -1308,7 +1299,7 @@ pub mod advanced_validation {
             let joint_entropy = Self::joint_entropy(_clusteringsolutions)?;
 
             // Multi-information = sum of individual entropies - joint entropy
-            let sum_individual: F = individual_entropies.iter().sum();
+            let sum_individual: F = individual_entropies.iter().copied().sum();
             Ok(sum_individual - joint_entropy)
         }
 
@@ -1358,8 +1349,8 @@ pub mod advanced_validation {
             }
 
             // I(A; B; C) = I(A; B|C) - I(A; B)
-            let conditional_mi = conditional_mutual_information(labels_a, labels_b, labels_c)?;
-            let mutual_info = mutual_info_score(labels_a, labels_b)?;
+            let conditional_mi = conditional_mutual_information::<F>(labels_a, labels_b, labels_c)?;
+            let mutual_info = mutual_info_score::<F>(labels_a, labels_b)?;
 
             Ok(conditional_mi - mutual_info)
         }
@@ -1372,9 +1363,9 @@ pub mod advanced_validation {
         where
             F: Float + FromPrimitive + Debug,
         {
-            let mi = mutual_info_score(true_labels, predicted_labels)?;
-            let h_true = entropy(true_labels)?;
-            let h_pred = entropy(predicted_labels)?;
+            let mi = mutual_info_score::<F>(true_labels, predicted_labels)?;
+            let h_true = entropy::<F>(true_labels)?;
+            let h_pred = entropy::<F>(predicted_labels)?;
 
             // IQR = 2 * MI / (H(true) + H(pred))
             let denominator = h_true + h_pred;
@@ -1782,8 +1773,7 @@ pub mod advanced_validation {
             }
 
             // Select remaining features using MRMR criterion
-            while self.selectedfeatures.len() < nfeatures_to_select
-                && !availablefeatures.is_empty()
+            while self.selectedfeatures.len() < nfeatures_to_select && !availablefeatures.is_empty()
             {
                 let mut bestfeature = "availablefeatures"[0];
                 let mut best_score = F::neg_infinity();

@@ -402,10 +402,10 @@ fn extract_neighborhood_nd<T>(
 
 /// Common filter functions that can be used with generic_filter
 pub mod filter_functions {
-    use num_traits::Float;
+    use num_traits::{Float, FromPrimitive};
 
     /// Calculate the mean of values
-    pub fn mean<T: Float>(values: &[T]) -> T {
+    pub fn mean<T: Float + FromPrimitive>(values: &[T]) -> T {
         if values.is_empty() {
             return T::zero();
         }
@@ -414,7 +414,7 @@ pub mod filter_functions {
     }
 
     /// Calculate the standard deviation of values
-    pub fn std_dev<T: Float>(values: &[T]) -> T {
+    pub fn std_dev<T: Float + FromPrimitive>(values: &[T]) -> T {
         if values.len() <= 1 {
             return T::zero();
         }
@@ -441,7 +441,7 @@ pub mod filter_functions {
     }
 
     /// Calculate the variance of values
-    pub fn variance<T: Float>(values: &[T]) -> T {
+    pub fn variance<T: Float + FromPrimitive>(values: &[T]) -> T {
         if values.len() <= 1 {
             return T::zero();
         }
@@ -471,7 +471,7 @@ pub mod filter_functions {
     }
 
     /// Calculate the median value
-    pub fn median<T: Float>(values: &[T]) -> T {
+    pub fn median<T: Float + FromPrimitive>(values: &[T]) -> T {
         if values.is_empty() {
             return T::zero();
         }

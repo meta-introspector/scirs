@@ -541,7 +541,7 @@ pub fn compute_conv_indices(
     stride: (usize, usize),
     padding: (usize, usize),
 ) -> LinalgResult<ndarray::Array1<usize>> {
-    let (batchsize, in_channels, height, width) = inputshape;
+    let (batchsize, _in_channels, height, width) = inputshape;
     let (out_channels_, in_channels, kernel_h, kernel_w) = kernelshape;
     let (stride_h, stride_w) = stride;
     let (padding_h, padding_w) = padding;
@@ -819,9 +819,9 @@ pub fn conv2d_backward_input<F>(
 where
     F: Float + NumAssign + Sum + Zero + ScalarOperand,
 {
-    let (batchsize, out_channels, output_h, output_w) = grad_output.dim();
+    let (batchsize, out_channels, _output_h, _output_w) = grad_output.dim();
     let (k_out_channels, in_channels, kernel_h, kernel_w) = kernel.dim();
-    let (i_batchsize, i_in_channels, height, width) = inputshape;
+    let (i_batchsize, i_in_channels, _height, _width) = inputshape;
 
     // Check that shapes match
     if batchsize != i_batchsize {
@@ -858,9 +858,9 @@ where
     }
 
     // Calculate padding for transposed convolution
-    let (_stride_h, stride_w) = stride;
+    let (_stride_h, _stride_w) = stride;
     let (padding_h, padding_w) = padding;
-    let (_dilation_h, dilation_w) = dilation;
+    let (_dilation_h, _dilation_w) = dilation;
 
     // We need to adjust padding for transposed convolution
     let pad_h = kernel_h - 1 - padding_h;
@@ -943,7 +943,7 @@ pub fn conv2d_backward_kernel<F>(
 where
     F: Float + NumAssign + Sum + Zero + ScalarOperand,
 {
-    let (batchsize, in_channels, height, width) = input.dim();
+    let (batchsize, in_channels, _height, _width) = input.dim();
     let (go_batchsize, out_channels_, output_h, output_w) = grad_output.dim();
     let (k_out_channels, k_in_channels, kernel_h, kernel_w) = kernelshape;
 

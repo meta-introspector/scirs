@@ -22,7 +22,8 @@ impl<T> UniformChunkProcessor<T> {
     pub fn new(size: Vec<usize>, bordermode: BorderMode) -> Self {
         Self {
             size,
-            border_mode_marker: std::marker::PhantomData,
+            border_mode: bordermode,
+            _marker: std::marker::PhantomData,
         }
     }
 }
@@ -76,14 +77,26 @@ impl<T> MedianChunkProcessor<T> {
     pub fn new(size: Vec<usize>, bordermode: BorderMode) -> Self {
         Self {
             size,
-            border_mode_marker: std::marker::PhantomData,
+            border_mode: bordermode,
+            _marker: std::marker::PhantomData,
         }
     }
 }
 
 impl<T, D> ChunkProcessor<T, D> for MedianChunkProcessor<T>
 where
-    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + Zero + PartialOrd + std::ops::DivAssign + 'static,
+    T: Float
+        + FromPrimitive
+        + NumCast
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + Zero
+        + PartialOrd
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     D: Dimension + 'static,
 {
     fn process_chunk(
@@ -171,7 +184,18 @@ pub fn median_filter_chunked<T, D>(
     config: Option<ChunkConfig>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + Zero + PartialOrd + std::ops::DivAssign + 'static,
+    T: Float
+        + FromPrimitive
+        + NumCast
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + Zero
+        + PartialOrd
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     D: Dimension + 'static,
 {
     let config = config.unwrap_or_default();

@@ -112,10 +112,7 @@ where
 ///
 /// * Whitened array with the same shape as input
 #[allow(dead_code)]
-pub fn whiten_simd<F>(
-    obs: &Array2<F>,
-    config: Option<&SimdOptimizationConfig>,
-) -> Result<Array2<F>>
+pub fn whiten_simd<F>(obs: &Array2<F>, config: Option<&SimdOptimizationConfig>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
 {

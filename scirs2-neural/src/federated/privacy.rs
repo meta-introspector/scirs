@@ -69,7 +69,7 @@ impl DifferentialPrivacy {
             NoiseMethod::Laplace => {
                 let b = self.clip_threshold / self.epsilon;
                         // Manual Laplace distribution: sample from uniform and transform
-                        let u: f32 = rng.gen_range(-0.5..0.5);
+                        let u: f32 = rng.random_range(-0.5..0.5);
                         let laplace_sample = -b * u.signum() * (1.0 - 2.0 * u.abs()).ln();
                         *elem += laplace_sample;
     /// Calculate privacy spent
@@ -103,7 +103,7 @@ use rand::rng;
             let seed = client_id as u64 * 1000 + 42; // Simplified seed generation
             let mut rng = StdRng::seed_from_u64(seed);
             for elem in mask.iter_mut() {
-                *elem = rng.gen_range(-1.0..1.0);
+                *elem = rng.random_range(-1.0..1.0);
             masked.push(update + &mask);
         Ok(masked)
     /// Unmask aggregated updates
@@ -116,7 +116,7 @@ use rand::rng;
                 let seed = client_id as u64 * 1000 + 42;
                 let mut rng = StdRng::seed_from_u64(seed);
                 for elem in total_mask.iter_mut() {
-                    *elem += rng.gen_range(-1.0..1.0);
+                    *elem += rng.random_range(-1.0..1.0);
             *update -= &total_mask;
 /// Homomorphic encryption (placeholder)
 pub struct HomomorphicEncryption {

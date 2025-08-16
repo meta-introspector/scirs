@@ -186,7 +186,7 @@ where
 /// // Add noise to create signal_plusnoise
 /// let mut rng = rand::rng();
 /// let noisy: Vec<f64> = clean.iter()
-///     .map(|&x| x + rng.gen_range(-0.1f64..0.1f64))
+///     .map(|&x| x + rng.random_range(-0.1f64..0.1f64))
 ///     .collect();
 ///
 /// // Calculate SNR
@@ -469,7 +469,7 @@ mod tests {
         let mut rng = rand::rng();
         let noisy: Vec<f64> = clean
             .iter()
-            .map(|&x| x + noise_amplitude * (2.0 * PI * rng.gen_range(0.0..1.0)).sin())
+            .map(|&x| x + noise_amplitude * (2.0 * PI * rng.random_range(0.0..1.0)).sin())
             .collect();
 
         // Calculate SNR

@@ -326,7 +326,7 @@ fn validate_spectral_accuracy(
         let noise_std = 1.0 / snr_linear.sqrt();
         let noisy_signal: Vec<f64> = signal
             .iter()
-            .map(|&s| s + noise_std * rng.gen_range(-1.0..1.0))
+            .map(|&s| s + noise_std * rng.random_range(-1.0..1.0))
             .collect();
 
         let result = enhanced_pmtm(&noisy_signal, &config)?;
@@ -751,7 +751,7 @@ fn validate_confidence_intervals(
         // Add noise
         let noisy_signal: Vec<f64> = signal
             .iter()
-            .map(|&s| s + 0.1 * rng.gen_range(-1.0..1.0))
+            .map(|&s| s + 0.1 * rng.random_range(-1.0..1.0))
             .collect();
 
         let result = enhanced_pmtm(&noisy_signal, config)?;
@@ -863,7 +863,7 @@ pub fn generate_test_signal(
 
         TestSignalType::WhiteNoise => {
             // White Gaussian _noise
-            (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect()
+            (0..n).map(|_| rng.random_range(-1.0..1.0)).collect()
         }
 
         TestSignalType::ColoredNoise => {
@@ -875,7 +875,7 @@ pub fn generate_test_signal(
             let mut prev2 = 0.0;
 
             for i in 0..n {
-                let innovation = rng.gen_range(-1.0..1.0);
+                let innovation = rng.random_range(-1.0..1.0);
                 signal[i] = a1 * prev1 + a2 * prev2 + innovation;
                 prev2 = prev1;
                 prev1 = signal[i];
@@ -927,7 +927,7 @@ pub fn generate_test_signal(
 
         Ok(signal
             .into_iter()
-            .map(|s| s + noise_std * rng.gen_range(-1.0..1.0))
+            .map(|s| s + noise_std * rng.random_range(-1.0..1.0))
             .collect())
     } else {
         Ok(signal)

@@ -328,10 +328,10 @@ where
                 let mut indices = Vec::new();
 
                 for _ in 0..sample_size {
-                    indices.push(rng.gen_range(0..n_samples));
+                    indices.push(rng.random_range(0..n_samples));
                 }
 
-                let sampled_data = self.extract_samples(data..&indices)?;
+                let sampled_data = self.extract_samples(data, &indices)?;
                 Ok((sampled_data, indices))
             }
             SamplingStrategy::RandomSubspace { feature_ratio } => {
@@ -353,7 +353,7 @@ where
                 let mut sample_indices = Vec::new();
 
                 for _ in 0..sample_size {
-                    sample_indices.push(rng.gen_range(0..n_samples));
+                    sample_indices.push(rng.random_range(0..n_samples));
                 }
 
                 // Then apply feature sampling
@@ -362,7 +362,7 @@ where
                 featureindices.shuffle(rng);
                 featureindices.truncate(n_selected_features);
 
-                let bootstrap_data = self.extract_samples(data..&sample_indices)?;
+                let bootstrap_data = self.extract_samples(data, &sample_indices)?;
                 let sampled_data = self.extract_features(bootstrap_data.view(), &featureindices)?;
 
                 Ok((sampled_data, sample_indices))
@@ -397,11 +397,11 @@ where
                     NoiseType::Outliers { outlier_ratio } => {
                         let n_outliers = (n_samples as f64 * outlier_ratio) as usize;
                         for _ in 0..n_outliers {
-                            let outlier_idx = rng.gen_range(0..n_samples);
+                            let outlier_idx = rng.random_range(0..n_samples);
                             for j in 0..n_features {
                                 let outlier_value =
                                     F::from(rng.random::<f64>() * 10.0 - 5.0).unwrap();
-                                noisy_data[[outlier_idx..j]] = outlier_value;
+                                noisy_data[[outlier_idx, j]] = outlier_value;
                             }
                         }
                     }
@@ -540,7 +540,7 @@ where
                 let most_voted_cluster = votes
                     .iter()
                     .max_by_key(|(_, &count)| count)
-                    .map(|(&cluster_)| cluster_)
+                    .map(|(&cluster_, _)| cluster_)
                     .unwrap_or(0);
                 consensus_labels[sample_idx] = most_voted_cluster;
             }
@@ -590,7 +590,7 @@ where
                 let most_voted_cluster = votes
                     .iter()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                    .map(|(&cluster_)| cluster_)
+                    .map(|(&cluster_, _)| cluster_)
                     .unwrap_or(0);
                 consensus_labels[sample_idx] = most_voted_cluster;
             }
@@ -950,7 +950,7 @@ where
             }
             _ => {
                 // Default to K-means with random k
-                let k = rng.gen_range(2..=10);
+                let k = rng.random_range(2..=10);
                 let algorithm = ClusteringAlgorithm::KMeans { k_range: (k, k) };
                 let mut parameters = HashMap::new();
                 parameters.insert("k".to_string(), k.to_string());
@@ -970,33 +970,33 @@ where
 
         match algorithm {
             ClusteringAlgorithm::KMeans { k_range } => {
-                let k = rng.gen_range(k_range.0..=k_range.1);
-                parameters.insert("k".to_string()..k.to_string());
+                let k = rng.random_range(k_range.0..=k_range.1);
+                parameters.insert("k".to_string(), k.to_string());
             }
             ClusteringAlgorithm::DBSCAN {
                 eps_range,
                 min_samples_range,
             } => {
-                let eps = rng.gen_range(eps_range.0..=eps_range.1);
-                let min_samples = rng.gen_range(min_samples_range.0..=min_samples_range.1);
-                parameters.insert("eps".to_string()..eps.to_string());
+                let eps = rng.random_range(eps_range.0..=eps_range.1);
+                let min_samples = rng.random_range(min_samples_range.0..=min_samples_range.1);
+                parameters.insert("eps".to_string(), eps.to_string());
                 parameters.insert("min_samples".to_string(), min_samples.to_string());
             }
             ClusteringAlgorithm::MeanShift { bandwidth_range } => {
-                let bandwidth = rng.gen_range(bandwidth_range.0..=bandwidth_range.1);
-                parameters.insert("bandwidth".to_string()..bandwidth.to_string());
+                let bandwidth = rng.random_range(bandwidth_range.0..=bandwidth_range.1);
+                parameters.insert("bandwidth".to_string(), bandwidth.to_string());
             }
             ClusteringAlgorithm::Hierarchical { methods } => {
-                let method = &methods[rng.gen_range(0..methods.len())];
-                parameters.insert("method".to_string()..method.clone());
+                let method = &methods[rng.random_range(0..methods.len())];
+                parameters.insert("method".to_string(), method.clone());
             }
             ClusteringAlgorithm::Spectral { k_range } => {
-                let k = rng.gen_range(k_range.0..=k_range.1);
-                parameters.insert("k".to_string()..k.to_string());
+                let k = rng.random_range(k_range.0..=k_range.1);
+                parameters.insert("k".to_string(), k.to_string());
             }
             ClusteringAlgorithm::AffinityPropagation { damping_range } => {
-                let damping = rng.gen_range(damping_range.0..=damping_range.1);
-                parameters.insert("damping".to_string()..damping.to_string());
+                let damping = rng.random_range(damping_range.0..=damping_range.1);
+                parameters.insert("damping".to_string(), damping.to_string());
             }
         }
 
@@ -1014,10 +1014,10 @@ where
 
         for (param_name, range) in parameter_ranges {
             let value = match range {
-                ParameterRange::Integer(min, max) => rng.gen_range(*min..=*max).to_string(),
-                ParameterRange::Float(min, max) => rng.gen_range(*min..=*max).to_string(),
+                ParameterRange::Integer(min, max) => rng.random_range(*min..=*max).to_string(),
+                ParameterRange::Float(min, max) => rng.random_range(*min..=*max).to_string(),
                 ParameterRange::Categorical(choices) => {
-                    choices[rng.gen_range(0..choices.len())].clone()
+                    choices[rng.random_range(0..choices.len())].clone()
                 }
                 ParameterRange::Boolean => rng.gen_bool(0.5).to_string(),
             };
@@ -1132,19 +1132,15 @@ where
     /// Filter results by quality
     #[allow(dead_code)]
     fn filter_by_quality(&self, results: &[ClusteringResult]) -> Vec<ClusteringResult> {
-        let threshold = self.config.quality_threshold;
-        results
-            .iter()
-            .filter(|r| r.quality_score >= threshold)
-            .cloned()
-            .collect()
-    }
-
-    /// Count number of clusters in labels
-    #[allow(dead_code)]
-    fn count_clusters(&self, labels: &Array1<i32>) -> usize {
-        let unique_labels: HashSet<i32> = labels.iter().cloned().collect();
-        unique_labels.len()
+        if let Some(threshold) = self.config.quality_threshold {
+            results
+                .iter()
+                .filter(|r| r.quality_score >= threshold)
+                .cloned()
+                .collect()
+        } else {
+            results.to_vec()
+        }
     }
 
     /// Map labels back to full dataset size
@@ -1189,8 +1185,14 @@ where
         let n_samples = data.nrows();
 
         match &self.config.consensus_method {
-            ConsensusMethod::MajorityVoting => self.majority_voting_consensus(results, n_samples),
-            ConsensusMethod::WeightedConsensus => self.weighted_consensus(results, n_samples),
+            ConsensusMethod::MajorityVoting => {
+                let result = self.majority_voting_consensus(results, data)?;
+                Ok(result.consensus_labels)
+            }
+            ConsensusMethod::WeightedConsensus => {
+                let result = self.weighted_consensus(results, data)?;
+                Ok(result.consensus_labels)
+            }
             ConsensusMethod::CoAssociation { threshold } => {
                 self.co_association_consensus(results, n_samples, *threshold)
             }
@@ -1235,10 +1237,10 @@ where
         results: &[ClusteringResult],
     ) -> Result<DiversityMetrics> {
         Ok(DiversityMetrics {
-            average_diversity: 0.5,  // Stub implementation
-            diversity_matrix: Array2::eye(results.len()),  // Stub implementation
-            algorithm_distribution: HashMap::new(),  // Stub implementation
-            parameter_diversity: HashMap::new(),  // Stub implementation
+            average_diversity: 0.5,                       // Stub implementation
+            diversity_matrix: Array2::eye(results.len()), // Stub implementation
+            algorithm_distribution: HashMap::new(),       // Stub implementation
+            parameter_diversity: HashMap::new(),          // Stub implementation
         })
     }
 
@@ -2132,7 +2134,7 @@ pub mod advanced_ensemble {
             weights: &Array1<f64>,
             n_samples: usize,
         ) -> Result<Array1<i32>> {
-            let mut consensus = Array1::zeros(n_samples);
+            let mut consensus = Array1::<i32>::zeros(n_samples);
 
             // Weighted voting with continuous weights
             for i in 0..n_samples {
@@ -2173,7 +2175,7 @@ pub mod advanced_ensemble {
 
             // Propose new _weights with small random perturbations
             for weight in new_weights.iter_mut() {
-                let perturbation = rng.gen_range(-0.05..0.05);
+                let perturbation = rng.random_range(-0.05..0.05);
                 *weight = (*weight + perturbation).max(0.01).min(0.99);
             }
 
@@ -2259,7 +2261,7 @@ pub mod advanced_ensemble {
             let data_f64 = data_view.mapv(|x| x.to_f64().unwrap_or(0.0));
 
             // Use a simple K-means clustering as weak learner
-            let result = crate::vq::kmeans(data_f64.view(), k, None, None, None).map_err(|e| {
+            let result = crate::vq::kmeans(data_f64.view(), k, None, None, None, None).map_err(|e| {
                 ClusteringError::InvalidInput(format!("Weak learner failed: {}", e))
             })?;
 
@@ -2363,7 +2365,7 @@ pub mod advanced_ensemble {
                     .iter()
                     .enumerate()
                     .filter(|(_, &l)| l == label)
-                    .map(|(i_)| i_)
+                    .map(|(i, _)| i)
                     .collect();
 
                 if !cluster_points.is_empty() {
@@ -2386,8 +2388,9 @@ pub mod advanced_ensemble {
                 let assigned_label = result.labels[i];
                 let sample_point = data_f64.row(i);
 
-                if let Some((_, centroid)) =
-                    centroids.iter().find(|(label_)| *label_ == assigned_label)
+                if let Some((_, centroid)) = centroids
+                    .iter()
+                    .find(|(label, _)| **label == assigned_label)
                 {
                     let distance: f64 = sample_point
                         .iter()
@@ -2820,7 +2823,7 @@ fn secure_aggregate_results(
     // For simplicity, perform simple majority voting
     // A real implementation would use secure aggregation protocols
     let n_samples = local_results[0].consensus_labels.len();
-    let mut consensus_labels = Array1::zeros(n_samples);
+    let mut consensus_labels = Array1::<i32>::zeros(n_samples);
 
     for i in 0..n_samples {
         let mut votes = HashMap::new();

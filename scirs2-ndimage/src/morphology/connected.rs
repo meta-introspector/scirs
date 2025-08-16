@@ -215,7 +215,7 @@ where
     let total_elements: usize = shape.iter().product();
 
     if total_elements == 0 {
-        let output = Array::<usize>::zeros(input.raw_dim());
+        let output = Array::<usize, D>::zeros(input.raw_dim());
         return Ok((output, 0));
     }
 
@@ -248,7 +248,7 @@ where
     let component_mapping = uf.get_component_mapping();
 
     // Create output array
-    let mut output = Array::<usize>::zeros(input.raw_dim());
+    let mut output = Array::<usize, D>::zeros(input.raw_dim());
     let mut num_labels = 0;
 
     // Second pass: assign labels
@@ -308,7 +308,7 @@ where
 
     let shape = input.shape();
     let total_elements: usize = shape.iter().product();
-    let mut output = Array::<bool>::from_elem(input.raw_dim(), false);
+    let mut output = Array::<bool, D>::from_elem(input.raw_dim(), false);
 
     if total_elements == 0 {
         return Ok(output);
@@ -406,7 +406,7 @@ where
     let (labeled, num_labels) = label(input, None, Some(conn), None)?;
 
     if num_labels == 0 {
-        return Ok(Array::<bool>::from_elem(input.raw_dim(), false));
+        return Ok(Array::<bool, D>::from_elem(input.raw_dim(), false));
     }
 
     // Count the _size of each component
@@ -418,7 +418,7 @@ where
     }
 
     // Create output array, keeping only large enough components
-    let mut output = Array::<bool>::from_elem(input.raw_dim(), false);
+    let mut output = Array::<bool, D>::from_elem(input.raw_dim(), false);
     let shape = input.shape();
     let total_elements: usize = shape.iter().product();
 

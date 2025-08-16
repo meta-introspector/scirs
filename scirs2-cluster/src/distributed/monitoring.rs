@@ -172,7 +172,7 @@ pub struct BottleneckAnalysis {
 }
 
 /// Types of system bottlenecks
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum BottleneckType {
     Cpu,
     Memory,
@@ -298,9 +298,8 @@ impl PerformanceMonitor {
             if metrics.latency_history.len() > max_size {
                 metrics.latency_history.pop_front();
             }
-
         }
-        
+
         // Update health score after all metrics updates
         if let Some(metrics) = self.worker_metrics.get(&worker_id) {
             let health_score = self.calculate_worker_health_score(metrics);

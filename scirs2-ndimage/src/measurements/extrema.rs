@@ -299,8 +299,8 @@ where
     let neighborhood_size = size.unwrap_or(&default_size);
 
     // Initialize result arrays
-    let mut minima = Array::<bool>::from_elem(input.raw_dim(), false);
-    let mut maxima = Array::<bool>::from_elem(input.raw_dim(), false);
+    let mut minima = Array::<bool, D>::from_elem(input.raw_dim(), false);
+    let mut maxima = Array::<bool, D>::from_elem(input.raw_dim(), false);
 
     // Create neighborhood offsets for n-dimensional case
     let mut offsets = Vec::new();

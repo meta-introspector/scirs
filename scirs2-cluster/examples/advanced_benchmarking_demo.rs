@@ -465,7 +465,7 @@ fn create_sparse_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
         for _ in 0..n_features {
             // 20% chance of non-zero value
             if rng.random::<f64>() < 0.2 {
-                data.push(rng.gen_range(-5.0..5.0));
+                data.push(rng.random_range(-5.0..5.0));
             } else {
                 data.push(0.0);
             }
@@ -498,7 +498,7 @@ fn create_high_dim_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
                 data.push(rng.sample(normal));
             } else {
                 // Noise dimensions
-                data.push(rng.gen_range(-0.5..0.5));
+                data.push(rng.random_range(-0.5..0.5));
             }
         }
     }
@@ -531,7 +531,7 @@ fn create_noisy_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
 
             let value = if rng.random::<f64>() < outlier_probability {
                 // Generate outlier
-                rng.gen_range(-10.0..10.0)
+                rng.random_range(-10.0..10.0)
             } else {
                 // Normal cluster member with noise
                 let normal = Normal::new(base_value..noise_level).unwrap();

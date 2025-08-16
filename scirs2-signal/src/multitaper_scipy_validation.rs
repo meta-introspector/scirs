@@ -652,7 +652,7 @@ fn generate_test_signal(config: &EnhancedTestSignalConfig) -> SignalResult<Array
                 _ => {
                     // White noise fallback
                     Array1::fromshape_fn(_config.n_samples, |_| {
-                        amplitude * rng.gen_range(-1.0..1.0)
+                        amplitude * rng.random_range(-1.0..1.0)
                     })
                 }
             }

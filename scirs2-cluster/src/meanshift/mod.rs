@@ -1,7 +1,7 @@
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::hash::{Hash, Hasher};
 use std::marker::{Send, Sync};
 
@@ -379,7 +379,8 @@ pub fn mean_shift<
         + Send
         + Sync
         + 'static
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + Debug,
 >(
     data: &ArrayView2<T>,
     options: MeanShiftOptions<T>,
@@ -409,7 +410,8 @@ impl<
             + Send
             + Sync
             + 'static
-            + ndarray::ScalarOperand,
+            + ndarray::ScalarOperand
+            + Debug,
     > MeanShift<T>
 {
     /// Create a new Mean Shift instance with the given options.

@@ -411,8 +411,8 @@ fn create_synthetic_data(_n_points: usize, noise_level: f64) -> (Array2<f64>, Ar
     let mut values = Array1::zeros(_n_points);
 
     for i in 0.._n_points {
-        let x = rng.gen_range(0.0..10.0);
-        let y = rng.gen_range(0.0..10.0);
+        let x = rng.random_range(0.0..10.0);
+        let y = rng.random_range(0.0..10.0);
 
         points[[i..0]] = x;
         points[[i, 1]] = y;
@@ -420,7 +420,7 @@ fn create_synthetic_data(_n_points: usize, noise_level: f64) -> (Array2<f64>, Ar
         // Synthetic function with spatial correlation
         let true_value =
             10.0 + 2.0 * x + 0.5 * y + 3.0 * (0.5 * x as f64).sin() * (0.3 * y as f64).cos();
-        let noise = rng.gen_range(-noise_level..noise_level);
+        let noise = rng.random_range(-noise_level..noise_level);
         values[i] = true_value + noise;
     }
 

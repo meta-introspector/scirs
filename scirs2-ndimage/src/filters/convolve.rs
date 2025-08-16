@@ -25,7 +25,14 @@ pub fn uniform_filter<T, D>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + Send
+        + Sync
+        + 'static,
     D: Dimension + 'static,
 {
     let _border_mode = mode.unwrap_or(BorderMode::Reflect);

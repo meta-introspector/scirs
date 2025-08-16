@@ -1218,7 +1218,7 @@ impl HomeostaticNeuralClusterer {
 
         for mut row in self.weights.outer_iter_mut() {
             for weight in row.iter_mut() {
-                *weight = rng.gen_range(0.0..1.0);
+                *weight = rng.random_range(0.0..1.0);
             }
 
             // Normalize weights
@@ -1799,7 +1799,7 @@ impl DendriticCompartment {
 
         let mut weights = Array1::zeros(_inputdim);
         for weight in weights.iter_mut() {
-            *weight = rng.gen_range(0.0..1.0);
+            *weight = rng.random_range(0.0..1.0);
         }
 
         let local_learning_params = LocalLearningParams::new();

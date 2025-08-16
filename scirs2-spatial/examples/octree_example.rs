@@ -134,7 +134,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for i in 0..n_points {
         for j in 0..3 {
-            large_points[[i, j]] = rng.gen_range(-100.0..100.0);
+            large_points[[i, j]] = rng.random_range(-100.0..100.0);
         }
     }
 

@@ -10,7 +10,7 @@ use crate::norm::vector_norm;
 use crate::quantization::quantized_matrixfree::QuantizedMatrixFreeOp;
 use ndarray::ScalarOperand;
 use ndarray::{Array1, Array2, ArrayView1};
-use num_traits::{AsPrimitive, Float, FromPrimitive, NumAssign, NumCast, One, Zero};
+use num_traits::{AsPrimitive, Float, FromPrimitive, NumAssign, One, Zero};
 use std::fmt::Debug;
 use std::iter::Sum;
 

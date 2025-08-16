@@ -13,12 +13,12 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::convert::TryInto;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::Path;
+use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid;
 
@@ -216,12 +216,31 @@ impl PlatformInfo {
 }
 
 /// Enhanced model wrapper with integrity checking and versioning
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone)]
 pub struct EnhancedModel<T: SerializableModel> {
     /// The actual model data
     pub model: T,
     /// Enhanced metadata
     pub metadata: EnhancedModelMetadata,
+}
+
+impl<'de, T: SerializableModel> Deserialize<'de> for EnhancedModel<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct EnhancedModelHelper<T> {
+            model: T,
+            metadata: EnhancedModelMetadata,
+        }
+
+        let helper = EnhancedModelHelper::<T>::deserialize(deserializer)?;
+        Ok(EnhancedModel {
+            model: helper.model,
+            metadata: helper.metadata,
+        })
+    }
 }
 
 impl<T: SerializableModel> EnhancedModel<T> {
@@ -1695,11 +1714,9 @@ impl AdvancedExport for KMeansModel {
             Some(DataCharacteristics {
                 n_samples: labels.len(),
                 n_features: self.centroids.ncols(),
-                data_type: Some("continuous".to_string()),
-                missing_value_percentage: Some(0.0),
-                feature_scaling: None,
-                preprocessing_steps: None,
-                statistical_summary: None,
+                data_type_fingerprint: "continuous".to_string(),
+                feature_ranges: None,
+                preprocessing_applied: vec![],
             })
         } else {
             None
@@ -1795,11 +1812,9 @@ impl AdvancedExport for HierarchicalModel {
         let data_characteristics = Some(DataCharacteristics {
             n_samples: self.n_observations,
             n_features: 0, // Unknown in linkage matrix
-            data_type: Some("continuous".to_string()),
-            missing_value_percentage: Some(0.0),
-            feature_scaling: None,
-            preprocessing_steps: None,
-            statistical_summary: None,
+            data_type_fingerprint: "continuous".to_string(),
+            feature_ranges: None,
+            preprocessing_applied: vec![],
         });
 
         ModelMetadata {
@@ -2040,9 +2055,7 @@ pub mod compatibility {
     }
 
     /// Import from scikit-learn compatible format
-    pub fn from_sklearn_format<T: SerializableModel>(
-        sklearndata: &serde_json::Value,
-    ) -> Result<T> {
+    pub fn from_sklearn_format<T: SerializableModel>(sklearndata: &serde_json::Value) -> Result<T> {
         if let Some(modeldata) = sklearndata.get("modeldata") {
             let model_str = serde_json::to_string(modeldata)?;
             let model: T = serde_json::from_str(&model_str)?;
@@ -2861,7 +2874,12 @@ pub mod persistence {
                     ClusteringError::InvalidInput(format!("Failed to get entry path: {}", e))
                 })?;
 
-                if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+                let file_name_str = path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|s| s.to_string());
+
+                if let Some(file_name) = file_name_str {
                     if !file_name.ends_with("_metadata.json") {
                         let mut contents = String::new();
                         entry.read_to_string(&mut contents).map_err(|e| {
@@ -2880,9 +2898,9 @@ pub mod persistence {
 
                         let model_name = file_name
                             .rsplit_once('.')
-                            .map(|(name_, _)| name_)
-                            .unwrap_or(file_name);
-                        models.push((model_name.to_string(), model));
+                            .map(|(name_, _)| name_.to_string())
+                            .unwrap_or(file_name.clone());
+                        models.push((model_name, model));
                     }
                 }
             }
@@ -3198,9 +3216,7 @@ pub mod compression {
                 original_size: self.original_size,
                 compressed_size: self.compresseddata.len(),
                 compression_ratio: self.compression_ratio,
-                space_saved_bytes: self
-                    .original_size
-                    .saturating_sub(self.compresseddata.len()),
+                space_saved_bytes: self.original_size.saturating_sub(self.compresseddata.len()),
                 space_saved_percentage: (1.0 - self.compression_ratio) * 100.0,
             }
         }

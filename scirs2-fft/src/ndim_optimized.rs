@@ -17,7 +17,7 @@ use crate::rfft::rfft;
 #[allow(dead_code)]
 pub fn fftn_optimized<T, D>(
     x: &ArrayView<T, D>,
-    shape: Option<Vec<usize>>,
+    _shape: Option<Vec<usize>>,
     axes: Option<Vec<usize>>,
 ) -> FFTResult<Array<Complex64, D>>
 where
@@ -257,7 +257,7 @@ where
 #[allow(dead_code)]
 pub fn rfftn_optimized<T, D>(
     x: &ArrayView<T, D>,
-    shape: Option<Vec<usize>>,
+    _shape: Option<Vec<usize>>,
     axes: Option<Vec<usize>>,
 ) -> FFTResult<Array<Complex64, D>>
 where

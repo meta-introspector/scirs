@@ -307,8 +307,8 @@ mod tests {
         let id2 = multi.add(tracker2);
 
         multi.start_all();
-        multi.update_model(id1, 50); // 50% complete
-        multi.update_model(id2, 25); // 25% complete
+        multi.update(id1, 50); // 50% complete
+        multi.update(id2, 25); // 25% complete
 
         // Overall should be (50 + 25) / 2 = 37.5%
         let overall = multi.overall_progress();

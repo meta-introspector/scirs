@@ -250,7 +250,7 @@ where
     }
 
     // Evaluate B-spline basis function at given positions
-    let mut result = Array::<T>::zeros(positions.len());
+    let mut result = Array1::<T>::zeros(positions.len());
 
     for (i, &pos) in positions.iter().enumerate() {
         result[i] = evaluate_bspline_basis(pos, spline_order, deriv);

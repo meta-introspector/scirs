@@ -203,9 +203,8 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
     /// Generate quantum noise for superposition
     fn quantum_noise(&self) -> F {
         // Simplified quantum noise generation
-        let uniform = Uniform::new(-1.0, 1.0);
         let mut rng = rand::rng();
-        F::from(uniform.sample(&mut rng)).unwrap()
+        F::from(rng.random_range(-1.0..1.0)).unwrap()
     }
 
     /// Perform quantum optimization iterations
@@ -265,7 +264,9 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
             // Normalize probabilities
             let sum: F = quantum_state.cluster_probabilities.sum();
             if sum > F::zero() {
-                quantum_state.cluster_probabilities /= sum;
+                quantum_state
+                    .cluster_probabilities
+                    .mapv_inplace(|x| x / sum);
             }
         }
 
@@ -299,10 +300,10 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
             let sum_j: F = state_j.cluster_probabilities.sum();
 
             if sum_i > F::zero() {
-                state_i.cluster_probabilities /= sum_i;
+                state_i.cluster_probabilities.mapv_inplace(|x| x / sum_i);
             }
             if sum_j > F::zero() {
-                state_j.cluster_probabilities /= sum_j;
+                state_j.cluster_probabilities.mapv_inplace(|x| x / sum_j);
             }
         }
 
@@ -334,7 +335,9 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
             // Renormalize after measurement
             let sum: F = quantum_state.cluster_probabilities.sum();
             if sum > F::zero() {
-                quantum_state.cluster_probabilities /= sum;
+                quantum_state
+                    .cluster_probabilities
+                    .mapv_inplace(|x| x / sum);
             }
         }
 
@@ -368,7 +371,8 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
         // Normalize centroids by weights
         for cluster in 0..self.n_clusters {
             if cluster_weights[cluster] > F::zero() {
-                classical_centroids.row_mut(cluster) /= cluster_weights[cluster];
+                let mut row = classical_centroids.row_mut(cluster);
+                row.mapv_inplace(|x| x / cluster_weights[cluster]);
             }
         }
 
@@ -758,7 +762,7 @@ impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
 
     /// Predict cluster assignment for new data
     pub fn predict(&self, point: ArrayView1<F>) -> Result<usize> {
-        let (nearest_cluster_idx_) = self.find_nearest_cluster(point);
+        let (nearest_cluster_idx_, _distance) = self.find_nearest_cluster(point);
 
         nearest_cluster_idx_.ok_or_else(|| {
             ClusteringError::InvalidInput("No clusters available for prediction".to_string())
@@ -935,17 +939,17 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
 
             // Initialize random assignment
             for i in 0..n_samples {
-                current_assignments[i] = rng.gen_range(0..self.config.n_actions.min(n_samples));
+                current_assignments[i] = rng.random_range(0..self.config.n_actions.min(n_samples));
             }
 
             // Episode simulation
             for step in 0..n_samples {
-                let state = self.encode_state(&current_assignments[..step]);
+                let state = self.encode_state(&current_assignments[..step], step);
 
                 // Choose action (cluster assignment)
                 let action = if rng.random::<f64>() < exploration_rate {
                     // Exploration
-                    rng.gen_range(0..self.config.n_actions.min(n_samples))
+                    rng.random_range(0..self.config.n_actions.min(n_samples))
                 } else {
                     // Exploitation
                     self.choose_best_action(state)
@@ -1700,43 +1704,43 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
         // Initialize encoder
         let mut prev_dim = inputdim;
         for &dim in &self.config.encoder_dims {
-            let weight = Array2::fromshape_fn((prev_dim, dim), |_| {
-                F::from(rng.gen_range(-0.1..0.1)).unwrap()
+            let weight = Array2::from_shape_fn((prev_dim, dim), |_| {
+                F::from(rng.random_range(-0.1..0.1)).unwrap()
             });
             let bias = Array1::zeros(dim);
 
-            self.encoderweights.push(weight);
+            self.encoder_weights.push(weight);
             self.encoder_biases.push(bias);
             prev_dim = dim;
         }
 
         // Add final embedding layer
-        let embedding_weight = Array2::fromshape_fn((prev_dim..self.config.embedding_dim), |_| {
-            F::from(rng.gen_range(-0.1..0.1)).unwrap()
+        let embedding_weight = Array2::from_shape_fn((prev_dim, self.config.embedding_dim), |_| {
+            F::from(rng.random_range(-0.1..0.1)).unwrap()
         });
         let embedding_bias = Array1::zeros(self.config.embedding_dim);
-        self.encoderweights.push(embedding_weight);
+        self.encoder_weights.push(embedding_weight);
         self.encoder_biases.push(embedding_bias);
 
         // Initialize decoder (reverse of encoder)
         prev_dim = self.config.embedding_dim;
         for &dim in &self.config.decoder_dims {
-            let weight = Array2::fromshape_fn((prev_dim, dim), |_| {
-                F::from(rng.gen_range(-0.1..0.1)).unwrap()
+            let weight = Array2::from_shape_fn((prev_dim, dim), |_| {
+                F::from(rng.random_range(-0.1..0.1)).unwrap()
             });
             let bias = Array1::zeros(dim);
 
-            self.decoderweights.push(weight);
+            self.decoder_weights.push(weight);
             self.decoder_biases.push(bias);
             prev_dim = dim;
         }
 
         // Add final reconstruction layer
-        let output_weight = Array2::fromshape_fn((prev_dim, inputdim), |_| {
-            F::from(rng.gen_range(-0.1..0.1)).unwrap()
+        let output_weight = Array2::from_shape_fn((prev_dim, inputdim), |_| {
+            F::from(rng.random_range(-0.1..0.1)).unwrap()
         });
         let output_bias = Array1::zeros(inputdim);
-        self.decoderweights.push(output_weight);
+        self.decoder_weights.push(output_weight);
         self.decoder_biases.push(output_bias);
 
         Ok(())
@@ -1756,7 +1760,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
             x = x.dot(weight) + bias;
 
             // Apply ReLU activation (except for last layer)
-            if i < self.encoderweights.len() - 1 {
+            if i < self.encoder_weights.len() - 1 {
                 x.mapv_inplace(|val| val.max(F::zero()));
             }
         }
@@ -1778,7 +1782,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
             x = x.dot(weight) + bias;
 
             // Apply ReLU activation (except for last layer which is sigmoid)
-            if i < self.decoderweights.len() - 1 {
+            if i < self.decoder_weights.len() - 1 {
                 x.mapv_inplace(|val| val.max(F::zero()));
             } else {
                 // Sigmoid activation for reconstruction
@@ -1906,7 +1910,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
             None,
             None,
         ) {
-            Ok((centers_f64_)) => {
+            Ok((centers_f64_, _distortion)) => {
                 let centers = centers_f64_.mapv(|x| F::from(x).unwrap_or(F::zero()));
                 self.cluster_centers = Some(centers);
                 Ok(())
@@ -2171,13 +2175,13 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
         let mut rng = rand::rng();
 
         // Initialize QAOA parameters randomly
-        let gamma_params = Array1::fromshape_fn(config.p_layers, |_| {
-            F::from(rng.gen_range(0.0..std::f64::consts::PI)).unwrap()
+        let gamma_params = Array1::from_shape_fn(config.p_layers, |_| {
+            F::from(rng.random_range(0.0..std::f64::consts::PI)).unwrap()
         });
 
-        let beta_params = Array1::fromshape_fn(
-            config.p_layers..|_| F::from(rng.gen_range(0.0..std::f64::consts::PI / 2.0)).unwrap(),
-        );
+        let beta_params = Array1::from_shape_fn(config.p_layers, |_| {
+            F::from(rng.random_range(0.0..std::f64::consts::PI / 2.0)).unwrap()
+        });
 
         Self {
             config,
@@ -2324,7 +2328,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
             let mut expectation = F::zero();
 
             for i in 0..state.len() {
-                let probability = state[i].norm().powi(2);
+                let probability = state[i].abs().powi(2);
                 let mut cost = F::zero();
 
                 // Calculate cost for this bit string
@@ -2422,7 +2426,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
                 let random_val = F::from(rng.random::<f64>()).unwrap();
 
                 for (i, &amplitude) in state.iter().enumerate() {
-                    let prob = amplitude.norm().powi(2);
+                    let prob = amplitude.abs().powi(2);
                     cumulative_prob = cumulative_prob + prob;
 
                     if random_val < cumulative_prob {
@@ -2564,8 +2568,8 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
         let mut rng = rand::rng();
 
         // Initialize variational parameters
-        let params = Array1::fromshape_fn(config.n_params, |_| {
-            F::from(rng.gen_range(0.0..2.0 * std::f64::consts::PI)).unwrap()
+        let params = Array1::from_shape_fn(config.n_params, |_| {
+            F::from(rng.random_range(0.0..2.0 * std::f64::consts::PI)).unwrap()
         });
 
         Self {

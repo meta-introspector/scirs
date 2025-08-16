@@ -14,7 +14,7 @@ fn main() {
     let mut rng = rand::rng();
     let noisy_signal = signal
         .iter()
-        .map(|&x| x + 0.1 * rng.gen_range(-1.0..1.0))
+        .map(|&x| x + 0.1 * rng.random_range(-1.0..1.0))
         .collect::<Vec<f64>>();
 
     // Perform DWT with Meyer wavelet (3 levels)

@@ -319,7 +319,7 @@ where
 /// Fallback implementations when GPU feature is not enabled
 #[cfg(not(feature = "cuda"))]
 #[allow(dead_code)]
-fn rfft_gpu<T>(_input: &[T], _n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
+fn rfft_gpu<T>(_input: &[T], _n: Option<usize>, _norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -330,7 +330,7 @@ where
 
 #[cfg(not(feature = "cuda"))]
 #[allow(dead_code)]
-fn irfft_gpu<T>(_input: &[T], _n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
+fn irfft_gpu<T>(_input: &[T], _n: Option<usize>, _norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {

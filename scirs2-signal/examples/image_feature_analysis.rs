@@ -395,7 +395,7 @@ fn texture_based_segmentation() {
     let mut cluster_centers = Vec::with_capacity(4);
     for _ in 0..4 {
         let mut rng = rand::rng();
-        let random_idx = rng.gen_range(0..patch_features.len());
+        let random_idx = rng.random_range(0..patch_features.len());
         cluster_centers.push(patch_features[random_idx].1.clone());
     }
 
@@ -452,7 +452,7 @@ fn texture_based_segmentation() {
         for (c, count) in counts.iter().enumerate() {
             if *count == 0 {
                 let mut rng = rand::rng();
-                let random_idx = rng.gen_range(0..patch_features.len());
+                let random_idx = rng.random_range(0..patch_features.len());
                 new_centers[c] = patch_features[random_idx].1.clone();
             }
         }

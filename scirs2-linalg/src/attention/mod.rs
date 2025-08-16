@@ -1701,7 +1701,7 @@ where
         let (batchsize, seq_len_q, d_model) =
             (query.shape()[0], query.shape()[1], query.shape()[2]);
         let (_, seq_len_k, _) = (key.shape()[0], key.shape()[1], key.shape()[2]);
-        let (_, _, d_model_v) = (value.shape()[0], value.shape()[1], value.shape()[2]); // For future use
+        let (_, _, _d_model_v) = (value.shape()[0], value.shape()[1], value.shape()[2]); // For future use
 
         // Create scaled arrays for computation
 

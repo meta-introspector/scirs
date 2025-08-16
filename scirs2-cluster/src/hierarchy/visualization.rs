@@ -1846,8 +1846,8 @@ pub mod export {
                     ),
                     MarkerShape::Square => format!(
                         "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"{}\"/>\n",
-                        leaf.position.0 - config.styling.node_markers.marker_size / 2.0,
-                        leaf.position.1 - config.styling.node_markers.marker_size / 2.0,
+                        leaf.position.0 - config.styling.node_markers.marker_size as f64 / 2.0,
+                        leaf.position.1 - config.styling.node_markers.marker_size as f64 / 2.0,
                         config.styling.node_markers.marker_size,
                         config.styling.node_markers.marker_size,
                         config.styling.node_markers.marker_color
@@ -1885,10 +1885,12 @@ pub mod export {
             if let Some(ref bg_color) = config.styling.label_style.background {
                 svg.push_str(&format!(
                     "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"{}\" rx=\"2\"/>\n",
-                    leaf.position.0 - config.styling.label_style.padding * 3.0,
-                    leaf.position.1 - config.font_size / 2.0 - config.styling.label_style.padding,
-                    config.styling.label_style.padding * 6.0,
-                    config.font_size + 2.0 * config.styling.label_style.padding,
+                    leaf.position.0 - config.styling.label_style.padding as f64 * 3.0,
+                    leaf.position.1
+                        - config.font_size as f64 / 2.0
+                        - config.styling.label_style.padding as f64,
+                    config.styling.label_style.padding as f64 * 6.0,
+                    config.font_size as f64 + 2.0 * config.styling.label_style.padding as f64,
                     bg_color
                 ));
             }
@@ -2090,7 +2092,6 @@ pub mod realtime {
     use std::time::{Duration, Instant};
 
     /// Real-time dendrogram that updates as clustering progresses
-    #[derive(Debug)]
     pub struct RealtimeDendrogram<F: Float> {
         /// Current dendrogram state
         currentplot: Arc<Mutex<Option<DendrogramPlot<F>>>>,
@@ -2100,6 +2101,17 @@ pub mod realtime {
         update_callback: Option<Arc<dyn Fn(&DendrogramPlot<F>) + Send + Sync>>,
         /// Whether the visualization is active
         is_active: Arc<Mutex<bool>>,
+    }
+
+    impl<F: Float> std::fmt::Debug for RealtimeDendrogram<F> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.debug_struct("RealtimeDendrogram")
+                .field("currentplot", &self.currentplot)
+                .field("config", &self.config)
+                .field("update_callback", &"<closure>")
+                .field("is_active", &self.is_active)
+                .finish()
+        }
     }
 
     /// Configuration for real-time visualization

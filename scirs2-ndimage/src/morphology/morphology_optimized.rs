@@ -875,7 +875,15 @@ pub fn geodesic_erosion_2d<T>(
     iterations: Option<usize>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static + PartialOrd,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + 'static
+        + PartialOrd
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
     T: SimdUnifiedOps,
 {
     if marker.shape() != mask.shape() {
@@ -943,7 +951,15 @@ pub fn geodesic_dilation_2d<T>(
     iterations: Option<usize>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static + PartialOrd,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + 'static
+        + PartialOrd
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
     T: SimdUnifiedOps,
 {
     if marker.shape() != mask.shape() {

@@ -737,7 +737,7 @@ mod tests {
         balancer.recordexecution_time(2, Duration::from_millis(150));
 
         let new_weights = balancer.rebalance();
-        assert_eq!(newweights.len(), 3);
+        assert_eq!(new_weights.len(), 3);
 
         // Partition 1 was slowest, should have reduced weight
         assert!(new_weights[1] < new_weights[0]);

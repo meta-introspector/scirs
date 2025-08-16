@@ -159,7 +159,7 @@ impl QuantumState {
 
         // Cumulative probability distribution
         let mut cumulative = 0.0;
-        let random_value = rng.gen_range(0.0..1.0);
+        let random_value = rng.random_range(0.0..1.0);
 
         for (i, &prob) in probabilities.iter().enumerate() {
             cumulative += prob;
@@ -418,7 +418,7 @@ impl QuantumClusterer {
         // Use k-means++ initialization
         let mut selected_indices = Vec::new();
         for _ in 0..self.numclusters {
-            let idx = rng.gen_range(0..n_points);
+            let idx = rng.random_range(0..n_points);
             selected_indices.push(idx);
         }
 
@@ -3304,7 +3304,7 @@ impl QuantumTSPSolver {
         // Fisher-Yates shuffle
         let mut rng = rand::rng();
         for i in (1..tour.len()).rev() {
-            let j = rng.gen_range(0..=i);
+            let j = rng.random_range(0..=i);
             tour.swap(i, j);
         }
 
@@ -3556,8 +3556,8 @@ impl QuantumTSPSolver {
         if beta > 0.5 {
             // High mixing: explore more diverse solutions
             for _ in 0..5 {
-                let i = rng.gen_range(0..mixed.tour.len());
-                let j = rng.gen_range(0..mixed.tour.len());
+                let i = rng.random_range(0..mixed.tour.len());
+                let j = rng.random_range(0..mixed.tour.len());
 
                 if i != j {
                     mixed.tour.swap(i, j);
@@ -3565,7 +3565,7 @@ impl QuantumTSPSolver {
 
                     // Accept with quantum probability
                     let quantum_prob = (-beta * (new_distance - solution.distance).abs()).exp();
-                    if new_distance < mixed.distance || rng.gen_range(0.0..1.0) < quantum_prob {
+                    if new_distance < mixed.distance || rng.random_range(0.0..1.0) < quantum_prob {
                         mixed.distance = new_distance;
                     } else {
                         // Revert
@@ -3931,9 +3931,9 @@ impl QuantumKernelMachine {
         let mut rng = rand::rng();
 
         for qubit in 0..self.numqubits {
-            if rng.gen_range(0.0..1.0) < self.kernel_params.noise_level {
+            if rng.random_range(0.0..1.0) < self.kernel_params.noise_level {
                 // Apply random Pauli noise
-                let noise_type = rng.gen_range(0..3);
+                let noise_type = rng.random_range(0..3);
                 match noise_type {
                     0 => {
                         // Bit flip (X gate)
@@ -4152,7 +4152,7 @@ impl QuantumVariationalClassifier {
 
         // Initialize parameters randomly
         for param in self.parameters.iter_mut() {
-            *param = rng.gen_range(-PI..PI);
+            *param = rng.random_range(-PI..PI);
         }
 
         for iteration in 0..max_iterations {

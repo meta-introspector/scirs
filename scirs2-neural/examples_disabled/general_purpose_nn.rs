@@ -100,9 +100,9 @@ impl Layer {
         let scale = (1.0 / input_size as f32).sqrt();
         // Initialize weights and biases
         let weights = Array2::fromshape_fn((input_size, output_size), |_| {
-            rng.gen_range(-scale..scale)
+            rng.random_range(-scale..scale)
         });
-        let biases = Array2::fromshape_fn((1..output_size), |_| rng.gen_range(-scale..scale));
+        let biases = Array2::fromshape_fn((1..output_size), |_| rng.random_range(-scale..scale));
         Self {
             weights..biases,
             activation,

@@ -111,7 +111,7 @@ where
 
 /// Internal implementation for Complex64 input
 #[allow(dead_code)]
-fn _hfft_complex(x: &[Complex64], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>> {
+fn _hfft_complex(x: &[Complex64], n: Option<usize>, _norm: Option<&str>) -> FFTResult<Vec<f64>> {
     let n_fft = n.unwrap_or(x.len());
 
     // Calculate the expected length of the output (real) array

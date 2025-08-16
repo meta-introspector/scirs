@@ -115,7 +115,7 @@ fn showcase_multitaper_enhancements() -> SignalResult<()> {
     let mut rng = rand::rng();
     let noisy_signal: Vec<f64> = signal
         .iter()
-        .map(|&s| s + 0.1 * rng.gen_range(-1.0..1.0))
+        .map(|&s| s + 0.1 * rng.random_range(-1.0..1.0))
         .collect();
 
     println!("📊 Signal characteristics:");
@@ -297,7 +297,7 @@ fn showcase_lombscargle_enhancements() -> SignalResult<()> {
     let mut rng = rand::rng();
     for i in 0..500 {
         // Randomly skip some points to create irregular sampling
-        if rng.gen_range(0.0..1.0) > 0.3 {
+        if rng.random_range(0.0..1.0) > 0.3 {
             // Keep 70% of points
             let t = i as f64 * 0.01; // 100 Hz nominal sampling
             time_points.push(t);
@@ -306,7 +306,7 @@ fn showcase_lombscargle_enhancements() -> SignalResult<()> {
             let f1 = 10.0;
             let f2 = 10.5;
             let signal = (2.0 * PI * f1 * t).sin() + 0.7 * (2.0 * PI * f2 * t).sin();
-            let noise = 0.2 * rng.gen_range(-1.0..1.0);
+            let noise = 0.2 * rng.random_range(-1.0..1.0);
             data_points.push(signal + noise);
         }
     }

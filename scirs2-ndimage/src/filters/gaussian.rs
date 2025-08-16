@@ -290,7 +290,7 @@ where
         // We need to convert to Array2 to use the slice methods for 2D arrays
         let array2d = input
             .clone()
-            .into__dimensionality::<ndarray::Ix2>()
+            .into_dimensionality::<ndarray::Ix2>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D array".into()))?;
 
         let mut output = array2d.clone();
@@ -668,12 +668,9 @@ where
         2 => {
             // For 2D arrays, use a specialized implementation with Ix2 dimensionality
             // This requires explicitly converting to and from Array2
-            let array2d = input
-                .to_owned()
-                .into__dimensionality::<Ix2>()
-                .map_err(|_| {
-                    NdimageError::DimensionError("Failed to convert to 2D array".into())
-                })?;
+            let array2d = input.to_owned().into_dimensionality::<Ix2>().map_err(|_| {
+                NdimageError::DimensionError("Failed to convert to 2D array".into())
+            })?;
 
             let radius = (trunc * sigma).ceil() as usize;
             let size = 2 * radius + 1;

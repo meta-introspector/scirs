@@ -753,7 +753,7 @@ mod tests {
 
     #[test]
     fn test_sobol_sequence_properties() {
-        let mut sobol = SobolGenerator::new(2).unwrap();
+        let mut sobol = SobolGenerator::dimension(2).unwrap();
 
         // First point should be [0, 0]
         let first = sobol.next_point();
@@ -854,7 +854,7 @@ mod tests {
 
     #[test]
     fn test_sequence_reset() {
-        let mut sobol = SobolGenerator::new(2).unwrap();
+        let mut sobol = SobolGenerator::dimension(2).unwrap();
 
         let first_sequence: Vec<_> = (0..5).map(|_| sobol.next_point()).collect();
 
@@ -866,7 +866,7 @@ mod tests {
 
     #[test]
     fn test_discrepancy_estimation() {
-        let sobol = SobolGenerator::new(2).unwrap();
+        let sobol = SobolGenerator::dimension(2).unwrap();
         let discrepancy = sobol.estimate_discrepancy(1000);
 
         // Should be small for low-discrepancy sequences

@@ -96,7 +96,9 @@ pub struct GaussianMixture<F: Float> {
     converged: bool,
 }
 
-impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum> GaussianMixture<F> {
+impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum + std::borrow::Borrow<f64>>
+    GaussianMixture<F>
+{
     /// Create a new GMM instance
     pub fn new(options: GMMOptions<F>) -> Self {
         Self {
@@ -216,7 +218,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum> GaussianMixture<F> 
 
                 let mut means = Array2::zeros((n_components, n_features));
                 for i in 0..n_components {
-                    let idx = rng.gen_range(0..n_samples);
+                    let idx = rng.random_range(0..n_samples);
                     means.slice_mut(s![i, ..]).assign(&data.slice(s![idx, ..]));
                 }
                 means
@@ -531,7 +533,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum> GaussianMixture<F> 
 #[allow(dead_code)]
 pub fn gaussian_mixture<F>(data: ArrayView2<F>, options: GMMOptions<F>) -> Result<Array1<i32>>
 where
-    F: Float + FromPrimitive + Debug + ScalarOperand + Sum,
+    F: Float + FromPrimitive + Debug + ScalarOperand + Sum + std::borrow::Borrow<f64>,
 {
     let mut gmm = GaussianMixture::new(options);
     gmm.fit(data)?;

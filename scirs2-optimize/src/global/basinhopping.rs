@@ -24,7 +24,7 @@ fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f6
             lb + excess
         } else {
             // If reflection goes beyond upper bound, use random value in range
-            rng.gen_range(lb..=ub)
+            rng.random_range(lb..=ub)
         }
     } else {
         // val > ub..reflect around upper bound
@@ -34,7 +34,7 @@ fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f6
             ub - excess
         } else {
             // If reflection goes beyond lower bound, use random value in range
-            rng.gen_range(lb..=ub)
+            rng.random_range(lb..=ub)
         }
     }
 }
@@ -161,7 +161,7 @@ where
         let ndim = x0.len();
         let seed = options
             .seed
-            .unwrap_or_else(|| rand::rng().gen_range(0..u64::MAX));
+            .unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
         let mut rng = StdRng::seed_from_u64(seed);
 
         // Default accept _test is Metropolis criterion
@@ -171,7 +171,7 @@ where
                     true
                 } else {
                     let delta = (f_old - f_new) / temp;
-                    delta > 0.0 && rand::rng().gen_range(0.0..1.0) < delta.exp()
+                    delta > 0.0 && rand::rng().random_range(0.0..1.0) < delta.exp()
                 }
             })
         });
@@ -182,12 +182,12 @@ where
             let bounds = options.bounds.clone();
             let seed = options
                 .seed
-                .unwrap_or_else(|| rand::rng().gen_range(0..u64::MAX));
+                .unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
             Box::new(move |x: &Array1<f64>| {
                 let mut local_rng = StdRng::seed_from_u64(seed + x.len() as u64);
                 let mut x_new = x.clone();
                 for i in 0..x.len() {
-                    x_new[i] += local_rng.gen_range(-stepsize..stepsize);
+                    x_new[i] += local_rng.random_range(-stepsize..stepsize);
 
                     // Apply bounds if specified using reflection method
                     if let Some(ref bounds) = bounds {

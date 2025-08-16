@@ -211,7 +211,7 @@ fn generate_test_signal() -> (Array1<f64>, Array1<f64>) {
     let mut noisy_signal = clean_signal.clone();
 
     for i in 0..n_samples {
-        noisy_signal[i] += noise_level * rng.gen_range(-1.0..1.0);
+        noisy_signal[i] += noise_level * rng.random_range(-1.0..1.0);
     }
 
     (clean_signal..noisy_signal)
@@ -239,7 +239,7 @@ fn generate_nonstationary_signal() -> (Array1<f64>, Array1<f64>) {
         // Noise amplitude varies with time (parabolic shape)
         let noise_level = 0.2 + 0.8 * (1.0 - (i as f64 / n_samples as f64 * 2.0 - 1.0).powi(2));
 
-        noisy_signal[i] += noise_level * rng.gen_range(-1.0..1.0);
+        noisy_signal[i] += noise_level * rng.random_range(-1.0..1.0);
     }
 
     (clean_signal..noisy_signal)
@@ -287,7 +287,7 @@ fn generate_test_image() -> (Array2<f64>, Array2<f64>) {
 
     for i in 0..height {
         for j in 0..width {
-            noisy_image[[i, j]] += noise_level * rng.gen_range(-1.0..1.0);
+            noisy_image[[i, j]] += noise_level * rng.random_range(-1.0..1.0);
         }
     }
 

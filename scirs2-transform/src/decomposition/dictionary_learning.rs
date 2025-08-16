@@ -99,7 +99,7 @@ impl DictionaryLearning {
 
         // Select random samples as initial dictionary atoms
         for i in 0..self.n_components {
-            let idx = rng.gen_range(0..n_samples);
+            let idx = rng.random_range(0..n_samples);
             dictionary.row_mut(i).assign(&x.row(idx));
 
             // Normalize atom

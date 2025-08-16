@@ -605,7 +605,7 @@ mod tests {
         assert!(registry.register("test_function", hints.clone()).is_ok());
 
         // Retrieve hints
-        let retrieved = registry.get_hints(test_function).unwrap();
+        let retrieved = registry.get_hints("test_function").unwrap();
         assert!(retrieved.is_some());
         assert_eq!(retrieved.unwrap().complexity, ComplexityClass::Linear);
 
@@ -615,7 +615,7 @@ mod tests {
             .is_ok());
 
         // Get stats
-        let stats = registry.get_stats(test_function).unwrap();
+        let stats = registry.get_stats("test_function").unwrap();
         assert!(stats.is_some());
         assert_eq!(stats.unwrap().total_calls, 1);
     }
@@ -634,7 +634,7 @@ mod tests {
         registry.register("test_function", hints).unwrap();
 
         let recommendations = registry
-            .get_optimization_recommendations(test_function)
+            .get_optimization_recommendations("test_function")
             .unwrap();
         assert!(!recommendations.is_empty());
 
@@ -644,11 +644,11 @@ mod tests {
 
     #[test]
     fn test_performance_tracker() {
-        let tracker = PerformanceTracker::start(test_tracker);
+        let tracker = PerformanceTracker::start("test_tracker");
         thread::sleep(Duration::from_millis(10));
         tracker.finish();
 
-        let stats = global_registry().get_stats(test_tracker).unwrap();
+        let stats = global_registry().get_stats("test_tracker").unwrap();
         assert!(stats.is_some());
         let stats = stats.unwrap();
         assert_eq!(stats.total_calls, 1);

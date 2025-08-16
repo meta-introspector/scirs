@@ -1262,7 +1262,7 @@ mod distributed_tests {
     fn test_distributedlogger() {
         let nodeid = NodeId::new("test_node".to_string(), 1.to_string());
         let logger =
-            DistributedLogger::new(nodeid, "testlogger", 1000, Duration::from_secs(60), 100.0);
+            DistributedLogger::new("testlogger", nodeid, 1000, Duration::from_secs(60), 100.0);
 
         logger.info_adaptive("Test message 1");
         logger.warn_adaptive("Test message 2");
@@ -1279,13 +1279,7 @@ mod distributed_tests {
         let coordinator = MultiNodeCoordinator::new(Duration::from_millis(10));
 
         let node1_id = NodeId::new("node1".to_string(), "1".to_string());
-        let node1logger = Arc::new(DistributedLogger::new(
-            node1_id.clone(),
-            "node1logger",
-            100,
-            Duration::from_secs(10),
-            50.0,
-        ));
+        let node1logger = Arc::new(DistributedLogger::new("node1logger", node1_id.clone(), 100, Duration::from_secs(10), 50.0));
 
         coordinator.register_node(node1_id, node1logger);
 
@@ -1307,7 +1301,7 @@ mod distributed_tests {
     fn testlog_export() {
         let nodeid = NodeId::new("export_test".to_string(), 1.to_string());
         let logger =
-            DistributedLogger::new(nodeid, "exportlogger", 100, Duration::from_secs(60), 100.0);
+            DistributedLogger::new("exportlogger", nodeid, 100, Duration::from_secs(60), 100.0);
 
         logger.info_adaptive("Export test message");
 

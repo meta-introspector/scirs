@@ -8,10 +8,11 @@
 mod silhouette;
 pub use silhouette::{silhouette_samples, silhouette_score};
 
-mod information_theoretic;
+pub mod information_theoretic;
 pub use information_theoretic::{
     adjusted_mutual_info_score, adjusted_rand_score, completeness_score, homogeneity_score,
-    mutual_info_score, normalized_mutual_info_score, v_measure_score,
+    jensen_shannon_divergence, mutual_info_score, normalized_mutual_info_score,
+    normalized_variation_of_information, v_measure_score,
 };
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
@@ -833,10 +834,7 @@ pub mod information_theory {
     /// # Returns
     ///
     /// The information-theoretic quality score (higher is better)
-    pub fn information_cluster_quality<F>(
-        data: ArrayView2<F>,
-        labels: ArrayView1<i32>,
-    ) -> Result<F>
+    pub fn information_cluster_quality<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
     where
         F: Float + FromPrimitive + Debug + PartialOrd + 'static,
     {
@@ -1665,8 +1663,7 @@ pub mod ensemble {
                     let test_labels_array = Array1::from_vec(test_labels);
 
                     // Compute silhouette score for test fold
-                    if let Ok(score) = silhouette_score(testdata.view(), test_labels_array.view())
-                    {
+                    if let Ok(score) = silhouette_score(testdata.view(), test_labels_array.view()) {
                         cv_scores.push(score);
                     }
                 }
@@ -1803,18 +1800,16 @@ pub mod ensemble {
 
             // Sample with replacement
             let bootstrap_indices: Vec<usize> = (0..n_samples)
-                .map(|_| indices[rng.gen_range(0..n_samples)])
+                .map(|_| indices[rng.random_range(0..n_samples)])
                 .collect();
 
             // Extract _bootstrap sample
             let bootstrapdata = data.select(ndarray::Axis(0)..&bootstrap_indices);
-            let bootstrap_labels: Vec<i32> =
-                bootstrap_indices.iter().map(|&i| labels[i]).collect();
+            let bootstrap_labels: Vec<i32> = bootstrap_indices.iter().map(|&i| labels[i]).collect();
             let bootstrap_labels_array = Array1::from_vec(bootstrap_labels);
 
             // Compute metric (using silhouette score as example)
-            if let Ok(score) =
-                silhouette_score(bootstrapdata.view(), bootstrap_labels_array.view())
+            if let Ok(score) = silhouette_score(bootstrapdata.view(), bootstrap_labels_array.view())
             {
                 bootstrap_scores.push(score);
             }
@@ -2136,7 +2131,7 @@ pub mod advanced_stability {
                 // Add noise to data
                 let mut noisydata = data.to_owned();
                 for element in noisydata.iter_mut() {
-                    let noise = rng.gen_range(-current_noise..current_noise);
+                    let noise = rng.random_range(-current_noise..current_noise);
                     *element = *element + F::from(noise).unwrap();
                 }
 
@@ -2651,10 +2646,10 @@ pub mod advanced_stability {
         let adjacency = build_knn_connectivity_matrix(data, k)?;
 
         // Compute modularity
-        let modularity = compute_modularity(&adjacency, &labels)?;
+        let modularity = compute_modularity::<F>(&adjacency, &labels)?;
 
         // Compute conductance
-        let conductance = compute_conductance(&adjacency, &labels)?;
+        let conductance = compute_conductance::<F>(&adjacency, &labels)?;
 
         // Combine measures
         let quality = modularity * (F::one() - conductance);

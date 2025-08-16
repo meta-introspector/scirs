@@ -13,7 +13,7 @@ fn generate_random_points(_n_samples: usize, nfeatures: usize, seed: u64) -> Arr
     let mut data = Array2::zeros((_n_samples, n_features));
     for i in 0.._n_samples {
         for j in 0..n_features {
-            data[(i, j)] = rng.gen_range(0.0..1.0);
+            data[(i, j)] = rng.random_range(0.0..1.0);
         }
     }
 

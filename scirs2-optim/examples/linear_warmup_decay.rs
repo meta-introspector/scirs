@@ -13,13 +13,13 @@ fn generate_data<A: Float>(n_samples: usize, nfeatures: usize) -> (Array2<A>, Ar
 
     // Generate random weights
     let true_weights: Vec<A> = (0..n_features)
-        .map(|_| A::from(rng.gen_range(-1.0..1.0)).unwrap())
+        .map(|_| A::from(rng.random_range(-1.0..1.0)).unwrap())
         .collect();
 
     // Generate random _features and compute targets
     for i in 0.._n_samples {
         for j in 0..n_features {
-            let x_val = A::from(rng.gen_range(-5.0..5.0)).unwrap();
+            let x_val = A::from(rng.random_range(-5.0..5.0)).unwrap();
             x[[i, j]] = x_val;
         }
 
@@ -29,7 +29,7 @@ fn generate_data<A: Float>(n_samples: usize, nfeatures: usize) -> (Array2<A>, Ar
             target = target + x[[i, j]] * true_weights[j];
         }
         // Add some noise
-        target = target + A::from(rng.gen_range(-0.1..0.1)).unwrap();
+        target = target + A::from(rng.random_range(-0.1..0.1)).unwrap();
         y[i] = target;
     }
 
@@ -125,7 +125,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Simple Fisher-Yates shuffle
         let mut rng = scirs2_core::random::rng();
         for i in (1..indices.len()).rev() {
-            let j = rng.gen_range(0..i);
+            let j = rng.random_range(0..i);
             indices.swap(i, j);
         }
 

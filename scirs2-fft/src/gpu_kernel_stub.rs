@@ -29,7 +29,7 @@ impl GpuFftKernel {
     /// Execute the kernel (stub implementation)
     ///
     /// In the real implementation, this would dispatch to scirs2-core::gpu
-    pub fn execute(&self, input: &[Complex64]) -> FFTResult<Vec<Complex64>> {
+    pub fn execute(&self, _input: &[Complex64]) -> FFTResult<Vec<Complex64>> {
         Err(FFTError::NotImplementedError(format!(
             "GPU kernel '{}' not yet migrated to scirs2-core GPU system. \
              Direct GPU implementations are forbidden - all GPU operations must use scirs2-core::gpu",

@@ -41,7 +41,7 @@ pub struct GpuStream {
 }
 
 impl GpuStream {
-    pub fn new(deviceid: i32) -> FFTResult<Self> {
+    pub fn new(_deviceid: i32) -> FFTResult<Self> {
         Err(FFTError::NotImplementedError(
             "GPU streams need to be implemented with scirs2-core::gpu abstractions".to_string(),
         ))
@@ -64,7 +64,7 @@ impl GpuMemoryManager {
         ))
     }
 
-    pub fn free(descriptor: BufferDescriptor) -> FFTResult<()> {
+    pub fn free(_descriptor: BufferDescriptor) -> FFTResult<()> {
         Err(FFTError::NotImplementedError(
             "GPU memory management needs to be implemented with scirs2-core::gpu abstractions"
                 .to_string(),
@@ -175,7 +175,7 @@ impl FftGpuContext {
         // In a real implementation, this would call cudaFree
 
         // Use the global memory manager to track allocations
-        let manager = get_global_memory_manager()?;
+        let _manager = get_global_memory_manager()?;
 
         GpuMemoryManager::free(descriptor)
     }
@@ -290,7 +290,7 @@ impl GpuSparseFFT {
 
     /// Free all buffers
     fn free_buffers(&mut self) -> FFTResult<()> {
-        if let Ok(memory_manager) = get_global_memory_manager() {
+        if let Ok(_memory_manager) = get_global_memory_manager() {
             if let Some(buffer) = self.input_buffer.take() {
                 GpuMemoryManager::free(buffer)?;
             }

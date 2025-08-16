@@ -1003,7 +1003,7 @@ mod tests {
         let config = ProfileConfig::development();
         let profiler = ProductionProfiler::new(config).unwrap();
 
-        let bottlenecks = profiler.identify_bottlenecks(test_workload).unwrap();
+        let bottlenecks = profiler.identify_bottlenecks("test_workload").unwrap();
         assert!(!bottlenecks.is_empty());
 
         for bottleneck in &bottlenecks {
@@ -1030,7 +1030,7 @@ mod tests {
         let config = ProfileConfig::development();
         let profiler = ProductionProfiler::new(config).unwrap();
 
-        let stats = profiler.calculate_statistics(test_workload).unwrap();
+        let stats = profiler.calculate_statistics("test_workload").unwrap();
 
         assert!(stats.mean_time > Duration::ZERO);
         assert!(stats.p95_time >= stats.median_time);
@@ -1054,7 +1054,7 @@ mod tests {
     #[test]
     fn test_workload_report_analysis() {
         let bottlenecks = vec![PerformanceBottleneck {
-            function: slow_function.to_string(),
+            function: "slow_function".to_string(),
             average_time: Duration::from_millis(100),
             impact_percentage: 45.0,
             sample_count: 50,
@@ -1065,7 +1065,7 @@ mod tests {
         }];
 
         let report = WorkloadAnalysisReport {
-            workload_id: test.to_string(),
+            workload_id: "test".to_string(),
             workload_type: WorkloadType::ComputeIntensive,
             start_time: SystemTime::now(),
             duration: Duration::from_secs(60),
@@ -1092,6 +1092,6 @@ mod tests {
 
         let summary = report.executive_summary();
         assert!(summary.contains("Performance Bottlenecks"));
-        assert!(summary.contains(slow_function));
+        assert!(summary.contains("slow_function"));
     }
 }

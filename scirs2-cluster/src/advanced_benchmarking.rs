@@ -50,7 +50,7 @@ use crate::error::{ClusteringError, Result};
 use crate::gmm::{gaussian_mixture, GMMOptions};
 use crate::hierarchy::{linkage, LinkageMethod, Metric};
 use crate::metrics::{calinski_harabasz_score, silhouette_score};
-use crate::vq::{kmeans, kmeans2};
+use crate::vq::{kmeans, kmeans2, vq};
 
 use ndarray::{Array1, Array2, ArrayView2};
 use std::collections::HashMap;
@@ -424,7 +424,7 @@ impl AdvancedBenchmark {
                             regression_alerts.push(alert);
                         }
                     }
-                    algorithmresults.insert(algorithm_name, result);
+                    algorithmresults.insert(algorithm_name.to_string(), result);
                 }
                 Err(e) => {
                     eprintln!("Failed to benchmark {}: {}", algorithm_name, e);
@@ -552,20 +552,21 @@ impl AdvancedBenchmark {
     fn run_algorithm_once(&self, algorithm: &str, data: &ArrayView2<f64>) -> Result<()> {
         match algorithm {
             "kmeans" => {
-                let _result = kmeans(data, 3, Some(10), None, None, None)?;
+                let _result = kmeans(*data, 3, Some(10), None, None, None)?;
             }
             "kmeans2" => {
-                let _result = kmeans2(data, 3, None, None, None)?;
+                let _result = kmeans2(data.view(), 3, None, None, None, None, None, None)?;
             }
             "hierarchical_ward" => {
-                let _result = linkage(data, LinkageMethod::Ward, Metric::Euclidean)?;
+                let _result = linkage(*data, LinkageMethod::Ward, Metric::Euclidean)?;
             }
             "dbscan" => {
-                let _result = dbscan(data, 0.5, 5)?;
+                let _result = dbscan(*data, 0.5, 5, None)?;
             }
             "gmm" => {
-                let options = GMMOptions::default();
-                let _result = gaussian_mixture(data, 3, options)?;
+                let mut options = GMMOptions::default();
+                options.n_components = 3;
+                let _result = gaussian_mixture(data, options)?;
             }
             _ => {
                 return Err(ClusteringError::ComputationError(format!(
@@ -744,11 +745,12 @@ impl AdvancedBenchmark {
         // Run algorithm to get labels for quality calculation
         let (labels, n_clusters, inertia, convergence_iterations) = match algorithm {
             "kmeans" => {
-                let (centroids, labels) = kmeans(data, 3, Some(10), None, None, None)?;
+                let (centroids, _distortion) = kmeans(data.view(), 3, Some(10), None, None, None)?;
+                let (labels, _distances) = vq(data.view(), centroids.view())?;
                 (labels.mapv(|x| x as i32), centroids.nrows(), None, Some(10))
             }
             "dbscan" => {
-                let (labels_) = dbscan(data, 0.5, 5)?;
+                let (labels_) = dbscan(*data, 0.5, 5, None)?;
                 let n_clusters = labels_
                     .iter()
                     .filter(|&&x| x >= 0)
@@ -760,20 +762,21 @@ impl AdvancedBenchmark {
             }
             _ => {
                 // Fallback to K-means for other algorithms
-                let (centroids, labels) = kmeans(data, 3, Some(10), None, None, None)?;
+                let (centroids, _distortion) = kmeans(data.view(), 3, Some(10), None, None, None)?;
+                let (labels, _distances) = vq(data.view(), centroids.view())?;
                 (labels.mapv(|x| x as i32), centroids.nrows(), None, Some(10))
             }
         };
 
         // Calculate quality metrics
         let silhouette_score = if n_clusters > 1 && n_clusters < data.nrows() {
-            silhouette_score(data, &labels).ok()
+            silhouette_score(*data, labels.view()).ok()
         } else {
             None
         };
 
         let calinski_harabasz = if n_clusters > 1 && n_clusters < data.nrows() {
-            calinski_harabasz_score(data, &labels).ok()
+            calinski_harabasz_score(*data, labels.view()).ok()
         } else {
             None
         };
@@ -1150,7 +1153,7 @@ impl AdvancedBenchmark {
         let high_error_algos: Vec<&str> = results
             .iter()
             .filter(|(_, result)| result.error_rate > 0.05)
-            .map(|(name_)| name_.as_str())
+            .map(|(name_, _)| name_.as_str())
             .collect();
 
         if !high_error_algos.is_empty() {
@@ -1170,7 +1173,7 @@ impl AdvancedBenchmark {
                     .map(|m| m.efficiency_score < 60.0)
                     .unwrap_or(false)
             })
-            .map(|(name_)| name_.as_str())
+            .map(|(name_, _)| name_.as_str())
             .collect();
 
         if !memory_inefficient.is_empty() {

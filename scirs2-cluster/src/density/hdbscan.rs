@@ -377,7 +377,7 @@ where
                 .iter()
                 .enumerate()
                 .filter(|(_, &l)| l == cluster_idx)
-                .map(|(i_)| i_)
+                .map(|(i, _)| i)
                 .collect();
 
             if cluster_points.is_empty() {
@@ -1213,11 +1213,11 @@ where
     nodes_by_lambda.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
 
     // Process nodes from deepest to shallowest
-    for (idx_) in nodes_by_lambda {
-        let child = condensed_tree.child[idx_];
-        let parent = condensed_tree.parent[idx_];
-        let lambda = condensed_tree.lambda_val[idx_];
-        let size = condensed_tree.sizes[idx_];
+    for (idx, _) in nodes_by_lambda {
+        let child = condensed_tree.child[idx];
+        let parent = condensed_tree.parent[idx];
+        let lambda = condensed_tree.lambda_val[idx];
+        let size = condensed_tree.sizes[idx];
 
         // Calculate stability
         if is_leaf.contains(&child) && child >= 0 {

@@ -245,7 +245,6 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
         };
 
         if let Some(health) = self.worker_health.get_mut(&workerid) {
-
             let new_status = if performance_score >= self.fault_config.degraded_threshold {
                 WorkerStatus::Healthy
             } else if performance_score >= self.fault_config.failed_threshold {

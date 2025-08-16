@@ -50,7 +50,7 @@ pub fn generate_binary_structure(
 
     // Create a structure of shape (3, 3, ..., 3) with rank dimensions
     let shape = vec![3; rank];
-    let mut structure = Array::<bool>::from_elem(IxDyn(&shape), false);
+    let mut structure = Array::<bool, IxDyn>::from_elem(IxDyn(&shape), false);
 
     // Center indices (1, 1, ..., 1)
     let center = vec![1; rank];
@@ -202,7 +202,7 @@ pub fn box_structure(shape: &[usize]) -> NdimageResult<Array<bool, IxDyn>> {
     }
 
     // Create a box of ones
-    let structure = Array::<bool>::from_elem(IxDyn(shape), true);
+    let structure = Array::<bool, IxDyn>::from_elem(IxDyn(shape), true);
     Ok(structure)
 }
 

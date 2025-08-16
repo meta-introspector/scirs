@@ -978,7 +978,16 @@ pub fn multi_scale_bilateral_filter<T, D>(
     config: &MultiScaleBilateralConfig,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + std::fmt::Display + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     D: Dimension,
 {
     if input.ndim() == 0 {
@@ -1072,7 +1081,16 @@ pub fn adaptive_bilateral_filter<T, D>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + std::fmt::Display + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     D: Dimension,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);

@@ -357,7 +357,7 @@ fn create_large_sample_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> 
 
             // Add additional random _features
             for _ in 2..n_features {
-                data.push(rng.gen_range(-1.0..1.0));
+                data.push(rng.random_range(-1.0..1.0));
             }
         }
     }

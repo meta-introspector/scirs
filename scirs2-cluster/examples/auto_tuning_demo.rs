@@ -339,7 +339,7 @@ fn create_dense_clusters_data(_n_samples: usize, nfeatures: usize) -> Array2<f64
 
             // Add random _features
             for _ in 2..n_features {
-                data.push(rng.gen_range(-1.0..1.0));
+                data.push(rng.random_range(-1.0..1.0));
             }
         }
     }
@@ -360,7 +360,7 @@ fn create_sparse_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
         for _ in 0..n_features {
             if rng.random::<f64>() < 0.1 {
                 // 10% density
-                data.push(rng.gen_range(-10.0..10.0));
+                data.push(rng.random_range(-10.0..10.0));
             } else {
                 data.push(0.0);
             }
@@ -385,13 +385,13 @@ fn create_high_dimensional_data(_n_samples: usize, nfeatures: usize) -> Array2<f
         // Signal dimensions
         for dim in 0..signal_dims {
             let cluster_id = dim % 3;
-            let value = cluster_id as f64 * 3.0 + rng.gen_range(-1.0..1.0);
+            let value = cluster_id as f64 * 3.0 + rng.random_range(-1.0..1.0);
             data.push(value);
         }
 
         // Noise dimensions
         for _ in signal_dims..n_features {
-            data.push(rng.gen_range(-0.5..0.5));
+            data.push(rng.random_range(-0.5..0.5));
         }
     }
 
@@ -423,7 +423,7 @@ fn create_noisy_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
 
         // Additional noisy _features
         for _ in 2..n_features {
-            data.push(rng.gen_range(-3.0..3.0));
+            data.push(rng.random_range(-3.0..3.0));
         }
     }
 

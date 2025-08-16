@@ -224,7 +224,7 @@ fn generate_test_signal() -> (Array1<f64>, Array1<f64>) {
     let mut noisy_signal = clean_signal.clone();
 
     for i in 0..n {
-        noisy_signal[i] += noise_level * rng.gen_range(-1.0..1.0);
+        noisy_signal[i] += noise_level * rng.random_range(-1.0..1.0);
     }
 
     (clean_signal, noisy_signal)
@@ -279,7 +279,7 @@ fn generate_test_image() -> (Array2<f64>, Array2<f64>) {
 
     for i in 0..size {
         for j in 0..size {
-            noisy_image[[i, j]] += noise_level * rng.gen_range(-1.0..1.0);
+            noisy_image[[i, j]] += noise_level * rng.random_range(-1.0..1.0);
         }
     }
 
@@ -333,7 +333,7 @@ fn generate_color_image() -> (Array3<f64>, Array3<f64>) {
     for i in 0..size {
         for j in 0..size {
             for c in 0..3 {
-                noisy_image[[i, j, c]] += noise_level * rng.gen_range(-1.0..1.0);
+                noisy_image[[i, j, c]] += noise_level * rng.random_range(-1.0..1.0);
             }
         }
     }

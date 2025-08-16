@@ -130,7 +130,7 @@ pub fn run_ransac<M: RansacModel>(
 
         // Fisher-Yates shuffle
         for i in (1..n_points).rev() {
-            let j = rng.gen_range(0..=i);
+            let j = rng.random_range(0..=i);
             sample_indices.swap(i, j);
         }
 

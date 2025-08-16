@@ -418,7 +418,7 @@ where
     // Initialize synaptic weights randomly
     let mut rng = rand::rng();
     let mut learned_filter =
-        Array2::from_shape_fn(filter_size, |_| (rng.random_range::<f64>(-0.1..0.1)));
+        Array2::from_shape_fn(filter_size, |_| (rng.gen_range::<f64>(-0.1..0.1)));
 
     let mut pre_synaptic_traces = Array2::zeros(filter_size);
     let mut post_synaptic_trace = 0.0;
@@ -429,8 +429,8 @@ where
             let (height, width) = image.dim();
 
             // Random location for unsupervised patch learning
-            let y_start = rng.random_range::<usize>(0..height.saturating_sub(filter_h));
-            let x_start = rng.random_range::<usize>(0..width.saturating_sub(filter_w));
+            let y_start = rng.gen_range::<usize>(0..height.saturating_sub(filter_h));
+            let x_start = rng.gen_range::<usize>(0..width.saturating_sub(filter_w));
 
             // Extract patch
             let patch = image.slice(s![y_start..y_start + filter_h, x_start..x_start + filter_w]);
@@ -537,7 +537,7 @@ where
             let spike_rate = intensity.max(0.0).min(1.0); // Normalized rate
 
             for t in 0..time_steps {
-                if rng.random_range::<f64>(0.0..1.0) < spike_rate * config.learning_rate {
+                if rng.gen_range::<f64>(0.0..1.0) < spike_rate * config.learning_rate {
                     spike_trains[(t, y, x)] = 1.0;
                 }
             }
@@ -781,7 +781,7 @@ fn initialize_reservoir(
     // Initialize reservoir with diverse properties
     for (i, neuron) in reservoir.iter_mut().enumerate() {
         neuron.target_rate = 0.05 + 0.1 * (i as f64 / reservoir_size as f64);
-        neuron.membrane_potential = rng.random_range::<f64>(-0.05..0.05);
+        neuron.membrane_potential = rng.gen_range::<f64>(-0.05..0.05);
     }
 
     Ok(reservoir)

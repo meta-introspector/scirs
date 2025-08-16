@@ -268,7 +268,7 @@ impl SparseFFT {
         let mut sample_indices = Vec::with_capacity(m);
 
         for _ in 0..m {
-            let idx = self.rng.gen_range(0..n);
+            let idx = self.rng.random_range(0..n);
             sample_indices.push(idx);
             measurements.push(signal_complex[idx]);
         }
@@ -620,7 +620,7 @@ where
 #[allow(dead_code)]
 pub fn sparse_fftn<T>(
     _signal: &[T],
-    shape: &[usize],
+    _shape: &[usize],
     _k: usize,
     _algorithm: Option<SparseFFTAlgorithm>,
 ) -> FFTResult<SparseFFTResult>

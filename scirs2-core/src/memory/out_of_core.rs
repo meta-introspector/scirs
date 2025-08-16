@@ -1464,7 +1464,7 @@ mod tests {
     #[test]
     fn test_file_storage_backend() -> CoreResult<()> {
         let temp_dir = TempDir::new().unwrap();
-        let storage = FileStorageBackend::new(temp_dir.path())?;
+        let storage = FileStorageBackend::new(temp_dir.path(), temp_dir.path())?;
 
         let chunk_id = ChunkId::new("test_array".to_string(), vec![0, 0]);
         let metadata = storage.allocate_chunk(&chunk_id, 1024)?;

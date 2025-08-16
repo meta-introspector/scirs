@@ -18,6 +18,8 @@
 
 use ndarray::{s, Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
+use rand::prelude::*;
+use rand::thread_rng;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::hash::{Hash, Hasher};
@@ -76,14 +78,14 @@ impl Hypervector {
     pub fn random(dim: usize, sparsity: f64) -> Self {
         let num_nonzero = (dim as f64 * sparsity) as usize;
         let mut sparse_data = Vec::new();
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         let mut used_indices = HashSet::new();
 
         while sparse_data.len() < num_nonzero {
             let idx = rng.gen_range(0..dim);
             if !used_indices.contains(&idx) {
                 used_indices.insert(idx);
-                let value = if rng.random_bool(0.5) { 1.0 } else { -1.0 };
+                let value = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };
                 sparse_data.push((idx, value));
             }
         }

@@ -715,7 +715,7 @@ pub struct GpuMemoryManager {
 impl GpuMemoryManager {
     pub fn new(config: &GpuAccelerationConfig) -> Self {
         Self {
-            _config: config.clone(),
+            config: config.clone(),
             allocated_memory: 0,
             peak_memory: 0,
         }
@@ -766,7 +766,7 @@ pub struct GpuKernelExecutor {
 impl GpuKernelExecutor {
     pub fn new(config: &GpuAccelerationConfig) -> Self {
         Self {
-            _config: config.clone(),
+            config: config.clone(),
             kernel_stats: GpuKernelStats::default(),
         }
     }

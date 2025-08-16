@@ -735,7 +735,7 @@ impl FuzzingTester {
 
         let mut rng = StdRng::seed_from_u64(seed);
         let data: Vec<f64> = (0..size)
-            .map(|_| rng.gen_range(-1000.0..1000.0))
+            .map(|_| rng.random_range(-1000.0..1000.0))
             .collect();
         StatisticalTestData::new(data)
     }
@@ -750,7 +750,7 @@ impl FuzzingTester {
         use rand::{Rng, SeedableRng};
 
         let mut rng = StdRng::seed_from_u64(seed);
-        let mut data: Vec<f64> = (0..size).map(|_| rng.gen_range(0.0..1.0)).collect();
+        let mut data: Vec<f64> = (0..size).map(|_| rng.random_range(0.0..1.0)).collect();
 
         // Apply transformation to create skewness
         if skew_direction > 0.0 {
@@ -775,12 +775,12 @@ impl FuzzingTester {
         use rand::{Rng, SeedableRng};
 
         let mut rng = StdRng::seed_from_u64(seed);
-        let mut data: Vec<f64> = (0..size).map(|_| rng.gen_range(-1.0..1.0)).collect();
+        let mut data: Vec<f64> = (0..size).map(|_| rng.random_range(-1.0..1.0)).collect();
 
         let num_outliers = (size as f64 * outlier_fraction) as usize;
         for _ in 0..num_outliers {
-            let idx = rng.gen_range(0..size);
-            data[idx] = rng.gen_range(-100.0..100.0); // Outlier range
+            let idx = rng.random_range(0..size);
+            data[idx] = rng.random_range(-100.0..100.0); // Outlier range
         }
 
         StatisticalTestData::new(data)
