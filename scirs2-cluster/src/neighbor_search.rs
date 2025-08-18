@@ -867,7 +867,7 @@ mod tests {
     use ndarray::{Array1, Array2, ArrayView1};
 
     fn create_test_data() -> Array2<f64> {
-        Array2::fromshape_vec(
+        Array2::from_shape_vec(
             (6, 2),
             vec![
                 0.0, 0.0, // Point 0
@@ -998,7 +998,7 @@ mod tests {
         let mut searcher = BruteForceSearch::new();
         searcher.fit(data.view()).unwrap();
 
-        let queries = Array2::fromshape_vec((2, 2), vec![0.0, 0.0, 10.0, 10.0]).unwrap();
+        let queries = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 10.0, 10.0]).unwrap();
 
         let results = searcher.kneighbors_batch(queries.view(), 2).unwrap();
 

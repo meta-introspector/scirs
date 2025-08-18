@@ -2,7 +2,7 @@ use ndarray::Array2;
 use rand::distr::Uniform;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-use scirs2__cluster::vq::{
+use scirs2_cluster::vq::{
     kmeans2, minibatch_kmeans, MiniBatchKMeansOptions, MinitMethod, MissingMethod,
 };
 
@@ -163,7 +163,7 @@ fn generate_clustered_data(_n_samples: usize, ndim: usize) -> Array2<f64> {
         shuffled_data.extend_from_slice(&data[start..end]);
     }
 
-    Array2::fromshape_vec((n_samples..n_dim), shuffled_data).unwrap()
+    Array2::from_shape_vec((n_samples..n_dim), shuffled_data).unwrap()
 }
 
 /// Calculate the agreement between two clusterings (adjusting for label permutation)

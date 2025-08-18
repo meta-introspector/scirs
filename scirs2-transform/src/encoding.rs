@@ -632,9 +632,9 @@ impl OrdinalEncoder {
 /// # Examples
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__transform::encoding::TargetEncoder;
+/// use scirs2_transform::encoding::TargetEncoder;
 ///
-/// let x = Array2::fromshape_vec((6, 1), vec![0.0, 1.0, 2.0, 0.0, 1.0, 2.0]).unwrap();
+/// let x = Array2::from_shape_vec((6, 1), vec![0.0, 1.0, 2.0, 0.0, 1.0, 2.0]).unwrap();
 /// let y = vec![1.0, 2.0, 3.0, 1.5, 2.5, 3.5];
 ///
 /// let mut encoder = TargetEncoder::new("mean", 1.0, 0.0).unwrap();
@@ -1811,7 +1811,7 @@ mod tests {
     #[test]
     fn test_one_hot_encoder_basic() {
         // Create test data with categorical values
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (4, 2),
             vec![
                 0.0, 1.0, // categories: [0, 1, 2] and [1, 2, 3]
@@ -1849,7 +1849,7 @@ mod tests {
     #[test]
     fn test_one_hot_encoder_drop_first() {
         // Create test data with categorical values
-        let data = Array::fromshape_vec((3, 2), vec![0.0, 1.0, 1.0, 2.0, 2.0, 1.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![0.0, 1.0, 1.0, 2.0, 2.0, 1.0]).unwrap();
 
         let mut encoder = OneHotEncoder::new(Some("first".to_string()), "error", false).unwrap();
         let encoded = encoder.fit_transform(&data).unwrap();
@@ -1875,7 +1875,7 @@ mod tests {
     #[test]
     fn test_ordinal_encoder() {
         // Create test data with categorical values
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (4, 2),
             vec![
                 2.0, 10.0, // categories will be mapped to ordinals
@@ -1906,9 +1906,9 @@ mod tests {
 
     #[test]
     fn test_unknown_category_handling() {
-        let train_data = Array::fromshape_vec((2, 1), vec![1.0, 2.0]).unwrap();
+        let train_data = Array::from_shape_vec((2, 1), vec![1.0, 2.0]).unwrap();
 
-        let test_data = Array::fromshape_vec(
+        let test_data = Array::from_shape_vec(
             (1, 1),
             vec![3.0], // Unknown category
         )
@@ -1933,9 +1933,9 @@ mod tests {
 
     #[test]
     fn test_ordinal_encoder_unknown_value() {
-        let train_data = Array::fromshape_vec((2, 1), vec![1.0, 2.0]).unwrap();
+        let train_data = Array::from_shape_vec((2, 1), vec![1.0, 2.0]).unwrap();
 
-        let test_data = Array::fromshape_vec(
+        let test_data = Array::from_shape_vec(
             (1, 1),
             vec![3.0], // Unknown category
         )
@@ -1952,7 +1952,7 @@ mod tests {
 
     #[test]
     fn test_get_feature_names() {
-        let data = Array::fromshape_vec((2, 2), vec![1.0, 10.0, 2.0, 20.0]).unwrap();
+        let data = Array::from_shape_vec((2, 2), vec![1.0, 10.0, 2.0, 20.0]).unwrap();
 
         let mut encoder = OneHotEncoder::with_defaults();
         encoder.fit(&data).unwrap();
@@ -1969,7 +1969,7 @@ mod tests {
     #[test]
     fn test_target_encoder_mean_strategy() {
         // Create test data
-        let x = Array::fromshape_vec((6, 1), vec![0.0, 1.0, 2.0, 0.0, 1.0, 2.0]).unwrap();
+        let x = Array::from_shape_vec((6, 1), vec![0.0, 1.0, 2.0, 0.0, 1.0, 2.0]).unwrap();
         let y = vec![1.0, 2.0, 3.0, 1.5, 2.5, 3.5];
 
         let mut encoder = TargetEncoder::new("mean", 0.0, 0.0).unwrap();
@@ -1996,7 +1996,7 @@ mod tests {
 
     #[test]
     fn test_target_encoder_median_strategy() {
-        let x = Array::fromshape_vec((4, 1), vec![0.0, 1.0, 0.0, 1.0]).unwrap();
+        let x = Array::from_shape_vec((4, 1), vec![0.0, 1.0, 0.0, 1.0]).unwrap();
         let y = vec![1.0, 2.0, 3.0, 4.0];
 
         let mut encoder = TargetEncoder::new("median", 0.0, 0.0).unwrap();
@@ -2013,7 +2013,7 @@ mod tests {
 
     #[test]
     fn test_target_encoder_count_strategy() {
-        let x = Array::fromshape_vec((5, 1), vec![0.0, 1.0, 0.0, 2.0, 1.0]).unwrap();
+        let x = Array::from_shape_vec((5, 1), vec![0.0, 1.0, 0.0, 2.0, 1.0]).unwrap();
         let y = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 
         let mut encoder = TargetEncoder::new("count", 0.0, 0.0).unwrap();
@@ -2032,7 +2032,7 @@ mod tests {
 
     #[test]
     fn test_target_encoder_sum_strategy() {
-        let x = Array::fromshape_vec((4, 1), vec![0.0, 1.0, 0.0, 1.0]).unwrap();
+        let x = Array::from_shape_vec((4, 1), vec![0.0, 1.0, 0.0, 1.0]).unwrap();
         let y = vec![1.0, 2.0, 3.0, 4.0];
 
         let mut encoder = TargetEncoder::new("sum", 0.0, 0.0).unwrap();
@@ -2049,7 +2049,7 @@ mod tests {
 
     #[test]
     fn test_target_encoder_smoothing() {
-        let x = Array::fromshape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let x = Array::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
         let y = vec![1.0, 2.0, 3.0];
 
         let mut encoder = TargetEncoder::new("mean", 1.0, 0.0).unwrap();
@@ -2067,10 +2067,10 @@ mod tests {
 
     #[test]
     fn test_target_encoder_unknown_categories() {
-        let train_x = Array::fromshape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let train_x = Array::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
         let train_y = vec![1.0, 2.0, 3.0];
 
-        let test_x = Array::fromshape_vec((2, 1), vec![3.0, 4.0]).unwrap(); // Unknown categories
+        let test_x = Array::from_shape_vec((2, 1), vec![3.0, 4.0]).unwrap(); // Unknown categories
 
         let mut encoder = TargetEncoder::new("mean", 0.0, -1.0).unwrap();
         encoder.fit(&train_x, &train_y).unwrap();
@@ -2083,10 +2083,10 @@ mod tests {
 
     #[test]
     fn test_target_encoder_unknown_categories_global_mean() {
-        let train_x = Array::fromshape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let train_x = Array::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
         let train_y = vec![1.0, 2.0, 3.0];
 
-        let test_x = Array::fromshape_vec((1, 1), vec![3.0]).unwrap(); // Unknown category
+        let test_x = Array::from_shape_vec((1, 1), vec![3.0]).unwrap(); // Unknown category
 
         let mut encoder = TargetEncoder::new("mean", 0.0, 0.0).unwrap(); // globalstat = 0.0
         encoder.fit(&train_x, &train_y).unwrap();
@@ -2098,7 +2098,8 @@ mod tests {
 
     #[test]
     fn test_target_encoder_multi_feature() {
-        let x = Array::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0]).unwrap();
+        let x =
+            Array::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0]).unwrap();
         let y = vec![1.0, 2.0, 3.0, 4.0];
 
         let mut encoder = TargetEncoder::new("mean", 0.0, 0.0).unwrap();
@@ -2119,7 +2120,7 @@ mod tests {
 
     #[test]
     fn test_target_encoder_cross_validation() {
-        let x = Array::fromshape_vec(
+        let x = Array::from_shape_vec(
             (10, 1),
             vec![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0],
         )
@@ -2141,7 +2142,7 @@ mod tests {
 
     #[test]
     fn test_target_encoder_convenience_methods() {
-        let _x = Array::fromshape_vec((4, 1), vec![0.0, 1.0, 0.0, 1.0]).unwrap();
+        let _x = Array::from_shape_vec((4, 1), vec![0.0, 1.0, 0.0, 1.0]).unwrap();
         let _y = [1.0, 2.0, 3.0, 4.0];
 
         let encoder1 = TargetEncoder::with_mean(1.0);
@@ -2162,7 +2163,7 @@ mod tests {
         assert!(TargetEncoder::new("mean", -1.0, 0.0).is_err());
 
         // Mismatched target length
-        let x = Array::fromshape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let x = Array::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
         let y = vec![1.0, 2.0]; // Wrong length
 
         let mut encoder = TargetEncoder::new("mean", 0.0, 0.0).unwrap();
@@ -2173,8 +2174,8 @@ mod tests {
         assert!(encoder2.transform(&x).is_err());
 
         // Wrong number of features
-        let train_x = Array::fromshape_vec((2, 1), vec![0.0, 1.0]).unwrap();
-        let test_x = Array::fromshape_vec((2, 2), vec![0.0, 1.0, 1.0, 0.0]).unwrap();
+        let train_x = Array::from_shape_vec((2, 1), vec![0.0, 1.0]).unwrap();
+        let test_x = Array::from_shape_vec((2, 2), vec![0.0, 1.0, 1.0, 0.0]).unwrap();
         let train_y = vec![1.0, 2.0];
 
         let mut encoder = TargetEncoder::new("mean", 0.0, 0.0).unwrap();
@@ -2182,7 +2183,7 @@ mod tests {
         assert!(encoder.transform(&test_x).is_err());
 
         // Invalid CV folds
-        let x = Array::fromshape_vec((4, 1), vec![0.0, 1.0, 0.0, 1.0]).unwrap();
+        let x = Array::from_shape_vec((4, 1), vec![0.0, 1.0, 0.0, 1.0]).unwrap();
         let y = vec![1.0, 2.0, 3.0, 4.0];
         let mut encoder = TargetEncoder::new("mean", 0.0, 0.0).unwrap();
         assert!(encoder.fit_transform_cv(&x, &y, 1).is_err()); // cv_folds < 2
@@ -2190,7 +2191,7 @@ mod tests {
 
     #[test]
     fn test_target_encoder_accessors() {
-        let x = Array::fromshape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let x = Array::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
         let y = vec![1.0, 2.0, 3.0];
 
         let mut encoder = TargetEncoder::new("mean", 0.0, 0.0).unwrap();
@@ -2223,7 +2224,7 @@ mod tests {
     #[test]
     fn test_binary_encoder_basic() {
         // Test basic binary encoding with 4 categories (needs 2 bits)
-        let data = Array::fromshape_vec((4, 1), vec![0.0, 1.0, 2.0, 3.0]).unwrap();
+        let data = Array::from_shape_vec((4, 1), vec![0.0, 1.0, 2.0, 3.0]).unwrap();
 
         let mut encoder = BinaryEncoder::with_defaults();
         let encoded = encoder.fit_transform(&data).unwrap();
@@ -2246,7 +2247,7 @@ mod tests {
     fn test_binary_encoder_power_of_two() {
         // Test with exactly 8 categories (power of 2)
         let data =
-            Array::fromshape_vec((8, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]).unwrap();
+            Array::from_shape_vec((8, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]).unwrap();
 
         let mut encoder = BinaryEncoder::with_defaults();
         let encoded = encoder.fit_transform(&data).unwrap();
@@ -2267,7 +2268,7 @@ mod tests {
     #[test]
     fn test_binary_encoder_non_power_of_two() {
         // Test with 5 categories (not power of 2, needs 3 bits)
-        let data = Array::fromshape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
+        let data = Array::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
 
         let mut encoder = BinaryEncoder::with_defaults();
         let encoded = encoder.fit_transform(&data).unwrap();
@@ -2280,7 +2281,7 @@ mod tests {
     #[test]
     fn test_binary_encoder_single_category() {
         // Test edge case with only 1 category
-        let data = Array::fromshape_vec((3, 1), vec![5.0, 5.0, 5.0]).unwrap();
+        let data = Array::from_shape_vec((3, 1), vec![5.0, 5.0, 5.0]).unwrap();
 
         let mut encoder = BinaryEncoder::with_defaults();
         let encoded = encoder.fit_transform(&data).unwrap();
@@ -2298,7 +2299,7 @@ mod tests {
     #[test]
     fn test_binary_encoder_multi_feature() {
         // Test with multiple features
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (4, 2),
             vec![
                 0.0, 10.0, // Feature 0: [0,1,2] (2 bits), Feature 1: [10,11] (1 bit)
@@ -2321,8 +2322,8 @@ mod tests {
 
     #[test]
     fn test_binary_encoder_separate_fit_transform() {
-        let train_data = Array::fromshape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
-        let test_data = Array::fromshape_vec((2, 1), vec![1.0, 0.0]).unwrap();
+        let train_data = Array::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let test_data = Array::from_shape_vec((2, 1), vec![1.0, 0.0]).unwrap();
 
         let mut encoder = BinaryEncoder::with_defaults();
 
@@ -2342,8 +2343,8 @@ mod tests {
 
     #[test]
     fn test_binary_encoder_unknown_categories_error() {
-        let train_data = Array::fromshape_vec((2, 1), vec![0.0, 1.0]).unwrap();
-        let test_data = Array::fromshape_vec((1, 1), vec![2.0]).unwrap(); // Unknown category
+        let train_data = Array::from_shape_vec((2, 1), vec![0.0, 1.0]).unwrap();
+        let test_data = Array::from_shape_vec((1, 1), vec![2.0]).unwrap(); // Unknown category
 
         let mut encoder = BinaryEncoder::new("error").unwrap();
         encoder.fit(&train_data).unwrap();
@@ -2354,8 +2355,8 @@ mod tests {
 
     #[test]
     fn test_binary_encoder_unknown_categories_ignore() {
-        let train_data = Array::fromshape_vec((2, 1), vec![0.0, 1.0]).unwrap();
-        let test_data = Array::fromshape_vec((1, 1), vec![2.0]).unwrap(); // Unknown category
+        let train_data = Array::from_shape_vec((2, 1), vec![0.0, 1.0]).unwrap();
+        let test_data = Array::from_shape_vec((1, 1), vec![2.0]).unwrap(); // Unknown category
 
         let mut encoder = BinaryEncoder::new("ignore").unwrap();
         encoder.fit(&train_data).unwrap();
@@ -2368,7 +2369,7 @@ mod tests {
 
     #[test]
     fn test_binary_encoder_categories_accessor() {
-        let data = Array::fromshape_vec((3, 1), vec![10.0, 20.0, 30.0]).unwrap();
+        let data = Array::from_shape_vec((3, 1), vec![10.0, 20.0, 30.0]).unwrap();
 
         let mut encoder = BinaryEncoder::with_defaults();
 
@@ -2422,13 +2423,13 @@ mod tests {
         assert!(encoder.fit(&empty_data).is_err());
 
         // Transform before fit
-        let data = Array::fromshape_vec((2, 1), vec![0.0, 1.0]).unwrap();
+        let data = Array::from_shape_vec((2, 1), vec![0.0, 1.0]).unwrap();
         let encoder = BinaryEncoder::with_defaults();
         assert!(encoder.transform(&data).is_err());
 
         // Wrong number of features in transform
-        let train_data = Array::fromshape_vec((2, 1), vec![0.0, 1.0]).unwrap();
-        let test_data = Array::fromshape_vec((2, 2), vec![0.0, 1.0, 1.0, 0.0]).unwrap();
+        let train_data = Array::from_shape_vec((2, 1), vec![0.0, 1.0]).unwrap();
+        let test_data = Array::from_shape_vec((2, 2), vec![0.0, 1.0, 1.0, 0.0]).unwrap();
 
         let mut encoder = BinaryEncoder::with_defaults();
         encoder.fit(&train_data).unwrap();
@@ -2438,7 +2439,7 @@ mod tests {
     #[test]
     fn test_binary_encoder_consistency() {
         // Test that encoding is consistent across multiple calls
-        let data = Array::fromshape_vec((4, 1), vec![3.0, 1.0, 4.0, 1.0]).unwrap();
+        let data = Array::from_shape_vec((4, 1), vec![3.0, 1.0, 4.0, 1.0]).unwrap();
 
         let mut encoder = BinaryEncoder::with_defaults();
         let encoded1 = encoder.fit_transform(&data).unwrap();
@@ -2460,7 +2461,7 @@ mod tests {
     fn test_binary_encoder_memory_efficiency() {
         // Test that binary encoding is more memory efficient than one-hot
         // For 10 categories: one-hot needs 10 features, binary needs 4 features
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (10, 1),
             vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
         )
@@ -2499,7 +2500,7 @@ mod tests {
     #[test]
     fn test_onehot_sparse_output() {
         let data =
-            Array::fromshape_vec((4, 2), vec![0.0, 1.0, 1.0, 2.0, 2.0, 0.0, 0.0, 1.0]).unwrap();
+            Array::from_shape_vec((4, 2), vec![0.0, 1.0, 1.0, 2.0, 2.0, 0.0, 0.0, 1.0]).unwrap();
 
         // Test sparse output
         let mut encoder_sparse = OneHotEncoder::new(None, "error", true).unwrap();
@@ -2546,7 +2547,7 @@ mod tests {
 
     #[test]
     fn test_onehot_sparse_with_drop() {
-        let data = Array::fromshape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let data = Array::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
 
         let mut encoder = OneHotEncoder::new(Some("first".to_string()), "error", true).unwrap();
         let result = encoder.fit_transform(&data).unwrap();
@@ -2568,7 +2569,7 @@ mod tests {
 
     #[test]
     fn test_onehot_sparse_backward_compatibility() {
-        let data = Array::fromshape_vec((2, 1), vec![0.0, 1.0]).unwrap();
+        let data = Array::from_shape_vec((2, 1), vec![0.0, 1.0]).unwrap();
 
         let mut encoder = OneHotEncoder::new(None, "error", true).unwrap();
         encoder.fit(&data).unwrap();
@@ -2593,7 +2594,8 @@ mod tests {
 
     #[test]
     fn test_encoded_output_methods() {
-        let dense_array = Array::fromshape_vec((2, 3), vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0]).unwrap();
+        let dense_array =
+            Array::from_shape_vec((2, 3), vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0]).unwrap();
         let dense_output = EncodedOutput::Dense(dense_array);
 
         let mut sparse_matrix = SparseMatrix::new((2, 3));

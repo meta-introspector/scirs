@@ -4,9 +4,9 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array2, ArrayBase, Axis, Data};
+use ndarray_rand::rand::distributions::Uniform;
 use ndarray_rand::RandomExt;
-use rand::distributions::Uniform;
-use scirs2__transform::*;
+use scirs2_transform::*;
 
 const SAMPLE_SIZES: &[usize] = &[100, 1000, 10_000];
 const FEATURE_SIZES: &[usize] = &[10, 50, 100];
@@ -77,7 +77,7 @@ fn bench_normalization(c: &mut Criterion) {
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
 fn bench_simd_normalization(c: &mut Criterion) {
-    use scirs2__transform::normalize_simd::*;
+    use scirs2_transform::normalize_simd::*;
 
     let mut group = c.benchmark_group("SIMD_Normalization");
 
@@ -181,7 +181,7 @@ fn bench_feature_engineering(c: &mut Criterion) {
                 ),
                 &data,
                 |b, data| {
-                    let poly = PolynomialFeatures::new(2, false, false).unwrap();
+                    let poly = PolynomialFeatures::new(2, false, false);
 
                     b.iter(|| {
                         let _result = poly.transform(black_box(data));
@@ -194,7 +194,7 @@ fn bench_feature_engineering(c: &mut Criterion) {
                 BenchmarkId::new("PowerTransform", format!("{}x{}", n_samples, n_features)),
                 &data,
                 |b, data| {
-                    let mut pt = PowerTransformer::new("yeo-johnson").unwrap();
+                    let mut pt = PowerTransformer::new("yeo-johnson", true).unwrap();
                     pt.fit(data).unwrap();
 
                     b.iter(|| {
@@ -289,7 +289,7 @@ fn bench_imputation(c: &mut Criterion) {
                 BenchmarkId::new("SimpleImputer", format!("{}x{}", n_samples, n_features)),
                 &data,
                 |b, data| {
-                    let mut imputer = SimpleImputer::new(ImputeStrategy::Mean);
+                    let mut imputer = SimpleImputer::new(ImputeStrategy::Mean, f64::NAN);
                     imputer.fit(data).unwrap();
 
                     b.iter(|| {
@@ -306,8 +306,9 @@ fn bench_imputation(c: &mut Criterion) {
                     |b, data| {
                         let mut imputer = KNNImputer::new(
                             5,
-                            WeightingScheme::Distance,
                             DistanceMetric::Euclidean,
+                            WeightingScheme::Distance,
+                            f64::NAN,
                         );
                         imputer.fit(data).unwrap();
 

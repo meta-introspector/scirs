@@ -1,9 +1,9 @@
 use ndarray::{Array1, Array2};
-use scirs2__cluster::metrics::{
+use scirs2_cluster::metrics::{
     adjusted_rand_index, calinski_harabasz_score, davies_bouldin_score,
     homogeneity_completeness_v_measure, normalized_mutual_info, silhouette_score,
 };
-use scirs2__cluster::vq::{kmeans2, MinitMethod, MissingMethod};
+use scirs2_cluster::vq::{kmeans2, MinitMethod, MissingMethod};
 
 #[allow(dead_code)]
 fn main() {
@@ -180,7 +180,7 @@ fn generate_data_with_ground_truth() -> (Array2<f64>, Array1<i32>) {
         labels.push(2);
     }
 
-    let data_array = Array2::fromshape_vec((75, 2), data).unwrap();
+    let data_array = Array2::from_shape_vec((75, 2), data).unwrap();
     let labels_array = Array1::from_vec(labels);
 
     (data_array, labels_array)

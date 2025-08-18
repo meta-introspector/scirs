@@ -1563,7 +1563,7 @@ mod tests {
     #[test]
     fn test_dirty_chunk_tracking() -> CoreResult<()> {
         let temp_dir = TempDir::new()?;
-        let storage = Arc::new(FileStorageBackend::new(temp_dir.path())?);
+        let storage = Arc::new(FileStorageBackend::new(temp_dir.path(), temp_dir.path())?);
 
         let config = OutOfCoreConfig {
             chunkshape: vec![100, 100],

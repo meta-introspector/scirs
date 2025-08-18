@@ -231,7 +231,7 @@ impl VarianceThreshold {
     ///
     /// This method is not implemented for feature selection as it's not possible
     /// to reconstruct removed features.
-    pub fn inverse_transform<S>(selfx: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    pub fn inverse_transform<S>(&self, _x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
     where
         S: Data,
         S::Elem: Float + NumCast,
@@ -611,7 +611,7 @@ mod tests {
         // Feature 1: [1, 2, 3] - varying, variance > 0
         // Feature 2: [5, 5, 5] - constant, variance = 0
         // Feature 3: [1, 3, 5] - varying, variance > 0
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (3, 4),
             vec![1.0, 1.0, 5.0, 1.0, 1.0, 2.0, 5.0, 3.0, 1.0, 3.0, 5.0, 5.0],
         )
@@ -640,7 +640,7 @@ mod tests {
     #[test]
     fn test_variance_threshold_custom() {
         // Create test data with specific variances
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (4, 3),
             vec![
                 1.0, 1.0, 1.0, // Sample 0
@@ -671,7 +671,7 @@ mod tests {
 
     #[test]
     fn test_variance_threshold_support_mask() {
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (3, 4),
             vec![1.0, 1.0, 5.0, 1.0, 1.0, 2.0, 5.0, 3.0, 1.0, 3.0, 5.0, 5.0],
         )
@@ -693,7 +693,7 @@ mod tests {
     #[test]
     fn test_variance_threshold_all_removed() {
         // Create data where all features are constant
-        let data = Array::fromshape_vec((3, 2), vec![5.0, 10.0, 5.0, 10.0, 5.0, 10.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![5.0, 10.0, 5.0, 10.0, 5.0, 10.0]).unwrap();
 
         let mut selector = VarianceThreshold::with_defaults();
         let transformed = selector.fit_transform(&data).unwrap();
@@ -709,12 +709,12 @@ mod tests {
         assert!(VarianceThreshold::new(-0.1).is_err());
 
         // Test with insufficient samples
-        let small_data = Array::fromshape_vec((1, 2), vec![1.0, 2.0]).unwrap();
+        let small_data = Array::from_shape_vec((1, 2), vec![1.0, 2.0]).unwrap();
         let mut selector = VarianceThreshold::with_defaults();
         assert!(selector.fit(&small_data).is_err());
 
         // Test transform before fit
-        let data = Array::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let selector_unfitted = VarianceThreshold::with_defaults();
         assert!(selector_unfitted.transform(&data).is_err());
 
@@ -727,9 +727,9 @@ mod tests {
     #[test]
     fn test_variance_threshold_feature_mismatch() {
         let train_data =
-            Array::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+            Array::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
                 .unwrap();
-        let test_data = Array::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap(); // Different number of features
+        let test_data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap(); // Different number of features
 
         let mut selector = VarianceThreshold::with_defaults();
         selector.fit(&train_data).unwrap();
@@ -740,7 +740,7 @@ mod tests {
     fn test_variance_calculation() {
         // Test variance calculation manually
         // Data: [1, 2, 3] should have variance = ((1-2)² + (2-2)² + (3-2)²) / 3 = (1 + 0 + 1) / 3 = 2/3
-        let data = Array::fromshape_vec((3, 1), vec![1.0, 2.0, 3.0]).unwrap();
+        let data = Array::from_shape_vec((3, 1), vec![1.0, 2.0, 3.0]).unwrap();
 
         let mut selector = VarianceThreshold::with_defaults();
         selector.fit(&data).unwrap();
@@ -767,7 +767,7 @@ mod tests {
             target_vec.push(3.0 * x1 + x4 + 0.1 * rand::random::<f64>());
         }
 
-        let x = Array::fromshape_vec((n_samples, 4), data_vec).unwrap();
+        let x = Array::from_shape_vec((n_samples, 4), data_vec).unwrap();
         let y = Array::from_vec(target_vec);
 
         // Simple importance function based on correlation
@@ -816,7 +816,7 @@ mod tests {
             y_data.push(t + 0.5 * t.sin());
         }
 
-        let x = Array::fromshape_vec((n_samples, 3), x_data).unwrap();
+        let x = Array::from_shape_vec((n_samples, 3), x_data).unwrap();
         let y = Array::from_vec(y_data);
 
         let mut selector = MutualInfoSelector::new(2);
@@ -834,7 +834,7 @@ mod tests {
     #[test]
     fn test_mutual_info_discrete() {
         // Create classification-like data
-        let x = Array::fromshape_vec(
+        let x = Array::from_shape_vec(
             (6, 3),
             vec![
                 1.0, 0.1, 5.0, // Class 0

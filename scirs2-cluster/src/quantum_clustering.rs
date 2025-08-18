@@ -465,7 +465,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
         let n_qubits = self.n_qubits;
         let n_states = self.quantum_state.len();
 
-        let mut new_state = Array1::zeros(n_states);
+        let mut new_state: Array1<f64> = Array1::zeros(n_states);
 
         for state in 0..n_states {
             let amplitude = self.quantum_state[state];
@@ -481,8 +481,8 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
         }
 
         // Normalize
-        let norm = new_state.mapv(|x| x * x).sum().sqrt();
-        if norm > 1e-10 {
+        let norm = new_state.mapv(|x: f64| x * x).sum().sqrt();
+        if F::from(norm).unwrap() > F::from(1e-10).unwrap() {
             self.quantum_state = new_state / norm;
         }
 
@@ -1130,7 +1130,7 @@ pub struct QuantumAnnealingConfig {
 }
 
 /// Cooling schedule types for quantum annealing
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum CoolingSchedule {
     /// Linear cooling schedule
@@ -1259,16 +1259,23 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
             use rand::SeedableRng;
             rand::rngs::StdRng::seed_from_u64(seed)
         } else {
-            rand::rng()
+            use rand::SeedableRng;
+            rand::rngs::StdRng::seed_from_u64(rand::rng().gen::<u64>())
         };
 
         let mut spins = Array1::zeros(total_qubits);
         for i in 0..total_qubits {
-            spins[i] = if rng.random::<f64>() > 0.5 { 1 } else { -1 };
+            spins[i] = if rng.random::<f64>() > 0.5_f64 {
+                F::one()
+            } else {
+                F::zero() - F::one()
+            };
         }
 
-        self.spin_configuration = Some(spins.clone());
-        self.best_configuration = Some(spins);
+        // Convert F spins to i8 for storage
+        let i8_spins = spins.mapv(|spin| if spin == F::one() { 1i8 } else { -1i8 });
+        self.spin_configuration = Some(i8_spins.clone());
+        self.best_configuration = Some(i8_spins);
         self.best_energy =
             Some(self.calculate_ising_energy(&self.spin_configuration.as_ref().unwrap()));
 
@@ -1313,30 +1320,41 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
             use rand::SeedableRng;
             rand::rngs::StdRng::seed_from_u64(seed)
         } else {
-            rand::rng()
+            use rand::SeedableRng;
+            rand::rngs::StdRng::seed_from_u64(rand::rng().gen::<u64>())
         };
 
-        let spins = self.spin_configuration.as_mut().unwrap();
-        let n_qubits = spins.len();
+        let n_qubits = self.spin_configuration.as_ref().unwrap().len();
 
         for temperature in &self.temperature_schedule {
             for _ in 0..self.config.mc_sweeps {
                 // Monte Carlo sweep with quantum tunneling
                 for qubit in 0..n_qubits {
                     // Calculate energy change for flipping this qubit
-                    let delta_e = self.calculate_flip_energy_change(spins, qubit);
+                    let delta_e = {
+                        let spins = self.spin_configuration.as_ref().unwrap();
+                        self.calculate_flip_energy_change(spins, qubit)
+                    };
 
                     // Quantum tunneling probability (includes classical thermal + quantum effects)
                     let tunnel_probability = self.quantum_tunnel_probability(delta_e, *temperature);
+                    let tunnel_prob_f = F::from(tunnel_probability).unwrap();
 
-                    if rng.random::<f64>() < tunnel_probability {
-                        spins[qubit] *= -1; // Flip spin
+                    if F::from(rng.random::<f64>()).unwrap() < tunnel_prob_f {
+                        // Flip spin
+                        {
+                            let spins = self.spin_configuration.as_mut().unwrap();
+                            spins[qubit] = -spins[qubit];
+                        }
 
                         // Update best configuration if we found a better one
-                        let current_energy = self.calculate_ising_energy(spins);
+                        let current_energy = {
+                            let spins = self.spin_configuration.as_ref().unwrap();
+                            self.calculate_ising_energy(spins)
+                        };
                         if current_energy < self.best_energy.unwrap() {
                             self.best_energy = Some(current_energy);
-                            self.best_configuration = Some(spins.clone());
+                            self.best_configuration = self.spin_configuration.clone();
                         }
                     }
                 }
@@ -1489,7 +1507,7 @@ mod tests {
     #[test]
     fn test_small_qaoa_clustering() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
 
         let result = qaoa_clustering(data.view(), 2);
         assert!(result.is_ok());
@@ -1532,7 +1550,7 @@ mod tests {
     #[test]
     fn test_small_quantum_annealing_clustering() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
 
         let result = quantum_annealing_clustering(data.view(), 2);
         assert!(result.is_ok());
@@ -1544,7 +1562,7 @@ mod tests {
 
     #[test]
     fn test_quantum_annealing_with_custom_config() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )

@@ -1,5 +1,5 @@
 use ndarray::{array, Array2};
-use scirs2__cluster::{
+use scirs2_cluster::{
     // Affinity Propagation
     affinity_propagation,
     // BIRCH

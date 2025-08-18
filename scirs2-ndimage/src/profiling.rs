@@ -372,7 +372,7 @@ impl ProfilingScope {
         drop(profiler);
 
         Self {
-            _name: name.into(),
+            name: name.into(),
             start: Instant::now(),
             shape: shape.to_vec(),
             backend,
@@ -485,7 +485,7 @@ pub struct BenchmarkResult<T> {
 impl<T> Benchmark<T> {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
-            _name: name.into(),
+            name: name.into(),
             iterations: 100,
             warmup_iterations: 10,
             results: Vec::new(),
@@ -582,7 +582,7 @@ impl BenchmarkComparison {
             let std_dev = Duration::from_nanos(variance.sqrt() as u64);
 
             variants.push(VariantStats {
-                _name: result.variant.clone(),
+                name: result.variant.clone(),
                 mean,
                 median,
                 std_dev,
@@ -600,11 +600,8 @@ impl BenchmarkComparison {
             .map(|(i, _)| i)
             .unwrap_or(0);
 
-        let fastest = variants[fastest_idx]._name.clone();
-        let baseline = variants
-            .first()
-            .map(|v| v._name.clone())
-            .unwrap_or_default();
+        let fastest = variants[fastest_idx].name.clone();
+        let baseline = variants.first().map(|v| v.name.clone()).unwrap_or_default();
 
         // Calculate speedups relative to baseline
         let baseline_time = variants[0].median.as_nanos() as f64;
@@ -613,7 +610,7 @@ impl BenchmarkComparison {
         }
 
         Self {
-            _name: name.to_string(),
+            name: name.to_string(),
             variants,
             fastest,
             baseline,
@@ -666,7 +663,7 @@ pub struct AutoTuner {
 impl AutoTuner {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
-            _name: name.into(),
+            name: name.into(),
             test_data: Vec::new(),
         }
     }

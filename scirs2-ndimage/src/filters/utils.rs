@@ -25,16 +25,14 @@ pub fn calculate_kernel_size<T: Float + FromPrimitive>(
     sigma: T,
     truncate: Option<T>,
 ) -> NdimageResult<usize> {
-    let truncate_val = truncate.unwrap_or_else(|| {
-        T::from_f64(4.0).unwrap_or_else(|| T::zero())
-    });
+    let truncate_val = truncate.unwrap_or_else(|| T::from_f64(4.0).unwrap_or_else(|| T::zero()));
     let size = (T::from_usize(1).unwrap_or(T::one())
         + (sigma * truncate_val * T::from_f64(2.0).unwrap_or(T::one() + T::one())))
-            .ceil()
-            .to_usize()
-            .ok_or_else(|| {
-                NdimageError::ComputationError("Failed to convert kernel size to usize".into())
-            })?;
+    .ceil()
+    .to_usize()
+    .ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert kernel size to usize".into())
+    })?;
 
     // Ensure odd size
     if size % 2 == 0 {

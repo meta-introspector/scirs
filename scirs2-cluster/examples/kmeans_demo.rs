@@ -1,5 +1,5 @@
 use ndarray::Array2;
-use scirs2__cluster::vq::{
+use scirs2_cluster::vq::{
     kmeans2, kmeans_plus_plus, kmeans_with_options, KMeansOptions, MinitMethod, MissingMethod,
 };
 
@@ -9,7 +9,7 @@ fn main() {
     println!("=========================");
 
     // Create a simple dataset with three clusters
-    let data = Array2::fromshape_vec(
+    let data = Array2::from_shape_vec(
         (15, 2),
         vec![
             // Cluster 1

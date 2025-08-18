@@ -422,7 +422,8 @@ impl<F: Float + FromPrimitive> ChunkedDistanceMatrix<F> {
 
         Self {
             chunk_size,
-            n_samples_phantom: std::marker::PhantomData,
+            n_samples,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -469,19 +470,19 @@ mod tests {
 
         // First batch
         let batch1 =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, 1.0, 1.0, 1.1, 1.1]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, 1.0, 1.0, 1.1, 1.1]).unwrap();
 
         streaming_kmeans.partial_fit(batch1.view()).unwrap();
         assert!(streaming_kmeans.cluster_centers().is_some());
 
         // Second batch
         let batch2 =
-            Array2::fromshape_vec((4, 2), vec![0.2, 0.2, 0.0, 0.1, 1.2, 1.0, 1.0, 1.2]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.2, 0.2, 0.0, 0.1, 1.2, 1.0, 1.0, 1.2]).unwrap();
 
         streaming_kmeans.partial_fit(batch2.view()).unwrap();
 
         // Test prediction
-        let test_data = Array2::fromshape_vec((2, 2), vec![0.05, 0.05, 1.05, 1.05]).unwrap();
+        let test_data = Array2::from_shape_vec((2, 2), vec![0.05, 0.05, 1.05, 1.05]).unwrap();
 
         let labels = streaming_kmeans.predict(test_data.view()).unwrap();
         assert_eq!(labels.len(), 2);
@@ -496,7 +497,7 @@ mod tests {
         let mut progressive = ProgressiveHierarchical::new(config);
 
         // Process first batch
-        let batch1 = Array2::fromshape_vec(
+        let batch1 = Array2::from_shape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )
@@ -513,7 +514,7 @@ mod tests {
     #[test]
     fn test_chunked_distance_matrix() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         let chunked_matrix = ChunkedDistanceMatrix::new(4, 1); // 1 MB limit
         let mut distance_count = 0;
@@ -631,7 +632,7 @@ pub mod memory_management {
 
     /// Disk-based storage for large intermediate results
     #[derive(Debug)]
-    pub struct DiskBackedStorage<F: Float> {
+    pub struct DiskBackedStorage<F: Float + FromPrimitive> {
         temp_files: Vec<PathBuf>,
         temp_dir: PathBuf,
         buffer_size: usize,
@@ -751,7 +752,7 @@ pub mod memory_management {
         }
     }
 
-    impl<F: Float> Drop for DiskBackedStorage<F> {
+    impl<F: Float + FromPrimitive> Drop for DiskBackedStorage<F> {
         fn drop(&mut self) {
             let _ = self.cleanup(); // Best effort cleanup
         }
@@ -1295,7 +1296,7 @@ pub mod online_algorithms {
             };
 
             Self {
-                _centers: initial_centers,
+                centers: initial_centers,
                 learning_rate_schedule,
                 iteration: 0,
                 adaptive_params,
@@ -1333,7 +1334,8 @@ pub mod online_algorithms {
 
             // Check for adaptive cluster adjustments
             if self.adaptive_params.auto_k_adjustment {
-                self.maybe_adjust_clusters(sample, min_distance)?;
+                // TODO: Implement maybe_adjust_clusters
+                // self.maybe_adjust_clusters(sample, min_distance)?;
             }
 
             self.iteration += 1;
@@ -1412,7 +1414,7 @@ pub mod online_algorithms {
                         return *max_lr;
                     }
 
-                    let avg_movement = recent_movements.iter().sum::<F>()
+                    let avg_movement = recent_movements.iter().fold(F::zero(), |acc, x| acc + *x)
                         / F::from(recent_movements.len()).unwrap();
                     let stability = F::one() / (F::one() + avg_movement);
 
@@ -1468,8 +1470,8 @@ pub mod online_algorithms {
             let mut predictions = Array1::zeros(n_samples);
 
             for (i, sample) in samples.rows().into_iter().enumerate() {
-                let (cluster_) = self.find_nearest_cluster(sample)?;
-                predictions[i] = cluster_;
+                let (cluster_id, _distance) = self.find_nearest_cluster(sample)?;
+                predictions[i] = cluster_id;
             }
 
             Ok(predictions)

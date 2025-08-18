@@ -133,9 +133,9 @@ impl<F: Float + FromPrimitive + ScalarOperand + 'static> WardCluster<F> {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__cluster::hierarchy::{optimized_ward_linkage, Metric};
+/// use scirs2_cluster::hierarchy::{optimized_ward_linkage, Metric};
 ///
-/// let data = Array2::fromshape_vec((4, 2), vec![
+/// let data = Array2::from_shape_vec((4, 2), vec![
 ///     0.0, 0.0,
 ///     1.0, 0.0,
 ///     0.0, 1.0,
@@ -352,7 +352,7 @@ mod tests {
     #[test]
     fn test_optimized_ward_simple() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         let linkage_matrix = optimized_ward_linkage(data.view(), Metric::Euclidean).unwrap();
 
@@ -420,7 +420,7 @@ mod tests {
     #[test]
     fn test_memory_efficient_ward() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         // Should succeed with reasonable memory limit
         let result = memory_efficient_ward_linkage(data.view(), 100);
@@ -449,7 +449,7 @@ mod tests {
     #[test]
     fn test_optimized_ward_identical_points() {
         // Test edge case with identical points
-        let data = Array2::fromshape_vec((3, 2), vec![1.0, 1.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![1.0, 1.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
 
         let result = optimized_ward_linkage(data.view(), Metric::Euclidean);
         assert!(result.is_ok());

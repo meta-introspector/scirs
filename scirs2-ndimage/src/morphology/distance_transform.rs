@@ -129,14 +129,14 @@ where
 #[allow(dead_code)]
 fn felzenszwalb_1d_edt<D>(
     dist_sq: &mut Array<f64, D>,
-    indices: Option<&mut Array<i32, IxDyn>>,
+    mut indices: Option<&mut Array<i32, IxDyn>>,
     dim: usize,
     sampling: f64,
 ) where
     D: Dimension,
     for<'a> &'a [usize]: ndarray::NdIndex<D>,
 {
-    let shape = dist_sq.shape();
+    let shape = dist_sq.shape().to_vec();
     let ndim = dist_sq.ndim();
     let n = shape[dim];
 
@@ -185,7 +185,7 @@ fn felzenszwalb_1d_edt<D>(
 
         // Apply 1D distance transform
         let (transformed_dist, transformed_indices) =
-            felzenszwalb_1d_line(&slice_data, slice_indices.as_ref(), sampling);
+            felzenszwalb_1d_line(&slice_data, slice_indices.as_ref().map(|v| &**v), sampling);
 
         // Write back transformed data
         for j in 0..n {
@@ -237,9 +237,12 @@ fn felzenszwalb_1d_line(
     // Build lower envelope
     for q in 1..n {
         // Remove parabolas that are no longer in the envelope
-        while k >= 0 {
+        loop {
             let s = intersection_point(v[k], q, input, sampling_sq);
             if s > z[k] {
+                break;
+            }
+            if k == 0 {
                 break;
             }
             k -= 1;

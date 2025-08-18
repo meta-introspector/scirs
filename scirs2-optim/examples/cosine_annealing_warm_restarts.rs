@@ -6,8 +6,8 @@
 use ndarray::{Array1, Array2};
 use ndarray_rand::rand_distr::Normal;
 use ndarray_rand::RandomExt;
-use scirs2__optim::optimizers::{Optimizer, SGD};
-use scirs2__optim::schedulers::{
+use scirs2_optim::optimizers::{Optimizer, SGD};
+use scirs2_optim::schedulers::{
     CosineAnnealing, CosineAnnealingWarmRestarts, LearningRateScheduler,
 };
 use std::time::Instant;

@@ -189,10 +189,10 @@ impl<F: Float + FromPrimitive> Default for HDBSCANOptions<F> {
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2__cluster::{hdbscan, HDBSCANOptions};
+/// use scirs2_cluster::{hdbscan, HDBSCANOptions};
 ///
 /// // Example data with two clusters
-/// let data = Array2::fromshape_vec((10, 2), vec![
+/// let data = Array2::from_shape_vec((10, 2), vec![
 ///     1.0, 2.0,  // Cluster 1
 ///     1.5, 1.8,
 ///     0.9, 1.9,
@@ -441,10 +441,10 @@ where
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2__cluster::{hdbscan, dbscan_clustering};
+/// use scirs2_cluster::{hdbscan, dbscan_clustering};
 ///
 /// // Example data with two clusters
-/// let data = Array2::fromshape_vec((10, 2), vec![
+/// let data = Array2::from_shape_vec((10, 2), vec![
 ///     1.0, 2.0,  // Cluster 1
 ///     1.5, 1.8,
 ///     0.9, 1.9,
@@ -1240,7 +1240,7 @@ where
                 .iter()
                 .zip(condensed_tree.parent.iter())
                 .find(|(_, &p)| p == parent && p != root)
-                .map(|(l_)| *l_)
+                .map(|(l_, _)| *l_)
                 .unwrap_or(F::zero());
 
             // Lambda difference is the stability decrease
@@ -1272,7 +1272,7 @@ where
             .parent
             .iter()
             .zip(condensed_tree.child.iter())
-            .filter(|&(p_)| *p_ == node)
+            .filter(|&(p_, _)| *p_ == node)
             .map(|(_, c)| *c)
             .collect();
 
@@ -1481,7 +1481,7 @@ mod tests {
     #[test]
     fn test_hdbscan_placeholder() {
         // Create a test dataset with more points
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![
                 // Cluster 1 - tight cluster

@@ -207,8 +207,8 @@ fn compute_intersection_safe<T>(f: &Array1<T>, p: usize, q: usize, spacing: T) -
 where
     T: Float + FromPrimitive,
 {
-    let p_t = safe_usize_to_float(p)?;
-    let q_t = safe_usize_to_float(q)?;
+    let p_t = safe_usize_to_float::<T>(p)?;
+    let q_t = safe_usize_to_float::<T>(q)?;
     let spacing_sq = spacing * spacing;
 
     let two = safe_f64_to_float::<T>(2.0)?;
@@ -505,7 +505,7 @@ mod tests {
         // Simple test case with a single background pixel
         let input = array![[true, true, true], [true, false, true], [true, true, true]];
 
-        let dt = euclidean_distance_transform(&input, None)
+        let dt = euclidean_distance_transform::<f64>(&input, None)
             .expect("euclidean_distance_transform should succeed for test");
 
         // Center should be 0 (background)
@@ -529,7 +529,7 @@ mod tests {
     fn test_cityblock_distance_transform() {
         let input = array![[true, true, true], [true, false, true], [true, true, true]];
 
-        let dt = cityblock_distance_transform(&input, None)
+        let dt = cityblock_distance_transform::<f64>(&input, None)
             .expect("cityblock_distance_transform should succeed for test");
 
         // Center should be 0 (background)

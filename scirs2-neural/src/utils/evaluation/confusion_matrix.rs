@@ -499,6 +499,8 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
     ///
     /// # Example
     /// ```
+    /// use ndarray::Array1;
+    /// use scirs2_neural::utils::ConfusionMatrix;
     /// // Create some example data
     /// let y_true = Array1::from_vec(vec![0, 1, 2, 0, 1, 2, 0, 1, 2, 0]);
     /// let y_pred = Array1::from_vec(vec![0, 1, 1, 0, 1, 2, 1, 1, 0, 0]);

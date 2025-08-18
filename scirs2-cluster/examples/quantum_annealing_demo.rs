@@ -4,7 +4,7 @@
 //! showcasing its ability to find global optima using quantum tunneling effects.
 
 use ndarray::Array2;
-use scirs2__cluster::{
+use scirs2_cluster::{
     quantum_annealing_clustering, CoolingSchedule, QuantumAnnealingClustering,
     QuantumAnnealingConfig,
 };
@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("===========================================");
 
     // Create sample data with three distinct clusters
-    let data = Array2::fromshape_vec(
+    let data = Array2::from_shape_vec(
         (12, 2),
         vec![
             // Cluster 1: Around origin

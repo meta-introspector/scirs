@@ -4,9 +4,9 @@
 mod tests {
     use approx::assert_abs_diff_eq;
     use ndarray::Array1;
-    use scirs2__optim::metrics::{MetricBasedReduceOnPlateau, MetricOptimizer, MetricScheduler};
-    use scirs2__optim::optimizers::{Optimizer, SGD};
-    use scirs2__optim::schedulers::LearningRateScheduler;
+    use scirs2_optim::metrics::{MetricBasedReduceOnPlateau, MetricOptimizer, MetricScheduler};
+    use scirs2_optim::optimizers::{Optimizer, SGD};
+    use scirs2_optim::schedulers::LearningRateScheduler;
     use std::collections::HashMap;
 
     /// Test the MetricOptimizer with SGD

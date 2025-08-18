@@ -1217,8 +1217,8 @@ mod tests {
 
     #[test]
     fn test_compound_eye_motion_detection() {
-        let image1 = Array2::zeros((20, 20));
-        let image2 = Array2::ones((20, 20));
+        let image1 = Array2::<f64>::zeros((20, 20));
+        let image2 = Array2::<f64>::ones((20, 20));
 
         let sequence = vec![image1.view(), image2.view()];
         let config = BiologicalVisionConfig::default();
@@ -1242,7 +1242,7 @@ mod tests {
             bio_inspired_attention_saccades(image.view(), &feature_maps, &config).unwrap();
 
         assert_eq!(attention_system.attention_map.dim(), (32, 32));
-        assert!(attention_system.feature_attentionweights.len() > 0);
+        assert!(attention_system.feature_attention_weights.len() > 0);
     }
 
     #[test]
@@ -1309,7 +1309,7 @@ mod tests {
         .unwrap();
 
         assert!(vwm_result.memory_slots.len() > 0);
-        assert!(vwm_result.attentionweights.len() > 0);
+        assert!(vwm_result.attention_weights.len() > 0);
         assert!(vwm_result.maintenance_activity.len() > 0);
     }
 }

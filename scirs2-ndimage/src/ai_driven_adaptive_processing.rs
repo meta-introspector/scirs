@@ -2581,7 +2581,7 @@ mod tests {
         let result = ai_driven_adaptive_processing(image.view(), &config, None);
 
         assert!(result.is_ok());
-        let (outputstate, explanation) = result.unwrap();
+        let (output, _state, explanation) = result.unwrap();
         assert_eq!(output.dim(), (4, 4));
         assert!(output.iter().all(|&x| x.is_finite()));
         assert!(!explanation.strategy_explanation.is_empty());

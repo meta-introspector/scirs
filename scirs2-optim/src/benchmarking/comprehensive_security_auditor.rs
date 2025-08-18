@@ -1880,8 +1880,8 @@ test-dep = "0.1"
 
         let deps = auditor.parse_cargo_dependencies(cargocontent).unwrap();
         assert!(deps.len() >= 2);
-        assert!(deps.iter().any(|(name_)| name == "serde"));
-        assert!(deps.iter().any(|(name_)| name == "log"));
+        assert!(deps.iter().any(|(name, _)| name == "serde"));
+        assert!(deps.iter().any(|(name, _)| name == "log"));
     }
 
     #[test]

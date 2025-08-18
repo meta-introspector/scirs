@@ -635,9 +635,8 @@ pub mod advanced {
         CrossValidationStability<F>
     {
         /// Create a new cross-validation stability assessor
-        pub fn new(config: StabilityConfig, nfolds: usize) -> Self {
+        pub fn new(config: StabilityConfig, n_folds: usize) -> Self {
             Self {
-                config,
                 config,
                 n_folds,
                 _phantom: std::marker::PhantomData,
@@ -682,9 +681,12 @@ pub mod advanced {
                 let (train_centroids, train_labels) = kmeans2(
                     train_data.view(),
                     k,
-                    100,                    // max_iter
-                    F::from(1e-6).unwrap(), // tol
-                    Some(42),               // seed
+                    Some(100),                    // max_iter
+                    Some(F::from(1e-6).unwrap()), // threshold
+                    None,                         // init method
+                    None,                         // missing method
+                    None,                         // check_finite
+                    Some(42),                     // seed
                 )?;
 
                 // Assign test data to nearest centroids
@@ -715,12 +717,12 @@ pub mod advanced {
             }
 
             // Calculate mean and standard deviation
-            let mean_stability =
-                stability_scores.iter().sum::<F>() / F::from(stability_scores.len()).unwrap();
+            let mean_stability = stability_scores.iter().fold(F::zero(), |acc, x| acc + *x)
+                / F::from(stability_scores.len()).unwrap();
             let variance = stability_scores
                 .iter()
                 .map(|&s| (s - mean_stability) * (s - mean_stability))
-                .sum::<F>()
+                .fold(F::zero(), |acc, x| acc + x)
                 / F::from(stability_scores.len()).unwrap();
             let std_stability = variance.sqrt();
 
@@ -793,10 +795,11 @@ pub mod advanced {
         PerturbationStability<F>
     {
         /// Create a new perturbation stability assessor
-        pub fn new(config: StabilityConfig, perturbationtypes: Vec<PerturbationType>) -> Self {
+        pub fn new(config: StabilityConfig, perturbation_types: Vec<PerturbationType>) -> Self {
             Self {
                 config,
-                perturbation_types_phantom: std::marker::PhantomData,
+                perturbation_types,
+                _phantom: std::marker::PhantomData,
             }
         }
 
@@ -813,9 +816,12 @@ pub mod advanced {
             let (baseline_centroids, baseline_labels) = kmeans2(
                 data,
                 k,
-                100,                    // max_iter
-                F::from(1e-6).unwrap(), // tol
-                Some(42),               // seed
+                Some(100),                    // max_iter
+                Some(F::from(1e-6).unwrap()), // threshold
+                None,                         // init method
+                None,                         // missing method
+                None,                         // check_finite
+                Some(42),                     // seed
             )?;
 
             // Test each perturbation type
@@ -830,9 +836,12 @@ pub mod advanced {
                     let (_, perturbed_labels) = kmeans2(
                         perturbed_data.view(),
                         k,
-                        100,                    // max_iter
-                        F::from(1e-6).unwrap(), // tol
-                        None,                   // random seed
+                        Some(100),                    // max_iter
+                        Some(F::from(1e-6).unwrap()), // threshold
+                        None,                         // init method
+                        None,                         // missing method
+                        None,                         // check_finite
+                        None,                         // random seed
                     )?;
 
                     // Calculate similarity to baseline
@@ -845,7 +854,9 @@ pub mod advanced {
             }
 
             // Calculate overall statistics
-            let mean_stability = all_stability_scores.iter().sum::<F>()
+            let mean_stability = all_stability_scores
+                .iter()
+                .fold(F::zero(), |acc, x| acc + *x)
                 / F::from(all_stability_scores.len()).unwrap();
             let variance = all_stability_scores
                 .iter()
@@ -913,7 +924,7 @@ pub mod advanced {
                         let sample_idx = rng.random_range(0..n_samples);
                         let feature_idx = rng.random_range(0..data.shape()[1]);
                         let outlier_value = rng.random::<f64>() * outlier_magnitude;
-                        perturbed[[sample_idx..feature_idx]] = F::from(outlier_value).unwrap();
+                        perturbed[[sample_idx, feature_idx]] = F::from(outlier_value).unwrap();
                     }
                 }
             }
@@ -954,10 +965,11 @@ pub mod advanced {
         MultiScaleStability<F>
     {
         /// Create a new multi-scale stability assessor
-        pub fn new(config: StabilityConfig, scalefactors: Vec<f64>) -> Self {
+        pub fn new(config: StabilityConfig, scale_factors: Vec<f64>) -> Self {
             Self {
                 config,
-                scale_factors_phantom: std::marker::PhantomData,
+                scale_factors,
+                _phantom: std::marker::PhantomData,
             }
         }
 
@@ -1051,12 +1063,14 @@ pub mod advanced {
         }
     }
 
-    impl<F: Float + FromPrimitive + Debug> PredictionStrength<F> {
+    impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
+        PredictionStrength<F>
+    {
         /// Create a new prediction strength validator
         pub fn new(config: PredictionStrengthConfig) -> Self {
             Self {
                 config,
-            phantom: std::marker::PhantomData,
+                phantom: std::marker::PhantomData,
             }
         }
 
@@ -1080,7 +1094,7 @@ pub mod advanced {
         pub fn compute_prediction_strength(&self, data: ArrayView2<F>, k: usize) -> Result<F> {
             let mut rng = match self.config.random_seed {
                 Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
-                None => rand::rngs::StdRng::from_entropy(),
+                None => rand::rngs::StdRng::seed_from_u64(rand::rng().random()),
             };
 
             let n_samples = data.nrows();
@@ -1105,10 +1119,10 @@ pub mod advanced {
                 let test_data = data.select(ndarray::Axis(0), test_indices);
 
                 // Cluster training data
-                match kmeans2(train_data.view(), k, None) {
+                match kmeans2(train_data.view(), k, None, None, None, None, None, None) {
                     Ok((_, train_labels)) => {
                         // Cluster test data
-                        match kmeans2(test_data.view(), k, None) {
+                        match kmeans2(test_data.view(), k, None, None, None, None, None, None) {
                             Ok((_, test_labels)) => {
                                 // Compute prediction strength
                                 let strength = self.compute_pairwise_prediction_strength(
@@ -1240,13 +1254,16 @@ pub mod advanced {
         _phantom: std::marker::PhantomData<F>,
     }
 
-    impl<F: Float + FromPrimitive + Debug> JaccardStability<F> {
+    impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
+        JaccardStability<F>
+    {
         /// Create a new Jaccard stability validator
-        pub fn new(n_bootstrap: usize, subsample_ratio: f64, randomseed: Option<u64>) -> Self {
+        pub fn new(n_bootstrap: usize, subsample_ratio: f64, random_seed: Option<u64>) -> Self {
             Self {
                 n_bootstrap,
                 subsample_ratio,
-                random_seed_phantom: std::marker::PhantomData,
+                random_seed,
+                _phantom: std::marker::PhantomData,
             }
         }
 
@@ -1254,7 +1271,7 @@ pub mod advanced {
         pub fn compute_stability(&self, data: ArrayView2<F>, k: usize) -> Result<F> {
             let mut rng = match self.random_seed {
                 Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
-                None => rand::rngs::StdRng::from_entropy(),
+                None => rand::rngs::StdRng::seed_from_u64(rand::rng().random()),
             };
 
             let n_samples = data.nrows();
@@ -1278,8 +1295,8 @@ pub mod advanced {
 
                 // Cluster both samples
                 match (
-                    kmeans2(sample_data1.view(), k, None),
-                    kmeans2(sample_data2.view(), k, None),
+                    kmeans2(sample_data1.view(), k, None, None, None, None, None, None),
+                    kmeans2(sample_data2.view(), k, None, None, None, None, None, None),
                 ) {
                     (Ok((_, labels1)), Ok((_, labels2))) => {
                         // Find overlapping samples
@@ -1393,12 +1410,14 @@ pub mod advanced {
         pub size_consistency: Vec<F>,
     }
 
-    impl<F: Float + FromPrimitive + Debug> ClusterSpecificStability<F> {
+    impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
+        ClusterSpecificStability<F>
+    {
         /// Create a new cluster-specific stability validator
         pub fn new(config: StabilityConfig) -> Self {
             Self {
                 config,
-            phantom: std::marker::PhantomData,
+                phantom: std::marker::PhantomData,
             }
         }
 
@@ -1410,7 +1429,7 @@ pub mod advanced {
         ) -> Result<ClusterStabilityResult<F>> {
             let mut rng = match self.config.random_seed {
                 Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
-                None => rand::rngs::StdRng::from_entropy(),
+                None => rand::rngs::StdRng::seed_from_u64(rand::rng().random()),
             };
 
             let n_samples = data.nrows();
@@ -1426,7 +1445,7 @@ pub mod advanced {
                 let sample_indices = &indices[..subsample_size];
                 let sample_data = data.select(ndarray::Axis(0), sample_indices);
 
-                match kmeans2(sample_data.view(), k, None) {
+                match kmeans2(sample_data.view(), k, None, None, None, None, None, None) {
                     Ok((_, labels)) => {
                         // Track cluster memberships
                         for cluster_id in 0..k {
@@ -1557,7 +1576,9 @@ pub mod advanced {
         pub robust_range: (f64, f64),
     }
 
-    impl<F: Float + FromPrimitive + Debug> ParameterStabilityAnalyzer<F> {
+    impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
+        ParameterStabilityAnalyzer<F>
+    {
         /// Create a new parameter stability analyzer
         pub fn new(
             base_k: usize,
@@ -1569,7 +1590,8 @@ pub mod advanced {
                 base_k,
                 perturbation_ranges,
                 n_samples_per_range,
-                random_seed_phantom: std::marker::PhantomData,
+                random_seed,
+                _phantom: std::marker::PhantomData,
             }
         }
 
@@ -1580,31 +1602,39 @@ pub mod advanced {
         ) -> Result<ParameterStabilityResult<F>> {
             let mut rng = match self.random_seed {
                 Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
-                None => rand::rngs::StdRng::from_entropy(),
+                None => rand::rngs::StdRng::seed_from_u64(rand::rng().random()),
             };
 
             let mut stability_by_perturbation = Vec::new();
             let mut sensitivity_profile = Vec::new();
 
             // Get baseline clustering
-            let baseline_result = kmeans2(data, self.base_k, None)?;
+            let baseline_result = kmeans2(data, self.base_k, None, None, None, None, None, None)?;
 
             for &perturbation_level in &self.perturbation_ranges {
                 let mut stability_scores = Vec::new();
 
                 for _ in 0..self.n_samples_per_range {
                     // Perturb parameters (here we vary k as an example)
-                    let k_perturbation = (rng.random::<f64>() - 0.5) * 2.0 * perturbation_level;
-                    let perturbed_k = (self.base_k as f64 * (1.0 + k_perturbation))
-                        .round()
-                        .max(1.0) as usize;
+                    let k_perturbation = (F::from(rng.random::<f64>()).unwrap()
+                        - F::from(0.5).unwrap())
+                        * F::from(2.0).unwrap()
+                        * F::from(perturbation_level).unwrap();
+                    let perturbed_k = (self.base_k as f64
+                        * (1.0 + k_perturbation.to_f64().unwrap()))
+                    .round()
+                    .max(1.0) as usize;
 
-                    match kmeans2(data, perturbed_k, None) {
+                    match kmeans2(data, perturbed_k, None, None, None, None, None, None) {
                         Ok((_, perturbed_labels)) => {
                             // Compute stability using ARI with baseline
-                            let stability =
-                                adjusted_rand_index(&baseline_result.1, &perturbed_labels);
-                            stability_scores.push(F::from(stability).unwrap());
+                            // Convert usize labels to i32 for ARI computation
+                            let baseline_i32 = baseline_result.1.mapv(|x| x as i32);
+                            let perturbed_i32 = perturbed_labels.mapv(|x| x as i32);
+                            match adjusted_rand_index(baseline_i32.view(), perturbed_i32.view()) {
+                                Ok(stability) => stability_scores.push(stability),
+                                Err(_) => continue,
+                            }
                         }
                         Err(_) => continue,
                     }
@@ -1692,7 +1722,7 @@ mod tests {
     #[test]
     fn test_bootstrap_validator() {
         let data =
-            Array2::fromshape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect()).unwrap();
+            Array2::from_shape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect()).unwrap();
 
         let config = StabilityConfig {
             n_bootstrap: 5,
@@ -1714,7 +1744,7 @@ mod tests {
 
     #[test]
     fn test_consensus_clusterer() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )
@@ -1740,7 +1770,7 @@ mod tests {
 
     #[test]
     fn test_optimal_k_selector() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (12, 2),
             vec![
                 0.0, 0.0, 0.1, 0.1, 0.2, 0.2, // Cluster 1
@@ -1769,7 +1799,7 @@ mod tests {
 
     #[test]
     fn test_gap_statistic() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (8, 2),
             vec![
                 0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2, 5.3, 5.3,

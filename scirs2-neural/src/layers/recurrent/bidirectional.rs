@@ -15,7 +15,7 @@ use std::sync::{Arc, RwLock};
 ///
 /// # Examples
 /// ```
-/// use scirs2_neural::layers::{Bidirectional, RNN, Layer, RecurrentActivation};
+/// use scirs2_neural::layers::{Layer, recurrent::{Bidirectional, RNN, rnn::RecurrentActivation}};
 /// use ndarray::{Array, Array3};
 /// use rand::rngs::SmallRng;
 /// use rand::SeedableRng;

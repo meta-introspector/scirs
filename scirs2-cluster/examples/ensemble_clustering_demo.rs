@@ -5,7 +5,7 @@
 //! and advanced techniques like meta-learning and Bayesian averaging.
 
 use ndarray::Array2;
-use scirs2__cluster::{
+use scirs2_cluster::{
     ensemble::{
         advanced_ensemble::*, convenience, ClusteringAlgorithm, ConsensusMethod, DiversityStrategy,
         EnsembleClusterer, EnsembleConfig, SamplingStrategy,
@@ -84,7 +84,7 @@ fn generate_test_data() -> Array2<f64> {
         data.push(-2.0 + (rand::random::<f64>() - 0.5) * 1.0);
     }
 
-    Array2::fromshape_vec((90, 2), data).unwrap()
+    Array2::from_shape_vec((90, 2), data).unwrap()
 }
 
 /// Demonstrate basic ensemble clustering

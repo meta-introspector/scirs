@@ -8,10 +8,10 @@ use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use std::time::Duration;
 
-use scirs2__cluster::density::dbscan;
-use scirs2__cluster::hierarchy::{linkage, LinkageMethod, Metric};
-use scirs2__cluster::spectral::{spectral_clustering, AffinityMode, SpectralClusteringOptions};
-use scirs2__cluster::vq::{kmeans2, MinitMethod, MissingMethod};
+use scirs2_cluster::density::dbscan;
+use scirs2_cluster::hierarchy::{linkage, LinkageMethod, Metric};
+use scirs2_cluster::spectral::{spectral_clustering, AffinityMode, SpectralClusteringOptions};
+use scirs2_cluster::vq::{kmeans2, MinitMethod, MissingMethod};
 
 /// Generate synthetic clustered data for benchmarks
 #[allow(dead_code)]
@@ -36,14 +36,14 @@ fn generate_clustered_data(
 
         // Create cluster center
         let mut center = Array1::zeros(n_features);
-        for j in 0..n_features {
+        for j in 0..nfeatures {
             center[j] = rng.random_range(-10.0..10.0);
         }
 
         // Generate points around cluster center
         for i in start_idx..end_idx {
-            for j in 0..n_features {
-                data[[i..j]] = center[j] + rng.random_range(-noise..noise);
+            for j in 0..nfeatures {
+                data[[i, j]] = center[j] + rng.random_range(-noise..noise);
             }
         }
     }
@@ -55,10 +55,10 @@ fn generate_clustered_data(
 #[allow(dead_code)]
 fn generate_random_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(42);
-    let mut data = Array2::zeros((_n_samples, n_features));
+    let mut data = Array2::zeros((_n_samples, nfeatures));
 
     for i in 0.._n_samples {
-        for j in 0..n_features {
+        for j in 0..nfeatures {
             data[[i, j]] = rng.random_range(-1.0..1.0);
         }
     }
@@ -262,7 +262,7 @@ fn bench_distance_metrics(c: &mut Criterion) {
 /// Benchmark cluster validation metrics
 #[allow(dead_code)]
 fn bench_validation_metrics(c: &mut Criterion) {
-    use scirs2__cluster::hierarchy::{cophenet, validate_linkage_matrix};
+    use scirs2_cluster::hierarchy::{cophenet, validate_linkage_matrix};
 
     let mut group = c.benchmark_group("validation_metrics");
 
@@ -311,7 +311,7 @@ fn bench_validation_metrics(c: &mut Criterion) {
 /// Benchmark data structure operations
 #[allow(dead_code)]
 fn bench_data_structures(c: &mut Criterion) {
-    use scirs2__cluster::hierarchy::{condensed_to_square, square_to_condensed, DisjointSet};
+    use scirs2_cluster::hierarchy::{condensed_to_square, square_to_condensed, DisjointSet};
 
     let mut group = c.benchmark_group("data_structures");
 

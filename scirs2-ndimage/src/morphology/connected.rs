@@ -88,7 +88,28 @@ fn get_neighbors(
                 }
             }
         }
-        Connectivity::Corner => {
+        Connectivity::FaceEdge => {
+            // Face and edge connectivity: 8-connectivity in 2D, 18-connectivity in 3D
+            let offsets = generate_face_edge_offsets(ndim);
+            for offset in offsets {
+                let mut neighbor = Vec::with_capacity(ndim);
+                let mut valid = true;
+
+                for (i, &pos) in position.iter().enumerate() {
+                    let new_pos = (pos as isize) + offset[i];
+                    if new_pos < 0 || new_pos >= shape[i] as isize {
+                        valid = false;
+                        break;
+                    }
+                    neighbor.push(new_pos as usize);
+                }
+
+                if valid && neighbor != position {
+                    neighbors.push(neighbor);
+                }
+            }
+        }
+        Connectivity::Full => {
             // Corner connectivity: all possible neighbors (8-connectivity in 2D, 26-connectivity in 3D)
             let offsets = generate_all_offsets(ndim);
             for offset in offsets {
@@ -132,6 +153,41 @@ fn generate_all_offsets(ndim: usize) -> Vec<Vec<isize>> {
 
         // Skip the center point (all zeros)
         if !offset.iter().all(|&x| x == 0) {
+            offsets.push(offset);
+        }
+    }
+
+    offsets
+}
+
+/// Generate face and edge neighbor offsets (excludes vertex neighbors in 3D+)
+#[allow(dead_code)]
+fn generate_face_edge_offsets(ndim: usize) -> Vec<Vec<isize>> {
+    let mut offsets = Vec::new();
+    let total_combinations = 3_usize.pow(ndim as u32);
+
+    for i in 0..total_combinations {
+        let mut offset = Vec::with_capacity(ndim);
+        let mut temp = i;
+        for _ in 0..ndim {
+            let val = (temp % 3) as isize - 1; // -1, 0, or 1
+            offset.push(val);
+            temp /= 3;
+        }
+
+        // Skip the center point (all zeros)
+        if offset.iter().all(|&x| x == 0) {
+            continue;
+        }
+
+        // For face and edge connectivity, exclude vertex neighbors
+        // Vertex neighbors have all non-zero components
+        let non_zero_count = offset.iter().filter(|&&x| x != 0).count();
+
+        // Include face neighbors (1 non-zero) and edge neighbors (2 non-zero in 3D+)
+        // In 2D, this gives 8-connectivity (same as full)
+        // In 3D, this gives 18-connectivity (excludes 8 vertex neighbors)
+        if non_zero_count <= 2 {
             offsets.push(offset);
         }
     }
@@ -222,10 +278,13 @@ where
     // Initialize Union-Find data structure
     let mut uf = UnionFind::new(total_elements);
 
+    // Convert to dynamic array for easier indexing
+    let input_dyn = input.clone().into_dyn();
+
     // First pass: scan all pixels and union adjacent foreground pixels
     for flat_idx in 0..total_elements {
         let indices = unravel_index(flat_idx, shape);
-        let current_pixel = input[IxDyn(&indices)];
+        let current_pixel = input_dyn[IxDyn(&indices)];
 
         // Only process foreground pixels (or background if bg=true)
         if current_pixel == !bg {
@@ -233,7 +292,7 @@ where
             let neighbors = get_neighbors(&indices, shape, conn);
 
             for neighbor_indices in neighbors {
-                let neighbor_pixel = input[IxDyn(&neighbor_indices)];
+                let neighbor_pixel = input_dyn[IxDyn(&neighbor_indices)];
 
                 // If neighbor is also foreground, union them
                 if neighbor_pixel == current_pixel {
@@ -252,18 +311,24 @@ where
     let mut num_labels = 0;
 
     // Second pass: assign labels
+    let mut output_dyn = output.clone().into_dyn();
     for flat_idx in 0..total_elements {
         let indices = unravel_index(flat_idx, shape);
-        let pixel = input[IxDyn(&indices)];
+        let pixel = input_dyn[IxDyn(&indices)];
 
         if pixel == !bg {
             let root = uf.find(flat_idx);
             if let Some(&label) = component_mapping.get(&root) {
-                output[IxDyn(&indices)] = label;
+                output_dyn[IxDyn(&indices)] = label;
                 num_labels = num_labels.max(label);
             }
         }
     }
+
+    // Convert back to original dimension type
+    output = output_dyn.into_dimensionality::<D>().map_err(|_| {
+        NdimageError::DimensionError("Failed to convert back to original dimension type".into())
+    })?;
 
     Ok((output, num_labels))
 }
@@ -314,10 +379,14 @@ where
         return Ok(output);
     }
 
+    // Convert to dynamic arrays for easier indexing
+    let input_dyn = input.clone().into_dyn();
+    let mut output_dyn = output.clone().into_dyn();
+
     // Scan all pixels to find boundaries
     for flat_idx in 0..total_elements {
         let indices = unravel_index(flat_idx, shape);
-        let current_label = input[IxDyn(&indices)];
+        let current_label = input_dyn[IxDyn(&indices)];
 
         // Skip background pixels for inner mode
         if mode_str == "inner" && current_label == 0 {
@@ -329,7 +398,7 @@ where
         let mut is_boundary = false;
 
         for neighbor_indices in neighbors {
-            let neighbor_label = input[IxDyn(&neighbor_indices)];
+            let neighbor_label = input_dyn[IxDyn(&neighbor_indices)];
 
             match mode_str {
                 "inner" => {
@@ -360,9 +429,14 @@ where
         }
 
         if is_boundary {
-            output[IxDyn(&indices)] = true;
+            output_dyn[IxDyn(&indices)] = true;
         }
     }
+
+    // Convert back to original dimension type
+    output = output_dyn.into_dimensionality::<D>().map_err(|_| {
+        NdimageError::DimensionError("Failed to convert back to original dimension type".into())
+    })?;
 
     Ok(output)
 }
@@ -422,14 +496,23 @@ where
     let shape = input.shape();
     let total_elements: usize = shape.iter().product();
 
+    // Convert to dynamic arrays for easier indexing
+    let labeled_dyn = labeled.clone().into_dyn();
+    let mut output_dyn = output.clone().into_dyn();
+
     for flat_idx in 0..total_elements {
         let indices = unravel_index(flat_idx, shape);
-        let label_val = labeled[IxDyn(&indices)];
+        let label_val = labeled_dyn[IxDyn(&indices)];
 
         if label_val > 0 && component_sizes[label_val] >= min_size {
-            output[IxDyn(&indices)] = true;
+            output_dyn[IxDyn(&indices)] = true;
         }
     }
+
+    // Convert back to original dimension type
+    output = output_dyn.into_dimensionality::<D>().map_err(|_| {
+        NdimageError::DimensionError("Failed to convert back to original dimension type".into())
+    })?;
 
     Ok(output)
 }
@@ -500,7 +583,7 @@ mod tests {
     #[test]
     fn test_label() {
         let input = Array2::from_elem((3, 3), true);
-        let (result_num_labels) = label(&input, None, None, None).unwrap();
+        let (result, _num_labels) = label(&input, None, None, None).unwrap();
         assert_eq!(result.shape(), input.shape());
     }
 

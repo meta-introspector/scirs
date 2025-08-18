@@ -446,7 +446,7 @@ mod spectral_tests {
 
         // Create 2D array and take a slice
         let psd_2d =
-            Array2::fromshape_vec((1, 7), vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0]).unwrap();
+            Array2::from_shape_vec((1, 7), vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0]).unwrap();
         let psd_slice = psd_2d.slice(ndarray::s![0, ..]);
         let psd_slice_vec: Vec<f64> = psd_slice.iter().cloned().collect();
 

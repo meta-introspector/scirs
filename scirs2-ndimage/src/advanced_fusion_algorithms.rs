@@ -4415,7 +4415,7 @@ mod tests {
         let result = fusion_processing(image.view(), &config, None);
 
         assert!(result.is_ok());
-        let (outputstate) = result.unwrap();
+        let (output, _state) = result.unwrap();
         assert_eq!(output.dim(), (4, 4));
         assert!(output.iter().all(|&x| x.is_finite()));
     }

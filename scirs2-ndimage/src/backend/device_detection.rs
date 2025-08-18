@@ -54,6 +54,17 @@ impl Default for DeviceCapability {
     }
 }
 
+/// Overall system capabilities summary
+#[derive(Debug, Clone)]
+pub struct SystemCapabilities {
+    pub cuda_available: bool,
+    pub opencl_available: bool,
+    pub metal_available: bool,
+    pub gpu_available: bool,
+    pub gpu_memory_mb: usize,
+    pub compute_units: u32,
+}
+
 /// Device detection and management
 pub struct DeviceManager {
     #[cfg(feature = "cuda")]
@@ -238,6 +249,87 @@ impl DeviceManager {
                 }
                 total
             }
+        }
+    }
+
+    /// Get overall system capabilities
+    pub fn get_capabilities(&self) -> SystemCapabilities {
+        let cuda_available = {
+            #[cfg(feature = "cuda")]
+            {
+                !self.cuda_devices.is_empty()
+            }
+            #[cfg(not(feature = "cuda"))]
+            {
+                false
+            }
+        };
+
+        let opencl_available = {
+            #[cfg(feature = "opencl")]
+            {
+                !self.opencl_devices.is_empty()
+            }
+            #[cfg(not(feature = "opencl"))]
+            {
+                false
+            }
+        };
+
+        let metal_available = {
+            #[cfg(all(target_os = "macos", feature = "metal"))]
+            {
+                !self.metal_devices.is_empty()
+            }
+            #[cfg(not(all(target_os = "macos", feature = "metal")))]
+            {
+                false
+            }
+        };
+
+        let gpu_available = cuda_available || opencl_available || metal_available;
+
+        // Find the best GPU device for memory and compute unit estimates
+        let mut total_memory_mb = 0;
+        let mut max_compute_units = 0;
+
+        #[cfg(feature = "cuda")]
+        {
+            for device in &self.cuda_devices {
+                total_memory_mb = total_memory_mb.max(device.total_memory / (1024 * 1024));
+                if let Some(mp_count) = device.multiprocessor_count {
+                    max_compute_units = max_compute_units.max(mp_count as u32);
+                }
+            }
+        }
+
+        #[cfg(feature = "opencl")]
+        {
+            for device in &self.opencl_devices {
+                total_memory_mb = total_memory_mb.max(device.total_memory / (1024 * 1024));
+                if let Some(mp_count) = device.multiprocessor_count {
+                    max_compute_units = max_compute_units.max(mp_count as u32);
+                }
+            }
+        }
+
+        #[cfg(all(target_os = "macos", feature = "metal"))]
+        {
+            for device in &self.metal_devices {
+                total_memory_mb = total_memory_mb.max(device.total_memory / (1024 * 1024));
+                if let Some(mp_count) = device.multiprocessor_count {
+                    max_compute_units = max_compute_units.max(mp_count as u32);
+                }
+            }
+        }
+
+        SystemCapabilities {
+            cuda_available,
+            opencl_available,
+            metal_available,
+            gpu_available,
+            gpu_memory_mb: total_memory_mb,
+            compute_units: max_compute_units,
         }
     }
 }

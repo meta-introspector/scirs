@@ -1,5 +1,5 @@
 use ndarray::Array2;
-use scirs2__cluster::density::{dbscan, labels, DistanceMetric};
+use scirs2_cluster::density::{dbscan, labels, DistanceMetric};
 
 #[allow(dead_code)]
 fn main() {
@@ -7,7 +7,7 @@ fn main() {
     println!("========================");
 
     // Create a dataset with clusters of different shapes and noise points
-    let data = Array2::fromshape_vec(
+    let data = Array2::from_shape_vec(
         (16, 2),
         vec![
             // Cluster 1 - dense cluster

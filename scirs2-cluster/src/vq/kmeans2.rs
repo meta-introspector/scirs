@@ -252,9 +252,9 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__cluster::vq::kmeans2_str;
+/// use scirs2_cluster::vq::kmeans2_str;
 ///
-/// let data = Array2::fromshape_vec((6, 2), vec![
+/// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 1.0, 1.1, 1.1, 0.9, 0.9,
 ///     8.0, 8.0, 8.1, 8.1, 7.9, 7.9,
 /// ]).unwrap();
@@ -347,7 +347,7 @@ where
     let mut centroids = Array2::<F>::zeros((k, n_features));
 
     let mut rng: Box<dyn RngCore> = if let Some(_seed) = randomseed {
-        Box::new(StdRng::seed_from_u64([_seed as u8; 32]))
+        Box::new(StdRng::seed_from_u64(_seed))
     } else {
         Box::new(rand::rng())
     };
@@ -381,7 +381,7 @@ where
     let n_features = data.shape()[1];
 
     let mut rng: Box<dyn RngCore> = if let Some(_seed) = randomseed {
-        Box::new(StdRng::seed_from_u64([_seed as u8; 32]))
+        Box::new(StdRng::seed_from_u64(_seed))
     } else {
         Box::new(rand::rng())
     };
@@ -417,7 +417,7 @@ where
     let n_features = data.shape()[1];
 
     let mut rng: Box<dyn RngCore> = if let Some(_seed) = randomseed {
-        Box::new(StdRng::seed_from_u64([_seed as u8; 32]))
+        Box::new(StdRng::seed_from_u64(_seed))
     } else {
         Box::new(rand::rng())
     };
@@ -427,7 +427,7 @@ where
     // Choose first centroid randomly
     let first_idx = rng.random_range(0..n_samples);
     for j in 0..n_features {
-        centroids[[0..j]] = data[[first_idx, j]];
+        centroids[[0, j]] = data[[first_idx, j]];
     }
 
     // Choose remaining centroids
@@ -736,8 +736,8 @@ mod tests {
         .unwrap();
 
         // Results should be valid for both
-        assert_eq!(centroids_few.shape(), [2, 2]);
-        assert_eq!(centroids_many.shape(), [2, 2]);
+        assert_eq!(centroids_few_.0.shape(), [2, 2]);
+        assert_eq!(centroids_many_.0.shape(), [2, 2]);
     }
 
     #[test]

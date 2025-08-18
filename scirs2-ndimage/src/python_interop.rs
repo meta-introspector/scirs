@@ -39,23 +39,29 @@ impl From<NdimageError> for PyError {
     fn from(error: NdimageError) -> Self {
         match error {
             NdimageError::InvalidInput(msg) => PyError {
-                _error_type: "ValueError".to_string(),
+                error_type: "ValueError".to_string(),
                 message: msg,
                 context: None,
             },
             NdimageError::DimensionError(msg) => PyError {
-                _error_type: "ValueError".to_string(),
+                error_type: "ValueError".to_string(),
                 message: format!("Dimension , error: {}", msg),
                 context: None,
             },
             NdimageError::ComputationError(msg) => PyError {
-                _error_type: "RuntimeError".to_string(),
+                error_type: "RuntimeError".to_string(),
                 message: msg,
                 context: None,
             },
-            NdimageError::OutOfMemory(msg) => PyError {
-                _error_type: "MemoryError".to_string(),
+            NdimageError::MemoryError(msg) => PyError {
+                error_type: "MemoryError".to_string(),
                 message: msg,
+                context: None,
+            },
+            // Catch-all for remaining error types
+            _ => PyError {
+                error_type: "RuntimeError".to_string(),
+                message: format!("{}", error),
                 context: None,
             },
         }

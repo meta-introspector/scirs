@@ -59,7 +59,7 @@ impl RecurrentActivation {
 /// h_t = activation(W_ih * x_t + b_ih + W_hh * h_(t-1) + b_hh)
 /// # Examples
 /// ```
-/// use scirs2_neural::layers::{RNN, Layer, RecurrentActivation};
+/// use scirs2_neural::layers::{Layer, recurrent::{RNN, rnn::RecurrentActivation}};
 /// use ndarray::{Array, Array3};
 /// use rand::rngs::SmallRng;
 /// use rand::SeedableRng;

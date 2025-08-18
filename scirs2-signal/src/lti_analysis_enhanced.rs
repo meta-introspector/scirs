@@ -27,7 +27,7 @@ fn vec_to_array2(vec: &[f64], rows: usize, cols: usize) -> SignalResult<Array2<f
             cols
         )));
     }
-    Ok(Array2::fromshape_vec((rows, cols), vec.to_vec())
+    Ok(Array2::from_shape_vec((rows, cols), vec.to_vec())
         .map_err(|e| SignalError::ComputationError(format!("Array creation failed: {}", e)))?)
 }
 
@@ -469,7 +469,7 @@ fn solve_continuous_lyapunov(a: &Array2<f64>, q: &Array2<f64>) -> SignalResult<A
     })?;
 
     // Reshape to matrix
-    Ok(Array2::fromshape_vec((n, n), x_vec.to_vec())?)
+    Ok(Array2::from_shape_vec((n, n), x_vec.to_vec())?)
 }
 
 /// Kronecker product

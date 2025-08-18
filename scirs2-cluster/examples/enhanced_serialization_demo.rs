@@ -8,7 +8,7 @@
 //! Run with: cargo run --example enhanced_serialization_demo
 
 use ndarray::{Array1, Array2};
-use scirs2__cluster::{
+use scirs2_cluster::{
     hierarchy::linkage,
     hierarchy::{LinkageMethod, Metric},
     preprocess::standardize,
@@ -72,7 +72,7 @@ fn create_sample_data() -> Result<Array2<f64>, Box<dyn std::error::Error>> {
         data.push(4.0 + ((i % 3) as f64 * 0.1 - 0.1));
     }
 
-    let array = Array2::fromshape_vec((60, 2), data)?;
+    let array = Array2::from_shape_vec((60, 2), data)?;
     let standardized = standardize(array.view(), true)?;
     Ok(standardized)
 }
@@ -291,7 +291,7 @@ fn demo_sklearn_scipy_compatibility(data: &Array2<f64>) -> Result<(), Box<dyn st
     }
 
     // Demonstrate enhanced metadata export
-    use scirs2__cluster::serialization::AdvancedExport;
+    use scirs2_cluster::serialization::AdvancedExport;
     println!("\n📋 Model Metadata:");
     let metadata = kmeans_model.get_metadata();
     println!("   - Model type: {}", metadata.model_type);

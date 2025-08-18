@@ -26,7 +26,7 @@ use std::fmt::Debug;
 ///     [0.1, 0.3, 0.3],  // First pair, second embedding (similar)
 ///     [0.5, 0.5, 0.5],  // Second pair, first embedding
 ///     [0.9, 0.8, 0.7],  // Second pair, second embedding (dissimilar)
-/// ]).intoshape((2, 2, 3)).unwrap().into_dyn();
+/// ]).into_shape((2, 2, 3)).unwrap().into_dyn();
 /// // Labels: 1 for similar pairs, 0 for dissimilar
 /// let labels = arr2(&[
 ///     [1.0],  // First pair is similar

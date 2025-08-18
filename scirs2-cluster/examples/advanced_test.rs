@@ -1,14 +1,14 @@
 //! Simple test for Advanced clustering functionality
 
 use ndarray::Array2;
-use scirs2__cluster::advanced_clustering::AdvancedClusterer;
+use scirs2_cluster::advanced_clustering::AdvancedClusterer;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing Advanced Clustering...");
 
     // Create simple test data with two clear clusters
-    let data = Array2::fromshape_vec(
+    let data = Array2::from_shape_vec(
         (6, 2),
         vec![
             1.0, 1.0, // Cluster 1

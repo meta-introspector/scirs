@@ -227,4 +227,4 @@ impl<F: Float + ScalarOperand + Debug> Optimizer<F> for RAdam<F> {
         self.learning_rate = lr;
 // Enable direct usage of scirs2-optim's RAdam when the optim feature is enabled
 #[cfg(feature = "optim")]
-pub use scirs2__optim::RAdam as OptimRAdam;
+pub use scirs2_optim::RAdam as OptimRAdam;

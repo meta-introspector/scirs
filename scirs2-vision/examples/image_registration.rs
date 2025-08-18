@@ -344,7 +344,7 @@ fn create_synthetic_matches(_nummatches: usize) -> Vec<PointMatch> {
     let mut rng = rand::rng();
 
     // Create mostly good _matches with known transformation
-    let true_transform = Array2::fromshape_vec(
+    let true_transform = Array2::from_shape_vec(
         (3, 3),
         vec![
             1.1 * 0.8_f64.cos(),

@@ -1,5 +1,5 @@
 use ndarray::Array2;
-use scirs2__cluster::{hdbscan, ClusterSelectionMethod, HDBSCANOptions};
+use scirs2_cluster::{hdbscan, ClusterSelectionMethod, HDBSCANOptions};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=========================\n");
 
     // Create a dataset with clusters of varying densities
-    let data = Array2::fromshape_vec(
+    let data = Array2::from_shape_vec(
         (30, 2),
         vec![
             // Dense cluster 1 (10 points, tight)
@@ -85,7 +85,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Demonstrate DBSCAN extraction
     println!("\nExtracting DBSCAN-like clustering from HDBSCAN result...");
 
-    use scirs2__cluster::dbscan_clustering;
+    use scirs2_cluster::dbscan_clustering;
 
     // Try different cut distances
     let cut_distances = vec![0.5, 1.0, 2.0];

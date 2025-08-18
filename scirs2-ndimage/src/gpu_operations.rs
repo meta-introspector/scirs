@@ -100,7 +100,15 @@ impl GpuOperations {
         mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
-        T: Float + FromPrimitive + Clone + Send + Sync + std::ops::DivAssign + std::ops::AddAssign,
+        T: Float
+            + FromPrimitive
+            + Clone
+            + Send
+            + Sync
+            + std::ops::DivAssign
+            + std::ops::AddAssign
+            + std::fmt::Debug
+            + 'static,
     {
         let operation_name = "convolution_2d";
 
@@ -141,7 +149,9 @@ impl GpuOperations {
             + Sync
             + PartialOrd
             + std::ops::AddAssign
-            + std::ops::DivAssign,
+            + std::ops::DivAssign
+            + std::fmt::Debug
+            + 'static,
     {
         let operation_name = "morphological_erosion";
 
@@ -184,7 +194,9 @@ impl GpuOperations {
             + Sync
             + PartialOrd
             + std::ops::AddAssign
-            + std::ops::DivAssign,
+            + std::ops::DivAssign
+            + std::fmt::Debug
+            + 'static,
     {
         let operation_name = "morphological_dilation";
 
@@ -300,7 +312,16 @@ impl GpuOperations {
             OperationInfo {
                 name: "convolution_2d".to_string(),
                 kernel_source: self.get_convolution_kernel_source(),
-                preferred_backend: Backend::OpenCL,
+                preferred_backend: {
+                    #[cfg(feature = "opencl")]
+                    {
+                        Backend::OpenCL
+                    }
+                    #[cfg(not(feature = "opencl"))]
+                    {
+                        Backend::Cpu
+                    }
+                },
                 memory_complexity: 2.0,  // Input + output
                 compute_complexity: 9.0, // Assume 3x3 kernel average
             },
@@ -312,7 +333,16 @@ impl GpuOperations {
             OperationInfo {
                 name: "morphological_erosion".to_string(),
                 kernel_source: self.get_morphology_kernel_source(),
-                preferred_backend: Backend::OpenCL,
+                preferred_backend: {
+                    #[cfg(feature = "opencl")]
+                    {
+                        Backend::OpenCL
+                    }
+                    #[cfg(not(feature = "opencl"))]
+                    {
+                        Backend::Cpu
+                    }
+                },
                 memory_complexity: 2.0,
                 compute_complexity: 9.0,
             },
@@ -324,7 +354,16 @@ impl GpuOperations {
             OperationInfo {
                 name: "gaussian_filter".to_string(),
                 kernel_source: self.get_gaussian_kernel_source(),
-                preferred_backend: Backend::OpenCL,
+                preferred_backend: {
+                    #[cfg(feature = "opencl")]
+                    {
+                        Backend::OpenCL
+                    }
+                    #[cfg(not(feature = "opencl"))]
+                    {
+                        Backend::Cpu
+                    }
+                },
                 memory_complexity: 3.0,  // Separable: input + temp + output
                 compute_complexity: 6.0, // Two 1D passes
             },
@@ -336,7 +375,16 @@ impl GpuOperations {
             OperationInfo {
                 name: "distance_transform".to_string(),
                 kernel_source: self.get_distance_transform_kernel_source(),
-                preferred_backend: Backend::OpenCL,
+                preferred_backend: {
+                    #[cfg(feature = "opencl")]
+                    {
+                        Backend::OpenCL
+                    }
+                    #[cfg(not(feature = "opencl"))]
+                    {
+                        Backend::Cpu
+                    }
+                },
                 memory_complexity: 2.0,
                 compute_complexity: 10.0, // Multiple passes
             },
@@ -381,8 +429,11 @@ impl GpuOperations {
         // Check operation preference
         if let Some(op_info) = self.operation_registry.get(operation_name) {
             match op_info.preferred_backend {
+                #[cfg(feature = "cuda")]
                 Backend::Cuda if capabilities.cuda_available => return Ok(Backend::Cuda),
+                #[cfg(feature = "opencl")]
                 Backend::OpenCL if capabilities.opencl_available => return Ok(Backend::OpenCL),
+                #[cfg(all(target_os = "macos", feature = "metal"))]
                 Backend::Metal if capabilities.metal_available => return Ok(Backend::Metal),
                 _ => {}
             }
@@ -390,13 +441,36 @@ impl GpuOperations {
 
         // Fallback to best available backend
         if capabilities.cuda_available {
-            Ok(Backend::Cuda)
+            #[cfg(feature = "cuda")]
+            {
+                Ok(Backend::Cuda)
+            }
+            #[cfg(not(feature = "cuda"))]
+            {
+                Ok(Backend::Cpu)
+            }
         } else if capabilities.opencl_available {
-            Ok(Backend::OpenCL)
+            #[cfg(feature = "opencl")]
+            {
+                Ok(Backend::OpenCL)
+            }
+            #[cfg(not(feature = "opencl"))]
+            {
+                Ok(Backend::Cpu)
+            }
         } else if capabilities.metal_available {
-            Ok(Backend::Metal)
+            #[cfg(all(target_os = "macos", feature = "metal"))]
+            {
+                Ok(Backend::Metal)
+            }
+            #[cfg(not(all(target_os = "macos", feature = "metal")))]
+            {
+                Ok(Backend::Cpu)
+            }
         } else {
-            Err(NdimageError::GpuNotAvailable("No GPU backend available".to_string()))
+            Err(NdimageError::GpuNotAvailable(
+                "No GPU backend available".to_string(),
+            ))
         }
     }
 
@@ -404,11 +478,32 @@ impl GpuOperations {
         let capabilities = self.device_manager.get_capabilities();
 
         if capabilities.cuda_available {
-            Backend::Cuda
+            #[cfg(feature = "cuda")]
+            {
+                Backend::Cuda
+            }
+            #[cfg(not(feature = "cuda"))]
+            {
+                Backend::Cpu
+            }
         } else if capabilities.opencl_available {
-            Backend::OpenCL
+            #[cfg(feature = "opencl")]
+            {
+                Backend::OpenCL
+            }
+            #[cfg(not(feature = "opencl"))]
+            {
+                Backend::Cpu
+            }
         } else if capabilities.metal_available {
-            Backend::Metal
+            #[cfg(all(target_os = "macos", feature = "metal"))]
+            {
+                Backend::Metal
+            }
+            #[cfg(not(all(target_os = "macos", feature = "metal")))]
+            {
+                Backend::Cpu
+            }
         } else {
             Backend::Cpu
         }
@@ -504,10 +599,25 @@ impl GpuOperations {
         mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
-        T: Float + FromPrimitive + Clone + Send + Sync + std::ops::DivAssign + std::ops::AddAssign,
+        T: Float
+            + FromPrimitive
+            + Clone
+            + Send
+            + Sync
+            + std::ops::DivAssign
+            + std::ops::AddAssign
+            + std::fmt::Debug
+            + 'static,
     {
         // Use existing CPU implementation
-        crate::convolve(input, kernel, mode)
+        let border_mode = match mode {
+            BoundaryMode::Constant => Some(crate::filters::BorderMode::Constant),
+            BoundaryMode::Reflect => Some(crate::filters::BorderMode::Reflect),
+            BoundaryMode::Mirror => Some(crate::filters::BorderMode::Mirror),
+            BoundaryMode::Wrap => Some(crate::filters::BorderMode::Wrap),
+            BoundaryMode::Nearest => Some(crate::filters::BorderMode::Constant), // No direct equivalent, use Constant
+        };
+        crate::convolve(&input.to_owned(), &kernel.to_owned(), border_mode)
     }
 
     fn fallback_morphological_erosion<T>(
@@ -524,7 +634,9 @@ impl GpuOperations {
             + Sync
             + PartialOrd
             + std::ops::DivAssign
-            + std::ops::AddAssign,
+            + std::ops::AddAssign
+            + std::fmt::Debug
+            + 'static,
     {
         // Use existing CPU implementation
         use crate::morphology::MorphBorderMode;
@@ -559,7 +671,9 @@ impl GpuOperations {
             + Sync
             + PartialOrd
             + std::ops::DivAssign
-            + std::ops::AddAssign,
+            + std::ops::AddAssign
+            + std::fmt::Debug
+            + 'static,
     {
         // Use existing CPU implementation
         use crate::morphology::MorphBorderMode;
@@ -602,9 +716,28 @@ impl GpuOperations {
     where
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
+        // Convert input to boolean array by thresholding at zero
+        let bool_input = input.mapv(|x| x > T::zero());
+
         // Use existing CPU implementation
-        crate::distance_transform_edt(&input.to_owned(), None, Some(true), Some(false))
-            .map(|(distances, _)| distances.unwrap())
+        let result = crate::distance_transform_edt(&bool_input.into_dyn(), None, true, false)?;
+
+        // Convert result back to the desired type
+        if let Some(distances) = result.0 {
+            let converted_distances = distances.mapv(|x| T::from_f64(x).unwrap_or(T::zero()));
+            // Convert from dynamic dimension back to Ix2
+            converted_distances
+                .into_dimensionality::<ndarray::Ix2>()
+                .map_err(|_| {
+                    NdimageError::DimensionError(
+                        "Failed to convert distance transform result to 2D".into(),
+                    )
+                })
+        } else {
+            Err(NdimageError::ComputationError(
+                "Distance transform did not return distances".into(),
+            ))
+        }
     }
 
     // GPU kernel source code methods
@@ -705,7 +838,16 @@ mod tests {
             metal_available: false,
             gpu_memory: 8192,
             compute_units: 16,
-            preferred_backend: Backend::OpenCL,
+            preferred_backend: {
+                #[cfg(feature = "opencl")]
+                {
+                    Backend::OpenCL
+                }
+                #[cfg(not(feature = "opencl"))]
+                {
+                    Backend::Cpu
+                }
+            },
         };
 
         // Test that display doesn't panic

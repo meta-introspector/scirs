@@ -651,7 +651,7 @@ impl DistributedPCA {
 
         // Reshape to proper dimensions (placeholder implementation)
         self.components = Some(
-            Array2::fromshape_vec((self.n_components, n_features), components).map_err(|e| {
+            Array2::from_shape_vec((self.n_components, n_features), components).map_err(|e| {
                 TransformError::ComputationError(format!("Failed to reshape components: {}", e))
             })?,
         );
@@ -695,7 +695,7 @@ impl DistributedPCA {
 
         // Reshape to final array
         let (n_samples_) = x.dim();
-        Array2::fromshape_vec((n_samples, self.n_components), all_results).map_err(|e| {
+        Array2::from_shape_vec((n_samples, self.n_components), all_results).map_err(|e| {
             TransformError::ComputationError(format!("Failed to reshape result: {}", e))
         })
     }

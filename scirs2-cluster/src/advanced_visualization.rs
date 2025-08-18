@@ -556,7 +556,7 @@ impl AdvancedVisualizer {
             // Quantum-enhanced power iteration
             for iteration in 0..50 {
                 // Matrix-vector multiplication
-                let mut new_vector = Array1::zeros(n);
+                let mut new_vector: Array1<f64> = Array1::zeros(n);
                 for i in 0..n {
                     for j in 0..n {
                         new_vector[i] += matrix[[i, j]] * vector[j];

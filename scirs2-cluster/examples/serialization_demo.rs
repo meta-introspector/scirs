@@ -1,7 +1,7 @@
 //! Example demonstrating clustering model serialization and persistence
 
 use ndarray::{array, Array2};
-use scirs2__cluster::{
+use scirs2_cluster::{
     hierarchy::{linkage, LinkageMethod},
     kmeans_to_model, save_hierarchy, save_kmeans,
     vq::kmeans2,

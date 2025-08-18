@@ -3,7 +3,7 @@
 //! This module provides functions for applying uniform filters (also known as box filters)
 //! to n-dimensional arrays.
 
-use ndarray::{s, Array, Array1, Array2, Dimension};
+use ndarray::{s, Array, Array1, Array2, Dimension, IxDyn};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::validation::{check_1d, check_2d, check_positive};
 use std::fmt::Debug;
@@ -714,7 +714,8 @@ where
             }
 
             // Add value at this window position to sum
-            let val = padded_input[&*actual_coords];
+            let padded_dyn = padded_input.view().into_dyn();
+            let val = padded_dyn[IxDyn(&actual_coords)];
             sum += val;
 
             // Increment window coordinates (n-dimensional counter)
@@ -733,7 +734,8 @@ where
         }
 
         // Set the normalized average value in the output
-        output[&*coords] = sum * norm_factor;
+        let mut output_dyn = output.view_mut().into_dyn();
+        output_dyn[IxDyn(&coords)] = sum * norm_factor;
     }
 
     Ok(output.clone())
@@ -789,7 +791,7 @@ where
                 }
 
                 // Add value at this window position to sum
-                let val = padded_input[&*actual_coords];
+                let val = padded_input[IxDyn(&actual_coords)];
                 sum += val;
 
                 // Increment window coordinates (n-dimensional counter)

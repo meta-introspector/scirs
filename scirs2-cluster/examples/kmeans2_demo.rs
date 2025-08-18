@@ -4,7 +4,7 @@
 
 use ndarray::{Array1, Array2};
 use rand::Rng;
-use scirs2__cluster::vq::{kmeans2, whiten, MinitMethod, MissingMethod};
+use scirs2_cluster::vq::{kmeans2, whiten, MinitMethod, MissingMethod};
 
 #[allow(dead_code)]
 fn generate_blobs(
@@ -46,7 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("===============================\n");
 
     // Generate three clusters
-    let centers = Array2::fromshape_vec(
+    let centers = Array2::from_shape_vec(
         (3, 2),
         vec![
             0.0, 0.0, // Cluster 1
@@ -100,7 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing empty cluster handling:");
 
     // Create a dataset where one cluster might become empty
-    let sparse_data = Array2::fromshape_vec(
+    let sparse_data = Array2::from_shape_vec(
         (6, 2),
         vec![
             1.0, 1.0, 1.1, 1.1, 1.2, 1.2, 10.0, 10.0, 10.1, 10.1, 10.2, 10.2,

@@ -5,9 +5,9 @@
 //! can significantly affect clustering results.
 
 use ndarray::{Array1, Array2};
-use scirs2__cluster::metrics::silhouette_score;
-use scirs2__cluster::preprocess::standardize;
-use scirs2__cluster::vq::{
+use scirs2_cluster::metrics::silhouette_score;
+use scirs2_cluster::preprocess::standardize;
+use scirs2_cluster::vq::{
     kmeans_with_metric, ChebyshevDistance, CorrelationDistance, CosineDistance, EuclideanDistance,
     KMeansInit, KMeansOptions, MahalanobisDistance, ManhattanDistance,
 };
@@ -71,7 +71,7 @@ fn generate_test_data() -> Array2<f64> {
         data.push(y);
     }
 
-    Array2::fromshape_vec((90, 2), data).unwrap()
+    Array2::from_shape_vec((90, 2), data).unwrap()
 }
 
 #[allow(dead_code)]

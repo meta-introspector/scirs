@@ -1,8 +1,8 @@
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use scirs2__optim::optimizers::SGD;
-use scirs2__optim::schedulers::{DecayStrategy, LearningRateScheduler, LinearWarmupDecay};
-use scirs2__optim::Optimizer;
+use scirs2_optim::optimizers::SGD;
+use scirs2_optim::schedulers::{DecayStrategy, LearningRateScheduler, LinearWarmupDecay};
+use scirs2_optim::Optimizer;
 
 /// Generate synthetic data for linear regression
 #[allow(dead_code)]

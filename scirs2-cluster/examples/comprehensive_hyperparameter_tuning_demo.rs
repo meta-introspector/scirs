@@ -5,7 +5,7 @@
 //! and adaptive strategies for all supported clustering algorithms.
 
 use ndarray::Array2;
-use scirs2__cluster::{
+use scirs2_cluster::{
     preprocess::standardize,
     tuning::{
         AcquisitionFunction, AutoTuner, CVStrategy, CrossValidationConfig, DependencyRelationship,
@@ -459,7 +459,7 @@ fn generate_blob_clusters(_n_samples: usize, n_clusters: usize, stddev: f64) -> 
         }
     }
 
-    Array2::fromshape_vec((n_samples, 2), data).unwrap()
+    Array2::from_shape_vec((n_samples, 2), data).unwrap()
 }
 
 /// Generate moon-shaped clusters
@@ -483,7 +483,7 @@ fn generate_moon_clusters(_nsamples: usize) -> Array2<f64> {
         data.extend_from_slice(&[x2, y2]);
     }
 
-    Array2::fromshape_vec((n_samples, 2), data).unwrap()
+    Array2::from_shape_vec((n_samples, 2), data).unwrap()
 }
 
 /// Generate circle clusters
@@ -509,7 +509,7 @@ fn generate_circle_clusters(_nsamples: usize) -> Array2<f64> {
         data.extend_from_slice(&[x2, y2]);
     }
 
-    Array2::fromshape_vec((n_samples, 2), data).unwrap()
+    Array2::from_shape_vec((n_samples, 2), data).unwrap()
 }
 
 /// Generate anisotropic clusters
@@ -535,7 +535,7 @@ fn generate_anisotropic_clusters(_n_samples: usize, nclusters: usize) -> Array2<
         }
     }
 
-    Array2::fromshape_vec((n_samples, 2), data).unwrap()
+    Array2::from_shape_vec((n_samples, 2), data).unwrap()
 }
 
 /// Generate varied size clusters
@@ -556,7 +556,7 @@ fn generate_varied_size_clusters(_nsamples: usize) -> Array2<f64> {
         }
     }
 
-    Array2::fromshape_vec((data.len() / 2, 2), data).unwrap()
+    Array2::from_shape_vec((data.len() / 2, 2), data).unwrap()
 }
 
 /// Other utility functions (placeholders for actual implementations)

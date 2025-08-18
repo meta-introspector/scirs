@@ -181,14 +181,13 @@ fn erosion_iteration_parallel<T>(
     use parallel_ops::*;
 
     // Process rows in parallel
-    let src_ptr = src as *const Array2<T>;
     let offsets_clone = offsets.clone();
 
     dst.axis_iter_mut(Axis(0))
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
-            let src_ref = unsafe { &*src_ptr };
+            let src_ref = src;
 
             for j in 0..width {
                 let mut min_val = T::infinity();
@@ -384,14 +383,13 @@ fn dilation_iteration_parallel<T>(
     use parallel_ops::*;
 
     // Process rows in parallel
-    let src_ptr = src as *const Array2<T>;
     let offsets_clone = offsets.clone();
 
     dst.axis_iter_mut(Axis(0))
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
-            let src_ref = unsafe { &*src_ptr };
+            let src_ref = src;
 
             for j in 0..width {
                 let mut max_val = T::neg_infinity();
@@ -544,16 +542,14 @@ fn binary_erosion_iteration_parallel(
     use parallel_ops::*;
 
     // Process rows in parallel
-    let src_ptr = src as *const Array2<bool>;
-    let mask_ptr = mask.map(|m| m as *const Array2<bool>);
     let offsets_clone = offsets.clone();
 
     dst.axis_iter_mut(Axis(0))
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
-            let src_ref = unsafe { &*src_ptr };
-            let mask_ref = mask_ptr.map(|p| unsafe { &*p });
+            let src_ref = src;
+            let mask_ref = mask;
 
             for j in 0..width {
                 // Check if masked
@@ -706,16 +702,14 @@ fn binary_dilation_iteration_parallel(
     use parallel_ops::*;
 
     // Process rows in parallel
-    let src_ptr = src as *const Array2<bool>;
-    let mask_ptr = mask.map(|m| m as *const Array2<bool>);
     let offsets_clone = offsets.clone();
 
     dst.axis_iter_mut(Axis(0))
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
-            let src_ref = unsafe { &*src_ptr };
-            let mask_ref = mask_ptr.map(|p| unsafe { &*p });
+            let src_ref = src;
+            let mask_ref = mask;
 
             for j in 0..width {
                 // Check if masked
@@ -1028,7 +1022,15 @@ pub fn morphological_reconstruction_2d<T>(
     structure: Option<&Array2<bool>>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static + PartialOrd,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + 'static
+        + PartialOrd
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
     T: SimdUnifiedOps,
 {
     match method {
@@ -1059,7 +1061,15 @@ pub fn multi_scale_morphology_2d<T>(
     config: &MultiScaleMorphConfig,
 ) -> NdimageResult<Vec<Array2<T>>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static + PartialOrd,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + 'static
+        + PartialOrd
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
     T: SimdUnifiedOps,
 {
     let mut results = Vec::with_capacity(config.scales.len());
@@ -1157,7 +1167,15 @@ pub fn granulometry_2d<T>(
     structure_type: StructureType,
 ) -> NdimageResult<Vec<f64>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static + PartialOrd,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + 'static
+        + PartialOrd
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
     T: SimdUnifiedOps,
 {
     let mut curve = Vec::with_capacity(scales.len());

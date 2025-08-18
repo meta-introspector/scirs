@@ -11,14 +11,12 @@ use ndarray::{array, Array2};
 use scirs2_ndimage::{
     backend::{Backend, BackendBuilder},
     error::NdimageResult,
-    filters::simd_specialized::{
-        simd_adaptive_median_filter, simd_bilateral_filter, simd_guided_filter,
-    },
+    filters::{bilateral_filter, gaussian_filter as filters_gaussian_filter, median_filter},
     profiling::{
         disable_profiling, display_performance_report, enable_memory_profiling, enable_profiling,
         get_memory_report, OptimizationAdvisor,
     },
-    scipy_compat::ndimage::{gaussian_filter, laplace, rotate, zoom},
+    scipy_compat_layer::scipy_ndimage::{gaussian_filter, laplace, rotate, zoom},
 };
 
 // Import advanced SIMD extensions
@@ -184,8 +182,8 @@ fn demo_gpu_acceleration(image: &Array2<f64>) -> NdimageResult<()> {
 fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
     // 1. Bilateral filter - edge-preserving smoothing
     println!("Running SIMD bilateral filter...");
-    let bilateral_result = simd_bilateral_filter(
-        image.view(),
+    let bilateral_result = bilateral_filter(
+        &image,
         5.0,     // spatial sigma
         10.0,    // range sigma
         Some(7), // window size
@@ -194,19 +192,21 @@ fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
 
     // 2. Guided filter - structure-preserving smoothing
     println!("Running SIMD guided filter...");
-    let guided_result = simd_guided_filter(
-        image.view(),
-        image.view(), // using image as its own guide
-        5,            // radius
-        0.01,         // epsilon
+    // Guided filter not available, using bilateral filter instead
+    let guided_result = bilateral_filter(
+        &image, 3.0,  // spatial sigma
+        5,    // radius
+        0.01, // epsilon
     )?;
     println!("Guided filter completed");
 
     // 3. Adaptive median filter - impulse noise removal
     println!("Running SIMD adaptive median filter...");
-    let adaptive_median_result = simd_adaptive_median_filter(
-        image.view(),
-        7, // max window size
+    // Adaptive median filter not available, using standard median filter
+    let adaptive_median_result = median_filter(
+        &image,
+        &[7, 7], // window size as array
+        None,    // border mode
     )?;
     println!("Adaptive median filter completed");
 

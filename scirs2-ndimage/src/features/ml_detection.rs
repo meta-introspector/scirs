@@ -386,7 +386,7 @@ impl LearnedKeypointDescriptor {
             }
 
             // Normalize patch
-            let mean = patch.mean();
+            let mean = patch.clone().mean();
             let std = patch.std(0.0);
             if std > 0.0 {
                 patch = (patch - mean) / std;
@@ -530,7 +530,7 @@ impl SemanticFeatureExtractor {
 
         // Convert to binary for shape analysis
         let img_f64 = image.mapv(|x| x.to_f64().unwrap_or(0.0));
-        let threshold = img_f64.mean();
+        let threshold = img_f64.clone().mean();
         let binary = img_f64.mapv(|x| if x > threshold { 1.0 } else { 0.0 });
 
         // Feature 1: Distance to nearest edge

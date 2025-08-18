@@ -59,10 +59,11 @@ pub struct BufferPool<T, D> {
 }
 
 impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> BufferPool<T, D> {
-    pub fn new(_maxbuffers: usize) -> Self {
+    pub fn new(maxbuffers: usize) -> Self {
         Self {
-            _buffers: Vec::new(),
-            max_buffers_phantom: PhantomData,
+            buffers: Vec::new(),
+            max_buffers: maxbuffers,
+            _phantom: PhantomData,
         }
     }
 
@@ -129,7 +130,8 @@ impl<
 {
     pub fn new(config: MemoryConfig) -> Self {
         Self {
-            _config_phantom: PhantomData,
+            config,
+            phantom: PhantomData,
         }
     }
 

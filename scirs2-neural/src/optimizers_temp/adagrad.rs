@@ -6,7 +6,7 @@ use ndarray::Array;
 use num_traits::Float;
 use std::fmt::Debug;
 // Import from scirs2-optim
-use scirs2__optim::optimizers as optim_optimizers;
+use scirs2_optim::optimizers as optim_optimizers;
 /// Adagrad optimizer.
 ///
 /// Adagrad is an optimizer that adapts the learning rate to the parameters,

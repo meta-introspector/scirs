@@ -12,8 +12,8 @@
 
 use ndarray::{Array2, Array3};
 use scirs2_ndimage::{
-    adaptive_advanced_optimizer::*, error::Result, fusion_core::*, gpu_operations::*,
-    performance_profiler::*,
+    adaptive_image_optimizer::*, advanced_fusion_algorithms::*, error::NdimageResult,
+    gpu_operations::*, performance_profiler::*,
 };
 use statrs::statistics::Statistics;
 use std::time::Instant;

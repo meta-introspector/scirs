@@ -2171,7 +2171,7 @@ mod tests {
         for i in 0..n {
             for j in i + 1..n {
                 let mut dist_squared = 0.0;
-                for k in 0.._points.shape()[1] {
+                for k in 0..points.shape()[1] {
                     let diff = points[[i, k]] - points[[j, k]];
                     dist_squared += diff * diff;
                 }

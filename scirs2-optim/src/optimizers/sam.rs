@@ -340,7 +340,7 @@ mod tests {
     #[test]
     fn test_sam_creation() {
         let sgd = SGD::new(0.01);
-        let optimizer: SAM<f64_, ndarray::Ix1> = SAM::new(sgd);
+        let optimizer: SAM<f64, ndarray::Ix1> = SAM::new(sgd);
 
         assert_abs_diff_eq!(optimizer.rho(), 0.05);
         assert_abs_diff_eq!(optimizer.get_learning_rate(), 0.01);
@@ -350,7 +350,7 @@ mod tests {
     #[test]
     fn test_sam_with_config() {
         let sgd = SGD::new(0.01);
-        let optimizer: SAM<f64_, ndarray::Ix1> = SAM::with_config(sgd, 0.1, true);
+        let optimizer: SAM<f64, ndarray::Ix1> = SAM::with_config(sgd, 0.1, true);
 
         assert_abs_diff_eq!(optimizer.rho(), 0.1);
         assert!(optimizer.is_adaptive());
@@ -359,7 +359,7 @@ mod tests {
     #[test]
     fn test_sam_first_step() {
         let sgd = SGD::new(0.1);
-        let mut optimizer: SAM<f64_, ndarray::Ix1> = SAM::new(sgd);
+        let mut optimizer: SAM<f64, ndarray::Ix1> = SAM::new(sgd);
 
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
@@ -384,7 +384,7 @@ mod tests {
     #[test]
     fn test_sam_adaptive() {
         let sgd = SGD::new(0.1);
-        let mut optimizer: SAM<f64_, ndarray::Ix1> = SAM::with_config(sgd, 0.05, true);
+        let mut optimizer: SAM<f64, ndarray::Ix1> = SAM::with_config(sgd, 0.05, true);
 
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
@@ -409,7 +409,7 @@ mod tests {
     #[test]
     fn test_sam_second_step() {
         let sgd = SGD::new(0.1);
-        let mut optimizer: SAM<f64_, ndarray::Ix1> = SAM::new(sgd);
+        let mut optimizer: SAM<f64, ndarray::Ix1> = SAM::new(sgd);
 
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
@@ -435,7 +435,7 @@ mod tests {
     #[test]
     fn test_sam_reset() {
         let sgd = SGD::new(0.1);
-        let mut optimizer: SAM<f64_, ndarray::Ix1> = SAM::new(sgd);
+        let mut optimizer: SAM<f64, ndarray::Ix1> = SAM::new(sgd);
 
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
@@ -454,7 +454,7 @@ mod tests {
     #[test]
     fn test_sam_error_handling() {
         let sgd = SGD::new(0.1);
-        let mut optimizer: SAM<f64_, ndarray::Ix1> = SAM::new(sgd);
+        let mut optimizer: SAM<f64, ndarray::Ix1> = SAM::new(sgd);
 
         // Gradient with all zeros should return error
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);

@@ -1,7 +1,7 @@
 //! Example demonstrating one-cycle learning rate policy
 
 use ndarray::Array1;
-use scirs2__optim::{
+use scirs2_optim::{
     optimizers::{Optimizer, SGD},
     schedulers::{AnnealStrategy, LearningRateScheduler, OneCycle},
 };
@@ -99,7 +99,7 @@ fn main() {
     println!("One-Cycle with Adam Optimizer");
     println!("{}", "=".repeat(60));
 
-    use scirs2__optim::optimizers::Adam;
+    use scirs2_optim::optimizers::Adam;
 
     let mut adam = Adam::new(0.001);
     let mut scheduler = OneCycle::new(0.001, 0.01, total_steps, 0.3).with_momentum(0.85, 0.95, 0.9);

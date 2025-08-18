@@ -72,7 +72,7 @@ struct BenchmarkResult {
 }
 
 impl BenchmarkResult {
-    fn new(_operation_name: String, image_size: (usize, usize), durations: &[Duration]) -> Self {
+    fn new(operation_name: String, image_size: (usize, usize), durations: &[Duration]) -> Self {
         let mean_duration = Duration::from_nanos(
             (durations.iter().map(|d| d.as_nanos()).sum::<u128>() / durations.len() as u128) as u64,
         );
@@ -133,6 +133,7 @@ impl BenchmarkResult {
     }
 }
 
+#[cfg(feature = "simd")]
 #[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("=== Advanced-Performance Benchmark for scirs2-ndimage ===\n");
@@ -205,8 +206,8 @@ fn main() -> NdimageResult<()> {
 
 #[allow(dead_code)]
 fn create_benchmarkimage(height: usize, width: usize) -> Array2<f64> {
-    Array2::fromshape_fn((_height, width), |(i, j)| {
-        let x = i as f64 / _height as f64;
+    Array2::from_shape_fn((height, width), |(i, j)| {
+        let x = i as f64 / height as f64;
         let y = j as f64 / width as f64;
 
         // Create a complex pattern with multiple frequency components
@@ -383,7 +384,7 @@ fn display_benchmark_summary(results: &[BenchmarkResult]) {
     use std::collections::HashMap;
     let mut grouped: HashMap<String, Vec<&BenchmarkResult>> = HashMap::new();
 
-    for result in _results {
+    for result in results {
         let operation_type = result
             .operation_name
             .split_whitespace()
@@ -450,12 +451,12 @@ fn display_benchmark_summary(results: &[BenchmarkResult]) {
     // Overall statistics
     println!("--- Overall Statistics ---");
     let total_operations = results.len();
-    let avg_throughput: f64 = _results
+    let avg_throughput: f64 = results
         .iter()
         .map(|r| r.throughput_mpix_per_sec)
         .sum::<f64>()
         / total_operations as f64;
-    let max_throughput = _results
+    let max_throughput = results
         .iter()
         .map(|r| r.throughput_mpix_per_sec)
         .fold(0.0, f64::max);

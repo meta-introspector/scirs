@@ -138,10 +138,10 @@ pub fn extract_dbscan_clustering(_opticsresult: &OPTICSResult, eps: f64) -> Arra
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2__cluster::density::{optics, DistanceMetric};
+/// use scirs2_cluster::density::{optics, DistanceMetric};
 ///
 /// // Example data with two clusters of different densities
-/// let data = Array2::fromshape_vec((10, 2), vec![
+/// let data = Array2::from_shape_vec((10, 2), vec![
 ///     1.0, 2.0,   // Cluster 1 (dense)
 ///     1.2, 1.8,   // Cluster 1
 ///     0.9, 1.9,   // Cluster 1
@@ -534,7 +534,7 @@ mod tests {
     #[test]
     fn test_optics_basic() {
         // Sample data with two clusters
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (8, 2),
             vec![
                 1.0, 2.0, // Cluster 1

@@ -695,13 +695,15 @@ pub use parallel_stats_enhanced::{
     kde_parallel, pairwise_distances_parallel, AdaptiveThreshold, ParallelCrossValidation,
     ParallelHistogram, ParallelMovingStats,
 };
+/*
 #[cfg(test)]
-pub use propertybased_tests_extended::{
+pub use property_based_tests_extended::{
     BatchProcessingTester, CrossPlatformTester, ExtendedMathematicalTester, FuzzingTester,
     MathematicalInvariantTester, MatrixTestData, MemoryOptimizationTester,
     NumericalStabilityTester, ParallelConsistencyTester, PerformanceRegressionTester,
     RobustnessTester, SimdConsistencyTester, StatisticalTestData,
 };
+*/
 pub use quantile_simd::{
     median_simd, percentile_simd, quantile_simd, quantiles_simd, quickselect_simd,
 };

@@ -1237,7 +1237,8 @@ mod tests {
 
     #[test]
     fn test_data_characteristics_analysis() {
-        let data = Array2::fromshape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
+        let data =
+            Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
         let chars = DataCharacteristics::analyze(&data.view()).unwrap();
 
         assert_eq!(chars.n_samples, 100);

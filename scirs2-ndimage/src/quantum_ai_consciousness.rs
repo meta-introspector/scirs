@@ -1708,7 +1708,7 @@ fn synthesize_conscious_output<T>(
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = image._dim();
+    let (height, width) = image.dim();
     let mut output = Array2::zeros((height, width));
 
     // Consciousness-guided synthesis
@@ -2144,7 +2144,7 @@ where
 {
     Ok(MultiscaleResult {
         attention_maps: vec![Array2::ones((10, 10))],
-        _scale_weights: Array1::ones(5),
+        scale_weights: Array1::ones(5),
     })
 }
 

@@ -122,21 +122,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to calculate mean of samples
 #[allow(dead_code)]
-fn calculate_mean(_samples: &Array2<f64>, nsamples: usize) -> Array1<f64> {
-    let mut mean = Array1::zeros(_samples.shape()[1]);
+fn calculate_mean(samples: &Array2<f64>, nsamples: usize) -> Array1<f64> {
+    let mut mean = Array1::zeros(samples.shape()[1]);
 
-    for i in 0..n_samples {
-        for j in 0.._samples.shape()[1] {
+    for i in 0..nsamples {
+        for j in 0..samples.shape()[1] {
             mean[j] += samples[[i, j]];
         }
     }
 
-    mean / n_samples as f64
+    mean / nsamples as f64
 }
 
 // Helper function to calculate median of samples
 #[allow(dead_code)]
-fn calculate_median(_samples: &Array2<f64>, nsamples: usize) -> Array1<f64> {
+fn calculate_median(samples: &Array2<f64>, nsamples: usize) -> Array1<f64> {
     let dim = samples.shape()[1];
     let mut median = Array1::zeros(dim);
 
@@ -144,12 +144,12 @@ fn calculate_median(_samples: &Array2<f64>, nsamples: usize) -> Array1<f64> {
         let mut values: Vec<f64> = samples.column(j).to_vec();
         values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-        if n_samples % 2 == 0 {
+        if nsamples % 2 == 0 {
             // Even number of samples, take average of middle two
-            median[j] = (values[n_samples / 2 - 1] + values[n_samples / 2]) / 2.0;
+            median[j] = (values[nsamples / 2 - 1] + values[nsamples / 2]) / 2.0;
         } else {
             // Odd number of samples, take middle value
-            median[j] = values[n_samples / 2];
+            median[j] = values[nsamples / 2];
         }
     }
 

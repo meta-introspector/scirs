@@ -1279,7 +1279,13 @@ mod distributed_tests {
         let coordinator = MultiNodeCoordinator::new(Duration::from_millis(10));
 
         let node1_id = NodeId::new("node1".to_string(), "1".to_string());
-        let node1logger = Arc::new(DistributedLogger::new("node1logger", node1_id.clone(), 100, Duration::from_secs(10), 50.0));
+        let node1logger = Arc::new(DistributedLogger::new(
+            "node1logger",
+            node1_id.clone(),
+            100,
+            Duration::from_secs(10),
+            50.0,
+        ));
 
         coordinator.register_node(node1_id, node1logger);
 

@@ -28,7 +28,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__cluster::advanced_clustering::{AdvancedClusterer, QuantumNeuromorphicCluster};
+//! use scirs2_cluster::advanced_clustering::{AdvancedClusterer, QuantumNeuromorphicCluster};
 //! use ndarray::array;
 //!
 //! // AI-driven Advanced clustering
@@ -703,7 +703,7 @@ impl AIClusteringSelector {
         &self,
         characteristics: &DataCharacteristics,
     ) -> f64 {
-        let mut score = 0.65; // Base score
+        let mut score: f64 = 0.65; // Base score
 
         // Adaptive algorithms excel with varied cluster densities
         if characteristics.cluster_tendency > 0.4 && characteristics.cluster_tendency < 0.8 {
@@ -769,7 +769,7 @@ impl AIClusteringSelector {
     }
 
     fn predict_classical_kmeans_performance(&self, characteristics: &DataCharacteristics) -> f64 {
-        let mut score = 0.5; // Base score
+        let mut score: f64 = 0.5; // Base score
 
         // Classical K-means works well with well-separated clusters
         if characteristics.cluster_tendency > 0.8 {
@@ -1252,7 +1252,7 @@ impl QuantumNeuromorphicProcessor {
             // Calculate weighted input current using synaptic weights
             let mut weighted_input = 0.0;
             for (i, &value) in point.iter().enumerate() {
-                if i < neuron.synapticweights.len() {
+                if i < neuron.synaptic_weights.len() {
                     weighted_input += value * neuron.synaptic_weights[i];
                 }
             }
@@ -1301,7 +1301,7 @@ impl QuantumNeuromorphicProcessor {
 
                 // Advanced synaptic plasticity with quantum entanglement
                 for (i, &input_val) in point.iter().enumerate() {
-                    if i < neuron.synapticweights.len() {
+                    if i < neuron.synaptic_weights.len() {
                         let hebbian_term = neuron.plasticity_trace * input_val * 0.01;
                         let quantum_term = neuron.quantum_state.re * input_val * 0.005; // Real part influence
                         let entanglement_term = neuron.entanglement_strength * input_val * 0.003;
@@ -1354,7 +1354,7 @@ impl QuantumNeuromorphicProcessor {
             // Calculate weighted input current using synaptic weights
             let mut weighted_input = 0.0;
             for (i, &value) in point.iter().enumerate() {
-                if i < neuron.synapticweights.len() {
+                if i < neuron.synaptic_weights.len() {
                     weighted_input += value * neuron.synaptic_weights[i];
                 }
             }
@@ -1394,7 +1394,7 @@ impl QuantumNeuromorphicProcessor {
 
                 // Apply synaptic plasticity
                 for (i, &input_val) in point.iter().enumerate() {
-                    if i < neuron.synapticweights.len() {
+                    if i < neuron.synaptic_weights.len() {
                         let weight_change = neuron.plasticity_trace * input_val * 0.01;
                         neuron.synaptic_weights[i] = (neuron.synaptic_weights[i] + weight_change)
                             .max(0.0)
@@ -1476,7 +1476,7 @@ impl MetaLearningClusterOptimizer {
         embedding[0] = data.nrows() as f64;
         embedding[1] = data.ncols() as f64;
         embedding[2] = data.mean().unwrap_or(0.0);
-        embedding[3] = data.variance().mean().unwrap_or(0.0);
+        embedding[3] = data.variance();
         // ... additional features
         embedding
     }

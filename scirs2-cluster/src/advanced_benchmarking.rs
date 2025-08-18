@@ -19,7 +19,7 @@
 //! # Example
 //!
 //! ```rust
-//! use scirs2__cluster::advanced_benchmarking::{
+//! use scirs2_cluster::advanced_benchmarking::{
 //!     AdvancedBenchmark, BenchmarkConfig, create_comprehensive_report
 //! };
 //! use ndarray::Array2;
@@ -566,7 +566,7 @@ impl AdvancedBenchmark {
             "gmm" => {
                 let mut options = GMMOptions::default();
                 options.n_components = 3;
-                let _result = gaussian_mixture(data, options)?;
+                let _result = gaussian_mixture(*data, options)?;
             }
             _ => {
                 return Err(ClusteringError::ComputationError(format!(

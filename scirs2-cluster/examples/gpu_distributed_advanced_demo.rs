@@ -5,7 +5,7 @@
 //! maximum scalability and performance.
 
 use ndarray::Array2;
-use scirs2__cluster::advanced_gpu_distributed::{
+use scirs2_cluster::advanced_gpu_distributed::{
     CoordinationStrategy, CustomGpuOptimization, DistributedAdvancedClusterer,
     GpuAccelerationConfig, GpuAdvancedClusterer, GpuDeviceSelection, GpuMemoryStrategy,
     GpuOptimizationLevel, HybridGpuDistributedClusterer, WorkerNodeConfig,
@@ -702,7 +702,7 @@ fn create_large_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
         }
     }
 
-    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -723,7 +723,7 @@ fn create_massive_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
         }
     }
 
-    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -753,7 +753,7 @@ fn create_advanced_massive_dataset(_n_samples: usize, nfeatures: usize) -> Array
         }
     }
 
-    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -770,7 +770,7 @@ fn create_optimization_test_data(_n_samples: usize, nfeatures: usize) -> Array2<
         }
     }
 
-    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -803,7 +803,7 @@ fn create_unbalanced_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64>
         }
     }
 
-    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -827,7 +827,7 @@ fn create_scaling_test_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> 
         }
     }
 
-    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -852,5 +852,5 @@ fn create_monitoring_test_data(_n_samples: usize, nfeatures: usize) -> Array2<f6
         }
     }
 
-    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }

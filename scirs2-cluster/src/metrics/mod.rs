@@ -15,9 +15,10 @@ pub use information_theoretic::{
     normalized_variation_of_information, v_measure_score,
 };
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
+use std::ops::{AddAssign, DivAssign, SubAssign};
 
 use crate::error::{ClusteringError, Result};
 
@@ -40,9 +41,9 @@ use crate::error::{ClusteringError, Result};
 ///
 /// ```
 /// use ndarray::{ArrayView1, Array1, Array2};
-/// use scirs2__cluster::metrics::davies_bouldin_score;
+/// use scirs2_cluster::metrics::davies_bouldin_score;
 ///
-/// let data = Array2::fromshape_vec((4, 2), vec![
+/// let data = Array2::from_shape_vec((4, 2), vec![
 ///     0.0, 0.0,
 ///     0.1, 0.1,
 ///     5.0, 5.0,
@@ -170,9 +171,9 @@ where
 ///
 /// ```
 /// use ndarray::{ArrayView1, Array1, Array2};
-/// use scirs2__cluster::metrics::calinski_harabasz_score;
+/// use scirs2_cluster::metrics::calinski_harabasz_score;
 ///
-/// let data = Array2::fromshape_vec((4, 2), vec![
+/// let data = Array2::from_shape_vec((4, 2), vec![
 ///     0.0, 0.0,
 ///     0.1, 0.1,
 ///     5.0, 5.0,
@@ -294,9 +295,9 @@ where
 ///
 /// ```
 /// use ndarray::{ArrayView1, Array1, Array2};
-/// use scirs2__cluster::metrics::mean_silhouette_score;
+/// use scirs2_cluster::metrics::mean_silhouette_score;
 ///
-/// let data = Array2::fromshape_vec((4, 2), vec![
+/// let data = Array2::from_shape_vec((4, 2), vec![
 ///     0.0, 0.0,
 ///     0.1, 0.1,
 ///     5.0, 5.0,
@@ -335,7 +336,7 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__cluster::metrics::adjusted_rand_index;
+/// use scirs2_cluster::metrics::adjusted_rand_index;
 ///
 /// let labels_true = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
 /// let labels_pred = Array1::from_vec(vec![0, 0, 2, 2, 1, 1]);
@@ -459,7 +460,7 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__cluster::metrics::normalized_mutual_info;
+/// use scirs2_cluster::metrics::normalized_mutual_info;
 ///
 /// let labels_true = Array1::from_vec(vec![0, 0, 1, 1]);
 /// let labels_pred = Array1::from_vec(vec![0, 0, 1, 1]);
@@ -635,7 +636,7 @@ fn build_contingency_matrix(
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__cluster::metrics::homogeneity_completeness_v_measure;
+/// use scirs2_cluster::metrics::homogeneity_completeness_v_measure;
 ///
 /// let labels_true = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
 /// let labels_pred = Array1::from_vec(vec![0, 0, 1, 1, 1, 1]);
@@ -754,7 +755,7 @@ pub mod information_theory {
         labels_pred: ArrayView1<i32>,
     ) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + 'static,
+        F: Float + FromPrimitive + Debug + AddAssign + 'static,
     {
         if labels_true.len() != labels_pred.len() {
             return Err(ClusteringError::InvalidInput(
@@ -836,7 +837,7 @@ pub mod information_theory {
     /// The information-theoretic quality score (higher is better)
     pub fn information_cluster_quality<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + 'static,
+        F: Float + FromPrimitive + Debug + PartialOrd + AddAssign + SubAssign + DivAssign + 'static,
     {
         if data.shape()[0] != labels.shape()[0] {
             return Err(ClusteringError::InvalidInput(
@@ -903,7 +904,7 @@ pub mod information_theory {
     /// Compute entropy of a dataset based on feature variance.
     fn computedata_entropy<F>(data: &[ndarray::ArrayView1<F>]) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + 'static,
+        F: Float + FromPrimitive + Debug + SubAssign + AddAssign + 'static,
     {
         if data.is_empty() {
             return Ok(F::zero());
@@ -988,7 +989,7 @@ pub mod information_theory {
     /// Compute Kullback-Leibler divergence between two probability distributions.
     fn kl_divergence<F>(p: &HashMap<i32, F>, q: &HashMap<i32, F>) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + 'static,
+        F: Float + FromPrimitive + Debug + AddAssign + 'static,
     {
         let mut kl = F::zero();
 
@@ -1032,7 +1033,14 @@ pub mod stability {
         subsample_ratio: f64,
     ) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         use rand::seq::SliceRandom;
 
@@ -1196,7 +1204,14 @@ pub mod stability {
         subsample_ratio: f64,
     ) -> Result<(usize, Vec<F>)>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         let mut stability_scores = Vec::new();
         let mut best_k = k_range.start;
@@ -1344,7 +1359,7 @@ pub mod advanced {
     /// The BIC score (lower is better)
     pub fn bic_score<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + 'static,
+        F: Float + FromPrimitive + Debug + PartialOrd + ScalarOperand + 'static,
     {
         if data.shape()[0] != labels.shape()[0] {
             return Err(ClusteringError::InvalidInput(
@@ -1419,7 +1434,7 @@ pub mod advanced {
     /// Compute mean of cluster data points.
     fn compute_cluster_mean<F>(clusterdata: &[ndarray::ArrayView1<F>]) -> ndarray::Array1<F>
     where
-        F: Float + FromPrimitive + Debug + 'static,
+        F: Float + FromPrimitive + Debug + ScalarOperand + 'static,
     {
         if clusterdata.is_empty() {
             return ndarray::Array1::zeros(0);
@@ -1464,7 +1479,14 @@ pub mod ensemble {
         n_algorithms: usize,
     ) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         if n_algorithms < 2 {
             return Err(ClusteringError::InvalidInput(
@@ -1585,7 +1607,14 @@ pub mod ensemble {
         k_folds: usize,
     ) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         if k_folds < 2 {
             return Err(ClusteringError::InvalidInput(
@@ -1647,7 +1676,7 @@ pub mod ensemble {
                         let mut min_dist = F::infinity();
                         let mut closest_cluster = 0;
 
-                        for (cluster_idx, center_row) in centers.rows().into_iter().enumerate() {
+                        for (cluster_idx, center_row) in centers.0.rows().into_iter().enumerate() {
                             let dist = euclidean_distance(data.row(i), center_row);
                             if dist < min_dist {
                                 min_dist = dist;
@@ -1704,7 +1733,14 @@ pub mod ensemble {
         n_consensus: usize,
     ) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         // Perform standard clustering
         let max_iter = 100;
@@ -1778,7 +1814,14 @@ pub mod ensemble {
         n_bootstrap: usize,
     ) -> Result<(F, F, F)>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         use rand::seq::SliceRandom;
 
@@ -1804,7 +1847,7 @@ pub mod ensemble {
                 .collect();
 
             // Extract _bootstrap sample
-            let bootstrapdata = data.select(ndarray::Axis(0)..&bootstrap_indices);
+            let bootstrapdata = data.select(ndarray::Axis(0), &bootstrap_indices);
             let bootstrap_labels: Vec<i32> = bootstrap_indices.iter().map(|&i| labels[i]).collect();
             let bootstrap_labels_array = Array1::from_vec(bootstrap_labels);
 
@@ -1895,7 +1938,14 @@ pub mod advanced_stability {
         config: StabilityConfig,
     ) -> Result<StabilityResult<F>>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         // 1. Bootstrap stability
         let bootstrap_stability = bootstrap_clustering_stability(
@@ -1956,7 +2006,14 @@ pub mod advanced_stability {
         subsample_ratio: f64,
     ) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         let mut rng = rand::rng();
         let n_samples = data.shape()[0];
@@ -2070,7 +2127,14 @@ pub mod advanced_stability {
         n_trials: usize,
     ) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         let ratios = [0.5, 0.6, 0.7, 0.8, 0.9];
         let mut scale_stabilities = Vec::new();
@@ -2099,7 +2163,14 @@ pub mod advanced_stability {
         n_trials: usize,
     ) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         let mut rng = rand::rng();
         let mut noise_stabilities = Vec::new();
@@ -2184,7 +2255,14 @@ pub mod advanced_stability {
         n_trials: usize,
     ) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         let mut rng = rand::rng();
         let n_features = data.shape()[1];
@@ -2271,7 +2349,14 @@ pub mod advanced_stability {
     /// Connectivity-based stability analysis
     fn connectivity_stability_analysis<F>(data: ArrayView2<F>, nclusters: usize) -> Result<F>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         let n_samples = data.shape()[0];
         let k_neighbors = [3, 5, 7, 10];
@@ -2319,7 +2404,14 @@ pub mod advanced_stability {
         k_range: std::ops::RangeInclusive<usize>,
     ) -> Result<Vec<F>>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         let mut persistence_scores = Vec::new();
         let mut previous_labels = None;
@@ -2363,10 +2455,17 @@ pub mod advanced_stability {
         n_timepoints: usize,
     ) -> Result<Vec<F>>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         let mut temporal_stabilities = Vec::new();
-        let mut reference_labels = None;
+        let mut reference_labels: Option<Array1<usize>> = None;
 
         for timepoint in 0..n_timepoints {
             if let Ok((_, labels)) = kmeans2(
@@ -2411,7 +2510,14 @@ pub mod advanced_stability {
         n_bootstrap: usize,
     ) -> Result<(F, F, F)>
     where
-        F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + PartialOrd
+            + Copy
+            + std::iter::Sum
+            + std::fmt::Display
+            + 'static,
     {
         let mut bootstrap_scores = Vec::new();
 
@@ -2731,7 +2837,7 @@ mod tests {
 
     #[test]
     fn test_davies_bouldin_score() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )
@@ -2744,7 +2850,7 @@ mod tests {
 
     #[test]
     fn test_calinski_harabasz_score() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )

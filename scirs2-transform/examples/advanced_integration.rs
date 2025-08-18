@@ -4,7 +4,7 @@
 //! with complex datasets and production-ready scenarios.
 
 use ndarray::{Array1, Array2};
-use scirs2__transform::{
+use scirs2_transform::{
     AdvancedNeuromorphicProcessor, AdvancedQuantumOptimizer, AutoFeatureEngineer,
     DatasetMetaFeatures, NeuromorphicTransformationSystem, QuantumTransformationOptimizer,
     TransformationConfig, TransformationType,
@@ -441,13 +441,13 @@ fn create_drifting_dataset(
 ) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
     use rand::Rng;
     let mut rng = rand::rng();
-    let mut data = Array2::zeros((n_samples, n_features));
+    let mut data = Array2::zeros((n_samples, _features));
 
     for i in 0..n_samples {
-        for j in 0..n_features {
+        for j in 0.._features {
             let base_value = rng.random_range(-1.0..1.0);
             let drift_effect = drift_factor * rng.random_range(-2.0..2.0);
-            data[[i..j]] = base_value + drift_effect;
+            data[[i, j]] = base_value + drift_effect;
         }
     }
 
@@ -504,7 +504,7 @@ fn create_temporal_features(
             let time_component = (i as f64 / n_samples as f64) * 2.0 * std::f64::consts::PI;
             let seasonal = (time_component + j as f64).sin();
             let noise = rng.random_range(-0.1..0.1);
-            data[[i..j]] = seasonal + noise;
+            data[[i, j]] = seasonal + noise;
         }
     }
 
@@ -620,7 +620,7 @@ fn evaluate_pipeline_quality(pipeline: &[TransformationConfig]) -> f64 {
         return 0.0;
     }
 
-    _pipeline
+    pipeline
         .iter()
         .map(|config| config.expected_performance)
         .sum::<f64>()

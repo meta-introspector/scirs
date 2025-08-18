@@ -1685,7 +1685,7 @@ fn setup_real_time_monitoring(
         adaptive_thresholds: AdaptiveThresholds {
             adaptation_rules: vec!["Exponential".to_string(), "Linear".to_string()],
             adaptation_rates: Array1::from_vec(vec![0.01, 0.001]),
-            threshold_bounds: Array2::fromshape_vec((2, 2), vec![0.001, 0.1, 0.0005, 0.05])
+            threshold_bounds: Array2::from_shape_vec((2, 2), vec![0.001, 0.1, 0.0005, 0.05])
                 .unwrap(),
             performance_metrics: Array1::ones(2) * 0.95,
         },

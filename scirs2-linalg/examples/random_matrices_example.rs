@@ -16,25 +16,25 @@ fn main() -> LinalgResult<()> {
     let mut rng = ChaCha8Rng::seed_from_u64(42);
 
     // Example 1: General random matrix
-    demo_generalmatrix(&mut rng)?;
+    demo_generalmatrix(rng)?;
 
     // Example 2: Symmetric matrix
-    demo_symmetricmatrix(&mut rng)?;
+    demo_symmetricmatrix(rng)?;
 
     // Example 3: Positive definite matrix
-    demo_positive_definite(&mut rng)?;
+    demo_positive_definite(rng)?;
 
     // Example 4: Orthogonal matrix
-    demo_orthogonalmatrix(&mut rng)?;
+    demo_orthogonalmatrix(rng)?;
 
     // Example 5: Correlation matrix
-    demo_correlationmatrix(&mut rng)?;
+    demo_correlationmatrix(rng)?;
 
     // Example 6: Sparse matrix
-    demo_sparsematrix(&mut rng)?;
+    demo_sparsematrix(rng)?;
 
     // Example 7: Complex matrices
-    demo_complex_matrices(&mut rng)?;
+    demo_complex_matrices(rng)?;
 
     Ok(())
 }
@@ -45,21 +45,21 @@ fn demo_generalmatrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
     println!("----------------------");
 
     // Uniform distribution
-    let uniformmatrix = randommatrix::<f64>(
+    let uniformmatrix = randommatrix(
         3,
         4,
         MatrixType::General(Distribution1D::Uniform { a: -1.0, b: 1.0 }),
-        &mut rng,
+        rng,
     )?;
     println!("Uniform[-1, 1] (3x4):");
     printmatrix(&uniformmatrix);
 
     // Standard normal distribution
-    let normalmatrix = randommatrix::<f64>(
+    let normalmatrix = randommatrix(
         4,
         3,
         MatrixType::General(Distribution1D::StandardNormal),
-        &mut rng,
+        rng,
     )?;
     println!("\nStandard Normal (4x3):");
     printmatrix(&normalmatrix);
@@ -73,14 +73,14 @@ fn demo_symmetricmatrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
     println!("2. Symmetric Random Matrix");
     println!("------------------------");
 
-    let symmatrix = randommatrix::<f64>(
+    let symmatrix = randommatrix(
         4,
         4,
         MatrixType::Symmetric(Distribution1D::Normal {
             mean: 0.0,
             std_dev: 2.0,
         }),
-        &mut rng,
+        rng,
     )?;
 
     println!("Symmetric matrix (4x4):");
@@ -105,14 +105,14 @@ fn demo_positive_definite<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
     println!("3. Positive Definite Matrix");
     println!("--------------------------");
 
-    let pdmatrix = randommatrix::<f64>(
+    let pdmatrix = randommatrix(
         3,
         3,
         MatrixType::PositiveDefinite {
             eigenvalue_min: 0.5,
             eigenvalue_max: 5.0,
         },
-        &mut rng,
+        rng,
     )?;
 
     println!("Positive definite matrix (3x3):");
@@ -134,7 +134,7 @@ fn demo_orthogonalmatrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
     println!("4. Orthogonal Matrix");
     println!("-------------------");
 
-    let orthomatrix = randommatrix::<f64>(3, 3, MatrixType::Orthogonal, &mut rng)?;
+    let orthomatrix = randommatrix(3, 3, MatrixType::Orthogonal, rng)?;
 
     println!("Orthogonal matrix Q (3x3):");
     printmatrix(&orthomatrix);
@@ -166,7 +166,7 @@ fn demo_correlationmatrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
     println!("5. Correlation Matrix");
     println!("--------------------");
 
-    let corrmatrix = randommatrix::<f64>(5, 5, MatrixType::Correlation, &mut rng)?;
+    let corrmatrix = randommatrix(5, 5, MatrixType::Correlation, rng)?;
 
     println!("Correlation matrix (5x5):");
     printmatrix(&corrmatrix);
@@ -215,7 +215,7 @@ fn demo_sparsematrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
     println!("6. Sparse Matrix");
     println!("---------------");
 
-    let sparsematrix = randommatrix::<f64>(
+    let sparsematrix = randommatrix(
         6,
         8,
         MatrixType::Sparse {
@@ -225,7 +225,7 @@ fn demo_sparsematrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
                 std_dev: 1.0,
             },
         },
-        &mut rng,
+        rng,
     )?;
 
     println!("Sparse matrix (6x8, density=0.2):");
@@ -251,23 +251,23 @@ fn demo_complex_matrices<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
     println!("------------------");
 
     // General complex matrix
-    let complexmatrix = random_complexmatrix::<f64>(
+    let complexmatrix = random_complexmatrix(
         3,
         3,
         Distribution1D::StandardNormal,
         Distribution1D::StandardNormal,
-        &mut rng,
+        rng,
     )?;
 
     println!("Complex matrix (3x3):");
     print_complexmatrix(&complexmatrix);
 
     // Hermitian matrix
-    let hermitian = random_hermitian::<f64>(
+    let hermitian = random_hermitian(
         4,
         Distribution1D::StandardNormal,
         Distribution1D::Uniform { a: -0.5, b: 0.5 },
-        &mut rng,
+        rng,
     )?;
 
     println!("\nHermitian matrix (4x4):");

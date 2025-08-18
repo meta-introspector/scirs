@@ -4,7 +4,7 @@
 //! including neuromorphic adaptation and quantum-inspired optimization.
 
 use ndarray::Array1;
-use scirs2__transform::{
+use scirs2_transform::{
     auto_feature_engineering::DatasetMetaFeatures, error::Result, AdvancedNeuromorphicProcessor,
     AdvancedQuantumOptimizer,
 };

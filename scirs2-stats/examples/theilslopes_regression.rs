@@ -66,8 +66,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut chart = ChartBuilder::on(&root)
         .caption("Theil-Sen vs OLS Regression", ("sans-serif", 30))
         .margin(10)
-        .x_label_areasize(30)
-        .y_label_areasize(40)
+        .x_label_area_size(30)
+        .y_label_area_size(40)
         .build_cartesian_2d(x_range, y_range)?;
 
     chart.configure_mesh().x_desc("X").y_desc("Y").draw()?;

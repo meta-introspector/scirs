@@ -102,7 +102,7 @@ pub struct Swt2dResult {
 /// use scirs2_signal::swt2d::swt2d_decompose;
 ///
 /// // Create a simple 4x4 "image"
-/// let data = Array2::fromshape_vec((4, 4), vec![
+/// let data = Array2::from_shape_vec((4, 4), vec![
 ///     1.0, 2.0, 3.0, 4.0,
 ///     5.0, 6.0, 7.0, 8.0,
 ///     9.0, 10.0, 11.0, 12.0,
@@ -369,7 +369,7 @@ where
 /// use scirs2_signal::swt2d::{swt2d_decompose, swt2d_reconstruct};
 ///
 /// // Create a simple "image"
-/// let data = Array2::fromshape_vec((4, 4), vec![
+/// let data = Array2::from_shape_vec((4, 4), vec![
 ///     1.0, 2.0, 3.0, 4.0,
 ///     5.0, 6.0, 7.0, 8.0,
 ///     9.0, 10.0, 11.0, 12.0,
@@ -650,7 +650,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
         // Create a simple test image
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (4, 4),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,

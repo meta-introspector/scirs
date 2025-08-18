@@ -694,7 +694,7 @@ mod tests {
         };
         let mut partitioner = DataPartitioner::new(config);
 
-        let data = Array2::fromshape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
         let partitions = partitioner.partition_data(data.view()).unwrap();
 
         assert_eq!(partitions.len(), 2);
@@ -713,7 +713,7 @@ mod tests {
         };
         let mut partitioner = DataPartitioner::new(config);
 
-        let data = Array2::fromshape_vec((99, 2), (0..198).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((99, 2), (0..198).map(|x| x as f64).collect()).unwrap();
         let partitions = partitioner.partition_data(data.view()).unwrap();
 
         assert_eq!(partitions.len(), 3);

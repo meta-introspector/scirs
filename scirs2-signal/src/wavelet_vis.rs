@@ -21,7 +21,7 @@ use ndarray::s;
 // use scirs2_signal::wavelet_vis::arrange_coefficients_2d;
 //
 // // Create a simple test image
-// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 //
 // // Perform 2D DWT decomposition
 // let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
@@ -107,7 +107,7 @@ pub struct WaveletEnergy {
 /// use scirs2_signal::wavelet_vis::arrange_coefficients_2d;
 ///
 /// // Create a simple test image
-/// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 ///
 /// // Perform 2D DWT decomposition
 /// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
@@ -330,7 +330,7 @@ pub fn arrange_multilevel_coefficients_2d(
 /// use scirs2_signal::wavelet_vis::calculate_energy_2d;
 ///
 /// // Create a simple test image
-/// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 ///
 /// // Perform 2D DWT decomposition
 /// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
@@ -406,7 +406,7 @@ pub fn calculate_energy_2d(decomposition: &Dwt2dResult) -> WaveletEnergy {
 /// use scirs2_signal::wavelet_vis::calculate_energy_swt2d;
 ///
 /// // Create a simple test image
-/// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 ///
 /// // Perform 2D SWT decomposition
 /// let decomp = swt2d_decompose(&image, Wavelet::Haar, 1, None).unwrap();
@@ -550,7 +550,7 @@ pub fn calculate_energy_1d(approx: &[f64], detail: &[f64]) -> WaveletEnergy {
 /// use scirs2_signal::wavelet_vis::{normalize_coefficients, NormalizationStrategy};
 ///
 /// // Create a simple test image
-/// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 ///
 /// // Perform 2D DWT decomposition
 /// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
@@ -707,7 +707,7 @@ pub enum NormalizationStrategy {
 /// use scirs2_signal::wavelet_vis::count_nonzero_coefficients;
 ///
 /// // Create a simple test image
-/// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 ///
 /// // Perform 2D DWT decomposition
 /// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
@@ -811,7 +811,7 @@ pub struct WaveletCoeffCount {
 /// use scirs2_signal::wavelet_vis::{create_coefficient_heatmap, NormalizationStrategy, colormaps};
 ///
 /// // Create a simple test image
-/// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 ///
 /// // Perform 2D DWT decomposition
 /// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();

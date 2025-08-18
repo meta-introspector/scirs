@@ -5,12 +5,12 @@
 //! reinforcement learning optimization, and neural architecture search.
 
 use ndarray::Array2;
-use scirs2__cluster::advanced_clustering::AdvancedClusterer;
-use scirs2__cluster::advanced_enhanced_features::{
+use scirs2_cluster::advanced_clustering::AdvancedClusterer;
+use scirs2_cluster::advanced_enhanced_features::{
     DeepAdvancedClusterer, DeepEnsembleCoordinator, GraphNeuralNetworkProcessor,
     NeuralArchitectureSearchEngine, ReinforcementLearningAgent, TransformerClusterEmbedder,
 };
-use scirs2__cluster::advanced_visualization::{
+use scirs2_cluster::advanced_visualization::{
     AdvancedVisualizationConfig, AdvancedVisualizer, QuantumColorScheme, VisualizationExportFormat,
 };
 use statrs::statistics::Statistics;
@@ -372,7 +372,7 @@ fn create_complex_high_dimensional_data() -> Array2<f64> {
         }
     }
 
-    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -392,7 +392,7 @@ fn create_graph_structured_data() -> Array2<f64> {
         data_vec.extend_from_slice(&[x, y, z]);
     }
 
-    Array2::fromshape_vec((n_samples, 3), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, 3), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -415,7 +415,7 @@ fn create_dynamic_clustering_data() -> Array2<f64> {
         data_vec.extend_from_slice(&[base_x + noise_x, base_y + noise_y]);
     }
 
-    Array2::fromshape_vec((n_samples, 2), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, 2), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -435,7 +435,7 @@ fn create_architecture_search_data() -> Array2<f64> {
         }
     }
 
-    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -455,7 +455,7 @@ fn create_ensemble_test_data() -> Array2<f64> {
         data_vec.extend_from_slice(&[x, y, z]);
     }
 
-    Array2::fromshape_vec((n_samples, 3), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, 3), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -478,7 +478,7 @@ fn create_comprehensive_test_data() -> Array2<f64> {
         }
     }
 
-    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -498,7 +498,7 @@ fn create_visualization_data() -> Array2<f64> {
         data_vec.extend_from_slice(&[x, y, z]);
     }
 
-    Array2::fromshape_vec((n_samples, 3), data_vec).unwrap()
+    Array2::from_shape_vec((n_samples, 3), data_vec).unwrap()
 }
 
 #[allow(dead_code)]

@@ -68,8 +68,9 @@ struct CacheKey {
     offset: i32, // Quantized to 1/1000th precision
 }
 
-impl<T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign>
-    CoefficientCache<T>
+impl<
+        T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    > CoefficientCache<T>
 {
     pub fn new(max_entries: usize) -> Self {
         Self {
@@ -217,8 +218,9 @@ pub struct Interpolator1D<T> {
     order: InterpolationOrder,
 }
 
-impl<T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign>
-    Interpolator1D<T>
+impl<
+        T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    > Interpolator1D<T>
 {
     pub fn new(order: InterpolationOrder) -> Self {
         Self {
@@ -344,7 +346,16 @@ impl<
                 let mut results = Vec::with_capacity(chunk.len());
 
                 for &(y, x) in chunk.iter() {
-                    let val = self.interpolate_single(data.view(), y, x, mode, cval)?;
+                    let val = self
+                        .interpolate_single(data.view(), y, x, mode, cval)
+                        .map_err(|e| {
+                            scirs2_core::CoreError::ComputationError(
+                                scirs2_core::ErrorContext::new(format!(
+                                    "interpolation error: {:?}",
+                                    e
+                                )),
+                            )
+                        })?;
                     results.push(val);
                 }
 
@@ -497,7 +508,15 @@ pub fn map_coordinates_optimized<T>(
     cval: Option<T>,
 ) -> NdimageResult<Array1<T>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
 {
     if coordinates.len() != 2 {
         return Err(NdimageError::InvalidInput(
@@ -540,7 +559,15 @@ pub fn zoom_optimized<T>(
     cval: Option<T>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
 {
     if zoom_factors.len() != 2 {
         return Err(NdimageError::InvalidInput(
@@ -553,10 +580,10 @@ where
     let cval = cval.unwrap_or_else(T::zero);
 
     let (h, w) = input.dim();
-    let new_h = (safe_usize_to_float(h)? * zoom_factors[0]).round();
-    let new_h = safe_to_usize(new_h)?;
-    let new_w = (safe_usize_to_float(w)? * zoom_factors[1]).round();
-    let new_w = safe_to_usize(new_w)?;
+    let new_h: T = safe_usize_to_float::<T>(h)? * zoom_factors[0];
+    let new_h = safe_to_usize(new_h.round())?;
+    let new_w: T = safe_usize_to_float::<T>(w)? * zoom_factors[1];
+    let new_w = safe_to_usize(new_w.round())?;
 
     let mut output = Array2::zeros((new_h, new_w));
 
@@ -569,15 +596,26 @@ where
 
         let process_row = |&row: &usize| -> Result<Vec<T>, scirs2_core::CoreError> {
             let mut row_data = Vec::with_capacity(new_w);
-            let y = safe_usize_to_float(row)
-                .map_err(|e| scirs2_core::CoreError::General(e.to_string()))?
-                / zoom_factors[0];
+            let y = safe_usize_to_float::<T>(row).map_err(|e| {
+                scirs2_core::CoreError::ComputationError(scirs2_core::ErrorContext::new(format!(
+                    "Failed to convert row to float: {}",
+                    e
+                )))
+            })? / zoom_factors[0];
 
             for col in 0..new_w {
-                let x = safe_usize_to_float(col)
-                    .map_err(|e| scirs2_core::CoreError::General(e.to_string()))?
-                    / zoom_factors[1];
-                let val = interpolator.interpolate_single(input.view(), y, x, mode, cval)?;
+                let x = safe_usize_to_float::<T>(col).map_err(|e| {
+                    scirs2_core::CoreError::ComputationError(scirs2_core::ErrorContext::new(
+                        format!("Failed to convert col to float: {}", e),
+                    ))
+                })? / zoom_factors[1];
+                let val = interpolator
+                    .interpolate_single(input.view(), y, x, mode, cval)
+                    .map_err(|e| {
+                        scirs2_core::CoreError::ComputationError(scirs2_core::ErrorContext::new(
+                            format!("interpolation error: {:?}", e),
+                        ))
+                    })?;
                 row_data.push(val);
             }
 
@@ -595,10 +633,10 @@ where
     } else {
         // Sequential processing
         for row in 0..new_h {
-            let y = safe_usize_to_float(row)? / zoom_factors[0];
+            let y = safe_usize_to_float::<T>(row)? / zoom_factors[0];
 
             for col in 0..new_w {
-                let x = safe_usize_to_float(col)? / zoom_factors[1];
+                let x = safe_usize_to_float::<T>(col)? / zoom_factors[1];
                 output[[row, col]] =
                     interpolator.interpolate_single(input.view(), y, x, mode, cval)?;
             }
@@ -618,13 +656,17 @@ mod tests {
         let cache: CoefficientCache<f64> = CoefficientCache::new(10);
 
         // Test linear interpolation coefficients
-        let coeffs1 = cache.get_coefficients(InterpolationOrder::Linear, 0.3);
+        let coeffs1 = cache
+            .get_coefficients(InterpolationOrder::Linear, 0.3)
+            .unwrap();
         assert_eq!(coeffs1.len(), 2);
         assert!((coeffs1[0] - 0.7).abs() < 1e-10);
         assert!((coeffs1[1] - 0.3).abs() < 1e-10);
 
         // Test that same coefficients are cached
-        let coeffs2 = cache.get_coefficients(InterpolationOrder::Linear, 0.3);
+        let coeffs2 = cache
+            .get_coefficients(InterpolationOrder::Linear, 0.3)
+            .unwrap();
         assert_eq!(coeffs1, coeffs2);
     }
 

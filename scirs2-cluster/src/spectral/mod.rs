@@ -4,7 +4,7 @@
 //! dimensionality before clustering in fewer dimensions. This method is particularly
 //! useful when the clusters have complex shapes and KMeans would perform poorly.
 
-use ndarray::{s, Array1, Array2, ArrayView2};
+use ndarray::{s, Array1, Array2, ArrayView2, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use scirs2_linalg::{eigh, smallest_k_eigh};
 use std::fmt::Debug;
@@ -309,10 +309,10 @@ impl<F: Float + FromPrimitive> Default for SpectralClusteringOptions<F> {
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2__cluster::spectral::{spectral_clustering, SpectralClusteringOptions, AffinityMode};
+/// use scirs2_cluster::spectral::{spectral_clustering, SpectralClusteringOptions, AffinityMode};
 ///
 /// // Example data with two ring-shaped clusters
-/// let data = Array2::fromshape_vec((20, 2), vec![
+/// let data = Array2::from_shape_vec((20, 2), vec![
 ///     // First ring
 ///     1.0, 0.0,  0.87, 0.5,  0.5, 0.87,  0.0, 1.0,  -0.5, 0.87,
 ///     -0.87, 0.5,  -1.0, 0.0,  -0.87, -0.5,  -0.5, -0.87,  0.0, -1.0,
@@ -344,6 +344,7 @@ where
         + FromPrimitive
         + Debug
         + PartialOrd
+        + ScalarOperand
         + 'static
         + std::iter::Sum
         + std::ops::AddAssign
@@ -351,7 +352,9 @@ where
         + std::ops::MulAssign
         + std::ops::DivAssign
         + std::ops::RemAssign
-        + std::fmt::Display,
+        + std::fmt::Display
+        + Send
+        + Sync,
 {
     let opts = options.unwrap_or_default();
     let n_samples = data.shape()[0];
@@ -544,6 +547,7 @@ where
         + FromPrimitive
         + Debug
         + PartialOrd
+        + ScalarOperand
         + 'static
         + std::iter::Sum
         + std::ops::AddAssign
@@ -551,7 +555,9 @@ where
         + std::ops::MulAssign
         + std::ops::DivAssign
         + std::ops::RemAssign
-        + std::fmt::Display,
+        + std::fmt::Display
+        + Send
+        + Sync,
 {
     // Run spectral clustering with exactly 2 clusters
     let (_, labels) = spectral_clustering(data, 2, options)?;
@@ -566,7 +572,7 @@ mod tests {
     #[test]
     fn test_spectral_clustering_basic() {
         // Create a dataset with 2 well-separated clusters
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![
                 // Cluster 1
@@ -619,7 +625,7 @@ mod tests {
     fn test_spectral_clustering_ring() {
         // Create two concentric ring-shaped clusters
         // This is a more realistic test that validates spectral clustering works
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (16, 2),
             vec![
                 // First ring (8 points)

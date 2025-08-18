@@ -42,9 +42,9 @@ use scirs2_core::validation::clustering::*;
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__cluster::vq::{kmeans_simd, KMeansOptions, SimdOptimizationConfig};
+/// use scirs2_cluster::vq::{kmeans_simd, KMeansOptions, SimdOptimizationConfig};
 ///
-/// let data = Array2::fromshape_vec((6, 2), vec![
+/// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.2, 1.8,
 ///     0.8, 1.9,
@@ -63,7 +63,14 @@ pub fn kmeans_simd<F>(
     simd_config: Option<SimdOptimizationConfig>,
 ) -> Result<(Array2<F>, Array1<usize>, F)>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps + std::iter::Sum,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + std::iter::Sum
+        + std::fmt::Display,
 {
     // Validate inputs
     if k == 0 {
@@ -148,7 +155,14 @@ fn simd_kmeans_single<F>(
     simd_config: &SimdOptimizationConfig,
 ) -> Result<(Array2<F>, Array1<usize>, F)>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps + std::iter::Sum,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + std::iter::Sum
+        + std::fmt::Display,
 {
     let n_samples = data.shape()[0];
     let _n_features = data.shape()[1];
@@ -165,7 +179,7 @@ where
         labels = new_labels;
 
         // Compute new centroids using SIMD
-        let newcentroids = computecentroids_simd(data, &labels, k, Some(simd_config))?;
+        let newcentroids = compute_centroids_simd(data, &labels, k, Some(simd_config))?;
 
         // Check for convergence using SIMD-optimized distance calculation
         let centroid_shift =
@@ -207,7 +221,14 @@ fn compute_centroid_shift_simd<F>(
     simd_config: &SimdOptimizationConfig,
 ) -> Result<F>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps + std::iter::Sum,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + std::iter::Sum
+        + std::fmt::Display,
 {
     let k = oldcentroids.shape()[0];
     let n_features = oldcentroids.shape()[1];
@@ -298,7 +319,14 @@ pub fn mini_batch_kmeans_simd<F>(
     simd_config: Option<SimdOptimizationConfig>,
 ) -> Result<(Array2<F>, Array1<usize>, F)>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps + std::iter::Sum,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + std::iter::Sum
+        + std::fmt::Display,
 {
     let opts = options.unwrap_or_default();
     let simd_config = simd_config.unwrap_or_default();
@@ -324,7 +352,7 @@ where
         }
 
         // Create mini-batch data
-        let mut batch_data = Array2::<F>::zeros((batch_size..n_features));
+        let mut batch_data = Array2::<F>::zeros((batch_size, n_features));
         for (i, &idx) in batch_indices.iter().enumerate() {
             for j in 0..n_features {
                 batch_data[[i, j]] = data[[idx, j]];
@@ -346,10 +374,10 @@ where
             // SIMD-optimized centroid update
             let caps = PlatformCapabilities::detect();
             if caps.simd_available || simd_config.force_simd {
-                let diff = F::simd_sub(&point, &centroid);
+                let diff = F::simd_sub(&point, &centroid.view());
                 let eta_array = Array1::from_elem(n_features, eta);
                 let weighted_diff = F::simd_mul(&diff.view(), &eta_array.view());
-                let updated_centroid = F::simd_add(&centroid, &weighted_diff.view());
+                let updated_centroid = F::simd_add(&centroid.view(), &weighted_diff.view());
 
                 for j in 0..n_features {
                     centroids[[cluster, j]] = updated_centroid[j];
@@ -408,11 +436,19 @@ pub fn kmeans_plus_plus_simd<F>(
     random_seed: Option<u64>,
 ) -> Result<Array2<F>>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps + std::iter::Sum,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + std::iter::Sum
+        + std::fmt::Display,
 {
     let n_samples = data.shape()[0];
     let n_features = data.shape()[1];
-    let simd_config = simd_config.unwrap_or(&SimdOptimizationConfig::default());
+    let default_config = SimdOptimizationConfig::default();
+    let simd_config = simd_config.unwrap_or(&default_config);
 
     if k == 0 || k > n_samples {
         return Err(ClusteringError::InvalidInput(format!(
@@ -427,7 +463,7 @@ where
     // Choose the first centroid randomly
     let first_idx = rng.random_range(0..n_samples);
     for j in 0..n_features {
-        centroids[[0..j]] = data[[first_idx, j]];
+        centroids[[0, j]] = data[[first_idx, j]];
     }
 
     if k == 1 {
@@ -539,7 +575,7 @@ where
 
         // Add selected point as centroid
         for j in 0..n_features {
-            centroids[[i..j]] = data[[selected_idx, j]];
+            centroids[[i, j]] = data[[selected_idx, j]];
         }
     }
 
@@ -554,7 +590,7 @@ mod tests {
 
     #[test]
     fn test_kmeans_simd() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 3.7, 4.2, 3.9, 3.9, 4.2, 4.1],
         )
@@ -574,7 +610,7 @@ mod tests {
 
     #[test]
     fn test_mini_batch_kmeans_simd() {
-        let data = Array2::fromshape_vec((20, 2), (0..40).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((20, 2), (0..40).map(|x| x as f64).collect()).unwrap();
 
         let (centroids, labels, inertia) =
             mini_batch_kmeans_simd(data.view(), 3, 5, None, None).unwrap();
@@ -591,7 +627,7 @@ mod tests {
 
     #[test]
     fn test_kmeans_plus_plus_simd() {
-        let data = Array2::fromshape_vec((10, 2), (0..20).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 2), (0..20).map(|x| x as f64).collect()).unwrap();
 
         let centroids = kmeans_plus_plus_simd(data.view(), 3, None, Some(42)).unwrap();
 
@@ -610,9 +646,9 @@ mod tests {
 
     #[test]
     fn test_compute_centroid_shift_simd() {
-        let oldcentroids = Array2::fromshape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let oldcentroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
 
-        let newcentroids = Array2::fromshape_vec((2, 2), vec![0.1, 0.1, 1.1, 1.1]).unwrap();
+        let newcentroids = Array2::from_shape_vec((2, 2), vec![0.1, 0.1, 1.1, 1.1]).unwrap();
 
         let config = SimdOptimizationConfig::default();
         let shift =

@@ -37,13 +37,13 @@ fn main() {
 /// Create synthetic model weights with normal distribution
 /// (typical for trained neural networks)
 #[allow(dead_code)]
-fn create_model_weights(_inputsize: usize, outputsize: usize) -> Array2<f32> {
+fn create_model_weights(inputsize: usize, outputsize: usize) -> Array2<f32> {
     let mut rng = rand::rng();
     let normal = Normal::new(0.0, 0.1).unwrap(); // Small standard deviation typical for weights
 
     let mut weights = Array2::zeros((outputsize, inputsize));
     for i in 0..outputsize {
-        for j in 0.._inputsize {
+        for j in 0..inputsize {
             weights[[i, j]] = normal.sample(&mut rng);
         }
     }
@@ -124,7 +124,7 @@ fn compare_matmul_accuracy(weights: &Array2<f32>, activations: &Array2<f32>, bit
 
         // Calculate _weights quantization error
         let weights_mse =
-            (_weights - &dequantized_weights).mapv(|x| x * x).sum() / weights.len() as f32;
+            (weights - &dequantized_weights).mapv(|x| x * x).sum() / weights.len() as f32;
 
         // Calibrate and quantize activations
         let activations_params =
@@ -151,7 +151,7 @@ fn compare_matmul_accuracy(weights: &Array2<f32>, activations: &Array2<f32>, bit
             Err(e) => {
                 println!("Error in quantized matmul: {:?}", e);
                 // Fallback to dequantized matmul
-                dequantized_activations.dot(&dequantizedweights.t())
+                dequantized_activations.dot(&dequantized_weights.t())
             }
         };
 
@@ -232,7 +232,7 @@ fn compare_bit_widths_matmul(weights: &Array2<f32>, activations: &Array2<f32>) {
                 let dequantized_weights = dequantize_matrix(&quantized_weights, &weights_params);
                 let dequantized_activations =
                     dequantize_matrix(&quantized_activations, &activations_params);
-                dequantized_activations.dot(&dequantizedweights.t())
+                dequantized_activations.dot(&dequantized_weights.t())
             }
         };
 
@@ -314,7 +314,7 @@ fn demonstrate_mixed_precision(weights: &Array2<f32>, activations: &Array2<f32>)
         let dequantized_weights = dequantize_matrix(&quantized_weights, &weights_params);
         let dequantized_activations =
             dequantize_matrix(&quantized_activations, &activations_params);
-        let mixed_result = dequantized_activations.dot(&dequantizedweights.t());
+        let mixed_result = dequantized_activations.dot(&dequantized_weights.t());
 
         // Calculate matrix multiplication error
         let matmul_mse = (&reference_result - &mixed_result).mapv(|x| x * x).sum()

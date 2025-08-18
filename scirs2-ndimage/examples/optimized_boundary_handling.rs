@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a test image
     let size = 100;
-    let image: Array2<f64> = Array2::fromshape_fn((size, size), |(i, j)| {
+    let image: Array2<f64> = Array2::from_shape_fn((size, size), |(i, j)| {
         ((i as f64 - size as f64 / 2.0).powi(2) + (j as f64 - size as f64 / 2.0).powi(2)).sqrt()
     });
 

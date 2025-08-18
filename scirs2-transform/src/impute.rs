@@ -1281,7 +1281,7 @@ mod tests {
     #[test]
     fn test_simple_imputer_mean() {
         // Create test data with NaN values
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (4, 3),
             vec![
                 1.0,
@@ -1330,7 +1330,7 @@ mod tests {
     #[test]
     fn test_simple_imputer_median() {
         // Create test data with NaN values
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (5, 2),
             vec![
                 1.0,
@@ -1364,7 +1364,7 @@ mod tests {
     fn test_simple_imputer_constant() {
         // Create test data with NaN values
         let data =
-            Array::fromshape_vec((3, 2), vec![1.0, f64::NAN, f64::NAN, 3.0, 4.0, 5.0]).unwrap();
+            Array::from_shape_vec((3, 2), vec![1.0, f64::NAN, f64::NAN, 3.0, 4.0, 5.0]).unwrap();
 
         let mut imputer = SimpleImputer::with_strategy(ImputeStrategy::Constant(99.0));
         let transformed = imputer.fit_transform(&data).unwrap();
@@ -1383,7 +1383,7 @@ mod tests {
     #[test]
     fn test_missing_indicator() {
         // Create test data with NaN values
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (3, 4),
             vec![
                 1.0,
@@ -1428,7 +1428,7 @@ mod tests {
     #[test]
     fn test_imputer_errors() {
         // Test error when all values are missing in a feature
-        let data = Array::fromshape_vec((2, 2), vec![f64::NAN, 1.0, f64::NAN, 2.0]).unwrap();
+        let data = Array::from_shape_vec((2, 2), vec![f64::NAN, 1.0, f64::NAN, 2.0]).unwrap();
 
         let mut imputer = SimpleImputer::with_strategy(ImputeStrategy::Mean);
         assert!(imputer.fit(&data).is_err());
@@ -1442,7 +1442,7 @@ mod tests {
         // [4.0, NaN, 6.0]
         // [7.0, 8.0, NaN]
         // [10.0, 11.0, 12.0]
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (4, 3),
             vec![
                 1.0,
@@ -1483,7 +1483,7 @@ mod tests {
     #[test]
     fn test_knn_imputer_simple_case() {
         // Simple test case where neighbors are easy to determine
-        let data = Array::fromshape_vec((3, 2), vec![1.0, 1.0, f64::NAN, 2.0, 3.0, 3.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![1.0, 1.0, f64::NAN, 2.0, 3.0, 3.0]).unwrap();
 
         let mut imputer = KNNImputer::with_n_neighbors(2);
         let transformed = imputer.fit_transform(&data).unwrap();
@@ -1497,7 +1497,7 @@ mod tests {
     #[test]
     fn test_knn_imputer_manhattan_distance() {
         let data =
-            Array::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, f64::NAN, 2.0, 2.0, 10.0, 10.0])
+            Array::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, f64::NAN, 2.0, 2.0, 10.0, 10.0])
                 .unwrap();
 
         let mut imputer = KNNImputer::new(
@@ -1518,13 +1518,13 @@ mod tests {
     #[test]
     fn test_knn_imputer_validation_errors() {
         // Test insufficient samples
-        let small_data = Array::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let small_data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
         let mut imputer = KNNImputer::with_n_neighbors(5); // More neighbors than samples
         assert!(imputer.fit(&small_data).is_err());
 
         // Test transform without fit
         let data =
-            Array::fromshape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+            Array::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
         let unfitted_imputer = KNNImputer::with_n_neighbors(2);
         assert!(unfitted_imputer.transform(&data).is_err());
     }
@@ -1532,7 +1532,7 @@ mod tests {
     #[test]
     fn test_knn_imputer_no_missing_values() {
         // Test data with no missing values
-        let data = Array::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 
         let mut imputer = KNNImputer::with_n_neighbors(2);
         let transformed = imputer.fit_transform(&data).unwrap();
@@ -1558,7 +1558,7 @@ mod tests {
     #[test]
     fn test_knn_imputer_multiple_missing_features() {
         // Test sample with multiple missing features
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (4, 3),
             vec![
                 1.0,
@@ -1593,7 +1593,7 @@ mod tests {
         // Dataset with correlated features:
         // Feature 0: [1.0, 2.0, 3.0, NaN]
         // Feature 1: [2.0, 4.0, NaN, 8.0] (roughly 2 * feature 0)
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (4, 2),
             vec![1.0, 2.0, 2.0, 4.0, 3.0, f64::NAN, f64::NAN, 8.0],
         )
@@ -1628,7 +1628,7 @@ mod tests {
     #[test]
     fn test_iterative_imputer_no_missing_values() {
         // Test with data that has no missing values
-        let data = Array::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 
         let mut imputer = IterativeImputer::with_defaults();
         let transformed = imputer.fit_transform(&data).unwrap();
@@ -1644,7 +1644,7 @@ mod tests {
     #[test]
     fn test_iterative_imputer_convergence() {
         // Test with data that should converge quickly
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (5, 3),
             vec![
                 1.0,
@@ -1686,7 +1686,7 @@ mod tests {
 
     #[test]
     fn test_iterative_imputer_different_strategies() {
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (4, 2),
             vec![1.0, f64::NAN, 2.0, 4.0, 3.0, 6.0, f64::NAN, 8.0],
         )
@@ -1723,12 +1723,12 @@ mod tests {
     fn test_iterative_imputer_errors() {
         // Test error when not fitted
         let imputer = IterativeImputer::with_defaults();
-        let test_data = Array::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let test_data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
         assert!(imputer.transform(&test_data).is_err());
 
         // Test error when all values are missing in a feature
         let bad_data =
-            Array::fromshape_vec((3, 2), vec![f64::NAN, 1.0, f64::NAN, 2.0, f64::NAN, 3.0])
+            Array::from_shape_vec((3, 2), vec![f64::NAN, 1.0, f64::NAN, 2.0, f64::NAN, 3.0])
                 .unwrap();
         let mut imputer = IterativeImputer::with_defaults();
         assert!(imputer.fit(&bad_data).is_err());
@@ -1737,13 +1737,13 @@ mod tests {
     #[test]
     fn test_simple_regressor() {
         // Test the internal SimpleRegressor
-        let x = Array::fromshape_vec((3, 2), vec![1.0, 2.0, 2.0, 3.0, 3.0, 4.0]).unwrap();
+        let x = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 2.0, 3.0, 3.0, 4.0]).unwrap();
         let y = Array::from_vec(vec![5.0, 8.0, 11.0]); // y = 2*x1 + x2 + 1
 
         let mut regressor = SimpleRegressor::new(true, 1e-6);
         regressor.fit(&x, &y).unwrap();
 
-        let test_x = Array::fromshape_vec((2, 2), vec![4.0, 5.0, 5.0, 6.0]).unwrap();
+        let test_x = Array::from_shape_vec((2, 2), vec![4.0, 5.0, 5.0, 6.0]).unwrap();
         let predictions = regressor.predict(&test_x).unwrap();
 
         // Check that predictions are reasonable

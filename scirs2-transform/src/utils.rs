@@ -659,7 +659,7 @@ mod tests {
     #[test]
     fn test_data_quality_score() {
         let good_data =
-            Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+            Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let quality = StatUtils::data_quality_score(&good_data.view()).unwrap();
         assert!(quality > 0.5); // Should have reasonable quality
 

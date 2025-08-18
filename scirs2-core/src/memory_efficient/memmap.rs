@@ -638,7 +638,7 @@ where
             }
         };
 
-        // No need to create a separate dimension object - use the fromshape_vec method on Array directly
+        // No need to create a separate dimension object - use the from_shape_vec method on Array directly
         // This approach works because we're not trying to use the dimension directly
         let shape_vec = self.shape.clone();
 

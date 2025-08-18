@@ -615,7 +615,7 @@ fn apply_quantum_stdp_learning(
             if let Some(&last_spike_time) = neuron.classical_neuron.spike_times.back() {
                 if current_time.saturating_sub(last_spike_time) < config.neuromorphic.stdp_window {
                     let stdp_strength = config.neuromorphic.learning_rate
-                        * (-(current_time - last_spike_time) as f64
+                        * (-((current_time - last_spike_time) as f64)
                             / config.neuromorphic.stdp_window as f64)
                             .exp();
 
@@ -653,7 +653,8 @@ fn quantum_network_memory_consolidation(
 
             // Apply consolidation to quantum states
             if neuron.quantum_memory.len() > 1 {
-                let mut consolidated_amplitudes = Array1::zeros(config.quantumstates_per_neuron);
+                let mut consolidated_amplitudes: Array1<Complex<f64>> =
+                    Array1::zeros(config.quantumstates_per_neuron);
 
                 for memorystate in &neuron.quantum_memory {
                     for (i, &amplitude) in memorystate.iter().enumerate() {
@@ -1303,7 +1304,7 @@ where
 
     // Calculate integrated information Φ
     let mut total_phi = 0.0;
-    let mut phi_processedimage = Array2::zeros((height, width));
+    let mut phi_processedimage = Array2::<f64>::zeros((height, width));
 
     // Analyze each possible bipartition of the system
     for partition_size in 1..=((height * width) / 2) {
@@ -1333,14 +1334,15 @@ where
     total_phi /= calculate_num_bipartitions(height * width) as f64;
 
     // Convert back to output format
+    let mut result = Array2::<T>::zeros((height, width));
     for y in 0..height {
         for x in 0..width {
-            phi_processedimage[(y, x)] = T::from_f64(phi_processedimage[(y, x)])
+            result[(y, x)] = T::from_f64(phi_processedimage[(y, x)])
                 .ok_or_else(|| NdimageError::ComputationError("Φ conversion failed".to_string()))?;
         }
     }
 
-    Ok((phi_processedimage, total_phi))
+    Ok((result, total_phi))
 }
 
 /// Predictive Coding Hierarchy
@@ -1521,9 +1523,9 @@ where
     }
 
     // Calculate global meta-cognitive state
-    let global_confidence = confidence_map.mean().unwrap_or(0.0);
-    let global_effort = effort_map.mean().unwrap_or(0.0);
-    let global_error_monitoring = error_monitoring_map.mean().unwrap_or(0.0);
+    let global_confidence = confidence_map.mean();
+    let global_effort = effort_map.mean();
+    let global_error_monitoring = error_monitoring_map.mean();
 
     // Self-awareness index: how aware is the system of its own processing?
     let self_awareness_index = calculate_self_awareness_index(
@@ -1924,7 +1926,7 @@ fn calculate_prediction_error(
 ) -> NdimageResult<f64> {
     let diff = actual - predicted;
     let squared_error = diff.mapv(|x| x * x);
-    Ok(squared_error.mean().unwrap_or(0.0))
+    Ok(squared_error.mean())
 }
 
 #[allow(dead_code)]
@@ -3064,7 +3066,12 @@ where
     // Extract insights
     let insights = extract_hybrid_insights(&corrected_result, &hybrid_processor, hybrid_config)?;
 
-    Ok((corrected_result.processedimage, insights))
+    // Convert back to generic type T
+    let result_array = corrected_result
+        .processedimage
+        .mapv(|v| T::from_f64(v).unwrap_or(T::zero()));
+
+    Ok((result_array, insights))
 }
 
 /// Quantum-Classical Hybrid Configuration

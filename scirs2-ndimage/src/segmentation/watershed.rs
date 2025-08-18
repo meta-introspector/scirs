@@ -156,7 +156,9 @@ where
         }
 
         // Determine the label for this point
-        if let Some((most_common_label_)) = neighbor_labels.iter().max_by_key(|&(_, count)| count) {
+        if let Some((most_common_label_, _)) =
+            neighbor_labels.iter().max_by_key(|&(_, count)| count)
+        {
             output[[r, c]] = *most_common_label_;
 
             // Add new neighbors to the queue
@@ -383,7 +385,7 @@ where
 
         // If we have labeled neighbors, assign this pixel to the most frequent label
         if !labels.is_empty() {
-            let (most_common_label_) = labels.iter().max_by_key(|&(_, count)| count).unwrap();
+            let (most_common_label_, _) = labels.iter().max_by_key(|&(_, count)| count).unwrap();
 
             output[[r, c]] = *most_common_label_;
 

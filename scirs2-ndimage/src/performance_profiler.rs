@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use ndarray::{Array, ArrayView, Dimension};
+use ndarray::{Array, ArrayView, Dimension, IxDyn};
 use num_traits::{Float, FromPrimitive};
 
 use crate::error::NdimageResult;
@@ -377,7 +377,7 @@ impl PerformanceProfiler {
     }
 
     /// Benchmark specific operation with various array sizes
-    pub fn benchmark_operation<F, T, D>(
+    pub fn benchmark_operation<F, T>(
         &self,
         operation_name: &str,
         operation: F,
@@ -385,9 +385,8 @@ impl PerformanceProfiler {
         iterations: usize,
     ) -> NdimageResult<BenchmarkResults>
     where
-        F: Fn(&ArrayView<T, D>) -> NdimageResult<Array<T, D>>,
+        F: Fn(&ArrayView<T, IxDyn>) -> NdimageResult<Array<T, IxDyn>>,
         T: Float + FromPrimitive + Clone + Default,
-        D: Dimension,
     {
         let mut results = Vec::new();
 

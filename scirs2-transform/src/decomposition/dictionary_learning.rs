@@ -455,7 +455,7 @@ mod tests {
             }
         }
 
-        let x = Array::fromshape_vec((n_samples, n_features), data).unwrap();
+        let x = Array::from_shape_vec((n_samples, n_features), data).unwrap();
 
         let mut dict_learning = DictionaryLearning::new(10, 0.1)
             .with_max_iter(50)

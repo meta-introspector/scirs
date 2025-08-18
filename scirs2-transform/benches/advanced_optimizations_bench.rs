@@ -9,7 +9,7 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Through
 use ndarray::Array2;
 use ndarray_rand::rand::distributions::Uniform;
 use ndarray_rand::RandomExt;
-use scirs2__transform::*;
+use scirs2_transform::*;
 use std::hint::black_box;
 
 const SAMPLE_SIZES: &[usize] = &[100, 1000, 10_000];
@@ -142,19 +142,19 @@ fn bench_enhanced_pca(c: &mut Criterion) {
                 },
             );
 
-            // Optimized PCA (memory pool)
-            group.bench_with_input(
-                BenchmarkId::new("AdvancedFast", format!("{}x{}", n_samples, n_features)),
-                &data,
-                |b_data| {
-                    let mut advanced_pca =
-                        AdvancedFastPCA::new(n_components, n_samples, n_features);
-                    b.iter(|| {
-                        // Note: This would need the fitting implementation to be complete
-                        let _stats = advanced_pca.performance_stats();
-                    });
-                },
-            );
+            // Optimized PCA (memory pool) - commented out as AdvancedFastPCA is not implemented
+            // group.bench_with_input(
+            //     BenchmarkId::new("AdvancedFast", format!("{}x{}", n_samples, n_features)),
+            //     &data,
+            //     |b, _data| {
+            //         let mut advanced_pca =
+            //             AdvancedFastPCA::new(n_components, n_samples, n_features);
+            //         b.iter(|| {
+            //             // Note: This would need the fitting implementation to be complete
+            //             let _stats = advanced_pca.performance_stats();
+            //         });
+            //     },
+            // );
         }
     }
 
@@ -221,18 +221,19 @@ fn bench_simd_polynomial_features(c: &mut Criterion) {
 
 /// Benchmark memory pool performance
 #[allow(dead_code)]
-fn bench_memory_pool_performance(c: &mut Criterion) {
-    let mut group = c.benchmark_group("Memory Pool Performance");
+fn bench_memory_pool_performance(_c: &mut Criterion) {
+    // Commented out as AdvancedFastMemoryPool is not implemented
+    // let mut group = c.benchmark_group("Memory Pool Performance");
 
-    let pool = AdvancedFastMemoryPool::new(1000, 100, 4);
+    // let pool = AdvancedFastMemoryPool::new(1000, 100, 4);
 
-    group.bench_function("Memory Pool Stats", |b| {
-        b.iter(|| {
-            let _stats = pool.stats();
-        });
-    });
+    // group.bench_function("Memory Pool Stats", |b| {
+    //     b.iter(|| {
+    //         let _stats = pool.stats();
+    //     });
+    // });
 
-    group.finish();
+    // group.finish();
 }
 
 /// Comprehensive performance comparison

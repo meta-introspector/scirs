@@ -6,6 +6,7 @@
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::*;
+use crate::interpolation::BoundaryMode;
 use ndarray::{Array, ArrayView, ArrayViewMut, Dimension};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
@@ -50,16 +51,18 @@ pub mod scipy_ndimage {
                 .into_dimensionality::<ndarray::Ix2>()
                 .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?;
 
-            let sigma_t = T::from_f64(sigma).ok_or_else(|| {
-                NdimageError::InvalidInput("Cannot convert sigma to target type".to_string())
-            })?;
+            // Convert to f64, apply filter, convert back
+            let input_f64 = input_2d.mapv(|x| x.to_f64().unwrap_or(0.0));
 
-            let result = crate::filters::gaussian_filter(
-                input_2d,
-                sigma_t,
+            let result_f64 = crate::filters::gaussian_filter(
+                &input_f64,
+                sigma,
                 Some(boundary_mode),
-                None, // SciPy doesn't expose threads parameter directly
+                None, // truncate parameter
             )?;
+
+            // Convert back to type T
+            let result = result_f64.mapv(|x| T::from_f64(x).unwrap_or_else(|| T::zero()));
 
             // Convert back to original dimension type
             result.into_dimensionality::<D>().map_err(|_| {
@@ -83,8 +86,17 @@ pub mod scipy_ndimage {
         origin: Option<Vec<isize>>,
     ) -> NdimageResult<Array<T, D>>
     where
-        T: Float + FromPrimitive + Debug + Clone + Send + Sync + PartialOrd,
-        D: Dimension,
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Clone
+            + Send
+            + Sync
+            + PartialOrd
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + 'static,
+        D: Dimension + 'static,
     {
         let boundary_mode = match mode.unwrap_or("reflect") {
             "constant" => BorderMode::Constant,
@@ -107,8 +119,11 @@ pub mod scipy_ndimage {
                 ));
             }
 
-            let result =
-                crate::filters::median_filter(input_2d, &kernel_size, Some(boundary_mode))?;
+            let result = crate::filters::median_filter(
+                &input_2d.to_owned(),
+                &kernel_size,
+                Some(boundary_mode),
+            )?;
 
             result.into_dimensionality::<D>().map_err(|_| {
                 NdimageError::ComputationError("Failed to convert result dimension".to_string())
@@ -130,8 +145,16 @@ pub mod scipy_ndimage {
         origin: Option<Vec<isize>>,
     ) -> NdimageResult<Array<T, D>>
     where
-        T: Float + FromPrimitive + Debug + Clone + Send + Sync,
-        D: Dimension,
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Clone
+            + Send
+            + Sync
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + 'static,
+        D: Dimension + 'static,
     {
         let boundary_mode = match mode.unwrap_or("reflect") {
             "constant" => BorderMode::Constant,
@@ -154,8 +177,12 @@ pub mod scipy_ndimage {
                 ));
             }
 
-            let result =
-                crate::filters::uniform_filter(input_2d, &kernel_size, Some(boundary_mode), None)?;
+            let result = crate::filters::uniform_filter(
+                &input_2d.to_owned(),
+                &kernel_size,
+                Some(boundary_mode),
+                None,
+            )?;
 
             result.into_dimensionality::<D>().map_err(|_| {
                 NdimageError::ComputationError("Failed to convert result dimension".to_string())
@@ -176,8 +203,16 @@ pub mod scipy_ndimage {
         cval: Option<T>,
     ) -> NdimageResult<Array<T, D>>
     where
-        T: Float + FromPrimitive + Debug + Clone + Send + Sync,
-        D: Dimension,
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Clone
+            + Send
+            + Sync
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + 'static,
+        D: Dimension + 'static,
     {
         let boundary_mode = match mode.unwrap_or("reflect") {
             "constant" => BorderMode::Constant,
@@ -193,7 +228,9 @@ pub mod scipy_ndimage {
                 .into_dimensionality::<ndarray::Ix2>()
                 .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?;
 
-            let result = crate::filters::sobel(input_2d, axis, Some(boundary_mode))?;
+            let axis_usize = axis.unwrap_or(0) as usize;
+            let result =
+                crate::filters::sobel(&input_2d.to_owned(), axis_usize, Some(boundary_mode))?;
 
             result.into_dimensionality::<D>().map_err(|_| {
                 NdimageError::ComputationError("Failed to convert result dimension".to_string())
@@ -222,19 +259,32 @@ pub mod scipy_ndimage {
         if D::NDIM == Some(2) {
             let input_2d = input
                 .into_dimensionality::<ndarray::Ix2>()
-                .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?;
+                .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?
+                .to_owned();
+
+            let structure_2d = structure
+                .map(|s| {
+                    s.into_dimensionality::<ndarray::Ix2>()
+                        .ok()
+                        .map(|arr| arr.to_owned())
+                })
+                .flatten();
+            let mask_2d = mask
+                .map(|m| {
+                    m.into_dimensionality::<ndarray::Ix2>()
+                        .ok()
+                        .map(|arr| arr.to_owned())
+                })
+                .flatten();
 
             let result = crate::morphology::binary_erosion(
-                input_2d,
-                structure
-                    .map(|s| s.into_dimensionality::<ndarray::Ix2>().ok())
-                    .flatten(),
-                mask.map(|m| m.into_dimensionality::<ndarray::Ix2>().ok())
-                    .flatten(),
-                None, // output parameter not directly supported
+                &input_2d,
+                structure_2d.as_ref(),
                 iterations,
-                None, // border_value parameter mapping
+                mask_2d.as_ref(),
+                border_value,
                 None, // origin parameter not directly supported
+                brute_force,
             )?;
 
             result.into_dimensionality::<D>().map_err(|_| {
@@ -264,19 +314,32 @@ pub mod scipy_ndimage {
         if D::NDIM == Some(2) {
             let input_2d = input
                 .into_dimensionality::<ndarray::Ix2>()
-                .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?;
+                .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?
+                .to_owned();
+
+            let structure_2d = structure
+                .map(|s| {
+                    s.into_dimensionality::<ndarray::Ix2>()
+                        .ok()
+                        .map(|arr| arr.to_owned())
+                })
+                .flatten();
+            let mask_2d = mask
+                .map(|m| {
+                    m.into_dimensionality::<ndarray::Ix2>()
+                        .ok()
+                        .map(|arr| arr.to_owned())
+                })
+                .flatten();
 
             let result = crate::morphology::binary_dilation(
-                input_2d,
-                structure
-                    .map(|s| s.into_dimensionality::<ndarray::Ix2>().ok())
-                    .flatten(),
-                mask.map(|m| m.into_dimensionality::<ndarray::Ix2>().ok())
-                    .flatten(),
-                None,
+                &input_2d,
+                structure_2d.as_ref(),
                 iterations,
-                None,
-                None,
+                mask_2d.as_ref(),
+                border_value,
+                None, // origin parameter not directly supported
+                brute_force,
             )?;
 
             result.into_dimensionality::<D>().map_err(|_| {
@@ -301,8 +364,16 @@ pub mod scipy_ndimage {
         grid_mode: Option<bool>,
     ) -> NdimageResult<Array<T, D>>
     where
-        T: Float + FromPrimitive + Debug + Clone + Send + Sync,
-        D: Dimension,
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Clone
+            + Send
+            + Sync
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + 'static,
+        D: Dimension + 'static,
     {
         let boundary_mode = match mode.unwrap_or("reflect") {
             "constant" => BorderMode::Constant,
@@ -324,13 +395,50 @@ pub mod scipy_ndimage {
                 ));
             }
 
-            let result = crate::interpolation::zoom(
-                input_2d,
-                &zoom,
-                None, // output shape
-                order,
-                Some(boundary_mode),
-                None, // cval parameter
+            let input_2d = input_2d.to_owned();
+
+            // Use affine_transform for per-axis zooming
+            // Create a diagonal matrix with zoom factors
+            let mut matrix = ndarray::Array2::<T>::zeros((2, 2));
+            matrix[[0, 0]] = T::from_f64(1.0 / zoom[0]).unwrap_or(T::one());
+            matrix[[1, 1]] = T::from_f64(1.0 / zoom[1]).unwrap_or(T::one());
+
+            // Calculate output shape
+            let input_shape = input_2d.shape();
+            let output_shape = vec![
+                (input_shape[0] as f64 * zoom[0]) as usize,
+                (input_shape[1] as f64 * zoom[1]) as usize,
+            ];
+
+            use crate::interpolation::{affine_transform, BoundaryMode, InterpolationOrder};
+
+            let interp_order = order
+                .map(|o| match o {
+                    0 => InterpolationOrder::Nearest,
+                    1 => InterpolationOrder::Linear,
+                    3 => InterpolationOrder::Cubic,
+                    _ => InterpolationOrder::Linear,
+                })
+                .unwrap_or(InterpolationOrder::Linear);
+
+            // Convert BorderMode to BoundaryMode
+            let interp_boundary_mode = match boundary_mode {
+                BorderMode::Constant => BoundaryMode::Constant,
+                BorderMode::Reflect => BoundaryMode::Reflect,
+                BorderMode::Mirror => BoundaryMode::Mirror,
+                BorderMode::Wrap => BoundaryMode::Wrap,
+                BorderMode::Nearest => BoundaryMode::Nearest,
+            };
+
+            let result = affine_transform(
+                &input_2d,
+                &matrix,
+                None, // offset
+                Some(&output_shape),
+                Some(interp_order),
+                Some(interp_boundary_mode),
+                cval,
+                prefilter,
             )?;
 
             result.into_dimensionality::<D>().map_err(|_| {
@@ -356,31 +464,52 @@ pub mod scipy_ndimage {
         prefilter: Option<bool>,
     ) -> NdimageResult<Array<T, D>>
     where
-        T: Float + FromPrimitive + Debug + Clone + Send + Sync,
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Clone
+            + Send
+            + Sync
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + 'static,
         D: Dimension,
     {
         let boundary_mode = match mode.unwrap_or("reflect") {
-            "constant" => BorderMode::Constant,
-            "reflect" => BorderMode::Reflect,
-            "mirror" => BorderMode::Mirror,
-            "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest,
-            _ => BorderMode::Reflect,
+            "constant" => BoundaryMode::Constant,
+            "reflect" => BoundaryMode::Reflect,
+            "mirror" => BoundaryMode::Mirror,
+            "wrap" => BoundaryMode::Wrap,
+            "nearest" => BoundaryMode::Nearest,
+            _ => BoundaryMode::Reflect,
         };
 
         if D::NDIM == Some(2) {
             let input_2d = input
                 .into_dimensionality::<ndarray::Ix2>()
-                .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?;
+                .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?
+                .to_owned();
+
+            // Convert order parameter
+            let interp_order = order.map(|o| {
+                match o {
+                    0 => crate::interpolation::InterpolationOrder::Nearest,
+                    1 => crate::interpolation::InterpolationOrder::Linear,
+                    3 => crate::interpolation::InterpolationOrder::Cubic,
+                    5 => crate::interpolation::InterpolationOrder::Spline,
+                    _ => crate::interpolation::InterpolationOrder::Linear, // Default fallback
+                }
+            });
 
             let result = crate::interpolation::rotate(
-                input_2d,
-                angle,
+                &input_2d,
+                T::from_f64(angle).unwrap_or(T::zero()),
                 None, // axes parameter not directly supported for 2D
-                reshape.unwrap_or(true),
-                None, // output shape
-                order,
+                reshape,
+                interp_order,
                 Some(boundary_mode),
+                None, // cval
+                None, // prefilter
             )?;
 
             result.into_dimensionality::<D>().map_err(|_| {
@@ -405,16 +534,26 @@ pub mod scipy_ndimage {
         if D::NDIM == Some(2) {
             let input_2d = input
                 .into_dimensionality::<ndarray::Ix2>()
-                .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?;
+                .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?
+                .to_owned();
+
+            let structure_2d = structure
+                .map(|s| {
+                    s.into_dimensionality::<ndarray::Ix2>()
+                        .ok()
+                        .map(|arr| arr.to_owned())
+                })
+                .flatten();
 
             let (labeled, num_features) = crate::morphology::label(
-                input_2d,
-                structure
-                    .map(|s| s.into_dimensionality::<ndarray::Ix2>().ok())
-                    .flatten(),
+                &input_2d,
+                structure_2d.as_ref(),
+                None, // connectivity
+                None, // background
             )?;
 
-            let labeled_nd = labeled.into_dimensionality::<D>().map_err(|_| {
+            let labeled_i32 = labeled.mapv(|v| v as i32);
+            let labeled_nd = labeled_i32.into_dimensionality::<D>().map_err(|_| {
                 NdimageError::ComputationError("Failed to convert result dimension".to_string())
             })?;
 
@@ -433,18 +572,31 @@ pub mod scipy_ndimage {
         index: Option<Vec<i32>>,
     ) -> NdimageResult<Vec<f64>>
     where
-        T: Float + FromPrimitive + Debug + Clone + Send + Sync,
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Clone
+            + Send
+            + Sync
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + num_traits::NumAssign
+            + 'static,
         D: Dimension,
     {
         if D::NDIM == Some(2) {
             let input_2d = input
                 .into_dimensionality::<ndarray::Ix2>()
-                .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?;
+                .map_err(|_| NdimageError::InvalidInput("Expected 2D array".to_string()))?
+                .to_owned();
 
             if labels.is_none() && index.is_none() {
                 // Simple center of mass for entire image
-                let com = crate::measurements::center_of_mass(input_2d)?;
-                Ok(com)
+                let com = crate::measurements::center_of_mass(&input_2d)?;
+                // Convert Vec<T> to Vec<f64>
+                let com_f64: Vec<f64> =
+                    com.into_iter().map(|v| v.to_f64().unwrap_or(0.0)).collect();
+                Ok(com_f64)
             } else {
                 // Labeled center of mass not yet implemented in compatibility layer
                 Err(NdimageError::InvalidInput(

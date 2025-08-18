@@ -92,7 +92,7 @@ pub enum GPUMemoryStrategy {
 }
 
 /// Quantum error correction levels
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum QuantumErrorCorrectionLevel {
     /// No error correction
     None,

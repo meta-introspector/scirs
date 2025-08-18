@@ -439,10 +439,10 @@ mod tests {
     #[test]
     fn test_input_validation() {
         let mut validator = ComprehensiveValidator::new();
-        let validimage = Array2::ones((10, 10));
+        let validimage = Array2::<f64>::ones((10, 10));
         assert!(validator.validate_inputimage(validimage.view()).is_ok());
 
-        let smallimage = Array2::ones((1, 1));
+        let smallimage = Array2::<f64>::ones((1, 1));
         assert!(validator.validate_inputimage(smallimage.view()).is_err());
     }
 
@@ -462,7 +462,7 @@ mod tests {
     #[test]
     fn test_quality_score_computation() {
         let validator = ComprehensiveValidator::new();
-        let output = Array2::ones((10, 10));
+        let output = Array2::<f64>::ones((10, 10));
         let quality = validator.compute_quality_score(&output).unwrap();
         assert!(quality > 0.0 && quality <= 1.0);
     }

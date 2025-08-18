@@ -364,28 +364,27 @@ where
     let n_tiles = n.div_ceil(tilesize);
     let k_tiles = k1.div_ceil(tilesize);
 
-    // Iterate over tiles
+    // Optimized cache-friendly tiled matrix multiplication
+    // Use i -> k -> j loop order for better cache locality
     for i_tile in 0..m_tiles {
         let i_start = i_tile * tilesize;
         let i_end = (i_start + tilesize).min(m);
 
-        for j_tile in 0..n_tiles {
-            let j_start = j_tile * tilesize;
-            let j_end = (j_start + tilesize).min(n);
+        for k_tile in 0..k_tiles {
+            let k_start = k_tile * tilesize;
+            let k_end = (k_start + tilesize).min(k1);
 
-            // Iterate over tiles of the k dimension
-            for k_tile in 0..k_tiles {
-                let k_start = k_tile * tilesize;
-                let k_end = (k_start + tilesize).min(k1);
+            for j_tile in 0..n_tiles {
+                let j_start = j_tile * tilesize;
+                let j_end = (j_start + tilesize).min(n);
 
-                // Process the current tile
+                // Process the current tile with optimal cache access pattern
                 for i in i_start..i_end {
-                    for j in j_start..j_end {
-                        let mut sum = F::zero();
-                        for k in k_start..k_end {
-                            sum += a[[i, k]] * b[[k, j]];
+                    for k in k_start..k_end {
+                        let a_ik = a[[i, k]];
+                        for j in j_start..j_end {
+                            result[[i, j]] += a_ik * b[[k, j]];
                         }
-                        result[[i, j]] += sum;
                     }
                 }
             }

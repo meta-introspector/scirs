@@ -4,7 +4,7 @@
 //! - Spatial Dropout: drops entire feature maps (useful for CNNs)
 //! - Feature Dropout: drops specific features across all spatial locations
 
-use ndarray::{Array, Axis, Dimension, ScalarOperand};
+use ndarray::{Array, Axis, Dimension, Ix3, ScalarOperand};
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -315,7 +315,7 @@ mod tests {
         // Check that features are consistently dropped across all positions
         for f in 0..5 {
             let first_batch = masked.index_axis(Axis(0), 0);
-            let first_batch_feature = "first_batch".index_axis(Axis(0), f);
+            let first_batch_feature = first_batch.index_axis(Axis(0), f);
             let first_batch_clone = first_batch_feature.to_owned();
             let is_dropped = first_batch_clone.iter().all(|&x| x == 0.0);
 
@@ -369,7 +369,7 @@ mod tests {
 
         let _penalty_apply = sd.apply(&params, true);
         let penalty_reg =
-            <SpatialDropout<f64> as Regularizer<f64_>>::apply(&sd, &params, &mut gradient).unwrap();
+            <SpatialDropout<f64> as Regularizer<f64, Ix3>>::apply(&sd, &params, &mut gradient).unwrap();
         assert_eq!(penalty_reg, 0.0);
 
         // Gradient should be modified

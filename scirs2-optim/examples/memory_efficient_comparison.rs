@@ -1,8 +1,8 @@
 // Example demonstrating memory-efficient optimizers
 use ndarray::Array2;
-use scirs2__optim::memory_efficient::{InPlaceAdam, InPlaceOptimizer, InPlaceSGD};
-use scirs2__optim::optimizers::{Adam, SGD};
-use scirs2__optim::Optimizer;
+use scirs2_optim::memory_efficient::{InPlaceAdam, InPlaceOptimizer, InPlaceSGD};
+use scirs2_optim::optimizers::{Adam, SGD};
+use scirs2_optim::Optimizer;
 use std::error::Error;
 use std::time::Instant;
 
@@ -159,7 +159,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("\nUtility Functions Demo:");
     println!("----------------------");
 
-    use scirs2__optim::memory_efficient::{clip_inplace, normalize_inplace, scale_inplace};
+    use scirs2_optim::memory_efficient::{clip_inplace, normalize_inplace, scale_inplace};
 
     let mut test_array = Array2::from_elem((3, 3), 2.0);
     println!("Original array:\n{}", test_array);

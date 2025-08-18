@@ -541,7 +541,7 @@ mod tests {
     #[test]
     fn test_umap_basic() {
         // Create a simple dataset
-        let x = Array::fromshape_vec(
+        let x = Array::from_shape_vec(
             (10, 3),
             vec![
                 1.0, 2.0, 3.0, 1.1, 2.1, 3.1, 1.2, 2.2, 3.2, 5.0, 6.0, 7.0, 5.1, 6.1, 7.1, 5.2,

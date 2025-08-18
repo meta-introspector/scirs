@@ -1278,7 +1278,7 @@ mod tests {
 
     #[test]
     fn test_enhanced_standard_scaler() {
-        let data = Array2::fromshape_vec((100, 5), (0..500).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((100, 5), (0..500).map(|x| x as f64).collect()).unwrap();
 
         let mut scaler = EnhancedStandardScaler::new(false, 100);
         let transformed = scaler.fit_transform(&data.view()).unwrap();
@@ -1295,7 +1295,7 @@ mod tests {
     #[test]
     fn test_enhanced_standard_scaler_robust() {
         let mut data =
-            Array2::fromshape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
+            Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
         // Add some outliers
         data[[0, 0]] = 1000.0;
         data[[1, 1]] = -1000.0;
@@ -1314,7 +1314,7 @@ mod tests {
 
     #[test]
     fn test_enhanced_pca() {
-        let data = Array2::fromshape_vec((50, 10), (0..500).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((50, 10), (0..500).map(|x| x as f64).collect()).unwrap();
 
         let mut pca = EnhancedPCA::new(5, true, 100).unwrap();
         let transformed = pca.fit_transform(&data.view()).unwrap();
@@ -1326,7 +1326,7 @@ mod tests {
 
     #[test]
     fn test_enhanced_pca_no_centering() {
-        let data = Array2::fromshape_vec((30, 8), (0..240).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((30, 8), (0..240).map(|x| x as f64).collect()).unwrap();
 
         let mut pca = EnhancedPCA::new(3, false, 100).unwrap();
         let transformed = pca.fit_transform(&data.view()).unwrap();
@@ -1374,7 +1374,7 @@ mod tests {
 
     #[test]
     fn test_optimized_pca_small_data() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (20, 8),
             (0..160)
                 .map(|x| x as f64 + rand::random::<f64>() * 0.1)
@@ -1400,7 +1400,7 @@ mod tests {
     #[test]
     fn test_optimized_pca_large_data() {
         // Test with larger data to trigger block-wise algorithm
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (15000, 600),
             (0..9000000)
                 .map(|x| (x as f64).sin() * 0.01 + (x as f64 / 1000.0).cos())
@@ -1424,7 +1424,7 @@ mod tests {
     #[test]
     fn test_optimized_pca_very_large_data() {
         // Test with very large data to trigger randomized SVD
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (60000, 1200),
             (0..72000000)
                 .map(|x| {
@@ -1451,7 +1451,7 @@ mod tests {
         let pca = AdvancedPCA::new(5, 100, 50);
 
         // Test QR decomposition on a simple matrix
-        let matrix = Array2::fromshape_vec(
+        let matrix = Array2::from_shape_vec(
             (6, 4),
             vec![
                 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 2.0, 3.0, 0.0, 0.0, 1.0, 2.0, 0.0, 0.0, 0.0, 1.0,
@@ -1485,7 +1485,7 @@ mod tests {
         let pca = AdvancedPCA::new(3, 100, 50);
 
         // Test SVD on a known matrix
-        let matrix = Array2::fromshape_vec(
+        let matrix = Array2::from_shape_vec(
             (4, 3),
             vec![3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0],
         )
@@ -1587,7 +1587,7 @@ mod tests {
     #[test]
     fn test_enhanced_standard_scaler_vs_optimized_pca() {
         // Compare enhanced scaler with optimized PCA preprocessing
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (200, 15),
             (0..3000)
                 .map(|x| x as f64 + rand::random::<f64>() * 10.0)
@@ -2465,7 +2465,7 @@ impl SimdMatrixOps {
         let a_view = Array1::from_vec(a_flat).view();
         let b_view = Array1::from_vec(b_flat).view();
         let result_flat = f64::simd_add(&a_view, &b_view);
-        let result = Array2::fromshape_vec(a.dim(), result_flat.to_vec())
+        let result = Array2::from_shape_vec(a.dim(), result_flat.to_vec())
             .map_err(|_| TransformError::ComputationError("Shape mismatch".to_string()))?;
         Ok(result)
     }
@@ -2487,7 +2487,7 @@ impl SimdMatrixOps {
         let a_view = Array1::from_vec(a_flat).view();
         let b_view = Array1::from_vec(b_flat).view();
         let result_flat = f64::simd_sub(&a_view, &b_view);
-        let result = Array2::fromshape_vec(a.dim(), result_flat.to_vec())
+        let result = Array2::from_shape_vec(a.dim(), result_flat.to_vec())
             .map_err(|_| TransformError::ComputationError("Shape mismatch".to_string()))?;
         Ok(result)
     }
@@ -2509,7 +2509,7 @@ impl SimdMatrixOps {
         let a_view = Array1::from_vec(a_flat).view();
         let b_view = Array1::from_vec(b_flat).view();
         let result_flat = f64::simd_mul(&a_view, &b_view);
-        let result = Array2::fromshape_vec(a.dim(), result_flat.to_vec())
+        let result = Array2::from_shape_vec(a.dim(), result_flat.to_vec())
             .map_err(|_| TransformError::ComputationError("Shape mismatch".to_string()))?;
         Ok(result)
     }

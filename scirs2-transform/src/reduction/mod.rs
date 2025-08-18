@@ -871,7 +871,7 @@ mod tests {
     #[test]
     fn test_pca_transform() {
         // Create a simple dataset
-        let x = Array::fromshape_vec(
+        let x = Array::from_shape_vec(
             (4, 3),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
@@ -897,7 +897,7 @@ mod tests {
     #[test]
     fn test_truncated_svd() {
         // Create a simple dataset
-        let x = Array::fromshape_vec(
+        let x = Array::from_shape_vec(
             (4, 3),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
@@ -923,7 +923,7 @@ mod tests {
     #[test]
     fn test_lda() {
         // Create a simple dataset with 2 classes
-        let x = Array::fromshape_vec(
+        let x = Array::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 2.0, 3.0, 3.0, 3.0, 5.0, 4.0, 6.0, 5.0, 7.0, 4.0],
         )
@@ -946,7 +946,7 @@ mod tests {
     #[test]
     fn test_lda_eigen_solver() {
         // Create a simple dataset with 3 classes
-        let x = Array::fromshape_vec(
+        let x = Array::from_shape_vec(
             (9, 2),
             vec![
                 1.0, 2.0, 2.0, 3.0, 3.0, 3.0, // Class 0

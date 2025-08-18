@@ -110,9 +110,9 @@ pub struct PrecisionRequirements {
     /// Relative tolerance for f32
     pub f32_relative_tolerance: f32,
     /// Absolute tolerance for f64
-    pub f64_absolute_tolerance: f64,
+    pub f64absolute_tolerance: f64,
     /// Relative tolerance for f64
-    pub f64_relative_tolerance: f64,
+    pub f64relative_tolerance: f64,
     /// Required significant digits
     pub required_significant_digits: usize,
 }
@@ -166,8 +166,8 @@ impl Default for CrossPlatformConfig {
             precision_requirements: PrecisionRequirements {
                 f32_absolute_tolerance: 1e-6,
                 f32_relative_tolerance: 1e-5,
-                f64_absolute_tolerance: 1e-12,
-                f64_relative_tolerance: 1e-10,
+                f64absolute_tolerance: 1e-12,
+                f64relative_tolerance: 1e-10,
                 required_significant_digits: 6,
             },
             timeout_settings: TimeoutSettings {

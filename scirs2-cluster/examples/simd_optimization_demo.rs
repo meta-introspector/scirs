@@ -4,7 +4,7 @@
 //! comparing performance between standard and SIMD-accelerated implementations.
 
 use ndarray::Array2;
-use scirs2__cluster::vq::{
+use scirs2_cluster::vq::{
     kmeans, kmeans_simd, vq, vq_simd, whiten, whiten_simd, KMeansOptions, SimdOptimizationConfig,
 };
 use std::time::Instant;

@@ -1,6 +1,6 @@
 //! Moment calculation functions for arrays
 
-use ndarray::{Array, Dimension};
+use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::{Float, FromPrimitive, NumAssign};
 use std::fmt::Debug;
 
@@ -146,10 +146,7 @@ where
         // If total mass is zero, return center of array
         let center: Result<Vec<T>, NdimageError> = shape
             .iter()
-            .map(|&dim| {
-                let dim_t = safe_usize_to_float(dim)?;
-                Ok(dim_t / (T::one() + T::one()))
-            })
+            .map(|&dim| safe_usize_to_float::<T>(dim).map(|dim_t| dim_t / (T::one() + T::one())))
             .collect();
         let center = center?;
         return Ok(center);
@@ -166,7 +163,7 @@ where
         if value != T::zero() {
             // Add weighted coordinates
             for (dim, &coord) in idx.as_array_view().iter().enumerate() {
-                let coord_t = safe_usize_to_float(coord)?;
+                let coord_t = safe_usize_to_float::<T>(coord)?;
                 center_of_mass[dim] += coord_t * value;
             }
         }

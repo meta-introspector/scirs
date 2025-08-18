@@ -84,7 +84,7 @@ where
 #[allow(dead_code)]
 pub fn otsu_threshold<T, D>(image: &Array<T, D>, bins: usize) -> NdimageResult<(Array<T, D>, T)>
 where
-    T: Float + NumAssign + std::fmt::Debug + std::ops::DivAssign + 'static,
+    T: Float + NumAssign + std::fmt::Debug + std::ops::DivAssign + FromPrimitive + 'static,
     D: Dimension + 'static,
 {
     let nbins = bins;
@@ -152,12 +152,13 @@ where
             continue;
         }
 
-        let bg_mean = cum_val[i] / safe_usize_to_float(bg_pixels)?;
-        let fg_mean = (cum_val[nbins - 1] - cum_val[i]) / safe_usize_to_float(fg_pixels)?;
+        let bg_mean = cum_val[i] / safe_usize_to_float::<T>(bg_pixels)?;
+        let fg_mean = (cum_val[nbins - 1] - cum_val[i]) / safe_usize_to_float::<T>(fg_pixels)?;
 
         // Calculate inter-class variance
-        let variance =
-            safe_usize_to_float(bg_pixels * fg_pixels)? * (bg_mean - fg_mean) * (bg_mean - fg_mean);
+        let variance = safe_usize_to_float::<T>(bg_pixels * fg_pixels)?
+            * (bg_mean - fg_mean)
+            * (bg_mean - fg_mean);
 
         // Update threshold if variance is higher
         if variance > max_var {
@@ -167,7 +168,7 @@ where
     }
 
     // Convert threshold index back to intensity value
-    let threshold = min_val + safe_usize_to_float(threshold_idx)? * bin_width;
+    let threshold = min_val + safe_usize_to_float::<T>(threshold_idx)? * bin_width;
 
     // Create binary image using the threshold
     let binary = threshold_binary(image, threshold)?;
@@ -219,7 +220,7 @@ pub fn adaptive_threshold<T>(
     c: T,
 ) -> NdimageResult<Array<bool, Ix2>>
 where
-    T: Float + NumAssign + std::fmt::Debug,
+    T: Float + NumAssign + std::fmt::Debug + FromPrimitive,
 {
     // Check block _size (must be odd)
     if block_size % 2 == 0 || block_size < 3 {
@@ -264,10 +265,11 @@ where
                     for (idx, &val) in neighborhood.indexed_iter() {
                         let dist_sq = (idx.0 as isize - center_row as isize).pow(2)
                             + (idx.1 as isize - center_col as isize).pow(2);
-                        let dist = safe_usize_to_float(dist_sq as usize)?.sqrt();
+                        let dist = safe_usize_to_float::<T>(dist_sq as usize)?.sqrt();
 
                         // Gaussian weight
-                        let sigma = safe_usize_to_float(radius)? / safe_f64_to_float::<T>(2.0)?;
+                        let sigma =
+                            safe_usize_to_float::<T>(radius)? / safe_f64_to_float::<T>(2.0)?;
                         let weight =
                             (-dist * dist / (safe_f64_to_float::<T>(2.0)? * sigma * sigma)).exp();
 

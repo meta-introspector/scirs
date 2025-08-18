@@ -1,7 +1,7 @@
 //! Example demonstrating the Leader clustering algorithm
 
 use ndarray::array;
-use scirs2__cluster::{
+use scirs2_cluster::{
     euclidean_distance, leader_clustering, manhattan_distance, LeaderClustering, LeaderNode,
     LeaderTree,
 };

@@ -383,7 +383,9 @@ pub struct InteractiveGraphCuts<T> {
     params: GraphCutsParams,
 }
 
-impl<T: Float + FromPrimitive + Debug> InteractiveGraphCuts<T> {
+impl<T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static>
+    InteractiveGraphCuts<T>
+{
     /// Create new interactive segmentation session
     pub fn new(image: Array2<T>, params: Option<GraphCutsParams>) -> Self {
         let shape = image.dim();

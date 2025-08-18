@@ -378,8 +378,9 @@ where
     use ndarray::IxDyn;
     let dynamic_indices = IxDyn(indices);
 
-    // Access the element at the specified indices
-    match input.get(dynamic_indices) {
+    // Access the element at the specified indices using dynamic view
+    let input_dyn = input.view().into_dyn();
+    match input_dyn.get(dynamic_indices) {
         Some(value) => Ok(*value),
         None => Err(NdimageError::InvalidInput(
             "Unable to access array at the specified indices".into(),
@@ -409,7 +410,7 @@ pub fn interpn<T, D>(
     cval: Option<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::DivAssign + std::ops::AddAssign,
+    T: Float + FromPrimitive + Debug + std::ops::DivAssign + std::ops::AddAssign + 'static,
     D: ndarray::Dimension,
 {
     // Validate inputs

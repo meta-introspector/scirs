@@ -1,8 +1,8 @@
 use ndarray::{Array1, Array2};
 use rand::distr::Uniform;
 use rand::prelude::*;
-use scirs2__cluster::density::optics::{extract_dbscan_clustering, extract_xi_clusters, optics};
-use scirs2__cluster::density::DistanceMetric;
+use scirs2_cluster::density::optics::{extract_dbscan_clustering, extract_xi_clusters, optics};
+use scirs2_cluster::density::DistanceMetric;
 
 #[allow(dead_code)]
 fn main() {
@@ -89,7 +89,7 @@ fn generate_data() -> Array2<f64> {
     }
 
     // Convert to ndarray
-    Array2::fromshape_vec((75, 2), data).unwrap()
+    Array2::from_shape_vec((75, 2), data).unwrap()
 }
 
 #[allow(dead_code)]

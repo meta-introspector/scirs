@@ -161,13 +161,14 @@ where
     // Preprocess image to compute edge map
     let smoothed = gaussian_filter(
         &image.mapv(|x| x.to_f64().unwrap_or(0.0)),
-        &[2.0, 2.0],
-        None,
+        2.0, // Use single sigma value
         None,
         None,
     )?;
 
-    let (gx, gy) = sobel(&smoothed.view(), None)?;
+    // Compute gradients in x and y directions
+    let gx = sobel(&smoothed, 1, None)?; // axis 1 (x-direction)
+    let gy = sobel(&smoothed, 0, None)?; // axis 0 (y-direction)
     let edge_map = (gx.mapv(|x| x * x) + gy.mapv(|x| x * x)).mapv(|x| x.sqrt());
 
     // Compute GVF field
@@ -212,18 +213,20 @@ where
                     // Bilinear interpolation of GVF field
                     let coords = arr2(&[[y, x]]);
                     let u_interp = map_coordinates(
-                        &u.view(),
-                        &coords.view(),
-                        InterpolationOrder::Linear,
+                        &u.to_owned(),
+                        &coords.to_owned().into_dyn(),
+                        Some(1), // order: 1 for linear
                         None,
                         None,
+                        None, // prefilter
                     )?;
                     let v_interp = map_coordinates(
-                        &v.view(),
-                        &coords.view(),
-                        InterpolationOrder::Linear,
+                        &v.to_owned(),
+                        &coords.to_owned().into_dyn(),
+                        Some(1), // order: 1 for linear
                         None,
                         None,
+                        None, // prefilter
                     )?;
 
                     (params.gamma * u_interp[[0]], params.gamma * v_interp[[0]])
@@ -259,7 +262,7 @@ where
         }
 
         // Check convergence
-        let movement = ((_contour.clone() - prev_contour).mapv(|x| x * x))
+        let movement = ((_contour.clone() - prev_contour.clone()).mapv(|x| x * x))
             .sum()
             .sqrt();
         if movement < params.convergence {
@@ -416,13 +419,13 @@ pub fn smooth_contour(
     // Circular padding
     x_padded[0] = x_coords[num_points - 2];
     x_padded[1] = x_coords[num_points - 1];
-    x_padded[num_points + 2] = x_coords[0];
-    x_padded[num_points + 3] = x_coords[1];
+    x_padded[num_points + 2] = x_coords[0usize];
+    x_padded[num_points + 3] = x_coords[1usize];
 
     y_padded[0] = y_coords[num_points - 2];
     y_padded[1] = y_coords[num_points - 1];
-    y_padded[num_points + 2] = y_coords[0];
-    y_padded[num_points + 3] = y_coords[1];
+    y_padded[num_points + 2] = y_coords[0usize];
+    y_padded[num_points + 3] = y_coords[1usize];
 
     // Apply smoothing
     let kernel_size = (smoothing_factor * 3.0) as usize;

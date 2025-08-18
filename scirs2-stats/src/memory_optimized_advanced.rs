@@ -535,7 +535,7 @@ where
                 let j = {
                     use rand::Rng;
                     let mut rng = rand::rng();
-                    rng.random_range(0..total_count)
+                    rng.gen_range(0..total_count)
                 };
                 if j < values.len() {
                     values[j] = value;

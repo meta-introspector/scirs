@@ -491,7 +491,7 @@ mod tests {
     fn test_spectral_embedding_gaussian() {
         // Create a simple 2D dataset with two clusters
         let data = vec![1.0, 1.0, 1.1, 1.1, 1.2, 0.9, 5.0, 5.0, 5.1, 5.1, 4.9, 5.2];
-        let x = Array::fromshape_vec((6, 2), data).unwrap();
+        let x = Array::from_shape_vec((6, 2), data).unwrap();
 
         let mut spectral = SpectralEmbedding::new(2, AffinityMethod::Gaussian);
         let embedding = spectral.fit_transform(&x).unwrap();
@@ -522,7 +522,7 @@ mod tests {
     #[test]
     fn test_spectral_embedding_out_of_sample() {
         let x_train: Array2<f64> = Array::eye(5);
-        let x_test = Array::fromshape_vec(
+        let x_test = Array::from_shape_vec(
             (2, 5),
             vec![0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.1, 0.0],
         )

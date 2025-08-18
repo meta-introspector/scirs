@@ -1114,9 +1114,10 @@ mod tests {
             [13.0, 14.0, 15.0, 16.0]
         ];
 
-        let denoised =
-            wavelet_denoise(&image.view(), WaveletFamily::Haar, 1.0, BorderMode::Nearest)
-                .expect("Failed to denoise with wavelet");
+        let haar_filter =
+            WaveletFilter::new(WaveletFamily::Haar).expect("Failed to create Haar wavelet filter");
+        let denoised = wavelet_denoise(&image.view(), &haar_filter, 1.0, 3, BorderMode::Nearest)
+            .expect("Failed to denoise with wavelet");
 
         // Check that output has same dimensions as input
         assert_eq!(denoised.dim(), image.dim());

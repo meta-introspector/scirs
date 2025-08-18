@@ -463,7 +463,7 @@ mod tests {
     #[test]
     fn test_validate_linkage_matrix_valid() {
         // Create a valid linkage matrix for 4 points
-        let linkage = Array2::fromshape_vec(
+        let linkage = Array2::from_shape_vec(
             (3, 4),
             vec![
                 0.0, 1.0, 0.5, 2.0, // Merge clusters 0 and 1 at distance 0.5
@@ -484,7 +484,7 @@ mod tests {
     fn test_validate_linkage_matrix_wrong_dimensions() {
         // Wrong number of rows
         let linkage =
-            Array2::fromshape_vec((2, 4), vec![0.0, 1.0, 0.5, 2.0, 2.0, 3.0, 0.8, 2.0]).unwrap();
+            Array2::from_shape_vec((2, 4), vec![0.0, 1.0, 0.5, 2.0, 2.0, 3.0, 0.8, 2.0]).unwrap();
 
         let result = validate_linkage_matrix(linkage.view(), 4);
         assert!(result.is_err(), "Wrong dimensions should fail validation");
@@ -492,7 +492,7 @@ mod tests {
 
     #[test]
     fn test_validate_linkage_matrix_negative_distance() {
-        let linkage = Array2::fromshape_vec(
+        let linkage = Array2::from_shape_vec(
             (3, 4),
             vec![
                 0.0, 1.0, -0.5, 2.0, // Negative distance
@@ -507,7 +507,7 @@ mod tests {
 
     #[test]
     fn test_validate_linkage_matrix_self_merge() {
-        let linkage = Array2::fromshape_vec(
+        let linkage = Array2::from_shape_vec(
             (3, 4),
             vec![
                 0.0, 0.0, 0.5, 2.0, // Self-merge
@@ -522,7 +522,7 @@ mod tests {
 
     #[test]
     fn test_validate_monotonic_distances_valid() {
-        let linkage = Array2::fromshape_vec(
+        let linkage = Array2::from_shape_vec(
             (3, 4),
             vec![0.0, 1.0, 0.5, 2.0, 2.0, 3.0, 0.8, 2.0, 4.0, 5.0, 1.2, 4.0],
         )
@@ -534,7 +534,7 @@ mod tests {
 
     #[test]
     fn test_validate_monotonic_distances_invalid() {
-        let linkage = Array2::fromshape_vec(
+        let linkage = Array2::from_shape_vec(
             (3, 4),
             vec![
                 0.0, 1.0, 1.2, 2.0, // Higher distance first
@@ -574,7 +574,7 @@ mod tests {
 
     #[test]
     fn test_validate_cluster_extraction_params() {
-        let linkage = Array2::fromshape_vec(
+        let linkage = Array2::from_shape_vec(
             (3, 4),
             vec![0.0, 1.0, 0.5, 2.0, 2.0, 3.0, 0.8, 2.0, 4.0, 5.0, 1.2, 4.0],
         )

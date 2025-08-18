@@ -417,6 +417,30 @@ struct TreeNode<F: Float> {
     is_leaf: bool,
 }
 
+impl<F: Float + std::fmt::Display> TreeNode<F> {
+    /// Convert this tree node to Newick format string
+    fn to_newick(&self) -> String {
+        if self.is_leaf {
+            format!("{}", self.id)
+        } else {
+            let left_str = if let Some(ref left) = self.left {
+                left.to_newick()
+            } else {
+                "".to_string()
+            };
+            let right_str = if let Some(ref right) = self.right {
+                right.to_newick()
+            } else {
+                "".to_string()
+            };
+            format!(
+                "({}:{},{}:{})",
+                left_str, self.height, right_str, self.height
+            )
+        }
+    }
+}
+
 /// Build the dendrogram tree structure from linkage matrix
 #[allow(dead_code)]
 fn build_dendrogram_tree<F: Float + FromPrimitive + Debug>(
@@ -520,13 +544,13 @@ fn calculate_positions_recursive<F: Float + FromPrimitive>(
         x
     } else {
         let left_x = if let Some(ref left) = node.left {
-            calculate_positions_recursive(left, positions, leaf_counter, orientation)
+            calculate_positions_recursive(left, positions, leaf_counter, _n_samples, orientation)
         } else {
             F::zero()
         };
 
         let right_x = if let Some(ref right) = node.right {
-            calculate_positions_recursive(right, positions, leaf_counter, orientation)
+            calculate_positions_recursive(right, positions, leaf_counter, _n_samples, orientation)
         } else {
             F::zero()
         };
@@ -856,7 +880,7 @@ mod tests {
     #[test]
     fn test_create_dendrogramplot() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0]).unwrap();
 
         let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
         let config = DendrogramConfig::default();
@@ -876,7 +900,7 @@ mod tests {
 
     #[test]
     fn test_color_threshold_auto() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )
@@ -916,7 +940,7 @@ mod tests {
 
     #[test]
     fn test_dendrogram_orientations() {
-        let data = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0]).unwrap();
 
         let linkage_matrix =
             linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
@@ -944,7 +968,7 @@ mod tests {
 
     #[test]
     fn test_custom_labels() {
-        let data = Array2::fromshape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
 
         let linkage_matrix =
             linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
@@ -1176,7 +1200,7 @@ pub mod interactive {
         }
 
         /// Get clusters at a specific cut height
-        pub fn get_clusters_at_height(&selfheight: F) -> Result<Vec<Vec<usize>>> {
+        pub fn get_clusters_at_height(&self, height: F) -> Result<Vec<Vec<usize>>> {
             // Simplified cluster extraction - in a full implementation,
             // this would traverse the dendrogram tree
             Ok(vec![vec![0, 1], vec![2, 3]]) // Placeholder
@@ -1417,6 +1441,7 @@ pub mod animation {
                 colors,
                 legend,
                 bounds,
+                config: plot1.config.clone(),
             })
         }
     }
@@ -1690,7 +1715,7 @@ pub mod export {
     }
 
     /// Export dendrogram to Newick format
-    pub fn export_dendrogram_newick<F: Float + FromPrimitive + Debug>(
+    pub fn export_dendrogram_newick<F: Float + FromPrimitive + Debug + std::fmt::Display>(
         linkage_matrix: &ArrayView2<F>,
         labels: Option<&[String]>,
     ) -> Result<String> {
@@ -1921,7 +1946,7 @@ pub mod export {
 
     /// Export to JSON format
     /// Export dendrogram to Newick format
-    fn export_to_newick<F: Float + FromPrimitive + Debug>(
+    fn export_to_newick<F: Float + FromPrimitive + Debug + std::fmt::Display>(
         linkage_matrix: &ArrayView2<F>,
         labels: Option<&[String]>,
     ) -> Result<String> {
@@ -1940,7 +1965,14 @@ pub mod export {
             } else {
                 format!("node_{}", i)
             };
-            tree_nodes.push(TreeNode::Leaf { id: i, label });
+            tree_nodes.push(TreeNode {
+                id: i,
+                height: F::zero(),
+                left: None,
+                right: None,
+                count: 1,
+                is_leaf: true,
+            });
         }
 
         // Create internal nodes from linkage _matrix
@@ -1952,11 +1984,13 @@ pub mod export {
             let left_child = tree_nodes[left_id].clone();
             let right_child = tree_nodes[right_id].clone();
 
-            let internal_node = TreeNode::Internal {
+            let internal_node = TreeNode {
                 id: n_samples + merge_idx,
-                left: Box::new(left_child),
-                right: Box::new(right_child),
-                distance,
+                height: F::from(distance).unwrap(),
+                left: Some(Box::new(left_child)),
+                right: Some(Box::new(right_child)),
+                count: tree_nodes[left_id].count + tree_nodes[right_id].count,
+                is_leaf: false,
             };
 
             tree_nodes.push(internal_node);
@@ -1973,47 +2007,58 @@ pub mod export {
     fn export_to_json<F: Float + FromPrimitive + Debug>(
         plot: &DendrogramPlot<F>,
     ) -> Result<String> {
-        #[derive(serde::Serialize)]
-        struct JsonBranch {
-            start: (f64, f64),
-            end: (f64, f64),
-            height: f64,
-            cluster_id: usize,
-        }
+        #[cfg(feature = "serde")]
+        {
+            #[derive(serde::Serialize)]
+            struct JsonBranch {
+                start: (f64, f64),
+                end: (f64, f64),
+                height: f64,
+                cluster_id: usize,
+            }
 
-        #[derive(serde::Serialize)]
-        struct JsonPlot {
-            branches: Vec<JsonBranch>,
-            leaves: Vec<Leaf>,
-            colors: Vec<String>,
-            bounds: (f64, f64, f64, f64),
-        }
+            #[derive(serde::Serialize)]
+            struct JsonPlot {
+                branches: Vec<JsonBranch>,
+                leaves: Vec<Leaf>,
+                colors: Vec<String>,
+                bounds: (f64, f64, f64, f64),
+            }
 
-        let json_branches: Vec<JsonBranch> = plot
-            .branches
-            .iter()
-            .map(|b| JsonBranch {
-                start: (b.start.0.to_f64().unwrap(), b.start.1.to_f64().unwrap()),
-                end: (b.end.0.to_f64().unwrap(), b.end.1.to_f64().unwrap()),
-                height: b.height.to_f64().unwrap(),
-                cluster_id: b.cluster_id,
+            let json_branches: Vec<JsonBranch> = plot
+                .branches
+                .iter()
+                .map(|b| JsonBranch {
+                    start: (b.start.0.to_f64().unwrap(), b.start.1.to_f64().unwrap()),
+                    end: (b.end.0.to_f64().unwrap(), b.end.1.to_f64().unwrap()),
+                    height: b.height.to_f64().unwrap(),
+                    cluster_id: b.cluster_id,
+                })
+                .collect();
+
+            let jsonplot = JsonPlot {
+                branches: json_branches,
+                leaves: plot.leaves.clone(),
+                colors: plot.colors.clone(),
+                bounds: (
+                    plot.bounds.0.to_f64().unwrap(),
+                    plot.bounds.1.to_f64().unwrap(),
+                    plot.bounds.2.to_f64().unwrap(),
+                    plot.bounds.3.to_f64().unwrap(),
+                ),
+            };
+
+            serde_json::to_string_pretty(&jsonplot).map_err(|e| {
+                ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e))
             })
-            .collect();
+        }
 
-        let jsonplot = JsonPlot {
-            branches: json_branches,
-            leaves: plot.leaves.clone(),
-            colors: plot.colors.clone(),
-            bounds: (
-                plot.bounds.0.to_f64().unwrap(),
-                plot.bounds.1.to_f64().unwrap(),
-                plot.bounds.2.to_f64().unwrap(),
-                plot.bounds.3.to_f64().unwrap(),
-            ),
-        };
-
-        serde_json::to_string_pretty(&jsonplot)
-            .map_err(|e| ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e)))
+        #[cfg(not(feature = "serde"))]
+        {
+            Err(ClusteringError::InvalidInput(
+                "JSON export requires 'serde' feature to be enabled".to_string(),
+            ))
+        }
     }
 
     /// Export to DOT format for Graphviz
@@ -2106,7 +2151,7 @@ pub mod realtime {
     impl<F: Float> std::fmt::Debug for RealtimeDendrogram<F> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             f.debug_struct("RealtimeDendrogram")
-                .field("currentplot", &self.currentplot)
+                .field("currentplot", &"<Arc<Mutex<Option<DendrogramPlot<F>>>>>")
                 .field("config", &self.config)
                 .field("update_callback", &"<closure>")
                 .field("is_active", &self.is_active)

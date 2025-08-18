@@ -25,7 +25,7 @@ fn main() -> NdimageResult<()> {
     let originalimage = create_sampleimage(image_size);
 
     // Apply some processing
-    let smoothedimage = gaussian_filter(&originalimage.view(), 2.0, None)?;
+    let smoothedimage = gaussian_filter(&originalimage, 2.0, None, None)?;
     let noisyimage = add_noise(&originalimage);
 
     println!("\n1. Creating Interactive Visualization");
@@ -175,9 +175,9 @@ fn main() -> NdimageResult<()> {
 
 #[allow(dead_code)]
 fn create_sampleimage(size: usize) -> Array2<f64> {
-    Array2::fromshape_fn((_size, size), |(i, j)| {
-        let x = i as f64 / _size as f64;
-        let y = j as f64 / _size as f64;
+    Array2::from_shape_fn((size, size), |(i, j)| {
+        let x = i as f64 / size as f64;
+        let y = j as f64 / size as f64;
 
         // Create an interesting pattern with multiple features
         let wave1 = (x * 10.0).sin() * (y * 10.0).cos();
@@ -190,8 +190,9 @@ fn create_sampleimage(size: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn add_noise(image: &Array2<f64>) -> Array2<f64> {
-    let mut rng = ndarray_rand::rand::rng();
-    image.mapv(|x| x + (ndarray_rand::rand::Rng::gen::<f64>(&mut rng) - 0.5) * 0.1)
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    image.mapv(|x| x + (rng.gen::<f64>() - 0.5) * 0.1)
 }
 
 struct ImageStats {
@@ -207,7 +208,8 @@ fn computeimage_stats(image: &ArrayView2<f64>) -> ImageStats {
     let min = image.iter().cloned().fold(f64::INFINITY, f64::min);
     let max = image.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 
-    let variance = image.mapv(|x| (x - mean).powi(2)).mean().unwrap_or(0.0);
+    let variance_array = image.mapv(|x| (x - mean).powi(2));
+    let variance = variance_array.mean();
     let std_dev = variance.sqrt();
 
     ImageStats {

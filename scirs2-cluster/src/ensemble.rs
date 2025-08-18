@@ -424,7 +424,7 @@ where
                 // Generate random projection matrix using Gaussian random values
                 let mut rng = match self.config.random_seed {
                     Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
-                    None => rand::rngs::StdRng::from_entropy(),
+                    None => rand::rngs::StdRng::seed_from_u64(rand::random()),
                 };
 
                 // Create random projection matrix (n_features x target_dimensions)
@@ -432,8 +432,10 @@ where
                 for i in 0..n_features {
                     for j in 0..*target_dimensions {
                         // Use Gaussian random values for projection matrix
-                        projection_matrix[[i, j]] =
-                            F::from(rng.random::<f64>() * 2.0 - 1.0).unwrap();
+                        let random_val = F::from(rng.random::<f64>()).unwrap();
+                        let two = F::from(2.0).unwrap();
+                        let one = F::from(1.0).unwrap();
+                        projection_matrix[[i, j]] = random_val * two - one;
                     }
                 }
 
@@ -503,12 +505,17 @@ where
             ConsensusMethod::WeightedConsensus => self.weighted_consensus(results, data),
             ConsensusMethod::GraphBased {
                 similarity_threshold,
-            } => self.graph_based_consensus(results, data, *similarity_threshold),
+            } => {
+                let result = self.graph_based_consensus(results, data, *similarity_threshold)?;
+                Ok(result)
+            }
             ConsensusMethod::CoAssociation { threshold } => {
-                self.co_association_consensus(results, data, *threshold)
+                let result = self.co_association_consensus(results, data, *threshold)?;
+                Ok(result)
             }
             ConsensusMethod::EvidenceAccumulation => {
-                self.evidence_accumulation_consensus(results, data)
+                let result = self.evidence_accumulation_consensus(results, data)?;
+                Ok(result)
             }
             ConsensusMethod::Hierarchical { linkage_method } => {
                 self.hierarchical_consensus(results, data, linkage_method)
@@ -730,7 +737,7 @@ where
         let n_samples = data.nrows();
 
         // Build co-association matrix as distance matrix
-        let mut co_association = Array2::zeros((n_samples, n_samples));
+        let mut co_association: Array2<f64> = Array2::zeros((n_samples, n_samples));
 
         for result in results {
             for i in 0..n_samples {
@@ -803,10 +810,9 @@ where
         for i in 0..results.len() {
             for j in (i + 1)..results.len() {
                 // Calculate pairwise diversity using adjusted rand index
-                if let Ok(ari) = adjusted_rand_index(
-                    results[i].labels.mapv(|x| x as usize).view(),
-                    results[j].labels.mapv(|x| x as usize).view(),
-                ) {
+                if let Ok(ari) =
+                    adjusted_rand_index::<f64>(results[i].labels.view(), results[j].labels.view())
+                {
                     total_diversity += 1.0 - ari; // Higher diversity means lower agreement
                     count += 1;
                 }
@@ -1058,7 +1064,7 @@ where
                     Err(_) => {
                         // Fallback: create dummy labels
                         let n_samples = data.nrows();
-                        let labels = Array1::fromshape_fn(n_samples, |i| (i % k) as i32);
+                        let labels = Array1::from_shape_fn(n_samples, |i| (i % k) as i32);
                         Ok(labels)
                     }
                 }
@@ -1085,13 +1091,14 @@ where
                     convergence_iter,
                     preference: None, // Use default (median of similarities)
                     affinity: "euclidean".to_string(),
+                    max_affinity_iterations: max_iter, // Use same as max_iter
                 };
 
                 match affinity_propagation(data.view(), false, Some(options)) {
                     Ok((_, labels)) => Ok(labels),
                     Err(_) => {
                         // Fallback: create dummy labels
-                        Ok(Array1::zeros(data.nrows()).mapv(|_| 0))
+                        Ok(Array1::zeros(data.nrows()).mapv(|_: f64| 0i32))
                     }
                 }
             }
@@ -1113,7 +1120,7 @@ where
                     None,
                 ) {
                     Ok((_, labels)) => Ok(labels.mapv(|x| x as i32)),
-                    Err(_) => Ok(Array1::zeros(data.nrows()).mapv(|_| 0)),
+                    Err(_) => Ok(Array1::zeros(data.nrows()).mapv(|_: f64| 0i32)),
                 }
             }
         }
@@ -1194,20 +1201,27 @@ where
                 Ok(result.consensus_labels)
             }
             ConsensusMethod::CoAssociation { threshold } => {
-                self.co_association_consensus(results, n_samples, *threshold)
+                let result = self.co_association_consensus(results, data, *threshold)?;
+                Ok(result.consensus_labels)
             }
             ConsensusMethod::EvidenceAccumulation => {
-                self.evidence_accumulation_consensus(results, n_samples)
+                let result = self.evidence_accumulation_consensus(results, data)?;
+                Ok(result.consensus_labels)
             }
             ConsensusMethod::GraphBased {
                 similarity_threshold,
-            } => self.graph_based_consensus(results, n_samples, *similarity_threshold),
+            } => {
+                let result = self.graph_based_consensus(results, data, *similarity_threshold)?;
+                Ok(result.consensus_labels)
+            }
             ConsensusMethod::Hierarchical { linkage_method } => {
-                self.hierarchical_consensus(results, n_samples, linkage_method)
+                let result = self.hierarchical_consensus(results, data, linkage_method)?;
+                Ok(result.consensus_labels)
             }
             _ => {
                 // Fallback to majority voting for any other consensus methods
-                self.majority_voting_consensus(results, n_samples)
+                let result = self.majority_voting_consensus(results, data)?;
+                Ok(result.consensus_labels)
             }
         }
     }
@@ -1241,6 +1255,24 @@ where
             diversity_matrix: Array2::eye(results.len()), // Stub implementation
             algorithm_distribution: HashMap::new(),       // Stub implementation
             parameter_diversity: HashMap::new(),          // Stub implementation
+        })
+    }
+
+    /// Calculate consensus statistics for the ensemble
+    #[allow(dead_code)]
+    fn calculate_consensus_statistics(
+        &self,
+        _results: &[ClusteringResult],
+        _consensus_labels: &Array1<i32>,
+    ) -> Result<ConsensusStatistics> {
+        let n_samples = _consensus_labels.len();
+
+        // Stub implementation - in production this would analyze agreement between clusterers
+        Ok(ConsensusStatistics {
+            agreement_matrix: Array2::zeros((n_samples, n_samples)),
+            consensus_strength: Array1::ones(n_samples),
+            cluster_stability: vec![0.5; 10], // Placeholder
+            agreement_counts: Array1::ones(n_samples),
         })
     }
 
@@ -1946,13 +1978,8 @@ pub mod advanced_ensemble {
                 let test_data = data.select(Axis(0), &test_indices);
 
                 // Train base algorithms on fold training data
-                for (alg_idx, algorithm) in self
-                    .config
-                    .stackingconfig
-                    .base_algorithms
-                    .iter()
-                    .enumerate()
-                {
+                let base_algorithms = self.config.stackingconfig.base_algorithms.clone();
+                for (alg_idx, algorithm) in base_algorithms.iter().enumerate() {
                     let labels = self.train_base_algorithm(&train_data, algorithm)?;
                     let test_labels =
                         self.predict_base_algorithm(&test_data, algorithm, &labels)?;
@@ -2154,7 +2181,7 @@ pub mod advanced_ensemble {
                     .max_by(|(_, score_a), (_, score_b)| {
                         score_a.partial_cmp(score_b).unwrap_or(Ordering::Equal)
                     })
-                    .map(|(label_)| label_)
+                    .map(|(label_, _)| label_)
                     .unwrap_or(0);
 
                 consensus[i] = best_label;
@@ -2261,15 +2288,18 @@ pub mod advanced_ensemble {
             let data_f64 = data_view.mapv(|x| x.to_f64().unwrap_or(0.0));
 
             // Use a simple K-means clustering as weak learner
-            let result = crate::vq::kmeans(data_f64.view(), k, None, None, None, None).map_err(|e| {
+            let result = crate::vq::kmeans_with_options(data_f64.view(), k, None).map_err(|e| {
                 ClusteringError::InvalidInput(format!("Weak learner failed: {}", e))
             })?;
 
             let runtime = start_time.elapsed().as_secs_f64();
 
+            // Convert usize labels to i32 for ClusteringResult
+            let labels_i32 = result.1.mapv(|x| x as i32);
+
             // Calculate a simple quality score (silhouette score)
             let quality_score =
-                crate::metrics::silhouette_score(data_f64.view(), result.1.view()).unwrap_or(0.0);
+                crate::metrics::silhouette_score(data_f64.view(), labels_i32.view()).unwrap_or(0.0);
 
             // Create parameters map
             let mut parameters = HashMap::new();
@@ -2277,11 +2307,13 @@ pub mod advanced_ensemble {
             parameters.insert("algorithm".to_string(), "kmeans".to_string());
 
             Ok(ClusteringResult {
-                labels: result.1,
+                labels: labels_i32,
                 algorithm: "weak_kmeans".to_string(),
                 parameters,
                 quality_score,
                 runtime,
+                n_clusters: k,
+                stability_score: None,
             })
         }
 
@@ -2347,7 +2379,7 @@ pub mod advanced_ensemble {
             let data_f64 = data.mapv(|x| x.to_f64().unwrap_or(0.0));
 
             // Calculate per-sample clustering quality to determine misclassification
-            let mut sample_errors = Array1::zeros(n_samples);
+            let mut sample_errors = Array1::<f64>::zeros(n_samples);
 
             // For clustering, we'll use distance to assigned cluster centroid as error measure
             let unique_labels: Vec<i32> = {
@@ -2388,14 +2420,13 @@ pub mod advanced_ensemble {
                 let assigned_label = result.labels[i];
                 let sample_point = data_f64.row(i);
 
-                if let Some((_, centroid)) = centroids
-                    .iter()
-                    .find(|(label, _)| **label == assigned_label)
+                if let Some((_, centroid)) =
+                    centroids.iter().find(|(label, _)| *label == assigned_label)
                 {
                     let distance: f64 = sample_point
                         .iter()
                         .zip(centroid.iter())
-                        .map(|(&x, &c)| (x - c).powi(2))
+                        .map(|(&x, &c): (&f64, &f64)| (x - c).powi(2))
                         .sum::<f64>()
                         .sqrt();
 
@@ -2453,7 +2484,8 @@ pub mod advanced_ensemble {
             Ok(())
         }
 
-        fn combine_boosted_learners(
+        pub fn combine_boosted_learners(
+            &mut self,
             self_learners: &[ClusteringResult],
             _weights: &[f64],
             n_samples: usize,
@@ -2479,7 +2511,8 @@ pub mod advanced_ensemble {
             })
         }
 
-        fn train_base_algorithm(
+        pub fn train_base_algorithm(
+            &mut self,
             self_data: &Array2<F>,
             _algorithm: &ClusteringAlgorithm,
         ) -> Result<Array1<i32>> {
@@ -2495,12 +2528,16 @@ pub mod advanced_ensemble {
             Ok(Array1::zeros(0)) // Stub
         }
 
-        fn train_meta_clustering_algorithm(selfpredictions: &Array2<f64>) -> Result<Array1<i32>> {
+        pub fn train_meta_clustering_algorithm(
+            &mut self,
+            predictions: &Array2<f64>,
+        ) -> Result<Array1<i32>> {
             Ok(Array1::zeros(0)) // Stub
         }
 
-        fn calculate_stacking_consensus_stats(
-            self_labels: &Array1<i32>,
+        pub fn calculate_stacking_consensus_stats(
+            &mut self,
+            labels: &Array1<i32>,
         ) -> Result<ConsensusStatistics> {
             Ok(ConsensusStatistics {
                 agreement_matrix: Array2::zeros((0, 0)),
@@ -2510,8 +2547,9 @@ pub mod advanced_ensemble {
             })
         }
 
-        fn calculate_stacking_diversity_metrics(
-            self_predictions: &Array2<f64>,
+        pub fn calculate_stacking_diversity_metrics(
+            &mut self,
+            predictions: &Array2<f64>,
         ) -> Result<DiversityMetrics> {
             Ok(DiversityMetrics {
                 average_diversity: 0.0,
@@ -2835,7 +2873,7 @@ fn secure_aggregate_results(
         let majority_label = votes
             .into_iter()
             .max_by_key(|(_, count)| *count)
-            .map(|(label_)| label_)
+            .map(|(label_, _)| label_)
             .unwrap_or(0);
 
         consensus_labels[i] = majority_label;
@@ -2914,7 +2952,7 @@ mod tests {
 
     #[test]
     fn test_convenience_functions() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )

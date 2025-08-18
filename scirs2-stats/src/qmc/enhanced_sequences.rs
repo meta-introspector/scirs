@@ -506,7 +506,7 @@ where
 
         // Generate random permutation matrix
         for i in 0..32 {
-            let j = rng.random_range(0..32);
+            let j = rng.gen_range(0..32);
             matrix[[i, j]] = 1;
         }
 

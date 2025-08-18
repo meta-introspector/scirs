@@ -169,12 +169,18 @@ fn parallel_find_closestclusters<
                     distances,
                     n_samples,
                 ),
-                LinkageMethod::Centroid => {
-                    Ok(centroid_linkage(cluster_i, cluster_i, cluster_j, centroids.unwrap()))
-                }
-                LinkageMethod::Median => {
-                    Ok(median_linkage(cluster_i, cluster_i, cluster_j, centroids.unwrap()))
-                }
+                LinkageMethod::Centroid => Ok(centroid_linkage(
+                    cluster_i,
+                    cluster_i,
+                    cluster_j,
+                    centroids.unwrap(),
+                )),
+                LinkageMethod::Median => Ok(median_linkage(
+                    cluster_i,
+                    cluster_i,
+                    cluster_j,
+                    centroids.unwrap(),
+                )),
                 LinkageMethod::Weighted => parallel_weighted_linkage(
                     &clusters[cluster_i],
                     &clusters[cluster_j],
@@ -395,7 +401,7 @@ mod tests {
         let distances = Array1::from(vec![1.0, 2.0, 3.0, 1.5, 2.5, 1.8]);
 
         let result = parallel_single_linkage(&cluster1, &cluster2, &distances, 4);
-        assert!(result >= 0.0);
+        assert!(result.unwrap() >= 0.0);
     }
 
     #[test]
@@ -412,7 +418,7 @@ mod tests {
         let distances = Array1::from(vec![1.0, 2.0, 3.0, 1.5, 2.5, 1.8]);
 
         let result = parallel_complete_linkage(&cluster1, &cluster2, &distances, 4);
-        assert!(result >= 0.0);
+        assert!(result.unwrap() >= 0.0);
     }
 
     #[test]
@@ -429,6 +435,6 @@ mod tests {
         let distances = Array1::from(vec![1.0, 2.0, 3.0, 1.5, 2.5, 1.8]);
 
         let result = parallel_average_linkage(&cluster1, &cluster2, &distances, 4);
-        assert!(result >= 0.0);
+        assert!(result.unwrap() >= 0.0);
     }
 }

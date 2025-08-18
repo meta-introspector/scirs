@@ -7,9 +7,9 @@
 //! - Various initialization methods
 
 use ndarray::{Array1, Array2};
-use scirs2__cluster::metrics::silhouette_score;
-use scirs2__cluster::preprocess::standardize;
-use scirs2__cluster::vq::{
+use scirs2_cluster::metrics::silhouette_score;
+use scirs2_cluster::preprocess::standardize;
+use scirs2_cluster::vq::{
     distance_to_centroids_simd, kmeans_with_options, minibatch_kmeans, pairwise_euclidean_simd,
     parallel_kmeans, weighted_kmeans, KMeansInit, KMeansOptions, MiniBatchKMeansOptions,
     ParallelKMeansOptions, WeightedKMeansOptions,
@@ -80,7 +80,7 @@ fn generate_sample_data() -> Array2<f64> {
         data.push(4.0 + noise_y);
     }
 
-    Array2::fromshape_vec((150, 2), data).unwrap()
+    Array2::from_shape_vec((150, 2), data).unwrap()
 }
 
 #[allow(dead_code)]
@@ -232,7 +232,7 @@ fn demo_simd_distances(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Err
     );
 
     // Create some centroids for distance-to-centroids demo
-    let centroids = Array2::fromshape_vec(
+    let centroids = Array2::from_shape_vec(
         (3, 2),
         vec![
             0.0, 0.0, // Center of cluster 1

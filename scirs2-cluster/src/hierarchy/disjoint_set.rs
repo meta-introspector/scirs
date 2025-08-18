@@ -18,7 +18,7 @@ use std::collections::HashMap;
 /// # Examples
 ///
 /// ```
-/// use scirs2__cluster::hierarchy::DisjointSet;
+/// use scirs2_cluster::hierarchy::DisjointSet;
 ///
 /// let mut ds = DisjointSet::new();
 ///
@@ -53,7 +53,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__cluster::hierarchy::DisjointSet;
+    /// use scirs2_cluster::hierarchy::DisjointSet;
     /// let ds: DisjointSet<i32> = DisjointSet::new();
     /// ```
     pub fn new() -> Self {
@@ -91,7 +91,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__cluster::hierarchy::DisjointSet;
+    /// use scirs2_cluster::hierarchy::DisjointSet;
     /// let mut ds = DisjointSet::new();
     /// ds.make_set(42);
     /// assert!(ds.contains(&42));
@@ -121,7 +121,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__cluster::hierarchy::DisjointSet;
+    /// use scirs2_cluster::hierarchy::DisjointSet;
     /// let mut ds = DisjointSet::new();
     /// ds.make_set(1);
     /// ds.make_set(2);
@@ -172,7 +172,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__cluster::hierarchy::DisjointSet;
+    /// use scirs2_cluster::hierarchy::DisjointSet;
     /// let mut ds = DisjointSet::new();
     /// ds.make_set(1);
     /// ds.make_set(2);
@@ -232,7 +232,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__cluster::hierarchy::DisjointSet;
+    /// use scirs2_cluster::hierarchy::DisjointSet;
     /// let mut ds = DisjointSet::new();
     /// ds.make_set(1);
     /// ds.make_set(2);
@@ -272,7 +272,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__cluster::hierarchy::DisjointSet;
+    /// use scirs2_cluster::hierarchy::DisjointSet;
     /// let mut ds = DisjointSet::new();
     /// assert_eq!(ds.num_sets(), 0);
     ///
@@ -320,7 +320,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__cluster::hierarchy::DisjointSet;
+    /// use scirs2_cluster::hierarchy::DisjointSet;
     /// let mut ds = DisjointSet::new();
     /// ds.make_set(1);
     /// ds.make_set(2);
@@ -359,7 +359,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__cluster::hierarchy::DisjointSet;
+    /// use scirs2_cluster::hierarchy::DisjointSet;
     /// let mut ds = DisjointSet::new();
     /// ds.make_set(1);
     /// ds.make_set(2);
@@ -387,7 +387,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__cluster::hierarchy::DisjointSet;
+    /// use scirs2_cluster::hierarchy::DisjointSet;
     /// let mut ds = DisjointSet::new();
     /// ds.make_set(1);
     /// ds.make_set(2);

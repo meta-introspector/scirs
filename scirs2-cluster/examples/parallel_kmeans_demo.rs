@@ -1,5 +1,5 @@
 use ndarray::Array2;
-use scirs2__cluster::vq::{
+use scirs2_cluster::vq::{
     kmeans_with_options, parallel_kmeans, KMeansOptions, ParallelKMeansOptions,
 };
 use std::time::Instant;
@@ -150,7 +150,7 @@ fn generate_clustered_data(_n_samples: usize, n_features: usize, nclusters: usiz
         }
     }
 
-    Array2::fromshape_vec((n_samples, n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
 }
 
 #[allow(dead_code)]

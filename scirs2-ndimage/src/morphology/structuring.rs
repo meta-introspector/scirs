@@ -240,7 +240,7 @@ pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Ar
         let shape = vec![size; dim];
         let center = (size - 1) as f64 / 2.0;
 
-        let mut structure = Array::<bool>::from_elem(IxDyn(&shape), false);
+        let mut structure = Array::<bool, IxDyn>::from_elem(IxDyn(&shape), false);
 
         // For 2D case
         if dim == 2 {
@@ -266,7 +266,7 @@ pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Ar
         let shape = vec![size; dim];
         let center = (size - 1) as f64 / 2.0;
 
-        let mut structure = Array::<bool>::from_elem(IxDyn(&shape), false);
+        let mut structure = Array::<bool, IxDyn>::from_elem(IxDyn(&shape), false);
 
         // For 2D case
         if dim == 2 {

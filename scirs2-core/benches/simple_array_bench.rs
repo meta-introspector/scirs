@@ -10,7 +10,7 @@ use std::hint::black_box;
 
 #[allow(dead_code)]
 fn bench_array_creation(c: &mut Criterion) {
-    let mut group = c.benchmark_group(array_creation);
+    let mut group = c.benchmark_group("array_creation");
 
     group.bench_function("zeros_1000", |b| {
         b.iter(|| {
@@ -38,7 +38,7 @@ fn bench_array_creation(c: &mut Criterion) {
 
 #[allow(dead_code)]
 fn bench_array_operations(c: &mut Criterion) {
-    let mut group = c.benchmark_group(array_operations);
+    let mut group = c.benchmark_group("array_operations");
 
     let arr1 = Array1::<f64>::random(1000, Uniform::new(0.0, 1.0));
     let arr2 = Array1::<f64>::random(1000, Uniform::new(0.0, 1.0));
@@ -69,7 +69,7 @@ fn bench_array_operations(c: &mut Criterion) {
 
 #[allow(dead_code)]
 fn benchmatrix_operations(c: &mut Criterion) {
-    let mut group = c.benchmark_group(matrix_operations);
+    let mut group = c.benchmark_group("matrix_operations");
 
     let mat1 = Array2::<f64>::random((100, 100), Uniform::new(0.0, 1.0));
     let mat2 = Array2::<f64>::random((100, 100), Uniform::new(0.0, 1.0));

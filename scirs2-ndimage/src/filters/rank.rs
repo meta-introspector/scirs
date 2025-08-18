@@ -348,19 +348,48 @@ where
     // Pad the input array
     let padded_input = pad_array(&input.to_owned(), &pad_width, &mode, None)?;
 
-    // Iterate through each position in the output array
-    for (output_idx, output_elem) in output.indexed_iter_mut() {
-        let output_coords: Vec<usize> = output_idx.into_pattern().as_array_view().to_vec();
+    // Convert to dynamic arrays for easier indexing
+    let input_dyn = input.view().into_dyn();
+    let footprint_dyn = footprint.view().into_dyn();
+    let mut output_dyn = output.view_mut().into_dyn();
+
+    // Iterate through each position in the output array using linear iteration
+    for linear_idx in 0..input.len() {
+        // Convert linear index to multi-dimensional coordinates
+        let output_coords = {
+            let dims = input.shape();
+            let mut coords = Vec::new();
+            let mut remaining = linear_idx;
+
+            for d in (0..dims.len()).rev() {
+                coords.insert(0, remaining % dims[d]);
+                remaining /= dims[d];
+            }
+            coords
+        };
 
         // Collect values within the footprint at this position
         let mut values = Vec::new();
 
-        // Iterate through the footprint
-        for (footprint_idx, &is_active) in footprint.indexed_iter() {
-            if is_active {
-                let footprint_coords: Vec<usize> =
-                    footprint_idx.into_pattern().as_array_view().to_vec();
+        // Iterate through the footprint using linear iteration
+        for footprint_linear_idx in 0..footprint.len() {
+            // Convert footprint linear index to coordinates
+            let footprint_coords = {
+                let dims = footprint.shape();
+                let mut coords = Vec::new();
+                let mut remaining = footprint_linear_idx;
 
+                for d in (0..dims.len()).rev() {
+                    coords.insert(0, remaining % dims[d]);
+                    remaining /= dims[d];
+                }
+                coords
+            };
+
+            // Check if this footprint position is active
+            let is_active = footprint_dyn[ndarray::IxDyn(&footprint_coords)];
+
+            if is_active {
                 // Calculate the corresponding position in the padded input
                 let mut input_coords = Vec::new();
                 for d in 0..input.ndim() {
@@ -368,15 +397,19 @@ where
                     input_coords.push(coord);
                 }
 
-                // Get the value from the padded input
-                let value = padded_input[&*input_coords];
+                // Get the value from the padded input using dynamic indexing
+                let padded_dyn = padded_input.view().into_dyn();
+                let value = padded_dyn[ndarray::IxDyn(&input_coords)];
                 values.push(value);
             }
         }
 
         // Sort values and select the rank-th element
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        *output_elem = values[rank];
+        if !values.is_empty() {
+            values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            let selected_value = values[rank.min(values.len() - 1)];
+            output_dyn[ndarray::IxDyn(&output_coords)] = selected_value;
+        }
     }
 
     Ok(output)

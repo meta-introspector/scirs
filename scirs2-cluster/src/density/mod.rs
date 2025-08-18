@@ -105,10 +105,10 @@ pub enum DistanceMetric {
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2__cluster::density::{dbscan, DistanceMetric};
+/// use scirs2_cluster::density::{dbscan, DistanceMetric};
 ///
 /// // Example data with two clusters and noise
-/// let data = Array2::fromshape_vec((8, 2), vec![
+/// let data = Array2::from_shape_vec((8, 2), vec![
 ///     1.0, 2.0,   // Cluster 1
 ///     1.5, 1.8,   // Cluster 1
 ///     1.3, 1.9,   // Cluster 1

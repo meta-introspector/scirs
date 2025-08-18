@@ -249,7 +249,7 @@ impl SemanticKMeans {
 
         for col_idx in 0..matrix.ncols() {
             let column = matrix.column(col_idx);
-            let mean = column.mean().unwrap_or(0.0);
+            let mean = column.mean();
             let variance =
                 column.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / column.len() as f64;
 
@@ -427,7 +427,7 @@ impl SemanticKMeans {
                 let similarity = self.cosine_similarity(a, b)?;
                 Ok(1.0 - similarity) // Convert similarity to distance
             }
-            SemanticSimilarity::Euclidean => Ok(euclidean_distance(a, b).to_f64().unwrap_or(0.0)),
+            SemanticSimilarity::Euclidean => Ok(euclidean_distance(a, b)),
             SemanticSimilarity::Manhattan => Ok(self.manhattan_distance(a, b)?),
             SemanticSimilarity::Jaccard => {
                 let similarity = self.jaccard_similarity(a, b)?;
@@ -493,8 +493,8 @@ impl SemanticKMeans {
             return Ok(0.0);
         }
 
-        let mean_a = a.mean().unwrap_or(0.0);
-        let mean_b = b.mean().unwrap_or(0.0);
+        let mean_a = a.mean();
+        let mean_b = b.mean();
 
         let mut numerator = 0.0;
         let mut sum_sq_a = 0.0;
@@ -646,7 +646,8 @@ impl SemanticKMeans {
             let mut labels = Array1::zeros(preprocessed.nrows());
 
             for (i, sample) in preprocessed.rows().into_iter().enumerate() {
-                let best_cluster = self.find_closest_centroid(sample, centroids.view())?;
+                let (best_cluster, _distance) =
+                    self.find_closest_centroid(sample, centroids.view())?;
                 labels[i] = best_cluster;
             }
 
@@ -790,7 +791,7 @@ impl SemanticHierarchical {
         }
 
         // Convert to linkage matrix
-        let linkage_matrix = Array2::fromshape_vec(
+        let linkage_matrix = Array2::from_shape_vec(
             (linkage_steps.len(), 4),
             linkage_steps.into_iter().flatten().collect(),
         )
@@ -836,10 +837,10 @@ impl SemanticHierarchical {
                     Ok(1.0 - similarity)
                 }
             }
-            SemanticSimilarity::Euclidean => Ok(euclidean_distance(a, b).to_f64().unwrap_or(0.0)),
+            SemanticSimilarity::Euclidean => Ok(euclidean_distance(a, b)),
             _ => {
                 // For other metrics, use Euclidean as fallback
-                Ok(euclidean_distance(a, b).to_f64().unwrap_or(0.0))
+                Ok(euclidean_distance(a, b))
             }
         }
     }
@@ -860,9 +861,10 @@ pub struct TopicBasedClustering {
 
 impl TopicBasedClustering {
     /// Create a new topic-based clusterer
-    pub fn new(_config: SemanticClusteringConfig, n_topics: usize) -> Self {
+    pub fn new(config: SemanticClusteringConfig, n_topics: usize) -> Self {
         Self {
-            _config_topics: None,
+            config,
+            topics: None,
             document_topic_distributions: None,
             n_topics,
         }
@@ -1080,8 +1082,8 @@ pub fn topic_clustering(
     clusterer.fit(text_repr)?;
 
     let _topics = clusterer
-        ._topics()
-        .ok_or_else(|| ClusteringError::ComputationError("Failed to get _topics".to_string()))?
+        .topics()
+        .ok_or_else(|| ClusteringError::ComputationError("Failed to get topics".to_string()))?
         .clone();
 
     let doc_topics = clusterer
@@ -1106,7 +1108,7 @@ mod tests {
     #[test]
     fn test_semantic_kmeans_basic() {
         // Create sample TF-IDF vectors
-        let vectors = Array2::fromshape_vec(
+        let vectors = Array2::from_shape_vec(
             (4, 3),
             vec![1.0, 0.0, 0.0, 0.9, 0.1, 0.0, 0.0, 0.0, 1.0, 0.0, 0.1, 0.9],
         )
@@ -1147,7 +1149,7 @@ mod tests {
         let config = SemanticClusteringConfig::default();
         let clusterer = SemanticKMeans::new(config);
 
-        let matrix = Array2::fromshape_vec((2, 3), vec![3.0, 4.0, 0.0, 1.0, 2.0, 2.0]).unwrap();
+        let matrix = Array2::from_shape_vec((2, 3), vec![3.0, 4.0, 0.0, 1.0, 2.0, 2.0]).unwrap();
 
         let normalized = clusterer.normalize_vectors(matrix).unwrap();
 
@@ -1161,7 +1163,7 @@ mod tests {
     #[test]
     fn test_topic_clustering_basic() {
         // Create sample document-term matrix
-        let matrix = Array2::fromshape_vec(
+        let matrix = Array2::from_shape_vec(
             (3, 4),
             vec![2.0, 0.0, 1.0, 0.0, 0.0, 3.0, 0.0, 1.0, 1.0, 1.0, 2.0, 1.0],
         )

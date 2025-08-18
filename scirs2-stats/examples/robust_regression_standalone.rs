@@ -136,7 +136,7 @@ fn simple_ransac(x: &[f64], y: &[f64], threshold: f64, ntrials: usize) -> Regres
     let mut best_model = (0.0, 0.0); // (slope, intercept)
     let mut best_inlier_mask = vec![false; n];
 
-    for _ in 0..n_trials {
+    for _ in 0..ntrials {
         // Select 2 random points
         let idx1 = (rng % n as u64) as usize;
         rng = (rng.wrapping_mul(1103515245).wrapping_add(12345)) % 2147483648; // Simple LCG
@@ -237,7 +237,7 @@ fn simple_huber(x: &[f64], y: &[f64], epsilon: f64, maxiter: usize) -> Regressio
         ..
     } = simple_ols(x, y);
 
-    for _ in 0..max_iter {
+    for _ in 0..maxiter {
         let mut numerator = 0.0;
         let mut denominator = 0.0;
 

@@ -607,7 +607,7 @@ fn create_mock_advancedstate(shape: (usize, usize), config: &AdvancedConfig) -> 
         consciousness_amplitudes: Array3::zeros((shape.0, shape.1, config.consciousness_depth)),
         meta_parameters: Array2::zeros((config.advanced_dimensions, config.temporal_window)),
         network_topology: std::sync::Arc::new(std::sync::RwLock::new(
-            scirs2_ndimage::fusion_core::NetworkTopology {
+            scirs2_ndimage::advanced_fusion_algorithms::NetworkTopology {
                 connections: HashMap::new(),
                 nodes: Vec::new(),
                 global_properties: scirs2,

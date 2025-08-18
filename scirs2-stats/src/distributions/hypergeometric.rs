@@ -231,7 +231,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
                 }
 
                 let p_success = success_remaining as f64 / population_remaining as f64;
-                if rng.random_range(0.0..1.0) < p_success {
+                if rng.gen_range(0.0..1.0) < p_success {
                     successes += 1;
                     success_remaining -= 1;
                 } else {

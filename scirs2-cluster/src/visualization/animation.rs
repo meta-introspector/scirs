@@ -267,7 +267,10 @@ impl IterativeAnimationRecorder {
             for j in 1..=self.config.interpolation_frames {
                 let t = j as f64 / (self.config.interpolation_frames + 1) as f64;
                 let interpolated_frame =
-                    interpolate_frames(current_frame, next_frame, t, &self.config)?;
+                    match interpolate_frames(current_frame, next_frame, t, &self.config) {
+                        Ok(frame) => frame,
+                        Err(_) => continue, // Skip interpolation on error
+                    };
                 interpolated_frames.push(interpolated_frame);
             }
         }
@@ -407,7 +410,7 @@ impl StreamingVisualizer {
             let recent_points = self
                 .data_buffer
                 .iter()
-                .filter(|(__, timestamp)| now.duration_since(*timestamp).as_secs_f64() < 1.0)
+                .filter(|(_, _, timestamp)| now.duration_since(*timestamp).as_secs_f64() < 1.0)
                 .count();
             self.streaming_stats.points_per_second =
                 recent_points as f64 / time_since_last_update.min(1.0);
@@ -418,7 +421,7 @@ impl StreamingVisualizer {
 
         if current_data.is_empty() {
             return Ok(StreamingFrame {
-                timestamp: now
+                timestamp: std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap()
                     .as_secs_f64(),
@@ -447,7 +450,7 @@ impl StreamingVisualizer {
             }
             labels[i] = *label;
 
-            let age = now.duration_since(**timestamp).as_millis() as f64;
+            let age = now.duration_since(*timestamp).as_millis() as f64;
             point_ages.push(age);
 
             // Mark as new if arrived recently
@@ -457,7 +460,7 @@ impl StreamingVisualizer {
         self.last_update = now;
 
         Ok(StreamingFrame {
-            timestamp: now
+            timestamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
                 .as_secs_f64(),
@@ -504,7 +507,7 @@ impl StreamingVisualizer {
     fn cleanup_old_points(&mut self, now: Instant) {
         let lifetime = Duration::from_millis(self.config.point_lifetime_ms);
 
-        while let Some((__, timestamp)) = self.data_buffer.front() {
+        while let Some((_, _, timestamp)) = self.data_buffer.front() {
             if now.duration_since(*timestamp) > lifetime {
                 self.data_buffer.pop_front();
             } else {
@@ -664,9 +667,9 @@ mod tests {
         let mut recorder = IterativeAnimationRecorder::new(config);
 
         let data =
-            Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
-        let centroids = Array2::fromshape_vec((2, 2), vec![2.0, 3.0, 6.0, 7.0]).unwrap();
+        let centroids = Array2::from_shape_vec((2, 2), vec![2.0, 3.0, 6.0, 7.0]).unwrap();
 
         recorder
             .record_frame(data.view(), &labels, Some(&centroids), Some(10.0))

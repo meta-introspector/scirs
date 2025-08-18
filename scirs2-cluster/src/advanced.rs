@@ -314,13 +314,14 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
     fn measure_and_decohere(&mut self, temperature: F) -> Result<()> {
         let decoherence = F::from(self.config.decoherence_factor).unwrap();
         let threshold = F::from(self.config.measurement_threshold).unwrap();
+        let quantum_noise = self.quantum_noise();
 
         for quantum_state in &mut self.quantum_states {
             // Apply quantum decoherence
             quantum_state.amplitude = quantum_state.amplitude * decoherence;
 
             // Thermal noise based on temperature
-            let thermal_noise = temperature * self.quantum_noise() * F::from(0.01).unwrap();
+            let thermal_noise = temperature * quantum_noise * F::from(0.01).unwrap();
             quantum_state.phase = quantum_state.phase + thermal_noise;
 
             // Measurement collapse - if probability is high enough, collapse to classical state
@@ -1503,7 +1504,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> TransferLearningClustering<F> {
         }
 
         // Update _centroids
-        let mut new_centroids = Array2::zeros((n_clusters, n_features));
+        let mut new_centroids: Array2<F> = Array2::zeros((n_clusters, n_features));
         let mut cluster_counts = vec![0; n_clusters];
 
         for (point_idx, point) in target_data.rows().into_iter().enumerate() {
@@ -2674,7 +2675,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
         // Normalize state
         let norm = state
             .iter()
-            .map(|x| x.norm().powi(2))
+            .map(|x| x.abs().powi(2))
             .fold(F::zero(), |acc, x| acc + x)
             .sqrt();
         if norm > F::zero() {
@@ -2826,7 +2827,7 @@ mod tests {
 
     #[test]
     fn test_quantum_kmeans_basic() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 5.0, 8.0, 8.0, 8.0, 1.0, 0.6, 9.0, 11.0],
         )
@@ -2848,7 +2849,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_online_clustering_basic() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (8, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 5.0, 8.0, 8.0, 8.0, 1.0, 0.6, 9.0, 11.0, 1.2, 1.9, 8.5, 9.0,
@@ -2888,7 +2889,7 @@ mod tests {
 
     #[test]
     fn test_rl_clustering_basic() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 5.0, 8.0, 8.0, 8.0, 1.0, 0.6, 9.0, 11.0],
         )
@@ -2911,9 +2912,9 @@ mod tests {
     #[test]
     fn test_transfer_learning_basic() {
         let target_data =
-            Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 1.5, 1.8, 5.0, 8.0, 8.0, 8.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 1.8, 5.0, 8.0, 8.0, 8.0]).unwrap();
 
-        let source_centroids = Array2::fromshape_vec((2, 2), vec![1.0, 1.5, 7.0, 9.0]).unwrap();
+        let source_centroids = Array2::from_shape_vec((2, 2), vec![1.0, 1.5, 7.0, 9.0]).unwrap();
 
         let config = TransferLearningConfig {
             adaptation_iterations: 5, // Reduced for testing

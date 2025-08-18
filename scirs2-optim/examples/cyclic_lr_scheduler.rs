@@ -1,7 +1,7 @@
 //! Example demonstrating cyclic learning rate scheduling
 
 use ndarray::Array1;
-use scirs2__optim::{
+use scirs2_optim::{
     optimizers::{Optimizer, SGD},
     schedulers::{CyclicLR, LearningRateScheduler},
 };

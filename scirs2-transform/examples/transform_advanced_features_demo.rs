@@ -7,18 +7,18 @@
 //! - Production monitoring
 
 use ndarray::Array2;
-use scirs2__transform::{auto_feature_engineering::AutoFeatureEngineer, Result};
+use scirs2_transform::{auto_feature_engineering::AutoFeatureEngineer, Result};
 
 #[cfg(feature = "gpu")]
-use scirs2__transform::gpu::GpuPCA;
+use scirs2_transform::gpu::GpuPCA;
 
 #[cfg(feature = "distributed")]
-use scirs2__transform::distributed::{
+use scirs2_transform::distributed::{
     DistributedConfig, DistributedPCA, NodeInfo, PartitioningStrategy,
 };
 
 #[cfg(feature = "monitoring")]
-use scirs2__transform::monitoring::{
+use scirs2_transform::monitoring::{
     AlertConfig, DriftMethod, PerformanceMetrics, TransformationMonitor,
 };
 
@@ -64,7 +64,7 @@ fn demo_automated_feature_engineering(data: &Array2<f64>) -> Result<()> {
     let auto_engineer = AutoFeatureEngineer::new()?;
 
     // Extract meta-features from the dataset
-    let meta_features = auto_engineer.extract_meta_features(&_data.view())?;
+    let meta_features = auto_engineer.extract_meta_features(&data.view())?;
     println!("📈 Dataset meta-features:");
     println!("   - Samples: {}", meta_features.n_samples);
     println!("   - Features: {}", meta_features.n_features);
@@ -76,7 +76,7 @@ fn demo_automated_feature_engineering(data: &Array2<f64>) -> Result<()> {
     println!("   - Outlier ratio: {:.3}", meta_features.outlier_ratio);
 
     // Get transformation recommendations
-    let recommendations = auto_engineer.recommend_transformations(&_data.view())?;
+    let recommendations = auto_engineer.recommend_transformations(&data.view())?;
     println!("\n🎯 Recommended transformations:");
     for (i, config) in recommendations.iter().enumerate() {
         println!(
@@ -222,7 +222,7 @@ fn generate_sample_data(_n_samples: usize, nfeatures: usize) -> Result<Array2<f6
     use ndarray_rand::rand_distr::Normal;
     use ndarray_rand::RandomExt;
 
-    let data = Array2::random((_n_samples, n_features), Normal::new(0.0, 1.0).unwrap());
+    let data = Array2::random((_n_samples, nfeatures), Normal::new(0.0, 1.0).unwrap());
     Ok(data)
 }
 

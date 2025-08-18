@@ -426,23 +426,23 @@ pub enum ErrorMitigationStrategy {
 pub fn enhanced_meta_learning_processing<T>(
     task_data: &[TaskData<T>],
     config: &AdvancedMetaLearningConfig,
-) -> NdimageResult<(Vec<Array2<T>>, MetaLearningInsights)>
+) -> NdimageResult<(Vec<Array2<T>>, MetaLearningInsights<T>)>
 where
-    T: Float + FromPrimitive + Copy + Send + Sync,
+    T: Float + FromPrimitive + Copy + Send + Sync + ndarray::ScalarOperand,
 {
     let mut results = Vec::new();
-    let mut insights = MetaLearningInsights::default();
+    let mut insights = MetaLearningInsights::<T>::default();
 
     for task in task_data {
         // Apply few-shot learning if limited examples
         if task.support_set.len() < config.few_shot.support_set_size {
             let few_shot_result = apply_few_shot_learning(task, config)?;
-            results.push(few_shot_result.processedimage);
+            results.push(few_shot_result.processedimage.clone());
             insights.few_shot_results.push(few_shot_result);
         } else {
             // Apply transfer learning
             let transfer_result = apply_transfer_learning(task, config)?;
-            results.push(transfer_result.processedimage);
+            results.push(transfer_result.processedimage.clone());
             insights.transfer_results.push(transfer_result);
         }
     }
@@ -493,12 +493,12 @@ pub struct TaskMetadata {
 }
 
 /// Meta-Learning Insights
-#[derive(Debug, Clone, Default)]
-pub struct MetaLearningInsights {
+#[derive(Debug, Clone)]
+pub struct MetaLearningInsights<T> {
     /// Few-shot learning results
-    pub few_shot_results: Vec<FewShotResult>,
+    pub few_shot_results: Vec<FewShotResult<T>>,
     /// Transfer learning results
-    pub transfer_results: Vec<TransferResult>,
+    pub transfer_results: Vec<TransferResult<T>>,
     /// Performance improvements
     pub performance_improvements: Vec<String>,
     /// Learning efficiency metrics
@@ -509,11 +509,24 @@ pub struct MetaLearningInsights {
     pub meta_discoveries: Vec<String>,
 }
 
+impl<T> Default for MetaLearningInsights<T> {
+    fn default() -> Self {
+        Self {
+            few_shot_results: Vec::new(),
+            transfer_results: Vec::new(),
+            performance_improvements: Vec::new(),
+            efficiencymetrics: Vec::new(),
+            transfer_effectiveness: Vec::new(),
+            meta_discoveries: Vec::new(),
+        }
+    }
+}
+
 /// Few-Shot Learning Result
 #[derive(Debug, Clone)]
-pub struct FewShotResult {
+pub struct FewShotResult<T> {
     /// Processed image
-    pub processedimage: Array2<f64>,
+    pub processedimage: Array2<T>,
     /// Adaptation steps taken
     pub adaptation_steps: usize,
     /// Final performance
@@ -524,9 +537,9 @@ pub struct FewShotResult {
 
 /// Transfer Learning Result
 #[derive(Debug, Clone)]
-pub struct TransferResult {
+pub struct TransferResult<T> {
     /// Processed image
-    pub processedimage: Array2<f64>,
+    pub processedimage: Array2<T>,
     /// Source domains used
     pub source_domains: Vec<String>,
     /// Transfer effectiveness
@@ -540,13 +553,14 @@ pub struct TransferResult {
 fn apply_few_shot_learning<T>(
     task: &TaskData<T>,
     _config: &AdvancedMetaLearningConfig,
-) -> NdimageResult<FewShotResult>
+) -> NdimageResult<FewShotResult<T>>
 where
-    T: Float + FromPrimitive + Copy,
+    T: Float + FromPrimitive + Copy + ndarray::ScalarOperand,
 {
     // Simplified few-shot learning implementation
     let (height, width) = task.support_set[0].input.dim();
-    let processedimage = Array2::ones((height, width)) * 1.05; // Enhanced processing
+    let enhancement_factor = T::from_f64(1.05).unwrap_or_else(|| T::one());
+    let processedimage = Array2::ones((height, width)) * enhancement_factor; // Enhanced processing
 
     Ok(FewShotResult {
         processedimage,
@@ -560,13 +574,14 @@ where
 fn apply_transfer_learning<T>(
     task: &TaskData<T>,
     _config: &AdvancedMetaLearningConfig,
-) -> NdimageResult<TransferResult>
+) -> NdimageResult<TransferResult<T>>
 where
-    T: Float + FromPrimitive + Copy,
+    T: Float + FromPrimitive + Copy + ndarray::ScalarOperand,
 {
     // Simplified transfer learning implementation
     let (height, width) = task.support_set[0].input.dim();
-    let processedimage = Array2::ones((height, width)) * 1.08; // Enhanced processing
+    let enhancement_factor = T::from_f64(1.08).unwrap_or_else(|| T::one());
+    let processedimage = Array2::ones((height, width)) * enhancement_factor; // Enhanced processing
 
     Ok(TransferResult {
         processedimage,
@@ -577,8 +592,8 @@ where
 }
 
 #[allow(dead_code)]
-fn extract_meta_learning_insights(
-    insights: &mut MetaLearningInsights,
+fn extract_meta_learning_insights<T>(
+    insights: &mut MetaLearningInsights<T>,
     config: &AdvancedMetaLearningConfig,
 ) -> NdimageResult<()> {
     // Extract insights (simplified)
@@ -614,11 +629,11 @@ mod tests {
 
     #[test]
     fn test_few_shot_learning() {
-        let task_data = TaskData {
+        let task_data = TaskData::<f64> {
             task_id: "test_task".to_string(),
             support_set: vec![TaskExample {
-                input: Array2::ones((10, 10)),
-                target: Array2::zeros((10, 10)),
+                input: Array2::<f64>::ones((10, 10)),
+                target: Array2::<f64>::zeros((10, 10)),
                 weight: 1.0,
             }],
             query_set: vec![],
@@ -643,11 +658,11 @@ mod tests {
 
     #[test]
     fn test_transfer_learning() {
-        let task_data = TaskData {
+        let task_data = TaskData::<f64> {
             task_id: "test_task".to_string(),
             support_set: vec![TaskExample {
-                input: Array2::ones((5, 5)),
-                target: Array2::zeros((5, 5)),
+                input: Array2::<f64>::ones((5, 5)),
+                target: Array2::<f64>::zeros((5, 5)),
                 weight: 1.0,
             }],
             query_set: vec![],
@@ -677,8 +692,8 @@ mod tests {
             TaskData {
                 task_id: "task1".to_string(),
                 support_set: vec![TaskExample {
-                    input: Array2::ones((3, 3)),
-                    target: Array2::zeros((3, 3)),
+                    input: Array2::<f64>::ones((3, 3)),
+                    target: Array2::<f64>::zeros((3, 3)),
                     weight: 1.0,
                 }],
                 query_set: vec![],
@@ -694,8 +709,8 @@ mod tests {
                 task_id: "task2".to_string(),
                 support_set: vec![
                     TaskExample {
-                        input: Array2::ones((4, 4)),
-                        target: Array2::zeros((4, 4)),
+                        input: Array2::<f64>::ones((4, 4)),
+                        target: Array2::<f64>::zeros((4, 4)),
                         weight: 1.0,
                     };
                     20 // Large support set to trigger transfer learning

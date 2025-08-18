@@ -8,10 +8,10 @@
 use ndarray::{s, Array1, Array2};
 use ndarray_rand::rand_distr::Normal;
 use ndarray_rand::RandomExt;
-use scirs2__optim::optimizer_composition::{
+use scirs2_optim::optimizer_composition::{
     ChainedOptimizer, ParallelOptimizer, ParameterGroup, SequentialOptimizer,
 };
-use scirs2__optim::optimizers::{Adam, Optimizer, RMSprop, SGD};
+use scirs2_optim::optimizers::{Adam, Optimizer, RMSprop, SGD};
 use std::time::Instant;
 
 #[allow(dead_code)]

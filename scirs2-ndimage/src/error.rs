@@ -72,6 +72,10 @@ pub enum NdimageError {
     #[error("Configuration error: {0}")]
     ConfigurationError(String),
 
+    /// Memory error
+    #[error("Memory error: {0}")]
+    MemoryError(String),
+
     /// Other error
     #[error("Error: {0}")]
     Other(String),

@@ -4,7 +4,7 @@
 //! parts of a model, which is common in transfer learning and fine-tuning.
 
 use ndarray::{Array1, Array2};
-use scirs2__optim::{
+use scirs2_optim::{
     optimizers::GroupedAdam,
     parameter_groups::{GroupedOptimizer, ParameterGroupConfig},
 };

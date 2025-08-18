@@ -255,27 +255,24 @@ where
     if is_parallel_enabled() {
         // Process features in parallel chunks
         let chunk_size = config.parallel_chunk_size;
-        (0..n_features)
+        let normalized_columns: Vec<Array1<F>> = (0..n_features)
             .into_par_iter()
-            .chunks(chunk_size)
-            .for_each(|chunk| {
-                for j in chunk {
-                    let column = obs.column(j);
-                    let mean_array = Array1::from_elem(n_samples, means[j]);
-                    let std_array = Array1::from_elem(n_samples, stds[j]);
+            .map(|j| {
+                let column = obs.column(j);
+                let mean_array = Array1::from_elem(n_samples, means[j]);
+                let std_array = Array1::from_elem(n_samples, stds[j]);
 
-                    let centered = F::simd_sub(&column, &mean_array.view());
-                    let normalized = F::simd_div(&centered.view(), &std_array.view());
+                let centered = F::simd_sub(&column, &mean_array.view());
+                F::simd_div(&centered.view(), &std_array.view())
+            })
+            .collect();
 
-                    // Note: This requires unsafe access for parallel writing
-                    // In a real implementation, we'd use a more sophisticated approach
-                    for i in 0..n_samples {
-                        unsafe {
-                            *whitened.uget_mut((i, j)) = normalized[i];
-                        }
-                    }
-                }
-            });
+        // Assign the normalized columns to the whitened array
+        for (j, normalized_column) in normalized_columns.iter().enumerate() {
+            for i in 0..n_samples {
+                whitened[[i, j]] = normalized_column[i];
+            }
+        }
     } else {
         for j in 0..n_features {
             let column = obs.column(j);
@@ -559,7 +556,7 @@ where
     let n_features = data.shape()[1];
 
     let mut centroids = Array2::zeros((k, n_features));
-    let mut counts = Array1::zeros(k);
+    let mut counts = Array1::<usize>::zeros(k);
 
     // Accumulate points for each cluster
     for i in 0..n_samples {
@@ -855,12 +852,12 @@ mod tests {
     #[test]
     fn test_whiten_simd() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
 
         let whitened = whiten_simd(&data, None).unwrap();
 
         // Check that means are approximately zero
-        let col_means: Vec<f64> = (0..2).map(|j| whitened.column(j).mean().unwrap()).collect();
+        let col_means: Vec<f64> = (0..2).map(|j| whitened.column(j).mean()).collect();
 
         for mean in col_means {
             assert_abs_diff_eq!(mean, 0.0, epsilon = 1e-10);
@@ -870,9 +867,9 @@ mod tests {
     #[test]
     fn test_vq_simd() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
-        let centroids = Array2::fromshape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).unwrap();
+        let centroids = Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).unwrap();
 
         let (labels, distances) = vq_simd(data.view(), centroids.view(), None).unwrap();
 
@@ -888,7 +885,7 @@ mod tests {
     #[test]
     fn test_compute_centroids_simd() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
@@ -908,9 +905,9 @@ mod tests {
     #[test]
     fn test_calculate_distortion_simd() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
-        let centroids = Array2::fromshape_vec((2, 2), vec![0.5, 0.0, 0.5, 1.0]).unwrap();
+        let centroids = Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.5, 1.0]).unwrap();
 
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 

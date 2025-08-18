@@ -141,7 +141,7 @@ pub struct MessagePassingCoordinator<F: Float> {
 }
 
 /// Worker status for health monitoring
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum WorkerStatus {
     Active,
     Inactive,

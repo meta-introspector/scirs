@@ -240,9 +240,7 @@ where
         }
 
         // Check convergence
-        let change = ((phi.clone() - phi_old).mapv(|x| x.abs()))
-            .mean()
-            .unwrap_or(0.0);
+        let change = ((phi.clone() - phi_old).mapv(|x| x.abs())).mean();
         if change < params.tolerance {
             break;
         }
@@ -313,8 +311,8 @@ where
                 }
                 1 => {
                     // Horizontal division
-                    Array2::from_shape_fn((height, width), |(i_)| {
-                        if i_ < height / 2 {
+                    Array2::from_shape_fn((height, width), |(i, _)| {
+                        if i < height / 2 {
                             10.0
                         } else {
                             -10.0
@@ -425,9 +423,7 @@ where
             }
 
             // Check convergence
-            let change = ((phi.clone() - phi_old).mapv(|x| x.abs()))
-                .mean()
-                .unwrap_or(0.0);
+            let change = ((phi.clone() - phi_old).mapv(|x| x.abs())).mean();
             if change >= params.tolerance {
                 converged = false;
             }

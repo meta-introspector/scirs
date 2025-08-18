@@ -646,9 +646,9 @@ mod tests {
     fn test_out_of_core_robust_scaling() {
         // Create test data with known quantiles
         let data = vec![
-            Array::fromshape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).unwrap(),
-            Array::fromshape_vec((3, 2), vec![4.0, 40.0, 5.0, 50.0, 6.0, 60.0]).unwrap(),
-            Array::fromshape_vec((3, 2), vec![7.0, 70.0, 8.0, 80.0, 9.0, 90.0]).unwrap(),
+            Array::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).unwrap(),
+            Array::from_shape_vec((3, 2), vec![4.0, 40.0, 5.0, 50.0, 6.0, 60.0]).unwrap(),
+            Array::from_shape_vec((3, 2), vec![7.0, 70.0, 8.0, 80.0, 9.0, 90.0]).unwrap(),
         ];
 
         // Create chunks iterator
@@ -678,9 +678,9 @@ mod tests {
     fn test_out_of_core_robust_transform() {
         // Create simple test data
         let fit_data = vec![
-            Array::fromshape_vec((2, 1), vec![1.0, 2.0]).unwrap(),
-            Array::fromshape_vec((2, 1), vec![3.0, 4.0]).unwrap(),
-            Array::fromshape_vec((1, 1), vec![5.0]).unwrap(),
+            Array::from_shape_vec((2, 1), vec![1.0, 2.0]).unwrap(),
+            Array::from_shape_vec((2, 1), vec![3.0, 4.0]).unwrap(),
+            Array::from_shape_vec((1, 1), vec![5.0]).unwrap(),
         ];
 
         let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust);
@@ -689,7 +689,7 @@ mod tests {
             .unwrap();
 
         // Transform new data
-        let transform_data = vec![Array::fromshape_vec((2, 1), vec![3.0, 6.0]).unwrap()];
+        let transform_data = vec![Array::from_shape_vec((2, 1), vec![3.0, 6.0]).unwrap()];
 
         let result = normalizer.transform_chunks(transform_data.into_iter().map(|chunk| Ok(chunk)));
         assert!(result.is_ok());

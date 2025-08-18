@@ -101,7 +101,7 @@ fn bilateral_filter_1d<T, D>(
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + Debug + Clone + Display + FromPrimitive,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     // Convert to 1D for processing
     let input_1d = input
@@ -174,7 +174,7 @@ fn bilateral_filter_2d<T, D>(
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + Debug + Clone + Display + FromPrimitive,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     // Convert to 2D for processing
     let input_2d = input
@@ -261,7 +261,7 @@ fn bilateral_filter_nd<T, D>(
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + Debug + Clone + Display + FromPrimitive,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     // Calculate kernel radius based on _spatial sigma
     let three = safe_f64_to_float::<T>(3.0)?;
@@ -441,7 +441,7 @@ fn bilateral_filter_1d_simd_f32<D>(
     mode: &BorderMode,
 ) -> NdimageResult<Array<f32, D>>
 where
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let input_1d = input
         .to_owned()
@@ -532,7 +532,7 @@ fn bilateral_filter_1d_simd_f64<D>(
     mode: &BorderMode,
 ) -> NdimageResult<Array<f64, D>>
 where
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let input_1d = input
         .to_owned()
@@ -619,7 +619,7 @@ fn bilateral_filter_2d_simd_f32<D>(
     mode: &BorderMode,
 ) -> NdimageResult<Array<f32, D>>
 where
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let input_2d = input
         .to_owned()
@@ -697,7 +697,7 @@ fn bilateral_filter_2d_simd_f64<D>(
     mode: &BorderMode,
 ) -> NdimageResult<Array<f64, D>>
 where
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let input_2d = input
         .to_owned()
@@ -988,7 +988,7 @@ where
         + std::ops::AddAssign
         + std::ops::DivAssign
         + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     if input.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
@@ -1091,7 +1091,7 @@ where
         + std::ops::AddAssign
         + std::ops::DivAssign
         + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
 
@@ -1144,7 +1144,7 @@ fn adaptive_bilateral_filter_2d<T, D>(
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let input_2d = input
         .to_owned()
@@ -1360,7 +1360,7 @@ where
 fn upsampleimage<T, D>(input: &Array<T, D>, target: &Array<T, D>) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let inputshape = input.shape();
     let targetshape = target.shape();
@@ -1404,7 +1404,7 @@ where
 fn blend_arrays<T, D>(a: &Array<T, D>, b: &Array<T, D>, alpha: T) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     if a.shape() != b.shape() {
         return Err(NdimageError::DimensionError(

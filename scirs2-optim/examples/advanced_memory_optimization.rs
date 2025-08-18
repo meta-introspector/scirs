@@ -2,7 +2,7 @@
 use ndarray::{Array1, Array2};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
-use scirs2__optim::memory_efficient::{
+use scirs2_optim::memory_efficient::{
     adaptive::{get_memory_usage_ratio, MemoryAwareBatchSizer},
     fused::{fused_adam_update, fused_apply_constraints, fused_gradient_clip_normalize},
     mixed_precision::LossScaler,

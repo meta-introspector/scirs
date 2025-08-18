@@ -37,7 +37,7 @@ use scirs2_core::Rng;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__cluster::metrics::mutual_info_score;
+/// use scirs2_cluster::metrics::mutual_info_score;
 ///
 /// let true_labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
 /// let pred_labels = Array1::from_vec(vec![0, 0, 1, 1, 1, 2]);
@@ -419,7 +419,7 @@ where
     F: Float + FromPrimitive + Debug,
 {
     // Proper calculation of Expected Mutual Information using hypergeometric distribution
-    let contingency = build_contingency_table(&labels_true, &labelspred);
+    let contingency = build_contingency_table(labels_true, labelspred);
 
     let n = labels_true.len() as f64;
     let mut row_sums = HashMap::new();
@@ -547,12 +547,15 @@ pub fn normalized_mutual_info_score_with_method<F>(
 where
     F: Float + FromPrimitive + Debug,
 {
-    let mi = mutual_info_score(labels_true, labelspred)?;
-    let h_true = entropy(labels_true)?;
-    let h_pred = entropy(labelspred)?;
+    let mi: F = mutual_info_score(labels_true, labelspred)?;
+    let h_true: F = entropy(labels_true)?;
+    let h_pred: F = entropy(labelspred)?;
 
-    let normalizer = match method {
-        NormalizationMethod::Geometric => (h_true * h_pred).sqrt(),
+    let normalizer: F = match method {
+        NormalizationMethod::Geometric => {
+            let product: F = h_true * h_pred;
+            product.sqrt()
+        }
         NormalizationMethod::Arithmetic => (h_true + h_pred) / F::from(2).unwrap(),
         NormalizationMethod::Min => h_true.min(h_pred),
         NormalizationMethod::Max => h_true.max(h_pred),
@@ -1000,8 +1003,8 @@ pub mod advanced_validation {
         n_bootstrap: usize,
         /// Fraction of data to sample in each bootstrap
         sample_fraction: f64,
-        /// Random number generator
-        rng: ThreadRng,
+        /// Random seed for reproducibility
+        seed: u64,
         /// Phantom marker for float type
         _phantom: std::marker::PhantomData<F>,
     }
@@ -1009,10 +1012,12 @@ pub mod advanced_validation {
     impl<F: Float + FromPrimitive + Debug + Send + Sync> StabilityValidator<F> {
         /// Create a new stability validator
         pub fn new(n_bootstrap: usize, sample_fraction: f64) -> Self {
+            use rand::Rng;
+            let mut thread_rng = rand::rngs::StdRng::seed_from_u64(42); // Use fixed seed for reproducibility
             Self {
                 n_bootstrap,
                 sample_fraction,
-                rng: rng(),
+                seed: thread_rng.gen::<u64>(),
                 _phantom: std::marker::PhantomData,
             }
         }
@@ -1143,7 +1148,8 @@ pub mod advanced_validation {
                         .map(|_| {
                             let n_samples = data.nrows();
                             let sample_size = (n_samples as f64 * self.sample_fraction) as usize;
-                            let mut rng = rand::rng();
+                            let mut rng =
+                                rand::rngs::StdRng::seed_from_u64(self.seed.wrapping_add(1));
 
                             let indices: Vec<usize> = (0..sample_size)
                                 .map(|_| rng.random_range(0..n_samples))
@@ -1299,7 +1305,10 @@ pub mod advanced_validation {
             let joint_entropy = Self::joint_entropy(_clusteringsolutions)?;
 
             // Multi-information = sum of individual entropies - joint entropy
-            let sum_individual: F = individual_entropies.iter().copied().sum();
+            let sum_individual: F = individual_entropies
+                .iter()
+                .copied()
+                .fold(F::zero(), |acc, x| acc + x);
             Ok(sum_individual - joint_entropy)
         }
 
@@ -1737,7 +1746,7 @@ pub mod advanced_validation {
             // Calculate relevance scores (MI with target)
             for j in 0..nfeatures {
                 let featuredata = data.column(j);
-                let discretizedfeature = "self".discretizefeature(featuredata)?;
+                let discretizedfeature = self.discretizefeature(featuredata)?;
                 let relevance = mutual_info_score::<F>(target_labels, discretizedfeature.view())?;
                 self.relevance_scores[j] = relevance;
             }
@@ -1775,7 +1784,7 @@ pub mod advanced_validation {
             // Select remaining features using MRMR criterion
             while self.selectedfeatures.len() < nfeatures_to_select && !availablefeatures.is_empty()
             {
-                let mut bestfeature = "availablefeatures"[0];
+                let mut bestfeature = availablefeatures[0];
                 let mut best_score = F::neg_infinity();
 
                 for &candidate in &availablefeatures {
@@ -1798,7 +1807,7 @@ pub mod advanced_validation {
 
                     if mrmr_score > best_score {
                         best_score = mrmr_score;
-                        bestfeature = "candidate";
+                        bestfeature = candidate;
                     }
                 }
 
@@ -2088,9 +2097,9 @@ pub mod advanced_metrics {
         let mut labels1_common = Array1::zeros(common_samples.len());
         let mut labels2_common = Array1::zeros(common_samples.len());
 
-        for (i, &(pos1, pos2_)) in common_samples.iter().enumerate() {
+        for (i, &(pos1, pos2, _)) in common_samples.iter().enumerate() {
             labels1_common[i] = labels1[pos1];
-            labels2_common[i] = labels2[pos2_];
+            labels2_common[i] = labels2[pos2];
         }
 
         // Calculate adjusted mutual information as stability measure
@@ -2132,14 +2141,14 @@ pub mod advanced_metrics {
         }
 
         // Calculate entropy of cluster labels
-        let h_labels = entropy(labels)?;
+        let h_labels = entropy::<F>(labels)?;
 
         // Discretize the feature
         let feature_column = data.column(feature_idx);
-        let discretizedfeature = "discretizefeature"(feature_column)?;
+        let discretizedfeature = discretizefeature(feature_column)?;
 
         // Calculate conditional entropy H(Labels | Feature)
-        let h_conditional = conditional_entropy(labels, discretizedfeature.view())?;
+        let h_conditional = conditional_entropy::<F>(labels, discretizedfeature.view())?;
 
         // Information gain = H(Labels) - H(Labels | Feature)
         Ok(h_labels - h_conditional)
@@ -2211,7 +2220,7 @@ pub mod advanced_metrics {
             let mut hy_givenx = F::zero();
             let x_count_f = F::from(x_count).unwrap();
 
-            for (&(x_jointy_val), &joint_count) in &joint_counts {
+            for (&(x_jointy_val, _y_val), &joint_count) in &joint_counts {
                 if x_jointy_val == x_val {
                     let py_givenx = F::from(joint_count).unwrap() / x_count_f;
                     if py_givenx > F::zero() {

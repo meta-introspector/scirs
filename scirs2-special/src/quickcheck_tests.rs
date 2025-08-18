@@ -106,7 +106,7 @@ where
     QuickCheck::new()
         .tests(config.test_count)
         .max_tests(config.max_iterations)
-        .quickcheck(_prop);
+        .quickcheck(prop);
     true
 }
 
@@ -120,14 +120,14 @@ where
     QuickCheck::new()
         .tests(config.test_count)
         .max_tests(config.max_iterations)
-        .quickcheck(_prop);
+        .quickcheck(prop);
     true
 }
 
 #[cfg(test)]
 mod gamma_properties {
     use super::*;
-    use quickcheck__macros::quickcheck;
+    use quickcheck_macros::quickcheck;
 
     /// Optimized gamma recurrence relation test with early termination
     #[quickcheck]
@@ -215,7 +215,7 @@ mod gamma_properties {
 #[cfg(test)]
 mod bessel_properties {
     use super::*;
-    use quickcheck__macros::quickcheck;
+    use quickcheck_macros::quickcheck;
 
     #[quickcheck]
     fn bessel_j_derivative_relation(x: PositiveF64) -> bool {
@@ -280,7 +280,7 @@ mod bessel_properties {
 #[cfg(test)]
 mod error_function_properties {
     use super::*;
-    use quickcheck__macros::quickcheck;
+    use quickcheck_macros::quickcheck;
 
     #[quickcheck]
     fn erf_odd_function(x: f64) -> bool {
@@ -329,7 +329,7 @@ mod error_function_properties {
 #[cfg(test)]
 mod orthogonal_polynomial_properties {
     use super::*;
-    use quickcheck__macros::quickcheck;
+    use quickcheck_macros::quickcheck;
 
     #[quickcheck]
     fn legendre_symmetry(n: SmallInt, x: f64) -> bool {
@@ -381,7 +381,7 @@ mod orthogonal_polynomial_properties {
 #[cfg(test)]
 mod complex_function_properties {
     use super::*;
-    use quickcheck__macros::quickcheck;
+    use quickcheck_macros::quickcheck;
 
     #[quickcheck]
     fn complex_erf_conjugate_symmetry(z: ReasonableComplex) -> bool {
@@ -418,7 +418,7 @@ mod complex_function_properties {
 #[cfg(test)]
 mod statistical_function_properties {
     use super::*;
-    use quickcheck__macros::quickcheck;
+    use quickcheck_macros::quickcheck;
 
     #[quickcheck]
     fn logistic_bounds(x: f64) -> bool {
@@ -501,7 +501,7 @@ mod integration {
             let mut rev = xs.clone();
             rev.reverse();
             rev.reverse();
-            _xs == rev
+            xs == rev
         }
 
         quickcheck::quickcheck(prop_reversing_twice_is_identity as fn(Vec<i32>) -> bool);

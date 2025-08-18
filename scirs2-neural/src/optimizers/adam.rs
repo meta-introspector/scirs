@@ -176,4 +176,4 @@ impl<F: Float + ScalarOperand + Debug> Optimizer<F> for Adam<F> {
         self.learning_rate = lr;
 // Enable direct usage of scirs2-optim's Adam when the optim feature is enabled
 #[cfg(feature = "optim")]
-pub use scirs2__optim::Adam as OptimAdam;
+pub use scirs2_optim::Adam as OptimAdam;

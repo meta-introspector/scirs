@@ -939,7 +939,7 @@ mod tests {
 
     #[test]
     fn test_threshold_methods() {
-        let coeffs = Array2::fromshape_vec(
+        let coeffs = Array2::from_shape_vec(
             (4, 4),
             vec![
                 0.1, 0.5, 1.0, 1.5, 0.2, 0.6, 1.1, 1.6, 0.3, 0.7, 1.2, 1.7, 0.4, 0.8, 1.3, 1.8,

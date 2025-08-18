@@ -1081,7 +1081,7 @@ mod tests {
             adaptation_rate: 0.01,
         };
 
-        assert_eq!(ai.chunk_sizeweights.dim(), (10, 10));
+        assert_eq!(ai.chunk_size_weights.dim(), (10, 10));
         assert_eq!(ai.contentfeatures.len(), 20);
         assert_eq!(ai.prediction_accuracy, 0.0);
     }

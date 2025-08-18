@@ -923,7 +923,7 @@ fn estimate_reconstruction_quality(
 mod tests {
     #[test]
     fn testtexture_analysis() {
-        let image = Array2::fromshape_vec((8, 8), (0..64).map(|x| x as f64).collect()).unwrap();
+        let image = Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64).collect()).unwrap();
         let config = Dwt2dConfig {
             boundary_mode: BoundaryMode::Symmetric,
             use_simd: false,

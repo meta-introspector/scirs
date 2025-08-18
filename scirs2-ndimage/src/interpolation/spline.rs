@@ -1,6 +1,6 @@
 //! Spline-based interpolation functions
 
-use ndarray::{Array, Axis, Dimension};
+use ndarray::{Array, Array1, Axis, Dimension};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use std::fmt::Debug;
 
@@ -117,7 +117,8 @@ fn apply_anti_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T,
 pub fn spline_filter<T, D>(input: &Array<T, D>, order: Option<usize>) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
-    D: Dimension + 'static,
+    D: Dimension + ndarray::RemoveAxis + 'static,
+    usize: ndarray::NdIndex<<D as ndarray::Dimension>::Smaller>,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -170,7 +171,8 @@ pub fn spline_filter1d<T, D>(
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
-    D: Dimension + 'static,
+    D: Dimension + ndarray::RemoveAxis + 'static,
+    usize: ndarray::NdIndex<<D as ndarray::Dimension>::Smaller>,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -264,7 +266,8 @@ where
 fn spline_filter_axis<T, D>(data: &mut Array<T, D>, order: usize, axis: usize) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Clone,
-    D: Dimension,
+    D: Dimension + ndarray::RemoveAxis,
+    usize: ndarray::NdIndex<<D as ndarray::Dimension>::Smaller>,
 {
     let poles = get_spline_poles::<T>(order);
     if poles.is_empty() {

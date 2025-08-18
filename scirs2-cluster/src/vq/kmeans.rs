@@ -59,9 +59,9 @@ impl<F: Float + FromPrimitive> Default for KMeansOptions<F> {
 ///
 /// ```
 /// use ndarray::{ArrayView1, Array2, ArrayView2};
-/// use scirs2__cluster::vq::kmeans;
+/// use scirs2_cluster::vq::kmeans;
 ///
-/// let data = Array2::fromshape_vec((6, 2), vec![
+/// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.2, 1.8,
 ///     0.8, 1.9,
@@ -148,9 +148,9 @@ where
 ///
 /// ```
 /// use ndarray::{ArrayView1, Array2, ArrayView2};
-/// use scirs2__cluster::vq::kmeans_with_options;
+/// use scirs2_cluster::vq::kmeans_with_options;
 ///
-/// let data = Array2::fromshape_vec((6, 2), vec![
+/// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.2, 1.8,
 ///     0.8, 1.9,
@@ -467,7 +467,7 @@ where
     // Choose the first centroid randomly
     let first_idx = rng.random_range(0..n_samples);
     for j in 0..n_features {
-        centroids[[0..j]] = data[[first_idx, j]];
+        centroids[[0, j]] = data[[first_idx, j]];
     }
 
     if k == 1 {
@@ -523,7 +523,7 @@ where
 
         // Add the new centroid
         for j in 0..n_features {
-            centroids[[i..j]] = data[[next_idx, j]];
+            centroids[[i, j]] = data[[next_idx, j]];
         }
     }
 
@@ -581,7 +581,7 @@ where
     let first_idx = rng.random_range(0..n_samples);
     let mut first_center = Vec::with_capacity(n_features);
     for j in 0..n_features {
-        first_center.push(data[[first_idx..j]]);
+        first_center.push(data[[first_idx, j]]);
     }
     centers.push(first_center);
     weights.push(F::one()); // Initial weight is 1
@@ -625,7 +625,7 @@ where
             if F::from(rng.random_range(0.0..1.0)).unwrap() < probability {
                 let mut new_center = Vec::with_capacity(n_features);
                 for j in 0..n_features {
-                    new_center.push(data[[sample_idx..j]]);
+                    new_center.push(data[[sample_idx, j]]);
                 }
                 centers.push(new_center);
                 weights.push(F::one()); // Initial weight is 1
@@ -678,7 +678,7 @@ where
             }
 
             // Run weighted k-means to get final centroids
-            let (finalcentroids_) = _weighted_kmeans_single(
+            let (finalcentroids_, _) = _weighted_kmeans_single(
                 centers_array.view(),
                 weights_array.view(),
                 initcentroids.view(),
@@ -749,7 +749,7 @@ where
 
     for _iter in 0..opts.max_iter {
         // Assign samples to nearest centroid
-        let (new_labels_) = vq(data, centroids.view())?;
+        let (new_labels_, _) = vq(data, centroids.view())?;
         labels = new_labels_;
 
         // Compute new centroids using weights
@@ -842,9 +842,9 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__cluster::vq::{kmeans_with_metric, EuclideanDistance, KMeansOptions};
+/// use scirs2_cluster::vq::{kmeans_with_metric, EuclideanDistance, KMeansOptions};
 ///
-/// let data = Array2::fromshape_vec((6, 2), vec![
+/// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.2, 1.8,
 ///     0.8, 1.9,
@@ -1058,7 +1058,7 @@ mod tests {
     #[test]
     fn test_kmeans_random_init() {
         // Create a sample dataset
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
@@ -1087,7 +1087,7 @@ mod tests {
     #[test]
     fn test_kmeans_plusplus_init() {
         // Create a sample dataset
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
@@ -1116,7 +1116,7 @@ mod tests {
     #[test]
     fn test_kmeans_parallel_init() {
         // Create a sample dataset
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (20, 2),
             vec![
                 1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 1.1, 2.2, 0.9, 1.7, 1.3, 2.1, 1.0, 1.9, 0.7, 2.0,
@@ -1161,7 +1161,7 @@ mod tests {
     #[test]
     fn test_scipy_compatible_kmeans() {
         // Test the new SciPy-compatible kmeans function
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
@@ -1205,7 +1205,7 @@ mod tests {
     #[test]
     fn test_scipy_kmeans_check_finite() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 1.5, 1.5, 8.0, 8.0, 8.5, 8.5]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 1.5, 8.0, 8.0, 8.5, 8.5]).unwrap();
 
         // Test with check_finite = true (should work with finite data)
         let result = kmeans(

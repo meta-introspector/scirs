@@ -671,7 +671,7 @@ impl InteractiveVisualizer {
             self.state.input_state.mouse_position.1 - self.state.input_state.prev_mouse_position.1,
         );
 
-        let sensitivity = self.config.camera_sensitivity;
+        let sensitivity = self.config.camera_sensitivity as f64;
 
         // Rotation with left mouse button
         if self
@@ -819,7 +819,7 @@ mod tests {
         let config = InteractiveConfig::default();
         let mut visualizer = InteractiveVisualizer::new(config);
 
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (4, 3),
             vec![1.0, 2.0, 3.0, 1.1, 2.1, 3.1, 5.0, 6.0, 7.0, 5.1, 6.1, 7.1],
         )

@@ -3,7 +3,7 @@
 //! This module provides functionality for processing images that are too large
 //! to fit in memory by processing them in chunks or tiles.
 
-use ndarray::{Array, ArrayView, ArrayViewMut, Dimension, IxDyn, Slice};
+use ndarray::{Array, ArrayView, ArrayViewMut, Dimension, IxDyn, Slice, SliceInfoElem};
 use num_traits::{Float, FromPrimitive, Zero};
 // use rayon::prelude::*; // FORBIDDEN: Use scirs2-core::parallel_ops instead
 use scirs2_core::parallel_ops::*;
@@ -88,7 +88,8 @@ where
 {
     pub fn new(config: StreamConfig) -> Self {
         Self {
-            _config_phantom: std::marker::PhantomData,
+            config,
+            phantom: std::marker::PhantomData,
         }
     }
 
@@ -121,10 +122,13 @@ where
             let chunk = self.read_chunk(&mut input_file, &chunk_info, shape)?;
 
             // Apply operation
-            let result = op.apply_chunk(&chunk.view())?;
+            let chunk_d = chunk.into_dimensionality::<D>().map_err(|_| {
+                NdimageError::ComputationError("Failed to convert chunk dimension".to_string())
+            })?;
+            let result = op.apply_chunk(&chunk_d.view())?;
 
             // Write result to output file
-            self.write_chunk(&mut output_file, &result.view(), &chunk_info)?;
+            self.write_chunk(&mut output_file, &result.view().into_dyn(), &chunk_info)?;
         }
 
         Ok(())
@@ -227,10 +231,23 @@ where
         let slices: Vec<_> = chunk_info
             .ranges
             .iter()
-            .map(|r| Slice::from(r.start..r.end))
+            .map(|r| SliceInfoElem::Slice {
+                start: r.start as isize,
+                end: Some(r.end as isize),
+                step: 1,
+            })
             .collect();
 
-        Ok(array.slice(slices.as_slice()).to_owned())
+        let array_dyn = array.view().into_dyn();
+        Ok(array_dyn
+            .slice(slices.as_slice())
+            .to_owned()
+            .into_dimensionality::<D>()
+            .map_err(|_| {
+                NdimageError::ComputationError(
+                    "Failed to convert chunk back to original dimension".to_string(),
+                )
+            })?)
     }
 
     /// Insert a chunk into an array
@@ -246,11 +263,16 @@ where
         let slices: Vec<_> = chunk_info
             .output_ranges
             .iter()
-            .map(|r| Slice::from(r.start..r.end))
+            .map(|r| SliceInfoElem::Slice {
+                start: r.start as isize,
+                end: Some(r.end as isize),
+                step: 1,
+            })
             .collect();
 
-        let mut output_slice = output.slice_mut(slices.as_slice());
-        output_slice.assign(chunk);
+        let mut output_dyn = output.view_mut().into_dyn();
+        let mut output_slice = output_dyn.slice_mut(slices.as_slice());
+        output_slice.assign(&chunk.view().into_dyn());
 
         Ok(())
     }
@@ -427,16 +449,30 @@ impl<T: Float + FromPrimitive + Debug + Clone> StreamingGaussianFilter<T> {
 impl<T, D> StreamableOp<T, D> for StreamingGaussianFilter<T>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     fn apply_chunk(&self, chunk: &ArrayView<T, D>) -> NdimageResult<Array<T, D>> {
-        crate::filters::gaussian_filter(
-            chunk.to_owned(),
-            &self.sigma,
-            self.truncate,
-            None,
+        // Convert to f64 for gaussian_filter
+        let chunk_f64 = chunk.mapv(|x| x.to_f64().unwrap_or(0.0));
+
+        // Use first sigma value (or average)
+        let sigma = self
+            .sigma
+            .first()
+            .map(|s| s.to_f64().unwrap_or(1.0))
+            .unwrap_or(1.0);
+
+        let truncate = self.truncate.and_then(|t| t.to_f64());
+
+        let result_f64 = crate::filters::gaussian_filter(
+            &chunk_f64,
+            sigma,
             Some(BorderMode::Reflect),
-        )
+            truncate,
+        )?;
+
+        // Convert back to T
+        Ok(result_f64.mapv(|x| T::from_f64(x).unwrap_or_else(|| T::zero())))
     }
 
     fn required_overlap(&self) -> Vec<usize> {
@@ -469,8 +505,8 @@ where
         // Weight decreases towards the edges of each _chunk to provide smooth blending
 
         // Get the shapes for calculations
-        let outputshape = output.shape();
-        let chunkshape = new_chunk.shape();
+        let outputshape = output.shape().to_vec();
+        let chunkshape = new_chunk.shape().to_vec();
 
         // Ensure shapes are compatible
         if outputshape != chunkshape {
@@ -480,10 +516,16 @@ where
         }
 
         // Iterate through all pixels and apply weighted blending in overlap regions
-        for (coords, (output_pixel, &chunk_pixel)) in
-            output.indexed_iter_mut().zip(new_chunk.iter())
-        {
-            let coord_in_dim = coords[dim];
+        // Calculate indices manually to avoid pattern type issues
+        let mut flat_idx = 0;
+
+        for (output_pixel, &chunk_pixel) in output.iter_mut().zip(new_chunk.iter()) {
+            // Calculate coordinate in the specified dimension
+            let mut coord_in_dim = flat_idx;
+            for d in (dim + 1..outputshape.len()).rev() {
+                coord_in_dim /= outputshape[d];
+            }
+            coord_in_dim %= outputshape[dim];
 
             if coord_in_dim < overlap_size {
                 // We're in the overlap region at the beginning
@@ -499,6 +541,8 @@ where
                 // Not in overlap region - use new _chunk value directly
                 *output_pixel = chunk_pixel;
             }
+
+            flat_idx += 1;
         }
 
         Ok(())

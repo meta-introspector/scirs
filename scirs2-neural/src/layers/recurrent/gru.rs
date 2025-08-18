@@ -25,12 +25,12 @@ pub struct GRUConfig {
 /// h_t = (1 - z_t) * n_t + z_t * h_(t-1)  # hidden state
 /// # Examples
 /// ```
-/// use scirs2_neural::layers::{GRU, Layer};
+/// use scirs2_neural::layers::{Layer, recurrent::GRU};
 /// use ndarray::{Array, Array3};
-/// use rand::rngs::SmallRng;
+/// use rand::rngs::StdRng;
 /// use rand::SeedableRng;
 /// // Create a GRU layer with 10 input features and 20 hidden units
-/// let mut rng = rand::rng();
+/// let mut rng = StdRng::seed_from_u64(42);
 /// let gru = GRU::new(10, 20, &mut rng).unwrap();
 /// // Forward pass with a batch of 2 samples, sequence length 5, and 10 features
 /// let batch_size = 2;

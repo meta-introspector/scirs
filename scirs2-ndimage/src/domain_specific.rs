@@ -983,6 +983,6 @@ mod tests {
             microscopy::segment_cells(&image.view(), None).expect("segment_cells should succeed");
 
         assert_eq!(cells.len(), 4); // Should detect 4 cells
-        assert!(labels.max() == Some(&4));
+        assert!(labels.into_iter().max() == Some(4));
     }
 }

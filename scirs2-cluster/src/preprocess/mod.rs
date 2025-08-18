@@ -31,10 +31,10 @@ use crate::error::{ClusteringError, Result};
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__cluster::preprocess::whiten;
+/// use scirs2_cluster::preprocess::whiten;
 ///
 /// // Example data with 3 features
-/// let data = Array2::fromshape_vec((3, 3), vec![
+/// let data = Array2::from_shape_vec((3, 3), vec![
 ///     1.9, 2.3, 1.7,
 ///     1.5, 2.5, 2.2,
 ///     0.8, 0.6, 1.7,
@@ -105,10 +105,10 @@ pub fn whiten<F: Float + FromPrimitive + Debug>(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__cluster::preprocess::standardize;
+/// use scirs2_cluster::preprocess::standardize;
 ///
 /// // Example data with 3 features
-/// let data = Array2::fromshape_vec((3, 3), vec![
+/// let data = Array2::from_shape_vec((3, 3), vec![
 ///     1.9, 2.3, 1.7,
 ///     1.5, 2.5, 2.2,
 ///     0.8, 0.6, 1.7,
@@ -185,10 +185,10 @@ pub fn standardize<F: Float + FromPrimitive + Debug>(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__cluster::preprocess::{normalize, NormType};
+/// use scirs2_cluster::preprocess::{normalize, NormType};
 ///
 /// // Example data with 3 features
-/// let data = Array2::fromshape_vec((3, 3), vec![
+/// let data = Array2::from_shape_vec((3, 3), vec![
 ///     1.9, 2.3, 1.7,
 ///     1.5, 2.5, 2.2,
 ///     0.8, 0.6, 1.7,
@@ -292,10 +292,10 @@ pub fn normalize<F: Float + FromPrimitive + Debug>(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__cluster::preprocess::min_max_scale;
+/// use scirs2_cluster::preprocess::min_max_scale;
 ///
 /// // Example data with 3 features
-/// let data = Array2::fromshape_vec((3, 3), vec![
+/// let data = Array2::from_shape_vec((3, 3), vec![
 ///     1.9, 2.3, 1.7,
 ///     1.5, 2.5, 2.2,
 ///     0.8, 0.6, 1.7,
@@ -462,8 +462,9 @@ mod tests {
 
     #[test]
     fn test_whiten() {
-        let data = Array2::fromshape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
-            .unwrap();
+        let data =
+            Array2::from_shape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
+                .unwrap();
 
         let whitened = whiten(data.view(), true).unwrap();
 
@@ -476,8 +477,9 @@ mod tests {
 
     #[test]
     fn test_standardize() {
-        let data = Array2::fromshape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
-            .unwrap();
+        let data =
+            Array2::from_shape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
+                .unwrap();
 
         let standardized = standardize(data.view(), true).unwrap();
 
@@ -496,8 +498,9 @@ mod tests {
 
     #[test]
     fn test_normalize_l2() {
-        let data = Array2::fromshape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
-            .unwrap();
+        let data =
+            Array2::from_shape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
+                .unwrap();
 
         let normalized = normalize(data.view(), NormType::L2, true).unwrap();
 
@@ -512,8 +515,9 @@ mod tests {
 
     #[test]
     fn test_min_max_scale() {
-        let data = Array2::fromshape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
-            .unwrap();
+        let data =
+            Array2::from_shape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
+                .unwrap();
 
         let scaled = min_max_scale(data.view(), (0.0, 1.0), true).unwrap();
 

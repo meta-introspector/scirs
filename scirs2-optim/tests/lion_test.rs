@@ -2,7 +2,7 @@
 
 use approx::assert_abs_diff_eq;
 use ndarray::{Array1, Array2};
-use scirs2__optim::optimizers::{Lion, Optimizer};
+use scirs2_optim::optimizers::{Lion, Optimizer};
 
 #[test]
 #[allow(dead_code)]

@@ -578,7 +578,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         let std_convergence_time =
             self.calculate_duration_std(&convergence_times, mean_convergence_time);
         let std_final_value = self.calculate_std(&final_values, mean_final_value);
-        let std_iterations = self.calculate_f64_std(&iterations_counts, mean_iterations);
+        let std_iterations = self.calculate_f64std(&iterations_counts, mean_iterations);
         let std_gradient_norm = self.calculate_std(&gradient_norms, mean_gradient_norm);
 
         Ok(OptimizerBenchmarkSummary {
@@ -1026,7 +1026,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
     }
 
     /// Calculate standard deviation for f64 values
-    fn calculate_f64_std(&self, values: &[f64], mean: f64) -> f64 {
+    fn calculate_f64std(&self, values: &[f64], mean: f64) -> f64 {
         if values.len() <= 1 {
             return 0.0;
         }
@@ -1129,7 +1129,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         }
 
         let mean = values.iter().sum::<f64>() / values.len() as f64;
-        let std_err = self.calculate_f64_std(values, mean) / (values.len() as f64).sqrt();
+        let std_err = self.calculate_f64std(values, mean) / (values.len() as f64).sqrt();
 
         // Simplified critical value (should use proper t-distribution)
         let _alpha = 1.0 - confidence_level;

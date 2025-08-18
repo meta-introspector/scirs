@@ -1,6 +1,6 @@
 use ndarray::Array2;
-use scirs2__cluster::metrics::{silhouette_samples, silhouette_score};
-use scirs2__cluster::vq::{kmeans2, MinitMethod, MissingMethod};
+use scirs2_cluster::metrics::{silhouette_samples, silhouette_score};
+use scirs2_cluster::vq::{kmeans2, MinitMethod, MissingMethod};
 
 #[allow(dead_code)]
 fn main() {
@@ -111,5 +111,5 @@ fn generate_data() -> Array2<f64> {
     }
 
     // Convert to ndarray
-    Array2::fromshape_vec((90, 2), data).unwrap()
+    Array2::from_shape_vec((90, 2), data).unwrap()
 }

@@ -512,7 +512,7 @@ mod tests {
     #[test]
     fn test_sparse_from_dense() {
         let dense =
-            Array2::fromshape_vec((3, 3), vec![0.0, 1.0, 5.0, 1.0, 0.0, 2.0, 5.0, 2.0, 0.0])
+            Array2::from_shape_vec((3, 3), vec![0.0, 1.0, 5.0, 1.0, 0.0, 2.0, 5.0, 2.0, 0.0])
                 .unwrap();
 
         let sparse = SparseDistanceMatrix::from_dense(dense.view(), 1.5);
@@ -562,7 +562,7 @@ mod tests {
     #[test]
     fn test_sparse_knn_graph() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0]).unwrap();
 
         let sparse_graph = sparse_knn_graph(data.view(), 2, Metric::Euclidean).unwrap();
 
@@ -575,7 +575,7 @@ mod tests {
     #[test]
     fn test_sparse_epsilon_graph() {
         let data =
-            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 5.0, 5.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 5.0, 5.0]).unwrap();
 
         let sparse_graph = sparse_epsilon_graph(data.view(), 1.0, Metric::Euclidean).unwrap();
 

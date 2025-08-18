@@ -10,8 +10,8 @@
 use ndarray::Array1;
 use num_traits::Float;
 use rand::{rng, Rng};
-use scirs2__optim::error::Result;
-use scirs2__optim::meta_learning::*;
+use scirs2_optim::error::Result;
+use scirs2_optim::meta_learning::*;
 use std::collections::HashMap;
 
 /// Simulated machine learning model for demonstration

@@ -2,8 +2,8 @@
 //! This test focuses only on the cluster module without dependencies on other modules
 
 use ndarray::Array2;
-use scirs2__cluster::advanced_clustering::AdvancedClusterer;
-use scirs2__cluster::advanced_visualization::{
+use scirs2_cluster::advanced_clustering::AdvancedClusterer;
+use scirs2_cluster::advanced_visualization::{
     AdvancedVisualizationConfig, AdvancedVisualizer, QuantumColorScheme, VisualizationExportFormat,
 };
 
@@ -89,7 +89,7 @@ fn create_complex_test_data() -> Array2<f64> {
         ]);
     }
 
-    Array2::fromshape_vec((45, 3), data_vec).expect("Failed to create test data")
+    Array2::from_shape_vec((45, 3), data_vec).expect("Failed to create test data")
 }
 
 #[allow(dead_code)]

@@ -976,7 +976,7 @@ where
     // For generic dimensional operations, convert to IxDyn and process
     let input_dyn = input
         .to_owned()
-        .intoshape_with_order(ndarray::IxDyn(input.shape()))
+        .into_shape_with_order(ndarray::IxDyn(input.shape()))
         .map_err(|_| {
             NdimageError::DimensionError("Failed to convert to dynamic dimension".to_string())
         })?;
@@ -984,7 +984,7 @@ where
     // Get or create structure element
     let struct_elem = if let Some(s) = structure {
         s.to_owned()
-            .intoshape_with_order(ndarray::IxDyn(s.shape()))
+            .into_shape_with_order(ndarray::IxDyn(s.shape()))
             .map_err(|_| {
                 NdimageError::DimensionError(
                     "Failed to convert structure to dynamic dimension".to_string(),
@@ -992,7 +992,7 @@ where
             })?
     } else if let Some(f) = footprint {
         f.to_owned()
-            .intoshape_with_order(ndarray::IxDyn(f.shape()))
+            .into_shape_with_order(ndarray::IxDyn(f.shape()))
             .map_err(|_| {
                 NdimageError::DimensionError(
                     "Failed to convert footprint to dynamic dimension".to_string(),
@@ -1065,7 +1065,11 @@ where
                     temp[ndarray::IxDyn(&input_idx)]
                 } else {
                     match border_mode {
-                        MorphBorderMode::Constant => constant_value, // For now, only support constant mode
+                        MorphBorderMode::Constant => constant_value,
+                        MorphBorderMode::Reflect => constant_value, // TODO: Implement reflection
+                        MorphBorderMode::Mirror => constant_value,  // TODO: Implement mirroring
+                        MorphBorderMode::Wrap => constant_value,    // TODO: Implement wrapping
+                        MorphBorderMode::Nearest => constant_value, // TODO: Implement nearest
                     }
                 };
 
@@ -1090,7 +1094,7 @@ where
     }
 
     // Convert back to original type
-    result.intoshape_with_order(input.raw_dim()).map_err(|_| {
+    result.into_shape_with_order(input.raw_dim()).map_err(|_| {
         NdimageError::DimensionError(
             "Failed to convert back to original dimensionality".to_string(),
         )

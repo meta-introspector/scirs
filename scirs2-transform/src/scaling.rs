@@ -311,7 +311,7 @@ impl MaxAbsScaler {
     ///
     /// # Examples
     /// ```
-    /// use scirs2__transform::scaling::MaxAbsScaler;
+    /// use scirs2_transform::scaling::MaxAbsScaler;
     ///
     /// let scaler = MaxAbsScaler::new();
     /// ```
@@ -515,7 +515,7 @@ mod tests {
     #[test]
     fn test_quantile_transformer_uniform() {
         // Create test data with different distributions
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (6, 2),
             vec![
                 1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0, 100.0, 1000.0,
@@ -552,7 +552,7 @@ mod tests {
     #[test]
     fn test_quantile_transformer_normal() {
         // Create test data
-        let data = Array::fromshape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
+        let data = Array::from_shape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
 
         let mut transformer = QuantileTransformer::new(5, "normal", false).unwrap();
         let transformed = transformer.fit_transform(&data).unwrap();
@@ -573,7 +573,7 @@ mod tests {
         assert!(QuantileTransformer::new(100, "invalid", true).is_err());
 
         // Test fitting with insufficient data
-        let small_data = Array::fromshape_vec((2, 1), vec![1.0, 2.0]).unwrap();
+        let small_data = Array::from_shape_vec((2, 1), vec![1.0, 2.0]).unwrap();
         let mut transformer = QuantileTransformer::new(10, "uniform", true).unwrap();
         assert!(transformer.fit(&small_data).is_err());
     }
@@ -591,7 +591,7 @@ mod tests {
         // Create test data with different ranges
         // Feature 0: [-4, -2, 0, 2, 4] -> max_abs = 4
         // Feature 1: [-10, -5, 0, 5, 10] -> max_abs = 10
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (5, 2),
             vec![-4.0, -10.0, -2.0, -5.0, 0.0, 0.0, 2.0, 5.0, 4.0, 10.0],
         )
@@ -635,7 +635,7 @@ mod tests {
     #[test]
     fn test_max_abs_scaler_positive_only() {
         // Test with positive-only data
-        let data = Array::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 6.0, 5.0, 10.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 6.0, 5.0, 10.0]).unwrap();
 
         let mut scaler = MaxAbsScaler::new();
         let scaled = scaler.fit_transform(&data).unwrap();
@@ -654,7 +654,7 @@ mod tests {
 
     #[test]
     fn test_max_abs_scaler_inverse_transform() {
-        let data = Array::fromshape_vec((3, 2), vec![-6.0, 8.0, 0.0, -4.0, 3.0, 12.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![-6.0, 8.0, 0.0, -4.0, 3.0, 12.0]).unwrap();
 
         let mut scaler = MaxAbsScaler::new();
         let scaled = scaler.fit_transform(&data).unwrap();
@@ -672,7 +672,7 @@ mod tests {
     #[test]
     fn test_max_abs_scaler_constant_feature() {
         // Test with a constant feature (all zeros)
-        let data = Array::fromshape_vec((3, 2), vec![0.0, 5.0, 0.0, 10.0, 0.0, 15.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![0.0, 5.0, 0.0, 10.0, 0.0, 15.0]).unwrap();
 
         let mut scaler = MaxAbsScaler::new();
         let scaled = scaler.fit_transform(&data).unwrap();
@@ -690,19 +690,19 @@ mod tests {
     #[test]
     fn test_max_abs_scaler_errors() {
         // Test with empty data
-        let empty_data = Array::<f64>::zeros((0, 2));
+        let empty_data = Array2::<f64>::zeros((0, 2));
         let mut scaler = MaxAbsScaler::new();
         assert!(scaler.fit(&empty_data).is_err());
 
         // Test transform before fit
-        let data = Array::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
         let unfitted_scaler = MaxAbsScaler::new();
         assert!(unfitted_scaler.transform(&data).is_err());
         assert!(unfitted_scaler.inverse_transform(&data).is_err());
 
         // Test feature dimension mismatch
-        let train_data = Array::fromshape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-        let test_data = Array::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let train_data = Array::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let test_data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
 
         let mut scaler = MaxAbsScaler::new();
         scaler.fit(&train_data).unwrap();
@@ -713,7 +713,7 @@ mod tests {
     #[test]
     fn test_max_abs_scaler_single_feature() {
         // Test with single feature
-        let data = Array::fromshape_vec((4, 1), vec![-8.0, -2.0, 4.0, 6.0]).unwrap();
+        let data = Array::from_shape_vec((4, 1), vec![-8.0, -2.0, 4.0, 6.0]).unwrap();
 
         let mut scaler = MaxAbsScaler::new();
         let scaled = scaler.fit_transform(&data).unwrap();
@@ -732,7 +732,7 @@ mod tests {
     #[test]
     fn test_max_abs_scaler_sparse_preservation() {
         // Test that zero values remain zero (sparsity preservation)
-        let data = Array::fromshape_vec(
+        let data = Array::from_shape_vec(
             (4, 3),
             vec![
                 0.0, 5.0, 0.0, // Row with zeros

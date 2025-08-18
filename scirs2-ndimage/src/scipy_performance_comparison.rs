@@ -230,12 +230,12 @@ impl SciPyBenchmarkSuite {
         // Benchmark Sobel filter
         let start = Instant::now();
         for _ in 0..self.config.warmup_iterations {
-            let _ = sobel(&input, Some(0), None, None)?;
+            let _ = sobel(&input, 0, None)?;
         }
 
         let start = Instant::now();
         for _ in 0..self.config.iterations {
-            let _ = sobel(&input, Some(0), None, None)?;
+            let _ = sobel(&input, 0, None)?;
         }
         let duration = start.elapsed();
 
@@ -358,12 +358,12 @@ impl SciPyBenchmarkSuite {
             // Benchmark zoom operation
             let start = Instant::now();
             for _ in 0..self.config.warmup_iterations {
-                let _ = zoom(&input, &[2.0, 2.0], None, None, None, None)?;
+                let _ = zoom(&input, 2.0, None, None, None, None)?;
             }
 
             let start = Instant::now();
             for _ in 0..self.config.iterations {
-                let _ = zoom(&input, &[2.0, 2.0], None, None, None, None)?;
+                let _ = zoom(&input, 2.0, None, None, None, None)?;
             }
             let duration = start.elapsed();
 
@@ -443,12 +443,12 @@ impl SciPyBenchmarkSuite {
             // Benchmark moments calculation
             let start = Instant::now();
             for _ in 0..self.config.warmup_iterations {
-                let _ = moments(&input)?;
+                let _ = moments(&input, 2)?; // Calculate up to 2nd order moments
             }
 
             let start = Instant::now();
             for _ in 0..self.config.iterations {
-                let _ = moments(&input)?;
+                let _ = moments(&input, 2)?; // Calculate up to 2nd order moments
             }
             let duration = start.elapsed();
 

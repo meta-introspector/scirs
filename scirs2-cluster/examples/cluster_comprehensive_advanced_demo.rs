@@ -5,9 +5,9 @@
 //! and continual adaptation features for optimal clustering performance.
 
 use ndarray::Array2;
-use scirs2__cluster::advanced_clustering::{AdvancedClusterer, AdvancedConfig};
-use scirs2__cluster::metrics::silhouette_score;
-use scirs2__cluster::preprocess::standardize;
+use scirs2_cluster::advanced_clustering::{AdvancedClusterer, AdvancedConfig};
+use scirs2_cluster::metrics::silhouette_score;
+use scirs2_cluster::preprocess::standardize;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn basic_advanced_clustering() -> Result<(), Box<dyn std::error::Error>> {
     // Create sample data with clear cluster structure
-    let data = Array2::fromshape_vec(
+    let data = Array2::from_shape_vec(
         (12, 2),
         vec![
             // Cluster 1: around (1, 1)
@@ -100,7 +100,7 @@ fn ai_driven_clustering() -> Result<(), Box<dyn std::error::Error>> {
         data_vec.push(base_value + feature_id as f64 + noise);
     }
 
-    let data = Array2::fromshape_vec((20, 3), data_vec)?;
+    let data = Array2::from_shape_vec((20, 3), data_vec)?;
 
     let mut clusterer = AdvancedClusterer::new().with_ai_algorithm_selection(true);
 
@@ -144,7 +144,7 @@ fn quantum_neuromorphic_clustering() -> Result<(), Box<dyn std::error::Error>> {
         data_vec.push(y);
     }
 
-    let data = Array2::fromshape_vec((16, 2), data_vec)?;
+    let data = Array2::from_shape_vec((16, 2), data_vec)?;
 
     let mut clusterer = AdvancedClusterer::new().with_quantum_neuromorphic_fusion(true);
 
@@ -193,7 +193,7 @@ fn meta_learning_clustering() -> Result<(), Box<dyn std::error::Error>> {
         data_vec.push(6.0 + 2.0 * angle.sin());
     }
 
-    let data = Array2::fromshape_vec((12, 2), data_vec)?;
+    let data = Array2::from_shape_vec((12, 2), data_vec)?;
 
     let mut clusterer = AdvancedClusterer::new().with_meta_learning(true);
 
@@ -233,7 +233,7 @@ fn continual_adaptation_clustering() -> Result<(), Box<dyn std::error::Error>> {
         data_vec.push(3.0 + (i % 4) as f64);
     }
 
-    let data = Array2::fromshape_vec((16, 2), data_vec)?;
+    let data = Array2::from_shape_vec((16, 2), data_vec)?;
 
     let mut clusterer = AdvancedClusterer::new().with_continual_adaptation(true);
 
@@ -284,7 +284,7 @@ fn full_advanced_mode() -> Result<(), Box<dyn std::error::Error>> {
         data_vec.push(10.0 + 3.0 * angle.sin());
     }
 
-    let data = Array2::fromshape_vec((18, 2), data_vec)?;
+    let data = Array2::from_shape_vec((18, 2), data_vec)?;
 
     // Standardize the data for better clustering
     let standardized_data = standardize(data.view(), true)?;
@@ -360,7 +360,7 @@ fn multi_objective_clustering() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    let data = Array2::fromshape_vec((18, 2), data_vec)?;
+    let data = Array2::from_shape_vec((18, 2), data_vec)?;
 
     // Custom configuration for multi-objective optimization
     let config = AdvancedConfig {

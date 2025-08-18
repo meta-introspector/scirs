@@ -6,7 +6,7 @@ use ndarray::Array;
 use num_traits::Float;
 use std::fmt::Debug;
 // Import from scirs2-optim
-use scirs2__optim::optimizers as optim_optimizers;
+use scirs2_optim::optimizers as optim_optimizers;
 /// RMSprop optimizer.
 ///
 /// RMSprop is an optimization algorithm proposed by Geoffrey Hinton

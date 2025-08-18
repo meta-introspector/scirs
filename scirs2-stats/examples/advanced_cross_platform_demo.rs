@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Endianness: {:?}", platform_info.endianness);
     println!("   Path Separator: '{}'", platform_info.path_separator);
     println!("   Max Path Length: {}", platform_info.max_path_length);
-    println!("   Page Size: {} bytes", platform_info.pagesize);
+    println!("   Page Size: {} bytes", platform_info.page_size);
 
     // Create validator
     let mut validator = CrossPlatformValidator::new()?;

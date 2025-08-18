@@ -7,7 +7,7 @@
 
 use approx::assert_abs_diff_eq;
 use ndarray::array;
-use num__complex::Complex;
+use num_complex::Complex;
 
 use ndarray::ArrayView1;
 use scirs2_linalg::complex::enhanced_ops::{

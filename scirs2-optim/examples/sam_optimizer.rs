@@ -7,7 +7,7 @@
 use ndarray::{Array1, Array2};
 use ndarray_rand::rand_distr::Normal;
 use ndarray_rand::RandomExt;
-use scirs2__optim::optimizers::{Adam, Optimizer, SAM, SGD};
+use scirs2_optim::optimizers::{Adam, Optimizer, SAM, SGD};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -290,7 +290,7 @@ where
     let mut weights = Array1::<f64>::zeros(x_train.dim().1);
 
     // Create SAM _optimizer
-    let mut _optimizer: SAM<f64_, ndarray::Ix1> = SAM::with_config(inner_optimizer, rho, adaptive);
+    let mut _optimizer: SAM<f64, ndarray::Ix1> = SAM::with_config(inner_optimizer, rho, adaptive);
 
     // Training loop
     for i in 0..n_iterations {

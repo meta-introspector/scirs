@@ -317,7 +317,7 @@ impl MathematicalProperty<Array1<f64>> for MeanTranslationInvariance {
         let mut test_cases = Vec::new();
 
         for _ in 0..config.test_cases_per_property {
-            let size = rng.random_range(10..1000);
+            let size = rng.gen_range(10..1000);
             let mut data = Array1::zeros(size);
 
             for val in data.iter_mut() {
@@ -461,7 +461,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationBounds {
         let mut test_cases = Vec::new();
 
         for _ in 0..config.test_cases_per_property {
-            let size = rng.random_range(10..1000);
+            let size = rng.gen_range(10..1000);
             let mut x = Array1::zeros(size);
             let mut y = Array1::zeros(size);
 

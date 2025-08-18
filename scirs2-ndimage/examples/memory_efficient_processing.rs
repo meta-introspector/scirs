@@ -104,8 +104,8 @@ fn example_2_memory_mapped_processing() -> Result<(), Box<dyn std::error::Error>
     // Load the image as memory-mapped
     println!("Loading image as memory-mapped array...");
     let loaded_mmap =
-        loadimage_mmap::<f64, ndarray::Ix2_>(&image_path, &shape, 0, AccessMode::Read)?;
-    println!("  ✓ Loaded with shape: {:?}", loaded_mmap.shape());
+        loadimage_mmap::<f64, ndarray::Ix2, _>(&image_path, &shape, 0, AccessMode::ReadOnly)?;
+    println!("  ✓ Loaded with shape: {:?}", loaded_mmap.shape);
 
     // Process the memory-mapped image in chunks
     println!("Processing memory-mapped image in chunks...");
@@ -133,7 +133,7 @@ fn example_3_chunked_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("------------------------------------");
 
     // Create a test image
-    let image = Array2::<f64>::fromshape_fn((1500, 1500), |(i, j)| {
+    let image = Array2::<f64>::from_shape_fn((1500, 1500), |(i, j)| {
         ((i as f64 * 0.01).sin() + (j as f64 * 0.01).cos()) * 100.0
     });
 
@@ -231,7 +231,7 @@ fn example_5_filter_pipeline() -> Result<(), Box<dyn std::error::Error>> {
     println!("-------------------------------------------");
 
     // Create a test image
-    let image = Array2::<f64>::fromshape_fn((800, 800), |(i, j)| {
+    let image = Array2::<f64>::from_shape_fn((800, 800), |(i, j)| {
         let x = i as f64 - 400.0;
         let y = j as f64 - 400.0;
         let r = (x * x + y * y).sqrt();
@@ -252,7 +252,7 @@ fn example_5_filter_pipeline() -> Result<(), Box<dyn std::error::Error>> {
 
     // Step 1: Gaussian blur
     println!("  1. Applying Gaussian blur...");
-    let step1 = gaussian_filter(&image, &[2.0, 2.0], None, Some(BorderMode::Reflect), None)?;
+    let step1 = gaussian_filter(&image, 2.0, Some(BorderMode::Reflect), None)?;
 
     // Step 2: Edge-preserving smoothing (simulated with uniform filter)
     println!("  2. Applying edge-preserving smoothing...");
@@ -262,7 +262,7 @@ fn example_5_filter_pipeline() -> Result<(), Box<dyn std::error::Error>> {
     // Step 3: Final Gaussian smoothing
     println!("  3. Applying final smoothing...");
     let kernel =
-        Array2::<f64>::fromshape_fn((3, 3), |(i, j)| if i == 1 && j == 1 { 0.5 } else { 0.0625 });
+        Array2::<f64>::from_shape_fn((3, 3), |(i, j)| if i == 1 && j == 1 { 0.5 } else { 0.0625 });
     let final_result = convolve_chunked_v2(&step2, &kernel, BorderMode::Constant, Some(config))?;
 
     println!("  ✓ Pipeline completed");
@@ -287,7 +287,7 @@ fn example_5_filter_pipeline() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Helper function to display memory usage
 #[allow(dead_code)]
-fn print_memory_stats(_label: &str, sizebytes: usize) {
-    let size_mb = size_bytes as f64 / (1024.0 * 1024.0);
+fn print_memory_stats(label: &str, sizebytes: usize) {
+    let size_mb = sizebytes as f64 / (1024.0 * 1024.0);
     println!("{}: {:.2} MB", label, size_mb);
 }

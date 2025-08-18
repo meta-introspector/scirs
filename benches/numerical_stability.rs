@@ -363,7 +363,7 @@ fn bench_edge_cases(c: &mut Criterion) {
     let mut results = Vec::new();
 
     // Test with very small matrices
-    let tiny_matrix = Array2::fromshape_vec((2, 2), vec![1e-15, 1e-14, 1e-14, 1e-13]).unwrap();
+    let tiny_matrix = Array2::from_shape_vec((2, 2), vec![1e-15, 1e-14, 1e-14, 1e-13]).unwrap();
 
     group.bench_function("tiny_matrix_det", |b| {
         b.iter(|| {
@@ -387,7 +387,7 @@ fn bench_edge_cases(c: &mut Criterion) {
     });
 
     // Test with very large values
-    let large_matrix = Array2::fromshape_vec((2, 2), vec![1e15, 1e14, 1e14, 1e13]).unwrap();
+    let large_matrix = Array2::from_shape_vec((2, 2), vec![1e15, 1e14, 1e14, 1e13]).unwrap();
 
     group.bench_function("large_matrix_det", |b| {
         b.iter(|| {

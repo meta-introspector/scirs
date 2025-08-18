@@ -398,7 +398,7 @@ impl ImageHDCEncoder {
                     let bound_hv = pixel_hv.bind(position_hv);
 
                     // Bundle with result
-                    result = result.bundle(&bound_hv);
+                    result = result.bundle(&bound_hv?)?;
                 }
             }
         }
@@ -419,7 +419,7 @@ impl ImageHDCEncoder {
 
         // Bind with patch _type if available
         if let Some(type_hv) = self.feature_encoders.get(patch_type) {
-            Ok(encodedimage.bind(type_hv))
+            Ok(encodedimage.bind(type_hv)?)
         } else {
             Ok(encodedimage)
         }
@@ -463,7 +463,7 @@ where
 
         // If label already exists, bundle with existing pattern
         if let Some(existing) = memory.patterns.get(label) {
-            let bundled = existing.bundle(&encodedimage);
+            let bundled = existing.bundle(&encodedimage)?;
             memory.store(label.clone(), bundled);
         } else {
             memory.store(label.clone(), encodedimage);
@@ -571,7 +571,7 @@ where
                 let feature_strength = analyze_patch_for_feature(&patch, feature_type)?;
 
                 if feature_strength > config.similarity_threshold {
-                    let encoded_feature = "encoder".encode_patch(patch, feature_type)?;
+                    let encoded_feature = encoder.encode_patch(patch, feature_type)?;
 
                     detections.push(FeatureDetection {
                         feature_type: feature_type.clone(),
@@ -623,7 +623,7 @@ where
     for (i, frame_hv) in encoded_frames.iter().enumerate() {
         // Permute based on temporal position
         let permuted_frame = frame_hv.permute(i * 1000); // Large shift for temporal separation
-        sequence_hv = sequence_hv.bundle(&permuted_frame);
+        sequence_hv = sequence_hv.bundle(&permuted_frame)?;
     }
 
     Ok(sequence_hv)
@@ -650,12 +650,12 @@ where
     let encodedimage = encoder.encodeimage(image)?;
 
     // Compose query from _concepts
-    let mut composed_query = None;
+    let mut composed_query: Option<Hypervector> = None;
 
     for concept in query_concepts {
         if let Some(concept_hv) = concept_memory.get_item(concept) {
             if let Some(ref current_query) = composed_query {
-                composed_query = Some(current_query.bind(concept_hv));
+                composed_query = Some(current_query.bind(concept_hv)?);
             } else {
                 composed_query = Some(concept_hv.clone());
             }
@@ -722,10 +722,12 @@ where
         let level_concepts = concept_library.get_concepts_at_level(level);
         let mut level_activations = HashMap::new();
 
-        for (concept_name, concept_hv) in level_concepts {
-            let activation = current_encoding.similarity(concept_hv);
-            if activation > config.cleanup_threshold {
-                level_activations.insert(concept_name.clone(), activation);
+        for level_concept_map in level_concepts {
+            for (concept_name, concept_hv) in level_concept_map {
+                let activation = current_encoding.similarity(concept_hv);
+                if activation > config.cleanup_threshold {
+                    level_activations.insert(concept_name.clone(), activation);
+                }
             }
         }
 
@@ -734,7 +736,7 @@ where
         for (concept_name, activation) in &level_activations {
             if let Some(concept_hv) = concept_library.get_concept(concept_name) {
                 let weighted_concept = weight_hypervector(concept_hv, *activation);
-                abstract_encoding = abstract_encoding.bundle(&weighted_concept);
+                abstract_encoding = abstract_encoding.bundle(&weighted_concept)?;
             }
         }
 
@@ -752,8 +754,8 @@ where
     Ok(HierarchicalReasoningResult {
         base_encoding,
         abstraction_levels: abstraction_results,
-        reasoning_chains,
         meta_cognitive_assessment: assess_reasoning_confidence(&reasoning_chains),
+        reasoning_chains,
     })
 }
 
@@ -883,7 +885,7 @@ where
     let attention_weights = if let Some(attention) = attention_map {
         Some(compute_attention_weights(
             &visual_encoding,
-            attention,
+            attention.mapv(|x| x.to_f64().unwrap_or(0.0)).view(),
             config,
         )?)
     } else {
@@ -963,7 +965,7 @@ where
     Ok(OnlineLearningResult {
         prediction: prediction_result,
         learning_update: update_result,
-        _system_performance: learning_system.get_performancemetrics(),
+        system_performance: learning_system.get_performancemetrics(),
         adaptation_rate: learning_system.get_current_adaptation_rate(),
     })
 }
@@ -1608,7 +1610,7 @@ fn apply_interference_resistant_encoding(
 ) -> NdimageResult<Hypervector> {
     // Apply noise or permutation to reduce interference
     let noise_hv = Hypervector::random(encoding.dimension, 0.001);
-    Ok(encoding.bundle(&noise_hv))
+    Ok(encoding.bundle(&noise_hv)?)
 }
 
 #[allow(dead_code)]
@@ -1644,7 +1646,7 @@ fn encode_semantic_concepts(concepts: &[String], config: &HDCConfig) -> NdimageR
         let hash_value = hasher.finish();
 
         let concept_hv = Hypervector::random(config.hypervector_dim, config.sparsity);
-        result = result.bundle(&concept_hv);
+        result = result.bundle(&concept_hv)?;
     }
 
     Ok(result)
@@ -1677,7 +1679,7 @@ fn perform_weighted_fusion(
 
     for component in components.iter().skip(1) {
         let weighted_component = weight_hypervector(&component.encoding, component.weight);
-        result = result.bundle(&weighted_component);
+        result = result.bundle(&weighted_component)?;
     }
 
     Ok(result)
@@ -1774,12 +1776,12 @@ mod tests {
         let hv2 = Hypervector::random(1000, 0.1);
 
         // Bundle operation
-        let bundled = hv1.bundle(&hv2);
+        let bundled = hv1.bundle(&hv2).unwrap();
         assert_eq!(bundled.dimension, 1000);
         assert!(bundled.norm > 0.0);
 
         // Bind operation
-        let bound = hv1.bind(&hv2);
+        let bound = hv1.bind(&hv2).unwrap();
         assert_eq!(bound.dimension, 1000);
         assert!(bound.norm > 0.0);
 
@@ -1826,11 +1828,14 @@ mod tests {
         let config = HDCConfig::default();
 
         // Create simple training data
-        let trainimages = vec![Array2::zeros((8, 8)).view(), Array2::ones((8, 8)).view()];
+        let train_zeros = Array2::<f64>::zeros((8, 8));
+        let train_ones = Array2::<f64>::ones((8, 8));
+        let trainimages = vec![train_zeros.view(), train_ones.view()];
         let train_labels = vec!["zeros".to_string(), "ones".to_string()];
 
         // Test data
-        let testimages = vec![Array2::zeros((8, 8)).view()];
+        let test_zeros = Array2::<f64>::zeros((8, 8));
+        let testimages = vec![test_zeros.view()];
 
         let results =
             hdcimage_classification(&trainimages, &train_labels, &testimages, &config).unwrap();
@@ -1915,7 +1920,9 @@ mod tests {
         let config = HDCConfig::default();
         let mut memory_system = ContinualLearningMemory::new(&config);
 
-        let trainingimages = vec![Array2::zeros((4, 4)).view(), Array2::ones((4, 4)).view()];
+        let train_zeros = Array2::<f64>::zeros((4, 4));
+        let train_ones = Array2::<f64>::ones((4, 4));
+        let trainingimages = vec![train_zeros.view(), train_ones.view()];
         let training_labels = vec!["zeros".to_string(), "ones".to_string()];
 
         let result = advanced_continual_learning_hdc(
@@ -1970,7 +1977,7 @@ mod tests {
         let config = HDCConfig::default();
         let mut learning_system = OnlineLearningSystem::new(&config);
 
-        let streamimage = Array2::zeros((6, 6));
+        let streamimage = Array2::<f64>::zeros((6, 6));
         let true_label = "test_pattern";
 
         let result = advanced_online_learning_hdc(
@@ -2000,7 +2007,7 @@ mod tests {
         library.levels.insert(1, level1_concepts);
 
         let retrieved_concepts = library.get_concepts_at_level(1);
-        assert!(retrieved_concepts.contains_key("test_concept"));
+        assert!(retrieved_concepts.unwrap().contains_key("test_concept"));
 
         let retrieved_concept = library.get_concept("test_concept");
         assert!(retrieved_concept.is_some());

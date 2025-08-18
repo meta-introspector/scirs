@@ -1101,7 +1101,7 @@ mod tests {
     #[test]
     fn test_sum_labels_3d() {
         let input = Array3::from_shape_fn((2, 2, 2), |(i, j, k)| (i + j + k) as f64);
-        let labels = Array3::from_shape_fn((2, 2, 2), |(i, j_k)| if i == j { 1 } else { 2 });
+        let labels = Array3::from_shape_fn((2, 2, 2), |(i, j, _k)| if i == j { 1 } else { 2 });
 
         let sums =
             sum_labels(&input, &labels, None).expect("sum_labels should succeed for 3D test");
@@ -1238,7 +1238,7 @@ mod tests {
     fn test_high_dimensional_arrays() {
         // Test 4D arrays
         let input = Array::from_shape_fn((2, 2, 2, 2), |(i, j, k, l)| (i + j + k + l) as f64);
-        let labels = Array::from_shape_fn((2, 2, 2, 2), |(i, j_k_l)| i + j + 1);
+        let labels = Array::from_shape_fn((2, 2, 2, 2), |(i, j, _k, _l)| i + j + 1);
 
         let sums =
             sum_labels(&input, &labels, None).expect("sum_labels should succeed for 4D test");

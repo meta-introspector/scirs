@@ -109,7 +109,7 @@ impl<T: Float> Hash for FloatPoint<T> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__cluster::meanshift::estimate_bandwidth;
+/// use scirs2_cluster::meanshift::estimate_bandwidth;
 ///
 /// let data = array![
 ///     [1.0, 1.0], [2.0, 1.0], [1.0, 0.0],
@@ -355,7 +355,7 @@ fn mean_shift_single_seed<
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__cluster::meanshift::{mean_shift, MeanShiftOptions};
+/// use scirs2_cluster::meanshift::{mean_shift, MeanShiftOptions};
 ///
 /// let data = array![
 ///     [1.0, 1.0], [2.0, 1.0], [1.0, 0.0],
@@ -503,7 +503,7 @@ impl<
         // Convert to Array2
         let mut sorted_centers = Array2::zeros((sorted_by_intensity.len(), n_features));
         for (i, center_) in sorted_by_intensity.iter().enumerate() {
-            for (j, &val) in center_.0.iter().enumerate() {
+            for (j, &val) in center_.0 .0.iter().enumerate() {
                 sorted_centers[[i, j]] = val;
             }
         }

@@ -27,12 +27,12 @@ pub struct LSTMConfig {
 /// h_t = o_t * tanh(c_t)                                     # hidden state
 /// # Examples
 /// ```
-/// use scirs2_neural::layers::{LSTM, Layer};
+/// use scirs2_neural::layers::{Layer, recurrent::LSTM};
 /// use ndarray::{Array, Array3};
-/// use rand::rngs::SmallRng;
+/// use rand::rngs::StdRng;
 /// use rand::SeedableRng;
 /// // Create an LSTM layer with 10 input features and 20 hidden units
-/// let mut rng = rand::rng();
+/// let mut rng = StdRng::seed_from_u64(42);
 /// let lstm = LSTM::new(10, 20, &mut rng).unwrap();
 /// // Forward pass with a batch of 2 samples, sequence length 5, and 10 features
 /// let batch_size = 2;

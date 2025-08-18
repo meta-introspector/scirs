@@ -586,7 +586,7 @@ mod tests {
     #[test]
     fn test_robust_filter_2d() {
         let image =
-            Array2::fromshape_vec((3, 3), vec![1.0, 1.2, 1.1, 1.1, 10.0, 1.2, 1.3, 1.2, 1.1])
+            Array2::from_shape_vec((3, 3), vec![1.0, 1.2, 1.1, 1.1, 10.0, 1.2, 1.3, 1.2, 1.1])
                 .unwrap();
 
         let filtered = robust_filter_2d(&image, alpha_trimmed_filter, 3, 0.2).unwrap();

@@ -13,7 +13,7 @@ pub mod kernels;
 #[cfg(feature = "cuda")]
 pub mod cuda;
 
-pub use device_detection::{DeviceCapability, DeviceManager, MemoryManager};
+pub use device_detection::{DeviceCapability, DeviceManager, MemoryManager, SystemCapabilities};
 pub use gpu_acceleration_framework::{
     CompiledKernel, GpuAccelerationManager, GpuKernelCache, GpuMemoryPool, GpuPerformanceReport,
     KernelPerformanceStats, MemoryPoolConfig, MemoryPoolStatistics,
@@ -124,7 +124,8 @@ impl BackendExecutor {
             Backend::OpenCL => Some(Arc::new(OpenCLContext::new(config.device_id)?)),
             // TODO: Implement Metal backend
             // #[cfg(all(target_os = "macos", feature = "metal"))]
-            // Backend::Metal => Some(Arc::new(MetalContext::new(_config.device_id)?), _ => None,
+            // Backend::Metal => Some(Arc::new(MetalContext::new(_config.device_id)?),
+            _ => None,
         };
 
         Ok(Self {

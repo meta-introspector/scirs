@@ -2,8 +2,8 @@
 use ndarray::{s, Array1, Array2};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
-use scirs2__optim::optimizers::{Adam, LARS, SGD};
-use scirs2__optim::Optimizer;
+use scirs2_optim::optimizers::{Adam, LARS, SGD};
+use scirs2_optim::Optimizer;
 use std::error::Error;
 use std::time::Instant;
 // use statrs::statistics::Statistics; // statrs not available
@@ -72,17 +72,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Initialize optimizers
     let mut optimizers: Vec<(_, &str, f64)> = vec![
         (
-            Box::new(SGD::new(0.01)) as Box<dyn Optimizer<f64_>>,
+            Box::new(SGD::new(0.01)) as Box<dyn Optimizer<f64>>,
             "SGD",
             0.01,
         ),
         (
-            Box::new(Adam::new(0.01)) as Box<dyn Optimizer<f64_>>,
+            Box::new(Adam::new(0.01)) as Box<dyn Optimizer<f64>>,
             "Adam",
             0.01,
         ),
         (
-            Box::new(LARS::new(0.01).with_trust_coefficient(0.001)) as Box<dyn Optimizer<f64_>>,
+            Box::new(LARS::new(0.01).with_trust_coefficient(0.001)) as Box<dyn Optimizer<f64>>,
             "LARS",
             0.01,
         ),

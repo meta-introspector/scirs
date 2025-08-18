@@ -4,10 +4,10 @@
 //! to automatically find the best clustering algorithm and parameters for your data.
 
 use ndarray::Array2;
-use scirs2__cluster::preprocess::standardize;
+use scirs2_cluster::preprocess::standardize;
 
 // Auto-tuning imports
-use scirs2__cluster::{
+use scirs2_cluster::{
     auto_select_clustering_algorithm, quick_algorithm_selection, AutoClusteringSelector, AutoTuner,
     CVStrategy, ClusteringAlgorithm, CrossValidationConfig, EarlyStoppingConfig, EvaluationMetric,
     SearchStrategy, StandardSearchSpaces, TuningConfig,
@@ -344,7 +344,7 @@ fn create_dense_clusters_data(_n_samples: usize, nfeatures: usize) -> Array2<f64
         }
     }
 
-    Array2::fromshape_vec((n_samples..n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create sparse data for testing
@@ -367,7 +367,7 @@ fn create_sparse_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
         }
     }
 
-    Array2::fromshape_vec((n_samples..n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create high-dimensional data for testing
@@ -395,7 +395,7 @@ fn create_high_dimensional_data(_n_samples: usize, nfeatures: usize) -> Array2<f
         }
     }
 
-    Array2::fromshape_vec((n_samples..n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create noisy data for testing
@@ -427,7 +427,7 @@ fn create_noisy_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
         }
     }
 
-    Array2::fromshape_vec((n_samples..n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
 }
 
 #[cfg(test)]

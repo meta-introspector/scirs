@@ -116,8 +116,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut chart = ChartBuilder::on(&root)
         .caption("Robust Regression Methods Comparison", ("sans-serif", 30))
         .margin(10)
-        .x_label_areasize(30)
-        .y_label_areasize(40)
+        .x_label_area_size(30)
+        .y_label_area_size(40)
         .build_cartesian_2d(x_range_original.clone(), y_range)?;
 
     chart.configure_mesh().x_desc("X").y_desc("Y").draw()?;
@@ -205,8 +205,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ("sans-serif", 30),
         )
         .margin(10)
-        .x_label_areasize(30)
-        .y_label_areasize(40)
+        .x_label_area_size(30)
+        .y_label_area_size(40)
         .build_cartesian_2d(x_range_original.clone(), y_range_tight)?;
 
     chart.configure_mesh().x_desc("X").y_desc("Y").draw()?;

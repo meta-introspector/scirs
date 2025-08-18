@@ -225,7 +225,7 @@ pub struct EnhancedModel<T: SerializableModel> {
 }
 
 impl<'de, T: SerializableModel> Deserialize<'de> for EnhancedModel<T> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
@@ -1321,7 +1321,7 @@ pub mod enhanced {
             } else {
                 Err(ClusteringError::InvalidInput(format!(
                     "Cannot migrate from {} to {}",
-                    self._version, target_version
+                    self.version, target_version
                 )))
             }
         }
@@ -1478,7 +1478,8 @@ pub fn save_spectral_clustering<P: AsRef<Path>>(
 }
 
 /// Export formats for clustering models
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ExportFormat {
     /// JSON format
     Json,
@@ -1711,12 +1712,14 @@ impl AdvancedExport for KMeansModel {
         });
 
         let data_characteristics = if let Some(ref labels) = self.labels {
-            Some(DataCharacteristics {
+            Some(ModelDataCharacteristics {
                 n_samples: labels.len(),
                 n_features: self.centroids.ncols(),
-                data_type_fingerprint: "continuous".to_string(),
-                feature_ranges: None,
-                preprocessing_applied: vec![],
+                data_type: Some("continuous".to_string()),
+                statistical_summary: None,
+                preprocessing_steps: Some(vec![]),
+                feature_scaling: None,
+                missing_value_percentage: Some(0.0),
             })
         } else {
             None
@@ -1809,12 +1812,14 @@ impl AdvancedExport for HierarchicalModel {
             custom_metrics: None,
         });
 
-        let data_characteristics = Some(DataCharacteristics {
+        let data_characteristics = Some(ModelDataCharacteristics {
             n_samples: self.n_observations,
             n_features: 0, // Unknown in linkage matrix
-            data_type_fingerprint: "continuous".to_string(),
-            feature_ranges: None,
-            preprocessing_applied: vec![],
+            data_type: Some("continuous".to_string()),
+            statistical_summary: None,
+            preprocessing_steps: Some(vec![]),
+            feature_scaling: None,
+            missing_value_percentage: Some(0.0),
         });
 
         ModelMetadata {
@@ -1939,7 +1944,7 @@ pub mod compatibility {
         let nrows = shape[0].as_u64().unwrap_or(0) as usize;
         let ncols = shape[1].as_u64().unwrap_or(0) as usize;
 
-        Array2::fromshape_vec((nrows, ncols), data)
+        Array2::from_shape_vec((nrows, ncols), data)
             .map_err(|e| ClusteringError::InvalidInput(format!("Shape mismatch: {}", e)))
     }
 
@@ -2250,9 +2255,9 @@ pub mod compatibility {
 
         card.push_str("\n## Usage\n\n");
         card.push_str("```rust\n");
-        card.push_str("use scirs2__cluster::serialization::SerializableModel;\n");
+        card.push_str("use scirs2_cluster::serialization::SerializableModel;\n");
         card.push_str(&format!(
-            "use scirs2__cluster::serialization::{}Model;\n",
+            "use scirs2_cluster::serialization::{}Model;\n",
             metadata.model_type.to_uppercase()
         ));
         card.push_str("\n");
@@ -2529,7 +2534,8 @@ pub mod persistence {
     }
 
     /// Entry in the model registry
-    #[derive(Serialize, Deserialize, Debug, Clone)]
+    #[derive(Debug, Clone)]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct ModelRegistryEntry {
         /// Unique model identifier
         pub model_id: String,
@@ -2562,6 +2568,7 @@ pub mod persistence {
         }
 
         /// Register a new model
+        #[cfg(feature = "serde")]
         pub fn register_model<T: SerializableModel + AdvancedExport>(
             &mut self,
             model_id: String,
@@ -2624,6 +2631,7 @@ pub mod persistence {
         }
 
         /// Remove a model from registry
+        #[cfg(feature = "serde")]
         pub fn remove_model(&mut self, model_id: &str) -> Result<()> {
             if let Some(entry) = self.models.remove(model_id) {
                 let fullpath = self.base_directory.join(&entry.filepath);
@@ -2653,6 +2661,7 @@ pub mod persistence {
         }
 
         /// Compact registry by removing unused models
+        #[cfg(feature = "serde")]
         pub fn compact_registry(&mut self) -> Result<Vec<String>> {
             let mut removed = Vec::new();
             let entries_to_check: Vec<_> = self.models.iter().collect();
@@ -2676,6 +2685,7 @@ pub mod persistence {
         }
 
         /// Load registry from disk
+        #[cfg(feature = "serde")]
         pub fn load_registry(&mut self) -> Result<()> {
             let registrypath = self.base_directory.join("registry.json");
             if registrypath.exists() {
@@ -2690,6 +2700,7 @@ pub mod persistence {
         }
 
         /// Save registry to disk
+        #[cfg(feature = "serde")]
         fn save_registry(&self) -> Result<()> {
             std::fs::create_dir_all(&self.base_directory).map_err(|e| {
                 ClusteringError::InvalidInput(format!("Failed to create directory: {}", e))
@@ -2802,7 +2813,7 @@ pub mod persistence {
 
                 // Add to tar archive
                 let mut header = tar::Header::new_gnu();
-                header.setpath(&file_name).map_err(|e| {
+                header.set_path(&file_name).map_err(|e| {
                     ClusteringError::InvalidInput(format!("Failed to set tar path: {}", e))
                 })?;
                 header.set_size(model_content.len() as u64);
@@ -2825,7 +2836,7 @@ pub mod persistence {
 
                     let metadata_file_name = format!("{}_metadata.json", model_name);
                     let mut metadata_header = tar::Header::new_gnu();
-                    metadata_header.setpath(&metadata_file_name).map_err(|e| {
+                    metadata_header.set_path(&metadata_file_name).map_err(|e| {
                         ClusteringError::InvalidInput(format!("Failed to set metadata path: {}", e))
                     })?;
                     metadata_header.set_size(metadata_content.len() as u64);
@@ -3578,9 +3589,8 @@ impl ClusteringWorkflowManager {
 
         // Remove excess backups
         while backups.len() > self.auto_save_config.max_backups {
-            if let Some(old_backup) = backups.remove(0) {
-                let _ = std::fs::remove_file(old_backup); // Ignore errors
-            }
+            let old_backup = backups.remove(0);
+            let _ = std::fs::remove_file(old_backup); // Ignore errors
         }
 
         Ok(())
@@ -3713,7 +3723,7 @@ pub mod import {
         let json_value: serde_json::Value = serde_json::from_str(&content)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to parse JSON: {}", e)))?;
 
-        parse_sklearn_json_format(&json_value)
+        parse_sklearn_json_format(json_value)
     }
 
     /// Import hierarchical clustering from SciPy JSON format
@@ -3724,7 +3734,7 @@ pub mod import {
         let json_value: serde_json::Value = serde_json::from_str(&content)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to parse JSON: {}", e)))?;
 
-        parse_scipy_json_format(&json_value)
+        parse_scipy_json_format(json_value)
     }
 
     /// Export model to scikit-learn compatible JSON format
@@ -3803,7 +3813,7 @@ fn parse_sklearn_json_format(json: Value) -> Result<KMeansModel> {
     }
 
     let centroids =
-        Array2::fromshape_vec((n_clusters, n_features), centroid_values).map_err(|e| {
+        Array2::from_shape_vec((n_clusters, n_features), centroid_values).map_err(|e| {
             ClusteringError::InvalidInput(format!("Failed to create centroids array: {}", e))
         })?;
 
@@ -3858,7 +3868,7 @@ fn parse_scipy_json_format(json: Value) -> Result<HierarchicalModel> {
         }
     }
 
-    let linkage = Array2::fromshape_vec((n_merges, 4), linkage_values).map_err(|e| {
+    let linkage = Array2::from_shape_vec((n_merges, 4), linkage_values).map_err(|e| {
         ClusteringError::InvalidInput(format!("Failed to create linkage matrix: {}", e))
     })?;
 

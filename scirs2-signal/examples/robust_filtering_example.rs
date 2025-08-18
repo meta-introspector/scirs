@@ -84,7 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         1.1, 1.3, 1.2, 1.1, 1.0,
     ];
 
-    let image = Array2::fromshape_vec((5, 5), image_data.clone())?;
+    let image = Array2::from_shape_vec((5, 5), image_data.clone())?;
 
     println!("   Original 2D signal:");
     for row in image.outer_iter() {

@@ -7,7 +7,7 @@ use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{
     convolve, gaussian_filter_f32, gradient_magnitude, prewitt, scharr, sobel, BorderMode,
 };
-use ndarray::{Array, ArrayD, Ix2};
+use ndarray::{Array, Array2, ArrayD, Ix2};
 use std::f32::consts::PI;
 
 /// Gradient calculation method for edge detection
@@ -916,7 +916,7 @@ mod tests {
     #[test]
     fn test_laplacian_edges() {
         // Create a simple test image with a point
-        let mut image = Array::<f32>::zeros((5, 5));
+        let mut image = Array2::<f32>::zeros((5, 5));
         image[[2, 2]] = 1.0;
 
         // Apply LoG filter

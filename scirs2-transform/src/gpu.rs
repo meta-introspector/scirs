@@ -44,7 +44,7 @@ impl GpuPCA {
     /// # Examples
     ///
     /// ```
-    /// # use scirs2__transform::gpu::GpuPCA;
+    /// # use scirs2_transform::gpu::GpuPCA;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let pca = GpuPCA::new(5)?;
     /// # Ok(())
@@ -83,7 +83,7 @@ impl GpuPCA {
     /// # Examples
     ///
     /// ```should_panic
-    /// # use scirs2__transform::gpu::GpuPCA;
+    /// # use scirs2_transform::gpu::GpuPCA;
     /// # use ndarray::Array2;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let mut pca = GpuPCA::new(2)?;

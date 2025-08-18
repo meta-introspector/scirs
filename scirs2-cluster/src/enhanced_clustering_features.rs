@@ -468,7 +468,7 @@ impl TransformerClusterEmbedder {
         let hidden_dim = ffn_weights.ncols();
 
         // First linear layer with ReLU activation
-        let mut hidden = Array2::zeros((seq_len, hidden_dim));
+        let mut hidden: Array2<f64> = Array2::zeros((seq_len, hidden_dim));
         for i in 0..seq_len {
             for j in 0..hidden_dim {
                 for k in 0..embed_dim {
@@ -508,7 +508,7 @@ impl TransformerClusterEmbedder {
         let (seq_len, embed_dim) = embeddings.dim();
         let output_dim = embed_dim / 2; // Reduce dimensionality for clustering
 
-        let mut projection = Array2::zeros((seq_len, output_dim));
+        let mut projection: Array2<f64> = Array2::zeros((seq_len, output_dim));
 
         // Simple projection with learned clustering-specific weights
         for i in 0..seq_len {
@@ -603,7 +603,7 @@ impl GraphNeuralNetworkProcessor {
         let n_nodes = graph.nrows();
         let embed_dim = embeddings.ncols();
 
-        let mut conv_output = Array2::zeros((n_nodes, embed_dim));
+        let mut conv_output: Array2<f64> = Array2::zeros((n_nodes, embed_dim));
 
         // Apply graph convolution
         for i in 0..n_nodes {

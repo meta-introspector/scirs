@@ -4,16 +4,16 @@
 //! to create static plots with plotters and interactive visualizations with egui.
 
 use ndarray::Array2;
-use scirs2__cluster::preprocess::standardize;
-use scirs2__cluster::vq::kmeans;
+use scirs2_cluster::preprocess::standardize;
+use scirs2_cluster::vq::kmeans;
 
 #[cfg(feature = "plotters")]
-use scirs2__cluster::{save_clustering_plot, PlotFormat, PlotOutput};
+use scirs2_cluster::{save_clustering_plot, PlotFormat, PlotOutput};
 
 #[cfg(feature = "egui")]
-use scirs2__cluster::launch_interactive_visualization;
+use scirs2_cluster::launch_interactive_visualization;
 
-use scirs2__cluster::VisualizationConfig;
+use scirs2_cluster::VisualizationConfig;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("======================================");
 
     // Create sample clustering data with 3 well-separated clusters
-    let data = Array2::fromshape_vec((300, 2), generate_sample_data())?;
+    let data = Array2::from_shape_vec((300, 2), generate_sample_data())?;
 
     println!("Generated {} data points with 2 features", data.nrows());
 
@@ -203,7 +203,7 @@ mod tests {
 
     #[test]
     fn test_clustering_pipeline() {
-        let data = Array2::fromshape_vec((300, 2), generate_sample_data()).unwrap();
+        let data = Array2::from_shape_vec((300, 2), generate_sample_data()).unwrap();
         let standardized = standardize(data.view(), true).unwrap();
         let (centroids, labels) = kmeans(
             standardized.view(),

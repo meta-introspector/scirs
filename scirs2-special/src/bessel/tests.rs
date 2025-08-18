@@ -2,9 +2,9 @@
 
 #[cfg(test)]
 mod bessel_tests {
-    use crate::bessel::first__kind::*;
+    use crate::bessel::first_kind::*;
     use crate::bessel::modified::*;
-    use crate::bessel::second__kind::*;
+    use crate::bessel::second_kind::*;
     use approx::assert_relative_eq;
 
     #[test]

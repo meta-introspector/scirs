@@ -556,7 +556,7 @@ mod tests {
             data.extend_from_slice(&[x, y, z]);
         }
 
-        let x = Array::fromshape_vec((n_points, 3), data).unwrap();
+        let x = Array::from_shape_vec((n_points, 3), data).unwrap();
 
         // Fit Isomap
         let mut isomap = Isomap::new(5, 2);

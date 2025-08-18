@@ -4,10 +4,10 @@
 //! with automatic fallback to CPU when GPU is not available.
 
 use ndarray::Array2;
-use scirs2__cluster::preprocess::standardize;
+use scirs2_cluster::preprocess::standardize;
 
 // GPU acceleration imports
-use scirs2__cluster::{
+use scirs2_cluster::{
     gpu_accelerated::{gpu_dbscan, gpu_hierarchical, gpu_kmeans},
     DeviceSelection, GpuBackend, GpuConfig, GpuLinkageMethod, MemoryStrategy,
 };
@@ -362,7 +362,7 @@ fn create_large_sample_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> 
         }
     }
 
-    Array2::fromshape_vec((n_samples..n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
 }
 
 #[cfg(test)]

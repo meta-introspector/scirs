@@ -9,7 +9,7 @@ use ndarray::{Array, ArrayView2, Ix2, Ix3};
 use num_traits::{Float, FromPrimitive};
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::filters::gaussian_filter as internal_gaussian_filter;
+use crate::filters::{gaussian_filter as internal_gaussian_filter, BorderMode};
 use crate::interpolation::BoundaryMode;
 use crate::measurements::center_of_mass as internal_center_of_mass;
 use crate::morphology::{
@@ -132,8 +132,26 @@ impl SciPyCompatLayer {
             );
         }
 
+        // Convert input to f64 array and sigma tuple to single value
+        let input_f64 = input.mapv(|x| x.to_f64().unwrap_or(0.0)).to_owned();
+        let sigma_single = (sigma_tuple.0 + sigma_tuple.1) / 2.0; // Use average of sigma values
+
+        // Convert BoundaryMode to BorderMode
+        let border_mode = match boundary_mode {
+            BoundaryMode::Constant => BorderMode::Constant,
+            BoundaryMode::Reflect => BorderMode::Reflect,
+            BoundaryMode::Mirror => BorderMode::Mirror,
+            BoundaryMode::Wrap => BorderMode::Wrap,
+            BoundaryMode::Nearest => BorderMode::Nearest,
+        };
+
         // Call internal implementation
-        internal_gaussian_filter(input, sigma_tuple, boundary_mode)
+        let result_f64 =
+            internal_gaussian_filter(&input_f64, sigma_single, Some(border_mode), None)?;
+
+        // Convert back to original type
+        let result = result_f64.mapv(|x| T::from_f64(x).unwrap_or(T::zero()));
+        Ok(result)
     }
 
     /// Median filter with SciPy-compatible interface
@@ -153,7 +171,16 @@ impl SciPyCompatLayer {
         origin: Option<OriginParam>,
     ) -> NdimageResult<Array<T, Ix2>>
     where
-        T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
+        T: Float
+            + FromPrimitive
+            + std::fmt::Debug
+            + Clone
+            + Send
+            + Sync
+            + PartialOrd
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + 'static,
     {
         let filter_size = self.convert_size_param(size, (3, 3))?;
         let boundary_mode = self.convert_mode_param(mode)?;
@@ -172,7 +199,20 @@ impl SciPyCompatLayer {
             );
         }
 
-        crate::filters::median_filter(input, filter_size, boundary_mode)
+        // Convert input to owned array and convert parameters
+        let input_owned = input.to_owned();
+        let size_slice = [filter_size.0, filter_size.1];
+
+        // Convert BoundaryMode to BorderMode
+        let border_mode = match boundary_mode {
+            BoundaryMode::Constant => BorderMode::Constant,
+            BoundaryMode::Reflect => BorderMode::Reflect,
+            BoundaryMode::Mirror => BorderMode::Mirror,
+            BoundaryMode::Wrap => BorderMode::Wrap,
+            BoundaryMode::Nearest => BorderMode::Nearest,
+        };
+
+        crate::filters::median_filter(&input_owned, &size_slice, Some(border_mode))
     }
 
     /// Uniform filter with SciPy-compatible interface
@@ -191,7 +231,15 @@ impl SciPyCompatLayer {
         origin: Option<OriginParam>,
     ) -> NdimageResult<Array<T, Ix2>>
     where
-        T: Float + FromPrimitive + Clone + Send + Sync,
+        T: Float
+            + FromPrimitive
+            + std::fmt::Debug
+            + Clone
+            + Send
+            + Sync
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + 'static,
     {
         let filter_size = self.convert_size_param(size, (3, 3))?;
         let boundary_mode = self.convert_mode_param(mode)?;
@@ -203,7 +251,20 @@ impl SciPyCompatLayer {
             );
         }
 
-        crate::filters::uniform_filter(input, filter_size, boundary_mode)
+        // Convert input to owned array and convert parameters
+        let input_owned = input.to_owned();
+        let size_slice = [filter_size.0, filter_size.1];
+
+        // Convert BoundaryMode to BorderMode
+        let border_mode = match boundary_mode {
+            BoundaryMode::Constant => BorderMode::Constant,
+            BoundaryMode::Reflect => BorderMode::Reflect,
+            BoundaryMode::Mirror => BorderMode::Mirror,
+            BoundaryMode::Wrap => BorderMode::Wrap,
+            BoundaryMode::Nearest => BorderMode::Nearest,
+        };
+
+        crate::filters::uniform_filter(&input_owned, &size_slice, Some(border_mode), None)
     }
 }
 
@@ -240,7 +301,10 @@ impl SciPyCompatLayer {
         )
         .unwrap();
 
-        let structure_elem = structure.unwrap_or(default_structure.view());
+        let structure_elem = match structure {
+            Some(s) => s.to_owned(),
+            None => default_structure,
+        };
 
         if iterations.is_some() && iterations != Some(1) {
             self.add_warning(
@@ -265,12 +329,26 @@ impl SciPyCompatLayer {
         }
 
         // Apply multiple iterations if requested
-        let mut result =
-            internal_binary_erosion(binary_input.view(), structure_elem, BoundaryMode::Constant)?;
+        let mut result = internal_binary_erosion(
+            &binary_input,
+            Some(&structure_elem),
+            None,
+            None,
+            None,
+            None,
+            None,
+        )?;
 
         for _ in 1..iterations.unwrap_or(1) {
-            result =
-                internal_binary_erosion(result.view(), structure_elem, BoundaryMode::Constant)?;
+            result = internal_binary_erosion(
+                &result,
+                Some(&structure_elem),
+                None,
+                None,
+                None,
+                None,
+                None,
+            )?;
         }
 
         Ok(result)
@@ -305,7 +383,10 @@ impl SciPyCompatLayer {
         )
         .unwrap();
 
-        let structure_elem = structure.unwrap_or(default_structure.view());
+        let structure_elem = match structure {
+            Some(s) => s.to_owned(),
+            None => default_structure,
+        };
 
         if iterations.is_some() && iterations != Some(1) {
             self.add_warning(
@@ -319,12 +400,26 @@ impl SciPyCompatLayer {
         }
 
         // Apply multiple iterations if requested
-        let mut result =
-            internal_binary_dilation(binary_input.view(), structure_elem, BoundaryMode::Constant)?;
+        let mut result = internal_binary_dilation(
+            &binary_input,
+            Some(&structure_elem),
+            None,
+            None,
+            None,
+            None,
+            None,
+        )?;
 
         for _ in 1..iterations.unwrap_or(1) {
-            result =
-                internal_binary_dilation(result.view(), structure_elem, BoundaryMode::Constant)?;
+            result = internal_binary_dilation(
+                &result,
+                Some(&structure_elem),
+                None,
+                None,
+                None,
+                None,
+                None,
+            )?;
         }
 
         Ok(result)
@@ -363,14 +458,29 @@ impl SciPyCompatLayer {
             );
         }
 
-        let _distances = crate::morphology::distance_transform_edt(binary_input.view())?;
+        let binary_input_dyn = binary_input.into_dyn();
+        let (distances_opt, _indices_opt) = crate::morphology::distance_transform_edt(
+            &binary_input_dyn,
+            None,  // sampling
+            true,  // return_distances
+            false, // return_indices
+        )?;
 
-        // Convert back to original type
-        let result_array = _distances.mapv(|v| T::from_f64(v).unwrap_or(T::zero()));
+        let _distances = distances_opt.ok_or_else(|| {
+            NdimageError::ComputationError("Failed to compute distances".to_string())
+        })?;
+
+        // Convert back to original type and convert to 2D
+        let result_2d = _distances
+            .into_dimensionality::<ndarray::Ix2>()
+            .map_err(|_| {
+                NdimageError::ComputationError("Failed to convert distances back to 2D".to_string())
+            })?;
+        let result_array = result_2d.mapv(|v| T::from_f64(v).unwrap_or(T::zero()));
 
         Ok(DistanceTransformResult {
-            _distances: Some(result_array),
-            _indices: None,
+            distances: Some(result_array),
+            indices: None,
         })
     }
 }
@@ -390,7 +500,15 @@ impl SciPyCompatLayer {
         index: Option<IndexParam>,
     ) -> NdimageResult<CenterOfMassResult>
     where
-        T: Float + FromPrimitive + Clone + Send + Sync,
+        T: Float
+            + FromPrimitive
+            + Clone
+            + Send
+            + Sync
+            + std::fmt::Debug
+            + std::ops::DivAssign
+            + num_traits::NumAssign
+            + 'static,
     {
         if labels.is_some() {
             self.add_warning("center_of_mass", "Labels parameter not yet fully supported");
@@ -400,8 +518,19 @@ impl SciPyCompatLayer {
             self.add_warning("center_of_mass", "Index parameter not yet supported");
         }
 
-        let com = internal_center_of_mass(input)?;
-        Ok(CenterOfMassResult::Single(com))
+        let com = internal_center_of_mass(&input.to_owned())?;
+        // Convert Vec<T> to (f64, f64)
+        if com.len() >= 2 {
+            let com_tuple = (
+                com[0].to_f64().unwrap_or(0.0),
+                com[1].to_f64().unwrap_or(0.0),
+            );
+            Ok(CenterOfMassResult::Single(com_tuple))
+        } else {
+            Err(NdimageError::ComputationError(
+                "Center of mass computation failed".to_string(),
+            ))
+        }
     }
 
     /// Label connected components with SciPy-compatible interface
@@ -427,11 +556,16 @@ impl SciPyCompatLayer {
             );
         }
 
-        let (labeled, num_labels) = crate::morphology::label(binary_input.view(), None)?;
+        let (labeled, num_labels) = crate::morphology::label(
+            &binary_input,
+            None, // structure
+            None, // connectivity
+            None, // background
+        )?;
 
         Ok(LabelResult {
-            labeled_array: labeled,
-            num_features: num_labels,
+            labeled_array: labeled.mapv(|v| v as i32),
+            num_features: num_labels as i32,
         })
     }
 }
@@ -537,7 +671,7 @@ pub enum SizeParam {
     Array(Vec<usize>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum OrderParam {
     Single(usize),
     Tuple(usize, usize),
@@ -632,7 +766,16 @@ pub fn median_filter<T>(
     origin: Option<OriginParam>,
 ) -> NdimageResult<Array<T, Ix2>>
 where
-    T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
+    T: Float
+        + FromPrimitive
+        + std::fmt::Debug
+        + Clone
+        + Send
+        + Sync
+        + PartialOrd
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     get_scipy_compat().median_filter(input, size, footprint, mode, cval, origin)
 }
@@ -708,7 +851,15 @@ pub fn center_of_mass<T>(
     index: Option<IndexParam>,
 ) -> NdimageResult<CenterOfMassResult>
 where
-    T: Float + FromPrimitive + Clone + Send + Sync,
+    T: Float
+        + FromPrimitive
+        + Clone
+        + Send
+        + Sync
+        + std::fmt::Debug
+        + std::ops::DivAssign
+        + num_traits::NumAssign
+        + 'static,
 {
     get_scipy_compat().center_of_mass(input, labels, index)
 }

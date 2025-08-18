@@ -1,5 +1,5 @@
 use ndarray::Array2;
-use scirs2__cluster::hierarchy::{fcluster, linkage, ClusterCriterion, LinkageMethod, Metric};
+use scirs2_cluster::hierarchy::{fcluster, linkage, ClusterCriterion, LinkageMethod, Metric};
 
 #[allow(dead_code)]
 fn main() {
@@ -7,7 +7,7 @@ fn main() {
     println!("==============================");
 
     // Create a simple dataset with three clusters
-    let data = Array2::fromshape_vec(
+    let data = Array2::from_shape_vec(
         (9, 2),
         vec![
             // Cluster 1

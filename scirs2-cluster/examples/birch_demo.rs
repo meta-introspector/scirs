@@ -1,6 +1,6 @@
 use ndarray::Array2;
-use scirs2__cluster::birch::{birch, BirchOptions};
-use scirs2__cluster::metrics::silhouette_score;
+use scirs2_cluster::birch::{birch, BirchOptions};
+use scirs2_cluster::metrics::silhouette_score;
 
 #[allow(dead_code)]
 fn main() {
@@ -145,5 +145,5 @@ fn generate_clustered_data() -> Array2<f64> {
     // Some outliers
     data.extend_from_slice(&[0.0, 0.0, 8.0, 8.0, 0.0, 8.0, 8.0, 0.0]);
 
-    Array2::fromshape_vec((124, 2), data).unwrap()
+    Array2::from_shape_vec((124, 2), data).unwrap()
 }

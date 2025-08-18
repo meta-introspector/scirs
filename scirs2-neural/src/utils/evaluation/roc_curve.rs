@@ -159,8 +159,14 @@ impl<F: Float + Debug + Display> ROCCurve<F> {
     /// # Example
     /// ```
     /// use scirs2_neural::utils::colors::ColorOptions;
+    /// use scirs2_neural::utils::ROCCurve;
+    /// use ndarray::Array1;
     ///
     /// // Create test data
+    /// let y_true = Array1::from_vec(vec![0, 0, 1, 1]);
+    /// let y_scores = Array1::from_vec(vec![0.1, 0.4, 0.35, 0.8]);
+    /// let roc = ROCCurve::new(&y_true.view(), &y_scores.view()).unwrap();
+    ///
     /// // Create ROC curve visualization
     /// let options = ColorOptions::default();
     /// let plot = roc.to_ascii_with_options(Some("Model Performance"), 50, 20, &options);

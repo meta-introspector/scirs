@@ -5,7 +5,7 @@
 //! can be more efficient when dealing with sparse gradients.
 
 use ndarray::Array1;
-use scirs2__optim::optimizers::{Adam, Optimizer, SparseAdam, SparseGradient};
+use scirs2_optim::optimizers::{Adam, Optimizer, SparseAdam, SparseGradient};
 use std::time::Instant;
 
 #[allow(dead_code)]

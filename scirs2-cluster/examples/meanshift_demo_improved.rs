@@ -1,5 +1,5 @@
 use ndarray::{array, Array2};
-use scirs2__cluster::meanshift::{estimate_bandwidth, mean_shift, MeanShiftOptions};
+use scirs2_cluster::meanshift::{estimate_bandwidth, mean_shift, MeanShiftOptions};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -86,7 +86,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         data_vec.push(rng.random::<f64>() * 0.5 - 0.25);
     }
 
-    let data2 = Array2::fromshape_vec((150, 2), data_vec)?;
+    let data2 = Array2::from_shape_vec((150, 2), data_vec)?;
 
     // Estimate bandwidth with different quantiles
     let quantiles = vec![0.1, 0.2, 0.3];

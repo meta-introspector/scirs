@@ -77,6 +77,10 @@ pub struct SpikingNeuron {
     pub current_rate: f64,
     /// Adaptation current
     pub adaptation_current: f64,
+    /// Pre-synaptic spike trace for STDP
+    pub pre_spike_trace: f64,
+    /// Post-synaptic spike trace for STDP
+    pub post_spike_trace: f64,
 }
 
 impl Default for SpikingNeuron {
@@ -89,6 +93,8 @@ impl Default for SpikingNeuron {
             target_rate: 0.1, // 10% baseline firing rate
             current_rate: 0.0,
             adaptation_current: 0.0,
+            pre_spike_trace: 0.0,
+            post_spike_trace: 0.0,
         }
     }
 }
@@ -258,7 +264,10 @@ where
     }
 
     // Read out final processed image from liquid states
-    let processedimage = readout_from_liquidstates(&liquidstates, (height, width), config)?;
+    let processedimage_f64 = readout_from_liquidstates(&liquidstates, (height, width), config)?;
+
+    // Convert from f64 to generic type T
+    let processedimage = processedimage_f64.mapv(|v| T::from_f64(v).unwrap_or(T::zero()));
 
     Ok(processedimage)
 }
@@ -382,7 +391,7 @@ where
                     }
 
                     // Temporal weighting (earlier spikes have higher precedence)
-                    let temporal_weight = (-t as f64 / config.tau_synaptic).exp();
+                    let temporal_weight = (-(t as f64) / config.tau_synaptic).exp();
                     temporal_correlation += spatial_correlation * temporal_weight;
                 }
 
@@ -417,10 +426,9 @@ where
 
     // Initialize synaptic weights randomly
     let mut rng = rand::rng();
-    let mut learned_filter =
-        Array2::from_shape_fn(filter_size, |_| (rng.gen_range::<f64>(-0.1..0.1)));
+    let mut learned_filter = Array2::from_shape_fn(filter_size, |_| (rng.gen_range(-0.1..0.1)));
 
-    let mut pre_synaptic_traces = Array2::zeros(filter_size);
+    let mut pre_synaptic_traces = Array2::<f64>::zeros(filter_size);
     let mut post_synaptic_trace = 0.0;
 
     // STDP learning over multiple epochs
@@ -429,8 +437,8 @@ where
             let (height, width) = image.dim();
 
             // Random location for unsupervised patch learning
-            let y_start = rng.gen_range::<usize>(0..height.saturating_sub(filter_h));
-            let x_start = rng.gen_range::<usize>(0..width.saturating_sub(filter_w));
+            let y_start = rng.gen_range(0..height.saturating_sub(filter_h));
+            let x_start = rng.gen_range(0..width.saturating_sub(filter_w));
 
             // Extract patch
             let patch = image.slice(s![y_start..y_start + filter_h, x_start..x_start + filter_w]);
@@ -537,7 +545,7 @@ where
             let spike_rate = intensity.max(0.0).min(1.0); // Normalized rate
 
             for t in 0..time_steps {
-                if rng.gen_range::<f64>(0.0..1.0) < spike_rate * config.learning_rate {
+                if rng.gen_range(0.0..1.0) < spike_rate * config.learning_rate {
                     spike_trains[(t, y, x)] = 1.0;
                 }
             }
@@ -753,7 +761,7 @@ fn apply_event_kernel(
                     (-((dy * dy + dx * dx) as f64) / (2.0 * config.tau_synaptic)).exp();
 
                 // Temporal decay based on event properties
-                let temporal_weight = (-event.timestamp as f64 / config.tau_membrane).exp();
+                let temporal_weight = (-(event.timestamp as f64) / config.tau_membrane).exp();
 
                 let contribution = event.value * spatial_weight * temporal_weight;
                 accumulator[(uy, ux)] += if event.polarity {
@@ -781,7 +789,7 @@ fn initialize_reservoir(
     // Initialize reservoir with diverse properties
     for (i, neuron) in reservoir.iter_mut().enumerate() {
         neuron.target_rate = 0.05 + 0.1 * (i as f64 / reservoir_size as f64);
-        neuron.membrane_potential = rng.gen_range::<f64>(-0.05..0.05);
+        neuron.membrane_potential = rng.gen_range(-0.05..0.05);
     }
 
     Ok(reservoir)
@@ -927,7 +935,7 @@ where
 
     // Create temporal patterns with different time constants
     for t in 0..time_window {
-        let temporal_weight = (-t as f64 / config.tau_synaptic).exp();
+        let temporal_weight = (-(t as f64) / config.tau_synaptic).exp();
 
         for y in 0..height {
             for x in 0..width {

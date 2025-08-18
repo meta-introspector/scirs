@@ -6,7 +6,7 @@ use ndarray::Array;
 use num_traits::Float;
 use std::fmt::Debug;
 // Import from scirs2-optim
-use scirs2__optim::optimizers as optim_optimizers;
+use scirs2_optim::optimizers as optim_optimizers;
 /// Stochastic Gradient Descent (SGD) optimizer.
 ///
 /// SGD is the simplest optimization algorithm, which updates parameters by

@@ -551,7 +551,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                 let computation_time = worker_start.elapsed().as_millis() as u64;
 
                 results.push(WorkerResult {
-                    worker_id: partition.worker_id,
+                    worker_id: partition.workerid,
                     local_centroids,
                     local_labels: labels,
                     local_inertia: local_inertia.to_f64().unwrap_or(f64::INFINITY),
@@ -563,7 +563,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                 let throughput = partition.data.nrows() as f64 / (computation_time as f64 / 1000.0);
                 let efficiency = 1.0 / (1.0 + computation_time as f64 / 10000.0); // Simplified efficiency
                 self.performance_monitor.update_worker_metrics(
-                    partition.worker_id,
+                    partition.workerid,
                     0.5, // CPU usage (placeholder)
                     0.4, // Memory usage (placeholder)
                     throughput,
@@ -588,7 +588,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
 
         let n_features = worker_results[0].local_centroids.ncols();
         let mut global_centroids = Array2::zeros((self.k, n_features));
-        let mut global_counts = Array1::zeros(self.k);
+        let mut global_counts: Array1<usize> = Array1::zeros(self.k);
         let mut global_inertia = 0.0;
 
         // Aggregate weighted centroids and counts
@@ -714,7 +714,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         let worker_assignments = self
             .partitions
             .iter()
-            .map(|p| (p.worker_id, vec![p.partition_id]))
+            .map(|p| (p.workerid, vec![p.partition_id]))
             .collect();
 
         self.fault_coordinator.create_checkpoint(
@@ -777,7 +777,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                 let end_offset = offset + partition_labels.len();
                 labels
                     .slice_mut(s![offset..end_offset])
-                    .assign(&partition_labels.view());
+                    .assign(&Array1::from_vec(partition_labels.clone()).view());
                 offset = end_offset;
             }
         }
@@ -884,7 +884,7 @@ mod tests {
         let config = DistributedKMeansConfig::default();
         let kmeans = DistributedKMeans::<f64>::new(3, config).unwrap();
 
-        let data = Array2::fromshape_vec((10, 2), (0..20).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 2), (0..20).map(|x| x as f64).collect()).unwrap();
 
         let centroids = kmeans.random_initialization(data.view()).unwrap();
         assert_eq!(centroids.shape(), &[3, 2]);
@@ -895,7 +895,7 @@ mod tests {
         let config = DistributedKMeansConfig::default();
         let kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
 
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (6, 2),
             vec![
                 0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0, 5.0, 5.0, 6.0, 6.0,
@@ -917,12 +917,12 @@ mod tests {
         let mut kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
 
         // Set known centroids
-        let centroids = Array2::fromshape_vec((2, 2), vec![0.0, 0.0, 10.0, 10.0]).unwrap();
+        let centroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 10.0, 10.0]).unwrap();
         kmeans.centroids = Some(centroids);
 
         // Test prediction
         let test_data =
-            Array2::fromshape_vec((4, 2), vec![1.0, 1.0, 9.0, 9.0, -1.0, -1.0, 11.0, 11.0])
+            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 9.0, 9.0, -1.0, -1.0, 11.0, 11.0])
                 .unwrap();
 
         let labels = kmeans.predict(test_data.view()).unwrap();
@@ -943,15 +943,15 @@ mod tests {
         };
         let kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
 
-        let old_centroids = Array2::fromshape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let old_centroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
 
-        let new_centroids_converged = Array2::fromshape_vec(
+        let new_centroids_converged = Array2::from_shape_vec(
             (2, 2),
             vec![0.05, 0.05, 1.05, 1.05], // Small movement
         )
         .unwrap();
 
-        let new_centroids_not_converged = Array2::fromshape_vec(
+        let new_centroids_not_converged = Array2::from_shape_vec(
             (2, 2),
             vec![0.5, 0.5, 1.5, 1.5], // Large movement
         )

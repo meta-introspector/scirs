@@ -261,9 +261,12 @@ impl GpuAdvancedClusterer {
 
         // Phase 5: Transfer results back to CPU
         self.performance_monitor.start_timing("result_transfer");
-        let cpu_clusters = self.memory_manager.transfer_to_cpu(&gpu_clusters)?;
+        let cpu_clusters_2d = self.memory_manager.transfer_to_cpu(&gpu_clusters)?;
         let cpu_centroids = self.memory_manager.transfer_to_cpu(&gpu_centroids)?;
         let result_transfer_time = self.performance_monitor.end_timing("result_transfer");
+
+        // Convert clusters from Array2<f64> to Array1<usize>
+        let cpu_clusters = cpu_clusters_2d.column(0).mapv(|x| x as usize);
 
         // Phase 6: Create Advanced result from GPU computation
         let base_result =
