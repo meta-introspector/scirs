@@ -897,7 +897,7 @@ mod tests {
         drop(file);
 
         // Create a memory-mapped array
-        let mmap = MemoryMappedArray::<f64>::open(&file_path, &[1000]).unwrap();
+        let mmap = MemoryMappedArray::<f64>::path(&file_path, &[1000]).unwrap();
 
         // Reduce operation: sum all elements
         let sum = mmap.reduce_zero_copy(0.0, |acc, x| acc + x).unwrap();
@@ -951,7 +951,7 @@ mod tests {
         drop(file);
 
         // Create a memory-mapped array
-        let mmap = MemoryMappedArray::<f64>::open(&file_path, &[1000]).unwrap();
+        let mmap = MemoryMappedArray::<f64>::path(&file_path, &[1000]).unwrap();
 
         // Filter operation: keep only even numbers
         let even_numbers = mmap.filter_zero_copy(|&x| (x as usize) % 2 == 0).unwrap();
@@ -1022,7 +1022,7 @@ mod tests {
         let file_path2 = dir.path().join("test_broadcast2.bin");
 
         // Create a 2D array (3x4) and a 1D array (4)
-        let data1 = Array2::<f64>::fromshape_fn((3, 4), |(0, j)| (0 * 4 + j) as f64);
+        let data1 = Array2::<f64>::from_shape_fn((3, 4), |(i, j)| (i * 4 + j) as f64);
         let data2 = ndarray::Array1::from_vec((0..4).map(|_| (0 + 1) as f64).collect());
 
         // Save the arrays with proper headers using save_array

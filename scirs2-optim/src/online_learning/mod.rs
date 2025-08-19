@@ -855,7 +855,7 @@ mod tests {
     fn test_online_update() {
         let strategy = OnlineLearningStrategy::AdaptiveSGD {
             initial_lr: 0.1,
-            adaptation_method: LearningRateAdaptation::ExponentialDecay { decay, rate: 0.99 },
+            adaptation_method: LearningRateAdaptation::ExponentialDecay { decay_rate: 0.99 },
         };
 
         let initial_params = Array1::from_vec(vec![1.0, 2.0, 3.0]);

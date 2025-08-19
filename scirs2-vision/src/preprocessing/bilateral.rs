@@ -44,7 +44,7 @@ impl Default for BilateralParams {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::preprocessing::{bilateral_filter_advanced, BilateralParams};
+/// use scirs2_vision::preprocessing::{bilateral_filter_advanced, BilateralParams};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

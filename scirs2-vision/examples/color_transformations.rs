@@ -5,7 +5,7 @@
 //! 2. Split and merge color channels
 //! 3. Apply weighted grayscale conversion
 
-use scirs2__vision::color::{
+use scirs2_vision::color::{
     hsv_to_rgb, lab_to_rgb, merge_channels, rgb_to_grayscale, rgb_to_hsv, rgb_to_lab,
     split_channels,
 };

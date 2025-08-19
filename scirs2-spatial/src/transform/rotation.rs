@@ -861,7 +861,7 @@ impl Rotation {
     /// let rotated = identity.apply(&vec.view());
     /// // Should still be [1.0, 2.0, 3.0]
     /// ```
-    pub fn identity(&self) -> Rotation {
+    pub fn identity() -> Rotation {
         let quat = array![1.0, 0.0, 0.0, 0.0];
         Rotation { quat }
     }

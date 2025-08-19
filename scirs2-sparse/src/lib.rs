@@ -259,6 +259,7 @@ pub use sym_ops::{
 
 // GPU-accelerated operations
 pub mod gpu_kernel_execution;
+pub mod gpu;
 pub mod gpu_ops;
 pub mod gpu_spmv_implementation;
 pub use gpu_kernel_execution::{
@@ -333,7 +334,7 @@ pub use csgraph::{
     bfs_distances,
     // Traversal algorithms
     breadth_first_search,
-    compute_laplacian_matrix,
+    compute_laplacianmatrix,
     connected_components,
     degree_matrix,
     depth_first_search,

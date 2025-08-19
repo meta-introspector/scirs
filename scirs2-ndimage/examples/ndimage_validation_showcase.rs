@@ -13,13 +13,13 @@
 
 use ndarray::{Array2, ArrayView2};
 use scirs2_ndimage::{
-    adaptive_advanced_optimizer::{AdaptiveAdvancedOptimizer, AdaptiveOptimizerConfig},
+    // adaptive_advanced_optimizer::{AdaptiveAdvancedOptimizer, AdaptiveOptimizerConfig},
     error::NdimageResult,
-    fusion_core::{
-        enhanced_meta_learning_with_temporal_fusion, enhanced_quantum_consciousness_evolution,
-        fusion_processing, quantum_aware_resource_scheduling_optimization, AdvancedConfig,
-        AdvancedState,
-    },
+    // fusion_core::{
+    //     enhanced_meta_learning_with_temporal_fusion, enhanced_quantum_consciousness_evolution,
+    //     fusion_processing, quantum_aware_resource_scheduling_optimization, AdvancedConfig,
+    //     AdvancedState,
+    // },
 };
 use statrs::statistics::Statistics;
 

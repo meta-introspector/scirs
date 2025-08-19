@@ -6,8 +6,8 @@
 use image::{DynamicImage, ImageBuffer, Luma, Rgb, RgbImage};
 use ndarray::Array2;
 use rand::prelude::*;
-use scirs2__vision::error::Result;
-use scirs2__vision::registration::{
+use scirs2_vision::error::Result;
+use scirs2_vision::registration::{
     feature_based::{register_images, FeatureRegistrationConfig},
     intensity::{register_images_intensity, IntensityRegistrationConfig, SimilarityMetric},
     ransac_estimate_transform, transform_point,

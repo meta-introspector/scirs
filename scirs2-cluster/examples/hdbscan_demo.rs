@@ -60,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nRunning HDBSCAN with custom parameters...");
     let options = HDBSCANOptions {
         min_cluster_size: 3,
-        min_samples: Some(3),
+        minsamples: Some(3),
         cluster_selection_method: ClusterSelectionMethod::EOM,
         ..Default::default()
     };

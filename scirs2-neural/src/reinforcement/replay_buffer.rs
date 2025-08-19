@@ -185,7 +185,7 @@ impl PrioritizedReplayBuffer {
     /// Sample indices based on probabilities
     fn sample_indices(&self, probs: &[f32], batchsize: usize) -> Result<Vec<usize>> {
         use rand::prelude::*;
-        use rand__distr::weighted::WeightedIndex;
+        use rand_distr::weighted::WeightedIndex;
         let dist = WeightedIndex::new(probs).map_err(|e| {
             crate::error::NeuralError::InvalidArgument(format!("Invalid weights: {}", e))
         })?;

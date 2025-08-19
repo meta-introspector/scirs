@@ -47,7 +47,7 @@ fn main() {
             }
 
             // Print statistics per cluster
-            for (cluster_id_) in cluster_sizes.iter().enumerate().take(k) {
+            for (cluster_id, _size) in cluster_sizes.iter().enumerate().take(k) {
                 let mut cluster_scores = Vec::new();
 
                 for (idx, &label) in labels_i32.iter().enumerate() {

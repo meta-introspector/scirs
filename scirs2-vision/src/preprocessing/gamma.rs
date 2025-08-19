@@ -21,7 +21,7 @@ use image::{DynamicImage, GrayImage, Luma};
 /// # Example
 ///
 /// ```
-/// use scirs2__vision::preprocessing::gamma_correction;
+/// use scirs2_vision::preprocessing::gamma_correction;
 /// use image::open;
 ///
 /// let img = open("examples/input/input.jpg").unwrap();

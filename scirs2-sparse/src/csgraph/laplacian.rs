@@ -65,7 +65,7 @@ impl LaplacianType {
 /// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
 ///
 /// // Compute standard Laplacian
-/// let (laplacian_, _) = laplacian(&graph, false, false, true).unwrap();
+/// let (laplacian, _) = laplacian(&graph, false, false, true).unwrap();
 /// ```
 #[allow(dead_code)]
 pub fn laplacian<T, S>(
@@ -80,13 +80,13 @@ where
 {
     validate_graph(graph, true)?; // Allow both directed and undirected
 
-    let laplacian_type = if normed {
+    let laplaciantype = if normed {
         LaplacianType::Normalized
     } else {
         LaplacianType::Standard
     };
 
-    compute_laplacian_matrix(graph, laplacian_type, return_diag, use_outdegree)
+    compute_laplacianmatrix(graph, laplaciantype, return_diag, use_outdegree)
 }
 
 /// Compute a specific type of Laplacian matrix
@@ -94,7 +94,7 @@ where
 /// # Arguments
 ///
 /// * `graph` - The graph as a sparse matrix
-/// * `laplacian_type` - Type of Laplacian to compute
+/// * `laplaciantype` - Type of Laplacian to compute
 /// * `return_diag` - Whether to return the diagonal degree matrix
 /// * `use_outdegree` - For directed graphs, whether to use out-degree
 ///
@@ -102,9 +102,9 @@ where
 ///
 /// A tuple containing the Laplacian matrix and optional degree array
 #[allow(dead_code)]
-pub fn compute_laplacian_matrix<T, S>(
+pub fn compute_laplacianmatrix<T, S>(
     graph: &S,
-    laplacian_type: LaplacianType,
+    laplaciantype: LaplacianType,
     return_diag: bool,
     use_outdegree: bool,
 ) -> SparseResult<(CsrArray<T>, Option<Array1<T>>)>
@@ -124,7 +124,7 @@ where
     // Get the graph structure
     let (row_indices, col_indices, values) = graph.find();
 
-    match laplacian_type {
+    match laplaciantype {
         LaplacianType::Standard => compute_standard_laplacian(
             row_indices.as_slice().unwrap(),
             col_indices.as_slice().unwrap(),
@@ -203,32 +203,32 @@ fn compute_standard_laplacian<T>(
 where
     T: Float + Debug + Copy + 'static,
 {
-    let mut laplacian_rows = Vec::new();
-    let mut laplacian_cols = Vec::new();
-    let mut laplacian_values = Vec::new();
+    let mut laplacianrows = Vec::new();
+    let mut laplaciancols = Vec::new();
+    let mut laplacianvalues = Vec::new();
 
     // Add diagonal elements (degrees)
     for (i, &degree) in degrees.iter().enumerate() {
         if !degree.is_zero() {
-            laplacian_rows.push(i);
-            laplacian_cols.push(i);
-            laplacian_values.push(degree);
+            laplacianrows.push(i);
+            laplaciancols.push(i);
+            laplacianvalues.push(degree);
         }
     }
 
     // Subtract off-diagonal elements (negative adjacency matrix entries)
     for (i, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         if row != col && !values[i].is_zero() {
-            laplacian_rows.push(row);
-            laplacian_cols.push(col);
-            laplacian_values.push(-values[i]);
+            laplacianrows.push(row);
+            laplaciancols.push(col);
+            laplacianvalues.push(-values[i]);
         }
     }
 
     CsrArray::from_triplets(
-        &laplacian_rows,
-        &laplacian_cols,
-        &laplacian_values,
+        &laplacianrows,
+        &laplaciancols,
+        &laplacianvalues,
         (n, n),
         false, // Triplets are not sorted
     )
@@ -254,16 +254,16 @@ where
         }
     }
 
-    let mut laplacian_rows = Vec::new();
-    let mut laplacian_cols = Vec::new();
-    let mut laplacian_values = Vec::new();
+    let mut laplacianrows = Vec::new();
+    let mut laplaciancols = Vec::new();
+    let mut laplacianvalues = Vec::new();
 
     // Add diagonal elements (1 for vertices with positive degree, 0 for isolated vertices)
     for (i, &degree) in degrees.iter().enumerate() {
         if degree > T::zero() {
-            laplacian_rows.push(i);
-            laplacian_cols.push(i);
-            laplacian_values.push(T::one());
+            laplacianrows.push(i);
+            laplaciancols.push(i);
+            laplacianvalues.push(T::one());
         }
     }
 
@@ -272,17 +272,17 @@ where
         if i != j && !values[k].is_zero() {
             let normalization = sqrt_inv_degrees[i] * sqrt_inv_degrees[j];
             if !normalization.is_zero() {
-                laplacian_rows.push(i);
-                laplacian_cols.push(j);
-                laplacian_values.push(-values[k] * normalization);
+                laplacianrows.push(i);
+                laplaciancols.push(j);
+                laplacianvalues.push(-values[k] * normalization);
             }
         }
     }
 
     CsrArray::from_triplets(
-        &laplacian_rows,
-        &laplacian_cols,
-        &laplacian_values,
+        &laplacianrows,
+        &laplaciancols,
+        &laplacianvalues,
         (n, n),
         false, // Triplets are not sorted
     )
@@ -308,32 +308,32 @@ where
         }
     }
 
-    let mut laplacian_rows = Vec::new();
-    let mut laplacian_cols = Vec::new();
-    let mut laplacian_values = Vec::new();
+    let mut laplacianrows = Vec::new();
+    let mut laplaciancols = Vec::new();
+    let mut laplacianvalues = Vec::new();
 
     // Add diagonal elements (1 for vertices with positive degree, 0 for isolated vertices)
     for (i, &degree) in degrees.iter().enumerate() {
         if degree > T::zero() {
-            laplacian_rows.push(i);
-            laplacian_cols.push(i);
-            laplacian_values.push(T::one());
+            laplacianrows.push(i);
+            laplaciancols.push(i);
+            laplacianvalues.push(T::one());
         }
     }
 
     // Add off-diagonal elements: -A_{ij} / d_i
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         if i != j && !values[k].is_zero() && inv_degrees[i] > T::zero() {
-            laplacian_rows.push(i);
-            laplacian_cols.push(j);
-            laplacian_values.push(-values[k] * inv_degrees[i]);
+            laplacianrows.push(i);
+            laplaciancols.push(j);
+            laplacianvalues.push(-values[k] * inv_degrees[i]);
         }
     }
 
     CsrArray::from_triplets(
-        &laplacian_rows,
-        &laplacian_cols,
-        &laplacian_values,
+        &laplacianrows,
+        &laplaciancols,
+        &laplacianvalues,
         (n, n),
         false, // Triplets are not sorted
     )
@@ -414,7 +414,7 @@ where
     validate_graph(graph, false)?; // Ensure it's a valid undirected graph
 
     // Compute the Laplacian matrix
-    let (laplacian_, _) = compute_laplacian_matrix(
+    let (laplacian, _) = compute_laplacianmatrix(
         graph,
         if normalized {
             LaplacianType::Normalized
@@ -427,8 +427,8 @@ where
 
     // Convert the Laplacian to symmetric CSR format
     // For undirected graphs, the Laplacian is already symmetric
-    let (rows, cols) = laplacian_.shape();
-    let (row_indices, col_indices, values) = laplacian_.find();
+    let (rows, cols) = laplacian.shape();
+    let (row_indices, col_indices, values) = laplacian.find();
 
     // Extract lower triangular part for symmetric storage
     let mut sym_indices = Vec::new();
@@ -479,7 +479,7 @@ where
 
     // Find the second smallest eigenvalue
     // Note: Eigenvalues from Lanczos are typically in ascending order for smallest eigenvalues
-    if eigenvalues.len() < 2_usize {
+    if eigenvalues.len() < 2 {
         return Err(SparseError::ValueError(
             "Not enough eigenvalues computed to determine algebraic connectivity".to_string(),
         ));
@@ -603,7 +603,7 @@ mod tests {
     fn test_standard_laplacian() {
         let graph = create_simple_graph();
         let (laplacian, degrees) =
-            compute_laplacian_matrix(&graph, LaplacianType::Standard, true, true).unwrap();
+            compute_laplacianmatrix(&graph, LaplacianType::Standard, true, true).unwrap();
 
         let degrees = degrees.unwrap();
 
@@ -614,57 +614,57 @@ mod tests {
 
         // Check Laplacian matrix properties
         // Diagonal elements should equal degrees
-        assert_relative_eq!(laplacian_.get(0, 0), 2.0);
-        assert_relative_eq!(laplacian_.get(1, 1), 2.0);
-        assert_relative_eq!(laplacian_.get(2, 2), 2.0);
+        assert_relative_eq!(laplacian.get(0, 0), 2.0);
+        assert_relative_eq!(laplacian.get(1, 1), 2.0);
+        assert_relative_eq!(laplacian.get(2, 2), 2.0);
 
         // Off-diagonal elements should be negative adjacency
-        assert_relative_eq!(laplacian_.get(0, 1), -1.0);
-        assert_relative_eq!(laplacian_.get(0, 2), -1.0);
-        assert_relative_eq!(laplacian_.get(1, 0), -1.0);
-        assert_relative_eq!(laplacian_.get(1, 2), -1.0);
-        assert_relative_eq!(laplacian_.get(2, 0), -1.0);
-        assert_relative_eq!(laplacian_.get(2, 1), -1.0);
+        assert_relative_eq!(laplacian.get(0, 1), -1.0);
+        assert_relative_eq!(laplacian.get(0, 2), -1.0);
+        assert_relative_eq!(laplacian.get(1, 0), -1.0);
+        assert_relative_eq!(laplacian.get(1, 2), -1.0);
+        assert_relative_eq!(laplacian.get(2, 0), -1.0);
+        assert_relative_eq!(laplacian.get(2, 1), -1.0);
     }
 
     #[test]
     fn test_normalized_laplacian() {
         let graph = create_simple_graph();
-        let (laplacian_, _) =
-            compute_laplacian_matrix(&graph, LaplacianType::Normalized, false, true).unwrap();
+        let (laplacian, _) =
+            compute_laplacianmatrix(&graph, LaplacianType::Normalized, false, true).unwrap();
 
         // Check diagonal elements are 1
-        assert_relative_eq!(laplacian_.get(0, 0), 1.0);
-        assert_relative_eq!(laplacian_.get(1, 1), 1.0);
-        assert_relative_eq!(laplacian_.get(2, 2), 1.0);
+        assert_relative_eq!(laplacian.get(0, 0), 1.0);
+        assert_relative_eq!(laplacian.get(1, 1), 1.0);
+        assert_relative_eq!(laplacian.get(2, 2), 1.0);
 
         // Check off-diagonal normalization: -1/sqrt(d_i * d_j)
         // For this graph, all degrees are 2, so normalization factor is 1/sqrt(2*2) = 1/2
-        assert_relative_eq!(laplacian_.get(0, 1), -0.5);
-        assert_relative_eq!(laplacian_.get(1, 2), -0.5);
-        assert_relative_eq!(laplacian_.get(2, 0), -0.5);
+        assert_relative_eq!(laplacian.get(0, 1), -0.5);
+        assert_relative_eq!(laplacian.get(1, 2), -0.5);
+        assert_relative_eq!(laplacian.get(2, 0), -0.5);
     }
 
     #[test]
     fn test_random_walk_laplacian() {
         let graph = create_simple_graph();
-        let (laplacian_, _) =
-            compute_laplacian_matrix(&graph, LaplacianType::RandomWalk, false, true).unwrap();
+        let (laplacian, _) =
+            compute_laplacianmatrix(&graph, LaplacianType::RandomWalk, false, true).unwrap();
 
         // Check diagonal elements are 1
-        assert_relative_eq!(laplacian_.get(0, 0), 1.0);
-        assert_relative_eq!(laplacian_.get(1, 1), 1.0);
-        assert_relative_eq!(laplacian_.get(2, 2), 1.0);
+        assert_relative_eq!(laplacian.get(0, 0), 1.0);
+        assert_relative_eq!(laplacian.get(1, 1), 1.0);
+        assert_relative_eq!(laplacian.get(2, 2), 1.0);
 
         // Check off-diagonal normalization: -A_{ij}/d_i
         // For this graph, all degrees are 2, so normalization factor is 1/2
-        assert_relative_eq!(laplacian_.get(0, 1), -0.5);
-        assert_relative_eq!(laplacian_.get(1, 2), -0.5);
-        assert_relative_eq!(laplacian_.get(2, 0), -0.5);
+        assert_relative_eq!(laplacian.get(0, 1), -0.5);
+        assert_relative_eq!(laplacian.get(1, 2), -0.5);
+        assert_relative_eq!(laplacian.get(2, 0), -0.5);
     }
 
     #[test]
-    fn test_laplacian_api() {
+    fn test_laplacianapi() {
         let graph = create_simple_graph();
 
         // Test standard Laplacian
@@ -690,16 +690,16 @@ mod tests {
     }
 
     #[test]
-    fn test_laplacian_row_sums() {
+    fn test_laplacianrow_sums() {
         let graph = create_simple_graph();
-        let (laplacian_, _) =
-            compute_laplacian_matrix(&graph, LaplacianType::Standard, false, true).unwrap();
+        let (laplacian, _) =
+            compute_laplacianmatrix(&graph, LaplacianType::Standard, false, true).unwrap();
 
         // Row sums of Laplacian should be zero
         for i in 0..3 {
             let mut row_sum = 0.0;
             for j in 0..3 {
-                row_sum += laplacian_.get(i, j);
+                row_sum += laplacian.get(i, j);
             }
             assert_relative_eq!(row_sum, 0.0, epsilon = 1e-10);
         }
@@ -708,11 +708,11 @@ mod tests {
     #[test]
     fn test_is_laplacian() {
         let graph = create_simple_graph();
-        let (laplacian_, _) =
-            compute_laplacian_matrix(&graph, LaplacianType::Standard, false, true).unwrap();
+        let (laplacian, _) =
+            compute_laplacianmatrix(&graph, LaplacianType::Standard, false, true).unwrap();
 
         // Our computed Laplacian should pass the validation
-        assert!(is_laplacian(&laplacian_, 1e-10).unwrap());
+        assert!(is_laplacian(&laplacian, 1e-10).unwrap());
     }
 
     #[test]
@@ -724,7 +724,7 @@ mod tests {
         let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
 
         let (laplacian, degrees) =
-            compute_laplacian_matrix(&graph, LaplacianType::Standard, true, true).unwrap();
+            compute_laplacianmatrix(&graph, LaplacianType::Standard, true, true).unwrap();
 
         let degrees = degrees.unwrap();
 
@@ -732,9 +732,9 @@ mod tests {
         assert_relative_eq!(degrees[2], 0.0);
 
         // Isolated vertex should have 0 on diagonal in Laplacian
-        assert_relative_eq!(laplacian_.get(2, 2), 0.0);
-        assert_relative_eq!(laplacian_.get(2, 0), 0.0);
-        assert_relative_eq!(laplacian_.get(2, 1), 0.0);
+        assert_relative_eq!(laplacian.get(2, 2), 0.0);
+        assert_relative_eq!(laplacian.get(2, 0), 0.0);
+        assert_relative_eq!(laplacian.get(2, 1), 0.0);
     }
 
     #[test]

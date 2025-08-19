@@ -5,45 +5,47 @@
 //! optimization, and production-ready resource management.
 
 pub mod advanced_optimization;
+pub mod benchmarking;
+pub mod cache_optimization;
 
-/// Re-export key performance types and functions
+/// Re-export key AI optimization types and functions
 pub use advanced_optimization::{
-    cache_awarematrix_multiply, prefetch, profiling, simd_ops, AdvancedPerformanceOptimizer,
-    CacheInfo, OptimizationSettings, PerformanceProfile, PerformanceRecommendation,
-    SimdCapabilities, SimdInstructionSet, WorkloadType,
+    AIOptimizationEngine,
+    AcceleratorType,
+    AdvancedOptimizationConfig,
+    CpuCharacteristics,
+    ExecutionContext,
+    OptimizationAnalytics,
+    // Legacy compatibility types
+    OptimizationSettings,
+    PerformanceProfile,
+    PerformanceTarget,
+    SimdInstructionSet,
+    SystemLoad,
+    WorkloadType,
 };
 
-/// Initialize the global performance optimizer
+/// Re-export cache optimization functions
+pub use cache_optimization::{
+    adaptive_memcpy, adaptive_sort, cache_aware_reduce, cache_aware_transpose,
+    matrix_multiply_cache_aware,
+};
+
+/// Re-export benchmarking framework types and functions
+pub use benchmarking::{
+    BenchmarkConfig, BenchmarkMeasurement, BenchmarkResults, BenchmarkRunner, BottleneckType,
+    MemoryScaling, PerformanceBottleneck, ScalabilityAnalysis, StrategyPerformance,
+};
+
+/// Initialize the AI optimization engine
 #[allow(dead_code)]
-pub fn initialize_performance_optimizer() -> crate::error::CoreResult<()> {
-    let _optimizer = AdvancedPerformanceOptimizer::global();
-    Ok(())
+pub fn initialize_ai_optimization_engine() -> crate::error::CoreResult<AIOptimizationEngine> {
+    Ok(AIOptimizationEngine::new())
 }
 
-/// Get performance recommendations for the current system
+/// Get AI-driven optimization analytics
 #[allow(dead_code)]
-pub fn get_system_performance_recommendations() -> Vec<String> {
-    let optimizer = AdvancedPerformanceOptimizer::new();
-    let profile = optimizer.profile();
-    let mut recommendations = Vec::new();
-
-    if profile.simd_capabilities.avx2 {
-        recommendations
-            .push("AVX2 instruction set detected - enable advanced SIMD optimizations".to_string());
-    }
-
-    if profile.cpu_cores > 8 {
-        recommendations.push(format!(
-            "High core count ({}) detected - consider parallel algorithms",
-            profile.cpu_cores
-        ));
-    }
-
-    if profile.cache_info.l3_cache_size > 16 * 1024 * 1024 {
-        recommendations.push(
-            "Large L3 cache detected - enable cache-aware blocking for large matrices".to_string(),
-        );
-    }
-
-    recommendations
+pub fn get_optimization_analytics() -> OptimizationAnalytics {
+    let engine = AIOptimizationEngine::new();
+    engine.get_optimization_analytics()
 }

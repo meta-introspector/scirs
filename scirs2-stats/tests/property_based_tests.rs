@@ -185,7 +185,7 @@ mod correlation_properties {
     use super::*;
 
     #[quickcheck]
-    fn correlation_bounds_property(_xdata: Vec<f64>, y_data: Vec<f64>) -> TestResult {
+    fn correlation_bounds_property(xdata: Vec<f64>, y_data: Vec<f64>) -> TestResult {
         if xdata.len() != y_data.len() || xdata.len() < 2 {
             return TestResult::discard();
         }
@@ -194,7 +194,7 @@ mod correlation_properties {
             return TestResult::discard();
         }
 
-        let x = Array1::from_vec(_xdata);
+        let x = Array1::from_vec(xdata);
         let y = Array1::from_vec(y_data);
 
         // Check for zero variance (would cause division by zero)
@@ -210,7 +210,7 @@ mod correlation_properties {
     }
 
     #[quickcheck]
-    fn correlation_symmetry_property(_xdata: Vec<f64>, y_data: Vec<f64>) -> TestResult {
+    fn correlation_symmetry_property(xdata: Vec<f64>, y_data: Vec<f64>) -> TestResult {
         if xdata.len() != y_data.len() || xdata.len() < 2 {
             return TestResult::discard();
         }
@@ -219,7 +219,7 @@ mod correlation_properties {
             return TestResult::discard();
         }
 
-        let x = Array1::from_vec(_xdata);
+        let x = Array1::from_vec(xdata);
         let y = Array1::from_vec(y_data);
 
         // Check for zero variance
@@ -313,7 +313,7 @@ mod distribution_properties {
 
     #[quickcheck]
     fn normal_pdf_non_negative_property(mu: f64, sigma: f64, x: f64) -> TestResult {
-        if !_mu.is_finite() || !sigma.is_finite() || !x.is_finite() || sigma <= 0.0 {
+        if !mu.is_finite() || !sigma.is_finite() || !x.is_finite() || sigma <= 0.0 {
             return TestResult::discard();
         }
 
@@ -321,7 +321,7 @@ mod distribution_properties {
             return TestResult::discard();
         }
 
-        let normal = norm(_mu, sigma).unwrap();
+        let normal = norm(mu, sigma).unwrap();
         let pdf_value = normal.pdf(x);
 
         TestResult::from_bool(pdf_value >= 0.0 && pdf_value.is_finite())
@@ -329,7 +329,7 @@ mod distribution_properties {
 
     #[quickcheck]
     fn normal_cdf_monotonic_property(mu: f64, sigma: f64, x1: f64, x2: f64) -> TestResult {
-        if !_mu.is_finite() || !sigma.is_finite() || !x1.is_finite() || !x2.is_finite() {
+        if !mu.is_finite() || !sigma.is_finite() || !x1.is_finite() || !x2.is_finite() {
             return TestResult::discard();
         }
 
@@ -341,7 +341,7 @@ mod distribution_properties {
             return TestResult::discard();
         }
 
-        let normal = norm(_mu, sigma).unwrap();
+        let normal = norm(mu, sigma).unwrap();
         let cdf1 = normal.cdf(x1);
         let cdf2 = normal.cdf(x2);
 
@@ -354,7 +354,7 @@ mod distribution_properties {
 
     #[quickcheck]
     fn normal_cdf_bounds_property(mu: f64, sigma: f64, x: f64) -> TestResult {
-        if !_mu.is_finite() || !sigma.is_finite() || !x.is_finite() || sigma <= 0.0 {
+        if !mu.is_finite() || !sigma.is_finite() || !x.is_finite() || sigma <= 0.0 {
             return TestResult::discard();
         }
 
@@ -362,7 +362,7 @@ mod distribution_properties {
             return TestResult::discard();
         }
 
-        let normal = norm(_mu, sigma).unwrap();
+        let normal = norm(mu, sigma).unwrap();
         let cdf_value = normal.cdf(x);
 
         TestResult::from_bool(cdf_value >= 0.0 && cdf_value <= 1.0 && cdf_value.is_finite())
@@ -370,7 +370,7 @@ mod distribution_properties {
 
     #[quickcheck]
     fn uniform_pdf_bounds_property(low: f64, high: f64, x: f64) -> TestResult {
-        if !_low.is_finite() || !high.is_finite() || !x.is_finite() || _low >= high {
+        if !low.is_finite() || !high.is_finite() || !x.is_finite() || low >= high {
             return TestResult::discard();
         }
 
@@ -378,10 +378,10 @@ mod distribution_properties {
             return TestResult::discard();
         }
 
-        let unif = uniform(_low, high).unwrap();
+        let unif = uniform(low, high).unwrap();
         let pdf_value = unif.pdf(x);
 
-        let expected_pdf = if x >= _low && x < high {
+        let expected_pdf = if x >= low && x < high {
             1.0 / (high - low)
         } else {
             0.0
@@ -394,7 +394,7 @@ mod distribution_properties {
 
     #[quickcheck]
     fn distribution_mean_variance_finite_property(mu: f64, sigma: f64) -> TestResult {
-        if !_mu.is_finite() || !sigma.is_finite() || sigma <= 0.0 {
+        if !mu.is_finite() || !sigma.is_finite() || sigma <= 0.0 {
             return TestResult::discard();
         }
 
@@ -402,7 +402,7 @@ mod distribution_properties {
             return TestResult::discard();
         }
 
-        let normal = norm(_mu, sigma).unwrap();
+        let normal = norm(mu, sigma).unwrap();
         let dist_mean = normal.mean();
         let dist_var = normal.var();
 
@@ -535,7 +535,7 @@ mod robust_statistics_properties {
             return TestResult::discard();
         }
 
-        if !outlier_factor.is_finite() || outlier_factor.abs() < 1.0 {
+        if !outlierfactor.is_finite() || outlierfactor.abs() < 1.0 {
             return TestResult::discard();
         }
 
@@ -547,7 +547,7 @@ mod robust_statistics_properties {
         let max_val = with_outlier
             .iter()
             .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        with_outlier.push(max_val * outlier_factor);
+        with_outlier.push(max_val * outlierfactor);
         let outlier_arr = Array1::from_vec(with_outlier);
         let outlier_median = median(&outlier_arr.view()).unwrap();
 
@@ -598,12 +598,12 @@ mod advanced_distribution_properties {
     use super::*;
 
     #[quickcheck]
-    fn beta_distribution_bounds_property(_alpha: f64, betaparam: f64, x: f64) -> TestResult {
-        if !_alpha.is_finite() || !beta_param.is_finite() || !x.is_finite() {
+    fn beta_distribution_bounds_property(alpha: f64, betaparam: f64, x: f64) -> TestResult {
+        if !alpha.is_finite() || !betaparam.is_finite() || !x.is_finite() {
             return TestResult::discard();
         }
 
-        if _alpha <= 0.0 || beta_param <= 0.0 || _alpha > 100.0 || beta_param > 100.0 {
+        if alpha <= 0.0 || betaparam <= 0.0 || alpha > 100.0 || betaparam > 100.0 {
             return TestResult::discard();
         }
 
@@ -611,7 +611,7 @@ mod advanced_distribution_properties {
             return TestResult::discard();
         }
 
-        match beta(_alpha, beta_param, 0.0, 1.0) {
+        match beta(alpha, betaparam, 0.0, 1.0) {
             Ok(dist) => {
                 let pdf_val = dist.pdf(x);
                 let cdf_val = dist.cdf(x);
@@ -659,7 +659,7 @@ mod advanced_distribution_properties {
 
     #[quickcheck]
     fn distribution_cdf_pdf_consistency(mu: f64, sigma: f64, x1: f64, x2: f64) -> TestResult {
-        if !_mu.is_finite() || !sigma.is_finite() || !x1.is_finite() || !x2.is_finite() {
+        if !mu.is_finite() || !sigma.is_finite() || !x1.is_finite() || !x2.is_finite() {
             return TestResult::discard();
         }
 
@@ -671,7 +671,7 @@ mod advanced_distribution_properties {
             return TestResult::discard();
         }
 
-        let normal = norm(_mu, sigma).unwrap();
+        let normal = norm(mu, sigma).unwrap();
         let cdf_x1 = normal.cdf(x1);
         let cdf_x2 = normal.cdf(x2);
 
@@ -681,11 +681,11 @@ mod advanced_distribution_properties {
 
     #[quickcheck]
     fn distribution_symmetry_property(sigma: f64, x: f64) -> TestResult {
-        if !_sigma.is_finite() || !x.is_finite() {
+        if !sigma.is_finite() || !x.is_finite() {
             return TestResult::discard();
         }
 
-        if _sigma <= 0.0 || _sigma > 100.0 || x.abs() > 100.0 {
+        if sigma <= 0.0 || sigma > 100.0 || x.abs() > 100.0 {
             return TestResult::discard();
         }
 
@@ -767,11 +767,11 @@ mod numerical_stability_properties {
 
     #[quickcheck]
     fn tiny_values_stability(exponent: i32) -> TestResult {
-        if _exponent < -100 || _exponent > -10 {
+        if exponent < -100 || exponent > -10 {
             return TestResult::discard();
         }
 
-        let value = 10.0_f64.powi(_exponent);
+        let value = 10.0_f64.powi(exponent);
         let data = vec![value, value * 1.1, value * 0.9, value * 1.05, value * 0.95];
         let arr = Array1::from_vec(data);
 
@@ -785,11 +785,11 @@ mod numerical_stability_properties {
 
     #[quickcheck]
     fn large_values_stability(exponent: i32) -> TestResult {
-        if _exponent < 10 || _exponent > 100 {
+        if exponent < 10 || exponent > 100 {
             return TestResult::discard();
         }
 
-        let value = 10.0_f64.powi(_exponent);
+        let value = 10.0_f64.powi(exponent);
         let data = vec![value, value * 1.1, value * 0.9, value * 1.05, value * 0.95];
         let arr = Array1::from_vec(data);
 

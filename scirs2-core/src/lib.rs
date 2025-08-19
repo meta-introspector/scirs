@@ -171,6 +171,10 @@ pub mod advanced_distributed_computing;
 // Advanced Tensor Cores and Automatic Kernel Tuning Framework
 pub mod advanced_tensor_cores;
 
+// Tensor cores optimization modules
+#[cfg(feature = "gpu")]
+pub mod tensor_cores;
+
 // Benchmarking module
 #[cfg(feature = "benchmarking")]
 pub mod benchmarking;

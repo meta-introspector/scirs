@@ -61,7 +61,7 @@ impl Default for HoughParams {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::feature::{hough_lines, canny, HoughParams, PreprocessMode};
+/// use scirs2_vision::feature::{hough_lines, canny, HoughParams, PreprocessMode};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

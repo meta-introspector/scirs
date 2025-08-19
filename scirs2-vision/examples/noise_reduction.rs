@@ -8,7 +8,7 @@
 
 use image::{DynamicImage, GenericImage, GenericImageView, ImageBuffer, Rgba};
 use rand::random;
-use scirs2__vision::preprocessing::{bilateral_filter, gaussian_blur, median_filter};
+use scirs2_vision::preprocessing::{bilateral_filter, gaussian_blur, median_filter};
 use std::error::Error;
 use std::path::PathBuf;
 

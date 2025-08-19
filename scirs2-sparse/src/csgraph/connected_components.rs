@@ -457,7 +457,7 @@ mod tests {
         let graph = create_disconnected_graph();
         let (n_components, labels) = undirected_connected_components(&graph, true).unwrap();
 
-        assert_eq!(n_components_, 2);
+        assert_eq!(n_components, 2);
 
         let labels = labels.unwrap();
         // Vertices 0 and 1 should be in the same component
@@ -477,7 +477,7 @@ mod tests {
         assert_eq!(n_components_, 2);
 
         // Test directed weak connectivity
-        let (n_components_) = connected_components(&graph, true, "weak", false).unwrap();
+        let (n_components_, _) = connected_components(&graph, true, "weak", false).unwrap();
         assert_eq!(n_components_, 2);
     }
 
@@ -487,7 +487,7 @@ mod tests {
         let (n_components, labels) = strongly_connected_components(&graph, true).unwrap();
 
         // Should have 2 components: {0,1,2} and {3}
-        assert_eq!(n_components_, 2);
+        assert_eq!(n_components, 2);
 
         let labels = labels.unwrap();
         // Vertices 0, 1, 2 should be in the same strongly connected component

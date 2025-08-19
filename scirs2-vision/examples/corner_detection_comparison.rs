@@ -6,11 +6,11 @@
 //! - FAST corner detection
 
 use image::DynamicImage;
-use scirs2__vision::feature::{
+use scirs2_vision::feature::{
     extract_feature_coordinates, fast_corners_simple, good_features_to_track, harris_corners,
     shi_tomasi_corners_simple,
 };
-use scirs2__vision::preprocessing::gaussian_blur;
+use scirs2_vision::preprocessing::gaussian_blur;
 use std::path::PathBuf;
 
 #[allow(dead_code)]

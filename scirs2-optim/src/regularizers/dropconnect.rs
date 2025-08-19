@@ -181,10 +181,10 @@ mod tests {
         let masked_weights = dc.apply_to_weights(&weights, true);
 
         // Check that some but not all values are zero (statistically)
-        let _zeros = maskedweights.iter().filter(|&&x| x == 0.0).count();
+        let _zeros = masked_weights.iter().filter(|&&x| x == 0.0).count();
 
         // The masked weights should have approximately scaled values
-        for (&original, &masked) in weights.iter().zip(maskedweights.iter()) {
+        for (&original, &masked) in weights.iter().zip(masked_weights.iter()) {
             if masked != 0.0 {
                 // Non-zero values should be scaled by 1/keep_prob = 2.0
                 assert_relative_eq!(masked, original * 2.0, epsilon = 1e-10);

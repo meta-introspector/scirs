@@ -248,7 +248,7 @@ fn create_dendrograms(
 #[allow(dead_code)]
 fn create_sample_data() -> Array2<f64> {
     use rand::prelude::*;
-    use rand__distr::Normal;
+    use rand_distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(12345);
     let mut data = Vec::with_capacity(60); // 12 points * 5 features

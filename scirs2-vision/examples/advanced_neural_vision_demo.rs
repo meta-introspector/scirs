@@ -20,7 +20,7 @@
 //! ```
 
 use ndarray::{Array1, Array2};
-use scirs2__vision::{
+use scirs2_vision::{
     error::Result,
     feature::{
         AdvancedDenoiser, AttentionFeatureMatcher, DeepSORT, DenoisingMethod, Detection,
@@ -536,7 +536,7 @@ fn create_detection_sequences() -> Vec<Vec<Detection>> {
     sequences
 }
 
-use scirs2__vision::feature::KeyPoint;
+use scirs2_vision::feature::KeyPoint;
 
 #[allow(dead_code)]
 fn generate_synthetic_features(

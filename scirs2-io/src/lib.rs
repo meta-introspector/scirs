@@ -129,7 +129,15 @@ pub mod fortran;
 /// - Support for multiple GPU backends (CUDA, Metal, OpenCL)
 /// - Automatic fallback to CPU when GPU is not available
 #[cfg(feature = "gpu")]
-pub mod gpu_io;
+/// GPU-accelerated I/O operations
+///
+/// Provides comprehensive GPU acceleration for I/O operations including:
+/// - Multi-backend GPU support (CUDA, Metal, OpenCL)
+/// - GPU-accelerated compression and decompression
+/// - Advanced GPU memory management with pooling
+/// - Performance monitoring and optimization
+/// - Intelligent backend selection and workload optimization
+pub mod gpu;
 /// Harwell-Boeing sparse matrix format module
 ///
 /// Provides functionality for reading and writing Harwell-Boeing sparse matrix files:

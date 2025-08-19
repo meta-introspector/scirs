@@ -1135,9 +1135,9 @@ fn interpolate_missing_pixels(
 }
 
 #[allow(dead_code)]
-fn estimate_perimeter(prop: &crate::measurements::RegionProperties) -> f64 {
+fn estimate_perimeter(prop: &scirs2_ndimage::measurements::RegionProperties) -> f64 {
     // Simplified perimeter estimation
-    4.0 * (_prop.area / std::f64::consts::PI).sqrt()
+    4.0 * (prop.area / std::f64::consts::PI).sqrt()
 }
 
 #[allow(dead_code)]
@@ -1178,7 +1178,7 @@ fn calculate_correlation(img1: &Array2<f64>, img2: &Array2<f64>) -> f64 {
     let mean1 = img1.sum() / img1.len() as f64;
     let mean2 = img2.sum() / img2.len() as f64;
 
-    let numerator: f64 = _img1
+    let numerator: f64 = img1
         .iter()
         .zip(img2.iter())
         .map(|(&a, &b)| (a - mean1) * (b - mean2))

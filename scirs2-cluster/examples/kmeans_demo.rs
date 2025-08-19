@@ -64,7 +64,7 @@ fn main() {
     let _initial_centroids = kmeans_plus_plus(data.view(), 3, None).unwrap();
     // Using the default options but with k-means++ initialization
     let options = KMeansOptions::<f64>::default();
-    let (centroids_pp_labels_pp) = kmeans_with_options(data.view(), 3, Some(options)).unwrap();
+    let (centroids_pp, labels_pp) = kmeans_with_options(data.view(), 3, Some(options)).unwrap();
 
     println!("\nK-means++ Centroids:");
     for (i, centroid) in centroids_pp.outer_iter().enumerate() {

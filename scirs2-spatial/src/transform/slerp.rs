@@ -340,7 +340,7 @@ mod tests {
         let slerp = Slerp::new(rot1, rot2).unwrap();
 
         // Get 5 equally spaced times
-        let times = slerp.times(5);
+        let times = Slerp::times(5);
 
         assert_eq!(times.len(), 5);
         assert_relative_eq!(times[0], 0.0, epsilon = 1e-10);

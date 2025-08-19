@@ -99,7 +99,7 @@ pub fn gabor_kernel(params: &GaborParams, size: usize) -> Array2<f32> {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::feature::{gabor_filter, GaborParams};
+/// use scirs2_vision::feature::{gabor_filter, GaborParams};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

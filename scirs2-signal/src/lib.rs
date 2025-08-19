@@ -56,8 +56,8 @@ pub mod waveforms;
 
 // Additional signal processing modules (temporarily disabled for compilation stability)
 // TODO: Re-add these modules incrementally after fixing compilation errors
-// pub mod lombscargle;
-// pub mod lombscargle_enhanced;
+// Lomb-Scargle periodogram module (refactored)
+pub mod lombscargle;
 // pub mod utilities;
 // pub mod simd_advanced;
 // pub mod cqt;

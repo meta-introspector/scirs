@@ -160,7 +160,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn generate_sample_data() -> Vec<f64> {
     use rand::prelude::*;
-    use rand__distr::Normal;
+    use rand_distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(42);
     let mut data = Vec::with_capacity(600); // 300 points * 2 features

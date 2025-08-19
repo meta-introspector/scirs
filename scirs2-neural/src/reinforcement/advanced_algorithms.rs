@@ -216,7 +216,7 @@ impl TD3 {
         Ok(actor_loss)
     /// Sample noise for exploration or target smoothing
     fn sample_noise(&self, size: usize, std: f32) -> Array1<f32> {
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
         let mut rng = rng();
         let normal = Normal::new(0.0, std).unwrap();
         Array1::fromshape_fn(size, |_| normal.sample(&mut rng))
@@ -702,7 +702,7 @@ use statrs::statistics::Statistics;
                     .unwrap_or(0))
             ExplorationStrategyType::ThompsonSampling => {
                 // Thompson Sampling (simplified)
-                use rand__distr::{Distribution, Normal};
+                use rand_distr::{Distribution, Normal};
                 let mut rng = rng();
                 let normal = Normal::new(0.0, 1.0).unwrap();
                 let mut sampled_values = Array1::zeros(q_values.len());

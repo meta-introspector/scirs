@@ -521,12 +521,12 @@ mod tests {
     #[test]
     fn test_dijkstra_single_source() {
         let graph = create_test_graph();
-        let (distances_) = dijkstra_single_source(&graph, 0, false, false).unwrap();
+        let (distances_, _) = dijkstra_single_source(&graph, 0, false, false).unwrap();
 
-        assert_relative_eq!(distances[0], 0.0);
-        assert_relative_eq!(distances[1], 1.0);
-        assert_relative_eq!(distances[2], 2.0);
-        assert_relative_eq!(distances[3], 3.0); // 0->2->3
+        assert_relative_eq!(distances_[0], 0.0);
+        assert_relative_eq!(distances_[1], 1.0);
+        assert_relative_eq!(distances_[2], 2.0);
+        assert_relative_eq!(distances_[3], 3.0); // 0->2->3
     }
 
     #[test]
@@ -544,30 +544,30 @@ mod tests {
     #[test]
     fn test_bellman_ford() {
         let graph = create_test_graph();
-        let (distances_) = bellman_ford_single_source(&graph, 0, false, false).unwrap();
+        let (distances_, _) = bellman_ford_single_source(&graph, 0, false, false).unwrap();
 
-        assert_relative_eq!(distances[0], 0.0);
-        assert_relative_eq!(distances[1], 1.0);
-        assert_relative_eq!(distances[2], 2.0);
-        assert_relative_eq!(distances[3], 3.0);
+        assert_relative_eq!(distances_[0], 0.0);
+        assert_relative_eq!(distances_[1], 1.0);
+        assert_relative_eq!(distances_[2], 2.0);
+        assert_relative_eq!(distances_[3], 3.0);
     }
 
     #[test]
     fn test_floyd_warshall() {
         let graph = create_test_graph();
-        let (distances_) = floyd_warshall(&graph, false, false).unwrap();
+        let (distances_, _) = floyd_warshall(&graph, false, false).unwrap();
 
         // Check distances from vertex 0
-        assert_relative_eq!(distances[[0, 0]], 0.0);
-        assert_relative_eq!(distances[[0, 1]], 1.0);
-        assert_relative_eq!(distances[[0, 2]], 2.0);
-        assert_relative_eq!(distances[[0, 3]], 3.0);
+        assert_relative_eq!(distances_[[0, 0]], 0.0);
+        assert_relative_eq!(distances_[[0, 1]], 1.0);
+        assert_relative_eq!(distances_[[0, 2]], 2.0);
+        assert_relative_eq!(distances_[[0, 3]], 3.0);
 
         // Check distances from vertex 1
-        assert_relative_eq!(distances[[1, 0]], 1.0);
-        assert_relative_eq!(distances[[1, 1]], 0.0);
-        assert_relative_eq!(distances[[1, 2]], 3.0); // 1->0->2
-        assert_relative_eq!(distances[[1, 3]], 3.0); // 1->3
+        assert_relative_eq!(distances_[[1, 0]], 1.0);
+        assert_relative_eq!(distances_[[1, 1]], 0.0);
+        assert_relative_eq!(distances_[[1, 2]], 3.0); // 1->0->2
+        assert_relative_eq!(distances_[[1, 3]], 3.0); // 1->3
     }
 
     #[test]
@@ -575,12 +575,13 @@ mod tests {
         let graph = create_test_graph();
 
         // Single source
-        let (distances_) = shortest_path(&graph, Some(0), None, "dijkstra", false, false).unwrap();
-        assert_relative_eq!(distances[[0, 1]], 1.0);
-        assert_relative_eq!(distances[[0, 3]], 3.0);
+        let (distances_, _) =
+            shortest_path(&graph, Some(0), None, "dijkstra", false, false).unwrap();
+        assert_relative_eq!(distances_[[0, 1]], 1.0);
+        assert_relative_eq!(distances_[[0, 3]], 3.0);
 
         // Single pair
-        let (distance_) = shortest_path(&graph, Some(0), Some(3), "auto", false, false).unwrap();
+        let (distance, _) = shortest_path(&graph, Some(0), Some(3), "auto", false, false).unwrap();
         assert_relative_eq!(distance[[0, 0]], 3.0);
     }
 

@@ -743,7 +743,7 @@ mod tests {
         drop(file);
 
         // Create a memory-mapped array
-        let mmap = MemoryMappedArray::<f64>::open(&file_path, &[100_000]).unwrap();
+        let mmap = MemoryMappedArray::<f64>::path(&file_path, &[100_000]).unwrap();
 
         // Create adaptive chunking parameters
         let params = AdaptiveChunkingBuilder::new()
@@ -787,7 +787,7 @@ mod tests {
         let cols = 120;
 
         // Create a test 2D array and save it to a file
-        let data = Array2::<f64>::fromshape_fn((rows, cols), |(i, j)| (i * cols + j) as f64);
+        let data = Array2::<f64>::from_shape_fn((rows, cols), |(i, j)| (i * cols + j) as f64);
         let mut file = File::create(&file_path).unwrap();
         for val in data.iter() {
             file.write_all(&val.to_ne_bytes()).unwrap();
@@ -795,7 +795,7 @@ mod tests {
         drop(file);
 
         // Create a memory-mapped array
-        let mmap = MemoryMappedArray::<f64>::open(&file_path, &[rows, cols]).unwrap();
+        let mmap = MemoryMappedArray::<f64>::path(&file_path, &[rows, cols]).unwrap();
 
         // Create adaptive chunking parameters
         let params = AdaptiveChunkingBuilder::new()
@@ -842,7 +842,7 @@ mod tests {
         drop(file);
 
         // Create a memory-mapped array
-        let mmap = MemoryMappedArray::<f64>::open(&file_path, &[1_000_000]).unwrap();
+        let mmap = MemoryMappedArray::<f64>::path(&file_path, &[1_000_000]).unwrap();
 
         // Create adaptive chunking parameters optimized for parallel processing
         let params = AdaptiveChunkingBuilder::new()

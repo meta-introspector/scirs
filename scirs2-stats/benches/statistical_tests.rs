@@ -6,7 +6,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
-use rand__distr::{Normal, StandardNormal};
+use rand_distr::{Normal, StandardNormal};
 use scirs2_stats::{
     anderson_darling,
     dagostino_k2,

@@ -5,8 +5,8 @@
 
 use image::{DynamicImage, ImageBuffer, Luma, Rgb, RgbImage};
 use rand::prelude::*;
-use scirs2__vision::error::Result;
-use scirs2__vision::feature::{
+use scirs2_vision::error::Result;
+use scirs2_vision::feature::{
     extract_feature_coordinates, harris_corners, LKTracker, TrackerParams,
 };
 

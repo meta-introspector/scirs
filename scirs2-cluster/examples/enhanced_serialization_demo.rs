@@ -85,7 +85,7 @@ fn demo_unified_workflow(data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
 
     // Create temporary directory for workflow storage
     let temp_dir = TempDir::new()?;
-    let manager = ClusteringWorkflowManager::new(temp_dir.path());
+    let manager = ClusteringWorkflowManager::new(temp_dir.path(), temp_dir.path());
 
     // Create a new K-means workflow
     let mut workflow = ClusteringWorkflow::new(
@@ -106,7 +106,7 @@ fn demo_unified_workflow(data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
     );
 
     // Simulate K-means training with state updates
-    let mut current_centroids = initialize_centroids(_data, 3)?;
+    let mut current_centroids = initialize_centroids(data, 3)?;
 
     for iteration in 0..10 {
         // Update algorithm state
@@ -133,8 +133,8 @@ fn demo_unified_workflow(data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
                 .as_secs(),
             metrics,
             converged,
-            memory_usage: Some(1024 * 1024),      // 1MB simulated
-            step_duration_ms: 50 + iteration * 5, // Simulate varying step times
+            memory_usage: Some(1024 * 1024), // 1MB simulated
+            step_duration_ms: (50 + iteration * 5) as u64, // Simulate varying step times
         };
 
         workflow.add_training_step(training_step);
@@ -145,8 +145,9 @@ fn demo_unified_workflow(data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
     }
 
     // Run actual K-means and save final model
-    let (final_centroids, labels) = kmeans(_data.view(), 3, None, None, None, None)?;
-    let kmeans_model = KMeansModel::new(final_centroids, 3, 10, 42.5, Some(labels));
+    let (final_centroids, labels) = kmeans(data.view(), 3, None, None, None, None)?;
+    let labels_usize = labels.mapv(|x| x as usize);
+    let kmeans_model = KMeansModel::new(final_centroids, 3, 10, 42.5, Some(labels_usize));
     workflow.set_model(&kmeans_model)?;
 
     println!("🎯 K-means training completed:");
@@ -186,14 +187,14 @@ fn demo_dendrogram_json_export(data: &Array2<f64>) -> Result<(), Box<dyn std::er
     println!("==========================================");
 
     // Perform hierarchical clustering
-    let linkage_matrix = linkage(_data.view(), LinkageMethod::Ward, Metric::Euclidean)?;
+    let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean)?;
     println!(
         "🔗 Generated linkage matrix: {} merges",
         linkage_matrix.nrows()
     );
 
     // Create hierarchical model with labels
-    let labels = (0.._data.nrows())
+    let labels = (0..data.nrows())
         .map(|i| format!("Sample_{}", i))
         .collect::<Vec<String>>();
 
@@ -251,8 +252,9 @@ fn demo_sklearn_scipy_compatibility(data: &Array2<f64>) -> Result<(), Box<dyn st
     println!("===========================================");
 
     // Create K-means model
-    let (centroids, labels) = kmeans(_data.view(), 3, None, None, None, None)?;
-    let kmeans_model = KMeansModel::new(centroids.clone(), 3, 15, 38.2, Some(labels));
+    let (centroids, labels) = kmeans(data.view(), 3, None, None, None, None)?;
+    let labels_usize = labels.mapv(|x| x as usize);
+    let kmeans_model = KMeansModel::new(centroids.clone(), 3, 15, 38.2, Some(labels_usize));
 
     println!("🤖 Created K-means model:");
     println!("   - Clusters: {}", kmeans_model.n_clusters);
@@ -334,9 +336,9 @@ fn initialize_centroids(
 /// Create test scikit-learn compatible JSON data
 #[allow(dead_code)]
 fn create_sklearn_test_data(centroids: &Array2<f64>) -> String {
-    use serde__json::json;
+    use serde_json::json;
 
-    let _centroids_vec: Vec<Vec<f64>> = _centroids
+    let centroids_vec: Vec<Vec<f64>> = centroids
         .rows()
         .into_iter()
         .map(|row| row.iter().cloned().collect())

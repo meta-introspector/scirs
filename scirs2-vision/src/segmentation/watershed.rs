@@ -54,7 +54,7 @@ impl PartialOrd for PixelPriority {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::segmentation::watershed;
+/// use scirs2_vision::segmentation::watershed;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

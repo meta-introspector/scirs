@@ -54,7 +54,7 @@ impl DifferentialPrivacy {
             }
     /// Add noise based on mechanism
     fn add_noise(&self, gradients: &mut [Array2<f32>]) -> Result<()> {
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
         let mut rng = rng();
         match self.mechanism {
             NoiseMethod::Gaussian => {

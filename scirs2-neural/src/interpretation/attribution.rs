@@ -927,7 +927,7 @@ pub fn compute_input_x_gradient_attribution_optimized<F, M>(
 /// Optimized SmoothGrad attribution
 #[allow(dead_code)]
 pub fn compute_smoothgrad_attribution_optimized<F, M>(
-    use rand__distr::StandardNormal;
+    use rand_distr::StandardNormal;
     // Generate all noise samples upfront for better parallelization
     let noise_samples: Vec<ArrayD<F>> = (0..num_samples)
         .map(|_| {

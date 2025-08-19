@@ -541,10 +541,10 @@ impl SuperPointNet {
         // For demonstration, create synthetic weights
 
         let conv_weights = vec![
-            Array3::from_shape_fn((64, 1, 3), |(___)| rand::random::<f32>() * 0.1),
-            Array3::from_shape_fn((64, 64, 3), |(___)| rand::random::<f32>() * 0.1),
-            Array3::from_shape_fn((128, 64, 3), |(___)| rand::random::<f32>() * 0.1),
-            Array3::from_shape_fn((128, 128, 3), |(___)| rand::random::<f32>() * 0.1),
+            Array3::from_shape_fn((64, 1, 3), |___| rand::random::<f32>() * 0.1),
+            Array3::from_shape_fn((64, 64, 3), |___| rand::random::<f32>() * 0.1),
+            Array3::from_shape_fn((128, 64, 3), |___| rand::random::<f32>() * 0.1),
+            Array3::from_shape_fn((128, 128, 3), |___| rand::random::<f32>() * 0.1),
         ];
 
         let conv_biases = vec![

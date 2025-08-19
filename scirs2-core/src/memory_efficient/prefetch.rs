@@ -1074,7 +1074,7 @@ mod tests {
 
         // Record sequential access
         for i in 0..5 {
-            state.record_access(0);
+            state.tracker.record_access(0);
         }
 
         // Get blocks to prefetch
@@ -1083,14 +1083,17 @@ mod tests {
 
         // Mark blocks as being prefetched
         for &block in &to_prefetch {
-            state.mark_prefetching(block);
+            // Mark block as prefetching
+            state.prefetching.insert(block);
         }
 
         // Mark block 5 as prefetched
-        state.mark_prefetched(5);
+        // Mark block as prefetched
+        state.prefetched.insert(5);
+        state.prefetching.remove(&5);
 
         // Access block 5 (should be a hit)
-        state.record_access(5);
+        state.tracker.record_access(5);
 
         // Check stats
         let stats = state.stats();

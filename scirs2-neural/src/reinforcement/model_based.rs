@@ -142,7 +142,7 @@ impl MPC {
         Ok(best_action_sequence[0].clone())
     /// Sample a random action sequence
     fn sample_action_sequence(&self) -> Result<Vec<Array1<f32>>> {
-        use rand__distr::{Distribution, Uniform};
+        use rand_distr::{Distribution, Uniform};
         let mut rng = rng();
         let mut sequence = Vec::with_capacity(self.horizon);
         for _ in 0..self.horizon {

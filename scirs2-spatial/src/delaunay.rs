@@ -1140,6 +1140,7 @@ impl Delaunay {
 mod tests {
     use super::*;
     use ndarray::arr2;
+    use rand::Rng;
     // use approx::assert_relative_eq;
 
     #[test]

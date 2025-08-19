@@ -1,7 +1,7 @@
 //! Example demonstrating affine transformations
 
 use image::{GenericImageView, Pixel, RgbaImage};
-use scirs2__vision::transform::{estimate_affine_transform, warp_affine, AffineTransform};
+use scirs2_vision::transform::{estimate_affine_transform, warp_affine, AffineTransform};
 use std::env;
 use std::path::Path;
 

@@ -63,7 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 5. Using the unified edge_detector API with default settings (Canny)
     println!("\n5. Unified Edge Detector API (Default - Canny):");
-    let unified_default = edge_detector(&image, EdgeDetectionConfig::default());
+    let unified_default = edge_detector(&image, EdgeDetectionConfig::default())?;
     print_array(&unified_default);
 
     // 6. Using Canny with custom parameters
@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         border_mode: BorderMode::Reflect,
         return_magnitude: false,
     };
-    let unified_canny = edge_detector(&image, canny_config);
+    let unified_canny = edge_detector(&image, canny_config)?;
     print_array(&unified_canny);
 
     // 7. Using the unified edge_detector API with Laplacian of Gaussian
@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return_magnitude: true,
         ..EdgeDetectionConfig::default()
     };
-    let unified_log = edge_detector(&image, log_config);
+    let unified_log = edge_detector(&image, log_config)?;
     print_array(&unified_log);
 
     // 8. Using the unified edge_detector API with Gradient algorithm and Scharr method
@@ -103,7 +103,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return_magnitude: true,
         ..EdgeDetectionConfig::default()
     };
-    let unified_gradient = edge_detector(&image, gradient_config);
+    let unified_gradient = edge_detector(&image, gradient_config)?;
     print_array(&unified_gradient);
 
     // Part 3: Comparing gradient methods on diagonal edges

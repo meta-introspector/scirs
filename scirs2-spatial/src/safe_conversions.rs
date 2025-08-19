@@ -1,7 +1,6 @@
 //! Safe numeric conversion utilities for spatial algorithms
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::ArrayView1;
 use num_traits::Float;
 
 /// Safely convert a numeric literal to type T

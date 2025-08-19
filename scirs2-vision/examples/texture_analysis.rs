@@ -1,7 +1,7 @@
 //! Example demonstrating texture analysis using Local Binary Patterns (LBP)
 
 use image::{DynamicImage, GenericImageView};
-use scirs2__vision::feature::{lbp, lbp_histogram, multi_scale_lbp, LBPType};
+use scirs2_vision::feature::{lbp, lbp_histogram, multi_scale_lbp, LBPType};
 use statrs::statistics::Statistics;
 use std::error::Error;
 

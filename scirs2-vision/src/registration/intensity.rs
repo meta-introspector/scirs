@@ -645,7 +645,7 @@ mod tests {
         let result = compute_gradient(&img1, &img2, &transform, &config);
         assert!(result.is_ok());
 
-        let (gradient_cost) = result.unwrap();
+        let (gradient_cost, _cost_value) = result.unwrap();
         assert_eq!(gradient_cost.len(), 6);
     }
 }

@@ -800,7 +800,7 @@ impl Ord for KNNItem {
 
 #[cfg(test)]
 mod tests {
-    use super::{AdvancedKDTree, KDTreeConfig};
+    use super::{AdvancedKDTree, BoundingBox, KDTreeConfig};
     #[allow(unused_imports)]
     use approx::assert_relative_eq;
     use ndarray::array;
@@ -861,7 +861,8 @@ mod tests {
     fn test_batch_knn_search() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let queries = array![[0.1, 0.1], [0.9, 0.9]];
-        let config = KDTreeConfig::new().with_parallel_construction(true, 100);
+        let mut config = KDTreeConfig::new();
+        config.with_parallel_construction(true, 100);
 
         let kdtree = AdvancedKDTree::new(&points.view(), config).unwrap();
         let (indices, distances) = kdtree.batch_knn_search(&queries.view(), 2).unwrap();

@@ -23,7 +23,7 @@ use statrs::statistics::Statistics;
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::quality::psnr;
+/// use scirs2_vision::quality::psnr;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -106,7 +106,7 @@ impl Default for SSIMParams {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::quality::{ssim, SSIMParams};
+/// use scirs2_vision::quality::{ssim, SSIMParams};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

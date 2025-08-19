@@ -55,7 +55,7 @@ pub struct SeedPoint {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::segmentation::{region_growing, RegionGrowingParams, SeedPoint};
+/// use scirs2_vision::segmentation::{region_growing, RegionGrowingParams, SeedPoint};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

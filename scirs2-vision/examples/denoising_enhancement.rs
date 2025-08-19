@@ -2,8 +2,8 @@
 
 use image::{DynamicImage, ImageBuffer, Luma};
 use ndarray::{Array2, Array3};
-use scirs2__vision::error::Result;
-use scirs2__vision::preprocessing::{
+use scirs2_vision::error::Result;
+use scirs2_vision::preprocessing::{
     adaptive_gamma_correction, auto_gamma_correction, gamma_correction, nlm_denoise,
     nlm_denoise_color, nlm_denoise_parallel,
 };
@@ -31,7 +31,7 @@ fn demonstrate_nlm_denoising(img: &DynamicImage) -> Result<()> {
     println!("\n1. Non-Local Means Denoising:");
 
     // Add synthetic noise to the image
-    let noisy_img = add_gaussian_noise(_img, 0.05);
+    let noisy_img = add_gaussian_noise(img, 0.05);
     noisy_img
         .save("examples/output/noisy_input.png")
         .expect("Failed to save noisy image");
@@ -141,7 +141,7 @@ fn demonstrate_gamma_correction(img: &DynamicImage) -> Result<()> {
     let gamma_values = vec![0.5, 1.0, 1.5, 2.2];
 
     for gamma in gamma_values {
-        let corrected = gamma_correction(_img, gamma)?;
+        let corrected = gamma_correction(img, gamma)?;
         let output_path = format!("examples/output/gamma_{gamma}.png");
 
         match corrected {
@@ -159,7 +159,7 @@ fn demonstrate_gamma_correction(img: &DynamicImage) -> Result<()> {
     let target_brightnesses = vec![0.3, 0.5, 0.7];
 
     for target in target_brightnesses {
-        let auto_corrected = auto_gamma_correction(_img, target)?;
+        let auto_corrected = auto_gamma_correction(img, target)?;
         let output_path = format!("examples/output/auto_gamma_target_{target}.png");
 
         match auto_corrected {
@@ -177,7 +177,7 @@ fn demonstrate_gamma_correction(img: &DynamicImage) -> Result<()> {
     let window_sizes = vec![5, 15, 25];
 
     for window_size in window_sizes {
-        let adaptive = adaptive_gamma_correction(_img, window_size, (0.5, 2.0))?;
+        let adaptive = adaptive_gamma_correction(img, window_size, (0.5, 2.0))?;
         let output_path = format!("examples/output/adaptive_gamma_window_{window_size}.png");
 
         match adaptive {
@@ -195,13 +195,13 @@ fn demonstrate_gamma_correction(img: &DynamicImage) -> Result<()> {
 
 /// Add Gaussian noise to an image
 #[allow(dead_code)]
-fn add_gaussian_noise(_img: &DynamicImage, noiselevel: f32) -> DynamicImage {
-    use rand__distr::{Distribution, Normal};
+fn add_gaussian_noise(img: &DynamicImage, noiselevel: f32) -> DynamicImage {
+    use rand_distr::{Distribution, Normal};
 
     let mut rng = rand::rng();
-    let normal = Normal::new(0.0, noise_level).unwrap();
+    let normal = Normal::new(0.0, noiselevel).unwrap();
 
-    match _img {
+    match img {
         DynamicImage::ImageLuma8(gray) => {
             let (width, height) = gray.dimensions();
             let mut noisy = ImageBuffer::new(width, height);

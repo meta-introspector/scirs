@@ -835,6 +835,7 @@ fn squared_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
 mod tests {
     use super::*;
     use ndarray::array;
+    use rand::Rng;
 
     #[test]
     fn test_bounding_box_creation() {
@@ -1077,9 +1078,9 @@ mod tests {
             println!("Built octree with {n_points} points in {build_time:?}");
 
             // Measure query time
-            let query = array![0.0..0.0, 0.0];
+            let query = array![0.0, 0.0, 0.0];
             let start = std::time::Instant::now();
-            let (indices) = octree.query_nearest(&query.view(), 10).unwrap();
+            let (indices, _distances) = octree.query_nearest(&query.view(), 10).unwrap();
             let query_time = start.elapsed();
 
             println!("Found 10 nearest neighbors in {query_time:?}");
@@ -1087,7 +1088,7 @@ mod tests {
 
             // Measure radius search time
             let start = std::time::Instant::now();
-            let (indices) = octree.query_radius(&query.view(), 10.0).unwrap();
+            let (indices, _distances) = octree.query_radius(&query.view(), 10.0).unwrap();
             let radius_time = start.elapsed();
 
             println!(

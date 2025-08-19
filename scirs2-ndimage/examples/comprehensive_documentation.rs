@@ -87,8 +87,8 @@ fn main() -> NdimageResult<()> {
 
 #[allow(dead_code)]
 fn create_testimage_2d(height: usize, width: usize) -> Array2<f64> {
-    Array2::fromshape_fn((_height, width), |(i, j)| {
-        let x = i as f64 / _height as f64;
+    Array2::from_shape_fn((height, width), |(i, j)| {
+        let x = i as f64 / height as f64;
         let y = j as f64 / width as f64;
 
         // Create multiple patterns
@@ -102,8 +102,8 @@ fn create_testimage_2d(height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_testimage_3d(height: usize, width: usize, depth: usize) -> Array3<f64> {
-    Array3::fromshape_fn((_height, width, depth), |(i, j, k)| {
-        let x = i as f64 / _height as f64;
+    Array3::from_shape_fn((height, width, depth), |(i, j, k)| {
+        let x = i as f64 / height as f64;
         let y = j as f64 / width as f64;
         let z = k as f64 / depth as f64;
 
@@ -117,11 +117,11 @@ fn create_testimage_3d(height: usize, width: usize, depth: usize) -> Array3<f64>
 #[allow(dead_code)]
 fn add_noise(image: &Array2<f64>, noiselevel: f64) -> Array2<f64> {
     image
-        + &Array2::fromshape_fn(image.dim(), |(i, j)| {
+        + &Array2::from_shape_fn(image.dim(), |(i, j)| {
             let noise = if (i * 7 + j * 11) % 13 == 0 {
-                noise_level
+                noiselevel
             } else {
-                -noise_level
+                -noiselevel
             };
             if (i + j) % 3 == 0 {
                 noise
@@ -133,13 +133,13 @@ fn add_noise(image: &Array2<f64>, noiselevel: f64) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_edge_testimage(height: usize, width: usize) -> Array2<f64> {
-    Array2::fromshape_fn((_height, width), |(i, j)| {
+    Array2::from_shape_fn((height, width), |(i, j)| {
         // Create step edges and lines
-        if i > _height / 2 && i < _height / 2 + 5 {
+        if i > height / 2 && i < height / 2 + 5 {
             1.0
         } else if j > width / 2 && j < width / 2 + 5 {
             1.0
-        } else if ((i as f64 - _height as f64 / 2.0).powi(2)
+        } else if ((i as f64 - height as f64 / 2.0).powi(2)
             + (j as f64 - width as f64 / 2.0).powi(2))
         .sqrt()
             < 15.0
@@ -157,7 +157,7 @@ fn demonstrate_filtering(image: &Array2<f64>, noisyimage: &Array2<f64>) -> Ndima
 
     // 1. Basic filters
     println!("  • Gaussian filtering (noise reduction):");
-    let gaussian = gaussian_filter(image, &[2.0, 2.0], None, None, None)?;
+    let gaussian = gaussian_filter(&image.view(), 2.0, None, None)?;
     println!(
         "    Input: {}x{}, Output: {}x{}",
         image.nrows(),
@@ -168,8 +168,8 @@ fn demonstrate_filtering(image: &Array2<f64>, noisyimage: &Array2<f64>) -> Ndima
 
     // 2. Edge detection filters
     println!("  • Edge detection filters:");
-    let sobel_result = sobel(&image.view(), None, None, None)?;
-    let laplace_result = laplace(&image.view(), None, None)?;
+    let sobel_result = sobel(&image.view(), 0, None)?;
+    let laplace_result = laplace(&image.view(), None)?;
     println!("    Sobel edges detected, Laplacian computed");
 
     // 3. Rank filters
@@ -187,12 +187,14 @@ fn demonstrate_filtering(image: &Array2<f64>, noisyimage: &Array2<f64>) -> Ndima
     println!("  • Generic filters with custom functions:");
     let custom_filter = generic_filter(
         &image.view(),
-        None,                        // use default 3x3 footprint
-        filter__functions::variance, // use variance as the filter function
-        None,                        // mode
-        None,                        // cval
-        None,                        // origin
-        None,                        // axes
+        None, // use default 3x3 footprint
+        |neighborhood: &[f64]| {
+            neighborhood.iter().fold(0.0, |sum, &x| sum + x) / neighborhood.len() as f64
+        }, // use mean as the filter function
+        None, // mode
+        None, // cval
+        None, // origin
+        None, // axes
     )?;
     println!("    Custom variance filter applied");
 
@@ -282,8 +284,7 @@ fn demonstrate_morphology(image: &Array2<f64>) -> NdimageResult<()> {
 
     // 4. Distance transforms
     println!("  • Distance transforms:");
-    let edt = crate::morphology::distance_transform_edt(&binary_image.view(), None, None, None)
-        .expect("Distance transform failed")?;
+    let edt = distance_transform_edt(&binary_image.view(), None, None, None)?;
     println!("    Euclidean distance transform computed");
 
     Ok(())

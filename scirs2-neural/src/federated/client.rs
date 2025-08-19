@@ -200,7 +200,7 @@ use rand::seq::SliceRandom;
                     *update *= clip_threshold / norm;
                 }
             // Add Gaussian noise
-            use rand__distr::{Distribution, Normal};
+            use rand_distr::{Distribution, Normal};
             let noise_scale = clip_threshold * (2.0 * (1.0 / accountant.delta).ln()).sqrt()
                 / accountant.max_epsilon;
             let noise_dist = Normal::new(0.0, noise_scale).unwrap();

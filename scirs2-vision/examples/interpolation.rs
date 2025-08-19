@@ -1,7 +1,7 @@
 //! Example demonstrating various interpolation methods
 
 use image::{GenericImageView, Pixel};
-use scirs2__vision::transform::{
+use scirs2_vision::transform::{
     resize, resize_bicubic, resize_edge_preserving, resize_lanczos, InterpolationMethod,
 };
 use std::env;

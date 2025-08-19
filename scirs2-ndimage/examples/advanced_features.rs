@@ -11,12 +11,13 @@ use ndarray::{array, Array2};
 use scirs2_ndimage::{
     backend::{Backend, BackendBuilder},
     error::NdimageResult,
+    filters::edge::laplace,
     filters::{bilateral_filter, gaussian_filter as filters_gaussian_filter, median_filter},
     profiling::{
         disable_profiling, display_performance_report, enable_memory_profiling, enable_profiling,
         get_memory_report, OptimizationAdvisor,
     },
-    scipy_compat_layer::scipy_ndimage::{gaussian_filter, laplace, rotate, zoom},
+    scipy_compat_layer::scipy_ndimage::{gaussian_filter, rotate, zoom},
 };
 
 // Import advanced SIMD extensions

@@ -14,8 +14,10 @@ use std::collections::VecDeque;
 use std::fmt::Debug;
 
 pub mod byzantine_tolerance;
+pub mod differential_privacy; // New modular differential privacy
 pub mod dp_sgd;
 pub mod enhanced_audit;
+pub mod federated; // New modular federated privacy
 pub mod federated_privacy;
 pub mod moment_accountant;
 pub mod noise_mechanisms;
@@ -31,6 +33,21 @@ pub use utility_analysis::{
     PrivacyConfiguration, PrivacyParameterSpace, PrivacyRiskAssessment, PrivacyUtilityAnalyzer,
     PrivacyUtilityResults, RobustnessResults, SensitivityResults, StatisticalTestResults,
     UtilityMetric,
+};
+
+// Re-export modular federated privacy types
+pub use federated::{
+    ByzantineRobustAggregator, ByzantineRobustConfig, ByzantineRobustMethod, ClientComposition,
+    CompositionStats, CrossDeviceConfig, CrossDevicePrivacyManager, DeviceProfile, DeviceType,
+    FederatedCompositionAnalyzer, FederatedCompositionMethod, OutlierDetectionResult,
+    ReputationSystemConfig, RoundComposition, SecureAggregationConfig, SecureAggregationPlan,
+    SecureAggregator, SeedSharingMethod, StatisticalTestConfig, StatisticalTestType, TemporalEvent,
+    TemporalEventType,
+};
+
+// Re-export modular differential privacy types
+pub use differential_privacy::{
+    AmplificationConfig, AmplificationStats, PrivacyAmplificationAnalyzer, SubsamplingEvent,
 };
 
 /// Differential privacy configuration
@@ -717,7 +734,7 @@ mod tests {
         assert!(epsilon > 0.0);
         assert_eq!(delta, 1e-5);
 
-        let (epsilon2_) = accountant.get_privacy_spent(200).unwrap();
+        let (epsilon2, _) = accountant.get_privacy_spent(200).unwrap();
         assert!(epsilon2 > epsilon); // More steps should consume more budget
     }
 
@@ -740,7 +757,7 @@ mod tests {
             ..Default::default()
         };
 
-        let dp_optimizer: DifferentiallyPrivateOptimizer<_, ndarray::Ix1> =
+        let dp_optimizer: DifferentiallyPrivateOptimizer<SGD<f64>, f64, ndarray::Ix1> =
             DifferentiallyPrivateOptimizer::new(sgd, dp_config).unwrap();
         let budget = dp_optimizer.get_privacy_budget();
 

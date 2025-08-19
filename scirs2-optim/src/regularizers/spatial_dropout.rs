@@ -369,7 +369,8 @@ mod tests {
 
         let _penalty_apply = sd.apply(&params, true);
         let penalty_reg =
-            <SpatialDropout<f64> as Regularizer<f64, Ix3>>::apply(&sd, &params, &mut gradient).unwrap();
+            <SpatialDropout<f64> as Regularizer<f64, Ix3>>::apply(&sd, &params, &mut gradient)
+                .unwrap();
         assert_eq!(penalty_reg, 0.0);
 
         // Gradient should be modified

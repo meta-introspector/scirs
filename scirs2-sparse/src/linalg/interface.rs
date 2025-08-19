@@ -1227,7 +1227,7 @@ mod tests {
         }));
 
         // Attempting to create adjoint should fail
-        assert!(AdjointOperator::new(funcop).is_err());
+        assert!(AdjointOperator::new(func_op).is_err());
     }
 
     #[test]

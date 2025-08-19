@@ -1140,7 +1140,7 @@ mod tests {
         assert_eq!(c.shape(), (4, 4));
 
         // Verify the matrix is non-trivial (has at least a few non-zero entries)
-        let (rows, data) = c.find();
+        let (rows, _cols, data) = c.find();
         assert!(!rows.is_empty());
         assert!(!data.is_empty());
 
@@ -1149,7 +1149,7 @@ mod tests {
         assert_eq!(c_coo.shape(), (4, 4));
 
         // Verify the COO format also has non-zero entries
-        let (coo_rows, coo_data) = c_coo.find();
+        let (coo_rows, _coo_cols, coo_data) = c_coo.find();
         assert!(!coo_rows.is_empty());
         assert!(!coo_data.is_empty());
     }

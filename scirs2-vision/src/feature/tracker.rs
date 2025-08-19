@@ -86,7 +86,7 @@ impl LKTracker {
     /// # Example
     ///
     /// ```rust
-    /// use scirs2__vision::feature::{LKTracker, TrackerParams};
+    /// use scirs2_vision::feature::{LKTracker, TrackerParams};
     ///
     /// let tracker = LKTracker::new(TrackerParams::default());
     /// ```
@@ -114,7 +114,7 @@ impl LKTracker {
     /// # Example
     ///
     /// ```rust
-    /// use scirs2__vision::feature::{LKTracker, TrackerParams};
+    /// use scirs2_vision::feature::{LKTracker, TrackerParams};
     /// use image::{DynamicImage, RgbImage};
     ///
     /// # fn main() -> scirs2_vision::error::Result<()> {

@@ -2,11 +2,11 @@
 
 use image::{DynamicImage, ImageBuffer, Luma, Rgb};
 use ndarray::{Array2, Array3};
-use scirs2__vision::error::Result;
-use scirs2__vision::feature::{
+use scirs2_vision::error::Result;
+use scirs2_vision::feature::{
     compute_gradients, sobel_edges_oriented, visualize_gradient_orientation,
 };
-use scirs2__vision::preprocessing::{fast_guided_filter, guided_filter, guided_filter_color};
+use scirs2_vision::preprocessing::{fast_guided_filter, guided_filter, guided_filter_color};
 
 #[allow(dead_code)]
 fn main() -> Result<()> {

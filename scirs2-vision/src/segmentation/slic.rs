@@ -52,7 +52,7 @@ struct SuperpixelCenter {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::segmentation::slic;
+/// use scirs2_vision::segmentation::slic;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

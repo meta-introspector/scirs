@@ -1418,10 +1418,10 @@ mod tests {
 
     #[test]
     fn test_neural_spatial_optimizer_creation() {
-        let optimizer = NeuralSpatialOptimizer::new()
-            .with_network_architecture([10, 64, 32, 8])
-            .with_learning_rate(0.001)
-            .with_adaptive_learning(true);
+        let mut optimizer =
+            NeuralSpatialOptimizer::new().with_network_architecture([10, 64, 32, 8]);
+        optimizer.with_learning_rate(0.001);
+        optimizer.with_adaptive_learning(true);
 
         assert_eq!(optimizer.layers.len(), 3);
         assert_eq!(optimizer.learning_rate, 0.001);
@@ -1447,9 +1447,9 @@ mod tests {
 
     #[test]
     fn test_reinforcement_learning_selector() {
-        let mut selector = ReinforcementLearningSelector::new()
-            .with_epsilon_greedy(0.1)
-            .with_experience_replay(true);
+        let mut selector = ReinforcementLearningSelector::new();
+        selector.with_epsilon_greedy(0.1);
+        selector.with_experience_replay(true);
 
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let algorithm = selector.select_best_algorithm(&points.view());

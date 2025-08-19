@@ -1,7 +1,7 @@
 //! Example demonstrating perspective transformations
 
 use image::{GenericImageView, Pixel, RgbaImage};
-use scirs2__vision::transform::{
+use scirs2_vision::transform::{
     correct_perspective, warp_perspective, BorderMode, PerspectiveTransform,
 };
 use std::env;

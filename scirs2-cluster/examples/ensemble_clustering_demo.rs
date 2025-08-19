@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=============================================");
 
     // Generate test data with multiple clusters
-    let data = generate_test_data();
+    let data = generate_testdata();
     println!(
         "Generated {} data points with {} features",
         data.nrows(),
@@ -63,7 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Generate synthetic test data with multiple clusters
 #[allow(dead_code)]
-fn generate_test_data() -> Array2<f64> {
+fn generate_testdata() -> Array2<f64> {
     let mut data = Vec::new();
 
     // Cluster 1: centered at (2, 2)
@@ -90,7 +90,7 @@ fn generate_test_data() -> Array2<f64> {
 /// Demonstrate basic ensemble clustering
 #[allow(dead_code)]
 fn demonstrate_basic_ensemble(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
-    let result = convenience::ensemble_clustering(_data.view())?;
+    let result = convenience::ensemble_clustering(data.view())?;
 
     println!("   📊 Basic ensemble results:");
     println!("      Ensemble quality: {:.4}", result.ensemble_quality);
@@ -114,7 +114,7 @@ fn demonstrate_basic_ensemble(data: &Array2<f64>) -> Result<(), Box<dyn std::err
 /// Demonstrate bootstrap ensemble clustering
 #[allow(dead_code)]
 fn demonstrate_bootstrap_ensemble(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
-    let result = convenience::bootstrap_ensemble(_data.view(), 8, 0.75)?;
+    let result = convenience::bootstrap_ensemble(data.view(), 8, 0.75)?;
 
     println!("   📊 Bootstrap ensemble results:");
     println!("      Ensemble quality: {:.4}", result.ensemble_quality);
@@ -164,12 +164,12 @@ fn demonstrate_consensus_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::
         let config = EnsembleConfig {
             n_estimators: 6,
             consensus_method: method,
-            sampling_strategy: SamplingStrategy::Bootstrap { sample, ratio: 0.8 },
+            sampling_strategy: SamplingStrategy::Bootstrap { sample_ratio: 0.8 },
             ..Default::default()
         };
 
         let ensemble = EnsembleClusterer::new(config);
-        let result = ensemble.fit(_data.view())?;
+        let result = ensemble.fit(data.view())?;
 
         println!("   📊 {} consensus:", name);
         println!(
@@ -233,18 +233,15 @@ fn demonstrate_meta_clustering_ensemble(
     let base_configs = vec![
         EnsembleConfig {
             n_estimators: 4,
-            sampling_strategy: SamplingStrategy::Bootstrap { sample, ratio: 0.7 },
+            sampling_strategy: SamplingStrategy::Bootstrap { sample_ratio: 0.7 },
             diversity_strategy: Some(DiversityStrategy::AlgorithmDiversity {
-                algorithms: vec![ClusteringAlgorithm::KMeans { k, range: (2, 4) }],
+                algorithms: vec![ClusteringAlgorithm::KMeans { k_range: (2, 4) }],
             }),
             ..Default::default()
         },
         EnsembleConfig {
             n_estimators: 4,
-            sampling_strategy: SamplingStrategy::RandomSubspace {
-                feature,
-                ratio: 0.8,
-            },
+            sampling_strategy: SamplingStrategy::RandomSubspace { feature_ratio: 0.8 },
             diversity_strategy: Some(DiversityStrategy::AlgorithmDiversity {
                 algorithms: vec![ClusteringAlgorithm::DBSCAN {
                     eps_range: (0.3, 0.7),
@@ -307,14 +304,11 @@ fn demonstrate_advanced_ensemble_techniques(
             n_generations: 10,
             crossover_prob: 0.8,
             mutation_prob: 0.1,
-            selection_method: SelectionMethod::Tournament {
-                tournament,
-                size: 3,
-            },
+            selection_method: SelectionMethod::Tournament { tournament_size: 3 },
             elite_percentage: 0.1,
             fitness_function: FitnessFunction::Silhouette,
         },
-        boosting_config: BoostingConfig {
+        boostingconfig: BoostingConfig {
             n_rounds: 5,
             learning_rate: 0.1,
             reweighting_strategy: ReweightingStrategy::Exponential,

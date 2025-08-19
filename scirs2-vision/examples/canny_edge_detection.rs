@@ -6,7 +6,7 @@
 //! 3. Compare results with different sigma values and thresholds
 
 use image::{DynamicImage, GrayImage};
-use scirs2__vision::feature::{canny, canny_simple, PreprocessMode};
+use scirs2_vision::feature::{canny, canny_simple, PreprocessMode};
 use std::error::Error;
 use std::path::PathBuf;
 
@@ -147,7 +147,7 @@ fn create_demo_image() -> DynamicImage {
     }
 
     // 4. Add some noise
-    use scirs2__vision::preprocessing::gaussian_blur;
+    use scirs2_vision::preprocessing::gaussian_blur;
     let dynamic_img = DynamicImage::ImageLuma8(img_buffer);
 
     // Apply slight blur to make it more realistic

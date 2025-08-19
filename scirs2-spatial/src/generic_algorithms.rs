@@ -1943,6 +1943,10 @@ pub struct GMMResult<T: SpatialScalar> {
 #[cfg(test)]
 mod tests {
     use crate::generic_traits::EuclideanMetric;
+    use crate::{
+        DBSCANResult, GenericConvexHull, GenericDBSCAN, GenericDistanceMatrix, GenericKDTree,
+        GenericKMeans, Point,
+    };
     use approx::assert_relative_eq;
 
     #[test]

@@ -33,7 +33,7 @@ use ndarray::Array2;
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::feature::fast_corners;
+/// use scirs2_vision::feature::fast_corners;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

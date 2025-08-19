@@ -8,8 +8,8 @@
 //! - RANSAC-based outlier rejection
 
 use image::{DynamicImage, ImageBuffer, Luma, Rgb, RgbImage};
-use scirs2__vision::error::Result;
-use scirs2__vision::feature::{
+use scirs2_vision::error::Result;
+use scirs2_vision::feature::{
     detect_and_compute, detect_and_compute_orb, match_descriptors, match_orb_descriptors,
     matching::*, OrbConfig,
 };

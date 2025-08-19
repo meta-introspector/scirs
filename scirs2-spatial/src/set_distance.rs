@@ -27,7 +27,6 @@ use crate::distance::euclidean;
 use crate::error::SpatialResult;
 use ndarray::{Array2, ArrayView2};
 use num_traits::Float;
-use rand::prelude::*;
 use rand::seq::SliceRandom;
 use rand::{rngs::StdRng, SeedableRng};
 
@@ -368,7 +367,9 @@ pub fn gromov_hausdorff_distance<T: Float + Send + Sync>(
 
 #[cfg(test)]
 mod tests {
-    use super::{directed_hausdorff, gromov_hausdorff_distance, hausdorff_distance};
+    use super::{
+        directed_hausdorff, gromov_hausdorff_distance, hausdorff_distance, wasserstein_distance,
+    };
     use approx::assert_relative_eq;
     use ndarray::{array, Array2};
 
@@ -377,7 +378,7 @@ mod tests {
         let set1 = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
         let set2 = array![[0.0, 0.5], [1.0, 0.5], [0.5, 1.0]];
 
-        let (dist__) = directed_hausdorff(&set1.view(), &set2.view(), Some(42));
+        let (dist, _idx1, _idx2) = directed_hausdorff(&set1.view(), &set2.view(), Some(42));
 
         // The directed Hausdorff distance should be 0.5
         // (the maximum minimum distance from a point in set1 to set2)

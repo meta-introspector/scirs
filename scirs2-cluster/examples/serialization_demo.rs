@@ -95,7 +95,7 @@ fn hierarchical_example(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
     println!("{}", newick);
 
     // Export to JSON tree format
-    let json_tree = model.to_json_tree()?;
+    let json_tree = model.to_jsontree()?;
     println!("\nJSON tree format:");
     println!("{}", serde_json::to_string_pretty(&json_tree)?);
 

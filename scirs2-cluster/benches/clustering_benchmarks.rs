@@ -36,13 +36,13 @@ fn generate_clustered_data(
 
         // Create cluster center
         let mut center = Array1::zeros(n_features);
-        for j in 0..nfeatures {
+        for j in 0..n_features {
             center[j] = rng.random_range(-10.0..10.0);
         }
 
         // Generate points around cluster center
         for i in start_idx..end_idx {
-            for j in 0..nfeatures {
+            for j in 0..n_features {
                 data[[i, j]] = center[j] + rng.random_range(-noise..noise);
             }
         }

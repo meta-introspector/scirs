@@ -52,7 +52,7 @@ pub fn detect_and_compute(
 ) -> Result<Vec<Descriptor>> {
     // Convert to grayscale
     let gray = img.to_luma8();
-    let (_width_height) = gray.dimensions();
+    let _width_height = gray.dimensions();
 
     // Convert to array for easier processing
     let array = image_to_array(img)?;

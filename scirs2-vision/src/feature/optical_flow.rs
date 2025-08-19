@@ -56,7 +56,7 @@ impl Default for LucasKanadeParams {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::feature::{lucas_kanade_flow, LucasKanadeParams};
+/// use scirs2_vision::feature::{lucas_kanade_flow, LucasKanadeParams};
 /// use image::{DynamicImage, RgbImage};
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

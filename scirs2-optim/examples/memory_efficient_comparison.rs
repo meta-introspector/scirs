@@ -9,15 +9,15 @@ use std::time::Instant;
 // Function to measure memory usage (approximation)
 #[allow(dead_code)]
 fn estimate_memory_usage<T>(arrays: &[&T]) -> usize {
-    std::mem::size_of_val(_arrays)
+    std::mem::size_of_val(arrays)
 }
 
 // Simple quadratic loss function: f(x) = (x - target)^2
 #[allow(dead_code)]
 fn compute_loss_and_gradient(params: &Array2<f64>, target: &Array2<f64>) -> (f64, Array2<f64>) {
-    let diff = _params - target;
-    let loss = diff.mapv(|x| x * x).sum() / (_params.nrows() * params.ncols()) as f64;
-    let grad = diff * 2.0 / (_params.nrows() * params.ncols()) as f64;
+    let diff = params - target;
+    let loss = diff.mapv(|x| x * x).sum() / (params.nrows() * params.ncols()) as f64;
+    let grad = diff * 2.0 / (params.nrows() * params.ncols()) as f64;
     (loss, grad)
 }
 

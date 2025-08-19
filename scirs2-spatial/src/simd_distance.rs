@@ -1389,7 +1389,12 @@ pub mod bench {
 
 #[cfg(test)]
 mod tests {
-    use super::HardwareOptimizedDistances;
+    use super::hardware_specific_simd::HardwareOptimizedDistances;
+    use super::{
+        linear_to_condensed_indices, parallel_cdist, parallel_pdist, simd_chebyshev_distance,
+        simd_euclidean_distance, simd_euclidean_distance_batch, simd_knn_search,
+        simd_manhattan_distance,
+    };
     use approx::assert_relative_eq;
     use ndarray::array;
 

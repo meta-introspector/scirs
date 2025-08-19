@@ -1460,7 +1460,7 @@ mod tests {
         let norm_val = norm(&test_point);
         let test_point_normalized = test_point / norm_val;
 
-        let (nearest_idx) = sv.nearest_generator(&test_point_normalized.view()).unwrap();
+        let (nearest_idx, _dist) = sv.nearest_generator(&test_point_normalized.view()).unwrap();
 
         // The test point should be closest to one of the equatorial points
         assert!(

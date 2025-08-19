@@ -1,7 +1,7 @@
 //! Example demonstrating feature descriptors (ORB, BRIEF, HOG)
 
 use image::{DynamicImage, GenericImageView, Pixel, Rgb, RgbImage};
-use scirs2__vision::feature::{
+use scirs2_vision::feature::{
     compute_brief_descriptors, compute_hog, detect_and_compute, detect_and_compute_orb,
     match_brief_descriptors, match_orb_descriptors, visualize_hog, BriefConfig, HogConfig,
     KeyPoint, OrbConfig,

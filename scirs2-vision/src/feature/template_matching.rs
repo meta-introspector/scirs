@@ -52,7 +52,7 @@ pub struct MatchResult {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::feature::{template_match, MatchMethod};
+/// use scirs2_vision::feature::{template_match, MatchMethod};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

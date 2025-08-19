@@ -1,5 +1,5 @@
 use image::{open, DynamicImage, GenericImageView, ImageBuffer, Rgb, RgbImage, Rgba};
-use scirs2__vision::transform::{
+use scirs2_vision::transform::{
     generate_grid_points, warp_elastic, warp_non_rigid, warp_thin_plate_spline, BorderMode,
     ElasticDeformation,
 };

@@ -10,7 +10,6 @@ use crate::error::{SparseError, SparseResult};
 use crate::sparray::{SparseArray, SparseSum};
 use crate::sym_coo::SymCooArray;
 use crate::sym_csr::SymCsrArray;
-use ndarray::ArrayView1;
 use num_traits::Float;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
@@ -902,7 +901,7 @@ mod tests {
         assert_eq!(coo.shape(), (3, 3));
 
         // Test that find() returns the full matrix elements
-        let (rowscols_data) = sym_csr.find();
+        let (rows, _cols, _data) = sym_csr.find();
         assert!(rows.len() > sym_csr.nnz_stored()); // Should include symmetric pairs
     }
 

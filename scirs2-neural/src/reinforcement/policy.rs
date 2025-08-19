@@ -5,7 +5,7 @@ use rand::rng;
 use crate::error::Result;
 use crate::layers::{Dense, Layer};
 use ndarray::prelude::*;
-use rand__distr::{Distribution, Normal};
+use rand_distr::{Distribution, Normal};
 use std::sync::Arc;
 use ndarray::ArrayView1;
 /// Base trait for policies

@@ -807,6 +807,10 @@ pub mod ndarray_integration {
 
 #[cfg(test)]
 mod tests {
+    use crate::{
+        ChebyshevMetric, DistanceMetric, EuclideanMetric, ManhattanMetric, Point, SpatialPoint,
+        SpatialScalar,
+    };
     use approx::assert_relative_eq;
 
     #[test]
@@ -856,6 +860,8 @@ mod tests {
 
     #[test]
     fn test_distance_metrics() {
+        use crate::generic_traits::DistanceMetric;
+
         let p1 = Point::new_2d(0.0f64, 0.0);
         let p2 = Point::new_2d(3.0, 4.0);
 

@@ -14,11 +14,11 @@ use ndarray::{Array2, ArrayView2};
 use std::time::Instant;
 
 use scirs2_ndimage::{
-    enhanced_validation::{
-        validated_advanced_processing, ComprehensiveValidator, ValidationConfig,
-    },
+    // enhanced_validation::{
+    //     validated_advanced_processing, ComprehensiveValidator, ValidationConfig,
+    // },
     error::NdimageResult,
-    fusion_core::AdvancedConfig,
+    // fusion_core::AdvancedConfig,
 };
 
 /// Comprehensive enhanced Advanced demonstration
@@ -113,8 +113,8 @@ fn create_test_dataset() -> Vec<(String, Array2<f64>)> {
 /// Create random test image
 #[allow(dead_code)]
 fn create_randomimage(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((_height, width));
-    for y in 0.._height {
+    let mut image = Array2::zeros((height, width));
+    for y in 0..height {
         for x in 0..width {
             // Pseudo-random based on coordinates
             let val = ((x * 37 + y * 17) % 1000) as f64 / 1000.0;
@@ -127,11 +127,11 @@ fn create_randomimage(height: usize, width: usize) -> Array2<f64> {
 /// Create structured test image with multiple patterns
 #[allow(dead_code)]
 fn create_structuredimage(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((_height, width));
+    let mut image = Array2::zeros((height, width));
 
-    for y in 0.._height {
+    for y in 0..height {
         for x in 0..width {
-            let y_norm = y as f64 / _height as f64;
+            let y_norm = y as f64 / height as f64;
             let x_norm = x as f64 / width as f64;
 
             // Multi-scale patterns
@@ -154,11 +154,11 @@ fn create_structuredimage(height: usize, width: usize) -> Array2<f64> {
 /// Create high frequency test image
 #[allow(dead_code)]
 fn create_high_frequencyimage(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((_height, width));
+    let mut image = Array2::zeros((height, width));
 
-    for y in 0.._height {
+    for y in 0..height {
         for x in 0..width {
-            let y_norm = y as f64 / _height as f64;
+            let y_norm = y as f64 / height as f64;
             let x_norm = x as f64 / width as f64;
 
             // High frequency patterns
@@ -176,16 +176,16 @@ fn create_high_frequencyimage(height: usize, width: usize) -> Array2<f64> {
 /// Create edge case test image (extreme values, discontinuities)
 #[allow(dead_code)]
 fn create_edge_caseimage(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((_height, width));
+    let mut image = Array2::zeros((height, width));
 
-    for y in 0.._height {
+    for y in 0..height {
         for x in 0..width {
             // Create discontinuities and edge cases
             if x < width / 4 {
                 image[(y, x)] = 0.0; // Dark region
             } else if x < width / 2 {
                 image[(y, x)] = 1.0; // Bright region
-            } else if y < _height / 2 {
+            } else if y < height / 2 {
                 // Checkerboard pattern
                 image[(y, x)] = if (x + y) % 2 == 0 { 0.0 } else { 1.0 };
             } else {

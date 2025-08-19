@@ -13,7 +13,7 @@
 //! - Multi-objective optimization balancing speed, accuracy, and energy
 
 use ndarray::Array2;
-use scirs2__vision::{
+use scirs2_vision::{
     // Neuromorphic processing
     AdaptiveNeuromorphicPipeline,
     // AI optimization
@@ -42,7 +42,7 @@ use scirs2__vision::{
 };
 
 // Import additional AI optimization types directly from the module
-use scirs2__vision::ai_optimization::{
+use scirs2_vision::ai_optimization::{
     ActivationType, ArchitectureSearchSpace, AttentionType, ConnectionType, Experience, LayerType,
     PoolingType, ResourceRequirement, WorkloadMeasurement,
 };

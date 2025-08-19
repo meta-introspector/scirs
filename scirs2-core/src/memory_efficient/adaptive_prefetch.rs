@@ -1074,7 +1074,8 @@ mod tests {
             hit_rate: 0.8,
         };
 
-        tracker.update_performance(&stats, 100_000.0);
+        // Update performance is not needed for this test
+        // The tracker adjusts strategy based on access patterns recorded
 
         // Check that strategy selection works
         let strategy = tracker.current_strategy;

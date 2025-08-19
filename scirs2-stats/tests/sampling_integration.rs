@@ -131,8 +131,8 @@ fn custom_std(arr: &Array1<f64>, ddof: usize) -> f64 {
         return 0.0;
     }
 
-    let mean = custom_mean(_arr);
+    let mean = custom_mean(arr);
     let sum_sq: f64 = arr.iter().map(|&x| (x - mean) * (x - mean)).sum();
-    let denominator = (_arr.len() - ddof) as f64;
+    let denominator = (arr.len() - ddof) as f64;
     (sum_sq / denominator).sqrt()
 }

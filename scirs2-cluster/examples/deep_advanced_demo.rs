@@ -6,13 +6,14 @@
 
 use ndarray::Array2;
 use scirs2_cluster::advanced_clustering::AdvancedClusterer;
-use scirs2_cluster::advanced_enhanced_features::{
-    DeepAdvancedClusterer, DeepEnsembleCoordinator, GraphNeuralNetworkProcessor,
-    NeuralArchitectureSearchEngine, ReinforcementLearningAgent, TransformerClusterEmbedder,
-};
-use scirs2_cluster::advanced_visualization::{
-    AdvancedVisualizationConfig, AdvancedVisualizer, QuantumColorScheme, VisualizationExportFormat,
-};
+// These modules don't exist yet - commented out
+// use scirs2_cluster::advanced_enhanced_features::{
+//     DeepAdvancedClusterer, DeepEnsembleCoordinator, GraphNeuralNetworkProcessor,
+//     NeuralArchitectureSearchEngine, ReinforcementLearningAgent, TransformerClusterEmbedder,
+// };
+// use scirs2_cluster::advanced_visualization::{
+//     AdvancedVisualizationConfig, AdvancedVisualizer, QuantumColorScheme, VisualizationExportFormat,
+// };
 use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
@@ -504,9 +505,9 @@ fn create_visualization_data() -> Array2<f64> {
 #[allow(dead_code)]
 fn create_sample_embeddings(_nsamples: usize) -> Array2<f64> {
     let embed_dim = 128;
-    let mut embeddings = Array2::zeros((_n_samples, embed_dim));
+    let mut embeddings = Array2::zeros((_nsamples, embed_dim));
 
-    for i in 0.._n_samples {
+    for i in 0.._nsamples {
         for j in 0..embed_dim {
             let val = ((i * 7 + j * 11) as f64 * 0.01).sin() * 0.5;
             embeddings[[i, j]] = val;

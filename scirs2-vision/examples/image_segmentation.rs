@@ -7,8 +7,8 @@
 //! 4. Perform connected component labeling
 
 use image::DynamicImage;
-use scirs2__vision::preprocessing::{gaussian_blur, normalize_brightness};
-use scirs2__vision::segmentation::{
+use scirs2_vision::preprocessing::{gaussian_blur, normalize_brightness};
+use scirs2_vision::segmentation::{
     adaptive_threshold, connected_components, otsu_threshold, threshold_binary, AdaptiveMethod,
 };
 use std::path::PathBuf;

@@ -1,5 +1,5 @@
 use image::{DynamicImage, GrayImage, RgbImage};
-use scirs2__vision::preprocessing::{
+use scirs2_vision::preprocessing::{
     bilateral_filter, clahe, gaussian_blur, median_filter, normalize_brightness, unsharp_mask,
 };
 

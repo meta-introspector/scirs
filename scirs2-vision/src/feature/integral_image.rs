@@ -23,7 +23,7 @@ use ndarray::Array2;
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::feature::compute_integral_image;
+/// use scirs2_vision::feature::compute_integral_image;
 /// use image::DynamicImage;
 ///
 /// let img = DynamicImage::new_luma8(10, 10);

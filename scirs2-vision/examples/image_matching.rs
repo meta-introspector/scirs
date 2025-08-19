@@ -1,10 +1,10 @@
 //! Example demonstrating feature matching and homography estimation
 
 use image::{GenericImageView, Pixel, Rgba, RgbaImage};
-use scirs2__vision::feature::{
+use scirs2_vision::feature::{
     detect_and_compute_orb, find_homography_from_matches, match_orb_descriptors, OrbConfig,
 };
-use scirs2__vision::transform::{warp_affine, AffineTransform};
+use scirs2_vision::transform::{warp_affine, AffineTransform};
 use std::env;
 use std::path::Path;
 

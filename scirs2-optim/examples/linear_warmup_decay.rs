@@ -8,28 +8,28 @@ use scirs2_optim::Optimizer;
 #[allow(dead_code)]
 fn generate_data<A: Float>(n_samples: usize, nfeatures: usize) -> (Array2<A>, Array1<A>) {
     let mut rng = scirs2_core::random::rng();
-    let mut x = Array2::<A>::zeros((n_samples, n_features));
+    let mut x = Array2::<A>::zeros((n_samples, nfeatures));
     let mut y = Array1::<A>::zeros(n_samples);
 
     // Generate random weights
-    let true_weights: Vec<A> = (0..n_features)
-        .map(|_| A::from(rng.random_range(-1.0..1.0)).unwrap())
+    let true_weights: Vec<A> = (0..nfeatures)
+        .map(|_| A::from(rng.gen_range(-1.0, 1.0)).unwrap())
         .collect();
 
     // Generate random _features and compute targets
-    for i in 0.._n_samples {
-        for j in 0..n_features {
-            let x_val = A::from(rng.random_range(-5.0..5.0)).unwrap();
+    for i in 0..n_samples {
+        for j in 0..nfeatures {
+            let x_val = A::from(rng.gen_range(-5.0, 5.0)).unwrap();
             x[[i, j]] = x_val;
         }
 
         // Compute target = X * w + noise
         let mut target = A::zero();
-        for j in 0..n_features {
+        for j in 0..nfeatures {
             target = target + x[[i, j]] * true_weights[j];
         }
         // Add some noise
-        target = target + A::from(rng.random_range(-0.1..0.1)).unwrap();
+        target = target + A::from(rng.gen_range(-0.1, 0.1)).unwrap();
         y[i] = target;
     }
 
@@ -39,7 +39,7 @@ fn generate_data<A: Float>(n_samples: usize, nfeatures: usize) -> (Array2<A>, Ar
 /// Calculate mean squared error
 #[allow(dead_code)]
 fn mean_squared_error<A: Float>(y_true: &Array1<A>, ypred: &Array1<A>) -> A {
-    let diff = y_pred - y_true;
+    let diff = ypred - y_true;
     let squared = diff.mapv(|x| x * x);
     let sum = squared.sum();
     sum / A::from(y_true.len()).unwrap()
@@ -55,11 +55,11 @@ fn predict<A: Float + 'static>(x: &Array2<A>, weights: &Array1<A>) -> Array1<A> 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Generate synthetic data
     let n_samples = 100;
-    let n_features = 5;
-    let (x, y) = generate_data::<f64>(n_samples, n_features);
+    let nfeatures = 5;
+    let (x, y) = generate_data::<f64>(n_samples, nfeatures);
     println!(
         "Generated data with {} samples and {} features",
-        n_samples, n_features
+        n_samples, nfeatures
     );
 
     // Training parameters
@@ -74,7 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let decay_steps = total_steps - warmup_steps;
 
     // Initialize parameters
-    let mut weights = Array1::<f64>::zeros(n_features);
+    let mut weights = Array1::<f64>::zeros(nfeatures);
 
     // Create optimizers with different schedulers to compare
     let mut sgd_constant = SGD::new(0.1);
@@ -125,7 +125,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Simple Fisher-Yates shuffle
         let mut rng = scirs2_core::random::rng();
         for i in (1..indices.len()).rev() {
-            let j = rng.random_range(0..i);
+            let j = rng.gen_range(0, i);
             indices.swap(i, j);
         }
 
@@ -137,7 +137,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Create batch
             let batch_indices = &indices[batch * batch_size..(batch + 1) * batch_size];
             let x_batch =
-                Array2::from_shape_fn((batch_size, n_features), |(i, j)| x[[batch_indices[i], j]]);
+                Array2::from_shape_fn((batch_size, nfeatures), |(i, j)| x[[batch_indices[i], j]]);
             let y_batch = Array1::from_shape_fn(batch_size, |i| y[batch_indices[i]]);
 
             // Constant learning rate SGD

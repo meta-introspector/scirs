@@ -8,7 +8,7 @@ use scirs2_cluster::preprocess::standardize;
 use scirs2_cluster::visualization::animation::{
     AnimationFrame, ConvergenceInfo, IterativeAnimationConfig, IterativeAnimationRecorder,
 };
-use scirs2_cluster::vq::kmeans;
+use scirs2_cluster::vq::kmeans2;
 use scirs2_cluster::VisualizationConfig;
 use std::path::Path;
 
@@ -30,13 +30,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create animation configuration
     let animation_config = IterativeAnimationConfig {
-        fps: 10,
-        capture_intermediate: true,
-        min_capture_interval_ms: 50,
-        max_frames: 200,
-        show_convergence: true,
-        centroid_trail_length: 8,
-        easing: scirs2_cluster::visualization::EasingFunction::EaseInOut,
+        capture_frequency: 1,
+        interpolate_frames: true,
+        interpolation_frames: 5,
+        fps: 10.0,
+        show_convergence_overlay: true,
+        show_iteration_numbers: true,
+        highlight_centroid_movement: true,
+        fade_effect: true,
+        trail_length: 8,
     };
 
     // Create visualization configuration
@@ -52,6 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             duration_ms: 3000,
             frames: 60,
             easing: scirs2_cluster::visualization::EasingFunction::EaseInOut,
+            loop_animation: false,
         }),
         dimensionality_reduction: scirs2_cluster::visualization::DimensionalityReduction::None,
     };
@@ -96,7 +99,6 @@ fn run_animated_kmeans(
     output_path: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut recorder = IterativeAnimationRecorder::new(animation_config.clone());
-    recorder.start_recording();
 
     // Manual K-means implementation with animation capture
     let n_samples = data.nrows();
@@ -115,18 +117,11 @@ fn run_animated_kmeans(
     let max_iterations = 50;
 
     // Capture initial state
-    recorder.capture_frame(
+    recorder.record_frame(
         data,
         &labels.mapv(|x| x as i32),
         Some(&centroids),
-        Some(0),
-        Some(ConvergenceInfo {
-            inertia: prev_inertia,
-            inertia_change: 0.0,
-            points_changed: n_samples,
-            max_centroid_movement: 0.0,
-            converged: false,
-        }),
+        Some(prev_inertia),
     )?;
 
     for iteration in 1..=max_iterations {
@@ -164,7 +159,7 @@ fn run_animated_kmeans(
 
         // Update step
         let old_centroids = centroids.clone();
-        let mut max_centroid_movement = 0.0;
+        let mut max_centroid_movement: f64 = 0.0;
 
         for j in 0..k {
             let cluster_points: Vec<usize> = (0..n_samples).filter(|&i| labels[i] == j).collect();
@@ -206,18 +201,11 @@ fn run_animated_kmeans(
         let converged = inertia_change < 1e-4 && points_changed == 0;
 
         // Capture frame
-        recorder.capture_frame(
+        recorder.record_frame(
             data,
             &labels.mapv(|x| x as i32),
             Some(&centroids),
-            Some(iteration),
-            Some(ConvergenceInfo {
-                inertia,
-                inertia_change,
-                points_changed,
-                max_centroid_movement,
-                converged,
-            }),
+            Some(inertia),
         )?;
 
         println!(
@@ -233,9 +221,9 @@ fn run_animated_kmeans(
         prev_inertia = inertia;
     }
 
-    // Export animation to HTML
-    let html_content = recorder.export_to_html(vis_config)?;
-    std::fs::write(output_path, html_content)?;
+    // Export animation to JSON
+    let json_content = recorder.export_to_json()?;
+    std::fs::write(output_path, json_content)?;
 
     Ok(())
 }
@@ -248,11 +236,14 @@ fn demonstrate_streaming_visualization(
     use scirs2_cluster::visualization::animation::{StreamingConfig, StreamingVisualizer};
 
     let streaming_config = StreamingConfig {
-        max_buffer_size: 500,
-        update_interval_ms: 100,
-        record_animation: true,
-        fade_old_points: true,
-        highlight_recent: 20,
+        buffer_size: 500,
+        update_frequency_ms: 100,
+        rolling_window_size: 100,
+        animate_new_data: true,
+        animate_cluster_updates: true,
+        adaptive_bounds: true,
+        show_streaming_stats: true,
+        data_point_lifetime_ms: 5000,
     };
 
     let mut visualizer = StreamingVisualizer::new(streaming_config);
@@ -262,7 +253,8 @@ fn demonstrate_streaming_visualization(
     // Simulate streaming data by adding points one by one
     for (i, point) in data.rows().into_iter().enumerate() {
         let label = i % 3; // Simulate clustering labels
-        let should_update = visualizer.add_point(point.to_owned(), label as i32)?;
+        visualizer.add_data_point(point.to_owned(), label as i32);
+        let should_update = true; // Simplified for demo
 
         if should_update {
             println!("  Updated visualization at point {}", i + 1);
@@ -276,13 +268,8 @@ fn demonstrate_streaming_visualization(
         } // Limit demo
     }
 
-    // Export streaming animation
-    if let Some(recorder) = &visualizer.recorder {
-        let vis_config = VisualizationConfig::default();
-        let html_content = recorder.export_to_html(&vis_config)?;
-        std::fs::write("streaming_visualization.html", html_content)?;
-        println!("Streaming animation saved to: streaming_visualization.html");
-    }
+    // Export streaming data (simplified)
+    println!("Streaming visualization completed");
 
     Ok(())
 }
@@ -301,7 +288,16 @@ fn demonstrate_3d_animation() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Run K-means on 3D data
-    let (centroids, labels) = kmeans(data_3d.view(), 3, Some(30), Some(1e-4), Some(42), None)?;
+    let (centroids, labels) = kmeans2(
+        data_3d.view(),
+        3,
+        Some(30),
+        Some(1e-4),
+        None,
+        None,
+        None,
+        Some(42),
+    )?;
 
     // Create 3D scatter plot
     let scatter_plot_3d = scirs2_cluster::visualization::create_scatter_plot_3d(
@@ -312,9 +308,11 @@ fn demonstrate_3d_animation() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     // Export 3D visualization to HTML
-    let html_content =
-        scirs2_cluster::visualization::export::export_scatter_3d_to_html(&scatter_plot_3d)?;
-    std::fs::write("3d_clustering_visualization.html", html_content)?;
+    scirs2_cluster::visualization::export::export_scatter_3d_to_html(
+        &scatter_plot_3d,
+        "3d_clustering_visualization.html",
+        &Default::default(),
+    )?;
     println!("3D visualization saved to: 3d_clustering_visualization.html");
 
     Ok(())

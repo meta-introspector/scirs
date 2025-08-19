@@ -26,7 +26,7 @@ use ndarray::Array2;
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::feature::prewitt_edges;
+/// use scirs2_vision::feature::prewitt_edges;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

@@ -1349,7 +1349,7 @@ mod tests {
     #[test]
     fn test_work_context_structures() {
         // Test that work context structures can be created
-        let (sender_receiver) = channel::<(usize, usize, f64)>();
+        let (sender, _receiver) = channel::<(usize, usize, f64)>();
 
         let distance_context = DistanceMatrixContext {
             points: Array2::zeros((4, 2)),

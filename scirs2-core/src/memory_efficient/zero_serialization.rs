@@ -1184,7 +1184,7 @@ mod tests {
 
         // Create a 2D array of complex numbers
         let data =
-            Array2::<Complex64>::fromshape_fn((5, 5), |(0, j)| Complex64::new(0 as f64, j as f64));
+            Array2::<Complex64>::from_shape_fn((5, 5), |(i, j)| Complex64::new(i as f64, j as f64));
 
         // Save with metadata
         let metadata = serde_json::json!({
@@ -1337,7 +1337,7 @@ mod tests {
         let filepath = dir.path().join("test_array_3d.bin");
 
         // Create a 3D array
-        let data = Array3::<i32>::fromshape_fn((5, 5, 5), |(0, j, k)| (0 * 25 + j * 5 + k) as i32);
+        let data = Array3::<i32>::from_shape_fn((5, 5, 5), |(i, j, k)| (i * 25 + j * 5 + k) as i32);
 
         // Save with metadata
         let metadata = serde_json::json!({
@@ -1383,12 +1383,12 @@ mod tests {
 
         // Create a dynamic-dimension array (4D)
         let shape = IxDyn(&[3, 4, 2, 5]);
-        let data = Array::fromshape_fn(shape, |idx| {
+        let data = Array::from_shape_fn(shape, |idx| {
             // Convert multidimensional index to a single value for testing
             let mut val = 0;
             let mut factor = 1;
-            for &0 in idx.slice().iter().rev() {
-                val += 0 * factor;
+            for &dim in idx.slice().iter().rev() {
+                val += dim * factor;
                 factor *= 10;
             }
             val as f64
@@ -1639,7 +1639,7 @@ mod tests {
         let filepath = dir.path().join("test_cow.bin");
 
         // Create a 2D array
-        let data = Array2::<f64>::fromshape_fn((10, 10), |(0, j)| (0 * 10 + j) as f64);
+        let data = Array2::<f64>::from_shape_fn((10, 10), |(i, j)| (i * 10 + j) as f64);
 
         // Save array
         MemoryMappedArray::<f64>::save_array(&data, &filepath, None).unwrap();

@@ -1561,8 +1561,8 @@ mod tests {
             .await;
         assert!(result.is_ok());
 
-        let (algorithm_parameters, prediction) = result.unwrap();
-        assert!(!algorithm.is_empty());
+        let (_algorithm_name, algorithm_parameters, prediction) = result.unwrap();
+        assert!(!algorithm_parameters.is_empty());
         assert!(prediction.expected_accuracy >= 0.0 && prediction.expected_accuracy <= 1.0);
         assert!(prediction.confidence >= 0.0 && prediction.confidence <= 1.0);
     }

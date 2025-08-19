@@ -8,11 +8,11 @@
 //! - Laplacian of Gaussian (LoG)
 
 use image::DynamicImage;
-use scirs2__vision::feature::{
+use scirs2_vision::feature::{
     canny_simple, laplacian_edges, laplacian_of_gaussian, laplacian_zero_crossing, prewitt_edges,
     sobel_edges,
 };
-use scirs2__vision::preprocessing::{gaussian_blur, normalize_brightness};
+use scirs2_vision::preprocessing::{gaussian_blur, normalize_brightness};
 use std::path::PathBuf;
 
 #[allow(dead_code)]

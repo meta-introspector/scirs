@@ -1886,7 +1886,7 @@ mod tests {
         let state = state.unwrap();
         assert_eq!(state.hidden_states.len(), config.num_layers);
         assert_eq!(state.cell_states.len(), config.num_layers);
-        assert!(state.attentionweights.is_some());
+        assert!(state.attention_weights.is_some());
     }
 
     #[test]

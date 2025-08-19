@@ -854,7 +854,7 @@ mod tests {
         assert_eq!(delta, 1e-5);
 
         // More steps should consume more privacy
-        let (epsilon2_) = accountant.get_privacy_spent(100).unwrap();
+        let (epsilon2, _) = accountant.get_privacy_spent(100).unwrap();
         assert!(epsilon2 > epsilon);
     }
 

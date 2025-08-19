@@ -254,7 +254,7 @@ where
     // Check if graph is connected
     if mst_edges.len() != n - 1 {
         return Err(SparseError::ValueError(
-            "Graph is not connected - cannot compute spanning _tree".to_string(),
+            "Graph is not connected - cannot compute spanning tree".to_string(),
         ));
     }
 
@@ -340,7 +340,7 @@ where
     let vertices_in_mst = in_mst.iter().filter(|&&x| x).count();
     if vertices_in_mst != n {
         return Err(SparseError::ValueError(
-            "Graph is not connected - cannot compute spanning _tree".to_string(),
+            "Graph is not connected - cannot compute spanning tree".to_string(),
         ));
     }
 
@@ -409,7 +409,7 @@ where
         return Ok(false);
     }
 
-    // All edges in tree must exist in original _graph with same weight
+    // All edges in tree must exist in original graph with same weight
     let (tree_rows, tree_cols, tree_values) = tree.find();
 
     for (i, (&u, &v)) in tree_rows.iter().zip(tree_cols.iter()).enumerate() {
@@ -565,7 +565,7 @@ mod tests {
     #[test]
     fn test_prim_mst() {
         let graph = create_test_graph();
-        let (total_weight, mst_parents) = prim_mst(&graph, 0, true).unwrap();
+        let (total_weight, mst_, _mst_parents) = prim_mst(&graph, 0, true).unwrap();
 
         // Should produce the same weight as Kruskal
         assert_relative_eq!(total_weight, 5.0);
@@ -627,7 +627,8 @@ mod tests {
         let data = vec![5.0, 5.0];
         let graph = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).unwrap();
 
-        let (total_weight, mst_) = minimum_spanning_tree(&graph, "prim", true).unwrap();
+        let (total_weight, mst_, _mst_parents) =
+            minimum_spanning_tree(&graph, "prim", true).unwrap();
         assert_relative_eq!(total_weight, 5.0);
 
         let mst = mst_.unwrap();

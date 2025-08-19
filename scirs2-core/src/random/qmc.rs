@@ -744,10 +744,10 @@ mod tests {
 
     #[test]
     fn test_sobol_generator_creation() {
-        let sobol = SobolGenerator::new(2);
+        let sobol = SobolGenerator::dimension(2);
         assert!(sobol.is_ok());
 
-        let invalid_sobol = SobolGenerator::new(0);
+        let invalid_sobol = SobolGenerator::dimension(0);
         assert!(invalid_sobol.is_err());
     }
 
@@ -789,7 +789,7 @@ mod tests {
 
     #[test]
     fn test_halton_primebases() {
-        let halton = HaltonGenerator::with_primebases(3).unwrap();
+        let halton = HaltonGenerator::dimension(3).unwrap();
         assert_eq!(halton.bases(), &[2, 3, 5]);
     }
 
@@ -816,7 +816,7 @@ mod tests {
 
     #[test]
     fn test_faure_generator() {
-        let mut faure = FaureGenerator::new(2).unwrap();
+        let mut faure = FaureGenerator::dimension(2).unwrap();
 
         let points = faure.generate(20);
         assert_eq!(points.nrows(), 20);

@@ -860,6 +860,22 @@ mod tests {
     }
 
     impl MockSystemInfo {
+        fn new(
+            cpu_usage: f64,
+            memory_used: u64,
+            memory_available: u64,
+            io_ops: u64,
+            io_bytes: u64,
+        ) -> Self {
+            Self {
+                cpu_usage,
+                memory_used,
+                memory_available,
+                io_ops,
+                io_bytes,
+            }
+        }
+
         fn bytes(value: u64) -> Self {
             Self {
                 cpu_usage: 0.0,
@@ -951,7 +967,7 @@ mod tests {
             ..Default::default()
         };
 
-        let mut prefetcher = ResourceAwarePrefetcher::new(baseconfig, resource_config);
+        let mut prefetcher = ResourceAwarePrefetcher::config(baseconfig, resource_config);
 
         // Record some performance data
         let stats = PrefetchStats {
@@ -961,8 +977,8 @@ mod tests {
             hit_rate: 0.8,
         };
 
-        prefetcher.record_performance(&stats, 500_000.0, true); // 500µs latency, prefetched
-        prefetcher.record_performance(&stats, 2_000_000.0, false); // 2ms latency, not prefetched
+        prefetcher.record_prefetch_performance(&stats, 500_000.0, true); // 500µs latency, prefetched
+        prefetcher.record_prefetch_performance(&stats, 2_000_000.0, false); // 2ms latency, not prefetched
 
         // Get the performance stats
         let perf_stats = prefetcher.get_performance_stats();

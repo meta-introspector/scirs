@@ -6072,7 +6072,7 @@ mod tests {
     #[test]
     fn test_privacy_guarantees() {
         let guarantees = PrivacyGuarantees {
-            epsilon: 1.0,
+            _epsilon: 1.0,
             delta: 1e-5,
             composition_method: FederatedCompositionMethod::FederatedMomentsAccountant,
             amplification_enabled: true,
@@ -6081,7 +6081,7 @@ mod tests {
             trust_model: TrustModel::HonestButCurious,
         };
 
-        assert_eq!(guarantees.epsilon, 1.0);
+        assert_eq!(guarantees._epsilon, 1.0);
         assert!(guarantees.amplification_enabled);
     }
 }

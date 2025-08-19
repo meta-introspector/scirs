@@ -257,7 +257,7 @@ fn color_distance_squared(r1: u8, g1: u8, b1: u8, r2: u8, g2: u8, b2: u8) -> u32
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::color::octree_quantize;
+/// use scirs2_vision::color::octree_quantize;
 /// use image::{DynamicImage, RgbImage, Rgb};
 ///
 /// // Create a simple test image

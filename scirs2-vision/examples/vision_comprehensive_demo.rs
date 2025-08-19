@@ -1,12 +1,12 @@
 //! Comprehensive demonstration of vision module features
 
 use image::GenericImageView;
-use scirs2__vision::feature::{
+use scirs2_vision::feature::{
     canny, gabor_filter, hough_lines, lbp, template_match, GaborParams, HoughParams, LBPType,
     MatchMethod, PreprocessMode,
 };
-use scirs2__vision::quality::{psnr, ssim, SSIMParams};
-use scirs2__vision::segmentation::slic;
+use scirs2_vision::quality::{psnr, ssim, SSIMParams};
+use scirs2_vision::segmentation::slic;
 use std::error::Error;
 
 #[allow(dead_code)]

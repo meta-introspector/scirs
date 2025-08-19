@@ -27,7 +27,7 @@ use std::sync::Mutex;
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2__vision::preprocessing::nlm_denoise;
+/// use scirs2_vision::preprocessing::nlm_denoise;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
 /// let noisy_image = Array2::zeros((100, 100));

@@ -30,7 +30,6 @@
 
 use ndarray::{Array2, ArrayView2};
 use num_traits::Float;
-use std::f64::consts::PI;
 
 /// Tests if a point is inside a polygon using the ray casting algorithm.
 ///

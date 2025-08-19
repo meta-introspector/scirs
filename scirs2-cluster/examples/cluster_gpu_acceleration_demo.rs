@@ -6,11 +6,11 @@
 use ndarray::Array2;
 use scirs2_cluster::preprocess::standardize;
 
-// GPU acceleration imports
-use scirs2_cluster::{
-    gpu_accelerated::{gpu_dbscan, gpu_hierarchical, gpu_kmeans},
-    DeviceSelection, GpuBackend, GpuConfig, GpuLinkageMethod, MemoryStrategy,
-};
+// GPU acceleration imports (commented out - requires gpu feature)
+// use scirs2_cluster::{
+//     gpu_accelerated::{gpu_dbscan, gpu_hierarchical, gpu_kmeans},
+//     DeviceSelection, GpuBackend, GpuConfig, GpuLinkageMethod, MemoryStrategy,
+// };
 use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
@@ -148,7 +148,7 @@ fn test_specific_gpu_backends(data: &Array2<f64>) -> Result<(), Box<dyn std::err
 
         let start_time = std::time::Instant::now();
 
-        match gpu_kmeans(_data.view(), 3, Some(backend_config)) {
+        match gpu_kmeans(data.view(), 3, Some(backend_config)) {
             Ok((centroids, labels)) => {
                 let duration = start_time.elapsed();
                 println!(
@@ -198,7 +198,7 @@ fn test_memory_strategies(data: &Array2<f64>) -> Result<(), Box<dyn std::error::
 
         let start_time = std::time::Instant::now();
 
-        match gpu_kmeans(_data.view(), 4, Some(mem_config)) {
+        match gpu_kmeans(data.view(), 4, Some(mem_config)) {
             Ok((centroids, labels)) => {
                 let duration = start_time.elapsed();
                 println!(
@@ -224,16 +224,16 @@ fn test_multi_algorithm_comparison(data: &Array2<f64>) -> Result<(), Box<dyn std
     println!("\n4. Multi-Algorithm Performance Comparison");
     println!("=========================================");
 
-    // Optimized configuration for best performance
-    let optimal_config = GpuConfig {
-        backend: GpuBackend::CpuFallback, // Auto-detect best
-        device_selection: DeviceSelection::Automatic,
-        memory_strategy: MemoryStrategy::Pooled { pool_size, mb: 512 },
-        block_size: 512, // Larger block size for better occupancy
-        grid_size: 2048, // More threads
-        auto_tune: true,
-        cpu_fallback: true,
-    };
+    // Optimized configuration for best performance (commented out - requires gpu feature)
+    // let optimal_config = GpuConfig {
+    //     backend: GpuBackend::CpuFallback, // Auto-detect best
+    //     device_selection: DeviceSelection::Automatic,
+    //     memory_strategy: MemoryStrategy::Pooled { pool_size: 16, mb: 512 },
+    //     block_size: 512, // Larger block size for better occupancy
+    //     grid_size: 2048, // More threads
+    //     auto_tune: true,
+    //     cpu_fallback: true,
+    // };
 
     // Test with smaller subset for faster execution
     let subset_size = std::cmp::min(1000, data.nrows());
@@ -324,10 +324,10 @@ fn test_multi_algorithm_comparison(data: &Array2<f64>) -> Result<(), Box<dyn std
 #[allow(dead_code)]
 fn create_large_sample_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
-    use rand__distr::Normal;
+    use rand_distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(42);
-    let mut data = Vec::with_capacity(_n_samples * n_features);
+    let mut data = Vec::with_capacity(_n_samples * nfeatures);
 
     // Create 5 distinct clusters
     let cluster_centers = vec![
@@ -356,13 +356,13 @@ fn create_large_sample_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> 
             data.push(rng.sample(normal_y));
 
             // Add additional random _features
-            for _ in 2..n_features {
+            for _ in 2..nfeatures {
                 data.push(rng.random_range(-1.0..1.0));
             }
         }
     }
 
-    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
+    Array2::from_shape_vec((_n_samples, nfeatures), data).unwrap()
 }
 
 #[cfg(test)]

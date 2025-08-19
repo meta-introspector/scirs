@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("============================\n");
 
     // Generate sample data with distinct patterns for different metrics
-    let data = generate_test_data();
+    let data = generate_testdata();
     println!(
         "Generated dataset with {} samples and {} features",
         data.shape()[0],
@@ -26,23 +26,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Standardize the data for better comparison
-    let standardized_data = standardize(data.view(), true)?;
+    let standardizeddata = standardize(data.view(), true)?;
     println!("Data standardized for fair comparison\n");
 
     // Demo different distance metrics
-    demo_euclidean_distance(&standardized_data)?;
-    demo_manhattan_distance(&standardized_data)?;
-    demo_chebyshev_distance(&standardized_data)?;
-    demo_cosine_distance(&standardized_data)?;
-    demo_correlation_distance(&standardized_data)?;
-    demo_mahalanobis_distance(&standardized_data)?;
+    demo_euclidean_distance(&standardizeddata)?;
+    demo_manhattan_distance(&standardizeddata)?;
+    demo_chebyshev_distance(&standardizeddata)?;
+    demo_cosine_distance(&standardizeddata)?;
+    demo_correlation_distance(&standardizeddata)?;
+    demo_mahalanobis_distance(&standardizeddata)?;
 
     println!("Demo completed successfully!");
     Ok(())
 }
 
 #[allow(dead_code)]
-fn generate_test_data() -> Array2<f64> {
+fn generate_testdata() -> Array2<f64> {
     // Create a more complex dataset with multiple patterns
     let mut data = Vec::new();
 
@@ -88,11 +88,11 @@ fn demo_euclidean_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::error:
     };
 
     let start = std::time::Instant::now();
-    let (_centroids, labels) = kmeans_with_metric(_data.view(), 3, metric, Some(options))?;
+    let (_centroids, labels) = kmeans_with_metric(data.view(), 3, metric, Some(options))?;
     let duration = start.elapsed();
 
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-    let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
+    let silhouette = silhouette_score(data.view(), labels_i32.view())?;
 
     println!(
         "  Euclidean K-means: Silhouette = {:.3}, Time = {:?}",
@@ -123,17 +123,17 @@ fn demo_manhattan_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::error:
     };
 
     let start = std::time::Instant::now();
-    let (_centroids, labels) = kmeans_with_metric(_data.view(), 3, metric, Some(options))?;
+    let (_centroids, labels) = kmeans_with_metric(data.view(), 3, metric, Some(options))?;
     let duration = start.elapsed();
 
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-    let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
+    let silhouette = silhouette_score(data.view(), labels_i32.view())?;
 
     println!(
         "  Manhattan K-means: Silhouette = {:.3}, Time = {:?}",
         silhouette, duration
     );
-    println!("  Best for: Robust to outliers, grid-like _data");
+    println!("  Best for: Robust to outliers, grid-like data");
 
     let mut cluster_counts = vec![0; 3];
     for &label in labels.iter() {
@@ -157,11 +157,11 @@ fn demo_chebyshev_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::error:
     };
 
     let start = std::time::Instant::now();
-    let (_centroids, labels) = kmeans_with_metric(_data.view(), 3, metric, Some(options))?;
+    let (_centroids, labels) = kmeans_with_metric(data.view(), 3, metric, Some(options))?;
     let duration = start.elapsed();
 
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-    let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
+    let silhouette = silhouette_score(data.view(), labels_i32.view())?;
 
     println!(
         "  Chebyshev K-means: Silhouette = {:.3}, Time = {:?}",
@@ -191,11 +191,11 @@ fn demo_cosine_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
     };
 
     let start = std::time::Instant::now();
-    let (_centroids, labels) = kmeans_with_metric(_data.view(), 3, metric, Some(options))?;
+    let (_centroids, labels) = kmeans_with_metric(data.view(), 3, metric, Some(options))?;
     let duration = start.elapsed();
 
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-    let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
+    let silhouette = silhouette_score(data.view(), labels_i32.view())?;
 
     println!(
         "  Cosine K-means: Silhouette = {:.3}, Time = {:?}",
@@ -225,11 +225,11 @@ fn demo_correlation_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::erro
     };
 
     let start = std::time::Instant::now();
-    let (_centroids, labels) = kmeans_with_metric(_data.view(), 3, metric, Some(options))?;
+    let (_centroids, labels) = kmeans_with_metric(data.view(), 3, metric, Some(options))?;
     let duration = start.elapsed();
 
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-    let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
+    let silhouette = silhouette_score(data.view(), labels_i32.view())?;
 
     println!(
         "  Correlation K-means: Silhouette = {:.3}, Time = {:?}",
@@ -250,7 +250,7 @@ fn demo_mahalanobis_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::erro
     println!("6. Mahalanobis Distance");
     println!("=======================");
 
-    let metric = Box::new(MahalanobisDistance::from_data(_data.view())?);
+    let metric = Box::new(MahalanobisDistance::fromdata(data.view())?);
     let options = KMeansOptions {
         init_method: KMeansInit::KMeansPlusPlus,
         n_init: 1,
@@ -259,17 +259,17 @@ fn demo_mahalanobis_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::erro
     };
 
     let start = std::time::Instant::now();
-    let (_centroids, labels) = kmeans_with_metric(_data.view(), 3, metric, Some(options))?;
+    let (_centroids, labels) = kmeans_with_metric(data.view(), 3, metric, Some(options))?;
     let duration = start.elapsed();
 
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-    let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
+    let silhouette = silhouette_score(data.view(), labels_i32.view())?;
 
     println!(
         "  Mahalanobis K-means: Silhouette = {:.3}, Time = {:?}",
         silhouette, duration
     );
-    println!("  Best for: Correlated features, elliptical clusters, accounts for _data covariance");
+    println!("  Best for: Correlated features, elliptical clusters, accounts for data covariance");
 
     let mut cluster_counts = vec![0; 3];
     for &label in labels.iter() {

@@ -2,7 +2,12 @@
 
 #[cfg(test)]
 mod collision_tests {
-    use super::super::continuous::*;
+    use crate::{
+        box2d_box2d_collision, box3d_box3d_collision, circle_circle_collision,
+        continuous_sphere_sphere_collision, point_box2d_collision, point_box3d_collision,
+        point_circle_collision, point_sphere_collision, ray_box3d_collision, ray_sphere_collision,
+        sphere_sphere_collision, Box2D, Box3D, Circle, Sphere,
+    };
 
     #[test]
     fn test_point_circle_collision() {
@@ -174,7 +179,7 @@ mod collision_tests {
         assert!(ray_sphere_collision(&ray_origin3, &ray_direction3, &sphere).is_some());
 
         // Check the distance
-        let (distance_hit_point) =
+        let (distance, _contact_point) =
             ray_sphere_collision(&ray_origin1, &ray_direction1, &sphere).unwrap();
         assert!((distance - 4.0).abs() < 1e-10);
     }
@@ -203,9 +208,9 @@ mod collision_tests {
         assert!(ray_box3d_collision(&ray_origin3, &ray_direction3, &box3d).is_some());
 
         // Check the distance
-        let (distance_exit_dist_hit_point) =
+        let (min_t, _max_t, _contact_point) =
             ray_box3d_collision(&ray_origin1, &ray_direction1, &box3d).unwrap();
-        assert!((distance - 4.0).abs() < 1e-10);
+        assert!((min_t - 4.0).abs() < 1e-10);
     }
 
     #[test]
@@ -234,7 +239,7 @@ mod collision_tests {
         );
 
         assert!(collision_time.is_some());
-        let (time_pos1_pos2) = collision_time.unwrap();
+        let (time, _pos1, _pos2) = collision_time.unwrap();
         assert!((time - 1.5).abs() < 1e-10);
 
         // Now with a time step that's too short

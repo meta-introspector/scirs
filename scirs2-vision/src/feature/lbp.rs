@@ -51,7 +51,7 @@ pub enum LBPType {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::feature::{lbp, LBPType};
+/// use scirs2_vision::feature::{lbp, LBPType};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -63,7 +63,7 @@ pub enum LBPType {
 #[allow(dead_code)]
 pub fn lbp(img: &DynamicImage, lbptype: LBPType) -> Result<GrayImage> {
     let gray = img.to_luma8();
-    let (_width_height) = gray.dimensions();
+    let _width_height = gray.dimensions();
 
     match lbptype {
         LBPType::Original => compute_lbp_original(&gray),

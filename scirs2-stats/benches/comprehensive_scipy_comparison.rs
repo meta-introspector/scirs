@@ -8,7 +8,7 @@ use criterion::{
 };
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::prelude::*;
-use rand__distr::{Exponential, Gamma as GammaDist, Normal, StandardNormal, Uniform};
+use rand_distr::{Exponential, Gamma as GammaDist, Normal, StandardNormal, Uniform};
 use scirs2_stats::*;
 use std::time::Duration;
 

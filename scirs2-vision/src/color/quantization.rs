@@ -7,7 +7,7 @@ use crate::error::Result;
 use image::{DynamicImage, Rgb, RgbImage};
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-use rand::{rng, Rng};
+use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 
@@ -60,7 +60,7 @@ pub enum InitMethod {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::color::{kmeans_quantize, KMeansParams};
+/// use scirs2_vision::color::{kmeans_quantize, KMeansParams};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

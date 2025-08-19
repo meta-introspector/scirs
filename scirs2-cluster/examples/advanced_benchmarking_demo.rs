@@ -418,7 +418,7 @@ fn analyze_regression_patterns(results: &scirs2_cluster::advanced_benchmarking::
 #[allow(dead_code)]
 fn create_dense_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
-    use rand__distr::Normal;
+    use rand_distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(12345);
     let mut data = Vec::with_capacity(_n_samples * n_features);
@@ -479,7 +479,7 @@ fn create_sparse_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
 #[allow(dead_code)]
 fn create_high_dim_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
-    use rand__distr::Normal;
+    use rand_distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(98765);
     let mut data = Vec::with_capacity(_n_samples * n_features);
@@ -510,7 +510,7 @@ fn create_high_dim_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
 #[allow(dead_code)]
 fn create_noisy_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
-    use rand__distr::Normal;
+    use rand_distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(13579);
     let mut data = Vec::with_capacity(_n_samples * n_features);

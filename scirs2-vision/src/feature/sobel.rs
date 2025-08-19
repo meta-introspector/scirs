@@ -29,7 +29,7 @@ use std::f32::consts::PI;
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::feature::sobel_edges_oriented;
+/// use scirs2_vision::feature::sobel_edges_oriented;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {

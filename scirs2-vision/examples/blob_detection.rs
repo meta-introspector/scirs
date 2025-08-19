@@ -1,7 +1,7 @@
 //! Example demonstrating blob and region detection using various algorithms
 
 use image::GenericImageView;
-use scirs2__vision::feature::{
+use scirs2_vision::feature::{
     blobs_to_image, dog_detect, draw_circles, hough_circles, log_blob_detect, log_blobs_to_image,
     mser_detect, mser_to_image, DogConfig, HoughCircleConfig, LogBlobConfig, MserConfig,
 };

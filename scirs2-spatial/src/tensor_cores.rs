@@ -2378,7 +2378,7 @@ mod tests {
     #[tokio::test]
     async fn test_tensor_core_distance_computation() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
-        let matrix_computer = TensorCoreDistanceMatrix::new().unwrap();
+        let mut matrix_computer = TensorCoreDistanceMatrix::new().unwrap();
 
         let result = matrix_computer.compute_parallel(&points.view()).await;
         assert!(result.is_ok());
@@ -2395,7 +2395,7 @@ mod tests {
     #[tokio::test]
     async fn test_tensor_core_clustering() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
-        let clustering = TensorCoreClustering::new(2).unwrap();
+        let mut clustering = TensorCoreClustering::new(2).unwrap();
 
         let result = clustering.fit(&points.view()).await;
         assert!(result.is_ok());
@@ -2484,17 +2484,18 @@ mod tests {
         let monitor = NumericalStabilityMonitor::new(config);
 
         // Test precision increase
-        let increased = monitor.increase_precision(PrecisionMode::Int8Dynamic);
+        let increased = NumericalStabilityMonitor::increase_precision(PrecisionMode::Int8Dynamic);
         assert_eq!(increased, PrecisionMode::Mixed16);
 
-        let max_increased = monitor.increase_precision(PrecisionMode::Full32);
+        let max_increased = NumericalStabilityMonitor::increase_precision(PrecisionMode::Full32);
         assert_eq!(max_increased, PrecisionMode::Full32); // Should stay at max
 
         // Test precision decrease
-        let decreased = monitor.decrease_precision(PrecisionMode::Mixed16);
+        let decreased = NumericalStabilityMonitor::decrease_precision(PrecisionMode::Mixed16);
         assert_eq!(decreased, PrecisionMode::Int8Dynamic);
 
-        let min_decreased = monitor.decrease_precision(PrecisionMode::Int4Advanced);
+        let min_decreased =
+            NumericalStabilityMonitor::decrease_precision(PrecisionMode::Int4Advanced);
         assert_eq!(min_decreased, PrecisionMode::Int4Advanced); // Should stay at min
     }
 
@@ -2505,12 +2506,12 @@ mod tests {
 
         // Well-conditioned data
         let well_conditioned = array![[1.0, 2.0], [3.0, 4.0]];
-        let condition_1 = monitor.estimate_condition_number(&well_conditioned);
+        let condition_1 = NumericalStabilityMonitor::estimate_condition_number(&well_conditioned);
         assert!(condition_1 > 1.0 && condition_1 < 100.0);
 
         // Ill-conditioned data (large range)
         let ill_conditioned = array![[1e-10, 2.0], [3.0, 1e10]];
-        let condition_2 = monitor.estimate_condition_number(&ill_conditioned);
+        let condition_2 = NumericalStabilityMonitor::estimate_condition_number(&ill_conditioned);
         assert!(condition_2 > 1e15);
     }
 
@@ -2636,7 +2637,7 @@ mod tests {
             objective: OptimizationObjective::Custom,
         };
 
-        let analyzer = PerformanceAccuracyAnalyzer::new(params);
+        let mut analyzer = PerformanceAccuracyAnalyzer::new(params);
 
         // Test different performance-accuracy combinations
         let score1 = analyzer.compute_weighted_score(0.1, 0.9); // Fast, accurate

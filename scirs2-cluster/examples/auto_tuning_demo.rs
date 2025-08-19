@@ -312,7 +312,7 @@ fn test_quick_selection(
 #[allow(dead_code)]
 fn create_dense_clusters_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
-    use rand__distr::Normal;
+    use rand_distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(12345);
     let mut data = Vec::with_capacity(_n_samples * n_features);
@@ -402,7 +402,7 @@ fn create_high_dimensional_data(_n_samples: usize, nfeatures: usize) -> Array2<f
 #[allow(dead_code)]
 fn create_noisy_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
-    use rand__distr::Normal;
+    use rand_distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(99999);
     let mut data = Vec::with_capacity(_n_samples * n_features);

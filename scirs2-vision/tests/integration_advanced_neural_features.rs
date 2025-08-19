@@ -4,7 +4,7 @@
 //! seamlessly and maintain consistent performance characteristics.
 
 use ndarray::{Array1, Array2};
-use scirs2__vision::{
+use scirs2_vision::{
     error::Result,
     feature::{
         AdvancedDenoiser, AttentionFeatureMatcher, DeepSORT, DenoisingMethod, Detection,
@@ -41,7 +41,7 @@ fn test_neural_features_tracking_integration() -> Result<()> {
     for (i, kp) in keypoints.iter().take(5).enumerate() {
         let bbox =
             TrackingBoundingBox::new(kp.x - 25.0, kp.y - 25.0, 50.0, 50.0, kp.response, i as i32);
-        let feature = "descriptors".slice(ndarray::s![i, ..]).to_owned();
+        let feature = descriptors.slice(ndarray::s![i, ..]).to_owned();
         detections.push(Detection::with_feature(bbox, feature));
     }
 
@@ -328,7 +328,7 @@ fn test_advanced_features_error_handling() -> Result<()> {
 #[allow(dead_code)]
 fn create_test_image(size: (usize, usize)) -> Array2<f32> {
     let (height, width) = size;
-    Array2::fromshape_fn((height, width), |(y, x)| {
+    Array2::from_shape_fn((height, width), |(y, x)| {
         let fx = x as f32 / width as f32;
         let fy = y as f32 / height as f32;
 
@@ -363,9 +363,9 @@ fn create_transformed_image(image: &Array2<f32>) -> Result<Array2<f32>> {
 }
 
 #[allow(dead_code)]
-fn add_noise(_image: &Array2<f32>, noiselevel: f32) -> Array2<f32> {
+fn add_noise(image: &Array2<f32>, noiselevel: f32) -> Array2<f32> {
     image.mapv(|x| {
-        let noise = (rand::random::<f32>() - 0.5) * noise_level;
+        let noise = (rand::random::<f32>() - 0.5) * noiselevel;
         (x + noise).clamp(0.0, 1.0)
     })
 }
@@ -376,7 +376,7 @@ fn create_synthetic_detections(_frameidx: usize) -> Vec<Detection> {
 
     // Create 2-3 moving objects
     for obj_id in 0..3 {
-        let t = _frame_idx as f32;
+        let t = _frameidx as f32;
         let base_x = 50.0 + obj_id as f32 * 100.0;
         let base_y = 50.0 + obj_id as f32 * 80.0;
 
@@ -387,7 +387,7 @@ fn create_synthetic_detections(_frameidx: usize) -> Vec<Detection> {
         let bbox = TrackingBoundingBox::new(x, y, 40.0, 60.0, 0.8, obj_id);
 
         // Synthetic appearance feature
-        let feature = Array1::fromshape_fn(128, |i| {
+        let feature = Array1::from_shape_fn(128, |i| {
             ((obj_id as f32 + i as f32) * 0.1).sin() * 0.5 + 0.5
         });
 

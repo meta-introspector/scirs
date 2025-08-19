@@ -132,8 +132,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (leaders_orig_) = leader_clustering(data.view(), 1.5, euclidean_distance)?;
     let (leaders_shuf_) = leader_clustering(shuffled_data.view(), 1.5, euclidean_distance)?;
 
-    println!("Original order - {} clusters", leaders_orig.nrows());
-    println!("Shuffled order - {} clusters", leaders_shuf.nrows());
+    println!("Original order - {} clusters", leaders_orig_.nrows());
+    println!("Shuffled order - {} clusters", leaders_shuf_.nrows());
     println!("(Results may differ due to order-dependent nature of Leader algorithm)");
 
     Ok(())

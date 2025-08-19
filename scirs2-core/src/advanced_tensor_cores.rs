@@ -4441,6 +4441,10 @@ mod gpu_implementation {
             assert!((norm - 1.0).abs() < 1e-10);
         }
     } // End of tests module
+
+    // Re-export extracted quantum optimization components
+    #[cfg(feature = "gpu")]
+    pub use crate::tensor_cores::quantum_optimization::*;
 } // End of gpu_implementation module
 
 #[cfg(feature = "gpu")]

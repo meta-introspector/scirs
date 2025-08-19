@@ -50,7 +50,7 @@ impl Default for MeanShiftParams {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__vision::segmentation::{mean_shift, MeanShiftParams};
+/// use scirs2_vision::segmentation::{mean_shift, MeanShiftParams};
 /// use image::{DynamicImage, RgbImage, Rgb};
 ///
 /// // Create a small test image with distinct regions

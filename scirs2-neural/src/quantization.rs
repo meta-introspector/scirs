@@ -487,7 +487,7 @@ pub mod utils {
 #[cfg(test)]
 mod tests {
     use ndarray::{array, Array2};
-    use rand__distr::Standard;
+    use rand_distr::Standard;
     use ndarray_rand::RandomExt;
     #[test]
     fn test_quantization_config_default() {

@@ -1474,10 +1474,10 @@ mod tests {
 
         // Execute several steps
         for depth in 0..5 {
-            let (output_checkpoint) = auto_checkpointer
+            let (output_checkpoint, _) = auto_checkpointer
                 .auto_step(depth, &input, forward_fn)
                 .unwrap();
-            assert_eq!(output, 3.0); // 1 + 2
+            assert_eq!(output_checkpoint, 3.0); // 1 + 2
         }
 
         let stats = auto_checkpointer.get_memory_stats();

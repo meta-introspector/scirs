@@ -1,6 +1,6 @@
 use ndarray::{array, Array1, Array2, ArrayView1};
-use scirs2__interpolate::bspline::ExtrapolateMode;
-use scirs2__interpolate::penalized::{
+use scirs2_interpolate::bspline::ExtrapolateMode;
+use scirs2_interpolate::penalized::{
     cross_validate_lambda, pspline_with_custom_penalty, PSpline, PenaltyType,
 };
 
@@ -298,7 +298,7 @@ fn generate_uniform_knots(
     let x_max = *x.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
 
     // Create knot vector
-    let mut _knots = Array1::zeros(n_knots + degree + 1);
+    let mut knots = Array1::zeros(n_knots + degree + 1);
 
     // First degree+1 _knots are at x_min
     for i in 0..=degree {
@@ -316,5 +316,5 @@ fn generate_uniform_knots(
         knots[n_knots + i] = x_max;
     }
 
-    Ok(_knots)
+    Ok(knots)
 }

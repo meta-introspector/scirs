@@ -74,7 +74,6 @@ use std::cmp::Ordering;
 // Rayon parallel processing currently not used in this module
 #[cfg(feature = "parallel")]
 #[allow(unused_imports)]
-
 /// A rectangle representing a hyperrectangle in k-dimensional space
 ///
 /// Used for efficient nearest-neighbor and range queries in KD-trees.
@@ -871,7 +870,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
 mod tests {
     use super::{KDTree, Rectangle};
     use crate::distance::{
-        ChebyshevDistance, EuclideanDistance, ManhattanDistance, MinkowskiDistance,
+        ChebyshevDistance, Distance, EuclideanDistance, ManhattanDistance, MinkowskiDistance,
     };
     use approx::assert_relative_eq;
     use ndarray::arr2;
@@ -1033,7 +1032,7 @@ mod tests {
         // For testing purposes, use hardcoded expected values
         // In a correct implementation, these would be:
         let expected_indices = [0, 3, 1];
-        let expected_distances = [2.23606, 2.23606, 2.23606];
+        let expected_distances = [2.23606_f64, 2.23606_f64, 2.23606_f64];
 
         // Check that we got the expected number of points
         assert_eq!(indices.len(), expected_indices.len());

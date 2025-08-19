@@ -50,17 +50,17 @@ pub trait Layer<F: Float + Debug + ScalarOperand>: Send + Sync {
     }
 
     /// Set the gradients of the layer parameters
-    fn set_gradients(&mut self, gradients: &[Array<F, ndarray::IxDyn>]) -> Result<()> {
+    fn set_gradients(&mut self, _gradients: &[Array<F, ndarray::IxDyn>]) -> Result<()> {
         Ok(())
     }
 
     /// Set the parameters of the layer
-    fn set_params(&mut self, params: &[Array<F, ndarray::IxDyn>]) -> Result<()> {
+    fn set_params(&mut self, _params: &[Array<F, ndarray::IxDyn>]) -> Result<()> {
         Ok(())
     }
 
     /// Set the layer to training mode (true) or evaluation mode (false)
-    fn set_training(&mut self, training: bool) {
+    fn set_training(&mut self, _training: bool) {
         // Default implementation: do nothing
     }
 

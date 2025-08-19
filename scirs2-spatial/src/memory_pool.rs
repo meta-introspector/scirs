@@ -1523,7 +1523,7 @@ mod tests {
         drop(matrix);
 
         // Get another matrix (should potentially reuse)
-        let matrix2 = pool.get_matrix_buffer(8, 8);
+        let mut matrix2 = pool.get_matrix_buffer(8, 8);
         assert_eq!(matrix2.dim(), (8, 8));
     }
 

@@ -5,7 +5,7 @@
 //! around a set of points through the alpha parameter.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array2, ArrayView1, ArrayView2};
 
 /// Alpha shape representation for point cloud analysis
 ///

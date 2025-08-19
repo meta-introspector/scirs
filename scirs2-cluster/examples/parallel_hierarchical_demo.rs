@@ -81,10 +81,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Create a test dataset with the specified number of points
 #[allow(dead_code)]
 fn create_dataset(_npoints: usize) -> Array2<f64> {
-    let mut data = Array2::zeros((_n_points, 2));
+    let mut data = Array2::zeros((_npoints, 2));
 
     // Create clusters for testing
-    for i in 0.._n_points {
+    for i in 0.._npoints {
         let cluster_id = i % 3; // 3 clusters
         let angle = (i as f64) * 0.5;
 
