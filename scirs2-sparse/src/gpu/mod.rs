@@ -4,28 +4,30 @@
 //! across multiple backends including CUDA, OpenCL, Metal, ROCm, and WGPU.
 
 pub mod cuda;
-pub mod opencl;
 pub mod metal;
+pub mod opencl;
 
 // Re-export common types and traits
 #[cfg(feature = "gpu")]
 pub use scirs2_core::gpu::{
-    GpuBackend, GpuBuffer, GpuContext, GpuDataType, GpuDevice, GpuError, GpuKernelHandle
+    GpuBackend, GpuBuffer, GpuContext, GpuDataType, GpuDevice, GpuError, GpuKernelHandle,
 };
 
 // Fallback types when GPU feature is not enabled
 #[cfg(not(feature = "gpu"))]
-pub use crate::gpu_ops::{GpuBackend, GpuBuffer, GpuError, GpuDevice, GpuKernelHandle};
+pub use crate::gpu_ops::{GpuBackend, GpuBuffer, GpuDevice, GpuError, GpuKernelHandle};
 
 // Re-export backend-specific modules
-pub use cuda::{CudaSpMatVec, CudaOptimizationLevel, CudaMemoryManager};
-pub use opencl::{OpenCLSpMatVec, OpenCLOptimizationLevel, OpenCLMemoryManager, OpenCLPlatformInfo};
-pub use metal::{MetalSpMatVec, MetalOptimizationLevel, MetalMemoryManager, MetalDeviceInfo};
+pub use cuda::{CudaMemoryManager, CudaOptimizationLevel, CudaSpMatVec};
+pub use metal::{MetalDeviceInfo, MetalMemoryManager, MetalOptimizationLevel, MetalSpMatVec};
+pub use opencl::{
+    OpenCLMemoryManager, OpenCLOptimizationLevel, OpenCLPlatformInfo, OpenCLSpMatVec,
+};
 
-use crate::error::{SparseError, SparseResult};
 use crate::csr_array::CsrArray;
-use crate::sparray::SparseArray;
+use crate::error::{SparseError, SparseResult};
 use crate::gpu_ops::GpuDataType;
+use crate::sparray::SparseArray;
 use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;
@@ -43,7 +45,7 @@ impl GpuSpMatVec {
     /// Create a new GPU sparse matrix handler with automatic backend detection
     pub fn new() -> SparseResult<Self> {
         let backend = Self::detect_best_backend();
-        
+
         let mut handler = Self {
             backend,
             cuda_handler: None,
@@ -53,7 +55,7 @@ impl GpuSpMatVec {
 
         // Initialize the appropriate backend
         handler.initialize_backend()?;
-        
+
         Ok(handler)
     }
 
@@ -67,7 +69,7 @@ impl GpuSpMatVec {
         };
 
         handler.initialize_backend()?;
-        
+
         Ok(handler)
     }
 
@@ -91,7 +93,7 @@ impl GpuSpMatVec {
                 self.backend = GpuBackend::Cpu;
             }
         }
-        
+
         Ok(())
     }
 
@@ -347,7 +349,11 @@ impl GpuSpMatVec {
                 version: "Unknown".to_string(),
                 device_count: 1,
                 supports_double_precision: false, // Metal has limited f64 support
-                max_memory_mb: if MetalDeviceInfo::detect().is_apple_silicon { 16384 } else { 8192 },
+                max_memory_mb: if MetalDeviceInfo::detect().is_apple_silicon {
+                    16384
+                } else {
+                    8192
+                },
             },
             _ => BackendInfo {
                 name: "CPU".to_string(),
@@ -438,10 +444,7 @@ pub mod convenience {
     use crate::gpu_ops::GpuDataType;
 
     /// Execute sparse matrix-vector multiplication with automatic GPU detection
-    pub fn gpu_spmv<T>(
-        matrix: &CsrArray<T>,
-        vector: &ArrayView1<T>,
-    ) -> SparseResult<Array1<T>>
+    pub fn gpu_spmv<T>(matrix: &CsrArray<T>, vector: &ArrayView1<T>) -> SparseResult<Array1<T>>
     where
         T: Float + Debug + Copy + GpuDataType + std::iter::Sum,
     {
@@ -465,21 +468,21 @@ pub mod convenience {
     /// Get information about available GPU backends
     pub fn available_backends() -> Vec<GpuBackend> {
         let mut backends = Vec::new();
-        
+
         if GpuSpMatVec::is_cuda_available() {
             backends.push(GpuBackend::Cuda);
         }
-        
+
         if GpuSpMatVec::is_opencl_available() {
             backends.push(GpuBackend::OpenCL);
         }
-        
+
         if GpuSpMatVec::is_metal_available() {
             backends.push(GpuBackend::Metal);
         }
-        
+
         backends.push(GpuBackend::Cpu); // Always available
-        
+
         backends
     }
 }
@@ -498,7 +501,7 @@ mod tests {
     #[test]
     fn test_backend_detection() {
         let backend = GpuSpMatVec::detect_best_backend();
-        
+
         // Should return a valid backend
         match backend {
             GpuBackend::Cuda | GpuBackend::OpenCL | GpuBackend::Metal | GpuBackend::Cpu => (),
@@ -509,11 +512,11 @@ mod tests {
     #[test]
     fn test_optimization_hint_conversions() {
         let hint = OptimizationHint::Maximum;
-        
+
         let cuda_level = hint.to_cuda_level();
         let opencl_level = hint.to_opencl_level();
         let metal_level = hint.to_metal_level();
-        
+
         assert_eq!(cuda_level, CudaOptimizationLevel::WarpLevel);
         assert_eq!(opencl_level, OpenCLOptimizationLevel::Vectorized);
         assert_eq!(metal_level, MetalOptimizationLevel::AppleSilicon);
@@ -523,7 +526,7 @@ mod tests {
     fn test_backend_info() {
         let gpu_spmv = GpuSpMatVec::new().unwrap();
         let info = gpu_spmv.get_backend_info();
-        
+
         assert!(!info.name.is_empty());
         assert!(!info.version.is_empty());
     }
@@ -538,7 +541,7 @@ mod tests {
     #[test]
     fn test_is_gpu_available() {
         let gpu_spmv = GpuSpMatVec::new().unwrap();
-        
+
         // Should not panic - either true or false is valid
         let _available = gpu_spmv.is_gpu_available();
     }

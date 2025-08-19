@@ -3,8 +3,8 @@
 //! This module provides functions to test whether points lie inside,
 //! outside, or on the boundary of a convex hull.
 
-use crate::error::{SpatialError, SpatialResult};
 use crate::convex_hull::core::ConvexHull;
+use crate::error::{SpatialError, SpatialResult};
 
 /// Check if a point is contained within a convex hull
 ///
@@ -33,13 +33,13 @@ use crate::convex_hull::core::ConvexHull;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&points.view()).unwrap();
-/// 
+///
 /// assert!(check_point_containment(&hull, &[0.1, 0.1]).unwrap());
 /// assert!(!check_point_containment(&hull, &[2.0, 2.0]).unwrap());
 /// ```
 pub fn check_point_containment<T: AsRef<[f64]>>(
-    hull: &ConvexHull, 
-    point: T
+    hull: &ConvexHull,
+    point: T,
 ) -> SpatialResult<bool> {
     let point_slice = point.as_ref();
 
@@ -107,12 +107,9 @@ fn check_containment_with_equations(
 /// # Returns
 ///
 /// * Result containing true if point is inside, false otherwise
-fn check_containment_convex_combination(
-    hull: &ConvexHull, 
-    point: &[f64]
-) -> SpatialResult<bool> {
+fn check_containment_convex_combination(hull: &ConvexHull, point: &[f64]) -> SpatialResult<bool> {
     let ndim = hull.ndim();
-    
+
     // Handle low-dimensional cases with specific methods
     match ndim {
         1 => check_containment_1d(hull, point),
@@ -134,7 +131,10 @@ fn check_containment_1d(hull: &ConvexHull, point: &[f64]) -> SpatialResult<bool>
     }
 
     let min_val = vertices.iter().map(|v| v[0]).fold(f64::INFINITY, f64::min);
-    let max_val = vertices.iter().map(|v| v[0]).fold(f64::NEG_INFINITY, f64::max);
+    let max_val = vertices
+        .iter()
+        .map(|v| v[0])
+        .fold(f64::NEG_INFINITY, f64::max);
 
     Ok(point[0] >= min_val - 1e-10 && point[0] <= max_val + 1e-10)
 }
@@ -158,7 +158,8 @@ fn check_containment_2d(hull: &ConvexHull, point: &[f64]) -> SpatialResult<bool>
         if v1[1] <= point[1] {
             if v2[1] > point[1] {
                 // Upward crossing
-                let cross = (v2[0] - v1[0]) * (point[1] - v1[1]) - (v2[1] - v1[1]) * (point[0] - v1[0]);
+                let cross =
+                    (v2[0] - v1[0]) * (point[1] - v1[1]) - (v2[1] - v1[1]) * (point[0] - v1[0]);
                 if cross > 0.0 {
                     winding_number += 1;
                 }
@@ -189,19 +190,19 @@ fn check_containment_3d(hull: &ConvexHull, point: &[f64]) -> SpatialResult<bool>
         }
 
         let v0 = [
-            hull.points[[simplex[0], 0]], 
-            hull.points[[simplex[0], 1]], 
-            hull.points[[simplex[0], 2]]
+            hull.points[[simplex[0], 0]],
+            hull.points[[simplex[0], 1]],
+            hull.points[[simplex[0], 2]],
         ];
         let v1 = [
-            hull.points[[simplex[1], 0]], 
-            hull.points[[simplex[1], 1]], 
-            hull.points[[simplex[1], 2]]
+            hull.points[[simplex[1], 0]],
+            hull.points[[simplex[1], 1]],
+            hull.points[[simplex[1], 2]],
         ];
         let v2 = [
-            hull.points[[simplex[2], 0]], 
-            hull.points[[simplex[2], 1]], 
-            hull.points[[simplex[2], 2]]
+            hull.points[[simplex[2], 0]],
+            hull.points[[simplex[2], 1]],
+            hull.points[[simplex[2], 2]],
         ];
 
         // Compute normal to the face
@@ -235,7 +236,7 @@ fn check_containment_nd(_hull: &ConvexHull, _point: &[f64]) -> SpatialResult<boo
     // A complete implementation would use linear programming to solve:
     // Find λᵢ ≥ 0 such that Σλᵢ = 1 and Σλᵢvᵢ = point
     // where vᵢ are hull vertices
-    
+
     // For now, return a conservative answer
     Ok(false)
 }
@@ -263,7 +264,7 @@ fn check_containment_nd(_hull: &ConvexHull, _point: &[f64]) -> SpatialResult<boo
 ///
 /// let hull_points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&hull_points.view()).unwrap();
-/// 
+///
 /// let test_points = array![[0.1, 0.1], [2.0, 2.0], [0.2, 0.2]];
 /// let results = check_multiple_containment(&hull, &test_points.view()).unwrap();
 /// assert_eq!(results, vec![true, false, true]);
@@ -279,7 +280,8 @@ pub fn check_multiple_containment(
     if let Some(equations) = &hull.equations {
         for i in 0..npoints {
             let point = points.row(i);
-            let is_inside = check_containment_with_equations(hull, point.as_slice().unwrap(), equations)?;
+            let is_inside =
+                check_containment_with_equations(hull, point.as_slice().unwrap(), equations)?;
             results.push(is_inside);
         }
     } else {
@@ -317,19 +319,16 @@ pub fn check_multiple_containment(
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&points.view()).unwrap();
-/// 
+///
 /// let dist = distance_to_hull(&hull, &[0.5, 0.5]).unwrap();
 /// assert!(dist < 0.0); // Inside the hull
-/// 
+///
 /// let dist = distance_to_hull(&hull, &[2.0, 2.0]).unwrap();
 /// assert!(dist > 0.0); // Outside the hull
 /// ```
-pub fn distance_to_hull<T: AsRef<[f64]>>(
-    hull: &ConvexHull,
-    point: T,
-) -> SpatialResult<f64> {
+pub fn distance_to_hull<T: AsRef<[f64]>>(hull: &ConvexHull, point: T) -> SpatialResult<f64> {
     let point_slice = point.as_ref();
-    
+
     if point_slice.len() != hull.points.ncols() {
         return Err(SpatialError::DimensionError(format!(
             "Point dimension ({}) does not match hull dimension ({})",
@@ -359,7 +358,7 @@ fn compute_distance_with_equations(
         // Compute signed distance to this facet
         let mut distance = equations[[i, equations.ncols() - 1]];
         let mut normal_length_sq = 0.0;
-        
+
         for j in 0..point.len() {
             distance += equations[[i, j]] * point[j];
             normal_length_sq += equations[[i, j]] * equations[[i, j]];
@@ -412,8 +411,8 @@ fn compute_distance_to_vertices(hull: &ConvexHull, point: &[f64]) -> SpatialResu
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
     use crate::convex_hull::ConvexHull;
+    use ndarray::arr2;
 
     #[test]
     fn test_2d_containment() {
@@ -449,8 +448,10 @@ mod tests {
     #[test]
     fn test_3d_containment() {
         let points = arr2(&[
-            [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], 
-            [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
         ]);
         let hull = ConvexHull::new(&points.view()).unwrap();
 
@@ -468,11 +469,11 @@ mod tests {
 
         let test_points = arr2(&[[0.1, 0.1], [2.0, 2.0], [0.2, 0.2]]);
         let results = check_multiple_containment(&hull, &test_points.view()).unwrap();
-        
+
         assert_eq!(results.len(), 3);
-        assert_eq!(results[0], true);  // Inside
+        assert_eq!(results[0], true); // Inside
         assert_eq!(results[1], false); // Outside
-        assert_eq!(results[2], true);  // Inside
+        assert_eq!(results[2], true); // Inside
     }
 
     #[test]
@@ -497,7 +498,7 @@ mod tests {
         // Test 3D point with 2D hull
         let result = check_point_containment(&hull, &[0.1, 0.1, 0.1]);
         assert!(result.is_err());
-        
+
         // Test 1D point with 2D hull
         let result = check_point_containment(&hull, &[0.1]);
         assert!(result.is_err());

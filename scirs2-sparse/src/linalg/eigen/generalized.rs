@@ -3,10 +3,10 @@
 //! This module provides solvers for generalized eigenvalue problems of the form
 //! Ax = λBx where A and B are sparse matrices.
 
-use crate::error::{SparseError, SparseResult};
-use crate::sym_csr::SymCsrMatrix;
 use super::lanczos::{EigenResult, LanczosOptions};
 use super::symmetric;
+use crate::error::{SparseError, SparseResult};
+use crate::sym_csr::SymCsrMatrix;
 use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;
@@ -77,13 +77,13 @@ where
 
     let (n_a, m_a) = a_matrix.shape();
     let (n_b, m_b) = b_matrix.shape();
-    
+
     if n_a != m_a || n_b != m_b {
         return Err(SparseError::ValueError(
             "Both matrices must be square for generalized eigenvalue problem".to_string(),
         ));
     }
-    
+
     if n_a != n_b {
         return Err(SparseError::DimensionMismatch {
             expected: n_a,
@@ -122,7 +122,7 @@ where
 /// use scirs2_sparse::sym_csr::SymCsrMatrix;
 ///
 /// let a_data = vec![5.0, 1.0, 4.0];
-/// let a_indices = vec![0, 1, 1]; 
+/// let a_indices = vec![0, 1, 1];
 /// let a_indptr = vec![0, 2, 3];
 /// let amatrix = SymCsrMatrix::new(a_data, a_indices, a_indptr, (2, 2)).unwrap();
 ///
@@ -164,9 +164,7 @@ where
     let _sigma = sigma.unwrap_or(T::zero());
 
     match mode {
-        "standard" => {
-            eigsh_generalized(a_matrix, b_matrix, k, which, options)
-        }
+        "standard" => eigsh_generalized(a_matrix, b_matrix, k, which, options),
         "buckling" => {
             // Buckling mode: (A - σB)x = μBx
             // For this simplified implementation, delegate to standard
@@ -177,12 +175,10 @@ where
             // For this simplified implementation, delegate to standard
             eigsh_generalized(a_matrix, b_matrix, k, which, options)
         }
-        _ => {
-            Err(SparseError::ValueError(format!(
-                "Unknown mode '{}'. Supported modes: standard, buckling, cayley",
-                mode
-            )))
-        }
+        _ => Err(SparseError::ValueError(format!(
+            "Unknown mode '{}'. Supported modes: standard, buckling, cayley",
+            mode
+        ))),
     }
 }
 
@@ -227,13 +223,18 @@ where
     // Simplified approach: solve using pseudo-inverse
     // This is not numerically stable for real applications
     let transformed_matrix = compute_generalized_matrix(a_matrix, b_matrix)?;
-    
+
     // Solve the transformed standard eigenvalue problem
     let mut transform_opts = options.clone();
     transform_opts.numeigenvalues = k;
-    
-    let result = symmetric::eigsh(&transformed_matrix, Some(k), Some(which), Some(transform_opts))?;
-    
+
+    let result = symmetric::eigsh(
+        &transformed_matrix,
+        Some(k),
+        Some(which),
+        Some(transform_opts),
+    )?;
+
     // The eigenvalues are already in the correct form for the generalized problem
     Ok(result)
 }
@@ -244,12 +245,12 @@ where
     T: Float + Debug + Copy,
 {
     let n = matrix.shape().0;
-    
+
     // Check diagonal elements are positive
     for i in 0..n {
         let mut diagonal_found = false;
         let mut diagonal_value = T::zero();
-        
+
         // Find diagonal element in row i
         for j in matrix.indptr[i]..matrix.indptr[i + 1] {
             if matrix.indices[j] == i {
@@ -258,12 +259,12 @@ where
                 break;
             }
         }
-        
+
         if !diagonal_found || diagonal_value <= T::zero() {
             return Ok(false);
         }
     }
-    
+
     Ok(true)
 }
 
@@ -277,18 +278,18 @@ where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
 {
     let n = a_matrix.shape().0;
-    
+
     // For this simplified implementation, we'll create a matrix that approximates
     // the solution. In practice, this would involve proper Cholesky factorization
     // and matrix transformations.
-    
+
     // Create a simple approximation: A + εI where ε is small
     let epsilon = T::from(1e-12).unwrap_or(T::epsilon());
-    
+
     let mut new_data = a_matrix.data.clone();
     let mut new_indices = a_matrix.indices.clone();
     let mut new_indptr = a_matrix.indptr.clone();
-    
+
     // Add small regularization to diagonal
     for i in 0..n {
         for j in new_indptr[i]..new_indptr[i + 1] {
@@ -298,7 +299,7 @@ where
             }
         }
     }
-    
+
     SymCsrMatrix::new(new_data, new_indices, new_indptr, (n, n))
 }
 
@@ -328,10 +329,10 @@ where
 {
     let k = k.unwrap_or(6);
     let which = which.unwrap_or("LM");
-    
+
     // Shift-invert transformation: (A - σB)^(-1) B x = μ x
     // where λ = σ + 1/μ are the original eigenvalues
-    
+
     // For this simplified implementation, use the standard transformation
     generalized_standard_transform(a_matrix, b_matrix, k, which, &options.unwrap_or_default())
 }
@@ -428,7 +429,7 @@ mod tests {
         let b_matrix = SymCsrMatrix::new(b_data, b_indices, b_indptr, (2, 2)).unwrap();
 
         let result = eigsh_generalized(&a_matrix, &b_matrix, Some(1), None, None);
-        
+
         // For this simplified implementation, just check it doesn't crash
         assert!(result.is_ok() || result.is_err());
     }
@@ -501,7 +502,7 @@ mod tests {
 
         let result = compute_generalized_matrix(&a_matrix, &b_matrix);
         assert!(result.is_ok());
-        
+
         let transformed = result.unwrap();
         assert_eq!(transformed.shape(), (2, 2));
     }

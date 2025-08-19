@@ -70,16 +70,16 @@ pub mod high_dimensional;
 
 // Re-export commonly used functions for convenience
 pub use calculations_2d::{
-    cross_product_2d, distance_squared_2d, compute_polygon_area, compute_polygon_perimeter,
-    is_counterclockwise, polar_angle, compute_2d_hull_equations
+    compute_2d_hull_equations, compute_polygon_area, compute_polygon_perimeter, cross_product_2d,
+    distance_squared_2d, is_counterclockwise, polar_angle,
 };
 
 pub use calculations_3d::{
-    tetrahedron_volume, triangle_area_3d, compute_polyhedron_volume, compute_polyhedron_surface_area,
-    cross_product_3d, dot_product_3d, vector_magnitude_3d, normalize_3d
+    compute_polyhedron_surface_area, compute_polyhedron_volume, cross_product_3d, dot_product_3d,
+    normalize_3d, tetrahedron_volume, triangle_area_3d, vector_magnitude_3d,
 };
 
 pub use high_dimensional::{
-    compute_high_dim_volume, compute_high_dim_surface_area, estimate_facet_area,
-    compute_centroid, compute_bounding_box, compute_characteristic_size
+    compute_bounding_box, compute_centroid, compute_characteristic_size,
+    compute_high_dim_surface_area, compute_high_dim_volume, estimate_facet_area,
 };

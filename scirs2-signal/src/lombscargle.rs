@@ -526,7 +526,7 @@ fn _lombscargle_impl(
 
     // Center the _data if requested
     let (y_centered, y_mean) = if center_data {
-        let _mean = y.sum() / n_samples as f64;
+        let mean = y.sum() / n_samples as f64;
         (y - mean, mean)
     } else {
         (y.clone(), 0.0)

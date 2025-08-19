@@ -76,24 +76,22 @@
 //!          vol, area, ratio, compactness);
 //! ```
 
-pub mod volume;
-pub mod surface_area;
 pub mod containment;
+pub mod surface_area;
+pub mod volume;
 
 // Re-export commonly used functions for convenience
 pub use volume::{
     compute_volume, compute_volume_bounds, compute_volume_monte_carlo,
-    is_volume_computation_reliable
+    is_volume_computation_reliable,
 };
 
 pub use surface_area::{
-    compute_surface_area, compute_surface_area_bounds, compute_surface_to_volume_ratio,
-    compute_compactness, is_surface_area_computation_reliable
+    compute_compactness, compute_surface_area, compute_surface_area_bounds,
+    compute_surface_to_volume_ratio, is_surface_area_computation_reliable,
 };
 
-pub use containment::{
-    check_point_containment, check_multiple_containment, distance_to_hull
-};
+pub use containment::{check_multiple_containment, check_point_containment, distance_to_hull};
 
 /// Comprehensive hull analysis results
 ///
@@ -155,7 +153,9 @@ pub struct HullAnalysis {
 /// println!("  Surface Area: {}", analysis.surface_area);
 /// println!("  Compactness: {:.3}", analysis.compactness);
 /// ```
-pub fn analyze_hull(hull: &ConvexHull) -> crate::error::SpatialResult<HullAnalysis> {
+pub fn analyze_hull(
+    hull: &crate::convex_hull::core::ConvexHull,
+) -> crate::error::SpatialResult<HullAnalysis> {
     let ndim = hull.ndim();
     let num_vertices = hull.vertex_indices().len();
     let num_facets = hull.simplices().len();
@@ -163,7 +163,7 @@ pub fn analyze_hull(hull: &ConvexHull) -> crate::error::SpatialResult<HullAnalys
     // Compute volume and surface area
     let volume = volume::compute_volume(hull)?;
     let surface_area = surface_area::compute_surface_area(hull)?;
-    
+
     // Compute derived properties
     let surface_to_volume_ratio = surface_area::compute_surface_to_volume_ratio(hull)?;
     let compactness = surface_area::compute_compactness(hull)?;
@@ -246,7 +246,9 @@ pub struct HullStatistics {
 }
 
 /// Get geometric statistics for a convex hull
-pub fn get_hull_statistics(hull: &ConvexHull) -> crate::error::SpatialResult<HullStatistics> {
+pub fn get_hull_statistics(
+    hull: &crate::convex_hull::core::ConvexHull,
+) -> crate::error::SpatialResult<HullStatistics> {
     let num_input_points = hull.points.nrows();
     let num_hull_vertices = hull.vertex_indices.len();
     let hull_vertex_fraction = num_hull_vertices as f64 / num_input_points as f64;
@@ -262,7 +264,7 @@ pub fn get_hull_statistics(hull: &ConvexHull) -> crate::error::SpatialResult<Hul
 
     // Distance calculations
     let mut min_distance = f64::INFINITY;
-    let mut max_distance = 0.0;
+    let mut max_distance: f64 = 0.0;
     let ndim = hull.ndim();
 
     // Compute pairwise distances between vertices
@@ -271,7 +273,7 @@ pub fn get_hull_statistics(hull: &ConvexHull) -> crate::error::SpatialResult<Hul
             let idx1 = hull.vertex_indices[i];
             let idx2 = hull.vertex_indices[j];
 
-            let mut dist_sq = 0.0;
+            let mut dist_sq: f64 = 0.0;
             for d in 0..ndim {
                 let diff = hull.points[[idx2, d]] - hull.points[[idx1, d]];
                 dist_sq += diff * diff;
@@ -286,10 +288,10 @@ pub fn get_hull_statistics(hull: &ConvexHull) -> crate::error::SpatialResult<Hul
     // Average distance from centroid to vertices
     use crate::convex_hull::geometry::compute_centroid;
     let centroid = compute_centroid(&hull.points.view(), &hull.vertex_indices);
-    
+
     let mut total_centroid_distance = 0.0;
     for &vertex_idx in &hull.vertex_indices {
-        let mut dist_sq = 0.0;
+        let mut dist_sq: f64 = 0.0;
         for d in 0..ndim {
             let diff = hull.points[[vertex_idx, d]] - centroid[d];
             dist_sq += diff * diff;
@@ -321,8 +323,8 @@ pub fn get_hull_statistics(hull: &ConvexHull) -> crate::error::SpatialResult<Hul
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
     use crate::convex_hull::ConvexHull;
+    use ndarray::arr2;
 
     #[test]
     fn test_analyze_hull() {
@@ -345,7 +347,11 @@ mod tests {
     #[test]
     fn test_get_hull_statistics() {
         let points = arr2(&[
-            [0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.5, 0.5] // Interior point
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [1.0, 1.0],
+            [0.0, 1.0],
+            [0.5, 0.5], // Interior point
         ]);
         let hull = ConvexHull::new(&points.view()).unwrap();
         let stats = get_hull_statistics(&hull).unwrap();
@@ -374,8 +380,10 @@ mod tests {
     #[test]
     fn test_3d_analysis() {
         let points = arr2(&[
-            [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], 
-            [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
         ]);
         let hull = ConvexHull::new(&points.view()).unwrap();
         let analysis = analyze_hull(&hull).unwrap();

@@ -3,8 +3,8 @@
 //! This module provides Metal-specific implementations for sparse matrix operations
 //! optimized for Apple Silicon and Intel Macs with discrete GPUs.
 
-use crate::error::{SparseError, SparseResult};
 use crate::csr_array::CsrArray;
+use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
@@ -175,29 +175,26 @@ impl MetalSpMatVec {
     #[cfg(feature = "gpu")]
     pub fn compile_shaders(&mut self, device: &super::GpuDevice) -> Result<(), super::GpuError> {
         // Compile basic kernel
-        self.kernel_handle = Some(
-            device
-                .compile_metal_shader(METAL_SPMV_SHADER_SOURCE, "spmv_csr_kernel")?
-        );
+        self.kernel_handle =
+            Some(device.compile_metal_shader(METAL_SPMV_SHADER_SOURCE, "spmv_csr_kernel")?);
 
         // Compile SIMD group kernel for better performance
         self.simdgroup_kernel = Some(
-            device
-                .compile_metal_shader(METAL_SPMV_SHADER_SOURCE, "spmv_csr_simdgroup_kernel")?
+            device.compile_metal_shader(METAL_SPMV_SHADER_SOURCE, "spmv_csr_simdgroup_kernel")?,
         );
 
         // Apple Silicon specific optimizations
         if self.device_info.is_apple_silicon {
-            self.apple_silicon_kernel = Some(
-                device
-                    .compile_metal_shader(METAL_APPLE_SILICON_SHADER_SOURCE, "spmv_csr_apple_silicon_kernel")?
-            );
+            self.apple_silicon_kernel = Some(device.compile_metal_shader(
+                METAL_APPLE_SILICON_SHADER_SOURCE,
+                "spmv_csr_apple_silicon_kernel",
+            )?);
 
             // Neural Engine preparation kernel (for future optimization)
-            self.neural_engine_kernel = Some(
-                device
-                    .compile_metal_shader(METAL_APPLE_SILICON_SHADER_SOURCE, "spmv_csr_neural_engine_prep_kernel")?
-            );
+            self.neural_engine_kernel = Some(device.compile_metal_shader(
+                METAL_APPLE_SILICON_SHADER_SOURCE,
+                "spmv_csr_neural_engine_prep_kernel",
+            )?);
         }
 
         Ok(())
@@ -289,7 +286,13 @@ impl MetalSpMatVec {
         } else {
             // Fallback to basic kernel if specific optimization not available
             if let Some(ref basic_kernel) = self.kernel_handle {
-                self.execute_kernel_with_optimization(matrix, vector, device, basic_kernel, MetalOptimizationLevel::Basic)
+                self.execute_kernel_with_optimization(
+                    matrix,
+                    vector,
+                    device,
+                    basic_kernel,
+                    MetalOptimizationLevel::Basic,
+                )
             } else {
                 Err(SparseError::ComputationError(
                     "No Metal kernels available".to_string(),
@@ -321,9 +324,7 @@ impl MetalSpMatVec {
 
         // Configure launch parameters based on optimization level
         let (threadgroup_size, uses_shared_memory) = match optimization_level {
-            MetalOptimizationLevel::Basic => {
-                (self.device_info.max_threadgroup_size.min(64), false)
-            }
+            MetalOptimizationLevel::Basic => (self.device_info.max_threadgroup_size.min(64), false),
             MetalOptimizationLevel::SimdGroup => {
                 (self.device_info.max_threadgroup_size.min(128), false)
             }
@@ -378,7 +379,11 @@ impl MetalSpMatVec {
 
     /// Select optimal kernel based on device and matrix characteristics
     #[cfg(feature = "gpu")]
-    fn select_optimal_kernel<T>(&self, rows: usize, matrix: &CsrArray<T>) -> SparseResult<super::GpuKernelHandle>
+    fn select_optimal_kernel<T>(
+        &self,
+        rows: usize,
+        matrix: &CsrArray<T>,
+    ) -> SparseResult<super::GpuKernelHandle>
     where
         T: Float + Debug + Copy,
     {
@@ -394,7 +399,9 @@ impl MetalSpMatVec {
             } else if let Some(ref kernel) = self.kernel_handle {
                 Ok(kernel.clone())
             } else {
-                Err(SparseError::ComputationError("No Metal kernels available".to_string()))
+                Err(SparseError::ComputationError(
+                    "No Metal kernels available".to_string(),
+                ))
             }
         } else if self.device_info.supports_simdgroups && avg_nnz_per_row > 5.0 {
             // Use SIMD group kernel for moderate sparsity
@@ -403,14 +410,18 @@ impl MetalSpMatVec {
             } else if let Some(ref kernel) = self.kernel_handle {
                 Ok(kernel.clone())
             } else {
-                Err(SparseError::ComputationError("No Metal kernels available".to_string()))
+                Err(SparseError::ComputationError(
+                    "No Metal kernels available".to_string(),
+                ))
             }
         } else {
             // Use basic kernel for very sparse matrices
             if let Some(ref kernel) = self.kernel_handle {
                 Ok(kernel.clone())
             } else {
-                Err(SparseError::ComputationError("No Metal kernels available".to_string()))
+                Err(SparseError::ComputationError(
+                    "No Metal kernels available".to_string(),
+                ))
             }
         }
     }
@@ -543,9 +554,12 @@ impl MetalMemoryManager {
             MetalStorageMode::Managed
         };
 
-        let indptr_buffer = device.create_metal_buffer_with_storage_mode(&matrix.indptr, storage_mode)?;
-        let indices_buffer = device.create_metal_buffer_with_storage_mode(&matrix.indices, storage_mode)?;
-        let data_buffer = device.create_metal_buffer_with_storage_mode(&matrix.data, storage_mode)?;
+        let indptr_buffer =
+            device.create_metal_buffer_with_storage_mode(&matrix.indptr, storage_mode)?;
+        let indices_buffer =
+            device.create_metal_buffer_with_storage_mode(&matrix.indices, storage_mode)?;
+        let data_buffer =
+            device.create_metal_buffer_with_storage_mode(&matrix.data, storage_mode)?;
 
         Ok(MetalMatrixBuffers {
             indptr: indptr_buffer,
@@ -557,7 +571,7 @@ impl MetalMemoryManager {
     /// Get optimal threadgroup size for the current device
     pub fn optimal_threadgroup_size(&self, problem_size: usize) -> usize {
         let max_tg_size = self.device_info.max_threadgroup_size;
-        
+
         if self.device_info.is_apple_silicon {
             // Apple Silicon prefers larger threadgroups
             if problem_size < 1000 {
@@ -585,7 +599,7 @@ impl MetalMemoryManager {
         }
 
         let avg_nnz_per_row = matrix.nnz() as f64 / matrix.shape().0 as f64;
-        
+
         // SIMD groups are beneficial for matrices with moderate to high sparsity
         avg_nnz_per_row >= 5.0
     }
@@ -636,7 +650,10 @@ mod tests {
         assert_ne!(basic, simdgroup);
         assert_ne!(simdgroup, apple_silicon);
         assert_ne!(apple_silicon, neural_engine);
-        assert_eq!(MetalOptimizationLevel::default(), MetalOptimizationLevel::Basic);
+        assert_eq!(
+            MetalOptimizationLevel::default(),
+            MetalOptimizationLevel::Basic
+        );
     }
 
     #[test]
@@ -650,11 +667,11 @@ mod tests {
     #[test]
     fn test_apple_silicon_detection() {
         let info = MetalDeviceInfo::detect();
-        
+
         // Test that detection logic runs without errors
         #[cfg(all(target_arch = "aarch64", target_os = "macos"))]
         assert!(info.is_apple_silicon);
-        
+
         #[cfg(not(all(target_arch = "aarch64", target_os = "macos")))]
         assert!(!info.is_apple_silicon);
     }
@@ -664,7 +681,7 @@ mod tests {
         let manager = MetalMemoryManager::new();
         assert_eq!(manager.allocated_buffers.len(), 0);
         assert!(manager.device_info.max_threadgroup_size > 0);
-        
+
         // Test threadgroup size selection
         let tg_size_small = manager.optimal_threadgroup_size(500);
         let tg_size_large = manager.optimal_threadgroup_size(50000);
@@ -693,7 +710,7 @@ mod tests {
     fn test_shader_sources() {
         assert!(!METAL_SPMV_SHADER_SOURCE.is_empty());
         assert!(!METAL_APPLE_SILICON_SHADER_SOURCE.is_empty());
-        
+
         // Check that shaders contain expected function names
         assert!(METAL_SPMV_SHADER_SOURCE.contains("spmv_csr_kernel"));
         assert!(METAL_SPMV_SHADER_SOURCE.contains("spmv_csr_simdgroup_kernel"));

@@ -152,10 +152,10 @@ impl GpuDataType for u32 {}
 impl GpuDataType for i32 {}
 
 // Re-export unified GPU interface
-pub use crate::gpu::{GpuSpMatVec, OptimizationHint, BackendInfo};
+pub use crate::gpu::{BackendInfo, GpuSpMatVec, OptimizationHint};
 
 // Re-export convenience functions for backward compatibility
-pub use crate::gpu::convenience::{gpu_spmv, gpu_spmv_optimized, available_backends};
+pub use crate::gpu::convenience::{available_backends, gpu_spmv, gpu_spmv_optimized};
 
 // Legacy types for backward compatibility
 #[derive(Debug, Clone)]
@@ -190,8 +190,8 @@ pub struct OptimizedGpuOps {
 }
 
 // Legacy function names for backward compatibility
-use crate::error::SparseResult;
 use crate::csr_array::CsrArray;
+use crate::error::SparseResult;
 use crate::sparray::SparseArray;
 use crate::sym_csr::SymCsrMatrix;
 use ndarray::{Array1, ArrayView1};
@@ -199,7 +199,7 @@ use num_traits::Float;
 use std::fmt::Debug;
 
 /// GPU sparse matrix-vector multiplication (legacy interface)
-/// 
+///
 /// This function provides backward compatibility with the original API.
 /// For new code, consider using the unified `GpuSpMatVec` interface.
 #[allow(dead_code)]
@@ -321,13 +321,13 @@ mod tests {
         let indices = vec![0, 1, 0, 1];
         let indptr = vec![0, 2, 4];
         let matrix = CsrArray::new(data, indices, indptr, (2, 2)).unwrap();
-        
+
         let vector = Array1::from_vec(vec![1.0, 2.0]);
-        
+
         // Test with automatic backend selection
         let result = gpu_sparse_matvec(&matrix, &vector.view(), None);
         assert!(result.is_ok());
-        
+
         // Test with specific backend
         let result = gpu_sparse_matvec(&matrix, &vector.view(), Some(GpuBackend::Cpu));
         assert!(result.is_ok());
@@ -344,10 +344,12 @@ mod tests {
     fn test_gpu_buffer_ext() {
         #[cfg(not(feature = "gpu"))]
         {
-            let buffer = GpuBuffer { data: vec![1.0, 2.0, 3.0, 4.0] };
+            let buffer = GpuBuffer {
+                data: vec![1.0, 2.0, 3.0, 4.0],
+            };
             let host_data = buffer.to_host().unwrap();
             assert_eq!(host_data, vec![1.0, 2.0, 3.0, 4.0]);
-            
+
             let range_data = buffer.to_host_range(1..3).unwrap();
             assert_eq!(range_data, vec![2.0, 3.0]);
         }
@@ -357,7 +359,7 @@ mod tests {
     fn test_gpu_data_types() {
         // Test that the trait is implemented for expected types
         fn is_gpu_data_type<T: GpuDataType>() {}
-        
+
         is_gpu_data_type::<f32>();
         is_gpu_data_type::<f64>();
         is_gpu_data_type::<usize>();

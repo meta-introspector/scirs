@@ -258,8 +258,8 @@ pub use sym_ops::{
 };
 
 // GPU-accelerated operations
-pub mod gpu_kernel_execution;
 pub mod gpu;
+pub mod gpu_kernel_execution;
 pub mod gpu_ops;
 pub mod gpu_spmv_implementation;
 pub use gpu_kernel_execution::{

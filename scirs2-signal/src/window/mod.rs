@@ -73,9 +73,9 @@ pub mod kaiser {
         super::families::exponential::kaiser(m, beta, sym)
     }
 
-    /// Kaiser-Bessel derived window - redirects to families::specialized
+    /// Kaiser-Bessel derived window - implementation in kaiser.rs
     pub fn kaiser_bessel_derived(m: usize, beta: f64, sym: bool) -> SignalResult<Vec<f64>> {
-        super::families::specialized::kaiser_bessel_derived(m, beta)
+        crate::window::kaiser::kaiser_bessel_derived(m, beta, sym)
     }
 }
 
@@ -197,7 +197,7 @@ pub fn get_window(window_type: &str, length: usize, periodic: bool) -> SignalRes
         }
         "kaiser_bessel_derived" => {
             // Default beta value of 8.6
-            families::specialized::kaiser_bessel_derived(length, 8.6)
+            crate::window::kaiser::kaiser_bessel_derived(length, 8.6, symmetric)
         }
 
         _ => Err(SignalError::ValueError(format!(

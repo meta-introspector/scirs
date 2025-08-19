@@ -5,7 +5,7 @@
 //! use quantum superposition, interference, and entanglement concepts to improve
 //! convergence and solution quality.
 
-use crate::spatial_error::{SpatialError, SpatialResult};
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView2};
 use rand::Rng;
 use std::f64::consts::PI;
@@ -274,15 +274,15 @@ impl QuantumClusterer {
 
         // Use k-means++ initialization for better initial centroids
         let mut selected_indices = Vec::new();
-        
+
         // First centroid: random selection
         let first_idx = rng.random_range(0..n_points);
         selected_indices.push(first_idx);
-        
+
         // Remaining centroids: weighted by distance to closest existing centroid
         for _ in 1..self.num_clusters {
             let mut distances = vec![f64::INFINITY; n_points];
-            
+
             // Calculate distances to closest existing centroid
             for i in 0..n_points {
                 for &selected_idx in &selected_indices {
@@ -296,12 +296,12 @@ impl QuantumClusterer {
                     distances[i] = distances[i].min(dist);
                 }
             }
-            
+
             // Select next centroid with probability proportional to squared distance
             let total_distance: f64 = distances.iter().sum();
             let mut cumulative = 0.0;
             let random_value = rng.random_range(0.0..total_distance);
-            
+
             for (i, &distance) in distances.iter().enumerate() {
                 cumulative += distance;
                 if cumulative >= random_value {
@@ -507,7 +507,7 @@ mod tests {
             .with_superposition_states(16)
             .with_max_iterations(200)
             .with_tolerance(1e-8);
-        
+
         assert_eq!(clusterer.quantum_depth(), 5);
         assert_eq!(clusterer.superposition_states(), 16);
         assert_eq!(clusterer.max_iterations, 200);
@@ -517,17 +517,21 @@ mod tests {
     #[test]
     fn test_simple_clustering() {
         // Create two well-separated clusters
-        let points = Array2::from_shape_vec((6, 2), vec![
-            0.0, 0.0, 1.0, 0.0, 0.0, 1.0,  // Cluster 1
-            5.0, 5.0, 6.0, 5.0, 5.0, 6.0   // Cluster 2
-        ]).unwrap();
+        let points = Array2::from_shape_vec(
+            (6, 2),
+            vec![
+                0.0, 0.0, 1.0, 0.0, 0.0, 1.0, // Cluster 1
+                5.0, 5.0, 6.0, 5.0, 5.0, 6.0, // Cluster 2
+            ],
+        )
+        .unwrap();
 
         let mut clusterer = QuantumClusterer::new(2);
         let result = clusterer.fit(&points.view());
-        
+
         assert!(result.is_ok());
         let (centroids, assignments) = result.unwrap();
-        
+
         assert_eq!(centroids.nrows(), 2);
         assert_eq!(centroids.ncols(), 2);
         assert_eq!(assignments.len(), 6);
@@ -537,24 +541,23 @@ mod tests {
     #[test]
     fn test_insufficient_points() {
         let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
-        let mut clusterer = QuantumClusterer::new(3);  // More clusters than points
-        
+        let mut clusterer = QuantumClusterer::new(3); // More clusters than points
+
         let result = clusterer.fit(&points.view());
         assert!(result.is_err());
     }
 
     #[test]
     fn test_single_cluster() {
-        let points = Array2::from_shape_vec((4, 2), vec![
-            0.0, 0.0, 0.1, 0.1, -0.1, 0.1, 0.1, -0.1
-        ]).unwrap();
+        let points =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, -0.1, 0.1, 0.1, -0.1]).unwrap();
 
         let mut clusterer = QuantumClusterer::new(1);
         let result = clusterer.fit(&points.view());
-        
+
         assert!(result.is_ok());
         let (centroids, assignments) = result.unwrap();
-        
+
         assert_eq!(centroids.nrows(), 1);
         // All points should be assigned to cluster 0
         for assignment in assignments.iter() {
@@ -566,7 +569,7 @@ mod tests {
     fn test_prediction_without_fitting() {
         let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
         let clusterer = QuantumClusterer::new(2);
-        
+
         let result = clusterer.predict(&points.view());
         assert!(result.is_err());
     }

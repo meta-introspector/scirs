@@ -3,9 +3,9 @@
 //! This module provides specialized eigenvalue solvers optimized for
 //! symmetric sparse matrices, including basic and shift-invert methods.
 
+use super::lanczos::{lanczos, EigenResult, LanczosOptions};
 use crate::error::{SparseError, SparseResult};
 use crate::sym_csr::SymCsrMatrix;
-use super::lanczos::{LanczosOptions, EigenResult, lanczos};
 use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;
@@ -146,10 +146,10 @@ where
     // For now, implement a simplified shift-invert using basic Lanczos
     // In a complete implementation, this would use proper factorization
     // and solve (A - σI)^(-1) x = μ x
-    
+
     // Create a shifted matrix (A - σI) - simplified implementation
     let mut shifted_matrix = matrix.clone();
-    
+
     // Modify diagonal elements to subtract sigma
     // This is a simplified approach - a proper implementation would
     // use sparse LU factorization or Cholesky decomposition
@@ -167,9 +167,9 @@ where
     // Note: This is a simplified implementation
     let mut shift_opts = opts.clone();
     shift_opts.numeigenvalues = k;
-    
+
     let result = lanczos(&shifted_matrix, &shift_opts, None)?;
-    
+
     // Transform eigenvalues back: λ = σ + 1/μ (simplified)
     let mut transformed_eigenvalues = Array1::zeros(result.eigenvalues.len());
     for (i, &mu) in result.eigenvalues.iter().enumerate() {
@@ -234,7 +234,7 @@ where
 {
     let _mode = mode.unwrap_or("normal");
     let _return_eigenvectors = return_eigenvectors.unwrap_or(true);
-    
+
     // For this simplified implementation, delegate to the basic shift-invert
     eigsh_shift_invert(matrix, sigma, k, which, options)
 }
@@ -264,20 +264,20 @@ where
         + 'static,
 {
     let n = matrix.shape().0;
-    
+
     // Create enhanced options for better convergence
     let mut enhanced_opts = options.clone();
     enhanced_opts.numeigenvalues = k;
-    
+
     // Adjust subspace size based on the problem size and requested eigenvalues
     enhanced_opts.max_subspace_size = (k * 2 + 10).min(n);
-    
+
     // Use stricter tolerance for better accuracy
     enhanced_opts.tol = enhanced_opts.tol.min(1e-10);
-    
+
     // Call the standard Lanczos algorithm with enhanced parameters
     let result = lanczos(matrix, &enhanced_opts, None)?;
-    
+
     // Post-process results based on 'which' parameter
     process_eigenvalue_selection(result, which, k)
 }
@@ -293,22 +293,28 @@ where
 {
     let n_computed = result.eigenvalues.len();
     let n_requested = k.min(n_computed);
-    
+
     match which {
         "LA" => {
             // Largest algebraic - already sorted in descending order
-            result.eigenvalues = result.eigenvalues.slice(ndarray::s![..n_requested]).to_owned();
+            result.eigenvalues = result
+                .eigenvalues
+                .slice(ndarray::s![..n_requested])
+                .to_owned();
             if let Some(ref mut evecs) = result.eigenvectors {
                 *evecs = evecs.slice(ndarray::s![.., ..n_requested]).to_owned();
             }
-            result.residuals = result.residuals.slice(ndarray::s![..n_requested]).to_owned();
+            result.residuals = result
+                .residuals
+                .slice(ndarray::s![..n_requested])
+                .to_owned();
         }
         "SA" => {
             // Smallest algebraic - reverse the order
             let mut eigenvals = result.eigenvalues.to_vec();
             eigenvals.reverse();
             result.eigenvalues = Array1::from_vec(eigenvals[..n_requested].to_vec());
-            
+
             if let Some(ref mut evecs) = result.eigenvectors {
                 let ncols = evecs.ncols();
                 let mut evecs_vec = Vec::new();
@@ -318,9 +324,11 @@ where
                     }
                 }
                 *evecs = ndarray::Array2::from_shape_vec((evecs.nrows(), n_requested), evecs_vec)
-                    .map_err(|_| SparseError::ValueError("Failed to reshape eigenvectors".to_string()))?;
+                    .map_err(|_| {
+                    SparseError::ValueError("Failed to reshape eigenvectors".to_string())
+                })?;
             }
-            
+
             let mut residuals = result.residuals.to_vec();
             residuals.reverse();
             result.residuals = Array1::from_vec(residuals[..n_requested].to_vec());
@@ -329,21 +337,23 @@ where
             // Largest magnitude - sort by absolute value
             let mut indices: Vec<usize> = (0..n_computed).collect();
             indices.sort_by(|&i, &j| {
-                result.eigenvalues[j].abs().partial_cmp(&result.eigenvalues[i].abs())
+                result.eigenvalues[j]
+                    .abs()
+                    .partial_cmp(&result.eigenvalues[i].abs())
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
-            
+
             let mut new_eigenvals = Vec::new();
             let mut new_residuals = Vec::new();
-            
+
             for &idx in indices.iter().take(n_requested) {
                 new_eigenvals.push(result.eigenvalues[idx]);
                 new_residuals.push(result.residuals[idx]);
             }
-            
+
             result.eigenvalues = Array1::from_vec(new_eigenvals);
             result.residuals = Array1::from_vec(new_residuals);
-            
+
             if let Some(ref mut evecs) = result.eigenvectors {
                 let mut new_evecs = Vec::new();
                 for &idx in indices.iter().take(n_requested) {
@@ -352,28 +362,32 @@ where
                     }
                 }
                 *evecs = ndarray::Array2::from_shape_vec((evecs.nrows(), n_requested), new_evecs)
-                    .map_err(|_| SparseError::ValueError("Failed to reshape eigenvectors".to_string()))?;
+                    .map_err(|_| {
+                    SparseError::ValueError("Failed to reshape eigenvectors".to_string())
+                })?;
             }
         }
         "SM" => {
             // Smallest magnitude - sort by absolute value (ascending)
             let mut indices: Vec<usize> = (0..n_computed).collect();
             indices.sort_by(|&i, &j| {
-                result.eigenvalues[i].abs().partial_cmp(&result.eigenvalues[j].abs())
+                result.eigenvalues[i]
+                    .abs()
+                    .partial_cmp(&result.eigenvalues[j].abs())
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
-            
+
             let mut new_eigenvals = Vec::new();
             let mut new_residuals = Vec::new();
-            
+
             for &idx in indices.iter().take(n_requested) {
                 new_eigenvals.push(result.eigenvalues[idx]);
                 new_residuals.push(result.residuals[idx]);
             }
-            
+
             result.eigenvalues = Array1::from_vec(new_eigenvals);
             result.residuals = Array1::from_vec(new_residuals);
-            
+
             if let Some(ref mut evecs) = result.eigenvectors {
                 let mut new_evecs = Vec::new();
                 for &idx in indices.iter().take(n_requested) {
@@ -382,17 +396,19 @@ where
                     }
                 }
                 *evecs = ndarray::Array2::from_shape_vec((evecs.nrows(), n_requested), new_evecs)
-                    .map_err(|_| SparseError::ValueError("Failed to reshape eigenvectors".to_string()))?;
+                    .map_err(|_| {
+                    SparseError::ValueError("Failed to reshape eigenvectors".to_string())
+                })?;
             }
         }
         _ => {
             return Err(SparseError::ValueError(format!(
-                "Unknown eigenvalue selection criterion: {}. Use 'LA', 'SA', 'LM', or 'SM'", 
+                "Unknown eigenvalue selection criterion: {}. Use 'LA', 'SA', 'LM', or 'SM'",
                 which
             )));
         }
     }
-    
+
     Ok(result)
 }
 
@@ -410,7 +426,7 @@ mod tests {
         let matrix = SymCsrMatrix::new(data, indices, indptr, (3, 3)).unwrap();
 
         let result = eigsh(&matrix, Some(2), Some("LA"), None).unwrap();
-        
+
         assert!(result.converged);
         assert_eq!(result.eigenvalues.len(), 2);
         assert!(result.eigenvectors.is_some());
@@ -426,11 +442,11 @@ mod tests {
         // Test largest algebraic
         let result_la = eigsh(&matrix, Some(1), Some("LA"), None).unwrap();
         assert!(result_la.converged);
-        
+
         // Test smallest algebraic
         let result_sa = eigsh(&matrix, Some(1), Some("SA"), None).unwrap();
         assert!(result_sa.converged);
-        
+
         // The largest should be greater than the smallest
         assert!(result_la.eigenvalues[0] >= result_sa.eigenvalues[0]);
     }
@@ -443,7 +459,7 @@ mod tests {
         let matrix = SymCsrMatrix::new(data, indices, indptr, (2, 2)).unwrap();
 
         let result = eigsh_shift_invert(&matrix, 2.0, Some(1), None, None).unwrap();
-        
+
         assert!(result.converged);
         assert_eq!(result.eigenvalues.len(), 1);
     }
@@ -467,7 +483,7 @@ mod tests {
         assert_eq!(result_la.eigenvalues[0], 5.0);
         assert_eq!(result_la.eigenvalues[1], 3.0);
 
-        // Test SA (smallest algebraic) 
+        // Test SA (smallest algebraic)
         let result_sa = process_eigenvalue_selection(result.clone(), "SA", 2).unwrap();
         assert_eq!(result_sa.eigenvalues.len(), 2);
         assert_eq!(result_sa.eigenvalues[0], 1.0);

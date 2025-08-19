@@ -4,7 +4,7 @@
 //! computing, including the leaky integrate-and-fire model and more sophisticated
 //! neuron types with adaptive behaviors.
 
-use crate::spatial_error::{SpatialError, SpatialResult};
+use crate::error::{SpatialError, SpatialResult};
 
 /// Spiking neuron model using leaky integrate-and-fire dynamics
 ///
@@ -23,11 +23,11 @@ use crate::spatial_error::{SpatialError, SpatialResult};
 /// use scirs2_spatial::neuromorphic::core::SpikingNeuron;
 ///
 /// let mut neuron = SpikingNeuron::new(vec![0.0, 0.0]);
-/// 
+///
 /// // Simulate neuron for several time steps
 /// let dt = 0.1;
 /// let input_current = 1.5;
-/// 
+///
 /// for _ in 0..20 {
 ///     let spiked = neuron.update(dt, input_current);
 ///     if spiked {
@@ -278,7 +278,7 @@ impl SpikingNeuron {
     pub fn adapt_threshold(&mut self, target_rate: f64, actual_rate: f64, adaptation_rate: f64) {
         let rate_error = actual_rate - target_rate;
         self.threshold += adaptation_rate * rate_error;
-        
+
         // Keep threshold in reasonable bounds
         self.threshold = self.threshold.clamp(0.1, 10.0);
     }
@@ -292,7 +292,7 @@ impl SpikingNeuron {
         // Increase learning rate if performance is poor, decrease if good
         let adjustment = adaptation_rate * (1.0 - performance_factor);
         self.learning_rate += adjustment;
-        
+
         // Keep learning rate in reasonable bounds
         self.learning_rate = self.learning_rate.clamp(0.001, 1.0);
     }
@@ -348,30 +348,30 @@ impl AdaptiveSpikingNeuron {
     /// True if the neuron spiked, false otherwise
     pub fn update(&mut self, dt: f64, input_current: f64) -> bool {
         self.current_time += dt;
-        
+
         // Update base neuron
         let spiked = self.base_neuron.update(dt, input_current);
-        
+
         if spiked {
             self.spike_count += 1;
         }
-        
+
         // Update firing rate estimate periodically
         if self.current_time >= self.rate_estimation_window {
             self.recent_firing_rate = self.spike_count as f64 / self.current_time;
-            
+
             // Apply homeostatic adaptation
             self.base_neuron.adapt_threshold(
                 self.target_firing_rate,
                 self.recent_firing_rate,
                 self.threshold_adaptation_rate,
             );
-            
+
             // Reset for next window
             self.spike_count = 0;
             self.current_time = 0.0;
         }
-        
+
         spiked
     }
 
@@ -429,12 +429,12 @@ mod tests {
     #[test]
     fn test_neuron_spiking() {
         let mut neuron = SpikingNeuron::new(vec![0.0, 0.0]);
-        
+
         // Test no spike with low input
         let spiked = neuron.update(0.1, 0.1);
         assert!(!spiked);
         assert!(neuron.membrane_potential() > 0.0);
-        
+
         // Test spike with high input
         let spiked = neuron.update(0.1, 10.0);
         assert!(spiked);
@@ -444,21 +444,22 @@ mod tests {
     #[test]
     fn test_refractory_period() {
         let mut neuron = SpikingNeuron::new(vec![0.0, 0.0]);
-        
+
         // Generate a spike
         neuron.update(0.1, 10.0);
         assert!(neuron.is_refractory());
-        
+
         // Try to spike again immediately - should fail
         let spiked = neuron.update(0.1, 10.0);
         assert!(!spiked);
-        
+
         // Wait for refractory period to pass
-        for _ in 0..25 { // 2.5 time units at dt=0.1
+        for _ in 0..25 {
+            // 2.5 time units at dt=0.1
             neuron.update(0.1, 0.0);
         }
         assert!(!neuron.is_refractory());
-        
+
         // Now should be able to spike again
         let spiked = neuron.update(0.1, 10.0);
         assert!(spiked);
@@ -468,10 +469,10 @@ mod tests {
     fn test_neuron_influence() {
         let neuron1 = SpikingNeuron::new(vec![0.0, 0.0]);
         let neuron2 = SpikingNeuron::new(vec![1.0, 1.0]);
-        
+
         let influence = neuron1.calculate_influence(&neuron2.position());
         assert!(influence > 0.0 && influence <= 1.0);
-        
+
         // Self-influence should be 1.0
         let self_influence = neuron1.calculate_influence(&neuron1.position());
         assert!((self_influence - 1.0).abs() < 1e-10);
@@ -481,10 +482,10 @@ mod tests {
     fn test_neuron_distance() {
         let neuron1 = SpikingNeuron::new(vec![0.0, 0.0]);
         let neuron2 = SpikingNeuron::new(vec![3.0, 4.0]);
-        
+
         let distance = neuron1.distance_to(&neuron2).unwrap();
         assert!((distance - 5.0).abs() < 1e-10);
-        
+
         // Test mismatched dimensions
         let neuron3 = SpikingNeuron::new(vec![1.0]);
         assert!(neuron1.distance_to(&neuron3).is_none());
@@ -494,11 +495,11 @@ mod tests {
     fn test_threshold_adaptation() {
         let mut neuron = SpikingNeuron::new(vec![0.0, 0.0]);
         let initial_threshold = neuron.threshold();
-        
+
         // Simulate high firing rate - threshold should increase
         neuron.adapt_threshold(0.1, 0.5, 0.1); // target=0.1, actual=0.5
         assert!(neuron.threshold() > initial_threshold);
-        
+
         // Simulate low firing rate - threshold should decrease
         neuron.adapt_threshold(0.1, 0.05, 0.1); // target=0.1, actual=0.05
         assert!(neuron.threshold() < initial_threshold);
@@ -507,16 +508,16 @@ mod tests {
     #[test]
     fn test_adaptive_neuron() {
         let mut adaptive_neuron = AdaptiveSpikingNeuron::new(vec![0.0, 0.0], 0.1);
-        
+
         assert_eq!(adaptive_neuron.target_firing_rate(), 0.1);
         assert_eq!(adaptive_neuron.spike_count(), 0);
         assert_eq!(adaptive_neuron.recent_firing_rate(), 0.0);
-        
+
         // Simulate some activity
         for _ in 0..50 {
             adaptive_neuron.update(0.1, 2.0);
         }
-        
+
         // Should have some spikes
         assert!(adaptive_neuron.spike_count() > 0);
     }
@@ -524,11 +525,11 @@ mod tests {
     #[test]
     fn test_neuron_reset() {
         let mut neuron = SpikingNeuron::new(vec![0.0, 0.0]);
-        
+
         // Change neuron state
         neuron.update(0.1, 5.0);
         neuron.inject_current(1.0);
-        
+
         // Reset should restore initial state
         neuron.reset();
         assert_eq!(neuron.membrane_potential(), 0.0);
@@ -539,19 +540,19 @@ mod tests {
     #[test]
     fn test_parameter_setters() {
         let mut neuron = SpikingNeuron::new(vec![0.0, 0.0]);
-        
+
         neuron.set_threshold(2.0);
         assert_eq!(neuron.threshold(), 2.0);
-        
+
         neuron.set_refractory_period(5.0);
         assert_eq!(neuron.refractory_period(), 5.0);
-        
+
         neuron.set_leak_constant(0.2);
         assert_eq!(neuron.leak_constant(), 0.2);
-        
+
         neuron.set_learning_rate(0.05);
         assert_eq!(neuron.learning_rate(), 0.05);
-        
+
         neuron.set_position(vec![1.0, 2.0, 3.0]);
         assert_eq!(neuron.position(), &[1.0, 2.0, 3.0]);
     }

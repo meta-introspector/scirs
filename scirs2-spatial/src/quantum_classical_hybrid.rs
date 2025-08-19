@@ -52,7 +52,7 @@
 //! ```
 
 use crate::error::SpatialResult;
-use crate::quantum_inspired::{QuantumClusterer, QuantumState, VariationalQuantumEigensolver};
+use crate::quantum_inspired::{QuantumClusterer, QuantumState};
 use ndarray::{Array1, Array2, ArrayView2};
 use std::time::Instant;
 
@@ -68,8 +68,8 @@ pub struct HybridSpatialOptimizer {
     adaptive_switching: bool,
     /// Quantum error correction enabled
     quantum_error_correction: bool,
-    /// Variational quantum eigensolver
-    vqe: Option<VariationalQuantumEigensolver>,
+    /// Variational quantum eigensolver (currently disabled - type not available)
+    // vqe: Option<VariationalQuantumEigensolver>,
     /// Classical optimizer state
     classical_state: ClassicalOptimizerState,
     /// Hybrid coupling parameters
@@ -166,7 +166,7 @@ impl HybridSpatialOptimizer {
             classical_weight: 0.5,
             adaptive_switching: true,
             quantum_error_correction: false,
-            vqe: None,
+            // vqe: None, // VQE disabled
             classical_state: ClassicalOptimizerState {
                 parameters: Array1::zeros(0),
                 gradients: Array1::zeros(0),
@@ -214,9 +214,9 @@ impl HybridSpatialOptimizer {
     /// Enable variational quantum component
     pub fn with_variational_quantum_component(mut self, enabled: bool) -> Self {
         if enabled {
-            self.vqe = Some(VariationalQuantumEigensolver::new(8)); // Default 8 qubits
+            // self.vqe = Some(VariationalQuantumEigensolver::new(8)); // Default 8 qubits // VQE disabled
         } else {
-            self.vqe = None;
+            // self.vqe = None; // VQE disabled
         }
         self
     }
@@ -375,7 +375,8 @@ impl HybridSpatialOptimizer {
         // First encode the spatial data
         let spatial_data = self.encode_optimization_problem_as_spatial_data();
 
-        if let Some(vqe) = self.vqe.as_mut() {
+        // VQE disabled - type not available
+        /*if let Some(vqe) = self.vqe.as_mut() {
             // Convert optimization problem to quantum Hamiltonian
             let vqe_result = vqe.solve_spatial_hamiltonian(&spatial_data.view()).await?;
 
@@ -396,7 +397,9 @@ impl HybridSpatialOptimizer {
                     entanglement_entropy: vqe_result.spatial_features.entanglement_entropy,
                 },
             })
-        } else {
+        }*/
+        // else {
+        {
             // Fallback to quantum-inspired classical algorithm
             let mut quantum_clusterer = QuantumClusterer::new(2);
             let dummy_data = Array2::from_shape_fn((10, 2), |(i, j)| {
@@ -589,7 +592,8 @@ impl HybridSpatialOptimizer {
     ) -> SpatialResult<()> {
         if self.coupling_parameters.classical_bias {
             // Use classical gradients to inform quantum parameter updates
-            if let Some(ref vqe) = self.vqe {
+            // VQE disabled - type not available
+            /*if let Some(ref vqe) = self.vqe {
                 // Encode classical gradient information into quantum parameter updates
                 // This would require modifying the VQE's parameter update strategy
                 // For now, we adjust the coupling parameters
@@ -604,7 +608,7 @@ impl HybridSpatialOptimizer {
                         self.quantum_weight = (self.quantum_weight * 1.05).min(0.9);
                     }
                 }
-            }
+            }*/
         }
 
         Ok(())

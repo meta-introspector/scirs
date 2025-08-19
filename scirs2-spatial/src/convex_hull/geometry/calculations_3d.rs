@@ -357,7 +357,7 @@ mod tests {
         let p3 = [0.0, 0.0, 1.0];
 
         let volume = tetrahedron_volume(p0, p1, p2, p3);
-        assert!((volume.abs() - 1.0/6.0).abs() < 1e-10);
+        assert!((volume.abs() - 1.0 / 6.0).abs() < 1e-10);
     }
 
     #[test]
@@ -408,27 +408,29 @@ mod tests {
     fn test_polyhedron_volume() {
         // Unit tetrahedron
         let points = arr2(&[
-            [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
         ]);
-        let simplices = vec![
-            vec![0, 1, 2], vec![0, 1, 3], vec![0, 2, 3], vec![1, 2, 3]
-        ];
+        let simplices = vec![vec![0, 1, 2], vec![0, 1, 3], vec![0, 2, 3], vec![1, 2, 3]];
 
         let volume = compute_polyhedron_volume(&points.view(), &simplices).unwrap();
         assert!(volume > 0.0);
         // Unit tetrahedron volume should be 1/6
-        assert!((volume - 1.0/6.0).abs() < 0.1); // Allow some numerical error
+        assert!((volume - 1.0 / 6.0).abs() < 0.1); // Allow some numerical error
     }
 
     #[test]
     fn test_polyhedron_surface_area() {
         // Unit tetrahedron
         let points = arr2(&[
-            [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
         ]);
-        let simplices = vec![
-            vec![0, 1, 2], vec![0, 1, 3], vec![0, 2, 3], vec![1, 2, 3]
-        ];
+        let simplices = vec![vec![0, 1, 2], vec![0, 1, 3], vec![0, 2, 3], vec![1, 2, 3]];
 
         let surface_area = compute_polyhedron_surface_area(&points.view(), &simplices).unwrap();
         assert!(surface_area > 0.0);

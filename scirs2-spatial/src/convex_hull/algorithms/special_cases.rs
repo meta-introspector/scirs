@@ -4,8 +4,8 @@
 //! well-handled by the general algorithms, such as very small point sets,
 //! degenerate cases, or highly regular geometries.
 
-use crate::error::{SpatialError, SpatialResult};
 use crate::convex_hull::core::ConvexHull;
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::ArrayView2;
 use qhull::Qh;
 
@@ -61,7 +61,9 @@ pub fn handle_degenerate_case(points: &ArrayView2<'_, f64>) -> Option<SpatialRes
     if npoints < ndim + 1 {
         return Some(Err(SpatialError::ValueError(format!(
             "Need at least {} points to construct a {}D convex hull, got {}",
-            ndim + 1, ndim, npoints
+            ndim + 1,
+            ndim,
+            npoints
         ))));
     }
 
@@ -79,7 +81,7 @@ pub fn handle_degenerate_case(points: &ArrayView2<'_, f64>) -> Option<SpatialRes
 /// * Result containing a degenerate ConvexHull
 fn handle_single_point(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> {
     let npoints = points.nrows();
-    
+
     if npoints != 1 {
         return Err(SpatialError::ValueError(
             "handle_single_point called with wrong number of points".to_string(),
@@ -116,7 +118,7 @@ fn handle_single_point(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull
 /// * Result containing a degenerate ConvexHull (line segment)
 fn handle_two_points(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> {
     let npoints = points.nrows();
-    
+
     if npoints != 2 {
         return Err(SpatialError::ValueError(
             "handle_two_points called with wrong number of points".to_string(),
@@ -153,7 +155,7 @@ fn handle_two_points(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> 
 /// * Result containing a degenerate ConvexHull (line segment)
 fn handle_collinear_points(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> {
     let npoints = points.nrows();
-    
+
     if npoints < 2 {
         return Err(SpatialError::ValueError(
             "Need at least 2 points for collinear case".to_string(),
@@ -162,13 +164,13 @@ fn handle_collinear_points(points: &ArrayView2<'_, f64>) -> SpatialResult<Convex
 
     // Find the two extreme points along the line
     let (min_idx, max_idx) = find_extreme_points_on_line(points)?;
-    
+
     let vertex_indices = if min_idx != max_idx {
         vec![min_idx, max_idx]
     } else {
         vec![min_idx] // All points are identical
     };
-    
+
     let simplices = if vertex_indices.len() == 2 {
         vec![vec![vertex_indices[0], vertex_indices[1]]]
     } else {
@@ -245,7 +247,7 @@ fn handle_identical_points(points: &ArrayView2<'_, f64>) -> SpatialResult<Convex
 pub fn is_all_collinear(points: &ArrayView2<'_, f64>) -> bool {
     let npoints = points.nrows();
     let ndim = points.ncols();
-    
+
     if npoints <= 2 {
         return true;
     }
@@ -265,7 +267,7 @@ pub fn is_all_collinear(points: &ArrayView2<'_, f64>) -> bool {
 /// Check if all 2D points are collinear
 fn is_all_collinear_2d(points: &ArrayView2<'_, f64>) -> bool {
     let npoints = points.nrows();
-    
+
     if npoints <= 2 {
         return true;
     }
@@ -276,10 +278,10 @@ fn is_all_collinear_2d(points: &ArrayView2<'_, f64>) -> bool {
     // Check if all subsequent points are collinear with the first two
     for i in 2..npoints {
         let p3 = [points[[i, 0]], points[[i, 1]]];
-        
+
         // Use cross product to check collinearity
         let cross = (p2[0] - p1[0]) * (p3[1] - p1[1]) - (p2[1] - p1[1]) * (p3[0] - p1[0]);
-        
+
         if cross.abs() > 1e-10 {
             return false;
         }
@@ -292,7 +294,7 @@ fn is_all_collinear_2d(points: &ArrayView2<'_, f64>) -> bool {
 fn is_all_collinear_nd(points: &ArrayView2<'_, f64>) -> bool {
     let npoints = points.nrows();
     let ndim = points.ncols();
-    
+
     if npoints <= 2 {
         return true;
     }
@@ -300,7 +302,7 @@ fn is_all_collinear_nd(points: &ArrayView2<'_, f64>) -> bool {
     // Find direction vector from first two distinct points
     let mut direction_found = false;
     let mut direction = vec![0.0; ndim];
-    
+
     for i in 1..npoints {
         let mut is_different = false;
         for d in 0..ndim {
@@ -309,7 +311,7 @@ fn is_all_collinear_nd(points: &ArrayView2<'_, f64>) -> bool {
                 is_different = true;
             }
         }
-        
+
         if is_different {
             direction_found = true;
             break;
@@ -337,8 +339,12 @@ fn is_all_collinear_nd(points: &ArrayView2<'_, f64>) -> bool {
         }
 
         // Project point_to_first onto direction
-        let projection: f64 = point_to_first.iter().zip(direction.iter()).map(|(a, b)| a * b).sum();
-        
+        let projection: f64 = point_to_first
+            .iter()
+            .zip(direction.iter())
+            .map(|(a, b)| a * b)
+            .sum();
+
         // Check if the projection fully explains the vector
         let mut residual = 0.0;
         for d in 0..ndim {
@@ -380,13 +386,13 @@ fn is_all_collinear_nd(points: &ArrayView2<'_, f64>) -> bool {
 pub fn has_all_identical_points(points: &ArrayView2<'_, f64>) -> bool {
     let npoints = points.nrows();
     let ndim = points.ncols();
-    
+
     if npoints <= 1 {
         return true;
     }
 
     let first_point = points.row(0);
-    
+
     for i in 1..npoints {
         for d in 0..ndim {
             if (points[[i, d]] - first_point[d]).abs() > 1e-10 {
@@ -410,7 +416,7 @@ pub fn has_all_identical_points(points: &ArrayView2<'_, f64>) -> bool {
 fn find_extreme_points_on_line(points: &ArrayView2<'_, f64>) -> SpatialResult<(usize, usize)> {
     let npoints = points.nrows();
     let ndim = points.ncols();
-    
+
     if npoints == 0 {
         return Err(SpatialError::ValueError("Empty point set".to_string()));
     }
@@ -426,13 +432,13 @@ fn find_extreme_points_on_line(points: &ArrayView2<'_, f64>) -> SpatialResult<(u
     for d in 0..ndim {
         let mut min_val = points[[0, d]];
         let mut max_val = points[[0, d]];
-        
+
         for i in 1..npoints {
             let val = points[[i, d]];
             min_val = min_val.min(val);
             max_val = max_val.max(val);
         }
-        
+
         let spread = max_val - min_val;
         if spread > max_spread {
             max_spread = spread;
@@ -470,7 +476,7 @@ mod tests {
     fn test_single_point() {
         let points = arr2(&[[1.0, 2.0]]);
         let hull = handle_single_point(&points.view()).unwrap();
-        
+
         assert_eq!(hull.vertex_indices().len(), 1);
         assert_eq!(hull.simplices().len(), 0);
         assert_eq!(hull.vertex_indices()[0], 0);
@@ -480,7 +486,7 @@ mod tests {
     fn test_two_points() {
         let points = arr2(&[[0.0, 0.0], [1.0, 1.0]]);
         let hull = handle_two_points(&points.view()).unwrap();
-        
+
         assert_eq!(hull.vertex_indices().len(), 2);
         assert_eq!(hull.simplices().len(), 1);
         assert_eq!(hull.simplices()[0], vec![0, 1]);
@@ -520,7 +526,7 @@ mod tests {
     fn test_find_extreme_points_on_line() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [2.0, 0.0], [1.5, 0.0]]);
         let (min_idx, max_idx) = find_extreme_points_on_line(&points.view()).unwrap();
-        
+
         // Should find points [0.0, 0.0] and [2.0, 0.0] as extremes
         assert_eq!(min_idx, 0);
         assert_eq!(max_idx, 2);
@@ -555,19 +561,11 @@ mod tests {
     #[test]
     fn test_is_all_collinear_3d() {
         // 3D collinear points
-        let collinear_3d = arr2(&[
-            [0.0, 0.0, 0.0],
-            [1.0, 1.0, 1.0],
-            [2.0, 2.0, 2.0],
-        ]);
+        let collinear_3d = arr2(&[[0.0, 0.0, 0.0], [1.0, 1.0, 1.0], [2.0, 2.0, 2.0]]);
         assert!(is_all_collinear(&collinear_3d.view()));
 
         // 3D non-collinear points
-        let not_collinear_3d = arr2(&[
-            [0.0, 0.0, 0.0],
-            [1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-        ]);
+        let not_collinear_3d = arr2(&[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]);
         assert!(!is_all_collinear(&not_collinear_3d.view()));
     }
 }

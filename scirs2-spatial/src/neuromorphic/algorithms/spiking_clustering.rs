@@ -4,7 +4,7 @@
 //! These algorithms use spike-timing dependent plasticity (STDP) and competitive learning
 //! to discover patterns in spatial data through biologically-inspired neural dynamics.
 
-use crate::spatial_error::{SpatialError, SpatialResult};
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView2};
 use rand::Rng;
 use std::collections::HashMap;
@@ -216,7 +216,9 @@ impl SpikingNeuralClusterer {
         // Create output neurons (cluster centers)
         let mut rng = rand::rng();
         for _i in 0..self.num_clusters {
-            let position = (0..input_dims).map(|_| rng.random_range(0.0..1.0)).collect();
+            let position = (0..input_dims)
+                .map(|_| rng.random_range(0.0..1.0))
+                .collect();
             let mut neuron = SpikingNeuron::new(position);
             neuron.set_threshold(self.spike_threshold);
             self.neurons.push(neuron);
@@ -266,13 +268,9 @@ impl SpikingNeuralClusterer {
             // Generate Poisson spike train
             let num_spikes = (spike_rate * 1.0) as usize; // 1 second duration
             for spike_idx in 0..num_spikes {
-                let timestamp = self.current_time + (spike_idx as f64) * (1.0 / spike_rate.max(1.0));
-                let spike = SpikeEvent::new(
-                    dim,
-                    timestamp,
-                    1.0,
-                    point.to_vec(),
-                );
+                let timestamp =
+                    self.current_time + (spike_idx as f64) * (1.0 / spike_rate.max(1.0));
+                let spike = SpikeEvent::new(dim, timestamp, 1.0, point.to_vec());
                 spike_train.push(spike);
             }
         }
@@ -327,12 +325,8 @@ impl SpikingNeuralClusterer {
                     neuron_spike_counts[cluster_idx] += 1;
 
                     // Record spike event
-                    let spike_event = SpikeEvent::new(
-                        neuron_idx,
-                        t,
-                        1.0,
-                        neuron.position().to_vec(),
-                    );
+                    let spike_event =
+                        SpikeEvent::new(neuron_idx, t, 1.0, neuron.position().to_vec());
                     self.spike_history.push(spike_event);
                 }
             }
@@ -423,7 +417,8 @@ impl SpikingNeuralClusterer {
 
                     // Find inhibitory synapse
                     for synapse in &mut self.synapses {
-                        if synapse.pre_neuron() == neuron_i_idx && synapse.post_neuron() == neuron_j_idx
+                        if synapse.pre_neuron() == neuron_i_idx
+                            && synapse.post_neuron() == neuron_j_idx
                         {
                             // Strengthen inhibition based on activity
                             let activity_i = self.neurons[neuron_i_idx].membrane_potential();
@@ -528,7 +523,7 @@ mod tests {
             .with_stdp_learning(false)
             .with_lateral_inhibition(false)
             .with_training_params(50, 5.0);
-        
+
         assert_eq!(clusterer.spike_threshold(), 0.8);
         assert!(!clusterer.is_stdp_enabled());
         assert!(!clusterer.is_lateral_inhibition_enabled());
@@ -538,19 +533,17 @@ mod tests {
 
     #[test]
     fn test_simple_clustering() {
-        let points = Array2::from_shape_vec((4, 2), vec![
-            0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0
-        ]).unwrap();
+        let points =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
-        let mut clusterer = SpikingNeuralClusterer::new(2)
-            .with_training_params(5, 1.0); // Reduced for test speed
+        let mut clusterer = SpikingNeuralClusterer::new(2).with_training_params(5, 1.0); // Reduced for test speed
 
         let result = clusterer.fit(&points.view());
         assert!(result.is_ok());
 
         let (assignments, spike_events) = result.unwrap();
         assert_eq!(assignments.len(), 4);
-        
+
         // Should have recorded some spike events
         assert!(!spike_events.is_empty());
     }
@@ -559,7 +552,7 @@ mod tests {
     fn test_empty_input() {
         let points = Array2::zeros((0, 2));
         let mut clusterer = SpikingNeuralClusterer::new(2);
-        
+
         let result = clusterer.fit(&points.view());
         assert!(result.is_err());
     }
@@ -568,30 +561,33 @@ mod tests {
     fn test_network_initialization() {
         let mut clusterer = SpikingNeuralClusterer::new(2);
         clusterer.initialize_network(3).unwrap();
-        
+
         let stats = clusterer.network_stats();
         assert_eq!(stats.num_neurons, 5); // 3 input + 2 output
-        
+
         // Should have input-to-output connections
         let expected_connections = 3 * 2; // input_dims * num_clusters
-        // Plus lateral inhibition connections: num_clusters * (num_clusters - 1)
+                                          // Plus lateral inhibition connections: num_clusters * (num_clusters - 1)
         let lateral_connections = 2 * 1;
-        assert_eq!(stats.num_synapses, expected_connections + lateral_connections);
+        assert_eq!(
+            stats.num_synapses,
+            expected_connections + lateral_connections
+        );
     }
 
     #[test]
     fn test_spike_encoding() {
         let clusterer = SpikingNeuralClusterer::new(2);
         let point = Array1::from_vec(vec![1.0, -1.0]);
-        
+
         let spike_train = clusterer.encode_point_as_spikes(&point).unwrap();
-        
+
         // Should generate spikes for each dimension
         assert!(!spike_train.is_empty());
-        
+
         // Spikes should be sorted by timestamp
         for i in 1..spike_train.len() {
-            assert!(spike_train[i-1].timestamp() <= spike_train[i].timestamp());
+            assert!(spike_train[i - 1].timestamp() <= spike_train[i].timestamp());
         }
     }
 
@@ -599,11 +595,13 @@ mod tests {
     fn test_network_reset() {
         let mut clusterer = SpikingNeuralClusterer::new(2);
         clusterer.initialize_network(2).unwrap();
-        
+
         // Add some activity
-        clusterer.spike_history.push(SpikeEvent::new(0, 1.0, 1.0, vec![0.0, 0.0]));
+        clusterer
+            .spike_history
+            .push(SpikeEvent::new(0, 1.0, 1.0, vec![0.0, 0.0]));
         clusterer.current_time = 100.0;
-        
+
         // Reset should clear history and time
         clusterer.reset();
         assert!(clusterer.spike_history().is_empty());
@@ -614,7 +612,7 @@ mod tests {
     fn test_network_stats() {
         let mut clusterer = SpikingNeuralClusterer::new(2);
         clusterer.initialize_network(3).unwrap();
-        
+
         let stats = clusterer.network_stats();
         assert_eq!(stats.num_neurons, 5);
         assert!(stats.num_synapses > 0);

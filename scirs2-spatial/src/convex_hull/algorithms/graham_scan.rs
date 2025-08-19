@@ -4,9 +4,9 @@
 //! by sorting points by polar angle and using a stack-based approach to
 //! eliminate concave points.
 
-use crate::error::{SpatialError, SpatialResult};
 use crate::convex_hull::core::ConvexHull;
-use crate::convex_hull::geometry::calculations_2d::{cross_product_2d, compute_2d_hull_equations};
+use crate::convex_hull::geometry::calculations_2d::{compute_2d_hull_equations, cross_product_2d};
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::ArrayView2;
 use qhull::Qh;
 
@@ -185,9 +185,9 @@ pub fn find_start_point(points: &ArrayView2<'_, f64>) -> usize {
     for i in 1..npoints {
         let current_y = points[[i, 1]];
         let start_y = points[[start_idx, 1]];
-        
-        if current_y < start_y || 
-           (current_y == start_y && points[[i, 0]] < points[[start_idx, 0]]) {
+
+        if current_y < start_y || (current_y == start_y && points[[i, 0]] < points[[start_idx, 0]])
+        {
             start_idx = i;
         }
     }
@@ -224,7 +224,8 @@ pub fn sort_by_polar_angle(points: &ArrayView2<'_, f64>, reference_point: [f64; 
     for i in 0..npoints {
         let point = [points[[i, 0]], points[[i, 1]]];
         let angle = (point[1] - reference_point[1]).atan2(point[0] - reference_point[0]);
-        let distance_sq = (point[0] - reference_point[0]).powi(2) + (point[1] - reference_point[1]).powi(2);
+        let distance_sq =
+            (point[0] - reference_point[0]).powi(2) + (point[1] - reference_point[1]).powi(2);
         indexed_points.push((i, angle, distance_sq));
     }
 
@@ -296,15 +297,10 @@ mod tests {
 
     #[test]
     fn test_graham_scan_square() {
-        let points = arr2(&[
-            [0.0, 0.0],
-            [1.0, 0.0],
-            [1.0, 1.0],
-            [0.0, 1.0],
-        ]);
+        let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
         let hull = compute_graham_scan(&points.view()).unwrap();
-        
+
         assert_eq!(hull.ndim(), 2);
         assert_eq!(hull.vertex_indices().len(), 4); // All points should be vertices
     }
@@ -321,7 +317,7 @@ mod tests {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
         let reference = [0.0, 0.0];
         let sorted_indices = sort_by_polar_angle(&points.view(), reference);
-        
+
         assert_eq!(sorted_indices.len(), 4);
         assert_eq!(sorted_indices[0], 0); // Reference point itself
     }
@@ -360,7 +356,7 @@ mod tests {
         ]);
 
         let hull = compute_graham_scan(&points.view()).unwrap();
-        
+
         // Should form a triangle with the three non-collinear points
         assert_eq!(hull.vertex_indices().len(), 3);
     }

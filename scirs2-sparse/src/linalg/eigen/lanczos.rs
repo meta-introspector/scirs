@@ -1,6 +1,6 @@
 //! Lanczos algorithm for sparse matrix eigenvalue computation
 //!
-//! This module implements the Lanczos algorithm for finding eigenvalues and 
+//! This module implements the Lanczos algorithm for finding eigenvalues and
 //! eigenvectors of large symmetric sparse matrices.
 
 use crate::error::{SparseError, SparseResult};
@@ -719,19 +719,29 @@ where
     // Substitute x = y - p/3 to eliminate the quadratic term
     let p_over_3 = p / T::from(3.0).unwrap();
     let q_new = q - p * p / T::from(3.0).unwrap();
-    let r_new = r - p * q / T::from(3.0).unwrap() + T::from(2.0).unwrap() * p * p * p / T::from(27.0).unwrap();
+    let r_new = r - p * q / T::from(3.0).unwrap()
+        + T::from(2.0).unwrap() * p * p * p / T::from(27.0).unwrap();
 
     // Now solve y³ + q_new * y + r_new = 0
-    let discriminant = -(T::from(4.0).unwrap() * q_new * q_new * q_new + T::from(27.0).unwrap() * r_new * r_new);
+    let discriminant =
+        -(T::from(4.0).unwrap() * q_new * q_new * q_new + T::from(27.0).unwrap() * r_new * r_new);
 
     if discriminant > T::zero() {
         // Three real roots
-        let theta = ((T::from(3.0).unwrap() * r_new) / (T::from(2.0).unwrap() * q_new) * (-T::from(3.0).unwrap() / q_new).sqrt()).acos();
+        let theta = ((T::from(3.0).unwrap() * r_new) / (T::from(2.0).unwrap() * q_new)
+            * (-T::from(3.0).unwrap() / q_new).sqrt())
+        .acos();
         let sqrt_term = T::from(2.0).unwrap() * (-q_new / T::from(3.0).unwrap()).sqrt();
 
         let y1 = sqrt_term * (theta / T::from(3.0).unwrap()).cos();
-        let y2 = sqrt_term * ((theta + T::from(2.0).unwrap() * T::from(std::f64::consts::PI).unwrap()) / T::from(3.0).unwrap()).cos();
-        let y3 = sqrt_term * ((theta + T::from(4.0).unwrap() * T::from(std::f64::consts::PI).unwrap()) / T::from(3.0).unwrap()).cos();
+        let y2 = sqrt_term
+            * ((theta + T::from(2.0).unwrap() * T::from(std::f64::consts::PI).unwrap())
+                / T::from(3.0).unwrap())
+            .cos();
+        let y3 = sqrt_term
+            * ((theta + T::from(4.0).unwrap() * T::from(std::f64::consts::PI).unwrap())
+                / T::from(3.0).unwrap())
+            .cos();
 
         let x1 = y1 - p_over_3;
         let x2 = y2 - p_over_3;
@@ -740,8 +750,13 @@ where
         Ok(vec![x1, x2, x3])
     } else {
         // One real root
-        let u = (-r_new / T::from(2.0).unwrap() + (discriminant / T::from(-108.0).unwrap()).sqrt()).cbrt();
-        let v = if u.is_zero() { T::zero() } else { -q_new / (T::from(3.0).unwrap() * u) };
+        let u = (-r_new / T::from(2.0).unwrap() + (discriminant / T::from(-108.0).unwrap()).sqrt())
+            .cbrt();
+        let v = if u.is_zero() {
+            T::zero()
+        } else {
+            -q_new / (T::from(3.0).unwrap() * u)
+        };
 
         let y = u + v;
         let x = y - p_over_3;
@@ -782,7 +797,8 @@ mod tests {
     fn test_tridiagonal_solver_2x2() {
         let alpha = vec![2.0, 3.0];
         let beta = vec![1.0];
-        let (eigenvalues, _eigenvectors) = solve_tridiagonal_eigenproblem(&alpha, &beta, 2).unwrap();
+        let (eigenvalues, _eigenvectors) =
+            solve_tridiagonal_eigenproblem(&alpha, &beta, 2).unwrap();
 
         assert_eq!(eigenvalues.len(), 2);
         // Eigenvalues should be sorted in descending order
@@ -794,11 +810,11 @@ mod tests {
         // Test x³ - 6x² + 11x - 6 = 0, which has roots 1, 2, 3
         let roots = solve_cubic(-6.0, 11.0, -6.0).unwrap();
         assert_eq!(roots.len(), 3);
-        
+
         // Sort roots for comparison
         let mut sorted_roots = roots;
         sorted_roots.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
+
         assert!((sorted_roots[0] - 1.0).abs() < 1e-10);
         assert!((sorted_roots[1] - 2.0).abs() < 1e-10);
         assert!((sorted_roots[2] - 3.0).abs() < 1e-10);

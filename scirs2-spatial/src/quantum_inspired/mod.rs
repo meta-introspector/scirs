@@ -115,13 +115,13 @@
 //! - Dynamical decoupling for coherence preservation
 //! - Error mitigation techniques for NISQ-era compatibility
 
-use crate::spatial_error::{SpatialError, SpatialResult};
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2};
 use std::collections::HashMap;
 
 // Re-export core concepts
 pub mod concepts;
-pub use concepts::{QuantumState, QuantumAmplitude};
+pub use concepts::{QuantumAmplitude, QuantumState};
 
 // Re-export algorithms
 pub mod algorithms;
@@ -354,13 +354,15 @@ impl QuantumSpatialFramework {
     }
 
     /// Create quantum nearest neighbor searcher with framework configuration
-    pub fn create_quantum_nn(&self, points: &ndarray::ArrayView2<'_, f64>) -> SpatialResult<QuantumNearestNeighbor> {
-        QuantumNearestNeighbor::new(points)
-            .map(|nn| nn
-                .with_quantum_encoding(true)
+    pub fn create_quantum_nn(
+        &self,
+        points: &ndarray::ArrayView2<'_, f64>,
+    ) -> SpatialResult<QuantumNearestNeighbor> {
+        QuantumNearestNeighbor::new(points).map(|nn| {
+            nn.with_quantum_encoding(true)
                 .with_amplitude_amplification(true)
                 .with_grover_iterations(3)
-            )
+        })
     }
 
     /// Validate quantum configuration
@@ -392,7 +394,7 @@ impl QuantumSpatialFramework {
         let quantum_state_size = (1 << self.quantum_config.num_qubits) * 16; // Complex64 = 16 bytes
         let classical_data_size = num_points * num_dims * 8; // f64 = 8 bytes
         let cache_overhead = self.state_cache.len() * quantum_state_size;
-        
+
         quantum_state_size + classical_data_size + cache_overhead
     }
 }
@@ -439,7 +441,7 @@ mod tests {
     fn test_clusterer_creation() {
         let framework = QuantumSpatialFramework::default();
         let clusterer = framework.create_quantum_clusterer(3);
-        
+
         assert_eq!(clusterer.num_clusters(), 3);
         assert_eq!(clusterer.quantum_depth(), 4);
     }
@@ -448,7 +450,7 @@ mod tests {
     fn test_memory_estimation() {
         let framework = QuantumSpatialFramework::default();
         let memory_usage = framework.estimate_memory_usage(100, 3);
-        
+
         // Should be reasonable estimate (> 0)
         assert!(memory_usage > 0);
     }
@@ -457,7 +459,7 @@ mod tests {
     fn test_cache_operations() {
         let mut framework = QuantumSpatialFramework::default();
         assert_eq!(framework.cache_size(), 0);
-        
+
         framework.clear_cache();
         assert_eq!(framework.cache_size(), 0);
     }
@@ -465,10 +467,10 @@ mod tests {
     #[test]
     fn test_config_update() {
         let mut framework = QuantumSpatialFramework::default();
-        
+
         let mut new_config = QuantumConfig::default();
         new_config.num_qubits = 16;
-        
+
         framework.update_quantum_config(new_config);
         assert_eq!(framework.quantum_config().num_qubits, 16);
     }

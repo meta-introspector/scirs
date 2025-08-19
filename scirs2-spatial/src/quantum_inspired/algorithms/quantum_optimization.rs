@@ -5,7 +5,7 @@
 //! problems in spatial domains. The algorithms use quantum superposition and interference
 //! to explore solution spaces more efficiently than classical methods.
 
-use crate::spatial_error::{SpatialError, SpatialResult};
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2};
 use std::f64::consts::PI;
 
@@ -193,7 +193,8 @@ impl QuantumSpatialOptimizer {
     ) -> SpatialResult<Vec<usize>> {
         let n = flow_matrix.nrows();
 
-        if n != flow_matrix.ncols() || n != distance_matrix.nrows() || n != distance_matrix.ncols() {
+        if n != flow_matrix.ncols() || n != distance_matrix.nrows() || n != distance_matrix.ncols()
+        {
             return Err(SpatialError::InvalidInput(
                 "All matrices must be square and of the same size".to_string(),
             ));
@@ -218,7 +219,8 @@ impl QuantumSpatialOptimizer {
                 )?;
             }
 
-            let expectation = self.calculate_qap_expectation(&quantum_state, flow_matrix, distance_matrix);
+            let expectation =
+                self.calculate_qap_expectation(&quantum_state, flow_matrix, distance_matrix);
             self.update_parameters(expectation, iteration);
         }
 
@@ -273,9 +275,13 @@ impl QuantumSpatialOptimizer {
                         if i != k && j != l {
                             let qubit1 = (i * n + j).min(max_qubits - 1);
                             let qubit2 = (k * n + l).min(max_qubits - 1);
-                            
-                            if qubit1 < state.numqubits && qubit2 < state.numqubits && qubit1 != qubit2 {
-                                let cost_weight = flow_matrix[[i, k]] * distance_matrix[[j, l]] / 1000.0;
+
+                            if qubit1 < state.numqubits
+                                && qubit2 < state.numqubits
+                                && qubit1 != qubit2
+                            {
+                                let cost_weight =
+                                    flow_matrix[[i, k]] * distance_matrix[[j, l]] / 1000.0;
                                 let phase_angle = gamma * cost_weight;
                                 state.controlled_rotation(qubit1, qubit2, phase_angle)?;
                             }
@@ -307,7 +313,11 @@ impl QuantumSpatialOptimizer {
     ///
     /// Estimates the expected cost of the TSP solution by sampling multiple
     /// measurements from the quantum state.
-    fn calculate_tsp_expectation(&self, state: &QuantumState, distance_matrix: &Array2<f64>) -> f64 {
+    fn calculate_tsp_expectation(
+        &self,
+        state: &QuantumState,
+        distance_matrix: &Array2<f64>,
+    ) -> f64 {
         let mut expectation = 0.0;
         let n_cities = distance_matrix.nrows();
         let num_samples = 100;
@@ -541,7 +551,7 @@ mod tests {
             .with_max_iterations(200)
             .with_learning_rate(0.05)
             .with_tolerance(1e-8);
-        
+
         assert_eq!(optimizer.max_iterations, 200);
         assert_eq!(optimizer.learning_rate(), 0.05);
         assert_eq!(optimizer.tolerance, 1e-8);
@@ -549,21 +559,18 @@ mod tests {
 
     #[test]
     fn test_simple_tsp() {
-        let distance_matrix = Array2::from_shape_vec((3, 3), vec![
-            0.0, 1.0, 2.0,
-            1.0, 0.0, 1.5,
-            2.0, 1.5, 0.0
-        ]).unwrap();
+        let distance_matrix =
+            Array2::from_shape_vec((3, 3), vec![0.0, 1.0, 2.0, 1.0, 0.0, 1.5, 2.0, 1.5, 0.0])
+                .unwrap();
 
-        let mut optimizer = QuantumSpatialOptimizer::new(2)
-            .with_max_iterations(10);
-        
+        let mut optimizer = QuantumSpatialOptimizer::new(2).with_max_iterations(10);
+
         let result = optimizer.solve_tsp(&distance_matrix);
         assert!(result.is_ok());
-        
+
         let tour = result.unwrap();
         assert_eq!(tour.len(), 3);
-        
+
         // Check that all cities are included
         let mut cities_included = [false; 3];
         for &city in &tour {
@@ -576,10 +583,8 @@ mod tests {
 
     #[test]
     fn test_invalid_distance_matrix() {
-        let distance_matrix = Array2::from_shape_vec((2, 3), vec![
-            0.0, 1.0, 2.0,
-            1.0, 0.0, 1.5
-        ]).unwrap();
+        let distance_matrix =
+            Array2::from_shape_vec((2, 3), vec![0.0, 1.0, 2.0, 1.0, 0.0, 1.5]).unwrap();
 
         let mut optimizer = QuantumSpatialOptimizer::new(1);
         let result = optimizer.solve_tsp(&distance_matrix);
@@ -588,37 +593,27 @@ mod tests {
 
     #[test]
     fn test_qap_solving() {
-        let flow_matrix = Array2::from_shape_vec((2, 2), vec![
-            0.0, 3.0,
-            2.0, 0.0
-        ]).unwrap();
-        
-        let distance_matrix = Array2::from_shape_vec((2, 2), vec![
-            0.0, 5.0,
-            5.0, 0.0
-        ]).unwrap();
+        let flow_matrix = Array2::from_shape_vec((2, 2), vec![0.0, 3.0, 2.0, 0.0]).unwrap();
 
-        let mut optimizer = QuantumSpatialOptimizer::new(1)
-            .with_max_iterations(5);
-        
+        let distance_matrix = Array2::from_shape_vec((2, 2), vec![0.0, 5.0, 5.0, 0.0]).unwrap();
+
+        let mut optimizer = QuantumSpatialOptimizer::new(1).with_max_iterations(5);
+
         let result = optimizer.solve_qap(&flow_matrix, &distance_matrix);
         assert!(result.is_ok());
-        
+
         let assignment = result.unwrap();
         assert_eq!(assignment.len(), 2);
     }
 
     #[test]
     fn test_cost_history_tracking() {
-        let distance_matrix = Array2::from_shape_vec((3, 3), vec![
-            0.0, 1.0, 2.0,
-            1.0, 0.0, 1.5,
-            2.0, 1.5, 0.0
-        ]).unwrap();
+        let distance_matrix =
+            Array2::from_shape_vec((3, 3), vec![0.0, 1.0, 2.0, 1.0, 0.0, 1.5, 2.0, 1.5, 0.0])
+                .unwrap();
 
-        let mut optimizer = QuantumSpatialOptimizer::new(1)
-            .with_max_iterations(5);
-        
+        let mut optimizer = QuantumSpatialOptimizer::new(1).with_max_iterations(5);
+
         optimizer.solve_tsp(&distance_matrix).unwrap();
         assert!(!optimizer.cost_history().is_empty());
         assert!(optimizer.cost_history().len() <= 5);

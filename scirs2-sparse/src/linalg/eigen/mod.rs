@@ -3,18 +3,20 @@
 //! This module provides a comprehensive set of eigenvalue solvers for sparse matrices,
 //! organized by algorithm type and matrix properties.
 
-pub mod power_iteration;
-pub mod lanczos;
-pub mod symmetric;
 pub mod general;
 pub mod generalized;
+pub mod lanczos;
+pub mod power_iteration;
+pub mod symmetric;
 
 // Re-export main types and functions for convenience
-pub use power_iteration::{PowerIterationOptions, power_iteration};
-pub use lanczos::{LanczosOptions, EigenResult, lanczos};
-pub use symmetric::{eigsh, eigsh_shift_invert, eigsh_shift_invert_enhanced};
 pub use general::eigs;
-pub use generalized::{eigsh_generalized, eigsh_generalized_enhanced, GeneralizedEigenSolverConfig};
+pub use generalized::{
+    eigsh_generalized, eigsh_generalized_enhanced, GeneralizedEigenSolverConfig,
+};
+pub use lanczos::{lanczos, EigenResult, LanczosOptions};
+pub use power_iteration::{power_iteration, PowerIterationOptions};
+pub use symmetric::{eigsh, eigsh_shift_invert, eigsh_shift_invert_enhanced};
 
 // Common eigenvalue result type
 pub use lanczos::EigenResult as CommonEigenResult;
@@ -169,7 +171,7 @@ where
         + 'static,
 {
     let (n, _) = matrix.shape();
-    
+
     let selected_strategy = match strategy {
         EigenSolverStrategy::Auto => {
             // Automatic selection based on problem characteristics
@@ -204,13 +206,24 @@ where
         }
         EigenSolverStrategy::Symmetric => {
             let opts = config.to_lanczos_options();
-            let result = symmetric::eigsh(matrix, Some(config.num_eigenvalues), Some(&config.which), Some(opts))?;
+            let result = symmetric::eigsh(
+                matrix,
+                Some(config.num_eigenvalues),
+                Some(&config.which),
+                Some(opts),
+            )?;
             Ok(result)
         }
         EigenSolverStrategy::ShiftInvert => {
             // For shift-invert, we need a target value - use 0.0 as default
             let opts = config.to_lanczos_options();
-            let result = symmetric::eigsh_shift_invert(matrix, T::zero(), Some(config.num_eigenvalues), Some(&config.which), Some(opts))?;
+            let result = symmetric::eigsh_shift_invert(
+                matrix,
+                T::zero(),
+                Some(config.num_eigenvalues),
+                Some(&config.which),
+                Some(opts),
+            )?;
             Ok(result)
         }
         EigenSolverStrategy::Auto => {
@@ -262,7 +275,8 @@ mod tests {
         let matrix = SymCsrMatrix::new(data, indices, indptr, (2, 2)).unwrap();
 
         let config = EigenSolverConfig::new().with_num_eigenvalues(1);
-        let result = solve_eigenvalues(&matrix, &config, EigenSolverStrategy::PowerIteration).unwrap();
+        let result =
+            solve_eigenvalues(&matrix, &config, EigenSolverStrategy::PowerIteration).unwrap();
 
         assert!(result.converged);
         assert_eq!(result.eigenvalues.len(), 1);

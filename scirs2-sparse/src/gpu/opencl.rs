@@ -2,8 +2,8 @@
 //!
 //! This module provides OpenCL-specific implementations for sparse matrix operations.
 
-use crate::error::{SparseError, SparseResult};
 use crate::csr_array::CsrArray;
+use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
@@ -139,22 +139,18 @@ impl OpenCLSpMatVec {
     #[cfg(feature = "gpu")]
     pub fn compile_kernels(&mut self, device: &super::GpuDevice) -> Result<(), super::GpuError> {
         // Compile basic kernel
-        self.kernel_handle = Some(
-            device
-                .compile_kernel(OPENCL_SPMV_KERNEL_SOURCE, "spmv_csr_kernel")?
-        );
+        self.kernel_handle =
+            Some(device.compile_kernel(OPENCL_SPMV_KERNEL_SOURCE, "spmv_csr_kernel")?);
 
         // Compile workgroup-optimized kernel
-        self.workgroup_kernel = Some(
-            device
-                .compile_kernel(OPENCL_SPMV_KERNEL_SOURCE, "spmv_csr_workgroup_kernel")?
-        );
+        self.workgroup_kernel =
+            Some(device.compile_kernel(OPENCL_SPMV_KERNEL_SOURCE, "spmv_csr_workgroup_kernel")?);
 
         // Compile vectorized kernel
-        self.vectorized_kernel = Some(
-            device
-                .compile_kernel(OPENCL_VECTORIZED_KERNEL_SOURCE, "spmv_csr_vectorized_kernel")?
-        );
+        self.vectorized_kernel = Some(device.compile_kernel(
+            OPENCL_VECTORIZED_KERNEL_SOURCE,
+            "spmv_csr_vectorized_kernel",
+        )?);
 
         Ok(())
     }
@@ -271,9 +267,7 @@ impl OpenCLSpMatVec {
 
         // Configure work group parameters based on optimization level
         let (work_group_size, local_memory_size) = match optimization_level {
-            OpenCLOptimizationLevel::Basic => {
-                (self.platform_info.max_work_group_size.min(64), 0)
-            }
+            OpenCLOptimizationLevel::Basic => (self.platform_info.max_work_group_size.min(64), 0),
             OpenCLOptimizationLevel::Workgroup => {
                 let wg_size = self.platform_info.max_work_group_size.min(128);
                 (wg_size, wg_size * std::mem::size_of::<f32>())
@@ -324,7 +318,11 @@ impl OpenCLSpMatVec {
 
     /// Select optimal kernel based on matrix characteristics
     #[cfg(feature = "gpu")]
-    fn select_optimal_kernel<T>(&self, rows: usize, matrix: &CsrArray<T>) -> SparseResult<super::GpuKernelHandle>
+    fn select_optimal_kernel<T>(
+        &self,
+        rows: usize,
+        matrix: &CsrArray<T>,
+    ) -> SparseResult<super::GpuKernelHandle>
     where
         T: Float + Debug + Copy,
     {
@@ -339,7 +337,9 @@ impl OpenCLSpMatVec {
             } else if let Some(ref kernel) = self.kernel_handle {
                 Ok(kernel.clone())
             } else {
-                Err(SparseError::ComputationError("No OpenCL kernels available".to_string()))
+                Err(SparseError::ComputationError(
+                    "No OpenCL kernels available".to_string(),
+                ))
             }
         } else if avg_nnz_per_row > 20.0 && self.platform_info.max_work_group_size >= 128 {
             // Dense-ish matrix, use workgroup kernel
@@ -348,14 +348,18 @@ impl OpenCLSpMatVec {
             } else if let Some(ref kernel) = self.kernel_handle {
                 Ok(kernel.clone())
             } else {
-                Err(SparseError::ComputationError("No OpenCL kernels available".to_string()))
+                Err(SparseError::ComputationError(
+                    "No OpenCL kernels available".to_string(),
+                ))
             }
         } else {
             // Default to basic kernel
             if let Some(ref kernel) = self.kernel_handle {
                 Ok(kernel.clone())
             } else {
-                Err(SparseError::ComputationError("No OpenCL kernels available".to_string()))
+                Err(SparseError::ComputationError(
+                    "No OpenCL kernels available".to_string(),
+                ))
             }
         }
     }
@@ -485,7 +489,7 @@ impl OpenCLMemoryManager {
     /// Get optimal work group size for the current platform
     pub fn optimal_work_group_size(&self, problem_size: usize) -> usize {
         let max_wg_size = self.platform_info.max_work_group_size;
-        
+
         // For small problems, use smaller work groups
         if problem_size < 1000 {
             max_wg_size.min(64)
@@ -506,7 +510,7 @@ impl OpenCLMemoryManager {
         }
 
         let avg_nnz_per_row = matrix.nnz() as f64 / matrix.shape().0 as f64;
-        
+
         // Vectorization is beneficial for sparse matrices with moderate sparsity
         avg_nnz_per_row >= 4.0 && avg_nnz_per_row <= 32.0
     }
@@ -545,7 +549,10 @@ mod tests {
 
         assert_ne!(basic, workgroup);
         assert_ne!(workgroup, vectorized);
-        assert_eq!(OpenCLOptimizationLevel::default(), OpenCLOptimizationLevel::Basic);
+        assert_eq!(
+            OpenCLOptimizationLevel::default(),
+            OpenCLOptimizationLevel::Basic
+        );
     }
 
     #[test]
@@ -578,7 +585,7 @@ mod tests {
         let manager = OpenCLMemoryManager::new();
         assert_eq!(manager.allocated_buffers.len(), 0);
         assert!(manager.platform_info.max_work_group_size > 0);
-        
+
         // Test work group size selection
         let wg_size_small = manager.optimal_work_group_size(500);
         let wg_size_large = manager.optimal_work_group_size(50000);
@@ -589,7 +596,7 @@ mod tests {
     fn test_kernel_sources() {
         assert!(!OPENCL_SPMV_KERNEL_SOURCE.is_empty());
         assert!(!OPENCL_VECTORIZED_KERNEL_SOURCE.is_empty());
-        
+
         // Check that kernels contain expected function names
         assert!(OPENCL_SPMV_KERNEL_SOURCE.contains("spmv_csr_kernel"));
         assert!(OPENCL_SPMV_KERNEL_SOURCE.contains("spmv_csr_workgroup_kernel"));

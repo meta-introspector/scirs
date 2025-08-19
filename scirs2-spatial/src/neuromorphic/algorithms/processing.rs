@@ -4,7 +4,7 @@
 //! including event-driven computation, memristive crossbar arrays, and temporal
 //! dynamics for spatial data processing.
 
-use crate::spatial_error::{SpatialError, SpatialResult};
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array2, ArrayView2};
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
@@ -42,7 +42,7 @@ use super::super::core::SpikeEvent;
 ///
 /// // Encode spatial data as neuromorphic events
 /// let events = processor.encode_spatial_events(&points.view()).unwrap();
-/// 
+///
 /// // Process events through neuromorphic pipeline
 /// let processed_events = processor.process_events(&events).unwrap();
 /// ```
@@ -183,12 +183,8 @@ impl NeuromorphicProcessor {
                 if self.temporal_coding {
                     // Timing-based encoding
                     let spike_time = normalized_coord * 100.0; // Map to [0, 100] time units
-                    let event = SpikeEvent::new(
-                        point_idx * n_dims + dim,
-                        spike_time,
-                        1.0,
-                        point.to_vec(),
-                    );
+                    let event =
+                        SpikeEvent::new(point_idx * n_dims + dim, spike_time, 1.0, point.to_vec());
                     events.push(event);
                 } else {
                     // Rate-based encoding
@@ -295,8 +291,8 @@ impl NeuromorphicProcessor {
             // Generate output spike if current exceeds threshold
             if output_current > self.crossbar_threshold {
                 let output_event = SpikeEvent::new(
-                    rows + col,                        // Offset for output neurons
-                    event.timestamp() + 0.1,          // Small delay
+                    rows + col,              // Offset for output neurons
+                    event.timestamp() + 0.1, // Small delay
                     output_current,
                     event.spatial_coords().to_vec(),
                 );
@@ -323,9 +319,8 @@ impl NeuromorphicProcessor {
         let current_conductance = self.conductances[[row, col]];
 
         // Simple memristive update rule
-        let conductance_change = self.memristive_learning_rate 
-            * spike_amplitude 
-            * (1.0 - current_conductance);
+        let conductance_change =
+            self.memristive_learning_rate * spike_amplitude * (1.0 - current_conductance);
 
         self.conductances[[row, col]] += conductance_change;
         self.conductances[[row, col]] = self.conductances[[row, col]].clamp(0.0, 1.0);
@@ -473,7 +468,7 @@ impl NeuromorphicProcessor {
                 "Crossbar indices out of bounds".to_string(),
             ));
         }
-        
+
         self.conductances[[row, col]] = value.clamp(0.0, 1.0);
         Ok(())
     }
@@ -510,7 +505,7 @@ mod tests {
             .with_temporal_coding(true)
             .with_crossbar_size(32, 32)
             .with_processing_params(500, 0.7, 0.01);
-        
+
         assert!(processor.is_memristive_enabled());
         assert!(processor.is_temporal_coding_enabled());
         assert_eq!(processor.crossbar_size(), (32, 32));
@@ -523,30 +518,34 @@ mod tests {
     fn test_spatial_event_encoding() {
         let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
         let processor = NeuromorphicProcessor::new();
-        
+
         let events = processor.encode_spatial_events(&points.view()).unwrap();
-        
+
         // Should generate events for each coordinate
         assert!(!events.is_empty());
-        
+
         // Events should be sorted by timestamp
         for i in 1..events.len() {
-            assert!(events[i-1].timestamp() <= events[i].timestamp());
+            assert!(events[i - 1].timestamp() <= events[i].timestamp());
         }
     }
 
     #[test]
     fn test_temporal_vs_rate_coding() {
         let points = Array2::from_shape_vec((1, 2), vec![1.0, 2.0]).unwrap();
-        
+
         // Rate coding
         let processor_rate = NeuromorphicProcessor::new().with_temporal_coding(false);
-        let events_rate = processor_rate.encode_spatial_events(&points.view()).unwrap();
-        
+        let events_rate = processor_rate
+            .encode_spatial_events(&points.view())
+            .unwrap();
+
         // Temporal coding
         let processor_temporal = NeuromorphicProcessor::new().with_temporal_coding(true);
-        let events_temporal = processor_temporal.encode_spatial_events(&points.view()).unwrap();
-        
+        let events_temporal = processor_temporal
+            .encode_spatial_events(&points.view())
+            .unwrap();
+
         // Different coding schemes should produce different numbers of events
         // (temporal coding typically produces fewer events)
         assert!(events_temporal.len() <= events_rate.len());
@@ -558,10 +557,10 @@ mod tests {
         let mut processor = NeuromorphicProcessor::new()
             .with_memristive_crossbar(false)
             .with_temporal_coding(false);
-        
+
         let events = processor.encode_spatial_events(&points.view()).unwrap();
         let processed_events = processor.process_events(&events).unwrap();
-        
+
         // Without crossbar, should have same number of events
         assert_eq!(events.len(), processed_events.len());
         assert!(processor.pipeline_length() > 0);
@@ -573,13 +572,13 @@ mod tests {
         let mut processor = NeuromorphicProcessor::new()
             .with_memristive_crossbar(true)
             .with_crossbar_size(4, 4);
-        
+
         let events = processor.encode_spatial_events(&points.view()).unwrap();
         let processed_events = processor.process_events(&events).unwrap();
-        
+
         // Memristive crossbar might generate additional output events
         assert!(!processed_events.is_empty());
-        
+
         let stats = processor.get_crossbar_statistics();
         assert!(stats.contains_key("avg_conductance"));
         assert!(stats.contains_key("max_conductance"));
@@ -590,15 +589,15 @@ mod tests {
         let mut processor = NeuromorphicProcessor::new()
             .with_memristive_crossbar(true)
             .with_crossbar_size(4, 4);
-        
+
         // Test setting and getting conductance
         processor.set_conductance(0, 0, 0.8).unwrap();
         assert_eq!(processor.get_conductance(0, 0), Some(0.8));
-        
+
         // Test bounds checking
         assert!(processor.set_conductance(10, 10, 0.5).is_err());
         assert_eq!(processor.get_conductance(10, 10), None);
-        
+
         // Test clamping
         processor.set_conductance(1, 1, 2.0).unwrap(); // Should be clamped to 1.0
         assert_eq!(processor.get_conductance(1, 1), Some(1.0));
@@ -606,25 +605,24 @@ mod tests {
 
     #[test]
     fn test_processor_reset() {
-        let mut processor = NeuromorphicProcessor::new()
-            .with_memristive_crossbar(true);
-        
+        let mut processor = NeuromorphicProcessor::new().with_memristive_crossbar(true);
+
         // Process some events to change state
         let points = Array2::from_shape_vec((1, 1), vec![1.0]).unwrap();
         let events = processor.encode_spatial_events(&points.view()).unwrap();
         processor.process_events(&events).unwrap();
-        
+
         assert!(processor.pipeline_length() > 0);
-        
+
         // Reset should clear pipeline
         processor.clear_pipeline();
         assert_eq!(processor.pipeline_length(), 0);
-        
+
         // Reset crossbar should reinitialize conductances
         let initial_stats = processor.get_crossbar_statistics();
         processor.reset_crossbar();
         let reset_stats = processor.get_crossbar_statistics();
-        
+
         // Conductances might be different after reset
         assert!(initial_stats.contains_key("avg_conductance"));
         assert!(reset_stats.contains_key("avg_conductance"));
@@ -634,7 +632,7 @@ mod tests {
     fn test_empty_input() {
         let points = Array2::zeros((0, 2));
         let processor = NeuromorphicProcessor::new();
-        
+
         let events = processor.encode_spatial_events(&points.view()).unwrap();
         assert!(events.is_empty());
     }

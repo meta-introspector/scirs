@@ -4,7 +4,7 @@
 //! used throughout the quantum-inspired spatial algorithms. It includes quantum
 //! state representations, quantum gates, and basic quantum operations.
 
-use crate::spatial_error::{SpatialError, SpatialResult};
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::Array1;
 use num_complex::Complex64;
 use rand::Rng;
@@ -390,7 +390,12 @@ impl QuantumState {
 
     /// Normalize the quantum state
     pub fn normalize(&mut self) {
-        let norm: f64 = self.amplitudes.iter().map(|amp| amp.norm_sqr()).sum::<f64>().sqrt();
+        let norm: f64 = self
+            .amplitudes
+            .iter()
+            .map(|amp| amp.norm_sqr())
+            .sum::<f64>()
+            .sqrt();
         if norm > 1e-10 {
             for amp in self.amplitudes.iter_mut() {
                 *amp /= norm;
@@ -404,7 +409,11 @@ impl QuantumState {
     }
 
     /// Set the amplitude for a specific basis state
-    pub fn set_amplitude(&mut self, state: usize, amplitude: QuantumAmplitude) -> SpatialResult<()> {
+    pub fn set_amplitude(
+        &mut self,
+        state: usize,
+        amplitude: QuantumAmplitude,
+    ) -> SpatialResult<()> {
         if state >= self.amplitudes.len() {
             return Err(SpatialError::InvalidInput(
                 "State index out of range".to_string(),
@@ -435,7 +444,7 @@ mod tests {
         let state = QuantumState::uniform_superposition(2);
         assert_eq!(state.num_qubits(), 2);
         assert_eq!(state.num_states(), 4);
-        
+
         // Each state should have equal probability
         for i in 0..4 {
             assert!((state.probability(i) - 0.25).abs() < 1e-10);
@@ -447,7 +456,7 @@ mod tests {
     fn test_hadamard_gate() {
         let mut state = QuantumState::zero_state(1);
         state.hadamard(0).unwrap();
-        
+
         // Should create equal superposition
         assert!((state.probability(0) - 0.5).abs() < 1e-10);
         assert!((state.probability(1) - 0.5).abs() < 1e-10);
@@ -458,7 +467,7 @@ mod tests {
     fn test_pauli_x_gate() {
         let mut state = QuantumState::zero_state(1);
         state.pauli_x(0).unwrap();
-        
+
         // Should flip |0⟩ to |1⟩
         assert_eq!(state.probability(0), 0.0);
         assert_eq!(state.probability(1), 1.0);
@@ -469,7 +478,7 @@ mod tests {
     fn test_phase_rotation() {
         let mut state = QuantumState::uniform_superposition(1);
         state.phase_rotation(0, PI).unwrap();
-        
+
         // Should apply -1 phase to |1⟩ component
         assert!(state.is_normalized());
         assert!((state.probability(0) - 0.5).abs() < 1e-10);
@@ -482,7 +491,7 @@ mod tests {
         // First create entanglement
         state.hadamard(0).unwrap();
         state.controlled_rotation(0, 1, PI).unwrap();
-        
+
         assert!(state.is_normalized());
         // Should be entangled Bell state
         assert!((state.probability(0) - 0.5).abs() < 1e-10);
@@ -521,7 +530,7 @@ mod tests {
             Complex64::new(0.0, 0.0),
         ]);
         let mut state = QuantumState::new(amplitudes).unwrap();
-        
+
         assert!(!state.is_normalized());
         state.normalize();
         assert!(state.is_normalized());

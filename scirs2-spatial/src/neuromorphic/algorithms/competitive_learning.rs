@@ -4,7 +4,7 @@
 //! winner-take-all dynamics, homeostatic plasticity, and multi-timescale adaptation
 //! for spatial data clustering and pattern discovery.
 
-use crate::spatial_error::{SpatialError, SpatialResult};
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use rand::Rng;
 use std::collections::VecDeque;
@@ -73,13 +73,16 @@ impl CompetitiveNeuralClusterer {
 
         // Initialize inhibition matrix
         let inhibition_strengths =
-            Array2::from_shape_fn((num_clusters, num_clusters), |(i, j)| {
-                if i == j {
-                    0.0
-                } else {
-                    0.1
-                }
-            });
+            Array2::from_shape_fn(
+                (num_clusters, num_clusters),
+                |(i, j)| {
+                    if i == j {
+                        0.0
+                    } else {
+                        0.1
+                    }
+                },
+            );
 
         Self {
             neurons,
@@ -259,19 +262,19 @@ impl CompetitiveNeuralClusterer {
     pub fn reset(&mut self) {
         let mut rng = rand::rng();
         let input_dims = self.neurons[0].len();
-        
+
         // Reinitialize neuron weights
         for neuron in &mut self.neurons {
             for weight in neuron.iter_mut() {
                 *weight = rng.random_range(0.0..1.0);
             }
         }
-        
+
         // Reset learning rates
         for rate in &mut self.learning_rates {
             *rate = 0.1;
         }
-        
+
         // Reset inhibition strengths
         let num_clusters = self.neurons.len();
         for i in 0..num_clusters {
@@ -811,7 +814,11 @@ impl MetaplasticityController {
 
     /// Compute metaplastic modulation
     pub fn compute_modulation(&self, neuron_idx: usize, error: f64) -> f64 {
-        let meta_var_avg = self.metaplastic_variables.row(neuron_idx).mean().unwrap_or(1.0);
+        let meta_var_avg = self
+            .metaplastic_variables
+            .row(neuron_idx)
+            .mean()
+            .unwrap_or(1.0);
 
         // Higher metaplastic variable means lower plasticity (harder to change)
         let modulation = 1.0 / (1.0 + meta_var_avg);
@@ -935,9 +942,8 @@ mod tests {
 
     #[test]
     fn test_competitive_clustering() {
-        let points = Array2::from_shape_vec((4, 2), vec![
-            0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0
-        ]).unwrap();
+        let points =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         let mut clusterer = CompetitiveNeuralClusterer::new(2, 2);
         let result = clusterer.fit(&points.view(), 10);
@@ -959,13 +965,12 @@ mod tests {
 
     #[test]
     fn test_homeostatic_clustering() {
-        let points = Array2::from_shape_vec((4, 2), vec![
-            0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0
-        ]).unwrap();
+        let points =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
-        let mut clusterer = HomeostaticNeuralClusterer::new(2, 2)
-            .with_homeostatic_params(0.1, 100.0);
-        
+        let mut clusterer =
+            HomeostaticNeuralClusterer::new(2, 2).with_homeostatic_params(0.1, 100.0);
+
         let result = clusterer.fit(&points.view(), 10);
         assert!(result.is_ok());
 
@@ -979,7 +984,7 @@ mod tests {
     #[test]
     fn test_homeostatic_neuron() {
         let mut neuron = HomeostaticNeuron::new();
-        
+
         // Test membrane potential update
         neuron.update_membrane_potential(1.0, 10.0);
         assert!(neuron.membrane_potential > 0.0);
@@ -1012,7 +1017,7 @@ mod tests {
     #[test]
     fn test_metaplasticity_controller() {
         let controller = MetaplasticityController::new(2, 3);
-        
+
         let modulation = controller.compute_modulation(0, 0.5);
         assert!(modulation > 0.0);
         assert!(modulation.is_finite());
@@ -1021,10 +1026,10 @@ mod tests {
     #[test]
     fn test_multi_timescale_adaptation() {
         let mut adaptation = MultiTimescaleAdaptation::new();
-        
+
         // Test update
         adaptation.update(0.5, 1.0);
-        
+
         let factor = adaptation.get_adaptation_factor();
         assert!(factor > 0.0);
         assert!(factor.is_finite());
@@ -1034,9 +1039,9 @@ mod tests {
     fn test_adaptation_scale() {
         let mut scale = AdaptationScale::new(10.0, 0.5);
         let initial_trace = scale.memory_trace;
-        
+
         scale.update(0.2, 1.0);
-        
+
         // Memory trace should have changed
         assert_ne!(scale.memory_trace, initial_trace);
         assert!(scale.memory_trace >= 0.0);
@@ -1046,7 +1051,7 @@ mod tests {
     #[test]
     fn test_empty_input() {
         let points = Array2::zeros((0, 2));
-        
+
         let mut competitive = CompetitiveNeuralClusterer::new(2, 2);
         let result = competitive.fit(&points.view(), 10);
         assert!(result.is_ok());
@@ -1062,7 +1067,7 @@ mod tests {
     fn test_dimension_mismatch() {
         let points = Array2::zeros((4, 3)); // Wrong dimension
         let mut clusterer = HomeostaticNeuralClusterer::new(2, 2);
-        
+
         let result = clusterer.fit(&points.view(), 10);
         assert!(result.is_err());
     }
@@ -1070,10 +1075,10 @@ mod tests {
     #[test]
     fn test_competitive_reset() {
         let mut clusterer = CompetitiveNeuralClusterer::new(2, 2);
-        
+
         // Modify some parameters
         clusterer.learning_rates[0] = 0.5;
-        
+
         // Reset should restore initial state
         clusterer.reset();
         assert_eq!(clusterer.learning_rates[0], 0.1);

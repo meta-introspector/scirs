@@ -4,7 +4,7 @@
 //! crossbar arrays with multiple device types, advanced plasticity mechanisms,
 //! homeostatic regulation, metaplasticity, and neuromodulation for spatial learning.
 
-use crate::spatial_error::{SpatialError, SpatialResult};
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use rand::Rng;
 use std::collections::VecDeque;
@@ -698,7 +698,8 @@ impl AdvancedMemristiveLearning {
             if mechanism.enabled {
                 match mechanism.mechanism_type {
                     PlasticityType::STDP => {
-                        self.apply_stdp_plasticity(input, output, &mechanism).await?;
+                        self.apply_stdp_plasticity(input, output, &mechanism)
+                            .await?;
                     }
                     PlasticityType::HomeostaticScaling => {
                         self.apply_homeostatic_scaling(input, output, &mechanism)
@@ -1512,7 +1513,7 @@ mod tests {
             AdvancedMemristiveLearning::new(4, 4, MemristiveDeviceType::TitaniumDioxide);
         let hfo2_system = AdvancedMemristiveLearning::new(4, 4, MemristiveDeviceType::HafniumOxide);
         let pcm_system = AdvancedMemristiveLearning::new(4, 4, MemristiveDeviceType::PhaseChange);
-        
+
         assert!(matches!(
             tio2_system.device_type(),
             MemristiveDeviceType::TitaniumDioxide
@@ -1531,7 +1532,10 @@ mod tests {
     fn test_plasticity_mechanism_creation() {
         let stdp_mechanism = PlasticityMechanism::new(PlasticityType::STDP);
         assert!(stdp_mechanism.enabled);
-        assert!(matches!(stdp_mechanism.mechanism_type, PlasticityType::STDP));
+        assert!(matches!(
+            stdp_mechanism.mechanism_type,
+            PlasticityType::STDP
+        ));
         assert!(stdp_mechanism.learning_rates.potentiation_rate > 0.0);
     }
 
@@ -1553,13 +1557,23 @@ mod tests {
             AdvancedMemristiveLearning::new(4, 4, MemristiveDeviceType::PhaseChange)
                 .with_forgetting_protection(true);
         assert!(learning_system.forgetting_protection);
-        assert!(learning_system.metaplasticity.forgetting_protection.ewc_enabled);
+        assert!(
+            learning_system
+                .metaplasticity
+                .forgetting_protection
+                .ewc_enabled
+        );
 
         let no_protection_system =
             AdvancedMemristiveLearning::new(4, 4, MemristiveDeviceType::PhaseChange)
                 .with_forgetting_protection(false);
         assert!(!no_protection_system.forgetting_protection);
-        assert!(!no_protection_system.metaplasticity.forgetting_protection.ewc_enabled);
+        assert!(
+            !no_protection_system
+                .metaplasticity
+                .forgetting_protection
+                .ewc_enabled
+        );
     }
 
     #[tokio::test]
@@ -1577,17 +1591,17 @@ mod tests {
     fn test_device_nonlinearity() {
         let learning_system =
             AdvancedMemristiveLearning::new(2, 2, MemristiveDeviceType::TitaniumDioxide);
-        
+
         // Test TiO2 nonlinearity
         let linear_current = 0.1;
         let nonlinear_current = learning_system.apply_device_nonlinearity(linear_current, 0, 0);
         assert!(nonlinear_current.is_finite());
-        
+
         // Test with HfO2
         let hfo2_system = AdvancedMemristiveLearning::new(2, 2, MemristiveDeviceType::HafniumOxide);
         let hfo2_output = hfo2_system.apply_device_nonlinearity(linear_current, 0, 0);
         assert!(hfo2_output.is_finite());
-        
+
         // Test with Phase Change Memory
         let pcm_system = AdvancedMemristiveLearning::new(2, 2, MemristiveDeviceType::PhaseChange);
         let pcm_output = pcm_system.apply_device_nonlinearity(linear_current, 0, 0);
@@ -1598,14 +1612,14 @@ mod tests {
     async fn test_memristive_training() {
         let mut learning_system =
             AdvancedMemristiveLearning::new(2, 1, MemristiveDeviceType::TitaniumDioxide);
-        
+
         let spatial_data = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let target_outputs = array![0.0, 1.0, 1.0, 0.0]; // XOR pattern
-        
+
         let result = learning_system
             .train_spatial_data(&spatial_data.view(), &target_outputs.view(), 5)
             .await;
-        
+
         assert!(result.is_ok());
         let training_result = result.unwrap();
         assert_eq!(training_result.training_metrics.len(), 5);
@@ -1623,7 +1637,7 @@ mod tests {
             crossbar.device_type,
             MemristiveDeviceType::SilverSulfide
         ));
-        
+
         // Check that resistances are inverse of conductances (approximately)
         for i in 0..4 {
             for j in 0..3 {
@@ -1640,22 +1654,22 @@ mod tests {
     fn test_device_aging_and_variability() {
         let mut learning_system =
             AdvancedMemristiveLearning::new(2, 2, MemristiveDeviceType::Organic);
-        
+
         // Store initial conductance
         let initial_conductance = learning_system.crossbar_array.conductances[[0, 0]];
-        
+
         // Apply aging
         learning_system.apply_device_aging(0, 0);
         let aged_conductance = learning_system.crossbar_array.conductances[[0, 0]];
-        
+
         // Conductance should be equal or slightly reduced (aging effect is small)
         assert!(aged_conductance <= initial_conductance);
-        
+
         // Apply variability
         let pre_variability = learning_system.crossbar_array.conductances[[0, 0]];
         learning_system.apply_device_variability(0, 0);
         let post_variability = learning_system.crossbar_array.conductances[[0, 0]];
-        
+
         // Variability should cause some change (might be very small)
         assert!(post_variability >= 0.0 && post_variability <= 1.0);
     }
@@ -1666,7 +1680,7 @@ mod tests {
             AdvancedMemristiveLearning::new(4, 4, MemristiveDeviceType::TitaniumDioxide)
                 .enable_plasticity(PlasticityType::CalciumDependent)
                 .enable_plasticity(PlasticityType::VoltageDependent);
-        
+
         // Check that mechanisms are properly configured
         let enabled_mechanisms: Vec<_> = learning_system
             .plasticity_mechanisms
@@ -1674,7 +1688,7 @@ mod tests {
             .filter(|m| m.enabled)
             .map(|m| &m.mechanism_type)
             .collect();
-        
+
         assert!(!enabled_mechanisms.is_empty());
     }
 
@@ -1682,7 +1696,7 @@ mod tests {
     fn test_learning_history_tracking() {
         let learning_system =
             AdvancedMemristiveLearning::new(3, 3, MemristiveDeviceType::MagneticTunnelJunction);
-        
+
         let history = learning_system.learning_history();
         assert_eq!(history.max_history_length, 1000);
         assert!(history.weight_changes.is_empty());

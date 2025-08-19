@@ -857,41 +857,41 @@ mod utils;
 // Quantum-inspired spatial algorithms for cutting-edge optimization
 pub mod quantum_inspired;
 pub use quantum_inspired::{
+    // Re-export from algorithms submodule
+    algorithms::QuantumSpatialOptimizer,
+    ErrorCorrectionConfig,
+    ErrorCorrectionType,
+    OptimizationConfig,
+    OptimizerType,
+    PerformanceMetrics,
     QuantumAmplitude,
     QuantumClusterer,
-    QuantumFeatureMapType,
-    QuantumGateType,
-    // Advanced quantum machine learning components
-    QuantumKernelMachine,
-    QuantumKernelParams,
+    // Configuration types
+    QuantumConfig,
     QuantumNearestNeighbor,
-    QuantumParameterOptimizer,
-    QuantumSpatialOptimizer,
+    QuantumSpatialFramework,
     QuantumState,
-    QuantumTSPSolution,
-    QuantumTSPSolver,
-    QuantumVariationalClassifier,
 };
 
 // Neuromorphic computing acceleration for brain-inspired spatial processing
 pub mod neuromorphic;
 pub use neuromorphic::{
-    AdaptationScale,
+    // Core neuromorphic components
+    AdaptiveSpikingNeuron,
+    // Clustering algorithms
     CompetitiveNeuralClusterer,
-    DendriticCompartment,
-    DendriticNeuron,
-    DendriticSpatialClusterer,
-    GlobalLearningParams,
-    // Advanced neuromorphic learning algorithms
     HomeostaticNeuralClusterer,
-    HomeostaticNeuron,
-    LearningRateAdaptation,
-    LocalLearningParams,
-    MetaplasticityController,
-    MultiTimescaleAdaptation,
+    HomeostaticSynapse,
+    MetaplasticSynapse,
+    NetworkStats,
+    NeuromorphicCapability,
+    // Configuration
+    NeuromorphicConfig,
+    NeuromorphicFactory,
+    // Processing
     NeuromorphicProcessor,
-    SomaCompartment,
     SpikeEvent,
+    SpikeSequence,
     SpikingNeuralClusterer,
     SpikingNeuron,
     Synapse,

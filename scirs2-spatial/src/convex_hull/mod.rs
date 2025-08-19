@@ -109,8 +109,8 @@
 //! - Degenerate point configurations
 //! - Numerical precision issues
 
-pub mod core;
 pub mod algorithms;
+pub mod core;
 pub mod geometry;
 pub mod properties;
 
@@ -119,20 +119,20 @@ pub use core::{ConvexHull, ConvexHullAlgorithm};
 
 // Re-export algorithm functions
 pub use algorithms::{
-    compute_qhull, compute_graham_scan, compute_jarvis_march, 
-    recommend_algorithm, get_algorithm_complexity
+    compute_graham_scan, compute_jarvis_march, compute_qhull, get_algorithm_complexity,
+    recommend_algorithm,
 };
 
 // Re-export geometry utilities (most commonly used ones)
 pub use geometry::{
-    cross_product_2d, cross_product_3d, tetrahedron_volume, triangle_area_3d,
-    compute_polygon_area, compute_polygon_perimeter, compute_polyhedron_volume
+    compute_polygon_area, compute_polygon_perimeter, compute_polyhedron_volume, cross_product_2d,
+    cross_product_3d, tetrahedron_volume, triangle_area_3d,
 };
 
 // Re-export properties functions
 pub use properties::{
-    compute_volume, compute_surface_area, check_point_containment,
-    analyze_hull, get_hull_statistics
+    analyze_hull, check_point_containment, compute_surface_area, compute_volume,
+    get_hull_statistics,
 };
 
 // Main convenience functions for backward compatibility with original API
@@ -164,7 +164,9 @@ pub use properties::{
 /// assert!(hull_vertices.nrows() >= 3);
 /// ```
 #[allow(dead_code)]
-pub fn convex_hull(points: &ndarray::ArrayView2<'_, f64>) -> crate::error::SpatialResult<ndarray::Array2<f64>> {
+pub fn convex_hull(
+    points: &ndarray::ArrayView2<'_, f64>,
+) -> crate::error::SpatialResult<ndarray::Array2<f64>> {
     let hull = ConvexHull::new(points)?;
     Ok(hull.vertices_array())
 }
@@ -211,13 +213,13 @@ pub mod advanced {
     //! research applications, and debugging purposes.
 
     use super::*;
-    
+
     /// Detailed performance metrics for hull computation
     #[derive(Debug, Clone)]
     pub struct HullComputationMetrics {
         /// Time taken for hull computation (if measured)
         pub computation_time: Option<std::time::Duration>,
-        /// Memory usage during computation (if measured) 
+        /// Memory usage during computation (if measured)
         pub memory_usage: Option<usize>,
         /// Number of iterations/steps in the algorithm
         pub algorithm_steps: Option<usize>,
@@ -240,26 +242,28 @@ pub mod advanced {
     ///
     /// * Results from different algorithms with comparison metrics
     pub fn compare_algorithms(
-        points: &ndarray::ArrayView2<'_, f64>
-    ) -> crate::error::SpatialResult<Vec<(ConvexHullAlgorithm, crate::error::SpatialResult<ConvexHull>)>> {
+        points: &ndarray::ArrayView2<'_, f64>,
+    ) -> crate::error::SpatialResult<
+        Vec<(ConvexHullAlgorithm, crate::error::SpatialResult<ConvexHull>)>,
+    > {
         let mut results = Vec::new();
-        
+
         // Always try QHull
         results.push((
-            ConvexHullAlgorithm::QHull, 
-            ConvexHull::new_with_algorithm(points, ConvexHullAlgorithm::QHull)
+            ConvexHullAlgorithm::QHull,
+            ConvexHull::new_with_algorithm(points, ConvexHullAlgorithm::QHull),
         ));
 
         // For 2D, also try other algorithms
         if points.ncols() == 2 && points.nrows() >= 3 {
             results.push((
                 ConvexHullAlgorithm::GrahamScan,
-                ConvexHull::new_with_algorithm(points, ConvexHullAlgorithm::GrahamScan)
+                ConvexHull::new_with_algorithm(points, ConvexHullAlgorithm::GrahamScan),
             ));
-            
+
             results.push((
                 ConvexHullAlgorithm::JarvisMarch,
-                ConvexHull::new_with_algorithm(points, ConvexHullAlgorithm::JarvisMarch)
+                ConvexHull::new_with_algorithm(points, ConvexHullAlgorithm::JarvisMarch),
             ));
         }
 
@@ -281,7 +285,7 @@ pub mod advanced {
     /// * Validation results and any issues found
     pub fn validate_hull(
         hull: &ConvexHull,
-        original_points: &ndarray::ArrayView2<'_, f64>
+        original_points: &ndarray::ArrayView2<'_, f64>,
     ) -> crate::error::SpatialResult<Vec<String>> {
         let mut issues = Vec::new();
 
@@ -289,11 +293,15 @@ pub mod advanced {
         for i in 0..original_points.nrows() {
             let point = original_points.row(i);
             let point_slice = point.as_slice().unwrap();
-            
+
             // Check if this point is a hull vertex
             let is_vertex = hull.vertex_indices().iter().any(|&idx| {
                 let vertex = hull.points.row(idx);
-                vertex.as_slice().unwrap().iter().zip(point_slice.iter())
+                vertex
+                    .as_slice()
+                    .unwrap()
+                    .iter()
+                    .zip(point_slice.iter())
                     .all(|(a, b)| (a - b).abs() < 1e-10)
             });
 
@@ -367,12 +375,14 @@ mod tests {
         ]);
 
         // Test with Graham scan
-        let hull_vertices = convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).unwrap();
+        let hull_vertices =
+            convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).unwrap();
         assert_eq!(hull_vertices.nrows(), 3); // Should exclude interior point
         assert_eq!(hull_vertices.ncols(), 2);
 
         // Test with Jarvis march
-        let hull_vertices = convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::JarvisMarch).unwrap();
+        let hull_vertices =
+            convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::JarvisMarch).unwrap();
         assert_eq!(hull_vertices.nrows(), 3); // Should exclude interior point
         assert_eq!(hull_vertices.ncols(), 2);
     }
@@ -381,12 +391,7 @@ mod tests {
     fn test_backward_compatibility() {
         // Test that the new modular implementation produces the same results
         // as the original monolithic implementation would have
-        let points = arr2(&[
-            [0.0, 0.0],
-            [1.0, 0.0],
-            [1.0, 1.0],
-            [0.0, 1.0],
-        ]);
+        let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
         let hull = ConvexHull::new(&points.view()).unwrap();
         let vertices = hull.vertices();
@@ -402,7 +407,7 @@ mod tests {
         let volume = hull.volume().unwrap();
         let area = hull.area().unwrap();
         assert!((volume - 1.0).abs() < 1e-10); // Unit square area
-        assert!((area - 4.0).abs() < 1e-10);   // Unit square perimeter
+        assert!((area - 4.0).abs() < 1e-10); // Unit square perimeter
 
         // Check containment
         assert!(hull.contains([0.5, 0.5]).unwrap()); // Center should be inside
@@ -437,7 +442,7 @@ mod tests {
 
         assert_eq!(hull.ndim(), 3);
         assert!(hull.vertex_indices().len() >= 4); // At least tetrahedron vertices
-        
+
         // Interior point should be inside
         assert!(hull.contains([0.25, 0.25, 0.25]).unwrap());
         // Far point should be outside

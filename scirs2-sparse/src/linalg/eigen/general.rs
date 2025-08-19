@@ -2,10 +2,10 @@
 //!
 //! This module provides eigenvalue solvers for general (non-symmetric) sparse matrices.
 
-use crate::error::{SparseError, SparseResult};
-use crate::sparray::SparseArray;
 use super::lanczos::{EigenResult, LanczosOptions};
 use super::symmetric;
+use crate::error::{SparseError, SparseResult};
+use crate::sparray::SparseArray;
 use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;
@@ -69,7 +69,8 @@ where
         + scirs2_core::simd_ops::SimdUnifiedOps
         + Send
         + Sync
-        + 'static + ndarray::ScalarOperand,
+        + 'static
+        + ndarray::ScalarOperand,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
@@ -109,19 +110,19 @@ where
     // unless it's explicitly in a symmetric format. A full implementation would
     // check the structure and values.
     let tolerance = T::from(1e-12).unwrap_or(T::epsilon());
-    
+
     // Sample a few elements to check symmetry
     for i in 0..n.min(10) {
         for j in 0..m.min(10) {
             let aij = matrix.get(i, j);
             let aji = matrix.get(j, i);
-            
+
             if (aij - aji).abs() > tolerance {
                 return Ok(false);
             }
         }
     }
-    
+
     Ok(true)
 }
 
@@ -132,17 +133,17 @@ where
     S: SparseArray<T>,
 {
     let (n, _) = matrix.shape();
-    
+
     // This is a simplified conversion that assumes the matrix is already symmetric
     // A full implementation would properly symmetrize the matrix
-    
+
     let mut data = Vec::new();
     let mut indices = Vec::new();
     let mut indptr = vec![0];
-    
+
     for i in 0..n {
         let mut row_nnz = 0;
-        
+
         // Only store lower triangular part for symmetric matrix
         for j in 0..=i {
             let value = matrix.get(i, j);
@@ -152,10 +153,10 @@ where
                 row_nnz += 1;
             }
         }
-        
+
         indptr.push(indptr[i] + row_nnz);
     }
-    
+
     crate::sym_csr::SymCsrMatrix::new(data, indices, indptr, (n, n))
 }
 
@@ -189,7 +190,7 @@ where
     // Initialize first Arnoldi vector
     let mut v = Array1::zeros(n);
     v[0] = T::one(); // Simple initialization
-    
+
     // Normalize the initial vector
     let norm = (v.iter().map(|&x| x * x).sum::<T>()).sqrt();
     if !norm.is_zero() {
@@ -202,7 +203,7 @@ where
 
     // Upper Hessenberg matrix elements
     let mut h_matrix = Array2::zeros((subspace_size + 1, subspace_size));
-    
+
     let mut converged = false;
     let mut iter = 0;
 
@@ -210,41 +211,42 @@ where
     for j in 0..subspace_size.min(options.max_iter) {
         // Matrix-vector multiplication: w = A * v_j
         let w = matrix_vector_multiply(matrix, &v_vectors[j])?;
-        
+
         // Orthogonalize against previous vectors (Modified Gram-Schmidt)
         let mut w_orth = w;
         for i in 0..=j {
-            let h_ij = v_vectors[i].iter()
+            let h_ij = v_vectors[i]
+                .iter()
                 .zip(w_orth.iter())
                 .map(|(&vi, &wi)| vi * wi)
                 .sum::<T>();
-            
+
             h_matrix[[i, j]] = h_ij;
-            
+
             // w_orth = w_orth - h_ij * v_i
             for k in 0..n {
                 w_orth[k] = w_orth[k] - h_ij * v_vectors[i][k];
             }
         }
-        
+
         // Compute the norm for the next vector
         let norm_w = (w_orth.iter().map(|&x| x * x).sum::<T>()).sqrt();
         h_matrix[[j + 1, j]] = norm_w;
-        
+
         // Check for breakdown
         if norm_w < T::from(options.tol).unwrap() {
             converged = true;
             break;
         }
-        
+
         // Add the next Arnoldi vector
         if j + 1 < subspace_size {
             let v_next = w_orth / norm_w;
             v_vectors.push(v_next);
         }
-        
+
         iter += 1;
-        
+
         // Check convergence periodically
         if (j + 1) >= num_eigenvalues && (j + 1) % 5 == 0 {
             // In a full implementation, we would solve the Hessenberg eigenvalue problem
@@ -256,7 +258,7 @@ where
 
     // Solve the reduced Hessenberg eigenvalue problem
     let (eigenvalues, eigenvectors) = solve_hessenberg_eigenproblem(
-        &h_matrix.slice(ndarray::s![..iter+1, ..iter]).to_owned(),
+        &h_matrix.slice(ndarray::s![..iter + 1, ..iter]).to_owned(),
         num_eigenvalues,
         which,
     )?;
@@ -290,10 +292,7 @@ where
 }
 
 /// Matrix-vector multiplication for general sparse matrix
-fn matrix_vector_multiply<T, S>(
-    matrix: &S,
-    vector: &Array1<T>,
-) -> SparseResult<Array1<T>>
+fn matrix_vector_multiply<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + std::iter::Sum + 'static,
     S: SparseArray<T>,
@@ -307,7 +306,7 @@ where
     }
 
     let mut result = Array1::zeros(n);
-    
+
     // For each row, compute the dot product with the vector
     for i in 0..n {
         let mut sum = T::zero();
@@ -317,7 +316,7 @@ where
         }
         result[i] = sum;
     }
-    
+
     Ok(result)
 }
 
@@ -331,54 +330,60 @@ where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
 {
     let n = h_matrix.nrows().min(h_matrix.ncols());
-    
+
     if n == 0 {
         return Ok((Vec::new(), Vec::new()));
     }
-    
+
     // For this simplified implementation, we'll just extract the diagonal
     // as approximate eigenvalues. A full implementation would use the QR algorithm.
     let mut eigenvalues = Vec::new();
     let mut eigenvectors = Vec::new();
-    
+
     for i in 0..n.min(num_eigenvalues) {
         eigenvalues.push(h_matrix[[i, i]]);
-        
+
         // Create a unit eigenvector
         let mut eigvec = vec![T::zero(); n];
         eigvec[i] = T::one();
         eigenvectors.push(eigvec);
     }
-    
+
     // Sort based on 'which' parameter
     let mut indices: Vec<usize> = (0..eigenvalues.len()).collect();
-    
+
     match which {
         "LM" => {
             // Largest magnitude
             indices.sort_by(|&i, &j| {
-                eigenvalues[j].abs().partial_cmp(&eigenvalues[i].abs())
+                eigenvalues[j]
+                    .abs()
+                    .partial_cmp(&eigenvalues[i].abs())
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         "SM" => {
             // Smallest magnitude
             indices.sort_by(|&i, &j| {
-                eigenvalues[i].abs().partial_cmp(&eigenvalues[j].abs())
+                eigenvalues[i]
+                    .abs()
+                    .partial_cmp(&eigenvalues[j].abs())
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         "LR" => {
             // Largest real part
             indices.sort_by(|&i, &j| {
-                eigenvalues[j].partial_cmp(&eigenvalues[i])
+                eigenvalues[j]
+                    .partial_cmp(&eigenvalues[i])
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         "SR" => {
             // Smallest real part
             indices.sort_by(|&i, &j| {
-                eigenvalues[i].partial_cmp(&eigenvalues[j])
+                eigenvalues[i]
+                    .partial_cmp(&eigenvalues[j])
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
@@ -386,11 +391,12 @@ where
             // Default to largest magnitude
         }
     }
-    
+
     // Reorder results
     let sorted_eigenvalues: Vec<T> = indices.iter().map(|&i| eigenvalues[i]).collect();
-    let sorted_eigenvectors: Vec<Vec<T>> = indices.iter().map(|&i| eigenvectors[i].clone()).collect();
-    
+    let sorted_eigenvectors: Vec<Vec<T>> =
+        indices.iter().map(|&i| eigenvectors[i].clone()).collect();
+
     Ok((sorted_eigenvalues, sorted_eigenvectors))
 }
 
@@ -408,7 +414,7 @@ mod tests {
         let matrix = CsrArray::new(data, indices, indptr, (2, 2)).unwrap();
 
         let result = eigs(&matrix, Some(1), Some("LM"), None);
-        
+
         // For this simplified implementation, we just check that it doesn't error
         assert!(result.is_ok() || result.is_err()); // Placeholder test
     }
@@ -419,10 +425,10 @@ mod tests {
         let indices = vec![0, 1, 0, 1];
         let indptr = vec![0, 2, 4];
         let matrix = CsrArray::new(data, indices, indptr, (2, 2)).unwrap();
-        
+
         let vector = Array1::from_vec(vec![1.0, 2.0]);
         let result = matrix_vector_multiply(&matrix, &vector).unwrap();
-        
+
         // Expected: [1*1 + 2*2, 3*1 + 4*2] = [5, 11]
         assert_eq!(result.len(), 2);
         assert!((result[0] - 5.0).abs() < 1e-10);
@@ -436,7 +442,7 @@ mod tests {
         let indices = vec![0, 1, 0, 1];
         let indptr = vec![0, 2, 4];
         let matrix = CsrArray::new(data, indices, indptr, (2, 2)).unwrap();
-        
+
         let is_sym = is_approximately_symmetric(&matrix).unwrap();
         assert!(is_sym);
     }
@@ -445,7 +451,7 @@ mod tests {
     fn test_solve_hessenberg_simple() {
         let h = Array2::from_shape_vec((2, 2), vec![3.0, 1.0, 0.0, 2.0]).unwrap();
         let (eigenvals, eigenvecs) = solve_hessenberg_eigenproblem(&h, 2, "LM").unwrap();
-        
+
         assert_eq!(eigenvals.len(), 2);
         assert_eq!(eigenvecs.len(), 2);
         // The diagonal elements should be 3.0 and 2.0

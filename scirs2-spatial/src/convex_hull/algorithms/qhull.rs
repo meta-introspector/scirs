@@ -3,8 +3,8 @@
 //! This module implements convex hull computation using the QHull library,
 //! which supports arbitrary dimensions and provides robust geometric calculations.
 
-use crate::error::{SpatialError, SpatialResult};
 use crate::convex_hull::core::ConvexHull;
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array2, ArrayView2};
 use qhull::Qh;
 
@@ -88,9 +88,7 @@ pub fn compute_qhull(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> 
                     } else if ndim == 3 {
                         return handle_special_case_3d(points);
                     } else {
-                        return Err(SpatialError::ComputationError(format!(
-                            "Qhull error: {e}"
-                        )));
+                        return Err(SpatialError::ComputationError(format!("Qhull error: {e}")));
                     }
                 }
             }
@@ -119,7 +117,10 @@ pub fn compute_qhull(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> 
 /// # Returns
 ///
 /// * Tuple of (vertex_indices, simplices, equations)
-fn extract_qhull_results(qh: &Qh, ndim: usize) -> (Vec<usize>, Vec<Vec<usize>>, Option<Array2<f64>>) {
+fn extract_qhull_results(
+    qh: &Qh,
+    ndim: usize,
+) -> (Vec<usize>, Vec<Vec<usize>>, Option<Array2<f64>>) {
     // Get vertex indices
     let mut vertex_indices: Vec<usize> = qh.vertices().filter_map(|v| v.index(qh)).collect();
 
@@ -390,7 +391,7 @@ mod tests {
         // Test triangle case
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
         let hull = handle_special_case_2d(&points.view()).unwrap();
-        
+
         assert_eq!(hull.ndim(), 2);
         assert_eq!(hull.vertex_indices().len(), 3);
         assert_eq!(hull.simplices().len(), 3); // Three edges
@@ -406,7 +407,7 @@ mod tests {
             [0.0, 0.0, 1.0],
         ]);
         let hull = handle_special_case_3d(&points.view()).unwrap();
-        
+
         assert_eq!(hull.ndim(), 3);
         assert_eq!(hull.vertex_indices().len(), 4);
         assert_eq!(hull.simplices().len(), 4); // Four triangular faces

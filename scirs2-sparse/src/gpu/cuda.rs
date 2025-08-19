@@ -2,8 +2,8 @@
 //!
 //! This module provides CUDA-specific implementations for sparse matrix operations.
 
-use crate::error::{SparseError, SparseResult};
 use crate::csr_array::CsrArray;
+use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use crate::sym_csr::SymCsrMatrix;
 use ndarray::{Array1, ArrayView1};
@@ -134,22 +134,16 @@ impl CudaSpMatVec {
     #[cfg(feature = "gpu")]
     pub fn compile_kernels(&mut self, device: &super::GpuDevice) -> Result<(), super::GpuError> {
         // Compile standard kernel
-        self.kernel_handle = Some(
-            device
-                .compile_kernel(CUDA_SPMV_KERNEL_SOURCE, "spmv_csr_kernel")?
-        );
+        self.kernel_handle =
+            Some(device.compile_kernel(CUDA_SPMV_KERNEL_SOURCE, "spmv_csr_kernel")?);
 
         // Compile vectorized kernel
-        self.vectorized_kernel = Some(
-            device
-                .compile_kernel(CUDA_SPMV_KERNEL_SOURCE, "spmv_csr_vectorized_kernel")?
-        );
+        self.vectorized_kernel =
+            Some(device.compile_kernel(CUDA_SPMV_KERNEL_SOURCE, "spmv_csr_vectorized_kernel")?);
 
         // Compile warp-level kernel
-        self.warp_kernel = Some(
-            device
-                .compile_kernel(CUDA_WARP_SPMV_KERNEL_SOURCE, "spmv_csr_warp_kernel")?
-        );
+        self.warp_kernel =
+            Some(device.compile_kernel(CUDA_WARP_SPMV_KERNEL_SOURCE, "spmv_csr_warp_kernel")?);
 
         Ok(())
     }
@@ -268,15 +262,11 @@ impl CudaSpMatVec {
 
         // Configure launch parameters based on optimization level
         let (grid_size, block_size, shared_memory) = match optimization_level {
-            CudaOptimizationLevel::Basic => {
-                ((rows + 255) / 256, 256, 0)
-            }
+            CudaOptimizationLevel::Basic => ((rows + 255) / 256, 256, 0),
             CudaOptimizationLevel::Vectorized => {
                 ((rows + 127) / 128, 128, 128 * std::mem::size_of::<f32>())
             }
-            CudaOptimizationLevel::WarpLevel => {
-                ((rows * 32 + 255) / 256, 256, 0)
-            }
+            CudaOptimizationLevel::WarpLevel => ((rows * 32 + 255) / 256, 256, 0),
         };
 
         // Launch kernel with optimized parameters
@@ -448,7 +438,10 @@ mod tests {
 
         assert_ne!(basic, vectorized);
         assert_ne!(vectorized, warp);
-        assert_eq!(CudaOptimizationLevel::default(), CudaOptimizationLevel::Basic);
+        assert_eq!(
+            CudaOptimizationLevel::default(),
+            CudaOptimizationLevel::Basic
+        );
     }
 
     #[test]
@@ -464,7 +457,7 @@ mod tests {
             MemoryAccessPattern::Random,
             MemoryAccessPattern::Strided,
         ];
-        
+
         // Test that all patterns are defined
         for pattern in &patterns {
             match pattern {
@@ -479,7 +472,7 @@ mod tests {
     fn test_kernel_sources() {
         assert!(!CUDA_SPMV_KERNEL_SOURCE.is_empty());
         assert!(!CUDA_WARP_SPMV_KERNEL_SOURCE.is_empty());
-        
+
         // Check that kernels contain expected function names
         assert!(CUDA_SPMV_KERNEL_SOURCE.contains("spmv_csr_kernel"));
         assert!(CUDA_SPMV_KERNEL_SOURCE.contains("spmv_csr_vectorized_kernel"));

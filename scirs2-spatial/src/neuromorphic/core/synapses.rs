@@ -4,7 +4,7 @@
 //! plasticity (STDP), metaplasticity, and homeostatic synaptic scaling. These synapses
 //! form the connections between neurons and enable learning and adaptation.
 
-use crate::spatial_error::{SpatialError, SpatialResult};
+use crate::error::{SpatialError, SpatialResult};
 use std::collections::VecDeque;
 
 /// Synaptic connection with STDP learning
@@ -287,7 +287,7 @@ impl MetaplasticSynapse {
     ) -> Self {
         let mut base_synapse = Synapse::new(pre_neuron, post_neuron, initial_weight);
         base_synapse.set_stdp_rate(base_learning_rate);
-        
+
         Self {
             base_synapse,
             learning_history: VecDeque::new(),
@@ -305,19 +305,20 @@ impl MetaplasticSynapse {
     /// * `post_spiked` - Whether post-synaptic neuron spiked
     pub fn update(&mut self, current_time: f64, pre_spiked: bool, post_spiked: bool) {
         let old_weight = self.base_synapse.weight();
-        
+
         // Update base synapse
-        self.base_synapse.update_stdp(current_time, pre_spiked, post_spiked);
-        
+        self.base_synapse
+            .update_stdp(current_time, pre_spiked, post_spiked);
+
         // Calculate weight change
         let weight_change = (self.base_synapse.weight() - old_weight).abs();
-        
+
         // Add to learning history
         self.learning_history.push_back(weight_change);
         if self.learning_history.len() > self.max_history_length {
             self.learning_history.pop_front();
         }
-        
+
         // Update learning rate based on history
         self.update_learning_rate();
     }
@@ -327,15 +328,15 @@ impl MetaplasticSynapse {
         if self.learning_history.is_empty() {
             return;
         }
-        
+
         // Calculate average recent activity
-        let avg_activity: f64 = self.learning_history.iter().sum::<f64>() 
-            / self.learning_history.len() as f64;
-        
+        let avg_activity: f64 =
+            self.learning_history.iter().sum::<f64>() / self.learning_history.len() as f64;
+
         // Adapt learning rate: decrease if high activity, increase if low activity
         let adaptation_factor = (-avg_activity / self.metaplasticity_tau).exp();
         let new_learning_rate = self.base_learning_rate * adaptation_factor;
-        
+
         self.base_synapse.set_stdp_rate(new_learning_rate);
     }
 
@@ -420,19 +421,21 @@ impl HomeostaticSynapse {
     /// * `dt` - Time step size
     pub fn update(&mut self, current_time: f64, pre_spiked: bool, post_spiked: bool, dt: f64) {
         // Update base STDP
-        self.base_synapse.update_stdp(current_time, pre_spiked, post_spiked);
-        
+        self.base_synapse
+            .update_stdp(current_time, pre_spiked, post_spiked);
+
         // Update activity estimate
         let activity_input = if post_spiked { 1.0 } else { 0.0 };
         let decay = (-dt / self.activity_tau).exp();
         self.current_activity = decay * self.current_activity + (1.0 - decay) * activity_input;
-        
+
         // Apply homeostatic scaling
         let activity_error = self.current_activity - self.target_activity;
         let scaling_factor = 1.0 - self.scaling_rate * activity_error;
-        
+
         let current_weight = self.base_synapse.weight();
-        self.base_synapse.set_weight(current_weight * scaling_factor);
+        self.base_synapse
+            .set_weight(current_weight * scaling_factor);
     }
 
     /// Get reference to base synapse
@@ -479,11 +482,11 @@ mod tests {
     fn test_stdp_potentiation() {
         let mut synapse = Synapse::new(0, 1, 0.5);
         let initial_weight = synapse.weight();
-        
+
         // Pre-synaptic spike before post-synaptic spike (potentiation)
-        synapse.update_stdp(10.0, true, false);   // Pre spike at t=10
-        synapse.update_stdp(15.0, false, true);   // Post spike at t=15
-        
+        synapse.update_stdp(10.0, true, false); // Pre spike at t=10
+        synapse.update_stdp(15.0, false, true); // Post spike at t=15
+
         // Weight should increase
         assert!(synapse.weight() > initial_weight);
     }
@@ -492,11 +495,11 @@ mod tests {
     fn test_stdp_depression() {
         let mut synapse = Synapse::new(0, 1, 0.5);
         let initial_weight = synapse.weight();
-        
+
         // Post-synaptic spike before pre-synaptic spike (depression)
-        synapse.update_stdp(10.0, false, true);   // Post spike at t=10
-        synapse.update_stdp(15.0, true, false);   // Pre spike at t=15
-        
+        synapse.update_stdp(10.0, false, true); // Post spike at t=10
+        synapse.update_stdp(15.0, true, false); // Pre spike at t=15
+
         // Weight should decrease
         assert!(synapse.weight() < initial_weight);
     }
@@ -511,11 +514,11 @@ mod tests {
     #[test]
     fn test_weight_bounds() {
         let mut synapse = Synapse::new(0, 1, 0.0);
-        
+
         // Test setting weight beyond bounds
         synapse.set_weight(10.0);
         assert_eq!(synapse.weight(), 2.0); // Should be clamped to max
-        
+
         synapse.set_weight(-10.0);
         assert_eq!(synapse.weight(), -2.0); // Should be clamped to min
     }
@@ -525,7 +528,7 @@ mod tests {
         let synapse = Synapse::new(0, 1, -0.5);
         assert!(!synapse.is_excitatory());
         assert!(synapse.is_inhibitory());
-        
+
         let current = synapse.synaptic_current(1.0);
         assert_eq!(current, -0.5);
     }
@@ -533,11 +536,11 @@ mod tests {
     #[test]
     fn test_spike_timing() {
         let mut synapse = Synapse::new(0, 1, 0.5);
-        
+
         synapse.update_stdp(10.0, true, false);
         assert_eq!(synapse.last_pre_spike(), 10.0);
         assert_eq!(synapse.time_since_pre_spike(15.0), 5.0);
-        
+
         synapse.update_stdp(12.0, false, true);
         assert_eq!(synapse.last_post_spike(), 12.0);
         assert_eq!(synapse.time_since_post_spike(15.0), 3.0);
@@ -546,16 +549,16 @@ mod tests {
     #[test]
     fn test_metaplastic_synapse() {
         let mut meta_synapse = MetaplasticSynapse::new(0, 1, 0.5, 0.01);
-        
+
         assert_eq!(meta_synapse.current_learning_rate(), 0.01);
         assert_eq!(meta_synapse.average_recent_activity(), 0.0);
-        
+
         // Simulate some activity
         for i in 0..10 {
             meta_synapse.update(i as f64, true, false);
             meta_synapse.update(i as f64 + 0.5, false, true);
         }
-        
+
         // Learning rate should adapt based on activity
         assert!(meta_synapse.average_recent_activity() > 0.0);
     }
@@ -563,15 +566,15 @@ mod tests {
     #[test]
     fn test_homeostatic_synapse() {
         let mut homeostatic = HomeostaticSynapse::new(0, 1, 0.5, 0.1);
-        
+
         assert_eq!(homeostatic.target_activity(), 0.1);
         assert_eq!(homeostatic.current_activity(), 0.0);
-        
+
         // Simulate high activity
         for _ in 0..50 {
             homeostatic.update(1.0, true, true, 0.1);
         }
-        
+
         // Activity should increase
         assert!(homeostatic.current_activity() > 0.0);
         assert!(homeostatic.activity_error() != 0.0);
@@ -580,11 +583,11 @@ mod tests {
     #[test]
     fn test_synapse_reset() {
         let mut synapse = Synapse::new(0, 1, 0.5);
-        
+
         // Record some spike activity
         synapse.update_stdp(10.0, true, false);
         synapse.update_stdp(15.0, false, true);
-        
+
         // Reset should clear spike history
         synapse.reset_spike_history();
         assert_eq!(synapse.last_pre_spike(), -1000.0);
@@ -594,7 +597,7 @@ mod tests {
     #[test]
     fn test_custom_stdp_parameters() {
         let synapse = Synapse::with_stdp_params(0, 1, 0.5, 0.05, 10.0, -1.0, 1.0);
-        
+
         assert_eq!(synapse.stdp_rate(), 0.05);
         assert_eq!(synapse.stdp_tau(), 10.0);
         assert_eq!(synapse.weight_bounds(), (-1.0, 1.0));

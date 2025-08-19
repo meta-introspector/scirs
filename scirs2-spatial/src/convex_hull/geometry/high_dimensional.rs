@@ -121,7 +121,7 @@ pub fn compute_high_dim_volume(
 }
 
 /// Estimate the area of a facet in high dimensions
-/// 
+///
 /// This is a simplified approach that works for well-formed convex hulls.
 ///
 /// # Arguments
@@ -388,7 +388,7 @@ mod tests {
             [0.0, 0.0, 0.0],
             [3.0, 0.0, 0.0],
             [0.0, 3.0, 0.0],
-            [0.0, 0.0, 3.0]
+            [0.0, 0.0, 3.0],
         ]);
         let vertices = vec![0, 1, 2, 3];
 
@@ -398,11 +398,7 @@ mod tests {
 
     #[test]
     fn test_compute_bounding_box() {
-        let points = arr2(&[
-            [0.0, 5.0, -1.0],
-            [3.0, 0.0, 2.0],
-            [1.0, 3.0, 0.0]
-        ]);
+        let points = arr2(&[[0.0, 5.0, -1.0], [3.0, 0.0, 2.0], [1.0, 3.0, 0.0]]);
         let vertices = vec![0, 1, 2];
 
         let (min_coords, max_coords) = compute_bounding_box(&points.view(), &vertices);
@@ -416,7 +412,7 @@ mod tests {
             [0.0, 0.0, 0.0],
             [2.0, 0.0, 0.0],
             [0.0, 4.0, 0.0],
-            [0.0, 0.0, 8.0]
+            [0.0, 0.0, 8.0],
         ]);
         let vertices = vec![0, 1, 2, 3];
 
@@ -433,7 +429,7 @@ mod tests {
             [1.0, 0.0, 0.0, 0.0],
             [0.0, 1.0, 0.0, 0.0],
             [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0]
+            [0.0, 0.0, 0.0, 1.0],
         ]);
         let vertices = vec![0, 1, 2, 3, 4];
 
@@ -448,7 +444,7 @@ mod tests {
             [1.0, 0.0, 0.0, 0.0],
             [0.0, 1.0, 0.0, 0.0],
             [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0]
+            [0.0, 0.0, 0.0, 1.0],
         ]);
         let vertices = vec![0, 1, 2, 3, 4];
         let equations = arr2(&[
@@ -456,10 +452,11 @@ mod tests {
             [0.0, 1.0, 0.0, 0.0, 0.0],
             [0.0, 0.0, 1.0, 0.0, 0.0],
             [0.0, 0.0, 0.0, 1.0, 0.0],
-            [-1.0, -1.0, -1.0, -1.0, 1.0]
+            [-1.0, -1.0, -1.0, -1.0, 1.0],
         ]);
 
-        let surface_area = compute_high_dim_surface_area(&points.view(), &vertices, &equations.view()).unwrap();
+        let surface_area =
+            compute_high_dim_surface_area(&points.view(), &vertices, &equations.view()).unwrap();
         assert!(surface_area >= 0.0);
     }
 
@@ -470,13 +467,10 @@ mod tests {
             [1.0, 0.0, 0.0, 0.0],
             [0.0, 1.0, 0.0, 0.0],
             [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0]
+            [0.0, 0.0, 0.0, 1.0],
         ]);
         let vertices = vec![0, 1, 2, 3, 4];
-        let equations = arr2(&[
-            [1.0, 0.0, 0.0, 0.0, 0.0],
-            [-1.0, 0.0, 0.0, 0.0, 1.0]
-        ]);
+        let equations = arr2(&[[1.0, 0.0, 0.0, 0.0, 0.0], [-1.0, 0.0, 0.0, 0.0, 1.0]]);
 
         let volume = compute_high_dim_volume(&points.view(), &vertices, &equations.view()).unwrap();
         assert!(volume >= 0.0);

@@ -52,12 +52,7 @@ impl SpikeEvent {
     ///
     /// # Returns
     /// A new `SpikeEvent` instance
-    pub fn new(
-        neuron_id: usize,
-        timestamp: f64,
-        amplitude: f64,
-        spatial_coords: Vec<f64>,
-    ) -> Self {
+    pub fn new(neuron_id: usize, timestamp: f64, amplitude: f64, spatial_coords: Vec<f64>) -> Self {
         Self {
             neuron_id,
             timestamp,
@@ -161,7 +156,7 @@ impl SpikeEvent {
 
 impl PartialEq for SpikeEvent {
     fn eq(&self, other: &Self) -> bool {
-        self.neuron_id == other.neuron_id 
+        self.neuron_id == other.neuron_id
             && (self.timestamp - other.timestamp).abs() < 1e-9
             && (self.amplitude - other.amplitude).abs() < 1e-9
             && self.spatial_coords == other.spatial_coords
@@ -184,9 +179,7 @@ pub struct SpikeSequence {
 impl SpikeSequence {
     /// Create a new empty spike sequence
     pub fn new() -> Self {
-        Self {
-            events: Vec::new(),
-        }
+        Self { events: Vec::new() }
     }
 
     /// Create a spike sequence from a vector of events
@@ -225,7 +218,8 @@ impl SpikeSequence {
 
     /// Sort events by timestamp
     pub fn sort_by_time(&mut self) {
-        self.events.sort_by(|a, b| a.timestamp.partial_cmp(&b.timestamp).unwrap());
+        self.events
+            .sort_by(|a, b| a.timestamp.partial_cmp(&b.timestamp).unwrap());
     }
 
     /// Get events within a time window
@@ -304,7 +298,7 @@ mod tests {
     #[test]
     fn test_spike_event_creation() {
         let spike = SpikeEvent::new(42, 1000.5, 1.0, vec![0.5, 0.3, 0.8]);
-        
+
         assert_eq!(spike.neuron_id(), 42);
         assert_eq!(spike.timestamp(), 1000.5);
         assert_eq!(spike.amplitude(), 1.0);
@@ -316,7 +310,7 @@ mod tests {
     fn test_temporal_distance() {
         let spike1 = SpikeEvent::new(1, 100.0, 1.0, vec![0.0]);
         let spike2 = SpikeEvent::new(2, 105.0, 1.0, vec![1.0]);
-        
+
         assert_eq!(spike1.temporal_distance(&spike2), 5.0);
         assert_eq!(spike2.temporal_distance(&spike1), 5.0);
     }
@@ -325,9 +319,9 @@ mod tests {
     fn test_spatial_distance() {
         let spike1 = SpikeEvent::new(1, 100.0, 1.0, vec![0.0, 0.0]);
         let spike2 = SpikeEvent::new(2, 105.0, 1.0, vec![3.0, 4.0]);
-        
+
         assert_eq!(spike1.spatial_distance(&spike2), Some(5.0));
-        
+
         // Test mismatched dimensions
         let spike3 = SpikeEvent::new(3, 110.0, 1.0, vec![1.0]);
         assert_eq!(spike1.spatial_distance(&spike3), None);
@@ -337,7 +331,7 @@ mod tests {
     fn test_spike_ordering() {
         let spike1 = SpikeEvent::new(1, 100.0, 1.0, vec![0.0]);
         let spike2 = SpikeEvent::new(2, 105.0, 1.0, vec![1.0]);
-        
+
         assert!(spike1.is_before(&spike2));
         assert!(spike2.is_after(&spike1));
         assert!(!spike1.is_after(&spike2));
@@ -348,16 +342,16 @@ mod tests {
     fn test_spike_sequence() {
         let mut sequence = SpikeSequence::new();
         assert!(sequence.is_empty());
-        
+
         let spike1 = SpikeEvent::new(1, 100.0, 1.0, vec![0.0]);
         let spike2 = SpikeEvent::new(2, 105.0, 1.0, vec![1.0]);
-        
+
         sequence.add_event(spike1);
         sequence.add_event(spike2);
-        
+
         assert_eq!(sequence.len(), 2);
         assert!(!sequence.is_empty());
-        
+
         let time_span = sequence.time_span().unwrap();
         assert_eq!(time_span.0, 100.0);
         assert_eq!(time_span.1, 105.0);
@@ -370,7 +364,7 @@ mod tests {
         sequence.add_event(SpikeEvent::new(2, 100.0, 1.0, vec![1.0]));
         sequence.add_event(SpikeEvent::new(3, 105.0, 1.0, vec![2.0]));
         sequence.add_event(SpikeEvent::new(4, 110.0, 1.0, vec![3.0]));
-        
+
         let windowed_events = sequence.events_in_window(100.0, 105.0);
         assert_eq!(windowed_events.len(), 2);
         assert_eq!(windowed_events[0].neuron_id, 2);
@@ -384,13 +378,13 @@ mod tests {
         sequence.add_event(SpikeEvent::new(1, 105.0, 1.0, vec![0.0]));
         sequence.add_event(SpikeEvent::new(1, 110.0, 1.0, vec![0.0]));
         sequence.add_event(SpikeEvent::new(2, 107.0, 1.0, vec![1.0]));
-        
+
         // Neuron 1 has 3 spikes in 10 time units = 0.3 spikes per unit
         assert_eq!(sequence.firing_rate(1, 10.0), 0.3);
-        
+
         // Neuron 2 has 1 spike in 10 time units = 0.1 spikes per unit
         assert_eq!(sequence.firing_rate(2, 10.0), 0.1);
-        
+
         // Non-existent neuron
         assert_eq!(sequence.firing_rate(99, 10.0), 0.0);
     }

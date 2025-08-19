@@ -4,9 +4,11 @@
 //! the convex hull by starting from the leftmost point and "wrapping" around the
 //! point set by repeatedly finding the most counterclockwise point.
 
-use crate::error::{SpatialError, SpatialResult};
 use crate::convex_hull::core::ConvexHull;
-use crate::convex_hull::geometry::calculations_2d::{cross_product_2d, distance_squared_2d, compute_2d_hull_equations};
+use crate::convex_hull::geometry::calculations_2d::{
+    compute_2d_hull_equations, cross_product_2d, distance_squared_2d,
+};
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::ArrayView2;
 use qhull::Qh;
 
@@ -89,8 +91,7 @@ pub fn compute_jarvis_march(points: &ArrayView2<'_, f64>) -> SpatialResult<Conve
 
             // If cross product is positive, i is more counterclockwise than next
             if cross > 0.0
-                || (cross == 0.0
-                    && distance_squared_2d(p1, p3) > distance_squared_2d(p1, p2))
+                || (cross == 0.0 && distance_squared_2d(p1, p3) > distance_squared_2d(p1, p2))
             {
                 next = i;
             }
@@ -215,7 +216,9 @@ pub fn find_most_counterclockwise(
         let cross = cross_product_2d(p1, p2, p3);
 
         // If cross product is positive, i is more counterclockwise than best
-        if cross > 0.0 || (cross == 0.0 && distance_squared_2d(p1, p3) > distance_squared_2d(p1, p2)) {
+        if cross > 0.0
+            || (cross == 0.0 && distance_squared_2d(p1, p3) > distance_squared_2d(p1, p2))
+        {
             best = i;
         }
     }
@@ -252,7 +255,7 @@ pub fn is_more_counterclockwise(
     candidate: [f64; 2],
 ) -> bool {
     let cross = cross_product_2d(reference, current_best, candidate);
-    
+
     if cross > 0.0 {
         true // Candidate is more counterclockwise
     } else if cross == 0.0 {
@@ -292,10 +295,10 @@ pub fn is_more_counterclockwise(
 /// ```
 pub fn jarvis_step(points: &ArrayView2<'_, f64>, current: usize) -> usize {
     let npoints = points.nrows();
-    
+
     // Find the first point that's not the current point
     let mut next = if current == 0 { 1 } else { 0 };
-    
+
     // Find the most counterclockwise point
     for i in 0..npoints {
         if i == current {
@@ -342,15 +345,10 @@ mod tests {
 
     #[test]
     fn test_jarvis_march_square() {
-        let points = arr2(&[
-            [0.0, 0.0],
-            [1.0, 0.0],
-            [1.0, 1.0],
-            [0.0, 1.0],
-        ]);
+        let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
         let hull = compute_jarvis_march(&points.view()).unwrap();
-        
+
         assert_eq!(hull.ndim(), 2);
         assert_eq!(hull.vertex_indices().len(), 4); // All points should be vertices
     }
@@ -359,7 +357,7 @@ mod tests {
     fn test_find_leftmost_point() {
         let points = arr2(&[[1.0, 0.0], [0.0, 1.0], [2.0, 0.0], [0.0, 0.0]]);
         let leftmost = find_leftmost_point(&points.view());
-        
+
         // Should be either index 1 or 3 (both have x = 0.0)
         assert!(leftmost == 1 || leftmost == 3);
     }
@@ -381,7 +379,11 @@ mod tests {
         let candidate = [0.0, 1.0];
 
         assert!(is_more_counterclockwise(reference, current_best, candidate));
-        assert!(!is_more_counterclockwise(reference, candidate, current_best));
+        assert!(!is_more_counterclockwise(
+            reference,
+            candidate,
+            current_best
+        ));
     }
 
     #[test]
@@ -418,7 +420,7 @@ mod tests {
         ]);
 
         let hull = compute_jarvis_march(&points.view()).unwrap();
-        
+
         // Should form a triangle with the non-collinear points
         assert_eq!(hull.vertex_indices().len(), 3);
         // The point above the line should be included
@@ -436,7 +438,7 @@ mod tests {
         ]);
 
         let hull = compute_jarvis_march(&points.view()).unwrap();
-        
+
         // Should still form a valid triangle
         assert_eq!(hull.vertex_indices().len(), 3);
     }

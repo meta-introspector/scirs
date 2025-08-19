@@ -96,16 +96,16 @@
 //! - h = number of hull vertices  
 //! - d = dimension
 
-pub mod qhull;
 pub mod graham_scan;
 pub mod jarvis_march;
+pub mod qhull;
 pub mod special_cases;
 
 // Re-export the main computation functions for convenience
-pub use qhull::compute_qhull;
 pub use graham_scan::compute_graham_scan;
 pub use jarvis_march::compute_jarvis_march;
-pub use special_cases::{handle_degenerate_case, is_all_collinear, has_all_identical_points};
+pub use qhull::compute_qhull;
+pub use special_cases::{handle_degenerate_case, has_all_identical_points, is_all_collinear};
 
 /// Algorithm performance characteristics for selection guidance
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -144,7 +144,7 @@ pub fn get_algorithm_complexity(
     dimension: usize,
 ) -> (AlgorithmComplexity, AlgorithmComplexity, Option<usize>) {
     use crate::convex_hull::core::ConvexHullAlgorithm;
-    
+
     match algorithm {
         ConvexHullAlgorithm::QHull => {
             let time_complexity = if dimension <= 3 {
@@ -154,12 +154,16 @@ pub fn get_algorithm_complexity(
             };
             (time_complexity, AlgorithmComplexity::NLogN, None) // No dimension limit
         }
-        ConvexHullAlgorithm::GrahamScan => {
-            (AlgorithmComplexity::NLogN, AlgorithmComplexity::NLogN, Some(2))
-        }
-        ConvexHullAlgorithm::JarvisMarch => {
-            (AlgorithmComplexity::OutputSensitive, AlgorithmComplexity::NLogN, Some(2))
-        }
+        ConvexHullAlgorithm::GrahamScan => (
+            AlgorithmComplexity::NLogN,
+            AlgorithmComplexity::NLogN,
+            Some(2),
+        ),
+        ConvexHullAlgorithm::JarvisMarch => (
+            AlgorithmComplexity::OutputSensitive,
+            AlgorithmComplexity::NLogN,
+            Some(2),
+        ),
     }
 }
 
@@ -195,7 +199,7 @@ pub fn recommend_algorithm(
     expected_hull_size: Option<usize>,
 ) -> crate::convex_hull::core::ConvexHullAlgorithm {
     use crate::convex_hull::core::ConvexHullAlgorithm;
-    
+
     // For dimensions > 2, only QHull is available
     if dimension > 2 {
         return ConvexHullAlgorithm::QHull;
@@ -205,11 +209,11 @@ pub fn recommend_algorithm(
     if dimension == 2 {
         if let Some(hull_size) = expected_hull_size {
             // If hull is expected to be small relative to input size, use Jarvis March
-            if hull_size * (num_points as f64).log2() as usize < num_points {
+            if hull_size * ((num_points as f64).log2() as usize) < num_points {
                 return ConvexHullAlgorithm::JarvisMarch;
             }
         }
-        
+
         // For educational purposes or when you need guaranteed vertex order
         // you might prefer Graham Scan, but for general robustness, use QHull
         if num_points < 100 {

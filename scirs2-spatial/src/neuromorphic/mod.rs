@@ -88,7 +88,7 @@
 //! let result = learning_system.train_spatial_data(
 //!     &spatial_data.view(), &targets.view(), 50
 //! ).await.unwrap();
-//! println!("Training completed with final accuracy: {:.2}", 
+//! println!("Training completed with final accuracy: {:.2}",
 //!          result.training_metrics.last().unwrap().accuracy);
 //! # });
 //! ```
@@ -109,7 +109,7 @@
 //!
 //! // Encode spatial data as neuromorphic events
 //! let events = processor.encode_spatial_events(&points.view()).unwrap();
-//! 
+//!
 //! // Process events through neuromorphic pipeline
 //! let processed_events = processor.process_events(&events).unwrap();
 //! println!("Processed {} events", processed_events.len());
@@ -132,32 +132,30 @@
 //! - **Memory consolidation**: Strengthening important patterns
 //! - **Competitive dynamics**: Winner-take-all neural competition
 
-pub mod core;
 pub mod algorithms;
+pub mod core;
 
 // Re-export core components for easier access
 pub use core::events::{SpikeEvent, SpikeSequence};
-pub use core::neurons::{SpikingNeuron, AdaptiveSpikingNeuron, LeakyIntegrateFireNeuron};
-pub use core::synapses::{Synapse, MetaplasticSynapse, HomeostaticSynapse};
+pub use core::neurons::{AdaptiveSpikingNeuron, SpikingNeuron};
+pub use core::synapses::{HomeostaticSynapse, MetaplasticSynapse, Synapse};
 
 // Re-export main algorithm implementations
-pub use algorithms::spiking_clustering::{SpikingNeuralClusterer, NetworkStats};
 pub use algorithms::competitive_learning::{
-    CompetitiveNeuralClusterer, HomeostaticNeuralClusterer, HomeostaticNeuron,
+    AdaptationScale, CompetitiveNeuralClusterer, HomeostaticNeuralClusterer, HomeostaticNeuron,
     LearningRateAdaptation, MetaplasticityController, MultiTimescaleAdaptation,
-    AdaptationScale
 };
 pub use algorithms::memristive_learning::{
-    AdvancedMemristiveLearning, MemristiveCrossbar, MemristiveDeviceType,
-    PlasticityMechanism, PlasticityType, PlasticityTimeConstants, PlasticityLearningRates,
-    PlasticityThresholds, HomeostaticSystem, HomeostaticMechanism, MetaplasticityRules,
-    LearningRateAdaptation as MemristiveLearningRateAdaptation, ThresholdAdaptation,
-    ConsolidationRules, ForgettingProtectionRules, NeuromodulationSystem,
-    NeuromodulationEffects, NeuromodulatorReleasePatterns, LearningHistory,
-    PerformanceMetrics, PlasticityEvent, PlasticityEventType, ConsolidationEvent,
-    ConsolidationType, TrainingResult
+    AdvancedMemristiveLearning, ConsolidationEvent, ConsolidationRules, ConsolidationType,
+    ForgettingProtectionRules, HomeostaticMechanism, HomeostaticSystem, LearningHistory,
+    LearningRateAdaptation as MemristiveLearningRateAdaptation, MemristiveCrossbar,
+    MemristiveDeviceType, MetaplasticityRules, NeuromodulationEffects, NeuromodulationSystem,
+    NeuromodulatorReleasePatterns, PerformanceMetrics, PlasticityEvent, PlasticityEventType,
+    PlasticityLearningRates, PlasticityMechanism, PlasticityThresholds, PlasticityTimeConstants,
+    PlasticityType, ThresholdAdaptation, TrainingResult,
 };
 pub use algorithms::processing::NeuromorphicProcessor;
+pub use algorithms::spiking_clustering::{NetworkStats, SpikingNeuralClusterer};
 
 /// Neuromorphic algorithm trait for unified interface
 ///
@@ -173,13 +171,13 @@ pub trait NeuromorphicAlgorithm<T> {
 
     /// Fit the algorithm to spatial data
     fn fit(&mut self, data: &Self::Input) -> Result<Self::Output, Self::Error>;
-    
+
     /// Predict using the trained algorithm
     fn predict(&self, data: &Self::Input) -> Result<Self::Output, Self::Error>;
-    
+
     /// Get algorithm parameters
     fn parameters(&self) -> T;
-    
+
     /// Reset algorithm to initial state
     fn reset(&mut self);
 }
@@ -349,11 +347,8 @@ impl NeuromorphicFactory {
         config: &NeuromorphicConfig,
         device_type: MemristiveDeviceType,
     ) -> AdvancedMemristiveLearning {
-        let mut system = AdvancedMemristiveLearning::new(
-            config.input_dims,
-            config.num_neurons,
-            device_type,
-        );
+        let mut system =
+            AdvancedMemristiveLearning::new(config.input_dims, config.num_neurons, device_type);
 
         if config.has_capability(&NeuromorphicCapability::ForgettingProtection) {
             system = system.with_forgetting_protection(true);
@@ -388,8 +383,8 @@ impl NeuromorphicFactory {
 /// Utility functions for working with neuromorphic algorithms and data.
 pub mod utils {
     use super::*;
+    use crate::error::SpatialResult;
     use ndarray::{Array1, Array2, ArrayView2};
-    use crate::spatial_error::SpatialResult;
 
     /// Convert spatial data to spike events
     ///
@@ -408,17 +403,13 @@ pub mod utils {
                 // Normalize value to [0, 1] and scale to spike rate
                 let normalized = (value + 10.0) / 20.0; // Assume data in [-10, 10]
                 let spike_rate = normalized.clamp(0.0, 1.0) * max_rate;
-                
+
                 // Generate Poisson spike train
                 let num_spikes = (spike_rate * time_window) as usize;
                 for spike_idx in 0..num_spikes {
                     let timestamp = (spike_idx as f64) * (time_window / num_spikes as f64);
-                    let event = SpikeEvent::new(
-                        point_idx * n_dims + dim,
-                        timestamp,
-                        1.0,
-                        point.to_vec(),
-                    );
+                    let event =
+                        SpikeEvent::new(point_idx * n_dims + dim, timestamp, 1.0, point.to_vec());
                     events.push(event);
                 }
             }
@@ -440,12 +431,16 @@ pub mod utils {
 
         let total_events = events.len();
         let time_span = events.last().unwrap().timestamp() - events.first().unwrap().timestamp();
-        let avg_rate = if time_span > 0.0 { total_events as f64 / time_span } else { 0.0 };
+        let avg_rate = if time_span > 0.0 {
+            total_events as f64 / time_span
+        } else {
+            0.0
+        };
 
         // Calculate inter-spike intervals
         let mut intervals = Vec::new();
         for i in 1..events.len() {
-            intervals.push(events[i].timestamp() - events[i-1].timestamp());
+            intervals.push(events[i].timestamp() - events[i - 1].timestamp());
         }
 
         let avg_interval = if !intervals.is_empty() {
@@ -457,9 +452,8 @@ pub mod utils {
         // Calculate coefficient of variation for regularity
         let interval_var = if intervals.len() > 1 {
             let mean = avg_interval;
-            let variance = intervals.iter()
-                .map(|x| (x - mean).powi(2))
-                .sum::<f64>() / intervals.len() as f64;
+            let variance =
+                intervals.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / intervals.len() as f64;
             variance.sqrt() / mean.max(1e-10)
         } else {
             0.0
@@ -471,7 +465,11 @@ pub mod utils {
             average_rate: avg_rate,
             average_interval: avg_interval,
             regularity: 1.0 / (1.0 + interval_var), // Higher = more regular
-            unique_neurons: events.iter().map(|e| e.neuron_id()).collect::<std::collections::HashSet<_>>().len(),
+            unique_neurons: events
+                .iter()
+                .map(|e| e.neuron_id())
+                .collect::<std::collections::HashSet<_>>()
+                .len(),
         }
     }
 
@@ -547,13 +545,13 @@ mod tests {
     fn test_utils_spatial_to_spikes() {
         let data = Array2::from_shape_vec((2, 2), vec![0.0, 1.0, -1.0, 0.5]).unwrap();
         let events = utils::spatial_to_spikes(&data.view(), 1.0, 10.0).unwrap();
-        
+
         // Should generate events for non-zero values
         assert!(!events.is_empty());
-        
+
         // Events should be sorted by timestamp
         for i in 1..events.len() {
-            assert!(events[i-1].timestamp() <= events[i].timestamp());
+            assert!(events[i - 1].timestamp() <= events[i].timestamp());
         }
     }
 

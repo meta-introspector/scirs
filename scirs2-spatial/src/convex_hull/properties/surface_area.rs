@@ -3,11 +3,11 @@
 //! This module provides surface area (perimeter, surface area, hypervolume)
 //! calculations for convex hulls in various dimensions.
 
-use crate::error::SpatialResult;
 use crate::convex_hull::core::ConvexHull;
 use crate::convex_hull::geometry::{
-    compute_polygon_perimeter, compute_polyhedron_surface_area, compute_high_dim_surface_area
+    compute_high_dim_surface_area, compute_polygon_perimeter, compute_polyhedron_surface_area,
 };
+use crate::error::SpatialResult;
 
 /// Compute the surface area of a convex hull
 ///
@@ -137,7 +137,7 @@ pub fn compute_surface_area_bounds(hull: &ConvexHull) -> SpatialResult<(f64, f64
 
     // For high dimensions, we may need to approximate
     let exact = compute_surface_area(hull).ok();
-    
+
     if let Some(area) = exact {
         Ok((area, area, Some(area)))
     } else {
@@ -158,13 +158,13 @@ pub fn compute_surface_area_bounds(hull: &ConvexHull) -> SpatialResult<(f64, f64
 /// * Result containing (lower_bound, upper_bound) tuple
 fn compute_geometric_surface_area_bounds(hull: &ConvexHull) -> SpatialResult<(f64, f64)> {
     use crate::convex_hull::geometry::compute_bounding_box;
-    
+
     let ndim = hull.ndim();
     let (min_coords, max_coords) = compute_bounding_box(&hull.points.view(), &hull.vertex_indices);
 
     // Compute bounding box surface area as upper bound
     let mut bbox_surface_area = 0.0;
-    
+
     if ndim == 2 {
         // Rectangle perimeter
         let width = max_coords[0] - min_coords[0];
@@ -197,7 +197,7 @@ fn compute_geometric_surface_area_bounds(hull: &ConvexHull) -> SpatialResult<(f6
         .map(|d| max_coords[d] - min_coords[d])
         .fold(0.0, |acc, x| acc + x * x)
         .sqrt();
-    
+
     let lower_bound = characteristic_size; // Very rough lower bound
     let upper_bound = bbox_surface_area;
 
@@ -231,7 +231,7 @@ fn compute_geometric_surface_area_bounds(hull: &ConvexHull) -> SpatialResult<(f6
 pub fn compute_surface_to_volume_ratio(hull: &ConvexHull) -> SpatialResult<f64> {
     let surface_area = compute_surface_area(hull)?;
     let volume = crate::convex_hull::properties::volume::compute_volume(hull)?;
-    
+
     if volume.abs() < 1e-12 {
         // Degenerate case - infinite ratio
         Ok(f64::INFINITY)
@@ -270,7 +270,7 @@ pub fn compute_compactness(hull: &ConvexHull) -> SpatialResult<f64> {
     let ndim = hull.ndim() as f64;
     let surface_area = compute_surface_area(hull)?;
     let volume = crate::convex_hull::properties::volume::compute_volume(hull)?;
-    
+
     if volume.abs() < 1e-12 || surface_area.abs() < 1e-12 {
         return Ok(0.0); // Degenerate case
     }
@@ -283,12 +283,11 @@ pub fn compute_compactness(hull: &ConvexHull) -> SpatialResult<f64> {
         2.0 * std::f64::consts::PI * (volume / std::f64::consts::PI).sqrt()
     } else if ndim == 3.0 {
         // Sphere: surface area = 4π(3V/(4π))^(2/3)
-        let radius = (3.0 * volume / (4.0 * std::f64::consts::PI)).powf(1.0/3.0);
+        let radius = (3.0 * volume / (4.0 * std::f64::consts::PI)).powf(1.0 / 3.0);
         4.0 * std::f64::consts::PI * radius * radius
     } else {
         // High-dimensional sphere (approximate)
-        let gamma = |x: f64| (2.0 * std::f64::consts::PI).powf(x / 2.0) / 
-                             tgamma_approx(x / 2.0);
+        let gamma = |x: f64| (2.0 * std::f64::consts::PI).powf(x / 2.0) / tgamma_approx(x / 2.0);
         let radius = (volume * gamma(ndim + 1.0) / gamma(ndim)).powf(1.0 / ndim);
         ndim * gamma(ndim / 2.0) * radius.powf(ndim - 1.0)
     };
@@ -344,7 +343,7 @@ pub fn is_surface_area_computation_reliable(hull: &ConvexHull) -> bool {
     let ndim = hull.ndim();
     let nvertices = hull.vertex_indices.len();
     let nsimplices = hull.simplices.len();
-    
+
     // 1D, 2D, 3D are generally reliable
     if ndim <= 3 {
         return true;
@@ -371,8 +370,8 @@ pub fn is_surface_area_computation_reliable(hull: &ConvexHull) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
     use crate::convex_hull::ConvexHull;
+    use ndarray::arr2;
 
     #[test]
     fn test_compute_2d_surface_area() {
@@ -404,7 +403,7 @@ mod tests {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
         let hull = ConvexHull::new(&points.view()).unwrap();
         let (lower, upper, exact) = compute_surface_area_bounds(&hull).unwrap();
-        
+
         assert!(exact.is_some());
         assert!((exact.unwrap() - 4.0).abs() < 1e-10);
         assert_eq!(lower, upper); // Should be exact for 2D
@@ -441,9 +440,12 @@ mod tests {
         let hull = ConvexHull::new(&points.view()).unwrap();
         assert!(is_surface_area_computation_reliable(&hull));
 
-        // 3D case - should be reliable  
+        // 3D case - should be reliable
         let points = arr2(&[
-            [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
         ]);
         let hull = ConvexHull::new(&points.view()).unwrap();
         assert!(is_surface_area_computation_reliable(&hull));

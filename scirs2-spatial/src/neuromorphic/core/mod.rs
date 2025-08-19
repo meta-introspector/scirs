@@ -4,9 +4,9 @@
 //! including spiking neurons, synapses, and spike events that form the basis of
 //! brain-inspired spatial algorithms.
 
+pub mod events;
 pub mod neurons;
 pub mod synapses;
-pub mod events;
 
 // Re-export core types for convenient access
 pub use events::SpikeEvent;

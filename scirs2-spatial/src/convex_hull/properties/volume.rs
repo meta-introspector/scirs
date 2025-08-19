@@ -3,11 +3,11 @@
 //! This module provides volume (hypervolume) calculations for convex hulls
 //! in various dimensions, using appropriate methods for each dimensionality.
 
-use crate::error::SpatialResult;
 use crate::convex_hull::core::ConvexHull;
 use crate::convex_hull::geometry::{
-    compute_polygon_area, compute_polyhedron_volume, compute_high_dim_volume
+    compute_high_dim_volume, compute_polygon_area, compute_polyhedron_volume,
 };
+use crate::error::SpatialResult;
 
 /// Compute the volume of a convex hull
 ///
@@ -63,7 +63,7 @@ fn compute_1d_volume(hull: &ConvexHull) -> SpatialResult<f64> {
 
     let min_idx = *hull.vertex_indices.iter().min().unwrap();
     let max_idx = *hull.vertex_indices.iter().max().unwrap();
-    
+
     Ok((hull.points[[max_idx, 0]] - hull.points[[min_idx, 0]]).abs())
 }
 
@@ -148,9 +148,9 @@ fn compute_nd_volume(hull: &ConvexHull) -> SpatialResult<f64> {
 /// assert!((estimated_area - 1.0).abs() < 0.1); // Monte Carlo approximation
 /// ```
 pub fn compute_volume_monte_carlo(hull: &ConvexHull, num_samples: usize) -> SpatialResult<f64> {
+    use crate::convex_hull::geometry::compute_bounding_box;
     use rand::Rng;
-    use crate::convex_hull::geometry::{compute_bounding_box};
-    
+
     if hull.vertex_indices.is_empty() {
         return Ok(0.0);
     }
@@ -174,7 +174,7 @@ pub fn compute_volume_monte_carlo(hull: &ConvexHull, num_samples: usize) -> Spat
 
     for _ in 0..num_samples {
         let mut sample_point = vec![0.0; ndim];
-        
+
         // Generate random point within bounding box
         for d in 0..ndim {
             sample_point[d] = rng.random_range(min_coords[d]..max_coords[d]);
@@ -229,24 +229,24 @@ pub fn compute_volume_bounds(hull: &ConvexHull) -> SpatialResult<(f64, f64, Opti
 
     // For high dimensions, provide bounds
     let exact = compute_volume(hull).ok();
-    
+
     if let Some(vol) = exact {
         Ok((vol, vol, Some(vol)))
     } else {
         // Use Monte Carlo with different sample sizes for bounds
         let lower_samples = 1000;
         let upper_samples = 10000;
-        
+
         let lower_bound = compute_volume_monte_carlo(hull, lower_samples)?;
         let upper_bound = compute_volume_monte_carlo(hull, upper_samples)?;
-        
+
         // Ensure bounds are properly ordered
         let (min_bound, max_bound) = if lower_bound <= upper_bound {
             (lower_bound * 0.9, upper_bound * 1.1) // Add some margin for uncertainty
         } else {
             (upper_bound * 0.9, lower_bound * 1.1)
         };
-        
+
         Ok((min_bound, max_bound, None))
     }
 }
@@ -275,7 +275,7 @@ pub fn compute_volume_bounds(hull: &ConvexHull) -> SpatialResult<(f64, f64, Opti
 pub fn is_volume_computation_reliable(hull: &ConvexHull) -> bool {
     let ndim = hull.ndim();
     let nvertices = hull.vertex_indices.len();
-    
+
     // 1D, 2D, 3D are generally reliable
     if ndim <= 3 {
         return true;
@@ -297,8 +297,8 @@ pub fn is_volume_computation_reliable(hull: &ConvexHull) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
     use crate::convex_hull::ConvexHull;
+    use ndarray::arr2;
 
     #[test]
     fn test_compute_2d_volume() {
@@ -329,7 +329,7 @@ mod tests {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
         let hull = ConvexHull::new(&points.view()).unwrap();
         let (lower, upper, exact) = compute_volume_bounds(&hull).unwrap();
-        
+
         assert!(exact.is_some());
         assert!((exact.unwrap() - 1.0).abs() < 1e-10);
         assert_eq!(lower, upper); // Should be exact for 2D
@@ -342,9 +342,12 @@ mod tests {
         let hull = ConvexHull::new(&points.view()).unwrap();
         assert!(is_volume_computation_reliable(&hull));
 
-        // 3D case - should be reliable  
+        // 3D case - should be reliable
         let points = arr2(&[
-            [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
         ]);
         let hull = ConvexHull::new(&points.view()).unwrap();
         assert!(is_volume_computation_reliable(&hull));
@@ -354,7 +357,7 @@ mod tests {
     fn test_compute_volume_monte_carlo() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
         let hull = ConvexHull::new(&points.view()).unwrap();
-        
+
         // Monte Carlo should give approximately correct result
         let estimated_area = compute_volume_monte_carlo(&hull, 10000).unwrap();
         assert!((estimated_area - 1.0).abs() < 0.1); // Allow for Monte Carlo error

@@ -3,7 +3,7 @@
 //! This module provides quantum-inspired search algorithms that leverage quantum computing
 //! principles for enhanced spatial data retrieval and neighbor searching.
 
-use crate::spatial_error::{SpatialError, SpatialResult};
+use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array2, ArrayView1, ArrayView2};
 use num_complex::Complex64;
 use std::f64::consts::PI;
@@ -362,7 +362,7 @@ mod tests {
     fn test_quantum_nearest_neighbor_creation() {
         let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
         let searcher = QuantumNearestNeighbor::new(&points.view()).unwrap();
-        
+
         assert_eq!(searcher.len(), 3);
         assert!(!searcher.is_quantum_enabled());
         assert!(!searcher.is_amplification_enabled());
@@ -372,10 +372,10 @@ mod tests {
     fn test_classical_search() {
         let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
         let searcher = QuantumNearestNeighbor::new(&points.view()).unwrap();
-        
+
         let query = ndarray::arr1(&[0.5, 0.5]);
         let (indices, distances) = searcher.query_quantum(&query.view(), 2).unwrap();
-        
+
         assert_eq!(indices.len(), 2);
         assert_eq!(distances.len(), 2);
         // Should find point [0,0] and [1,1] as nearest
@@ -391,7 +391,7 @@ mod tests {
             .with_quantum_encoding(true)
             .with_amplitude_amplification(true)
             .with_grover_iterations(5);
-        
+
         assert!(searcher.is_quantum_enabled());
         assert!(searcher.is_amplification_enabled());
         assert_eq!(searcher.grover_iterations, 5);
@@ -401,7 +401,7 @@ mod tests {
     fn test_empty_points() {
         let points = Array2::from_shape_vec((0, 2), vec![]).unwrap();
         let searcher = QuantumNearestNeighbor::new(&points.view()).unwrap();
-        
+
         assert!(searcher.is_empty());
         assert_eq!(searcher.len(), 0);
     }
@@ -410,10 +410,10 @@ mod tests {
     fn test_invalid_k() {
         let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
         let searcher = QuantumNearestNeighbor::new(&points.view()).unwrap();
-        
+
         let query = ndarray::arr1(&[0.5, 0.5]);
         let result = searcher.query_quantum(&query.view(), 5);
-        
+
         assert!(result.is_err());
     }
 }
