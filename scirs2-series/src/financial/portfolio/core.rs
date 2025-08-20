@@ -354,11 +354,11 @@ mod tests {
     #[test]
     fn test_equal_weight_portfolio() {
         let names = vec!["A".to_string(), "B".to_string(), "C".to_string()];
-        let portfolio = Portfolio::equal_weight(3, names).unwrap();
+        let portfolio: Portfolio<f64> = Portfolio::equal_weight(3, names).unwrap();
         
         assert_eq!(portfolio.num_assets(), 3);
-        for &weight in portfolio.weights.iter() {
-            assert!((weight - 1.0/3.0).abs() < 1e-10);
+        for weight in portfolio.weights.iter() {
+            assert!((*weight - 1.0/3.0).abs() < 1e-10);
         }
     }
 

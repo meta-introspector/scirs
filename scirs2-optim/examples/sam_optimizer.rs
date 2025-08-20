@@ -290,7 +290,7 @@ where
     let mut weights = Array1::<f64>::zeros(x_train.dim().1);
 
     // Create SAM _optimizer
-    let mut _optimizer: SAM<f64, ndarray::Ix1> = SAM::with_config(inner_optimizer, rho, adaptive);
+    let mut optimizer = SAM::with_config(inner_optimizer, rho, adaptive);
 
     // Training loop
     for i in 0..n_iterations {
@@ -305,7 +305,7 @@ where
         let gradients = x_train.t().dot(&diff) * (2.0 / (y_train.len() as f64));
 
         // Step 2: SAM first step - get perturbed parameters
-        let (perturbed_weights_) = optimizer.first_step(&weights, &gradients).unwrap();
+        let (perturbed_weights) = optimizer.first_step(&weights, &gradients).unwrap();
 
         // Step 3: Forward pass with perturbed weights
         let y_pred_perturbed = x_train.dot(&perturbed_weights);

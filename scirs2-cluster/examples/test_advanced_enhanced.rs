@@ -96,7 +96,7 @@ fn create_complex_test_data() -> Array2<f64> {
 fn test_enhanced_ai_selection(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     let mut clusterer = AdvancedClusterer::new().with_ai_algorithm_selection(true);
 
-    let result = clusterer.cluster(&_data.view())?;
+    let result = clusterer.cluster(&data.view())?;
 
     println!("   ✅ AI-enhanced algorithm selection completed");
     let selected = &result.selected_algorithm;
@@ -179,7 +179,7 @@ fn test_enhanced_meta_learning(data: &Array2<f64>) -> Result<(), Box<dyn std::er
         .with_meta_learning(true)
         .with_ai_algorithm_selection(true);
 
-    let result = clusterer.cluster(&_data.view())?;
+    let result = clusterer.cluster(&data.view())?;
 
     println!("   ✅ Enhanced meta-learning optimization completed");
     println!(
@@ -217,7 +217,7 @@ fn test_enhanced_visualization(data: &Array2<f64>) -> Result<(), Box<dyn std::er
         .with_quantum_neuromorphic_fusion(true)
         .with_ai_algorithm_selection(true);
 
-    let result = clusterer.cluster(&_data.view())?;
+    let result = clusterer.cluster(&data.view())?;
 
     // Test enhanced visualization with quantum PCA
     let vis_config = AdvancedVisualizationConfig {
@@ -230,7 +230,7 @@ fn test_enhanced_visualization(data: &Array2<f64>) -> Result<(), Box<dyn std::er
     };
 
     let mut visualizer = AdvancedVisualizer::new(vis_config);
-    let visualization_output = visualizer.visualize_results(&_data.view(), &result)?;
+    let visualization_output = visualizer.visualize_results(&data.view(), &result)?;
 
     println!("   ✅ Enhanced visualization with quantum PCA completed");
     println!(
@@ -285,7 +285,7 @@ fn test_full_enhanced_advanced(data: &Array2<f64>) -> Result<(), Box<dyn std::er
         .with_continual_adaptation(true)
         .with_multi_objective_optimization(true);
 
-    let result = clusterer.cluster(&_data.view())?;
+    let result = clusterer.cluster(&data.view())?;
 
     println!("   ✅ Full enhanced Advanced mode completed");
     println!(

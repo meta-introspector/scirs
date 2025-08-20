@@ -154,13 +154,13 @@ fn main() -> NdimageResult<()> {
         NdimageError::InvalidInput("Invalid input data".to_string()),
         NdimageError::DimensionError("Dimension mismatch".to_string()),
         NdimageError::ComputationError("Computation failed".to_string()),
-        NdimageError::OutOfMemory("Out of memory".to_string()),
+        NdimageError::MemoryError("Out of memory".to_string()),
     ];
 
     for error in errors {
         let py_error: PyError = error.into();
         println!(
-            "   • {} -> {}: {}",
+            "   • {:?} -> {}: {}",
             std::mem::discriminant(&py_error),
             py_error.error_type,
             py_error.message

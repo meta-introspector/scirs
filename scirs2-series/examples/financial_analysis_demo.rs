@@ -7,7 +7,7 @@ use ndarray::{Array1, Array2};
 use scirs2_series::{
     correlation::CorrelationAnalyzer,
     // features::{FeatureConfig, FeatureExtractor}, // TODO: Fix when needed
-    financial::{Distribution, GarchConfig, GarchModel, MeanModel},
+    financial::{models::{Distribution, MeanModel}, GarchConfig, GarchModel},
     transformations::NormalizationMethod,
 };
 use statrs::statistics::Statistics;

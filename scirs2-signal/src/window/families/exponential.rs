@@ -571,7 +571,7 @@ mod tests {
         assert_eq!(window.len(), 10);
 
         // Should have peak near center
-        let max_val = window.iter().fold(0.0, |a, &b| a.max(b));
+        let max_val = window.iter().fold(0.0f64, |a, &b| a.max(b));
         assert!(max_val > 0.9);
     }
 

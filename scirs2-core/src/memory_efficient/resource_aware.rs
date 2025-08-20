@@ -977,8 +977,8 @@ mod tests {
             hit_rate: 0.8,
         };
 
-        prefetcher.record_prefetch_performance(&stats, 500_000.0, true); // 500µs latency, prefetched
-        prefetcher.record_prefetch_performance(&stats, 2_000_000.0, false); // 2ms latency, not prefetched
+        prefetcher.record_prefetch_performance(true, 500_000.0, &stats); // 500µs latency, prefetched
+        prefetcher.record_prefetch_performance(false, 2_000_000.0, &stats); // 2ms latency, not prefetched
 
         // Get the performance stats
         let perf_stats = prefetcher.get_performance_stats();

@@ -200,7 +200,7 @@ fn train_with_adam(
     optimizer: &mut Adam<f64>,
 ) -> (f64, f64) {
     let n_samples = x_train.len();
-    let n_features = trueweights.len();
+    let n_features = true_weights.len();
 
     // Initialize _weights to zero
     let mut _weights = Array1::zeros(n_features);
@@ -265,7 +265,7 @@ fn train_with_sparse_adam(
     optimizer: &mut SparseAdam<f64>,
 ) -> (f64, f64) {
     let n_samples = x_train.len();
-    let n_features = trueweights.len();
+    let n_features = true_weights.len();
 
     // Initialize _weights to zero
     let mut _weights = Array1::zeros(n_features);

@@ -14,11 +14,11 @@ use ndarray::{Array2, ArrayView2};
 use std::time::Instant;
 
 use scirs2_ndimage::{
-    // enhanced_validation::{
-    //     validated_advanced_processing, ComprehensiveValidator, ValidationConfig,
-    // },
+    enhanced_validation::{
+        validated_advanced_processing, ComprehensiveValidator, ValidationConfig,
+    },
     error::NdimageResult,
-    // fusion_core::AdvancedConfig,
+    fusion_core::AdvancedConfig,
 };
 
 /// Comprehensive enhanced Advanced demonstration
@@ -235,18 +235,18 @@ where
     T: num_traits::Float + Copy,
 {
     // Check for NaN or infinite values
-    for &pixel in output.iter() {
+    for &pixel in _output.iter() {
         if !pixel.is_finite() {
             return Err(scirs2_ndimage::NdimageError::ComputationError(format!(
-                "Non-finite values in {} _output",
-                test_name
+                "Non-finite values in {} output",
+                testname
             )));
         }
     }
 
-    // Check _output range (assuming normalized output)
-    let min_val = output.iter().fold(T::infinity(), |a, &b| a.min(b));
-    let max_val = output.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
+    // Check output range (assuming normalized output)
+    let min_val = _output.iter().fold(T::infinity(), |a, &b| a.min(b));
+    let max_val = _output.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
 
     println!(
         "     - Output range: [{:.6}, {:.6}]",
@@ -259,7 +259,7 @@ where
 
 /// Print comprehensive performance summary
 #[allow(dead_code)]
-fn print_performance_summary(summary: &scirs2, ndimage: PerformanceSummary) {
+fn print_performance_summary(summary: &scirs2_ndimage::enhanced_validation::PerformanceSummary) {
     println!("\n📈 Performance Summary");
     println!("=====================");
     println!("Total operations: {}", summary.total_operations);
@@ -270,9 +270,9 @@ fn print_performance_summary(summary: &scirs2, ndimage: PerformanceSummary) {
         summary.total_processing_time()
     );
 
-    if !_summary.benchmarks.is_empty() {
+    if !summary.benchmarks.is_empty() {
         println!("\n📊 Detailed Benchmarks:");
-        for (name, benchmark) in &_summary.benchmarks {
+        for (name, benchmark) in &summary.benchmarks {
             println!("  {}:", name);
             println!("    - Avg time: {:?}", benchmark.avg_time);
             println!("    - Quality: {:.3}", benchmark.quality_score);

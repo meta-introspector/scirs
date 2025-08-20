@@ -380,7 +380,7 @@ pub mod analysis {
 
         // Basic properties
         let energy: f64 = window.iter().map(|&w| w * w).sum();
-        let peak_value = window.iter().fold(0.0, |a, &b| a.max(b));
+        let peak_value = window.iter().fold(0.0_f64, |a, &b| a.max(b));
 
         // Coherent gain (DC response normalized)
         let coherent_gain = window.iter().sum::<f64>() / n as f64;

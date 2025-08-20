@@ -790,7 +790,7 @@ mod tests {
     #[test]
     fn test_halton_primebases() {
         let halton = HaltonGenerator::dimension(3).unwrap();
-        assert_eq!(halton.bases(), &[2, 3, 5]);
+        assert_eq!(halton.bases, &[2, 3, 5]);
     }
 
     #[test]

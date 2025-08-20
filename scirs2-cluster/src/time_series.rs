@@ -199,15 +199,16 @@ where
             let candidates = [dtw[[i - 1, j]], dtw[[i, j - 1]], dtw[[i - 1, j - 1]]];
 
             // Soft minimum: -gamma * log(sum(exp(-x/gamma)))
-            let max_val = candidates
+            // For numerical stability, use the log-sum-exp trick
+            let min_val = candidates
                 .iter()
-                .fold(F::neg_infinity(), |acc, &x| acc.max(x));
+                .fold(F::infinity(), |acc, &x| acc.min(x));
             let sum_exp = candidates
                 .iter()
-                .map(|&x| ((x - max_val) / (-gamma)).exp())
+                .map(|&x| (-(x - min_val) / gamma).exp())
                 .fold(F::zero(), |acc, x| acc + x);
 
-            let soft_min = max_val - gamma * sum_exp.ln();
+            let soft_min = min_val - gamma * sum_exp.ln();
             dtw[[i, j]] = cost + soft_min;
         }
     }

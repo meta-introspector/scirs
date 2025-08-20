@@ -610,7 +610,7 @@ mod tests {
 
     #[test]
     fn test_empty_input() {
-        let values = arr1(&[]);
+        let values: Array1<f64> = arr1(&[]);
         let result = max_drawdown(&values);
         assert!(result.is_err());
     }

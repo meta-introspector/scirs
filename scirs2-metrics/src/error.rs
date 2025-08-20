@@ -74,6 +74,22 @@ pub enum MetricsError {
     #[error("Core error: {0}")]
     CoreError(#[from] scirs2_core::error::CoreError),
 
+    /// Consensus error
+    #[error("Consensus error: {0}")]
+    ConsensusError(String),
+
+    /// Sharding error
+    #[error("Sharding error: {0}")]
+    ShardingError(String),
+
+    /// Fault tolerance error
+    #[error("Fault tolerance error: {0}")]
+    FaultToleranceError(String),
+
+    /// Invalid operation
+    #[error("Invalid operation: {0}")]
+    InvalidOperation(String),
+
     /// Other error
     #[error("Error: {0}")]
     Other(String),

@@ -18,17 +18,32 @@ pub struct SimdWindowGenerator {
 }
 
 impl SimdWindowGenerator {
+    /// Approximation of modified Bessel function I0
+    fn bessel_i0_approx(x: f64) -> f64 {
+        let ax = x.abs();
+        if ax < 3.75 {
+            let y = (x / 3.75).powi(2);
+            1.0 + y * (3.5156229 + y * (3.0899424 + y * (1.2067492 + 
+                  y * (0.2659732 + y * (0.360768e-1 + y * 0.45813e-2)))))
+        } else {
+            let y = 3.75 / ax;
+            let result = (ax.exp() / ax.sqrt()) * 
+                (0.39894228 + y * (0.1328592e-1 + y * (0.225319e-2 + 
+                y * (-0.157565e-2 + y * (0.916281e-2 + y * (-0.2057706e-1 + 
+                y * (0.2635537e-1 + y * (-0.1647633e-1 + y * 0.392377e-2))))))));
+            result
+        }
+    }
+
     /// Create new SIMD window generator with capability detection
     pub fn new() -> Self {
         let caps = scirs2_core::simd_ops::PlatformCapabilities::detect();
 
         Self {
-            avx_available: caps.avx2,
-            sse_available: caps.sse4_1,
-            simd_chunk_size: if caps.avx2 {
-                4
-            } else if caps.sse4_1 {
-                2
+            avx_available: caps.simd_available,
+            sse_available: caps.simd_available,
+            simd_chunk_size: if caps.simd_available {
+                8
             } else {
                 1
             },
@@ -162,7 +177,7 @@ impl SimdWindowGenerator {
             let angles: Vec<f64> = indices.iter().map(|&i| 2.0 * PI * i / n_minus_1).collect();
 
             // SIMD cosine computation
-            let cos_values = f64::simd_cos(&angles);
+            let cos_values: Vec<f64> = angles.iter().map(|&x| x.cos()).collect();
 
             // Apply Hann formula: 0.5 * (1 - cos(2π * i / (N-1)))
             for (i, &cos_val) in cos_values.iter().enumerate() {
@@ -188,7 +203,7 @@ impl SimdWindowGenerator {
 
             let angles: Vec<f64> = indices.iter().map(|&i| 2.0 * PI * i / n_minus_1).collect();
 
-            let cos_values = f64::simd_cos(&angles);
+            let cos_values: Vec<f64> = angles.iter().map(|&x| x.cos()).collect();
 
             // Apply Hamming formula: 0.54 - 0.46 * cos(2π * i / (N-1))
             for (i, &cos_val) in cos_values.iter().enumerate() {
@@ -214,8 +229,8 @@ impl SimdWindowGenerator {
 
             let angles: Vec<f64> = indices.iter().map(|&i| 2.0 * PI * i / n_minus_1).collect();
 
-            let cos_values = f64::simd_cos(&angles);
-            let cos2_values = f64::simd_cos(&angles.iter().map(|&x| 2.0 * x).collect::<Vec<_>>());
+            let cos_values: Vec<f64> = angles.iter().map(|&x| x.cos()).collect();
+            let cos2_values: Vec<f64> = angles.iter().map(|&x| (2.0 * x).cos()).collect();
 
             // Apply Blackman formula: 0.42 - 0.5 * cos(2π * i / (N-1)) + 0.08 * cos(4π * i / (N-1))
             for i in 0..chunk.len() {
@@ -250,7 +265,7 @@ impl SimdWindowGenerator {
                 .collect();
 
             // SIMD Bessel function approximation
-            let bessel_values = f64::simd_bessel_i0_approx(&bessel_args);
+            let bessel_values: Vec<f64> = bessel_args.iter().map(|&x| Self::bessel_i0_approx(x)).collect();
 
             // Apply Kaiser formula
             for (i, &bessel_val) in bessel_values.iter().enumerate() {
@@ -285,7 +300,7 @@ impl SimdWindowGenerator {
                 .collect();
 
             // SIMD exponential
-            let exp_values = f64::simd_exp(&exponents);
+            let exp_values: Vec<f64> = exponents.iter().map(|&x| x.exp()).collect();
 
             for (i, &exp_val) in exp_values.iter().enumerate() {
                 if i < chunk.len() {

@@ -13,13 +13,13 @@
 
 use ndarray::{Array2, ArrayView2};
 use scirs2_ndimage::{
-    // adaptive_advanced_optimizer::{AdaptiveAdvancedOptimizer, AdaptiveOptimizerConfig},
+    adaptive_image_optimizer::{AdaptiveAdvancedOptimizer, AdaptiveOptimizerConfig},
     error::NdimageResult,
-    // fusion_core::{
-    //     enhanced_meta_learning_with_temporal_fusion, enhanced_quantum_consciousness_evolution,
-    //     fusion_processing, quantum_aware_resource_scheduling_optimization, AdvancedConfig,
-    //     AdvancedState,
-    // },
+    advanced_fusion_algorithms::{
+        enhanced_meta_learning_with_temporal_fusion, enhanced_quantum_consciousness_evolution,
+        fusion_processing, quantum_aware_resource_scheduling_optimization, AdvancedConfig,
+        AdvancedState,
+    },
 };
 use statrs::statistics::Statistics;
 
@@ -69,7 +69,7 @@ pub fn demonstrate_advanced_capabilities() -> NdimageResult<()> {
     // Demonstration 4: Adaptive Advanced Optimization
     println!("\n🎯 Testing Adaptive Advanced Optimization");
     let adaptive_config = AdaptiveOptimizerConfig::default();
-    let optimizer = AdaptiveAdvancedOptimizer::new(adaptive_config)?;
+    let optimizer = AdaptiveAdvancedOptimizer::new(adaptive_config);
 
     // Simulate optimization cycles
     for cycle in 1..=3 {
@@ -78,7 +78,7 @@ pub fn demonstrate_advanced_capabilities() -> NdimageResult<()> {
         println!("    ✓ Configuration optimized for cycle {}", cycle);
 
         // Run abbreviated processing with optimized config
-        let (processedstate) = fusion_processing(testimage.view(), &optimized_config, None)?;
+        let (processed, _state) = fusion_processing(testimage.view(), &optimized_config, None)?;
         println!("    ✓ Processing completed with optimized config");
         println!("    - Output shape: {:?}", processed.dim());
     }
@@ -110,12 +110,12 @@ pub fn demonstrate_advanced_capabilities() -> NdimageResult<()> {
 /// Create a sample test image for validation
 #[allow(dead_code)]
 fn create_testimage(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((_height, width));
+    let mut image = Array2::zeros((height, width));
 
     // Create a complex test pattern with multiple features
-    for y in 0.._height {
+    for y in 0..height {
         for x in 0..width {
-            let y_norm = y as f64 / _height as f64;
+            let y_norm = y as f64 / height as f64;
             let x_norm = x as f64 / width as f64;
 
             // Combination of patterns to test different processing aspects

@@ -137,16 +137,32 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
             sizes[i] += 1;
         }
 
-        // Ensure minimum partition size constraints
+        // Adjust for minimum partition size constraints
+        // If total is less than n_workers * min_partition_size, we can't satisfy the constraint
+        // so we use the calculated sizes instead
+        let effective_min_size = self.config.min_partition_size.min(totalsize / self.config.n_workers + 1);
+        
         for size in &mut sizes {
-            if *size < self.config.min_partition_size {
-                *size = self.config.min_partition_size.min(totalsize);
+            if *size < effective_min_size {
+                *size = effective_min_size;
             }
             if let Some(max_size) = self.config.max_partition_size {
                 if *size > max_size {
                     *size = max_size;
                 }
             }
+        }
+
+        // Ensure the total doesn't exceed the original totalsize
+        let current_total: usize = sizes.iter().sum();
+        if current_total > totalsize {
+            // Redistribute to match totalsize exactly
+            let mut sizes = vec![totalsize / self.config.n_workers; self.config.n_workers];
+            let remainder = totalsize % self.config.n_workers;
+            for i in 0..remainder {
+                sizes[i] += 1;
+            }
+            return Ok(sizes);
         }
 
         Ok(sizes)
@@ -672,6 +688,7 @@ mod tests {
     fn test_calculate_partition_sizes() {
         let config = PartitioningConfig {
             n_workers: 3,
+            min_partition_size: 1,  // Set a reasonable min_partition_size for the test
             ..Default::default()
         };
         let partitioner = DataPartitioner::<f64>::new(config);
@@ -690,6 +707,7 @@ mod tests {
         let config = PartitioningConfig {
             n_workers: 2,
             strategy: PartitioningStrategy::Random,
+            min_partition_size: 1,  // Set a reasonable min_partition_size for the test
             ..Default::default()
         };
         let mut partitioner = DataPartitioner::new(config);
@@ -727,14 +745,19 @@ mod tests {
         let config = PartitioningConfig::default();
         let mut partitioner = DataPartitioner::<f64>::new(config);
 
-        // Perfect balance
-        partitioner.partition_stats.partition_sizes = vec![25, 25, 25, 25];
-        partitioner.update_statistics(&[], 0);
+        // Perfect balance - create mock partitions
+        let balanced_partitions: Vec<DataPartition<f64>> = (0..4)
+            .map(|i| DataPartition::new(i, Array2::zeros((25, 2)), i))
+            .collect();
+        partitioner.update_statistics(&balanced_partitions, 0);
         assert!((partitioner.partition_stats.load_balance_score - 1.0).abs() < 0.01);
 
-        // Imbalanced
-        partitioner.partition_stats.partition_sizes = vec![10, 90];
-        partitioner.update_statistics(&[], 0);
+        // Imbalanced - create imbalanced mock partitions
+        let imbalanced_partitions = vec![
+            DataPartition::new(0, Array2::zeros((10, 2)), 0),
+            DataPartition::new(1, Array2::zeros((90, 2)), 1),
+        ];
+        partitioner.update_statistics(&imbalanced_partitions, 0);
         assert!(partitioner.partition_stats.load_balance_score < 0.5);
     }
 

@@ -70,7 +70,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         min_radius: 10,
         max_radius: 60,
         threshold: 0.3,
-        min_distance: 20,
+        mindistance: 20,
         edge_threshold: 0.1,
         max_circles: Some(10),
     };

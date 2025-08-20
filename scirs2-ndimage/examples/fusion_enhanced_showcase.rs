@@ -29,24 +29,25 @@
 
 use ndarray::{Array1, Array2, Array3, ArrayView2};
 use scirs2_ndimage::{
-    enhanced_meta_learning_with_temporal_fusion,
-    // Latest Advanced enhancements
-    enhanced_quantum_consciousness_evolution,
-    fusion_processing,
-    quantum_aware_resource_scheduling_optimization,
+    advanced_fusion_algorithms::{
+        enhanced_meta_learning_with_temporal_fusion,
+        enhanced_quantum_consciousness_evolution,
+        fusion_processing,
+        quantum_aware_resource_scheduling_optimization,
+        AdvancedConfig,
+        AdvancedState,
+        ConsciousnessState,
+        EnhancedMetaLearningSystem,
+        QuantumAwareResourceScheduler,
+        QuantumConsciousnessEvolution,
+        ResourceSchedulingDecision,
+        WorkloadCharacteristics,
+        NetworkProperties,
+        ResourceState,
+    },
     quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
-    // Core structures
-    AdvancedConfig,
-    AdvancedState,
-    ConsciousnessState,
-    EnhancedMetaLearningSystem,
-    NeuromorphicConfig,
-    QuantumAwareResourceScheduler,
-    // Quantum and neuromorphic configs
-    QuantumConfig,
-    QuantumConsciousnessEvolution,
-    ResourceSchedulingDecision,
-    WorkloadCharacteristics,
+    neuromorphic_computing::NeuromorphicConfig,
+    quantum_inspired::QuantumConfig,
 };
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
@@ -357,7 +358,7 @@ fn demonstrate_quantum_resource_scheduling(
     println!("   🔧 Active scheduling algorithms:");
     for (i, algorithm) in resource_scheduler.scheduling_algorithms.iter().enumerate() {
         match algorithm {
-            scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::QuantumAnnealing {
+            scirs2_ndimage::advanced_fusion_algorithms::QuantumSchedulingAlgorithm::QuantumAnnealing {
                 annealing_schedule,
                 optimization_target,
             } => {
@@ -367,10 +368,10 @@ fn demonstrate_quantum_resource_scheduling(
                     annealing_schedule.steps
                 );
             }
-            scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::QAOA { layers, .. } => {
+            scirs2_ndimage::advanced_fusion_algorithms::QuantumSchedulingAlgorithm::QAOA { layers, .. } => {
                 println!("      Algorithm {}: QAOA ({} layers)", i + 1, layers);
             }
-            scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::VQEScheduling {
+            scirs2_ndimage::advanced_fusion_algorithms::QuantumSchedulingAlgorithm::VQEScheduling {
                 ansatz,
                 ..
             } => {
@@ -395,7 +396,7 @@ fn demonstrate_quantum_resource_scheduling(
         .enumerate()
     {
         match strategy {
-            scirs2_ndimage::fusion_core::QuantumLoadBalancingStrategy::QuantumSuperposition {
+            scirs2_ndimage::advanced_fusion_algorithms::QuantumLoadBalancingStrategy::QuantumSuperposition {
                 measurement_basis,
                 ..
             } => {
@@ -405,7 +406,7 @@ fn demonstrate_quantum_resource_scheduling(
                     measurement_basis
                 );
             }
-            scirs2_ndimage::fusion_core::QuantumLoadBalancingStrategy::EntanglementSharing {
+            scirs2_ndimage::advanced_fusion_algorithms::QuantumLoadBalancingStrategy::EntanglementSharing {
                 entanglement_strength,
                 ..
             } => {
@@ -610,9 +611,7 @@ fn create_mock_advancedstate(shape: (usize, usize), config: &AdvancedConfig) -> 
             scirs2_ndimage::advanced_fusion_algorithms::NetworkTopology {
                 connections: HashMap::new(),
                 nodes: Vec::new(),
-                global_properties: scirs2,
-                _ndimage: fusion,
-                core: NetworkProperties {
+                global_properties: NetworkProperties {
                     coherence: 0.8,
                     self_organization_index: 0.7,
                     consciousness_emergence: 0.6,
@@ -623,9 +622,7 @@ fn create_mock_advancedstate(shape: (usize, usize), config: &AdvancedConfig) -> 
         temporal_memory: std::collections::VecDeque::new(),
         causal_graph: std::collections::BTreeMap::new(),
         advancedfeatures: Array3::zeros((shape.0, shape.1, config.advanced_dimensions)),
-        resource_allocation: scirs2,
-        _ndimage: fusion,
-        core: ResourceState {
+        resource_allocation: ResourceState {
             cpu_allocation: vec![0.7; num_cpus::get()],
             memory_allocation: 0.6,
             gpu_allocation: Some(0.8),
@@ -669,7 +666,7 @@ fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
     let mut task_types = HashMap::new();
     task_types.insert(
         "image_processing".to_string(),
-        scirs2_ndimage::fusion_core::QuantumTaskRequirements {
+        scirs2_ndimage::advanced_fusion_algorithms::QuantumTaskRequirements {
             qubit_requirement: 16,
             coherence_requirement: 50.0,
             gate_operations: vec![

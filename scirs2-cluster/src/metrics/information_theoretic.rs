@@ -606,9 +606,9 @@ where
             let same_pred = labelspred[i] == labelspred[j];
 
             match (same_true, same_pred) {
-                (_true, true) => tp += 1,
+                (true, true) => tp += 1,
                 (false, true) => fp += 1,
-                (_true, false) => fn_count += 1,
+                (true, false) => fn_count += 1,
                 (false, false) => {} // True negative, not used in FM calculation
             }
         }

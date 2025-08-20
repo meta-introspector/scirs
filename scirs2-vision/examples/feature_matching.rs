@@ -47,7 +47,7 @@ fn test_descriptor_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<
     println!("=================================");
 
     // Detect and compute descriptors
-    let descriptors1 = detect_and_compute(_img1, 50, 0.01)?;
+    let descriptors1 = detect_and_compute(img1, 50, 0.01)?;
     let descriptors2 = detect_and_compute(img2, 50, 0.01)?;
 
     println!("Image 1: {} features", descriptors1.len());
@@ -97,7 +97,7 @@ fn test_descriptor_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<
     // Visualize matches
     if !bf_matches.is_empty() {
         let visualization =
-            visualize_matches(_img1, img2, &descriptors1, &descriptors2, &bf_matches)?;
+            visualize_matches(img1, img2, &descriptors1, &descriptors2, &bf_matches)?;
         visualization.save("output/descriptor_matches.png").ok();
         println!("Saved match visualization: output/descriptor_matches.png");
     }
@@ -121,7 +121,7 @@ fn test_orb_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
         patch_size: 31,
     };
 
-    let orb_desc1 = detect_and_compute_orb(_img1, &orb_config)?;
+    let orb_desc1 = detect_and_compute_orb(img1, &orb_config)?;
     let orb_desc2 = detect_and_compute_orb(img2, &orb_config)?;
 
     println!("ORB Image 1: {} features", orb_desc1.len());
@@ -182,7 +182,7 @@ fn test_various_matchers(img1: &DynamicImage, img2: &DynamicImage) -> Result<()>
     println!("===============================");
 
     // Get descriptors
-    let descriptors1 = detect_and_compute(_img1, 30, 0.01)?;
+    let descriptors1 = detect_and_compute(img1, 30, 0.01)?;
     let descriptors2 = detect_and_compute(img2, 30, 0.01)?;
 
     if descriptors1.is_empty() || descriptors2.is_empty() {
@@ -244,7 +244,7 @@ fn test_ransac_filtering(img1: &DynamicImage, img2: &DynamicImage) -> Result<()>
     println!("============================");
 
     // Get descriptors and matches
-    let descriptors1 = detect_and_compute(_img1, 50, 0.01)?;
+    let descriptors1 = detect_and_compute(img1, 50, 0.01)?;
     let descriptors2 = detect_and_compute(img2, 50, 0.01)?;
 
     if descriptors1.is_empty() || descriptors2.is_empty() {
@@ -294,7 +294,7 @@ fn test_ransac_filtering(img1: &DynamicImage, img2: &DynamicImage) -> Result<()>
             // Visualize RANSAC results
             let filename = format!("output/ransac_{model:?}_matches.png").to_lowercase();
             let visualization =
-                visualize_matches(_img1, img2, &descriptors1, &descriptors2, &filtered_matches)?;
+                visualize_matches(img1, img2, &descriptors1, &descriptors2, &filtered_matches)?;
             visualization.save(&filename).ok();
             println!("  Saved visualization: {filename}");
         }

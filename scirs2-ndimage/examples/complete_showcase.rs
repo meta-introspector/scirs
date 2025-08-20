@@ -18,11 +18,11 @@ use std::time::Instant;
 
 use scirs2_ndimage::{
     // Enhanced validation system
-    enhanced_validation::{
+    comprehensive_validation::{
         validated_advanced_processing, ComprehensiveValidator, ValidationConfig,
     },
     error::NdimageResult,
-    fusion_core::{fusion_processing, AdvancedConfig, AdvancedState},
+    advanced_fusion_algorithms::{fusion_processing, AdvancedConfig, AdvancedState},
     // Core configurations
     neuromorphic_computing::NeuromorphicConfig,
     quantum_inspired::QuantumConfig,

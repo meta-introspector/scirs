@@ -181,6 +181,7 @@ impl PlatformInfo {
             os: std::env::consts::OS.to_string(),
             arch: std::env::consts::ARCH.to_string(),
             rust_version: option_env!("CARGO_PKG_RUST_VERSION")
+                .filter(|s| !s.is_empty())
                 .unwrap_or("unknown")
                 .to_string(),
             cpu_features: Self::detect_cpu_features(),

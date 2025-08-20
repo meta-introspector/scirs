@@ -411,7 +411,7 @@ mod tests {
         let data = vec![2.0, 1.0, 0.0, 1.0];
         let indices = vec![0, 1, 1];
         let indptr = vec![0, 2, 3];
-        let matrix = CsrArray::new(data, indices, indptr, (2, 2)).unwrap();
+        let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2)).unwrap();
 
         let result = eigs(&matrix, Some(1), Some("LM"), None);
 
@@ -424,7 +424,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0];
         let indices = vec![0, 1, 0, 1];
         let indptr = vec![0, 2, 4];
-        let matrix = CsrArray::new(data, indices, indptr, (2, 2)).unwrap();
+        let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2)).unwrap();
 
         let vector = Array1::from_vec(vec![1.0, 2.0]);
         let result = matrix_vector_multiply(&matrix, &vector).unwrap();
@@ -441,7 +441,7 @@ mod tests {
         let data = vec![2.0, 1.0, 1.0, 2.0];
         let indices = vec![0, 1, 0, 1];
         let indptr = vec![0, 2, 4];
-        let matrix = CsrArray::new(data, indices, indptr, (2, 2)).unwrap();
+        let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2)).unwrap();
 
         let is_sym = is_approximately_symmetric(&matrix).unwrap();
         assert!(is_sym);

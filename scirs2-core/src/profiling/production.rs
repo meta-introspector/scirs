@@ -984,13 +984,14 @@ mod tests {
         let mut profiler = ProductionProfiler::new(config).unwrap();
 
         // Start workload analysis
+        let start_time = std::time::SystemTime::now();
         let result =
-            profiler.start_workload_analysis("test_workload", WorkloadType::ComputeIntensive);
+            profiler.start_profiling_workload("test_workload", WorkloadType::ComputeIntensive);
         assert!(result.is_ok());
 
         // Finish analysis (this will work because we have a session)
         let report = profiler
-            .finish_workload_analysis_by_id("test_workload", WorkloadType::ComputeIntensive);
+            .finish_workload_analysis("test_workload", WorkloadType::ComputeIntensive, start_time);
         assert!(report.is_ok());
 
         let report = report.unwrap();

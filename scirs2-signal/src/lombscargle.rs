@@ -900,7 +900,7 @@ mod tests {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(idx_)| idx)
+            .map(|(idx_, _)| idx_)
             .unwrap();
 
         // The frequency with maximum power should be close to the true frequency
@@ -1080,9 +1080,9 @@ mod tests {
         let tolerance = 0.05; // Allow 0.05 Hz tolerance
         let mut frequencies_found = 0;
 
-        for &(freq_) in peaks.iter().take(4) {
+        for &(freq_, _) in peaks.iter().take(4) {
             // Check top 4 peaks
-            if (freq - freq1).abs() < tolerance || (freq - freq2).abs() < tolerance {
+            if (freq_ - freq1).abs() < tolerance || (freq_ - freq2).abs() < tolerance {
                 frequencies_found += 1;
             }
         }

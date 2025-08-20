@@ -135,10 +135,10 @@ fn compare_regions(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
 #[allow(dead_code)]
 fn chi_square_distance(hist1: &ndarray::Array1<f32>, hist2: &ndarray::Array1<f32>) -> f32 {
     let mut distance = 0.0;
-    for i in 0.._hist1.len() {
+    for i in 0..hist1.len() {
         let sum = hist1[i] + hist2[i];
         if sum > 0.0 {
-            distance += (_hist1[i] - hist2[i]).powi(2) / sum;
+            distance += (hist1[i] - hist2[i]).powi(2) / sum;
         }
     }
     distance / 2.0

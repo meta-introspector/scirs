@@ -1018,7 +1018,7 @@ mod tests {
     fn test_no_op_counter() {
         let counter = NoOpCounter;
         assert!(counter.available_counters().is_empty());
-        assert!(!counter.is_counter_available(&CounterType::CpuCycles));
+        assert!(!counter.is_available(&CounterType::CpuCycles));
         assert!(counter.start_counter(&CounterType::CpuCycles).is_err());
     }
 

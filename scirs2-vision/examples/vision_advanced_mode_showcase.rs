@@ -88,7 +88,7 @@ fn create_test_video_sequence(
     dimensions: (usize, usize),
 ) -> Result<Vec<Frame>> {
     let (height, width) = dimensions;
-    let mut _frames = Vec::with_capacity(_num_frames);
+    let mut frames = Vec::with_capacity(_num_frames);
 
     for i in 0.._num_frames {
         let t = i as f32 / _num_frames as f32;

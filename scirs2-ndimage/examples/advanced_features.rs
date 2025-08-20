@@ -11,13 +11,13 @@ use ndarray::{array, Array2};
 use scirs2_ndimage::{
     backend::{Backend, BackendBuilder},
     error::NdimageResult,
-    filters::edge::laplace,
+    filters::laplace,
     filters::{bilateral_filter, gaussian_filter as filters_gaussian_filter, median_filter},
     profiling::{
         disable_profiling, display_performance_report, enable_memory_profiling, enable_profiling,
         get_memory_report, OptimizationAdvisor,
     },
-    scipy_compat_layer::scipy_ndimage::{gaussian_filter, rotate, zoom},
+    scipy_compat::{gaussian_filter, rotate, zoom},
 };
 
 // Import advanced SIMD extensions
@@ -187,7 +187,7 @@ fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
         &image,
         5.0,     // spatial sigma
         10.0,    // range sigma
-        Some(7), // window size
+        None,    // border mode
     )?;
     println!("Bilateral filter completed");
 
@@ -195,9 +195,10 @@ fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
     println!("Running SIMD guided filter...");
     // Guided filter not available, using bilateral filter instead
     let guided_result = bilateral_filter(
-        &image, 3.0,  // spatial sigma
-        5,    // radius
-        0.01, // epsilon
+        &image,
+        3.0,  // spatial sigma
+        5.0,  // range sigma
+        None, // border mode
     )?;
     println!("Guided filter completed");
 

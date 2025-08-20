@@ -320,7 +320,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0];
         let indices = vec![0, 1, 0, 1];
         let indptr = vec![0, 2, 4];
-        let matrix = CsrArray::new(data, indices, indptr, (2, 2)).unwrap();
+        let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2)).unwrap();
 
         let vector = Array1::from_vec(vec![1.0, 2.0]);
 

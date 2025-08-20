@@ -356,10 +356,10 @@ mod tests {
         matrix_multiply_cache_aware(&a, &b, &mut c, 2, 2, 2);
 
         // Result should be [[19, 22], [43, 50]]
-        assert!((c[0] - 19.0).abs() < 1e-10);
-        assert!((c[1] - 22.0).abs() < 1e-10);
-        assert!((c[2] - 43.0).abs() < 1e-10);
-        assert!((c[3] - 50.0).abs() < 1e-10);
+        assert!((c[0] - 19.0_f64).abs() < 1e-10_f64);
+        assert!((c[1] - 22.0_f64).abs() < 1e-10_f64);
+        assert!((c[2] - 43.0_f64).abs() < 1e-10_f64);
+        assert!((c[3] - 50.0_f64).abs() < 1e-10_f64);
     }
 
     #[test]

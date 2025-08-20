@@ -662,7 +662,7 @@ mod tests {
         ];
 
         for scheme in &schemes {
-            let color = scheme.get_color(0.5, "test_function");
+            let color = scheme.get_color(0.5, Some("test_function"));
             assert!(color.starts_with("rgb("));
             assert!(color.ends_with(")"));
         }

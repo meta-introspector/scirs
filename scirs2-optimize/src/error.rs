@@ -41,6 +41,10 @@ pub enum OptimizeError {
     /// Invalid parameter error
     #[error("Invalid parameter: {0}")]
     InvalidParameter(String),
+
+    /// Maximum evaluations reached
+    #[error("Maximum evaluations reached")]
+    MaxEvaluationsReached,
 }
 
 /// Result type for optimization operations
@@ -168,6 +172,10 @@ impl From<OptimizeError> for CoreError {
             ),
             OptimizeError::InvalidParameter(msg) => CoreError::InvalidArgument(
                 scirs2_core::error::ErrorContext::new(msg)
+                    .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
+            ),
+            OptimizeError::MaxEvaluationsReached => CoreError::ComputationError(
+                scirs2_core::error::ErrorContext::new("Maximum number of function evaluations reached".to_string())
                     .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
             ),
         }

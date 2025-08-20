@@ -605,7 +605,7 @@ mod tests {
         assert!(registry.register("test_function", hints.clone()).is_ok());
 
         // Retrieve hints
-        let retrieved = registry.get_hints("test_function").unwrap();
+        let retrieved = registry.get_hint("test_function").unwrap();
         assert!(retrieved.is_some());
         assert_eq!(retrieved.unwrap().complexity, ComplexityClass::Linear);
 
@@ -644,7 +644,7 @@ mod tests {
 
     #[test]
     fn test_performance_tracker() {
-        let tracker = PerformanceTracker::start("test_tracker");
+        let tracker = PerformanceTracker::new("test_tracker");
         thread::sleep(Duration::from_millis(10));
         tracker.finish();
 
@@ -659,13 +659,13 @@ mod tests {
     fn test_execution_stats_update() {
         let mut stats = ExecutionStats::default();
 
-        stats.update_model(Duration::from_millis(100));
+        stats.update(Duration::from_millis(100));
         assert_eq!(stats.total_calls, 1);
         assert_eq!(stats.average_duration, Duration::from_millis(100));
         assert_eq!(stats.min_duration, Duration::from_millis(100));
         assert_eq!(stats.max_duration, Duration::from_millis(100));
 
-        stats.update_model(Duration::from_millis(200));
+        stats.update(Duration::from_millis(200));
         assert_eq!(stats.total_calls, 2);
         assert_eq!(stats.average_duration, Duration::from_millis(150));
         assert_eq!(stats.min_duration, Duration::from_millis(100));
@@ -676,11 +676,11 @@ mod tests {
     fn test_should_use_chunking() {
         let hints = PerformanceHints::new().with_complexity(ComplexityClass::Quadratic);
 
-        assert!(hints.should_use_chunking(10000));
+        assert!(hints.should_chunk(10000));
 
         let linear_hints = PerformanceHints::new().with_complexity(ComplexityClass::Linear);
 
-        assert!(linear_hints.should_use_chunking(20000));
-        assert!(!linear_hints.should_use_chunking(1000));
+        assert!(linear_hints.should_chunk(20000));
+        assert!(!linear_hints.should_chunk(1000));
     }
 }

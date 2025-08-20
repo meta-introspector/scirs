@@ -302,22 +302,20 @@ pub use models::{
     GarchModel, GarchConfig, GarchResult,
     EgarchModel, EgarchConfig, EgarchResult,
     GjrGarchModel, GjrGarchResult,
-    AparchModel, AparchConfig, AparchResult,
+    AparchModel, AparchResult,
 };
 
 // Technical indicators (basic)
 pub use technical_indicators::{
-    sma, ema, rsi, macd, bollinger_bands, stochastic_oscillator,
+    sma, ema, rsi, macd, bollinger_bands, stochastic,
     atr, williams_r, cci, obv,
-    MacdResult, BollingerBandsResult, StochasticResult,
 };
 
 // Technical indicators (advanced)
 pub use technical_indicators::{
-    BollingerBands, StochasticOscillator, IchimokuCloud,
+    AdvancedBollingerBands, AdvancedStochasticOscillator, IchimokuCloud,
     adx, parabolic_sar, vwap, chaikin_oscillator, mfi,
     aroon, fibonacci_retracement, kama,
-    IchimokuResult, AroonResult, FibonacciResult,
 };
 
 // Volatility estimators

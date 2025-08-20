@@ -183,7 +183,7 @@ fn select_window_for_analysis(
     analysis_type: &TimeFrequencyAnalysis,
     optimization: TimeFrequencyOptimization,
 ) -> SignalResult<TimeFrequencyWindowType> {
-    match (analysis_type, optimization) {
+    match (analysis_type, optimization.clone()) {
         (TimeFrequencyAnalysis::STFT, TimeFrequencyOptimization::MinimizeUncertainty) => {
             Ok(TimeFrequencyWindowType::Gaussian { std: 1.0 })
         }

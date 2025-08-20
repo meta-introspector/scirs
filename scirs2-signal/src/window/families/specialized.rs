@@ -369,8 +369,8 @@ pub fn analyze_specialized_window(window: &[f64]) -> SpecializedWindowAnalysis {
     let n = window.len();
 
     // Basic properties
-    let peak_value = window.iter().fold(0.0, |a, &b| a.max(b));
-    let min_value = window.iter().fold(1.0, |a, &b| a.min(b));
+    let peak_value = window.iter().fold(0.0_f64, |a, &b| a.max(b));
+    let min_value = window.iter().fold(1.0_f64, |a, &b| a.min(b));
 
     // Coherent gain
     let coherent_gain = window.iter().sum::<f64>() / n as f64;
@@ -469,7 +469,7 @@ fn modified_bessel_i0(x: f64) -> f64 {
 /// Estimate effective bandwidth of window
 fn estimate_effective_bandwidth(window: &[f64]) -> f64 {
     let n = window.len();
-    let peak_value = window.iter().fold(0.0, |a, &b| a.max(b));
+    let peak_value = window.iter().fold(0.0_f64, |a, &b| a.max(b));
     let threshold = peak_value * 0.707; // -3dB point
 
     let mut left_edge = 0;
@@ -539,7 +539,7 @@ fn has_approximately_flat_region(window: &[f64]) -> bool {
     let max_variation = center_region
         .windows(2)
         .map(|w| (w[1] - w[0]).abs())
-        .fold(0.0, |a, b| a.max(b));
+        .fold(0.0_f64, |a, b| a.max(b));
 
     max_variation < 0.05 // Less than 5% variation
 }
@@ -632,7 +632,7 @@ mod tests {
         assert_eq!(window.len(), 10);
 
         // Compare with direct Hamming calculation
-        let expected = super::super::families::cosine::hamming(10, true).unwrap();
+        let expected = crate::window::families::cosine::hamming(10, true).unwrap();
         for (a, b) in window.iter().zip(expected.iter()) {
             assert!((a - b).abs() < 1e-10);
         }

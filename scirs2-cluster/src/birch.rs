@@ -579,7 +579,9 @@ where
 {
     let mut model = Birch::new(options);
     model.fit(data)?;
-    model.extract_clusters()
+    let (centroids, _cf_labels) = model.extract_clusters()?;
+    let labels = model.predict(data)?;
+    Ok((centroids, labels))
 }
 
 #[cfg(test)]
