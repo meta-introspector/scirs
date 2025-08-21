@@ -120,7 +120,7 @@ fn main() {
 
 /// Generate random data with clusters
 #[allow(dead_code)]
-fn generate_clustered_data(_n_samples: usize, ndim: usize) -> Array2<f64> {
+fn generate_clustered_data(n_samples: usize, ndim: usize) -> Array2<f64> {
     let mut rng = rand::rng();
 
     // Define distributions for two clusters
@@ -128,15 +128,15 @@ fn generate_clustered_data(_n_samples: usize, ndim: usize) -> Array2<f64> {
     let cluster2_dist = Uniform::new(-0.5, 0.5).unwrap();
 
     // Create centers for the clusters
-    let center1: Vec<f64> = (0..n_dim).map(|_| rng.random_range(0.0..2.0)).collect();
-    let center2: Vec<f64> = (0..n_dim).map(|_| rng.random_range(8.0..10.0)).collect();
+    let center1: Vec<f64> = (0..ndim).map(|_| rng.random_range(0.0..2.0)).collect();
+    let center2: Vec<f64> = (0..ndim).map(|_| rng.random_range(8.0..10.0)).collect();
 
     // Allocate data array
-    let mut data = Vec::with_capacity(_n_samples * n_dim);
+    let mut data = Vec::with_capacity(n_samples * ndim);
 
     // Generate data points
-    for i in 0.._n_samples {
-        let center = if i < _n_samples / 2 {
+    for i in 0..n_samples {
+        let center = if i < n_samples / 2 {
             &center1
         } else {
             &center2
@@ -156,14 +156,14 @@ fn generate_clustered_data(_n_samples: usize, ndim: usize) -> Array2<f64> {
     let mut indices: Vec<usize> = (0..n_samples).collect();
     indices.shuffle(&mut rng);
 
-    let mut shuffled_data = Vec::with_capacity(n_samples * n_dim);
+    let mut shuffled_data = Vec::with_capacity(n_samples * ndim);
     for &idx in &indices {
-        let start = idx * n_dim;
-        let end = start + n_dim;
+        let start = idx * ndim;
+        let end = start + ndim;
         shuffled_data.extend_from_slice(&data[start..end]);
     }
 
-    Array2::from_shape_vec((n_samples..n_dim), shuffled_data).unwrap()
+    Array2::from_shape_vec((n_samples, ndim), shuffled_data).unwrap()
 }
 
 /// Calculate the agreement between two clusterings (adjusting for label permutation)

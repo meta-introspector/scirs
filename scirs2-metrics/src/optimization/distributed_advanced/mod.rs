@@ -10,12 +10,12 @@
 //! - Performance optimization and monitoring
 
 pub mod consensus;
-pub mod sharding;
 pub mod fault_recovery;
-pub mod scaling;
+pub mod monitoring;
 pub mod optimization;
 pub mod orchestration;
-pub mod monitoring;
+pub mod scaling;
+pub mod sharding;
 
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2};
@@ -26,24 +26,23 @@ use std::time::{Duration, Instant, SystemTime};
 
 // Re-export main components
 pub use consensus::*;
-pub use sharding::*;
 pub use fault_recovery::*;
-pub use scaling::*;
+pub use monitoring::*;
 pub use optimization::*;
 pub use orchestration::*;
-pub use monitoring::*;
+pub use scaling::*;
+pub use sharding::*;
 
 /// Comprehensive advanced distributed optimization coordinator
 pub struct AdvancedDistributedOptimizer<T: Float> {
     /// Configuration
     config: AdvancedDistributedConfig,
-    
+
     /// System statistics
     stats: DistributedSystemStats,
-    
+
     /// Current state (simplified for compilation)
     state: GlobalSystemState<T>,
-    
     // TODO: Add back complex subsystems when their implementations are complete
     // consensus_manager: consensus::ConsensusCoordinator<T>,
     // shard_manager: sharding::DistributedShardManager<T>,
@@ -59,25 +58,25 @@ pub struct AdvancedDistributedOptimizer<T: Float> {
 pub struct AdvancedDistributedConfig {
     /// Basic cluster settings
     pub basic_config: crate::optimization::distributed::DistributedConfig,
-    
+
     /// Consensus algorithm configuration
     pub consensus_config: consensus::ConsensusConfig,
-    
+
     /// Data sharding strategy
     pub sharding_config: sharding::ShardingConfig,
-    
+
     /// Fault tolerance settings
     pub fault_tolerance_config: FaultToleranceConfig,
-    
+
     /// Auto-scaling configuration
     pub auto_scaling_config: AutoScalingConfig,
-    
+
     /// Performance optimization settings
     pub optimization_config: OptimizationConfig,
-    
+
     /// Orchestration configuration
     pub orchestration_config: OrchestrationConfig,
-    
+
     /// Monitoring configuration
     pub monitoring_config: MonitoringConfig,
 }
@@ -87,28 +86,28 @@ pub struct AdvancedDistributedConfig {
 pub struct DistributedSystemStats {
     /// Total operations processed
     pub total_operations: u64,
-    
+
     /// Average operation latency (milliseconds)
     pub avg_latency_ms: f64,
-    
+
     /// System uptime (seconds)
     pub uptime_seconds: u64,
-    
+
     /// Current cluster size
     pub cluster_size: usize,
-    
+
     /// Total consensus decisions
     pub consensus_decisions: u64,
-    
+
     /// Data shards managed
     pub active_shards: usize,
-    
+
     /// Fault recovery events
     pub recovery_events: u64,
-    
+
     /// Scaling operations performed
     pub scaling_operations: u64,
-    
+
     /// System health score (0.0-1.0)
     pub health_score: f64,
 }
@@ -118,13 +117,12 @@ pub struct DistributedSystemStats {
 pub struct GlobalSystemState<T: Float> {
     /// Current system timestamp
     pub timestamp: SystemTime,
-    
+
     /// Active nodes in cluster
     pub active_nodes: HashMap<String, NodeInfo>,
-    
+
     /// Marker for type parameter
     _phantom: std::marker::PhantomData<T>,
-    
     // TODO: Add back complex subsystem states when implementations are complete
     // pub consensus_state: consensus::ConsensusSystemState,
     // pub sharding_state: sharding::ShardingSystemState,
@@ -149,19 +147,19 @@ impl<T: Float> GlobalSystemState<T> {
 pub struct NodeInfo {
     /// Node identifier
     pub node_id: String,
-    
+
     /// Node address
     pub address: String,
-    
+
     /// Node status
     pub status: NodeStatus,
-    
+
     /// Node capabilities
     pub capabilities: NodeCapabilities,
-    
+
     /// Performance metrics
     pub metrics: NodeMetrics,
-    
+
     /// Last heartbeat
     pub last_heartbeat: SystemTime,
 }
@@ -171,19 +169,19 @@ pub struct NodeInfo {
 pub enum NodeStatus {
     /// Node is active and healthy
     Active,
-    
+
     /// Node is degraded but functional
     Degraded,
-    
+
     /// Node is failed or unreachable
     Failed,
-    
+
     /// Node is being initialized
     Initializing,
-    
+
     /// Node is shutting down
     ShuttingDown,
-    
+
     /// Node status unknown
     Unknown,
 }
@@ -193,19 +191,19 @@ pub enum NodeStatus {
 pub struct NodeCapabilities {
     /// CPU cores available
     pub cpu_cores: usize,
-    
+
     /// Memory available (MB)
     pub memory_mb: usize,
-    
+
     /// Storage available (MB)
     pub storage_mb: usize,
-    
+
     /// Network bandwidth (Mbps)
     pub network_bandwidth: f64,
-    
+
     /// Supported consensus algorithms
     pub consensus_algorithms: Vec<String>,
-    
+
     /// Special capabilities
     pub special_capabilities: Vec<String>,
 }
@@ -215,22 +213,22 @@ pub struct NodeCapabilities {
 pub struct NodeMetrics {
     /// CPU utilization (0.0-1.0)
     pub cpu_usage: f64,
-    
+
     /// Memory utilization (0.0-1.0)
     pub memory_usage: f64,
-    
+
     /// Storage utilization (0.0-1.0)
     pub storage_usage: f64,
-    
+
     /// Network utilization (0.0-1.0)
     pub network_usage: f64,
-    
+
     /// Average response time (milliseconds)
     pub avg_response_time_ms: f64,
-    
+
     /// Operations per second
     pub ops_per_second: f64,
-    
+
     /// Error rate (0.0-1.0)
     pub error_rate: f64,
 }
@@ -240,14 +238,14 @@ impl<T: Float + Default + std::fmt::Debug + Clone + Send + Sync> AdvancedDistrib
     pub fn new(config: AdvancedDistributedConfig) -> Result<Self> {
         // TODO: Implement full distributed system initialization
         // For now, create placeholder components to allow compilation
-        
+
         Ok(Self {
             config,
             stats: DistributedSystemStats::default(),
             state: GlobalSystemState::new(),
         })
     }
-    
+
     /// Initialize the distributed system
     pub async fn initialize(&mut self) -> Result<()> {
         // TODO: Initialize all subsystems when implementations are complete
@@ -258,56 +256,58 @@ impl<T: Float + Default + std::fmt::Debug + Clone + Send + Sync> AdvancedDistrib
         // self.performance_optimizer.initialize().await?;
         // self.orchestrator.initialize().await?;
         // self.monitoring_system.initialize().await?;
-        
+
         Ok(())
     }
-    
+
     /// Process distributed optimization task
     pub async fn optimize_distributed(&mut self, data: &Array2<T>) -> Result<Array2<T>> {
         let start_time = Instant::now();
-        
+
         // Monitor system state
         let system_state = self.get_system_state().await?;
         // TODO: Uncomment when monitoring system is implemented
         // self.monitoring_system.record_system_state(&system_state).await?;
-        
+
         // TODO: Uncomment when scaling manager is implemented
         // Check if scaling is needed
         // if self.scaling_manager.should_scale(&system_state).await? {
         //     self.scaling_manager.execute_scaling(&system_state).await?;
         // }
-        
+
         // TODO: Uncomment when shard manager is implemented
         // Optimize data distribution
         // let sharding_plan = self.shard_manager.create_optimal_sharding_plan(data).await?;
-        
+
         // TODO: Uncomment when consensus manager is implemented
         // Distribute data using consensus
         // let consensus_result = self.consensus_manager.reach_consensus_on_plan(&sharding_plan).await?;
-        
+
         // TODO: Uncomment when orchestrator is implemented
         // Execute distributed computation
         // let computation_result = self.orchestrator.execute_distributed_computation(
         //     data,
         //     &consensus_result.plan
         // ).await?;
-        
+
         // TODO: Uncomment when performance optimizer is implemented
         // Apply performance optimizations
         // let optimized_result = self.performance_optimizer.optimize_result(&computation_result).await?;
-        
+
         // Simplified implementation for now
         let optimized_result = data.clone();
-        
+
         // Update statistics
         let elapsed = start_time.elapsed();
         self.stats.total_operations += 1;
-        self.stats.avg_latency_ms = (self.stats.avg_latency_ms * (self.stats.total_operations - 1) as f64 
-            + elapsed.as_millis() as f64) / self.stats.total_operations as f64;
-        
+        self.stats.avg_latency_ms = (self.stats.avg_latency_ms
+            * (self.stats.total_operations - 1) as f64
+            + elapsed.as_millis() as f64)
+            / self.stats.total_operations as f64;
+
         Ok(optimized_result)
     }
-    
+
     /// Get current system state
     pub async fn get_system_state(&self) -> Result<GlobalSystemState<T>> {
         Ok(GlobalSystemState {
@@ -317,7 +317,7 @@ impl<T: Float + Default + std::fmt::Debug + Clone + Send + Sync> AdvancedDistrib
             // TODO: Add back subsystem states when implementations are complete
         })
     }
-    
+
     /// Handle system failures
     pub async fn handle_failure(&mut self, failure_info: FailureInfo) -> Result<()> {
         // TODO: Implement failure handling when subsystems are complete
@@ -326,14 +326,14 @@ impl<T: Float + Default + std::fmt::Debug + Clone + Send + Sync> AdvancedDistrib
         // self.recovery_manager.execute_recovery_plan(&recovery_plan).await?;
         // self.consensus_manager.handle_node_failure(&failure_info.node_id).await?;
         // self.shard_manager.rebalance_after_failure(&failure_info).await?;
-        
+
         // Update statistics
         self.stats.recovery_events += 1;
         self.stats.health_score = self.calculate_health_score().await?;
-        
+
         Ok(())
     }
-    
+
     /// Calculate system health score
     async fn calculate_health_score(&self) -> Result<f64> {
         // TODO: Uncomment when all subsystems are implemented
@@ -343,21 +343,21 @@ impl<T: Float + Default + std::fmt::Debug + Clone + Send + Sync> AdvancedDistrib
         // let scaling_health = self.scaling_manager.get_health_score().await?;
         // let performance_health = self.performance_optimizer.get_health_score().await?;
         // let orchestration_health = self.orchestrator.get_health_score().await?;
-        
-        // let overall_health = (consensus_health + sharding_health + recovery_health + 
+
+        // let overall_health = (consensus_health + sharding_health + recovery_health +
         //                      scaling_health + performance_health + orchestration_health) / 6.0;
-        
+
         // Simplified health score for now
         let overall_health = 0.8; // Default reasonable health score
-        
+
         Ok(overall_health.min(1.0).max(0.0))
     }
-    
+
     /// Get system statistics
     pub fn get_statistics(&self) -> &DistributedSystemStats {
         &self.stats
     }
-    
+
     /// Shutdown the distributed system
     pub async fn shutdown(&mut self) -> Result<()> {
         // TODO: Uncomment when all subsystems are implemented
@@ -369,7 +369,7 @@ impl<T: Float + Default + std::fmt::Debug + Clone + Send + Sync> AdvancedDistrib
         // self.shard_manager.shutdown().await?;
         // self.consensus_manager.shutdown().await?;
         // self.monitoring_system.shutdown().await?;
-        
+
         Ok(())
     }
 }
@@ -631,21 +631,21 @@ impl Default for ResourceRequirements {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_advanced_distributed_config() {
         let config = AdvancedDistributedConfig::default();
         assert!(config.consensus_config.quorum_size > 0);
         assert!(config.sharding_config.shard_count > 0);
     }
-    
+
     #[test]
     fn test_node_metrics() {
         let metrics = NodeMetrics::default();
         assert_eq!(metrics.cpu_usage, 0.0);
         assert_eq!(metrics.ops_per_second, 0.0);
     }
-    
+
     #[test]
     fn test_distributed_system_stats() {
         let stats = DistributedSystemStats::default();

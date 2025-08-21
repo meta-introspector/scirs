@@ -289,8 +289,7 @@ pub use ml_optimizers::{
     GroupLassoOptimizer, LassoOptimizer,
 };
 pub use multi_objective::{
-    MultiObjectiveConfig, MultiObjectiveResult, MultiObjectiveSolution, NSGAII,
-    NSGAIII,
+    MultiObjectiveConfig, MultiObjectiveResult, MultiObjectiveSolution, NSGAII, NSGAIII,
 };
 pub use neural_integration::{optimizers, NeuralOptimizer, NeuralParameters, NeuralTrainer};
 pub use neuromorphic::{
@@ -411,8 +410,7 @@ pub mod prelude {
         GroupLassoOptimizer, LassoOptimizer,
     };
     pub use crate::multi_objective::{
-        MultiObjectiveConfig, MultiObjectiveResult, MultiObjectiveSolution, NSGAII,
-        NSGAIII,
+        MultiObjectiveConfig, MultiObjectiveResult, MultiObjectiveSolution, NSGAII, NSGAIII,
     };
     pub use crate::neural_integration::{
         optimizers, NeuralOptimizer, NeuralParameters, NeuralTrainer,

@@ -43,7 +43,7 @@
 //!
 //! // Portfolio value over time
 //! let portfolio_values = array![1000.0, 1100.0, 1050.0, 950.0, 1200.0, 1150.0, 1300.0];
-//! 
+//!
 //! // Maximum drawdown
 //! let mdd = max_drawdown(&portfolio_values).unwrap();
 //! println!("Maximum Drawdown: {:.2}%", mdd * 100.0);
@@ -77,11 +77,11 @@
 //! use ndarray::array;
 //!
 //! let portfolio_values = array![1000.0, 1100.0, 1050.0, 950.0, 1200.0, 1150.0, 1300.0];
-//! 
+//!
 //! let recovery_analysis = drawdown_recovery_analysis(&portfolio_values).unwrap();
 //! for period in recovery_analysis {
-//!     println!("Drawdown: {:.2}%, Duration: {} periods, Recovery: {} periods", 
-//!              period.max_drawdown * 100.0, period.duration, 
+//!     println!("Drawdown: {:.2}%, Duration: {} periods, Recovery: {} periods",
+//!              period.max_drawdown * 100.0, period.duration,
 //!              period.recovery_periods.unwrap_or(0));
 //! }
 //! ```
@@ -227,7 +227,7 @@ pub fn calculate_drawdown_series<F: Float + Clone>(values: &Array1<F>) -> Result
 /// ```
 pub fn pain_index<F: Float + Clone>(values: &Array1<F>) -> Result<F> {
     let drawdowns = calculate_drawdown_series(values)?;
-    
+
     // Convert to positive values and average
     let total_drawdown = drawdowns.mapv(|x| -x).sum();
     Ok(total_drawdown / F::from(values.len()).unwrap())
@@ -258,7 +258,7 @@ pub fn pain_index<F: Float + Clone>(values: &Array1<F>) -> Result<F> {
 /// ```
 pub fn ulcer_index<F: Float + Clone>(values: &Array1<F>) -> Result<F> {
     let drawdowns = calculate_drawdown_series(values)?;
-    
+
     // Calculate RMS of drawdowns (as positive values)
     let sum_squared_dd = drawdowns.mapv(|x| x.powi(2)).sum();
     Ok((sum_squared_dd / F::from(values.len()).unwrap()).sqrt())
@@ -377,7 +377,7 @@ pub fn drawdown_recovery_analysis<F: Float + Clone>(
 
                 in_drawdown = false;
             }
-            
+
             peak = values[i];
             peak_index = i;
         } else if values[i] < peak {
@@ -456,7 +456,7 @@ pub fn max_consecutive_losses<F: Float + Clone>(returns: &Array1<F>) -> usize {
 /// * `Result<F>` - Average drawdown duration in periods
 pub fn average_drawdown_duration<F: Float + Clone>(values: &Array1<F>) -> Result<F> {
     let periods = drawdown_recovery_analysis(values)?;
-    
+
     if periods.is_empty() {
         return Ok(F::zero());
     }
@@ -479,12 +479,12 @@ pub fn average_drawdown_duration<F: Float + Clone>(values: &Array1<F>) -> Result
 /// * `Result<F>` - Average recovery time in periods (only for recovered drawdowns)
 pub fn average_recovery_time<F: Float + Clone>(values: &Array1<F>) -> Result<F> {
     let periods = drawdown_recovery_analysis(values)?;
-    
+
     let recovered_periods: Vec<&DrawdownPeriod<F>> = periods
         .iter()
         .filter(|p| p.recovery_periods.is_some())
         .collect();
-    
+
     if recovered_periods.is_empty() {
         return Ok(F::zero());
     }
@@ -493,7 +493,7 @@ pub fn average_recovery_time<F: Float + Clone>(values: &Array1<F>) -> Result<F> 
         .iter()
         .map(|p| p.recovery_periods.unwrap())
         .sum();
-    
+
     Ok(F::from(total_recovery).unwrap() / F::from(recovered_periods.len()).unwrap())
 }
 
@@ -520,7 +520,7 @@ mod tests {
     fn test_max_drawdown() {
         let values = arr1(&[1000.0, 1100.0, 1050.0, 950.0, 1200.0, 1150.0, 1300.0]);
         let mdd = max_drawdown(&values).unwrap();
-        
+
         // Maximum drawdown should be from peak of 1100 to trough of 950
         let expected = (1100.0 - 950.0) / 1100.0;
         assert!((mdd - expected).abs() < 1e-10);
@@ -530,12 +530,12 @@ mod tests {
     fn test_drawdown_series() {
         let values = arr1(&[1000.0, 1100.0, 1050.0, 950.0, 1200.0]);
         let drawdowns = calculate_drawdown_series(&values).unwrap();
-        
+
         assert_eq!(drawdowns.len(), values.len());
-        
+
         // First value should have zero drawdown
         assert!(drawdowns[0] == 0.0);
-        
+
         // Drawdowns should be non-positive
         for &dd in drawdowns.iter() {
             assert!(dd <= 0.0);
@@ -546,7 +546,7 @@ mod tests {
     fn test_pain_index() {
         let values = arr1(&[1000.0, 1100.0, 1050.0, 950.0, 1200.0]);
         let pain = pain_index(&values).unwrap();
-        
+
         // Pain index should be positive (we convert drawdowns to positive)
         assert!(pain >= 0.0);
     }
@@ -555,7 +555,7 @@ mod tests {
     fn test_ulcer_index() {
         let values = arr1(&[1000.0, 1100.0, 1050.0, 950.0, 1200.0]);
         let ulcer = ulcer_index(&values).unwrap();
-        
+
         // Ulcer index should be positive
         assert!(ulcer >= 0.0);
     }
@@ -564,10 +564,10 @@ mod tests {
     fn test_calmar_ratio() {
         let returns = arr1(&[0.10, -0.05, -0.10, 0.26, -0.04]);
         let values = arr1(&[1000.0, 1100.0, 1050.0, 950.0, 1200.0, 1150.0]);
-        
+
         let result = calmar_ratio(&returns, &values, 252);
         assert!(result.is_ok());
-        
+
         let calmar = result.unwrap();
         // Calmar ratio should be finite or infinity (if no drawdown)
         assert!(calmar.is_finite() || calmar.is_infinite());
@@ -577,10 +577,10 @@ mod tests {
     fn test_drawdown_recovery_analysis() {
         let values = arr1(&[1000.0, 1100.0, 1050.0, 950.0, 1200.0, 1150.0, 1300.0]);
         let periods = drawdown_recovery_analysis(&values).unwrap();
-        
+
         // Should have at least one drawdown period
         assert!(!periods.is_empty());
-        
+
         // Check properties of first period
         if !periods.is_empty() {
             let first_period = &periods[0];
@@ -594,7 +594,7 @@ mod tests {
     fn test_max_consecutive_losses() {
         let returns = arr1(&[0.01, -0.02, -0.01, -0.005, 0.02, -0.01, 0.03]);
         let max_losses = max_consecutive_losses(&returns);
-        
+
         // Should be 3 consecutive losses in the middle
         assert_eq!(max_losses, 3);
     }
@@ -603,7 +603,7 @@ mod tests {
     fn test_no_drawdown() {
         let values = arr1(&[1000.0, 1100.0, 1200.0, 1300.0, 1400.0]);
         let mdd = max_drawdown(&values).unwrap();
-        
+
         // Should be zero drawdown for monotonically increasing series
         assert!(mdd == 0.0);
     }
@@ -619,7 +619,7 @@ mod tests {
     fn test_single_value() {
         let values = arr1(&[1000.0]);
         let mdd = max_drawdown(&values).unwrap();
-        
+
         // Single value should have zero drawdown
         assert!(mdd == 0.0);
     }

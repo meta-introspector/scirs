@@ -10,32 +10,32 @@ use num_traits::Float;
 use crate::error::{Result, TimeSeriesError};
 
 /// Modern Portfolio Theory: Calculate efficient frontier point
-/// 
+///
 /// Constructs a portfolio on the efficient frontier for a given target return.
 /// This simplified implementation uses iterative adjustment toward the target
 /// return. In practice, quadratic programming should be used for precision.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `expected_returns` - Expected returns for each asset
 /// * `covariance_matrix` - Asset return covariance matrix
 /// * `target_return` - Desired portfolio expected return
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<Array1<F>>` - Optimal portfolio weights
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::portfolio::optimization::calculate_efficient_portfolio;
 /// use ndarray::{array, Array2};
-/// 
+///
 /// let expected_returns = array![0.10, 0.12, 0.08];
-/// let cov_matrix = Array2::from_shape_vec((3, 3), 
+/// let cov_matrix = Array2::from_shape_vec((3, 3),
 ///     vec![0.01, 0.002, 0.001, 0.002, 0.015, 0.003, 0.001, 0.003, 0.008]).unwrap();
 /// let target_return = 0.10;
-/// 
+///
 /// let weights = calculate_efficient_portfolio(&expected_returns, &cov_matrix, target_return).unwrap();
 /// ```
 pub fn calculate_efficient_portfolio<F: Float + Clone>(
@@ -86,7 +86,7 @@ pub fn calculate_efficient_portfolio<F: Float + Clone>(
             } else {
                 -return_diff * learning_rate
             };
-            
+
             weights[i] = weights[i] + adjustment;
             weights[i] = weights[i].max(F::zero()); // Ensure non-negative
         }
@@ -103,8 +103,9 @@ pub fn calculate_efficient_portfolio<F: Float + Clone>(
         // Add damping for later iterations to prevent oscillation
         if iteration > max_iterations / 2 {
             let damping_factor = F::from(0.95).unwrap();
-            weights.mapv_inplace(|w| w * damping_factor + 
-                (F::one() / F::from(n).unwrap()) * (F::one() - damping_factor));
+            weights.mapv_inplace(|w| {
+                w * damping_factor + (F::one() / F::from(n).unwrap()) * (F::one() - damping_factor)
+            });
         }
     }
 
@@ -112,31 +113,29 @@ pub fn calculate_efficient_portfolio<F: Float + Clone>(
 }
 
 /// Risk parity portfolio optimization
-/// 
+///
 /// Constructs a portfolio where each asset contributes equally to portfolio risk.
 /// This implementation uses inverse volatility weighting as an approximation,
 /// which is computationally efficient and often performs well in practice.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `covariance_matrix` - Asset return covariance matrix
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<Array1<F>>` - Risk parity portfolio weights
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::portfolio::optimization::risk_parity_portfolio;
 /// use ndarray::Array2;
-/// 
+///
 /// let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
 /// let weights = risk_parity_portfolio(&cov_matrix).unwrap();
 /// ```
-pub fn risk_parity_portfolio<F: Float + Clone>(
-    covariance_matrix: &Array2<F>,
-) -> Result<Array1<F>> {
+pub fn risk_parity_portfolio<F: Float + Clone>(covariance_matrix: &Array2<F>) -> Result<Array1<F>> {
     let n = covariance_matrix.nrows();
 
     if covariance_matrix.ncols() != n {
@@ -181,25 +180,25 @@ pub fn risk_parity_portfolio<F: Float + Clone>(
 }
 
 /// Minimum variance portfolio optimization
-/// 
+///
 /// Constructs the portfolio with the lowest possible variance (risk).
 /// This implementation uses inverse variance weighting, which provides
 /// a good approximation to the true minimum variance portfolio.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `covariance_matrix` - Asset return covariance matrix
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<Array1<F>>` - Minimum variance portfolio weights
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::portfolio::optimization::minimum_variance_portfolio;
 /// use ndarray::Array2;
-/// 
+///
 /// let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
 /// let weights = minimum_variance_portfolio(&cov_matrix).unwrap();
 /// ```
@@ -232,9 +231,10 @@ pub fn minimum_variance_portfolio<F: Float + Clone>(
             weights[i] = inv_variance;
             total_inv_var = total_inv_var + inv_variance;
         } else {
-            return Err(TimeSeriesError::InvalidInput(
-                format!("Asset {} has zero variance", i),
-            ));
+            return Err(TimeSeriesError::InvalidInput(format!(
+                "Asset {} has zero variance",
+                i
+            )));
         }
     }
 
@@ -251,18 +251,18 @@ pub fn minimum_variance_portfolio<F: Float + Clone>(
 }
 
 /// Maximum diversification portfolio
-/// 
+///
 /// Constructs a portfolio that maximizes the diversification ratio, defined as
 /// the weighted average of individual volatilities divided by portfolio volatility.
 /// This approach tends to favor assets with low correlations.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `expected_returns` - Expected returns (used for tiebreaking)
 /// * `covariance_matrix` - Asset return covariance matrix
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<Array1<F>>` - Maximum diversification portfolio weights
 pub fn maximum_diversification_portfolio<F: Float + Clone>(
     expected_returns: &Array1<F>,
@@ -279,7 +279,7 @@ pub fn maximum_diversification_portfolio<F: Float + Clone>(
 
     // Start with inverse volatility weights (good approximation)
     let mut weights = Array1::zeros(n);
-    
+
     for i in 0..n {
         let variance = covariance_matrix[[i, i]];
         if variance > F::zero() {
@@ -298,11 +298,11 @@ pub fn maximum_diversification_portfolio<F: Float + Clone>(
     // Iterative improvement (simplified)
     for _ in 0..50 {
         let mut new_weights = weights.clone();
-        
+
         // Calculate portfolio volatility
         let portfolio_var = calculate_portfolio_variance(&weights, covariance_matrix)?;
         let portfolio_vol = portfolio_var.sqrt();
-        
+
         if portfolio_vol <= F::zero() {
             break;
         }
@@ -311,7 +311,7 @@ pub fn maximum_diversification_portfolio<F: Float + Clone>(
         for i in 0..n {
             let individual_vol = covariance_matrix[[i, i]].sqrt();
             let contribution = weights[i] * individual_vol / portfolio_vol;
-            
+
             // Increase weight if asset has high individual vol but low portfolio contribution
             if individual_vol > contribution {
                 let adjustment = F::from(0.01).unwrap() * (individual_vol - contribution);
@@ -331,18 +331,18 @@ pub fn maximum_diversification_portfolio<F: Float + Clone>(
 }
 
 /// Maximum Sharpe ratio portfolio (tangency portfolio)
-/// 
+///
 /// Constructs the portfolio with the highest Sharpe ratio, which represents
 /// the optimal risk-return trade-off on the efficient frontier.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `expected_returns` - Expected asset returns
 /// * `covariance_matrix` - Asset return covariance matrix
 /// * `risk_free_rate` - Risk-free rate for Sharpe ratio calculation
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<Array1<F>>` - Maximum Sharpe ratio portfolio weights
 pub fn maximum_sharpe_portfolio<F: Float + Clone>(
     expected_returns: &Array1<F>,
@@ -368,24 +368,26 @@ pub fn maximum_sharpe_portfolio<F: Float + Clone>(
     // Grid search with refinement (simplified optimization)
     for _iteration in 0..100 {
         let mut best_weights = weights.clone();
-        
+
         // Try small perturbations
         for i in 0..n {
             for delta in [-0.05, -0.01, 0.01, 0.05].iter() {
                 let mut test_weights = weights.clone();
-                
+
                 // Adjust weight i
                 test_weights[i] = test_weights[i] + F::from(*delta).unwrap();
                 test_weights[i] = test_weights[i].max(F::zero());
-                
+
                 // Normalize
                 let sum = test_weights.sum();
                 if sum > F::zero() {
                     test_weights.mapv_inplace(|w| w / sum);
-                    
+
                     // Calculate Sharpe ratio
                     if let Ok(sharpe) = calculate_portfolio_sharpe_ratio(
-                        &test_weights, &excess_returns, covariance_matrix
+                        &test_weights,
+                        &excess_returns,
+                        covariance_matrix,
                     ) {
                         if sharpe > best_sharpe {
                             best_sharpe = sharpe;
@@ -395,7 +397,7 @@ pub fn maximum_sharpe_portfolio<F: Float + Clone>(
                 }
             }
         }
-        
+
         weights = best_weights;
     }
 
@@ -403,21 +405,21 @@ pub fn maximum_sharpe_portfolio<F: Float + Clone>(
 }
 
 /// Calculate portfolio variance given weights and covariance matrix
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `weights` - Portfolio weights
 /// * `covariance_matrix` - Asset return covariance matrix
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<F>` - Portfolio variance
 pub fn calculate_portfolio_variance<F: Float + Clone>(
     weights: &Array1<F>,
     covariance_matrix: &Array2<F>,
 ) -> Result<F> {
     let n = weights.len();
-    
+
     if covariance_matrix.nrows() != n || covariance_matrix.ncols() != n {
         return Err(TimeSeriesError::DimensionMismatch {
             expected: n,
@@ -426,7 +428,7 @@ pub fn calculate_portfolio_variance<F: Float + Clone>(
     }
 
     let mut variance = F::zero();
-    
+
     for i in 0..n {
         for j in 0..n {
             variance = variance + weights[i] * weights[j] * covariance_matrix[[i, j]];
@@ -437,15 +439,15 @@ pub fn calculate_portfolio_variance<F: Float + Clone>(
 }
 
 /// Calculate portfolio Sharpe ratio
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `weights` - Portfolio weights
 /// * `excess_returns` - Asset excess returns (return - risk_free_rate)
 /// * `covariance_matrix` - Asset return covariance matrix
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<F>` - Portfolio Sharpe ratio
 fn calculate_portfolio_sharpe_ratio<F: Float + Clone>(
     weights: &Array1<F>,
@@ -453,43 +455,44 @@ fn calculate_portfolio_sharpe_ratio<F: Float + Clone>(
     covariance_matrix: &Array2<F>,
 ) -> Result<F> {
     // Calculate portfolio expected excess return
-    let portfolio_excess_return = weights.iter()
+    let portfolio_excess_return = weights
+        .iter()
         .zip(excess_returns.iter())
         .map(|(&w, &r)| w * r)
         .fold(F::zero(), |acc, x| acc + x);
 
     // Calculate portfolio variance
     let portfolio_variance = calculate_portfolio_variance(weights, covariance_matrix)?;
-    
+
     if portfolio_variance <= F::zero() {
         return Ok(F::zero());
     }
 
     let portfolio_volatility = portfolio_variance.sqrt();
-    
+
     Ok(portfolio_excess_return / portfolio_volatility)
 }
 
 /// Calculate correlation matrix from returns
-/// 
+///
 /// Computes the correlation matrix from a matrix of asset returns.
 /// This is often needed as input for portfolio optimization.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `returns` - Asset return matrix (rows: time, cols: assets)
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<Array2<F>>` - Correlation matrix
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::portfolio::optimization::calculate_correlation_matrix;
 /// use ndarray::Array2;
-/// 
-/// let returns = Array2::from_shape_vec((5, 2), 
+///
+/// let returns = Array2::from_shape_vec((5, 2),
 ///     vec![0.01, 0.02, -0.01, 0.005, 0.015, -0.008, 0.005, 0.012, -0.002, 0.008]).unwrap();
 /// let corr_matrix = calculate_correlation_matrix(&returns).unwrap();
 /// ```
@@ -585,11 +588,7 @@ mod tests {
 
     #[test]
     fn test_risk_parity_portfolio() {
-        let cov_matrix = Array2::from_shape_vec(
-            (2, 2),
-            vec![0.01, 0.002, 0.002, 0.015],
-        )
-        .unwrap();
+        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
 
         let result = risk_parity_portfolio(&cov_matrix);
         assert!(result.is_ok());
@@ -607,11 +606,7 @@ mod tests {
 
     #[test]
     fn test_minimum_variance_portfolio() {
-        let cov_matrix = Array2::from_shape_vec(
-            (2, 2),
-            vec![0.01, 0.002, 0.002, 0.015],
-        )
-        .unwrap();
+        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
 
         let result = minimum_variance_portfolio(&cov_matrix);
         assert!(result.is_ok());
@@ -630,11 +625,7 @@ mod tests {
     #[test]
     fn test_portfolio_variance() {
         let weights = arr1(&[0.6, 0.4]);
-        let cov_matrix = Array2::from_shape_vec(
-            (2, 2),
-            vec![0.01, 0.002, 0.002, 0.015],
-        )
-        .unwrap();
+        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
 
         let result = calculate_portfolio_variance(&weights, &cov_matrix);
         assert!(result.is_ok());
@@ -651,7 +642,9 @@ mod tests {
     fn test_correlation_matrix() {
         let returns = Array2::from_shape_vec(
             (5, 2),
-            vec![0.01, 0.02, -0.01, 0.005, 0.015, -0.008, 0.005, 0.012, -0.002, 0.008],
+            vec![
+                0.01, 0.02, -0.01, 0.005, 0.015, -0.008, 0.005, 0.012, -0.002, 0.008,
+            ],
         )
         .unwrap();
 
@@ -697,11 +690,7 @@ mod tests {
     #[test]
     fn test_maximum_sharpe_portfolio() {
         let expected_returns = arr1(&[0.10, 0.12]);
-        let cov_matrix = Array2::from_shape_vec(
-            (2, 2),
-            vec![0.01, 0.002, 0.002, 0.015],
-        )
-        .unwrap();
+        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
         let risk_free_rate = 0.02;
 
         let result = maximum_sharpe_portfolio(&expected_returns, &cov_matrix, risk_free_rate);

@@ -10,33 +10,33 @@ use num_traits::Float;
 use crate::error::{Result, TimeSeriesError};
 
 /// Calculate portfolio Value at Risk using parametric method
-/// 
+///
 /// Estimates potential portfolio losses using the normal distribution assumption.
 /// This method is fast but may underestimate tail risks during extreme market conditions.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `portfolio_value` - Current portfolio market value
 /// * `portfolio_return_mean` - Mean portfolio return (per period)
 /// * `portfolio_return_std` - Standard deviation of portfolio returns
 /// * `confidence_level` - Confidence level (0.90, 0.95, 0.99 typical)
 /// * `time_horizon` - Number of periods for VaR calculation
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<F>` - Estimated Value at Risk (loss amount)
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::portfolio::risk::portfolio_var_parametric;
-/// 
+///
 /// let portfolio_value = 1000000.0; // $1M portfolio
 /// let mean_return = 0.0008; // 0.08% daily return
 /// let std_return = 0.015; // 1.5% daily volatility
 /// let confidence = 0.95; // 95% confidence
 /// let horizon = 1; // 1-day VaR
-/// 
+///
 /// let var = portfolio_var_parametric(portfolio_value, mean_return, std_return, confidence, horizon).unwrap();
 /// println!("1-day 95% VaR: ${:.2}", var);
 /// ```
@@ -64,9 +64,9 @@ pub fn portfolio_var_parametric<F: Float + Clone>(
     // Standard normal quantiles for common confidence levels
     let z_score = match confidence_level {
         c if c >= 0.99 => F::from(-2.326).unwrap(), // 99% VaR
-        c if c >= 0.975 => F::from(-1.96).unwrap(),  // 97.5% VaR
-        c if c >= 0.95 => F::from(-1.645).unwrap(),  // 95% VaR
-        c if c >= 0.90 => F::from(-1.282).unwrap(),  // 90% VaR
+        c if c >= 0.975 => F::from(-1.96).unwrap(), // 97.5% VaR
+        c if c >= 0.95 => F::from(-1.645).unwrap(), // 95% VaR
+        c if c >= 0.90 => F::from(-1.282).unwrap(), // 90% VaR
         _ => {
             // For other confidence levels, use approximation
             let p = 1.0 - confidence_level;
@@ -87,18 +87,18 @@ pub fn portfolio_var_parametric<F: Float + Clone>(
 }
 
 /// Calculate portfolio Component Value at Risk (Component VaR)
-/// 
+///
 /// Decomposes portfolio VaR into contributions from individual assets,
 /// helping identify the primary sources of portfolio risk.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `weights` - Portfolio asset weights
 /// * `asset_returns` - Historical returns matrix (rows: time, cols: assets)
 /// * `confidence_level` - Confidence level for VaR calculation
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<Array1<F>>` - Component VaR for each asset
 pub fn calculate_component_var<F: Float + Clone + std::iter::Sum>(
     weights: &Array1<F>,
@@ -114,32 +114,35 @@ pub fn calculate_component_var<F: Float + Clone + std::iter::Sum>(
 
     // Calculate portfolio returns
     let portfolio_returns = super::core::calculate_portfolio_returns(asset_returns, weights)?;
-    
+
     // Calculate portfolio VaR
-    let portfolio_var = crate::financial::risk::var_historical(&portfolio_returns, confidence_level)?;
-    
+    let portfolio_var =
+        crate::financial::risk::var_historical(&portfolio_returns, confidence_level)?;
+
     let mut component_vars = Array1::zeros(weights.len());
-    
+
     // Calculate marginal VaR for each asset
     for i in 0..weights.len() {
         // Small perturbation for numerical derivative
         let epsilon = F::from(0.001).unwrap();
         let mut perturbed_weights = weights.clone();
         perturbed_weights[i] = perturbed_weights[i] + epsilon;
-        
+
         // Renormalize weights
         let weight_sum = perturbed_weights.sum();
         perturbed_weights.mapv_inplace(|w| w / weight_sum);
-        
+
         // Calculate perturbed portfolio returns
-        let perturbed_returns = super::core::calculate_portfolio_returns(asset_returns, &perturbed_weights)?;
-        
+        let perturbed_returns =
+            super::core::calculate_portfolio_returns(asset_returns, &perturbed_weights)?;
+
         // Calculate perturbed VaR
-        let perturbed_var = crate::financial::risk::var_historical(&perturbed_returns, confidence_level)?;
-        
+        let perturbed_var =
+            crate::financial::risk::var_historical(&perturbed_returns, confidence_level)?;
+
         // Marginal VaR (derivative)
         let marginal_var = (perturbed_var - portfolio_var) / epsilon;
-        
+
         // Component VaR = weight × marginal VaR
         component_vars[i] = weights[i] * marginal_var;
     }
@@ -148,18 +151,18 @@ pub fn calculate_component_var<F: Float + Clone + std::iter::Sum>(
 }
 
 /// Calculate portfolio stress testing scenarios
-/// 
+///
 /// Applies various stress scenarios to evaluate portfolio performance
 /// under extreme market conditions.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `weights` - Portfolio asset weights
 /// * `asset_returns` - Historical returns matrix
 /// * `stress_factors` - Stress multipliers for each scenario
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<Array1<F>>` - Portfolio returns under stress scenarios
 pub fn stress_test_portfolio<F: Float + Clone>(
     weights: &Array1<F>,
@@ -174,23 +177,24 @@ pub fn stress_test_portfolio<F: Float + Clone>(
     }
 
     let mut stressed_returns = Array1::zeros(stress_factors.len());
-    
+
     for scenario in 0..stress_factors.len() {
         let stress_factor = stress_factors[scenario];
         let mut portfolio_return = F::zero();
-        
+
         // Apply stress factor to all assets and calculate portfolio return
         for asset in 0..weights.len() {
             // Use worst historical return for this asset and apply stress
             let asset_col = asset_returns.column(asset);
-            let min_return = asset_col.iter().fold(F::infinity(), |min, &val| {
-                if val < min { val } else { min }
-            });
-            
+            let min_return =
+                asset_col
+                    .iter()
+                    .fold(F::infinity(), |min, &val| if val < min { val } else { min });
+
             let stressed_asset_return = min_return * stress_factor;
             portfolio_return = portfolio_return + weights[asset] * stressed_asset_return;
         }
-        
+
         stressed_returns[scenario] = portfolio_return;
     }
 
@@ -198,18 +202,18 @@ pub fn stress_test_portfolio<F: Float + Clone>(
 }
 
 /// Calculate Expected Shortfall decomposition
-/// 
+///
 /// Decomposes portfolio Expected Shortfall into asset contributions,
 /// providing insight into tail risk sources.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `weights` - Portfolio asset weights
 /// * `asset_returns` - Historical returns matrix
 /// * `confidence_level` - Confidence level for ES calculation
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<Array1<F>>` - Component Expected Shortfall for each asset
 pub fn calculate_component_es<F: Float + Clone + std::iter::Sum>(
     weights: &Array1<F>,
@@ -225,32 +229,35 @@ pub fn calculate_component_es<F: Float + Clone + std::iter::Sum>(
 
     // Calculate portfolio returns
     let portfolio_returns = super::core::calculate_portfolio_returns(asset_returns, weights)?;
-    
+
     // Calculate portfolio ES
-    let portfolio_es = crate::financial::risk::expected_shortfall(&portfolio_returns, confidence_level)?;
-    
+    let portfolio_es =
+        crate::financial::risk::expected_shortfall(&portfolio_returns, confidence_level)?;
+
     let mut component_es = Array1::zeros(weights.len());
-    
+
     // Calculate marginal ES for each asset
     for i in 0..weights.len() {
         // Small perturbation for numerical derivative
         let epsilon = F::from(0.001).unwrap();
         let mut perturbed_weights = weights.clone();
         perturbed_weights[i] = perturbed_weights[i] + epsilon;
-        
+
         // Renormalize weights
         let weight_sum = perturbed_weights.sum();
         perturbed_weights.mapv_inplace(|w| w / weight_sum);
-        
+
         // Calculate perturbed portfolio returns
-        let perturbed_returns = super::core::calculate_portfolio_returns(asset_returns, &perturbed_weights)?;
-        
+        let perturbed_returns =
+            super::core::calculate_portfolio_returns(asset_returns, &perturbed_weights)?;
+
         // Calculate perturbed ES
-        let perturbed_es = crate::financial::risk::expected_shortfall(&perturbed_returns, confidence_level)?;
-        
+        let perturbed_es =
+            crate::financial::risk::expected_shortfall(&perturbed_returns, confidence_level)?;
+
         // Marginal ES (derivative)
         let marginal_es = (perturbed_es - portfolio_es) / epsilon;
-        
+
         // Component ES = weight × marginal ES
         component_es[i] = weights[i] * marginal_es;
     }
@@ -259,18 +266,18 @@ pub fn calculate_component_es<F: Float + Clone + std::iter::Sum>(
 }
 
 /// Calculate portfolio correlation-based risk measures
-/// 
+///
 /// Analyzes how portfolio risk changes based on asset correlations,
 /// useful for understanding diversification benefits.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `weights` - Portfolio asset weights
 /// * `correlation_matrix` - Asset correlation matrix
 /// * `individual_volatilities` - Individual asset volatilities
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<(F, F, F)>` - (portfolio_volatility, diversification_ratio, concentration_risk)
 pub fn analyze_correlation_risk<F: Float + Clone>(
     weights: &Array1<F>,
@@ -278,14 +285,14 @@ pub fn analyze_correlation_risk<F: Float + Clone>(
     individual_volatilities: &Array1<F>,
 ) -> Result<(F, F, F)> {
     let n = weights.len();
-    
+
     if correlation_matrix.nrows() != n || correlation_matrix.ncols() != n {
         return Err(TimeSeriesError::DimensionMismatch {
             expected: n,
             actual: correlation_matrix.nrows(),
         });
     }
-    
+
     if individual_volatilities.len() != n {
         return Err(TimeSeriesError::DimensionMismatch {
             expected: n,
@@ -298,14 +305,19 @@ pub fn analyze_correlation_risk<F: Float + Clone>(
     for i in 0..n {
         for j in 0..n {
             let correlation = correlation_matrix[[i, j]];
-            portfolio_variance = portfolio_variance + 
-                weights[i] * weights[j] * individual_volatilities[i] * individual_volatilities[j] * correlation;
+            portfolio_variance = portfolio_variance
+                + weights[i]
+                    * weights[j]
+                    * individual_volatilities[i]
+                    * individual_volatilities[j]
+                    * correlation;
         }
     }
     let portfolio_volatility = portfolio_variance.sqrt();
 
     // Calculate weighted average of individual volatilities
-    let weighted_avg_volatility = weights.iter()
+    let weighted_avg_volatility = weights
+        .iter()
         .zip(individual_volatilities.iter())
         .map(|(&w, &vol)| w * vol)
         .fold(F::zero(), |acc, x| acc + x);
@@ -320,24 +332,28 @@ pub fn analyze_correlation_risk<F: Float + Clone>(
     // Concentration risk (Herfindahl index)
     let concentration_risk = weights.mapv(|w| w.powi(2)).sum();
 
-    Ok((portfolio_volatility, diversification_ratio, concentration_risk))
+    Ok((
+        portfolio_volatility,
+        diversification_ratio,
+        concentration_risk,
+    ))
 }
 
 /// Perform Monte Carlo VaR simulation for portfolio
-/// 
+///
 /// Uses Monte Carlo simulation to estimate portfolio VaR under
 /// various distributional assumptions.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `weights` - Portfolio asset weights
 /// * `expected_returns` - Expected returns for each asset
 /// * `covariance_matrix` - Asset return covariance matrix
 /// * `confidence_level` - Confidence level for VaR
 /// * `num_simulations` - Number of Monte Carlo simulations
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<F>` - Monte Carlo VaR estimate
 pub fn monte_carlo_portfolio_var<F: Float + Clone>(
     weights: &Array1<F>,
@@ -347,14 +363,14 @@ pub fn monte_carlo_portfolio_var<F: Float + Clone>(
     num_simulations: usize,
 ) -> Result<F> {
     let n = weights.len();
-    
+
     if expected_returns.len() != n {
         return Err(TimeSeriesError::DimensionMismatch {
             expected: n,
             actual: expected_returns.len(),
         });
     }
-    
+
     if covariance_matrix.nrows() != n || covariance_matrix.ncols() != n {
         return Err(TimeSeriesError::DimensionMismatch {
             expected: n,
@@ -363,31 +379,32 @@ pub fn monte_carlo_portfolio_var<F: Float + Clone>(
     }
 
     let mut simulated_returns = Vec::with_capacity(num_simulations);
-    
+
     // Simple simulation using multivariate normal (simplified)
     let mut seed = 42u64;
-    
+
     for _ in 0..num_simulations {
         let mut portfolio_return = F::zero();
-        
+
         // Generate correlated random returns (simplified approach)
         for i in 0..n {
             // Generate standard normal
             seed = seed.wrapping_mul(1664525).wrapping_add(1013904223);
             let u1 = (seed as f64) / (u64::MAX as f64);
-            
+
             seed = seed.wrapping_mul(1664525).wrapping_add(1013904223);
             let u2 = (seed as f64) / (u64::MAX as f64);
-            
+
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-            
+
             // Scale by volatility and add expected return
             let individual_volatility = covariance_matrix[[i, i]].sqrt();
-            let simulated_return = expected_returns[i] + individual_volatility * F::from(z).unwrap();
-            
+            let simulated_return =
+                expected_returns[i] + individual_volatility * F::from(z).unwrap();
+
             portfolio_return = portfolio_return + weights[i] * simulated_return;
         }
-        
+
         simulated_returns.push(portfolio_return);
     }
 
@@ -419,7 +436,11 @@ fn normal_inverse_cdf(p: f64) -> f64 {
     let denominator = 1.0 + b1 * t + b2 * t.powi(2) + b3 * t.powi(3);
     let z = t - numerator / denominator;
 
-    if p < 0.5 { -z } else { z }
+    if p < 0.5 {
+        -z
+    } else {
+        z
+    }
 }
 
 #[cfg(test)]
@@ -436,7 +457,11 @@ mod tests {
         let horizon = 1;
 
         let result = portfolio_var_parametric(
-            portfolio_value, mean_return, std_return, confidence, horizon
+            portfolio_value,
+            mean_return,
+            std_return,
+            confidence,
+            horizon,
         );
         assert!(result.is_ok());
 
@@ -450,8 +475,11 @@ mod tests {
         let weights = arr1(&[0.6, 0.4]);
         let returns = Array2::from_shape_vec(
             (5, 2),
-            vec![0.01, 0.02, -0.01, 0.005, 0.015, -0.008, 0.005, 0.012, -0.002, 0.008],
-        ).unwrap();
+            vec![
+                0.01, 0.02, -0.01, 0.005, 0.015, -0.008, 0.005, 0.012, -0.002, 0.008,
+            ],
+        )
+        .unwrap();
         let confidence = 0.95;
 
         let result = calculate_component_var(&weights, &returns, confidence);
@@ -459,7 +487,7 @@ mod tests {
 
         let comp_var = result.unwrap();
         assert_eq!(comp_var.len(), 2);
-        
+
         // Component VaR should sum approximately to total VaR
         let total_comp_var = comp_var.sum();
         assert!(total_comp_var > 0.0);
@@ -471,7 +499,8 @@ mod tests {
         let returns = Array2::from_shape_vec(
             (4, 2),
             vec![0.01, 0.02, -0.01, 0.005, 0.015, -0.008, 0.005, 0.012],
-        ).unwrap();
+        )
+        .unwrap();
         let stress_factors = arr1(&[1.5, 2.0, 3.0]); // 50%, 100%, 200% stress
 
         let result = stress_test_portfolio(&weights, &returns, &stress_factors);
@@ -479,7 +508,7 @@ mod tests {
 
         let stressed_returns = result.unwrap();
         assert_eq!(stressed_returns.len(), 3);
-        
+
         // Stressed returns should generally be negative and increasing in magnitude
         for &ret in stressed_returns.iter() {
             assert!(ret <= 0.0);
@@ -489,10 +518,7 @@ mod tests {
     #[test]
     fn test_correlation_risk_analysis() {
         let weights = arr1(&[0.5, 0.5]);
-        let correlation_matrix = Array2::from_shape_vec(
-            (2, 2),
-            vec![1.0, 0.3, 0.3, 1.0],
-        ).unwrap();
+        let correlation_matrix = Array2::from_shape_vec((2, 2), vec![1.0, 0.3, 0.3, 1.0]).unwrap();
         let volatilities = arr1(&[0.15, 0.20]);
 
         let result = analyze_correlation_risk(&weights, &correlation_matrix, &volatilities);
@@ -508,15 +534,16 @@ mod tests {
     fn test_monte_carlo_var() {
         let weights = arr1(&[0.6, 0.4]);
         let expected_returns = arr1(&[0.08, 0.12]);
-        let cov_matrix = Array2::from_shape_vec(
-            (2, 2),
-            vec![0.01, 0.002, 0.002, 0.015],
-        ).unwrap();
+        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
         let confidence = 0.95;
         let num_simulations = 1000;
 
         let result = monte_carlo_portfolio_var(
-            &weights, &expected_returns, &cov_matrix, confidence, num_simulations
+            &weights,
+            &expected_returns,
+            &cov_matrix,
+            confidence,
+            num_simulations,
         );
         assert!(result.is_ok());
 
@@ -543,7 +570,7 @@ mod tests {
     fn test_dimension_mismatches() {
         let weights = arr1(&[0.6, 0.4]);
         let returns = Array2::from_shape_vec((3, 3), vec![0.0; 9]).unwrap();
-        
+
         let result = calculate_component_var(&weights, &returns, 0.95);
         assert!(result.is_err());
     }

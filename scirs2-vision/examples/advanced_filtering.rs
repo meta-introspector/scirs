@@ -124,14 +124,14 @@ fn demonstrate_oriented_gradients(img: &DynamicImage) -> Result<()> {
 
     // Basic Sobel edge detection
     println!("  - Computing Sobel edges");
-    let (edges_orientations) = sobel_edges_oriented(_img, 0.1, true)?;
+    let (edges, _orientations) = sobel_edges_oriented(img, 0.1, true)?;
     edges
         .save("examples/output/sobel_edges.png")
         .expect("Failed to save Sobel edges");
 
     // Compute raw gradients
     println!("  - Computing gradient magnitude and orientation");
-    let (magnitude, orientation) = compute_gradients(_img)?;
+    let (magnitude, orientation) = compute_gradients(img)?;
 
     // Save gradient magnitude as image
     let (height, width) = magnitude.dim();

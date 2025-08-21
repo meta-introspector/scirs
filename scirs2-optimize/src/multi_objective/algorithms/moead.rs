@@ -2,9 +2,9 @@
 //!
 //! Decomposes multi-objective optimization into scalar subproblems.
 
-use crate::error::OptimizeError;
-use crate::multi_objective::solutions::{Solution, Population};
 use super::{MultiObjectiveOptimizer, MultiObjectiveResult};
+use crate::error::OptimizeError;
+use crate::multi_objective::solutions::{Population, Solution};
 use ndarray::{Array1, ArrayView1};
 
 /// MOEA/D optimizer
@@ -42,7 +42,8 @@ impl MOEAD {
 
     /// Tchebycheff approach for scalar optimization
     fn tchebycheff(&self, objectives: &[f64], weight: &[f64], ideal_point: &[f64]) -> f64 {
-        objectives.iter()
+        objectives
+            .iter()
             .zip(weight.iter())
             .zip(ideal_point.iter())
             .map(|((obj, w), ideal)| w * (obj - ideal).abs())

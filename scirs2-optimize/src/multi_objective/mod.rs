@@ -14,19 +14,24 @@
 //! - `selection`: Selection operators for genetic algorithms
 //! - `indicators`: Performance indicators and quality metrics
 
-pub mod solutions;
 pub mod algorithms;
 pub mod crossover;
+pub mod indicators;
 pub mod mutation;
 pub mod selection;
-pub mod indicators;
+pub mod solutions;
 
 // Re-export main types for easier access
-pub use solutions::{MultiObjectiveSolution, MultiObjectiveResult, Population, OptimizationMetrics};
-pub use algorithms::{MultiObjectiveConfig, MultiObjectiveOptimizer, OptimizerFactory, MultiObjectiveOptimizerWrapper, NSGAII, NSGAIII};
+pub use algorithms::{
+    MultiObjectiveConfig, MultiObjectiveOptimizer, MultiObjectiveOptimizerWrapper,
+    OptimizerFactory, NSGAII, NSGAIII,
+};
+pub use solutions::{
+    MultiObjectiveResult, MultiObjectiveSolution, OptimizationMetrics, Population,
+};
 
 use crate::error::OptimizeError;
-use ndarray::{Array1, ArrayView1, s};
+use ndarray::{s, Array1, ArrayView1};
 
 /// Convenience function to optimize using NSGA-II
 pub fn nsga2<F>(
@@ -39,7 +44,8 @@ where
     F: Fn(&ArrayView1<f64>) -> Array1<f64> + Send + Sync,
 {
     let config = config.unwrap_or_default();
-    let mut optimizer = algorithms::OptimizerFactory::create_nsga2(config, n_objectives, n_variables)?;
+    let mut optimizer =
+        algorithms::OptimizerFactory::create_nsga2(config, n_objectives, n_variables)?;
     optimizer.optimize(objective_function)
 }
 
@@ -55,7 +61,12 @@ where
     F: Fn(&ArrayView1<f64>) -> Array1<f64> + Send + Sync,
 {
     let config = config.unwrap_or_default();
-    let mut optimizer = algorithms::OptimizerFactory::create_nsga3(config, n_objectives, n_variables, reference_points)?;
+    let mut optimizer = algorithms::OptimizerFactory::create_nsga3(
+        config,
+        n_objectives,
+        n_variables,
+        reference_points,
+    )?;
     optimizer.optimize(objective_function)
 }
 
@@ -71,13 +82,12 @@ where
     F: Fn(&ArrayView1<f64>) -> Array1<f64> + Send + Sync,
 {
     let config = config.unwrap_or_default();
-    let mut optimizer = algorithms::OptimizerFactory::create_by_name(algorithm, config, n_objectives, n_variables)?;
-    
+    let mut optimizer =
+        algorithms::OptimizerFactory::create_by_name(algorithm, config, n_objectives, n_variables)?;
+
     // Adapt the objective function signature
-    let adapted_fn = |x: &ArrayView1<f64>| {
-        objective_function(x)
-    };
-    
+    let adapted_fn = |x: &ArrayView1<f64>| objective_function(x);
+
     optimizer.optimize(adapted_fn)
 }
 
@@ -100,10 +110,10 @@ mod tests {
         config.max_generations = 5;
         config.population_size = 10;
         config.bounds = Some((Array1::zeros(2), Array1::ones(2)));
-        
+
         let result = nsga2(zdt1, 2, 2, Some(config));
         assert!(result.is_ok());
-        
+
         let result = result.unwrap();
         assert!(result.success);
         assert!(!result.pareto_front.is_empty());
@@ -115,10 +125,10 @@ mod tests {
         config.max_generations = 5;
         config.population_size = 10;
         config.bounds = Some((Array1::zeros(2), Array1::ones(2)));
-        
+
         let result = optimize("nsga2", zdt1, 2, 2, Some(config.clone()));
         assert!(result.is_ok());
-        
+
         let result = optimize("unknown", zdt1, 2, 2, Some(config));
         assert!(result.is_err());
     }

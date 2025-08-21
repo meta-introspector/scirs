@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2};
+use ndarray_rand::rand::distributions::Uniform;
 use ndarray_rand::RandomExt;
-use rand::distributions::Uniform;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 use scirs2_linalg::{cholesky, det, inv, lstsq, lu, matrix_norm, qr, solve};
@@ -65,7 +65,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
     let mut results = Vec::new();
 
     for &size in COMPARISON_SIZES {
-        let (matrix_vector) = generate_test_data(size);
+        let (matrix, _vector) = generate_test_data(size);
 
         // Matrix determinant
         let start = Instant::now();
@@ -81,7 +81,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
             memory_usage_mb: None,
         });
 
-        group.bench_with_input(BenchmarkId::new("determinant_rust", size), &size, |b_| {
+        group.bench_with_input(BenchmarkId::new("determinant_rust", size), &size, |b, _| {
             b.iter(|| {
                 let result = det(&matrix.view(), None);
                 black_box(result)
@@ -103,7 +103,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
                 memory_usage_mb: None,
             });
 
-            group.bench_with_input(BenchmarkId::new("inverse_rust", size), &size, |b_| {
+            group.bench_with_input(BenchmarkId::new("inverse_rust", size), &size, |b, _| {
                 b.iter(|| {
                     let result = inv(&matrix.view(), None);
                     black_box(result)
@@ -125,12 +125,16 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
             memory_usage_mb: None,
         });
 
-        group.bench_with_input(BenchmarkId::new("frobenius_norm_rust", size), &size, |b_| {
-            b.iter(|| {
-                let result = matrix_norm(&matrix.view(), "frobenius", None);
-                black_box(result)
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::new("frobenius_norm_rust", size),
+            &size,
+            |b, _| {
+                b.iter(|| {
+                    let result = matrix_norm(&matrix.view(), "frobenius", None);
+                    black_box(result)
+                })
+            },
+        );
     }
 
     // Save intermediate results for Python comparison
@@ -145,7 +149,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
     let mut results = Vec::new();
 
     for &size in COMPARISON_SIZES {
-        let (matrix_vector) = generate_test_data(size);
+        let (matrix, vector) = generate_test_data(size);
         let spd_matrix = generate_spd_matrix(size);
 
         // LU decomposition
@@ -165,7 +169,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("lu_decomposition_rust", size),
             &size,
-            |b_| {
+            |b, _| {
                 b.iter(|| {
                     let result = lu(&matrix.view(), None);
                     black_box(result)
@@ -190,7 +194,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("qr_decomposition_rust", size),
             &size,
-            |b_| {
+            |b, _| {
                 b.iter(|| {
                     let result = qr(&matrix.view(), None);
                     black_box(result)
@@ -215,7 +219,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("cholesky_decomposition_rust", size),
             &size,
-            |b_| {
+            |b, _| {
                 b.iter(|| {
                     let result = cholesky(&spd_matrix.view(), None);
                     black_box(result)
@@ -251,12 +255,16 @@ fn bench_solver_comparison(c: &mut Criterion) {
             memory_usage_mb: None,
         });
 
-        group.bench_with_input(BenchmarkId::new("linear_solve_rust", size), &size, |b_| {
-            b.iter(|| {
-                let result = solve(&matrix.view(), &vector.view(), None);
-                black_box(result)
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::new("linear_solve_rust", size),
+            &size,
+            |b, _| {
+                b.iter(|| {
+                    let result = solve(&matrix.view(), &vector.view(), None);
+                    black_box(result)
+                })
+            },
+        );
 
         // Least squares solve
         let start = Instant::now();
@@ -272,12 +280,16 @@ fn bench_solver_comparison(c: &mut Criterion) {
             memory_usage_mb: None,
         });
 
-        group.bench_with_input(BenchmarkId::new("least_squares_rust", size), &size, |b_| {
-            b.iter(|| {
-                let result = lstsq(&matrix.view(), &vector.view(), None);
-                black_box(result)
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::new("least_squares_rust", size),
+            &size,
+            |b, _| {
+                b.iter(|| {
+                    let result = lstsq(&matrix.view(), &vector.view(), None);
+                    black_box(result)
+                })
+            },
+        );
     }
 
     save_rust_results(&results);
@@ -297,14 +309,14 @@ fn bench_cross_platform_performance(c: &mut Criterion) {
         let matrix_f64 = Array2::<f64>::ones((size, size));
 
         // Compare f32 vs f64 performance
-        group.bench_with_input(BenchmarkId::new("det_f32", size), &size, |b_| {
+        group.bench_with_input(BenchmarkId::new("det_f32", size), &size, |b, _| {
             b.iter(|| {
                 let result = det(&matrix_f32.view(), None);
                 black_box(result)
             })
         });
 
-        group.bench_with_input(BenchmarkId::new("det_f64", size), &size, |b_| {
+        group.bench_with_input(BenchmarkId::new("det_f64", size), &size, |b, _| {
             b.iter(|| {
                 let result = det(&matrix_f64.view(), None);
                 black_box(result)

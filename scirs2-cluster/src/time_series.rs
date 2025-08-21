@@ -200,9 +200,7 @@ where
 
             // Soft minimum: -gamma * log(sum(exp(-x/gamma)))
             // For numerical stability, use the log-sum-exp trick
-            let min_val = candidates
-                .iter()
-                .fold(F::infinity(), |acc, &x| acc.min(x));
+            let min_val = candidates.iter().fold(F::infinity(), |acc, &x| acc.min(x));
             let sum_exp = candidates
                 .iter()
                 .map(|&x| (-(x - min_val) / gamma).exp())

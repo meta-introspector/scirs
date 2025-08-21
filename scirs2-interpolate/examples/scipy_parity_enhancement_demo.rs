@@ -3,7 +3,7 @@
 //! This example demonstrates how to use the SciPy parity enhancement tools
 //! to analyze and complete remaining SciPy features for the stable release.
 
-use scirs2__interpolate::{
+use scirs2_interpolate::{
     enhance_scipy_parity_for_stable_release, enhance_scipy_parity_with_config,
     quick_scipy_parity_analysis, CompatibilityStatus, FeaturePriority, FocusArea,
     ImplementationLevel, ParityConfig, ParityReadiness, PerformanceCategory,

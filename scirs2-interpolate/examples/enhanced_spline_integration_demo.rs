@@ -4,9 +4,9 @@
 //! that provides SciPy-compatible integration beyond spline domain boundaries.
 
 use ndarray::Array1;
-use scirs2__interpolate::error::InterpolateResult;
-use scirs2__interpolate::interp1d::ExtrapolateMode;
-use scirs2__interpolate::spline::CubicSpline;
+use scirs2_interpolate::error::InterpolateResult;
+use scirs2_interpolate::interp1d::ExtrapolateMode;
+use scirs2_interpolate::spline::CubicSpline;
 
 #[allow(dead_code)]
 fn main() -> InterpolateResult<()> {

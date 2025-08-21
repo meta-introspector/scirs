@@ -50,7 +50,7 @@ impl AdvancedTrainer {
             weights,
             bias,
             loss_scaler: LossScaler::new(65536.0),
-            batch_sizer: MemoryAwareBatchSizer::new(initial_batch_size)
+            batch_sizer: MemoryAwareBatchSizer::new(initial_batchsize)
                 .with_memory_threshold(0.85)
                 .with_adaptation_factor(1.3),
             step_count: 0,

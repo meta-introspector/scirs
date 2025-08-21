@@ -15,14 +15,18 @@
 
 pub mod config;
 pub mod consensus;
-pub mod sharding;
 pub mod fault_tolerance;
+pub mod sharding;
 
 // Re-export main types for easier access
 pub use config::*;
-pub use consensus::{ConsensusManager, RaftConsensus, PbftConsensus, SimpleMajorityConsensus, ConsensusFactory};
-pub use sharding::{ShardManager, DataShard, ShardMigration, ShardingStats};
-pub use fault_tolerance::{FaultRecoveryManager, HealthMonitor, RecoveryAction, NodeMetrics, HealthSummary};
+pub use consensus::{
+    ConsensusFactory, ConsensusManager, PbftConsensus, RaftConsensus, SimpleMajorityConsensus,
+};
+pub use fault_tolerance::{
+    FaultRecoveryManager, HealthMonitor, HealthSummary, NodeMetrics, RecoveryAction,
+};
+pub use sharding::{DataShard, ShardManager, ShardMigration, ShardingStats};
 
 // Missing types referenced in mod.rs
 /// Basic distributed configuration
@@ -87,16 +91,16 @@ impl AdvancedDistributedCoordinator {
     pub fn new(config: AdvancedClusterConfig) -> Result<Self> {
         // Initialize shard manager
         let shard_manager = ShardManager::new(config.sharding_config.clone());
-        
+
         // Initialize fault recovery manager
         let fault_manager = FaultRecoveryManager::new(config.fault_tolerance.clone());
-        
+
         // Initialize cluster state
         let cluster_state = Arc::new(RwLock::new(ClusterState::new()));
-        
+
         // Initialize performance metrics
         let performance_metrics = Arc::new(RwLock::new(ClusterPerformanceMetrics::new()));
-        
+
         Ok(Self {
             config,
             consensus: None,
@@ -119,7 +123,7 @@ impl AdvancedDistributedCoordinator {
                 self.config.consensus_config.clone(),
             )?;
             self.consensus = Some(consensus);
-            
+
             if let Some(ref mut consensus) = self.consensus {
                 consensus.start()?;
             }
@@ -127,10 +131,10 @@ impl AdvancedDistributedCoordinator {
 
         // Initialize sharding
         self.shard_manager.initialize(peers.clone())?;
-        
+
         // Start fault monitoring
         self.fault_manager.start()?;
-        
+
         // Update cluster state
         {
             let mut state = self.cluster_state.write().unwrap();
@@ -139,9 +143,9 @@ impl AdvancedDistributedCoordinator {
             state.status = ClusterStatus::Active;
             state.last_updated = SystemTime::now();
         }
-        
+
         self.status = CoordinatorStatus::Running;
-        
+
         Ok(())
     }
 
@@ -149,17 +153,17 @@ impl AdvancedDistributedCoordinator {
     pub fn stop(&mut self) -> Result<()> {
         // Stop fault monitoring
         self.fault_manager.stop()?;
-        
+
         // Update status
         self.status = CoordinatorStatus::Stopped;
-        
+
         // Update cluster state
         {
             let mut state = self.cluster_state.write().unwrap();
             state.status = ClusterStatus::Stopped;
             state.last_updated = SystemTime::now();
         }
-        
+
         Ok(())
     }
 
@@ -169,7 +173,7 @@ impl AdvancedDistributedCoordinator {
             consensus.propose(data)
         } else {
             Err(MetricsError::ConsensusError(
-                "Consensus not initialized".to_string()
+                "Consensus not initialized".to_string(),
             ))
         }
     }
@@ -193,18 +197,18 @@ impl AdvancedDistributedCoordinator {
     pub fn add_node(&mut self, node_id: String) -> Result<()> {
         // Add to sharding
         self.shard_manager.add_node(node_id.clone())?;
-        
+
         // Register for health monitoring
         let metrics = NodeMetrics::healthy();
         self.fault_manager.register_node(node_id.clone(), metrics)?;
-        
+
         // Update cluster state
         {
             let mut state = self.cluster_state.write().unwrap();
             state.cluster_size += 1;
             state.last_updated = SystemTime::now();
         }
-        
+
         Ok(())
     }
 
@@ -212,17 +216,17 @@ impl AdvancedDistributedCoordinator {
     pub fn remove_node(&mut self, node_id: &str) -> Result<()> {
         // Remove from sharding
         self.shard_manager.remove_node(node_id)?;
-        
+
         // Unregister from health monitoring
         self.fault_manager.unregister_node(node_id)?;
-        
+
         // Update cluster state
         {
             let mut state = self.cluster_state.write().unwrap();
             state.cluster_size = state.cluster_size.saturating_sub(1);
             state.last_updated = SystemTime::now();
         }
-        
+
         Ok(())
     }
 
@@ -290,8 +294,14 @@ impl AdvancedDistributedCoordinator {
     }
 
     /// Update shard statistics
-    pub fn update_shard_stats(&mut self, shard_id: &str, size_bytes: u64, key_count: usize) -> Result<()> {
-        self.shard_manager.update_shard_stats(shard_id, size_bytes, key_count)
+    pub fn update_shard_stats(
+        &mut self,
+        shard_id: &str,
+        size_bytes: u64,
+        key_count: usize,
+    ) -> Result<()> {
+        self.shard_manager
+            .update_shard_stats(shard_id, size_bytes, key_count)
     }
 }
 
@@ -365,7 +375,8 @@ impl ClusterState {
 
     /// Get healthy node count
     pub fn healthy_node_count(&self) -> usize {
-        self.nodes.values()
+        self.nodes
+            .values()
             .filter(|node| node.status == NodeStatus::Healthy)
             .count()
     }
@@ -660,7 +671,7 @@ mod tests {
         let config = AdvancedClusterConfig::default();
         let coordinator = AdvancedDistributedCoordinator::new(config);
         assert!(coordinator.is_ok());
-        
+
         let coordinator = coordinator.unwrap();
         assert_eq!(coordinator.get_status(), CoordinatorStatus::Stopped);
     }
@@ -669,7 +680,7 @@ mod tests {
     fn test_cluster_state_operations() {
         let mut state = ClusterState::new();
         assert_eq!(state.cluster_size, 0);
-        
+
         let node_info = NodeInfo {
             id: "node1".to_string(),
             address: Some("localhost:8080".to_string()),
@@ -686,7 +697,7 @@ mod tests {
             last_seen: SystemTime::now(),
             metadata: HashMap::new(),
         };
-        
+
         state.add_node("node1".to_string(), node_info);
         assert_eq!(state.nodes.len(), 1);
         assert_eq!(state.healthy_node_count(), 1);
@@ -703,11 +714,11 @@ mod tests {
     fn test_coordinator_start_stop() {
         let config = AdvancedClusterConfig::default();
         let mut coordinator = AdvancedDistributedCoordinator::new(config).unwrap();
-        
+
         let nodes = vec!["node1".to_string(), "node2".to_string()];
         coordinator.start("node0".to_string(), nodes).unwrap();
         assert_eq!(coordinator.get_status(), CoordinatorStatus::Running);
-        
+
         coordinator.stop().unwrap();
         assert_eq!(coordinator.get_status(), CoordinatorStatus::Stopped);
     }

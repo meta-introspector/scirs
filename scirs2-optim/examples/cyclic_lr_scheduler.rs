@@ -81,11 +81,12 @@ fn main() {
 
     // 4. Custom scale function
     println!("\nCustom Scale Function (Sine Wave):");
-    let mut custom_scheduler =
-        CyclicLR::triangular(0.0001, 0.001, 50).with_scale_fn(|step, half_cycle__| {
-            let position = (step % (2 * half_cycle)) as f64 / (2.0 * half_cycle as f64);
+    let mut custom_scheduler = CyclicLR::triangular(0.0001, 0.001, 50).with_scale_fn(
+        |step, half_cycle__, _gamma, _unused| {
+            let position = (step % (2 * half_cycle__)) as f64 / (2.0 * half_cycle__ as f64);
             (position * std::f64::consts::PI * 2.0).sin().abs()
-        });
+        },
+    );
     run_optimization(params.clone(), &mut optimizer, &mut custom_scheduler, 200);
 }
 
@@ -105,7 +106,7 @@ fn run_optimization<LR: LearningRateScheduler<f64>>(
 
         // Get current learning rate from scheduler
         let lr = scheduler.get_learning_rate();
-        scheduler.apply_to::<ndarray::Ix1_>(optimizer);
+        scheduler.apply_to::<ndarray::Ix1, _>(optimizer);
 
         // Update parameters
         params = optimizer.step(&params, &gradient).unwrap();

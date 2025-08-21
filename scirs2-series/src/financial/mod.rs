@@ -132,10 +132,10 @@
 //!
 //! // Multi-asset portfolio optimization
 //! let asset_names = vec!["AAPL".to_string(), "GOOGL".to_string(), "MSFT".to_string()];
-//! 
+//!
 //! // Prepare return matrix (rows: time, cols: assets)
 //! // let asset_returns = Array2::from_shape_vec((252, 3), return_data).unwrap();
-//! 
+//!
 //! // Risk parity portfolio
 //! // let correlation_matrix = calculate_correlation_matrix(&asset_returns).unwrap();
 //! // let risk_parity_weights = risk_parity_portfolio(&correlation_matrix).unwrap();
@@ -160,7 +160,7 @@
 //! let volatility = 0.20;
 //!
 //! // Price call and put options
-//! let call_price = black_scholes(spot_price, strike_price, time_to_expiry, 
+//! let call_price = black_scholes(spot_price, strike_price, time_to_expiry,
 //!                               risk_free_rate, volatility, true).unwrap();
 //! let put_price = black_scholes(spot_price, strike_price, time_to_expiry,
 //!                              risk_free_rate, volatility, false).unwrap();
@@ -174,7 +174,7 @@
 //!
 //! // Implied volatility from market price
 //! let market_price = 8.5;
-//! if let Ok(impl_vol) = implied_volatility(market_price, spot_price, strike_price, 
+//! if let Ok(impl_vol) = implied_volatility(market_price, spot_price, strike_price,
 //!                                         time_to_expiry, risk_free_rate, true) {
 //!     println!("Implied volatility: {:.2}%", impl_vol * 100.0);
 //! }
@@ -289,79 +289,105 @@
 //! - ESG factor modeling
 
 pub mod models;
-pub mod technical_indicators;
-pub mod volatility;
-pub mod risk;
 pub mod portfolio;
 pub mod pricing;
+pub mod risk;
+pub mod technical_indicators;
+pub mod volatility;
 
 // Re-export the most commonly used types and functions for convenience
 
 // Volatility models
 pub use models::{
-    GarchModel, GarchConfig, GarchResult,
-    EgarchModel, EgarchConfig, EgarchResult,
-    GjrGarchModel, GjrGarchResult,
-    AparchModel, AparchResult,
+    AparchModel, AparchResult, EgarchConfig, EgarchModel, EgarchResult, GarchConfig, GarchModel,
+    GarchResult, GjrGarchModel, GjrGarchResult,
 };
 
 // Technical indicators (basic)
 pub use technical_indicators::{
-    sma, ema, rsi, macd, bollinger_bands, stochastic,
-    atr, williams_r, cci, obv,
+    atr, bollinger_bands, cci, ema, macd, obv, rsi, sma, stochastic, williams_r,
 };
 
 // Technical indicators (advanced)
 pub use technical_indicators::{
+    adx, aroon, chaikin_oscillator, fibonacci_retracement, kama, mfi, parabolic_sar, vwap,
     AdvancedBollingerBands, AdvancedStochasticOscillator, IchimokuCloud,
-    adx, parabolic_sar, vwap, chaikin_oscillator, mfi,
-    aroon, fibonacci_retracement, kama,
 };
 
 // Volatility estimators
 pub use volatility::{
-    realized_volatility, garman_klass_volatility, parkinson_volatility,
-    rogers_satchell_volatility, yang_zhang_volatility,
-    garch_volatility_estimate, ewma_volatility,
-    range_volatility, intraday_volatility,
+    ewma_volatility, garch_volatility_estimate, garman_klass_volatility, intraday_volatility,
+    parkinson_volatility, range_volatility, realized_volatility, rogers_satchell_volatility,
+    yang_zhang_volatility,
 };
 
 // Risk management
 pub use risk::{
-    // VaR and Expected Shortfall
-    var_historical, expected_shortfall, parametric_var, monte_carlo_var,
-    // Risk-adjusted ratios
-    sharpe_ratio, sortino_ratio, information_ratio, omega_ratio,
-    // Market risk measures  
-    beta, treynor_ratio, jensens_alpha,
+    // Market risk measures
+    beta,
+    calculate_drawdown_series,
+    calmar_ratio,
+    drawdown_recovery_analysis,
+    expected_shortfall,
+    information_ratio,
+    jensens_alpha,
     // Drawdown analysis
-    max_drawdown, calculate_drawdown_series, pain_index, ulcer_index,
-    calmar_ratio, drawdown_recovery_analysis, DrawdownPeriod,
+    max_drawdown,
+    monte_carlo_var,
+    omega_ratio,
+    pain_index,
+    parametric_var,
+    // Risk-adjusted ratios
+    sharpe_ratio,
+    sortino_ratio,
+    treynor_ratio,
+    ulcer_index,
+    // VaR and Expected Shortfall
+    var_historical,
+    DrawdownPeriod,
 };
 
 // Portfolio management
 pub use portfolio::{
-    // Core structures
-    Portfolio, PortfolioMetrics, calculate_portfolio_returns,
-    // Performance analysis
-    calculate_portfolio_metrics, calculate_return_statistics,
-    calculate_tracking_error, calculate_information_ratio,
-    calculate_portfolio_beta, calculate_capture_ratios,
+    analyze_correlation_risk,
+    calculate_capture_ratios,
+    calculate_component_var,
+    calculate_correlation_matrix,
     // Optimization
-    calculate_efficient_portfolio, risk_parity_portfolio,
-    minimum_variance_portfolio, maximum_sharpe_portfolio,
-    calculate_portfolio_variance, calculate_correlation_matrix,
+    calculate_efficient_portfolio,
+    calculate_information_ratio,
+    calculate_portfolio_beta,
+    // Performance analysis
+    calculate_portfolio_metrics,
+    calculate_portfolio_returns,
+    calculate_portfolio_variance,
+    calculate_return_statistics,
+    calculate_tracking_error,
+    maximum_sharpe_portfolio,
+    minimum_variance_portfolio,
     // Risk analysis
-    portfolio_var_parametric, calculate_component_var,
-    stress_test_portfolio, analyze_correlation_risk,
+    portfolio_var_parametric,
+    risk_parity_portfolio,
+    stress_test_portfolio,
+    // Core structures
+    Portfolio,
+    PortfolioMetrics,
 };
 
 // Pricing models
 pub use pricing::{
     // Option pricing
-    black_scholes, black_scholes_greeks, implied_volatility,
-    Greeks, option_value_components,
+    black_scholes,
+    black_scholes_greeks,
+    calculate_d1,
+    calculate_d2,
+    future_value,
+    implied_volatility,
     // Utility functions
-    normal_cdf, normal_pdf, normal_quantile,
-    present_value, future_value, calculate_d1, calculate_d2,
+    normal_cdf,
+    normal_pdf,
+    normal_quantile,
+    option_value_components,
+    present_value,
+    Greeks,
 };

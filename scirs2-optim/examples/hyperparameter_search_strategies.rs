@@ -222,7 +222,7 @@ fn random_search_example() -> Result<()> {
         .windows(2)
         .enumerate()
         .filter(|(_, window)| window[1] > window[0])
-        .map(|(i_)| i + 1)
+        .map(|(i_, _)| i_ + 1)
         .collect::<Vec<_>>();
 
     println!("Improvements found at trials: {:?}", improvement_steps);
@@ -401,7 +401,7 @@ fn population_based_training_example() -> Result<()> {
         // Statistics for this generation
         let best_performance = population[0].1;
         let avg_performance: f64 =
-            population.iter().map(|(_, perf_)| perf).sum::<f64>() / population.len() as f64;
+            population.iter().map(|(_, perf_, _)| *perf_).sum::<f64>() / population.len() as f64;
         let worst_performance = population.last().unwrap().1;
 
         if generation % 5 == 4 {
@@ -427,7 +427,7 @@ fn population_based_training_example() -> Result<()> {
     // Population diversity analysis
     let lr_values: Vec<f64> = population
         .iter()
-        .map(|(params__)| params["learning_rate"])
+        .map(|(params__, _, _)| params__["learning_rate"])
         .collect();
     let lr_std = {
         let mean = lr_values.iter().sum::<f64>() / lr_values.len() as f64;
@@ -584,14 +584,14 @@ fn multi_objective_optimization_example() -> Result<()> {
 
     // Find Pareto optimal solutions
     let mut pareto_optimal = Vec::new();
-    for (i, (params_i, acc_i, time_i_)) in pareto_front.iter().enumerate() {
+    for (i, (params_i, acc_i, time_i_, _)) in pareto_front.iter().enumerate() {
         let mut is_dominated = false;
 
-        for (j, (_, acc_j, time_j_)) in pareto_front.iter().enumerate() {
+        for (j, (_, acc_j, time_j_, _)) in pareto_front.iter().enumerate() {
             if i != j
                 && *acc_j >= *acc_i
-                && *time_j <= *time_i
-                && (*acc_j > *acc_i || *time_j < *time_i)
+                && *time_j_ <= *time_i_
+                && (*acc_j > *acc_i || *time_j_ < *time_i_)
             {
                 is_dominated = true;
                 break;
@@ -599,7 +599,7 @@ fn multi_objective_optimization_example() -> Result<()> {
         }
 
         if !is_dominated {
-            pareto_optimal.push((params_i.clone(), *acc_i, *time_i));
+            pareto_optimal.push((params_i.clone(), *acc_i, *time_i_));
         }
     }
 
@@ -688,7 +688,7 @@ fn sensitivity_analysis_example() -> Result<()> {
         );
 
         // Calculate sensitivity (performance variance)
-        let performances: Vec<f64> = results.iter().map(|(__, perf)| *perf).collect();
+        let performances: Vec<f64> = results.iter().map(|(_, perf, _)| *perf).collect();
         let mean_perf = performances.iter().sum::<f64>() / performances.len() as f64;
         let variance = performances
             .iter()

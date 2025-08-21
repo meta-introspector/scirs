@@ -115,10 +115,10 @@ fn create_tilt_transform(_width: u32, height: u32, tiltfactor: f64) -> Perspecti
     ];
 
     let dst_points = [
-        (_width as f64 * tilt_factor, 0.0),                   // Top-left
-        (_width as f64 * (1.0 - tilt_factor), 0.0),           // Top-right
-        (_width as f64 * (1.0 + tilt_factor), height as f64), // Bottom-right
-        (_width as f64 * -tilt_factor, height as f64),        // Bottom-left
+        (_width as f64 * tiltfactor, 0.0),                   // Top-left
+        (_width as f64 * (1.0 - tiltfactor), 0.0),           // Top-right
+        (_width as f64 * (1.0 + tiltfactor), height as f64), // Bottom-right
+        (_width as f64 * -tiltfactor, height as f64),        // Bottom-left
     ];
 
     PerspectiveTransform::from_points(&src_points, &dst_points)
@@ -131,16 +131,16 @@ fn create_birds_eye_transform(width: u32, height: u32) -> PerspectiveTransform {
     // Create a transform that makes the image appear as if viewed from above
     let src_points = [
         (0.0, 0.0),                     // Top-left
-        (_width as f64, 0.0),           // Top-right
-        (_width as f64, height as f64), // Bottom-right
+        (width as f64, 0.0),           // Top-right
+        (width as f64, height as f64), // Bottom-right
         (0.0, height as f64),           // Bottom-left
     ];
 
     let dst_points = [
-        (_width as f64 * 0.25, height as f64 * 0.25), // Top-left
-        (_width as f64 * 0.75, height as f64 * 0.25), // Top-right
-        (_width as f64 * 0.75, height as f64 * 0.75), // Bottom-right
-        (_width as f64 * 0.25, height as f64 * 0.75), // Bottom-left
+        (width as f64 * 0.25, height as f64 * 0.25), // Top-left
+        (width as f64 * 0.75, height as f64 * 0.25), // Top-right
+        (width as f64 * 0.75, height as f64 * 0.75), // Bottom-right
+        (width as f64 * 0.25, height as f64 * 0.75), // Bottom-left
     ];
 
     PerspectiveTransform::from_points(&src_points, &dst_points)
@@ -230,14 +230,14 @@ fn drawtext(img: &mut RgbaImage, text: &str, x: u32, y: u32) {
     for (i, c) in text.chars().enumerate() {
         let cx = x + i as u32 * 8 + 1;
         let cy = y + 1;
-        draw_char(_img, c, cx, cy, shadow_color);
+        draw_char(img, c, cx, cy, shadow_color);
     }
 
     // Draw text
     for (i, c) in text.chars().enumerate() {
         let cx = x + i as u32 * 8;
         let cy = y;
-        draw_char(_img, c, cx, cy, color);
+        draw_char(img, c, cx, cy, color);
     }
 }
 

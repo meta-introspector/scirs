@@ -226,14 +226,14 @@ fn draw_quadrilateral(img: &mut RgbaImage, points: &[(f64, f64)], color: [u8; 4]
     let color = image::Rgba(color);
 
     // Draw lines connecting the points
-    draw_line(_img, points[0], points[1], color);
-    draw_line(_img, points[1], points[2], color);
-    draw_line(_img, points[2], points[3], color);
-    draw_line(_img, points[3], points[0], color);
+    draw_line(img, points[0], points[1], color);
+    draw_line(img, points[1], points[2], color);
+    draw_line(img, points[2], points[3], color);
+    draw_line(img, points[3], points[0], color);
 
     // Draw points
     for &(x, y) in points {
-        draw_circle(_img, x as u32, y as u32, 5, color);
+        draw_circle(img, x as u32, y as u32, 5, color);
     }
 }
 

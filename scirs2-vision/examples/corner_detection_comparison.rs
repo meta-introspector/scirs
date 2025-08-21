@@ -145,9 +145,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create visualization for good features
     let mut features_img = blurred.to_luma8();
-    for (x, y_) in &good_features {
+    for (x, y_, _score) in &good_features {
         let px = x.round() as u32;
-        let py = y.round() as u32;
+        let py = y_.round() as u32;
         if px < features_img.width() && py < features_img.height() {
             features_img.put_pixel(px, py, image::Luma([255u8]));
         }

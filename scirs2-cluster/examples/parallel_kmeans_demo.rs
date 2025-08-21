@@ -132,12 +132,12 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn generate_clustered_data(_n_samples: usize, n_features: usize, nclusters: usize) -> Array2<f64> {
-    let mut data = Vec::with_capacity(_n_samples * n_features);
+fn generate_clustered_data(n_samples: usize, n_features: usize, nclusters: usize) -> Array2<f64> {
+    let mut data = Vec::with_capacity(n_samples * n_features);
 
     // Generate data with clear _clusters
-    for i in 0.._n_samples {
-        let cluster = i % n_clusters;
+    for i in 0..n_samples {
+        let cluster = i % nclusters;
 
         for _j in 0..n_features {
             // Base value for cluster separation

@@ -200,9 +200,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
 
         // Initialize parameters with typical values for financial data
         let omega = F::from(0.00001).unwrap(); // Small positive constant
-        let alpha = F::from(0.05).unwrap();    // Symmetric ARCH effect
-        let beta = F::from(0.90).unwrap();     // High persistence
-        let gamma = F::from(0.05).unwrap();    // Asymmetry parameter (leverage effect)
+        let alpha = F::from(0.05).unwrap(); // Symmetric ARCH effect
+        let beta = F::from(0.90).unwrap(); // High persistence
+        let gamma = F::from(0.05).unwrap(); // Asymmetry parameter (leverage effect)
 
         // Calculate mean and center the returns
         let mean = returns.sum() / F::from(n).unwrap();
@@ -231,7 +231,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
             conditional_variance[i] = omega
                 + alpha * lagged_return.powi(2)                    // Symmetric ARCH effect
                 + gamma * negative_indicator * lagged_return.powi(2) // Asymmetric effect
-                + beta * lagged_variance;                          // GARCH effect
+                + beta * lagged_variance; // GARCH effect
         }
 
         // Calculate standardized residuals
@@ -411,9 +411,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
     /// # Returns
     /// * `Option<F>` - Persistence measure if fitted, None otherwise
     pub fn volatility_persistence(&self) -> Option<F> {
-        self.parameters.as_ref().map(|p| {
-            p.alpha + p.beta + p.gamma / F::from(2.0).unwrap()
-        })
+        self.parameters
+            .as_ref()
+            .map(|p| p.alpha + p.beta + p.gamma / F::from(2.0).unwrap())
     }
 
     /// Calculate the long-run (unconditional) variance
@@ -460,7 +460,7 @@ mod tests {
         ]);
 
         assert!(!model.is_fitted());
-        
+
         let result = model.fit(&returns);
         assert!(result.is_ok());
 
@@ -485,7 +485,7 @@ mod tests {
         let forecasts = model.forecast(5).unwrap();
         assert_eq!(forecasts.len(), 5);
         assert!(forecasts.iter().all(|&x| x > 0.0));
-        
+
         // Forecasts should generally decrease towards long-run variance
         // (though this depends on the specific parameter values)
     }
@@ -538,22 +538,23 @@ mod tests {
     fn test_model_properties() {
         let mut model = GjrGarchModel::<f64>::new();
         let returns = arr1(&[
-            0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004,
-            0.009, -0.006, 0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006,
+            0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004, 0.009, -0.006,
+            0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006,
         ]);
 
         let result = model.fit(&returns).unwrap();
-        
+
         // Check that parameters make economic sense
-        assert!(result.parameters.omega > 0.0);  // Positive constant
+        assert!(result.parameters.omega > 0.0); // Positive constant
         assert!(result.parameters.alpha >= 0.0); // Non-negative ARCH term
-        assert!(result.parameters.beta >= 0.0);  // Non-negative GARCH term
+        assert!(result.parameters.beta >= 0.0); // Non-negative GARCH term
         assert!(result.parameters.gamma >= 0.0); // Non-negative asymmetry term
-        
+
         // Check stationarity condition (approximately)
-        let persistence = result.parameters.alpha + result.parameters.beta + result.parameters.gamma / 2.0;
+        let persistence =
+            result.parameters.alpha + result.parameters.beta + result.parameters.gamma / 2.0;
         assert!(persistence < 1.0);
-        
+
         // Check information criteria
         assert!(result.aic > result.log_likelihood); // AIC should be larger (less negative)
         assert!(result.bic > result.aic); // BIC penalizes parameters more

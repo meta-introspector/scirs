@@ -50,14 +50,14 @@
 //! let volatility = 0.20;     // 20% annual volatility
 //!
 //! // Calculate option price
-//! let call_price = black_scholes(spot_price, strike_price, time_to_expiry, 
+//! let call_price = black_scholes(spot_price, strike_price, time_to_expiry,
 //!                               risk_free_rate, volatility, true).unwrap();
 //! println!("Call option price: ${:.2}", call_price);
 //!
 //! // Calculate Greeks for risk management
 //! let greeks = black_scholes_greeks(spot_price, strike_price, time_to_expiry,
 //!                                  risk_free_rate, volatility, true).unwrap();
-//! println!("Delta: {:.4}, Gamma: {:.4}, Vega: {:.4}", 
+//! println!("Delta: {:.4}, Gamma: {:.4}, Vega: {:.4}",
 //!          greeks.delta, greeks.gamma, greeks.vega);
 //! ```
 //!
@@ -271,22 +271,10 @@ pub mod utils;
 
 // Re-export commonly used functions for convenience
 pub use options::{
-    black_scholes,
-    black_scholes_greeks,
-    implied_volatility,
-    Greeks,
-    option_value_components,
+    black_scholes, black_scholes_greeks, implied_volatility, option_value_components, Greeks,
 };
 
 pub use utils::{
-    normal_cdf,
-    normal_pdf,
-    normal_quantile,
-    present_value,
-    future_value,
-    calculate_d1,
-    calculate_d2,
-    bivariate_normal_cdf,
-    continuous_to_simple_return,
-    simple_to_continuous_return,
+    bivariate_normal_cdf, calculate_d1, calculate_d2, continuous_to_simple_return, future_value,
+    normal_cdf, normal_pdf, normal_quantile, present_value, simple_to_continuous_return,
 };

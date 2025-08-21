@@ -5,8 +5,8 @@
 
 use ndarray::{Array1, Array2};
 use rand::Rng;
-use scirs2__interpolate::parallel::ParallelConfig;
-use scirs2__interpolate::voronoi::{make_parallel_sibson_interpolator, make_sibson_interpolator};
+use scirs2_interpolate::parallel::ParallelConfig;
+use scirs2_interpolate::voronoi::{make_parallel_sibson_interpolator, make_sibson_interpolator};
 use std::error::Error;
 use std::time::Instant;
 
@@ -14,7 +14,7 @@ use std::time::Instant;
 fn main() -> Result<(), Box<dyn Error>> {
     // Generate scattered data points
     let n_points = 500;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Create points in a 2D domain
     let mut points_vec = Vec::with_capacity(n_points * 2);
@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         points_vec.push(y);
     }
 
-    let points = Array2::from_shape_vec((n_points..2), points_vec)?;
+    let points = Array2::from_shape_vec((n_points, 2), points_vec)?;
 
     // Create values with a test function
     let mut values_vec = Vec::with_capacity(n_points);

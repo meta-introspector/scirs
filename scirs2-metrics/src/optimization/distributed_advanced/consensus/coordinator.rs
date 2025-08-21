@@ -2,8 +2,11 @@
 //!
 //! Coordinates different consensus algorithms for distributed optimization.
 
+use super::{
+    majority::MajorityConsensus, pbft::PbftConsensus, proof_of_stake::ProofOfStakeConsensus,
+    raft::RaftConsensus,
+};
 use crate::error::{MetricsError, Result};
-use super::{raft::RaftConsensus, pbft::PbftConsensus, proof_of_stake::ProofOfStakeConsensus, majority::MajorityConsensus};
 
 /// Consensus coordinator that manages different consensus algorithms
 #[derive(Debug)]
@@ -25,15 +28,34 @@ pub enum ConsensusType {
 
 impl ConsensusCoordinator {
     /// Create new consensus coordinator from configuration
-    pub fn new(config: crate::optimization::distributed::config::ConsensusConfig) -> crate::error::Result<Self> {
+    pub fn new(
+        config: crate::optimization::distributed::config::ConsensusConfig,
+    ) -> crate::error::Result<Self> {
         use crate::optimization::distributed::config::ConsensusAlgorithm;
         match config.algorithm {
-            ConsensusAlgorithm::Raft => Ok(Self::new_raft(config.node_id.unwrap_or_else(|| "default".to_string()), config.peers.unwrap_or_default())),
-            ConsensusAlgorithm::Pbft => Ok(Self::new_pbft(config.node_id.unwrap_or_else(|| "default".to_string()), config.peers.unwrap_or_default())),
-            ConsensusAlgorithm::ProofOfStake => Ok(Self::new_proof_of_stake(config.node_id.unwrap_or_else(|| "default".to_string()), 100)),
-            ConsensusAlgorithm::SimpleMajority => Ok(Self::new_majority(config.node_id.unwrap_or_else(|| "default".to_string()), config.peers.unwrap_or_default())),
-            ConsensusAlgorithm::DelegatedProofOfStake => Ok(Self::new_proof_of_stake(config.node_id.unwrap_or_else(|| "default".to_string()), 100)), // Treat similar to ProofOfStake for now
-            ConsensusAlgorithm::None => Err(crate::error::MetricsError::ConsensusError("No consensus algorithm specified".to_string())),
+            ConsensusAlgorithm::Raft => Ok(Self::new_raft(
+                config.node_id.unwrap_or_else(|| "default".to_string()),
+                config.peers.unwrap_or_default(),
+            )),
+            ConsensusAlgorithm::Pbft => Ok(Self::new_pbft(
+                config.node_id.unwrap_or_else(|| "default".to_string()),
+                config.peers.unwrap_or_default(),
+            )),
+            ConsensusAlgorithm::ProofOfStake => Ok(Self::new_proof_of_stake(
+                config.node_id.unwrap_or_else(|| "default".to_string()),
+                100,
+            )),
+            ConsensusAlgorithm::SimpleMajority => Ok(Self::new_majority(
+                config.node_id.unwrap_or_else(|| "default".to_string()),
+                config.peers.unwrap_or_default(),
+            )),
+            ConsensusAlgorithm::DelegatedProofOfStake => Ok(Self::new_proof_of_stake(
+                config.node_id.unwrap_or_else(|| "default".to_string()),
+                100,
+            )), // Treat similar to ProofOfStake for now
+            ConsensusAlgorithm::None => Err(crate::error::MetricsError::ConsensusError(
+                "No consensus algorithm specified".to_string(),
+            )),
         }
     }
 
@@ -84,7 +106,9 @@ impl ConsensusCoordinator {
                     raft.start_election()?;
                     Ok("raft_proposal".to_string())
                 } else {
-                    Err(MetricsError::InvalidOperation("Raft not initialized".into()))
+                    Err(MetricsError::InvalidOperation(
+                        "Raft not initialized".into(),
+                    ))
                 }
             }
             ConsensusType::Pbft => {
@@ -92,7 +116,9 @@ impl ConsensusCoordinator {
                     let msg = pbft.pre_prepare(data)?;
                     Ok(format!("pbft_{}", msg.sequence))
                 } else {
-                    Err(MetricsError::InvalidOperation("PBFT not initialized".into()))
+                    Err(MetricsError::InvalidOperation(
+                        "PBFT not initialized".into(),
+                    ))
                 }
             }
             ConsensusType::ProofOfStake => {
@@ -108,7 +134,9 @@ impl ConsensusCoordinator {
                     let proposal_id = majority.propose(data)?;
                     Ok(format!("majority_{}", proposal_id))
                 } else {
-                    Err(MetricsError::InvalidOperation("Majority not initialized".into()))
+                    Err(MetricsError::InvalidOperation(
+                        "Majority not initialized".into(),
+                    ))
                 }
             }
         }

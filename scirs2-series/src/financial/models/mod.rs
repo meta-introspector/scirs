@@ -68,13 +68,13 @@
 //! println!("APARCH AIC: {}", aparch_result.aic);
 //! ```
 
-pub mod garch;
-pub mod egarch;
-pub mod gjr_garch;
 pub mod aparch;
+pub mod egarch;
+pub mod garch;
+pub mod gjr_garch;
 
 // Re-export main types for convenience
-pub use garch::{GarchModel, GarchConfig, GarchParameters, GarchResult, MeanModel, Distribution};
-pub use egarch::{EgarchModel, EgarchConfig, EgarchParameters, EgarchResult};
-pub use gjr_garch::{GjrGarchModel, GjrGarchParameters, GjrGarchResult};
 pub use aparch::{AparchModel, AparchParameters, AparchResult};
+pub use egarch::{EgarchConfig, EgarchModel, EgarchParameters, EgarchResult};
+pub use garch::{Distribution, GarchConfig, GarchModel, GarchParameters, GarchResult, MeanModel};
+pub use gjr_garch::{GjrGarchModel, GjrGarchParameters, GjrGarchResult};

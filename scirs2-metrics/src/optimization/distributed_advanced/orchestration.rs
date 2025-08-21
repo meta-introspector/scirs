@@ -49,7 +49,10 @@ impl OrchestrationManager {
             service.status = ServiceStatus::Running;
             Ok(())
         } else {
-            Err(MetricsError::InvalidOperation(format!("Service {} not found", name)))
+            Err(MetricsError::InvalidOperation(format!(
+                "Service {} not found",
+                name
+            )))
         }
     }
 
@@ -58,7 +61,10 @@ impl OrchestrationManager {
             service.status = ServiceStatus::Stopped;
             Ok(())
         } else {
-            Err(MetricsError::InvalidOperation(format!("Service {} not found", name)))
+            Err(MetricsError::InvalidOperation(format!(
+                "Service {} not found",
+                name
+            )))
         }
     }
 

@@ -133,22 +133,31 @@ impl FaultRecoveryManager {
 
     /// Update node metrics
     pub fn update_node_metrics(&mut self, node_id: &str, metrics: NodeMetrics) -> Result<()> {
-        self.health_monitor.update_metrics(node_id, metrics.clone())?;
-        
+        self.health_monitor
+            .update_metrics(node_id, metrics.clone())?;
+
         // Check if recovery action is needed
         if let Some(action) = self.evaluate_recovery_need(node_id, &metrics)? {
             self.trigger_recovery(action)?;
         }
-        
+
         Ok(())
     }
 
     /// Evaluate if recovery action is needed for a node
-    fn evaluate_recovery_need(&self, node_id: &str, metrics: &NodeMetrics) -> Result<Option<RecoveryAction>> {
+    fn evaluate_recovery_need(
+        &self,
+        node_id: &str,
+        metrics: &NodeMetrics,
+    ) -> Result<Option<RecoveryAction>> {
         // Check CPU threshold
         if metrics.cpu_usage > self.alert_thresholds.cpu_critical {
             return Ok(Some(RecoveryAction {
-                id: format!("recovery_{}_cpu_{}", node_id, Instant::now().elapsed().as_millis()),
+                id: format!(
+                    "recovery_{}_cpu_{}",
+                    node_id,
+                    Instant::now().elapsed().as_millis()
+                ),
                 action_type: RecoveryActionType::ResourceScaling,
                 target_node: node_id.to_string(),
                 severity: AlertSeverity::Critical,
@@ -165,7 +174,11 @@ impl FaultRecoveryManager {
         // Check memory threshold
         if metrics.memory_usage > self.alert_thresholds.memory_critical {
             return Ok(Some(RecoveryAction {
-                id: format!("recovery_{}_memory_{}", node_id, Instant::now().elapsed().as_millis()),
+                id: format!(
+                    "recovery_{}_memory_{}",
+                    node_id,
+                    Instant::now().elapsed().as_millis()
+                ),
                 action_type: RecoveryActionType::ResourceScaling,
                 target_node: node_id.to_string(),
                 severity: AlertSeverity::Critical,
@@ -180,10 +193,20 @@ impl FaultRecoveryManager {
         }
 
         // Check if node is unresponsive
-        let last_heartbeat_age = metrics.last_heartbeat.elapsed().unwrap_or_else(|_| Duration::from_secs(0));
+        let last_heartbeat_age = metrics
+            .last_heartbeat
+            .elapsed()
+            .unwrap_or_else(|_| Duration::from_secs(0));
         if last_heartbeat_age > Duration::from_secs(self.config.health_check_interval * 3) {
             return Ok(Some(RecoveryAction {
-                id: format!("recovery_{}_heartbeat_{}", node_id, SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_millis()),
+                id: format!(
+                    "recovery_{}_heartbeat_{}",
+                    node_id,
+                    SystemTime::now()
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_millis()
+                ),
                 action_type: RecoveryActionType::NodeFailover,
                 target_node: node_id.to_string(),
                 severity: AlertSeverity::Emergency,
@@ -205,18 +228,20 @@ impl FaultRecoveryManager {
         if !self.config.auto_recovery && action.strategy != RecoveryStrategy::Manual {
             // Log the action but don't execute if auto recovery is disabled
             self.log_action(action);
-            return Ok("Recovery action logged but not executed (auto recovery disabled)".to_string());
+            return Ok(
+                "Recovery action logged but not executed (auto recovery disabled)".to_string(),
+            );
         }
 
         let action_id = action.id.clone();
         let mut active_recoveries = self.active_recoveries.lock().unwrap();
-        
+
         let recovery_op = RecoveryOperation {
             action: action.clone(),
             progress: 0.0,
             estimated_completion: None,
         };
-        
+
         active_recoveries.insert(action_id.clone(), recovery_op);
         drop(active_recoveries);
 
@@ -254,9 +279,9 @@ impl FaultRecoveryManager {
         // 2. Migrating workload from failed node
         // 3. Updating routing tables
         // 4. Notifying cluster about the change
-        
+
         println!("Executing node failover for node: {}", action.target_node);
-        
+
         // Queue node replacement if configured
         match self.config.replacement_strategy {
             NodeReplacementStrategy::Immediate | NodeReplacementStrategy::HotStandby => {
@@ -266,21 +291,26 @@ impl FaultRecoveryManager {
                     replacement_type: self.config.replacement_strategy.clone(),
                     requested_at: SystemTime::now(),
                     priority: match action.severity {
-                        AlertSeverity::Emergency | AlertSeverity::Critical => ReplacementPriority::High,
+                        AlertSeverity::Emergency | AlertSeverity::Critical => {
+                            ReplacementPriority::High
+                        }
                         _ => ReplacementPriority::Normal,
                     },
                 });
             }
             _ => {}
         }
-        
+
         Ok(())
     }
 
     /// Execute data replication
     fn execute_data_replication(&self, action: &RecoveryAction) -> Result<()> {
         // TODO: Implement data replication logic
-        println!("Executing data replication for node: {}", action.target_node);
+        println!(
+            "Executing data replication for node: {}",
+            action.target_node
+        );
         Ok(())
     }
 
@@ -301,7 +331,10 @@ impl FaultRecoveryManager {
     /// Execute resource scaling
     fn execute_resource_scaling(&self, action: &RecoveryAction) -> Result<()> {
         // TODO: Implement resource scaling logic
-        println!("Executing resource scaling for node: {}", action.target_node);
+        println!(
+            "Executing resource scaling for node: {}",
+            action.target_node
+        );
         Ok(())
     }
 
@@ -316,7 +349,7 @@ impl FaultRecoveryManager {
     fn log_action(&self, action: RecoveryAction) {
         let mut history = self.recovery_history.write().unwrap();
         history.push_back(action);
-        
+
         // Keep only recent history
         while history.len() > 10000 {
             history.pop_front();
@@ -336,9 +369,14 @@ impl FaultRecoveryManager {
     }
 
     /// Complete a recovery operation
-    pub fn complete_recovery(&mut self, action_id: &str, success: bool, error: Option<String>) -> Result<()> {
+    pub fn complete_recovery(
+        &mut self,
+        action_id: &str,
+        success: bool,
+        error: Option<String>,
+    ) -> Result<()> {
         let mut active_recoveries = self.active_recoveries.lock().unwrap();
-        
+
         if let Some(mut recovery_op) = active_recoveries.remove(action_id) {
             recovery_op.action.completed_at = Some(SystemTime::now());
             recovery_op.action.status = if success {
@@ -348,11 +386,11 @@ impl FaultRecoveryManager {
             };
             recovery_op.action.error = error;
             recovery_op.progress = 1.0;
-            
+
             // Update history
             self.log_action(recovery_op.action);
         }
-        
+
         Ok(())
     }
 
@@ -452,7 +490,7 @@ impl HealthMonitor {
     pub fn start(&mut self) -> Result<()> {
         let mut is_monitoring = self.is_monitoring.write().unwrap();
         *is_monitoring = true;
-        
+
         // TODO: Start monitoring thread
         Ok(())
     }
@@ -461,7 +499,7 @@ impl HealthMonitor {
     pub fn stop(&mut self) -> Result<()> {
         let mut is_monitoring = self.is_monitoring.write().unwrap();
         *is_monitoring = false;
-        
+
         // TODO: Stop monitoring thread
         Ok(())
     }
@@ -469,7 +507,7 @@ impl HealthMonitor {
     /// Register a node for monitoring
     pub fn register_node(&mut self, node_id: String, metrics: NodeMetrics) -> Result<()> {
         let mut nodes = self.nodes.write().unwrap();
-        
+
         let monitoring_info = NodeMonitoringInfo {
             node_id: node_id.clone(),
             current_metrics: metrics,
@@ -479,7 +517,7 @@ impl HealthMonitor {
             recovery_attempts: 0,
             alerts: VecDeque::new(),
         };
-        
+
         nodes.insert(node_id, monitoring_info);
         Ok(())
     }
@@ -494,24 +532,29 @@ impl HealthMonitor {
     /// Update node metrics
     pub fn update_metrics(&mut self, node_id: &str, metrics: NodeMetrics) -> Result<()> {
         let mut nodes = self.nodes.write().unwrap();
-        
+
         if let Some(monitoring_info) = nodes.get_mut(node_id) {
             monitoring_info.current_metrics = metrics;
             monitoring_info.last_check = Instant::now();
-            monitoring_info.health_status = self.determine_health_status(&monitoring_info.current_metrics);
+            monitoring_info.health_status =
+                self.determine_health_status(&monitoring_info.current_metrics);
         } else {
-            return Err(MetricsError::FaultToleranceError(
-                format!("Node {} not registered for monitoring", node_id)
-            ));
+            return Err(MetricsError::FaultToleranceError(format!(
+                "Node {} not registered for monitoring",
+                node_id
+            )));
         }
-        
+
         Ok(())
     }
 
     /// Determine health status based on metrics
     fn determine_health_status(&self, metrics: &NodeMetrics) -> NodeHealthStatus {
         // Check if node is responsive
-        let heartbeat_age = metrics.last_heartbeat.elapsed().unwrap_or_else(|_| Duration::from_secs(0));
+        let heartbeat_age = metrics
+            .last_heartbeat
+            .elapsed()
+            .unwrap_or_else(|_| Duration::from_secs(0));
         if heartbeat_age > Duration::from_secs(self.check_interval * 3) {
             return NodeHealthStatus::Failed;
         }
@@ -531,7 +574,7 @@ impl HealthMonitor {
     /// Get health summary for all nodes
     pub fn get_health_summary(&self) -> HealthSummary {
         let nodes = self.nodes.read().unwrap();
-        
+
         let mut summary = HealthSummary {
             total_nodes: nodes.len(),
             healthy_nodes: 0,
@@ -707,7 +750,7 @@ impl HealthSummary {
         if self.total_nodes == 0 {
             return 100.0;
         }
-        
+
         (self.healthy_nodes as f64 / self.total_nodes as f64) * 100.0
     }
 
@@ -779,21 +822,30 @@ mod tests {
     fn test_node_registration() {
         let mut monitor = HealthMonitor::new(30);
         let metrics = NodeMetrics::healthy();
-        
+
         monitor.register_node("node1".to_string(), metrics).unwrap();
         assert_eq!(monitor.list_nodes().len(), 1);
-        assert_eq!(monitor.get_node_health("node1"), Some(NodeHealthStatus::Healthy));
+        assert_eq!(
+            monitor.get_node_health("node1"),
+            Some(NodeHealthStatus::Healthy)
+        );
     }
 
     #[test]
     fn test_health_status_determination() {
         let monitor = HealthMonitor::new(30);
-        
+
         let healthy_metrics = NodeMetrics::healthy();
-        assert_eq!(monitor.determine_health_status(&healthy_metrics), NodeHealthStatus::Healthy);
-        
+        assert_eq!(
+            monitor.determine_health_status(&healthy_metrics),
+            NodeHealthStatus::Healthy
+        );
+
         let degraded_metrics = NodeMetrics::degraded();
-        assert_eq!(monitor.determine_health_status(&degraded_metrics), NodeHealthStatus::Degraded);
+        assert_eq!(
+            monitor.determine_health_status(&degraded_metrics),
+            NodeHealthStatus::Degraded
+        );
     }
 
     #[test]
@@ -811,7 +863,7 @@ mod tests {
             status: RecoveryStatus::Pending,
             error: None,
         };
-        
+
         assert_eq!(action.status, RecoveryStatus::Pending);
         assert_eq!(action.severity, AlertSeverity::Critical);
     }
@@ -828,7 +880,7 @@ mod tests {
             maintenance_nodes: 0,
             last_updated: SystemTime::now(),
         };
-        
+
         assert_eq!(summary.health_percentage(), 80.0);
         assert!(!summary.is_healthy()); // Has failed nodes
     }

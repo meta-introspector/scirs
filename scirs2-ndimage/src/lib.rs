@@ -38,6 +38,7 @@ pub mod quantum_ai_consciousness;
 pub mod quantum_enhanced_gpu;
 pub mod quantum_inspired;
 pub mod quantum_neuromorphic_fusion;
+pub mod scipy_compat;
 pub mod scipy_compat_layer;
 pub mod scipy_migration_layer;
 pub mod scipy_performance_comparison;

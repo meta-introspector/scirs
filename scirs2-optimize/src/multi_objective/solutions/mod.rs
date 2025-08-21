@@ -72,7 +72,7 @@ impl MultiObjectiveSolution {
 
         // If both are equally feasible/infeasible, compare objectives
         let mut at_least_one_better = false;
-        
+
         for (obj1, obj2) in self.objectives.iter().zip(other.objectives.iter()) {
             if obj1 > obj2 {
                 return false; // Assuming minimization
@@ -81,7 +81,7 @@ impl MultiObjectiveSolution {
                 at_least_one_better = true;
             }
         }
-        
+
         at_least_one_better
     }
 
@@ -241,32 +241,30 @@ impl MultiObjectiveResult {
 
     /// Get best solution for a specific objective
     pub fn best_for_objective(&self, objective_index: usize) -> Option<&MultiObjectiveSolution> {
-        self.pareto_front
-            .iter()
-            .min_by(|a, b| {
-                a.objectives[objective_index]
-                    .partial_cmp(&b.objectives[objective_index])
-                    .unwrap_or(Ordering::Equal)
-            })
+        self.pareto_front.iter().min_by(|a, b| {
+            a.objectives[objective_index]
+                .partial_cmp(&b.objectives[objective_index])
+                .unwrap_or(Ordering::Equal)
+        })
     }
 
     /// Get solution closest to ideal point
     pub fn closest_to_ideal(&self, ideal_point: &Array1<f64>) -> Option<&MultiObjectiveSolution> {
-        self.pareto_front
-            .iter()
-            .min_by(|a, b| {
-                let dist_a = a.objectives
-                    .iter()
-                    .zip(ideal_point.iter())
-                    .map(|(obj, ideal)| (obj - ideal).powi(2))
-                    .sum::<f64>();
-                let dist_b = b.objectives
-                    .iter()
-                    .zip(ideal_point.iter())
-                    .map(|(obj, ideal)| (obj - ideal).powi(2))
-                    .sum::<f64>();
-                dist_a.partial_cmp(&dist_b).unwrap_or(Ordering::Equal)
-            })
+        self.pareto_front.iter().min_by(|a, b| {
+            let dist_a = a
+                .objectives
+                .iter()
+                .zip(ideal_point.iter())
+                .map(|(obj, ideal)| (obj - ideal).powi(2))
+                .sum::<f64>();
+            let dist_b = b
+                .objectives
+                .iter()
+                .zip(ideal_point.iter())
+                .map(|(obj, ideal)| (obj - ideal).powi(2))
+                .sum::<f64>();
+            dist_a.partial_cmp(&dist_b).unwrap_or(Ordering::Equal)
+        })
     }
 
     /// Get number of solutions in Pareto front
@@ -281,7 +279,10 @@ impl MultiObjectiveResult {
 
     /// Get all feasible solutions
     pub fn feasible_solutions(&self) -> Vec<&MultiObjectiveSolution> {
-        self.pareto_front.iter().filter(|sol| sol.is_feasible()).collect()
+        self.pareto_front
+            .iter()
+            .filter(|sol| sol.is_feasible())
+            .collect()
     }
 }
 
@@ -351,13 +352,15 @@ pub struct Population {
 impl Population {
     /// Create a new empty population
     pub fn new() -> Self {
-        Self {
-            solutions: vec![],
-        }
+        Self { solutions: vec![] }
     }
 
     /// Create a new population with specified capacity
-    pub fn with_capacity(population_size: usize, _n_objectives: usize, _n_variables: usize) -> Self {
+    pub fn with_capacity(
+        population_size: usize,
+        _n_objectives: usize,
+        _n_variables: usize,
+    ) -> Self {
         Self {
             solutions: Vec::with_capacity(population_size),
         }
@@ -401,10 +404,10 @@ impl Population {
     /// Extract Pareto front from population
     pub fn extract_pareto_front(&self) -> Vec<MultiObjectiveSolution> {
         let mut pareto_front: Vec<MultiObjectiveSolution> = Vec::new();
-        
+
         for candidate in &self.solutions {
             let mut is_dominated = false;
-            
+
             // Check if candidate is dominated by any existing solution in Pareto front
             for existing in &pareto_front {
                 if existing.dominates(candidate) {
@@ -412,14 +415,14 @@ impl Population {
                     break;
                 }
             }
-            
+
             if !is_dominated {
                 // Remove solutions from Pareto front that are dominated by candidate
                 pareto_front.retain(|existing| !candidate.dominates(existing));
                 pareto_front.push(candidate.clone());
             }
         }
-        
+
         pareto_front
     }
 
@@ -429,7 +432,7 @@ impl Population {
         let mut fronts = Vec::new();
         let mut domination_counts = vec![0; n];
         let mut dominated_solutions: Vec<Vec<usize>> = vec![Vec::new(); n];
-        
+
         // Calculate domination relationships
         for i in 0..n {
             for j in 0..n {
@@ -442,7 +445,7 @@ impl Population {
                 }
             }
         }
-        
+
         // Find first front
         let mut current_front = Vec::new();
         for i in 0..n {
@@ -451,13 +454,13 @@ impl Population {
                 current_front.push(i);
             }
         }
-        
+
         let mut front_number = 0;
-        
+
         while !current_front.is_empty() {
             fronts.push(current_front.clone());
             let mut next_front = Vec::new();
-            
+
             for &i in &current_front {
                 for &j in &dominated_solutions[i] {
                     domination_counts[j] -= 1;
@@ -467,11 +470,11 @@ impl Population {
                     }
                 }
             }
-            
+
             current_front = next_front;
             front_number += 1;
         }
-        
+
         fronts
     }
 
@@ -487,7 +490,7 @@ impl Population {
         }
 
         let n_objectives = self.solutions[front_indices[0]].n_objectives();
-        
+
         // Initialize distances to zero
         for &i in front_indices {
             self.solutions[i].crowding_distance = 0.0;
@@ -534,14 +537,14 @@ impl Population {
 
         // Perform non-dominated sorting
         let fronts = self.non_dominated_sort();
-        
+
         // Calculate crowding distances for each front
         for front in &fronts {
             self.calculate_crowding_distances(front);
         }
 
         let mut selected = Vec::new();
-        
+
         // Add complete fronts until we reach capacity
         for front in &fronts {
             if selected.len() + front.len() <= target_size {
@@ -551,16 +554,16 @@ impl Population {
             } else {
                 // Add partial front based on crowding distance
                 let remaining = target_size - selected.len();
-                let mut front_solutions: Vec<_> = front.iter()
-                    .map(|&i| &self.solutions[i])
-                    .collect();
-                
+                let mut front_solutions: Vec<_> =
+                    front.iter().map(|&i| &self.solutions[i]).collect();
+
                 // Sort by crowding distance (descending)
                 front_solutions.sort_by(|a, b| {
-                    b.crowding_distance.partial_cmp(&a.crowding_distance)
+                    b.crowding_distance
+                        .partial_cmp(&a.crowding_distance)
                         .unwrap_or(Ordering::Equal)
                 });
-                
+
                 for solution in front_solutions.iter().take(remaining) {
                     selected.push((*solution).clone());
                 }
@@ -640,7 +643,7 @@ mod tests {
         let variables = array![1.0, 2.0, 3.0];
         let objectives = array![4.0, 5.0];
         let solution = MultiObjectiveSolution::new(variables.clone(), objectives.clone());
-        
+
         assert_eq!(solution.variables, variables);
         assert_eq!(solution.objectives, objectives);
         assert_eq!(solution.constraint_violation, 0.0);
@@ -652,7 +655,7 @@ mod tests {
         let sol1 = MultiObjectiveSolution::new(array![1.0], array![1.0, 2.0]);
         let sol2 = MultiObjectiveSolution::new(array![2.0], array![2.0, 3.0]);
         let sol3 = MultiObjectiveSolution::new(array![3.0], array![0.5, 3.5]);
-        
+
         assert!(sol1.dominates(&sol2)); // sol1 is better in both objectives
         assert!(!sol2.dominates(&sol1));
         assert!(sol1.is_non_dominated_with(&sol3)); // Neither dominates the other
@@ -660,13 +663,11 @@ mod tests {
 
     #[test]
     fn test_constraint_domination() {
-        let feasible = MultiObjectiveSolution::new_with_constraints(
-            array![1.0], array![2.0, 3.0], 0.0
-        );
-        let infeasible = MultiObjectiveSolution::new_with_constraints(
-            array![2.0], array![1.0, 2.0], 1.0
-        );
-        
+        let feasible =
+            MultiObjectiveSolution::new_with_constraints(array![1.0], array![2.0, 3.0], 0.0);
+        let infeasible =
+            MultiObjectiveSolution::new_with_constraints(array![2.0], array![1.0, 2.0], 1.0);
+
         assert!(feasible.dominates(&infeasible)); // Feasible dominates infeasible
         assert!(!infeasible.dominates(&feasible));
     }
@@ -678,7 +679,7 @@ mod tests {
         population.add(MultiObjectiveSolution::new(array![2.0], array![2.0, 2.0]));
         population.add(MultiObjectiveSolution::new(array![3.0], array![3.0, 1.0]));
         population.add(MultiObjectiveSolution::new(array![4.0], array![2.5, 2.5])); // Dominated
-        
+
         let pareto_front = population.extract_pareto_front();
         assert_eq!(pareto_front.len(), 3); // First three solutions are non-dominated
     }
@@ -690,13 +691,13 @@ mod tests {
         population.add(MultiObjectiveSolution::new(array![2.0], array![3.0, 1.0]));
         population.add(MultiObjectiveSolution::new(array![3.0], array![2.0, 2.0]));
         population.add(MultiObjectiveSolution::new(array![4.0], array![4.0, 4.0])); // Dominated
-        
+
         let fronts = population.non_dominated_sort();
-        
+
         assert_eq!(fronts.len(), 2); // Two fronts
         assert_eq!(fronts[0].len(), 3); // First front has 3 solutions
         assert_eq!(fronts[1].len(), 1); // Second front has 1 solution
-        
+
         // Check ranks
         for &i in &fronts[0] {
             assert_eq!(population.solutions[i].rank, 0);
@@ -712,10 +713,10 @@ mod tests {
         population.add(MultiObjectiveSolution::new(array![1.0], array![1.0, 3.0]));
         population.add(MultiObjectiveSolution::new(array![2.0], array![2.0, 2.0]));
         population.add(MultiObjectiveSolution::new(array![3.0], array![3.0, 1.0]));
-        
+
         let front = vec![0, 1, 2];
         population.calculate_crowding_distances(&front);
-        
+
         // Boundary solutions should have infinite distance
         assert_eq!(population.solutions[0].crowding_distance, f64::INFINITY);
         assert_eq!(population.solutions[2].crowding_distance, f64::INFINITY);
@@ -730,9 +731,9 @@ mod tests {
         population.add(MultiObjectiveSolution::new(array![1.0], array![1.0, 3.0]));
         population.add(MultiObjectiveSolution::new(array![2.0], array![2.0, 2.0]));
         population.add(MultiObjectiveSolution::new(array![3.0], array![3.0, 1.0]));
-        
+
         let stats = population.calculate_statistics();
-        
+
         assert_eq!(stats.mean_objectives[0], 2.0); // (1+2+3)/3
         assert_eq!(stats.mean_objectives[1], 2.0); // (3+2+1)/3
         assert_eq!(stats.min_objectives[0], 1.0);

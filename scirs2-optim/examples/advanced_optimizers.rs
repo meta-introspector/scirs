@@ -152,7 +152,7 @@ fn plot_paths(
     // Plot optimizer paths
     let colors = [&RED, &BLUE, &GREEN, &MAGENTA, &CYAN, &YELLOW, &BLACK];
 
-    for (i, (path, (name_))) in paths.iter().zip(optimizers).enumerate() {
+    for (i, (path, (name, _optimizer))) in paths.iter().zip(optimizers).enumerate() {
         let color = colors[i % colors.len()];
 
         // Draw path
@@ -228,7 +228,7 @@ fn plot_loss_history(
 
     let colors = [&RED, &BLUE, &GREEN, &MAGENTA, &CYAN, &YELLOW, &BLACK];
 
-    for (i, (losses, (name_))) in loss_histories.iter().zip(optimizers).enumerate() {
+    for (i, (losses, (name, _optimizer))) in loss_histories.iter().zip(optimizers).enumerate() {
         let color = colors[i % colors.len()];
 
         let losses_with_idx: Vec<(f64, f64)> = losses

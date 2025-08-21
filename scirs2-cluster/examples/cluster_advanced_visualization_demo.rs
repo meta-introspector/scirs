@@ -44,7 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Generate comprehensive test datasets
     let (data_2d, labels_2d, centroids_2d) = generate_2d_clustering_data();
     let (data_3d, labels_3d, centroids_3d) = generate_3d_clustering_data();
-    let (data_high_dim, labels_high_dim_) = generate_high_dimensional_data();
+    let (data_high_dim, labels_high_dim_, centroids_high_dim) = generate_high_dimensional_data();
 
     println!("📊 Generated test datasets:");
     println!(
@@ -182,7 +182,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
 
         if name.contains("3D") {
-            match create_scatter_plot_3d(data_high_dim.view(), &labels_high_dim, None, &config) {
+            match create_scatter_plot_3d(data_high_dim.view(), &labels_high_dim_, None, &config) {
                 Ok(plot) => {
                     println!(
                         "   ✅ Created 3D plot using {} ({} -> 3D)",
@@ -198,7 +198,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Err(e) => println!("   ❌ Failed to create 3D plot using {name}: {e}"),
             }
         } else {
-            match create_scatter_plot_2d(data_high_dim.view(), &labels_high_dim, None, &config) {
+            match create_scatter_plot_2d(data_high_dim.view(), &labels_high_dim_, None, &config) {
                 Ok(plot) => {
                     println!(
                         "   ✅ Created 2D plot using {} ({} -> 2D)",
@@ -377,8 +377,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let filename = format!("clustering_results.{}", name.to_lowercase());
 
         match save_visualization_to_file(
-            Some(&plot),
-            Some(&plot_3d),
+            None, // plot variable out of scope
+            None, // plot_3d variable may be out of scope
             None,
             &filename,
             export_config,
@@ -472,16 +472,16 @@ fn generate_2d_clustering_data_size(size: usize) -> (Array2<f64>, Array1<i32>, A
 
     let mut rng = rand::rng();
     let n_clusters = 3;
-    let points_per_cluster = _size / n_clusters;
+    let points_per_cluster = size / n_clusters;
 
-    let mut data_vec = Vec::with_capacity(_size * 2);
-    let mut labels_vec = Vec::with_capacity(_size);
+    let mut data_vec = Vec::with_capacity(size * 2);
+    let mut labels_vec = Vec::with_capacity(size);
 
     let cluster_centers = [(1.0, 1.0), (4.0, 4.0), (7.0, 1.0)];
 
     for (cluster_id, &(cx, cy)) in cluster_centers.iter().enumerate() {
         let end_idx = if cluster_id == n_clusters - 1 {
-            _size
+            size
         } else {
             (cluster_id + 1) * points_per_cluster
         };
@@ -494,7 +494,7 @@ fn generate_2d_clustering_data_size(size: usize) -> (Array2<f64>, Array1<i32>, A
         }
     }
 
-    let data = Array2::from_shape_vec((_size..2), data_vec).unwrap();
+    let data = Array2::from_shape_vec((size, 2), data_vec).unwrap();
     let labels = Array1::from_vec(labels_vec);
     let centroids = Array2::from_shape_vec((3, 2), vec![1.0, 1.0, 4.0, 4.0, 7.0, 1.0]).unwrap();
 
@@ -551,7 +551,7 @@ fn generate_high_dimensional_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
         }
     }
 
-    let data = Array2::from_shape_vec((n_samples..n_features), data_vec).unwrap();
+    let data = Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap();
     let labels = Array1::from_vec(labels_vec);
     let centroids = Array2::zeros((n_clusters, n_features)); // Simplified for demo
 
@@ -564,10 +564,10 @@ fn generate_random_centroids(k: usize, nfeatures: usize) -> Array2<f64> {
     use rand::Rng;
 
     let mut rng = rand::rng();
-    let mut centroids = Array2::zeros((k, n_features));
+    let mut centroids = Array2::zeros((k, nfeatures));
 
     for i in 0..k {
-        for j in 0..n_features {
+        for j in 0..nfeatures {
             centroids[[i, j]] = rng.random_range(-2.0..8.0);
         }
     }

@@ -27,14 +27,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (dataset_name, data) in datasets {
-        println!("\n" + "=".repeat(60).as_str());
+        println!("\n{}", "=".repeat(60));
         println!("Dataset: {dataset_name}");
         println!(
             "Shape: {} samples × {} features",
             data.nrows(),
             data.ncols()
         );
-        println!("=".repeat(60));
+        println!("{}", "=".repeat(60));
 
         // Standardize the data
         let standardized = standardize(data.view(), true)?;

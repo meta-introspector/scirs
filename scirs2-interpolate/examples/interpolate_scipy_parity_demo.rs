@@ -4,7 +4,7 @@
 //! implemented for the 0.1.0 stable release.
 
 use ndarray::{array, Array1, Array2};
-use scirs2__interpolate::{
+use scirs2_interpolate::{
     create_scipy_interface, validate_complete_scipy_parity, CompatibilityReport, PPoly,
     SciPyBSpline, SciPyCubicSpline, SciPyInterpolate,
 };

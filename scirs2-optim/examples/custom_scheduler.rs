@@ -35,7 +35,7 @@ fn test_scheduler<S: LearningRateScheduler<f64>>(
     println!("Step | Learning Rate");
     println!("-----|-------------");
 
-    let mut _params = initial_params.clone();
+    let mut params = initial_params.clone();
     let mut optimizer = SGD::<f64>::new(scheduler.get_learning_rate());
 
     for step in 0..steps {
@@ -51,8 +51,8 @@ fn test_scheduler<S: LearningRateScheduler<f64>>(
         );
 
         // Compute gradient and update parameters
-        let gradient = quadratic_gradient(&_params);
-        _params = optimizer.step(&_params, &gradient)?;
+        let gradient = quadratic_gradient(&params);
+        params = optimizer.step(&params, &gradient)?;
 
         // Step the scheduler
         if step < steps - 1 {
@@ -60,10 +60,10 @@ fn test_scheduler<S: LearningRateScheduler<f64>>(
         }
     }
 
-    println!("\nFinal loss: {:.8}", quadratic_loss(&_params));
+    println!("\nFinal loss: {:.8}", quadratic_loss(&params));
     println!("Final parameters: {:?}", params);
 
-    Ok(_params)
+    Ok(params)
 }
 
 #[allow(dead_code)]
@@ -149,7 +149,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let noisy_scheduler = CustomScheduler::new(0.1, move |step| {
         // Exponential decay with noise
         let base_lr = 0.1 * 0.95f64.powi((step / 10) as i32);
-        let noise = rng.gen_range(-0.01, 0.01); // Add noise in range [-0.01..0.01]
+        let noise = rng.random_range(-0.01, 0.01); // Add noise in range [-0.01..0.01]
         (base_lr + noise).max(0.001) // Ensure LR doesn't go below 0.001
     });
 

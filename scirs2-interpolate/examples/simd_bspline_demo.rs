@@ -7,7 +7,7 @@
 #[cfg(feature = "simd")]
 use ndarray::Array1;
 #[cfg(feature = "simd")]
-use scirs2__interpolate::{
+use scirs2_interpolate::{
     bspline::{BSpline, ExtrapolateMode},
     simd_bspline::SimdBSplineEvaluator,
     simd_optimized::{get_simd_config, is_simd_available},

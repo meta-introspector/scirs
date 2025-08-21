@@ -21,31 +21,31 @@ fn main() {
 
     // Generate synthetic regression data
     let n_samples = 100;
-    let n_features = 10;
+    let nfeatures = 10;
 
     println!(
         "Generating synthetic linear regression data with {} samples and {} features",
-        n_samples, n_features
+        n_samples, nfeatures
     );
 
-    let (x_train, y_train, true_weights_true_bias) = generate_data(n_samples, n_features);
+    let (x_train, y_train, true_weights, true_bias) = generate_data(n_samples, nfeatures);
 
     // Define our optimization problem
     println!("\nRunning regression with different optimizer compositions...\n");
 
     // 1. Sequential Optimizer Example
-    sequential_optimizer_example(&x_train, &y_train, true_weights_true_bias.0.len());
+    sequential_optimizer_example(&x_train, &y_train, true_weights.len());
 
     // 2. Parallel Optimizer Example
-    parallel_optimizer_example(&x_train, &y_train, true_weights_true_bias.0.len());
+    parallel_optimizer_example(&x_train, &y_train, true_weights.len());
 
     // 3. Chained Optimizer Example
-    chained_optimizer_example(&x_train, &y_train, true_weights_true_bias.0.len());
+    chained_optimizer_example(&x_train, &y_train, true_weights.len());
 }
 
 /// Example demonstrating a sequential optimizer composition
 #[allow(dead_code)]
-fn sequential_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, nfeatures: usize) {
+fn sequential_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, nfeatures: usize) {
     println!("Sequential Optimizer Example");
     println!("----------------------------");
     println!(
@@ -53,7 +53,7 @@ fn sequential_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, n
     );
 
     // Initialize parameters
-    let mut weights = Array1::<f64>::zeros(n_features);
+    let mut weights = Array1::<f64>::zeros(nfeatures);
     let mut bias = 0.0;
 
     // Create a sequential optimizer with SGD followed by Adam
@@ -68,11 +68,11 @@ fn sequential_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, n
 
     for i in 0..n_iterations {
         // Forward pass (compute predictions)
-        let predictions = compute_predictions(_x_train, &weights, bias);
+        let predictions = compute_predictions(x_train, &weights, bias);
 
         // Compute loss and gradients
         let (loss, weight_grad, bias_grad) =
-            compute_gradients(_x_train, y_train, &predictions, &weights, bias);
+            compute_gradients(x_train, y_train, &predictions, &weights, bias);
 
         // Update weights using the sequential optimizer
         weights = sequential_optimizer.step(&weights, &weight_grad).unwrap();
@@ -90,28 +90,28 @@ fn sequential_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, n
 
     // Compute final predictions and loss
     let predictions = compute_predictions(x_train, &weights, bias);
-    let (final_loss__) = compute_gradients(x_train, y_train, &predictions, &weights, bias);
+    let (final_loss__, _, _) = compute_gradients(x_train, y_train, &predictions, &weights, bias);
 
     println!("\nResults:");
     println!("  Training time: {:?}", elapsed);
-    println!("  Final loss: {:.6}", final_loss);
+    println!("  Final loss: {:.6}", final_loss__);
     println!("  Weight norm: {:.6}", weights.mapv(|w| w * w).sum().sqrt());
     println!();
 }
 
 /// Example demonstrating a parallel optimizer composition
 #[allow(dead_code)]
-fn parallel_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, nfeatures: usize) {
+fn parallel_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, nfeatures: usize) {
     println!("Parallel Optimizer Example");
     println!("---------------------------");
     println!("Using different optimizers for different parameter groups\n");
 
     // Split the weights into two groups for demonstration
-    let split_point = n_features / 2;
+    let split_point = nfeatures / 2;
 
     // Initialize parameters
     let weights_group1 = Array1::<f64>::zeros(split_point);
-    let weights_group2 = Array1::<f64>::zeros(n_features - split_point);
+    let weights_group2 = Array1::<f64>::zeros(nfeatures - split_point);
     let mut bias = 0.0;
 
     // Create a parallel optimizer with SGD for group 1 and Adam for group 2
@@ -133,11 +133,11 @@ fn parallel_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, nfe
         let current_weights = parallel_optimizer.get_all_parameters().unwrap();
 
         // Combine the weights for predictions
-        let mut combined_weights = Array1::<f64>::zeros(n_features);
+        let mut combined_weights = Array1::<f64>::zeros(nfeatures);
         for j in 0..split_point {
             combined_weights[j] = current_weights[0][j];
         }
-        for j in 0..(n_features - split_point) {
+        for j in 0..(nfeatures - split_point) {
             combined_weights[j + split_point] = current_weights[1][j];
         }
 
@@ -172,17 +172,17 @@ fn parallel_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, nfe
     let final_weights = parallel_optimizer.get_all_parameters().unwrap();
 
     // Combine the weights for final predictions
-    let mut combined_weights = Array1::<f64>::zeros(n_features);
+    let mut combined_weights = Array1::<f64>::zeros(nfeatures);
     for j in 0..split_point {
         combined_weights[j] = final_weights[0][j];
     }
-    for j in 0..(n_features - split_point) {
+    for j in 0..(nfeatures - split_point) {
         combined_weights[j + split_point] = final_weights[1][j];
     }
 
     // Compute final predictions and loss
     let predictions = compute_predictions(x_train, &combined_weights, bias);
-    let (final_loss__) = compute_gradients(x_train, y_train, &predictions, &combined_weights, bias);
+    let (final_loss, _, _) = compute_gradients(x_train, y_train, &predictions, &combined_weights, bias);
 
     println!("\nResults:");
     println!("  Training time: {:?}", elapsed);
@@ -200,13 +200,13 @@ fn parallel_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, nfe
 
 /// Example demonstrating a chained optimizer composition
 #[allow(dead_code)]
-fn chained_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, nfeatures: usize) {
+fn chained_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, nfeatures: usize) {
     println!("Chained Optimizer Example");
     println!("-------------------------");
     println!("Using RMSprop wrapped with Adam\n");
 
     // Initialize parameters
-    let mut weights = Array1::<f64>::zeros(n_features);
+    let mut weights = Array1::<f64>::zeros(nfeatures);
     let mut bias = 0.0;
 
     // Create a chained optimizer with RMSprop as inner and Adam as outer
@@ -221,11 +221,11 @@ fn chained_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, nfea
 
     for i in 0..n_iterations {
         // Forward pass (compute predictions)
-        let predictions = compute_predictions(_x_train, &weights, bias);
+        let predictions = compute_predictions(x_train, &weights, bias);
 
         // Compute loss and gradients
         let (loss, weight_grad, bias_grad) =
-            compute_gradients(_x_train, y_train, &predictions, &weights, bias);
+            compute_gradients(x_train, y_train, &predictions, &weights, bias);
 
         // Update weights using the chained optimizer
         weights = chained_optimizer.step(&weights, &weight_grad).unwrap();
@@ -243,11 +243,11 @@ fn chained_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, nfea
 
     // Compute final predictions and loss
     let predictions = compute_predictions(x_train, &weights, bias);
-    let (final_loss__) = compute_gradients(x_train, y_train, &predictions, &weights, bias);
+    let (final_loss__, _, _) = compute_gradients(x_train, y_train, &predictions, &weights, bias);
 
     println!("\nResults:");
     println!("  Training time: {:?}", elapsed);
-    println!("  Final loss: {:.6}", final_loss);
+    println!("  Final loss: {:.6}", final_loss__);
     println!("  Weight norm: {:.6}", weights.mapv(|w| w * w).sum().sqrt());
     println!();
 }
@@ -256,14 +256,14 @@ fn chained_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, nfea
 #[allow(dead_code)]
 fn generate_data(
     n_samples: usize,
-    n_features: usize,
+    nfeatures: usize,
 ) -> (Array2<f64>, Array1<f64>, Array1<f64>, f64) {
     // Create random true weights and bias
-    let true_weights = Array1::random(n_features, Normal::new(0.0, 1.0).unwrap());
+    let true_weights = Array1::random(nfeatures, Normal::new(0.0, 1.0).unwrap());
     let true_bias = 1.0;
 
     // Generate random _features
-    let x = Array2::random((n_samples, n_features), Normal::new(0.0, 1.0).unwrap());
+    let x = Array2::random((n_samples, nfeatures), Normal::new(0.0, 1.0).unwrap());
 
     // Generate target values with noise
     let y_without_noise = x.dot(&true_weights) + true_bias;

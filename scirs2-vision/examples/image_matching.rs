@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nDetecting ORB features...");
     let orb_config = OrbConfig {
         num_features: 1000,
-        scale_factor: 1.2,
+        scalefactor: 1.2,
         num_levels: 8,
         fast_threshold: 20,
         use_harris_detector: true,
@@ -161,7 +161,7 @@ fn draw_matches(
     }
 
     // Draw matches
-    for (i, &(idx1, idx2_)) in matches.iter().enumerate() {
+    for (i, &(idx1, idx2, _distance)) in matches.iter().enumerate() {
         let kp1 = &kps1[idx1].keypoint;
         let kp2 = &kps2[idx2].keypoint;
 

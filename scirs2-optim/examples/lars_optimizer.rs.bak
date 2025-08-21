@@ -132,7 +132,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let (final_loss__) = compute_loss_and_gradient(&weights, &bias, &x, &y);
 
         println!("  Training completed in {:?}", duration);
-        println!("  Final loss: {:.6}", final_loss);
+        println!("  Final loss: {:.6}", final_loss__);
 
         // Calculate error compared to true weights
         let weight_error = (&weights - &true_weights).mapv(|v| v.abs()).mean().unwrap();

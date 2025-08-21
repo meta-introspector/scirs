@@ -26,7 +26,7 @@ fn main() {
         n_samples, n_features
     );
 
-    let (x_train, y_train, true_weights_true_bias) = generate_data(n_samples, n_features);
+    let (x_train, y_train, true_weights, true_bias) = generate_data(n_samples, n_features);
 
     // Parameters for optimization
     let initial_lr = 0.1;

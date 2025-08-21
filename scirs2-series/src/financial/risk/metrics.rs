@@ -406,8 +406,7 @@ pub fn sortino_ratio<F: Float + Clone>(
     } else {
         // Annualize the ratio
         let annualized_excess = mean_excess * F::from(periods_per_year).unwrap();
-        let annualized_downside =
-            downside_deviation * F::from(periods_per_year).unwrap().sqrt();
+        let annualized_downside = downside_deviation * F::from(periods_per_year).unwrap().sqrt();
         Ok(annualized_excess / annualized_downside)
     }
 }
@@ -479,10 +478,7 @@ pub fn information_ratio<F: Float + Clone>(
 /// # Returns
 ///
 /// * `Result<F>` - Beta coefficient
-pub fn beta<F: Float + Clone>(
-    asset_returns: &Array1<F>,
-    market_returns: &Array1<F>,
-) -> Result<F> {
+pub fn beta<F: Float + Clone>(asset_returns: &Array1<F>, market_returns: &Array1<F>) -> Result<F> {
     if asset_returns.len() != market_returns.len() {
         return Err(TimeSeriesError::DimensionMismatch {
             expected: asset_returns.len(),
@@ -605,7 +601,7 @@ pub fn jensens_alpha<F: Float + Clone>(
 /// Calculate Omega ratio (probability-weighted gains over losses)
 ///
 /// The Omega ratio considers the entire return distribution and measures
-/// the probability-weighted gains above a threshold relative to 
+/// the probability-weighted gains above a threshold relative to
 /// probability-weighted losses below the threshold.
 ///
 /// # Arguments
@@ -677,10 +673,10 @@ mod tests {
     fn test_var_historical() {
         let returns = arr1(&[-0.05, 0.02, -0.03, 0.01, -0.02, 0.03, -0.01, 0.04]);
         let var = var_historical(&returns, 0.95).unwrap();
-        
+
         // VaR should be positive (loss magnitude)
         assert!(var > 0.0);
-        
+
         // VaR should be reasonable for this data
         assert!(var < 0.1);
     }
@@ -690,7 +686,7 @@ mod tests {
         let returns = arr1(&[-0.05, 0.02, -0.03, 0.01, -0.02, 0.03, -0.01, 0.04]);
         let var = var_historical(&returns, 0.95).unwrap();
         let es = expected_shortfall(&returns, 0.95).unwrap();
-        
+
         // ES should be >= VaR
         assert!(es >= var);
         assert!(es > 0.0);
@@ -700,7 +696,7 @@ mod tests {
     fn test_parametric_var() {
         let returns = arr1(&[0.01, -0.02, 0.015, -0.01, 0.005]);
         let var = parametric_var(&returns, 0.95).unwrap();
-        
+
         assert!(var > 0.0);
     }
 
@@ -709,7 +705,7 @@ mod tests {
         let returns = arr1(&[0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003]);
         let result = sharpe_ratio(&returns, 0.02, 252);
         assert!(result.is_ok());
-        
+
         let sharpe = result.unwrap();
         // Sharpe ratio should be finite
         assert!(sharpe.is_finite());
@@ -720,7 +716,7 @@ mod tests {
         let returns = arr1(&[0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003]);
         let result = sortino_ratio(&returns, 0.02, 252);
         assert!(result.is_ok());
-        
+
         let sortino = result.unwrap();
         // Sortino ratio should be finite or infinity (if no downside)
         assert!(sortino.is_finite() || sortino.is_infinite());
@@ -730,10 +726,10 @@ mod tests {
     fn test_beta() {
         let asset_returns = arr1(&[0.01, -0.02, 0.015, -0.01, 0.005]);
         let market_returns = arr1(&[0.008, -0.015, 0.012, -0.008, 0.004]);
-        
+
         let result = beta(&asset_returns, &market_returns);
         assert!(result.is_ok());
-        
+
         let beta_coef = result.unwrap();
         // Beta should be reasonable (typically between -3 and 3)
         assert!(beta_coef.abs() < 5.0);
@@ -743,10 +739,10 @@ mod tests {
     fn test_information_ratio() {
         let portfolio_returns = arr1(&[0.01, -0.02, 0.015, -0.01, 0.005]);
         let benchmark_returns = arr1(&[0.008, -0.018, 0.012, -0.009, 0.003]);
-        
+
         let result = information_ratio(&portfolio_returns, &benchmark_returns);
         assert!(result.is_ok());
-        
+
         let ir = result.unwrap();
         assert!(ir.is_finite() || ir.is_infinite());
     }
@@ -755,10 +751,10 @@ mod tests {
     fn test_jensens_alpha() {
         let returns = arr1(&[0.01, -0.02, 0.015, -0.01, 0.005]);
         let market_returns = arr1(&[0.008, -0.015, 0.012, -0.008, 0.004]);
-        
+
         let result = jensens_alpha(&returns, &market_returns, 0.02, 252);
         assert!(result.is_ok());
-        
+
         let alpha = result.unwrap();
         // Alpha should be finite
         assert!(alpha.is_finite());
@@ -768,10 +764,10 @@ mod tests {
     fn test_omega_ratio() {
         let returns = arr1(&[0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003]);
         let threshold = 0.0;
-        
+
         let result = omega_ratio(&returns, threshold);
         assert!(result.is_ok());
-        
+
         let omega = result.unwrap();
         assert!(omega > 0.0);
     }
@@ -780,7 +776,7 @@ mod tests {
     fn test_dimension_mismatch() {
         let returns1 = arr1(&[0.01, -0.02]);
         let returns2 = arr1(&[0.008, -0.015, 0.012]);
-        
+
         let result = beta(&returns1, &returns2);
         assert!(result.is_err());
     }
@@ -789,7 +785,7 @@ mod tests {
     fn test_insufficient_data() {
         let returns = arr1(&[0.01]);
         let market_returns = arr1(&[0.008]);
-        
+
         let result = beta(&returns, &market_returns);
         assert!(result.is_err());
     }
@@ -797,11 +793,11 @@ mod tests {
     #[test]
     fn test_invalid_confidence() {
         let returns = arr1(&[0.01, -0.02, 0.015]);
-        
+
         // Invalid confidence > 1
         let result = var_historical(&returns, 1.1);
         assert!(result.is_err());
-        
+
         // Invalid confidence <= 0
         let result = var_historical(&returns, 0.0);
         assert!(result.is_err());

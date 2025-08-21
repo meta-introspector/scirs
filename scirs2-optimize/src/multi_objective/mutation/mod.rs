@@ -3,7 +3,7 @@
 //! Various mutation strategies for maintaining diversity in populations.
 
 use rand::Rng;
-use rand_distr::{Normal, Distribution};
+use rand_distr::{Distribution, Normal};
 
 /// Trait for mutation operators
 pub trait MutationOperator {
@@ -46,7 +46,7 @@ impl MutationOperator for PolynomialMutation {
                 let (lower, upper) = bounds[i];
                 let delta = self.calculate_delta(&mut rng);
                 let max_delta = upper - lower;
-                
+
                 solution[i] += delta * max_delta;
                 solution[i] = solution[i].max(lower).min(upper);
             }
@@ -79,7 +79,7 @@ impl MutationOperator for GaussianMutation {
             if rng.gen::<f64>() <= self.mutation_probability {
                 let (lower, upper) = bounds[i];
                 let perturbation = normal.sample(&mut rng);
-                
+
                 solution[i] += perturbation;
                 solution[i] = solution[i].max(lower).min(upper);
             }
@@ -95,7 +95,9 @@ pub struct UniformMutation {
 
 impl UniformMutation {
     pub fn new(mutation_probability: f64) -> Self {
-        Self { mutation_probability }
+        Self {
+            mutation_probability,
+        }
     }
 }
 

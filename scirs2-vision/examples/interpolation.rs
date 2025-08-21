@@ -391,14 +391,14 @@ fn drawtext(img: &mut image::RgbaImage, text: &str, x: u32, y: u32) {
     for (i, c) in text.chars().enumerate() {
         let cx = x + i as u32 * 8 + 1;
         let cy = y + 1;
-        draw_char(_img, c, cx, cy, shadow_color);
+        draw_char(img, c, cx, cy, shadow_color);
     }
 
     // Draw text
     for (i, c) in text.chars().enumerate() {
         let cx = x + i as u32 * 8;
         let cy = y;
-        draw_char(_img, c, cx, cy, color);
+        draw_char(img, c, cx, cy, color);
     }
 }
 

@@ -58,12 +58,15 @@ impl RaftConsensus {
     pub fn new(node_id: String, peers: Vec<String>, config: ConsensusConfig) -> Self {
         let mut peer_states = HashMap::new();
         for peer in peers {
-            peer_states.insert(peer.clone(), PeerState {
-                id: peer,
-                last_seen: Instant::now(),
-                is_healthy: true,
-                address: None,
-            });
+            peer_states.insert(
+                peer.clone(),
+                PeerState {
+                    id: peer,
+                    last_seen: Instant::now(),
+                    is_healthy: true,
+                    address: None,
+                },
+            );
         }
 
         Self {
@@ -87,15 +90,15 @@ impl RaftConsensus {
         self.state = NodeState::Candidate;
         self.voted_for = Some(self.node_id.clone());
         self.last_heartbeat = Instant::now();
-        
+
         // Reset election timeout with randomization
         let base_timeout = self.config.election_timeout_ms;
         let jitter = rand::thread_rng().gen_range(0..base_timeout / 2);
         self.election_timeout = Duration::from_millis(base_timeout + jitter);
-        
+
         // TODO: Send vote requests to all peers
         // This would be implemented with actual network communication
-        
+
         Ok(())
     }
 
@@ -117,7 +120,7 @@ impl RaftConsensus {
         }
 
         let can_vote = self.voted_for.is_none() || self.voted_for.as_ref() == Some(&candidate_id);
-        
+
         if term == self.current_term && can_vote {
             self.voted_for = Some(candidate_id);
             Ok(true)
@@ -129,14 +132,14 @@ impl RaftConsensus {
     /// Become leader
     pub fn become_leader(&mut self) -> Result<()> {
         self.state = NodeState::Leader;
-        
+
         // Initialize next_index and match_index for all peers
         let log_length = self.log.len();
         for peer_id in self.peers.keys() {
             self.next_index.insert(peer_id.clone(), log_length);
             self.match_index.insert(peer_id.clone(), 0);
         }
-        
+
         Ok(())
     }
 
@@ -147,10 +150,10 @@ impl RaftConsensus {
         }
 
         self.last_heartbeat = Instant::now();
-        
+
         // TODO: Send heartbeat messages to all peers
         // This would be implemented with actual network communication
-        
+
         Ok(())
     }
 
@@ -185,7 +188,7 @@ impl ConsensusManager for RaftConsensus {
     fn propose(&mut self, data: Vec<u8>) -> Result<String> {
         if self.state != NodeState::Leader {
             return Err(MetricsError::ConsensusError(
-                "Only leader can propose entries".to_string()
+                "Only leader can propose entries".to_string(),
             ));
         }
 
@@ -200,7 +203,7 @@ impl ConsensusManager for RaftConsensus {
         self.log.push(entry);
 
         // TODO: Replicate to followers
-        
+
         Ok(entry_id)
     }
 
@@ -331,12 +334,15 @@ impl PbftConsensus {
     pub fn new(node_id: String, peers: Vec<String>, config: ConsensusConfig) -> Self {
         let mut peer_states = HashMap::new();
         for peer in peers {
-            peer_states.insert(peer.clone(), PeerState {
-                id: peer,
-                last_seen: Instant::now(),
-                is_healthy: true,
-                address: None,
-            });
+            peer_states.insert(
+                peer.clone(),
+                PeerState {
+                    id: peer,
+                    last_seen: Instant::now(),
+                    is_healthy: true,
+                    address: None,
+                },
+            );
         }
 
         Self {
@@ -353,7 +359,7 @@ impl PbftConsensus {
     pub fn has_quorum(&self) -> bool {
         let total_nodes = self.peers.len() + 1; // +1 for self
         let healthy_nodes = self.peers.values().filter(|p| p.is_healthy).count() + 1;
-        
+
         // PBFT requires 3f + 1 nodes to tolerate f Byzantine failures
         // For simplicity, we use 2f + 1 for non-Byzantine consensus
         healthy_nodes >= (total_nodes * 2 / 3) + 1
@@ -363,7 +369,7 @@ impl PbftConsensus {
     pub fn start_consensus(&mut self, request: Vec<u8>) -> Result<String> {
         if !self.has_quorum() {
             return Err(MetricsError::ConsensusError(
-                "Insufficient nodes for consensus".to_string()
+                "Insufficient nodes for consensus".to_string(),
             ));
         }
 
@@ -381,15 +387,18 @@ impl PbftConsensus {
         self.message_log.push(message.clone());
 
         // TODO: Send pre-prepare to all replicas
-        
-        Ok(format!("pbft_{}_{}", self.current_view, self.sequence_number))
+
+        Ok(format!(
+            "pbft_{}_{}",
+            self.current_view, self.sequence_number
+        ))
     }
 
     fn compute_digest(&self, data: &[u8]) -> String {
         // Simplified hash computation
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         let mut hasher = DefaultHasher::new();
         data.hash(&mut hasher);
         format!("{:x}", hasher.finish())
@@ -411,7 +420,10 @@ impl ConsensusManager for PbftConsensus {
     fn get_state(&self) -> ConsensusState {
         ConsensusState {
             term: self.current_view,
-            leader: Some(format!("primary_{}", self.current_view % (self.peers.len() + 1) as u64)),
+            leader: Some(format!(
+                "primary_{}",
+                self.current_view % (self.peers.len() + 1) as u64
+            )),
             node_state: NodeState::Follower, // Simplified
             log_length: self.message_log.len(),
             committed_index: 0, // Simplified
@@ -471,12 +483,15 @@ impl SimpleMajorityConsensus {
     pub fn new(node_id: String, peers: Vec<String>, config: ConsensusConfig) -> Self {
         let mut peer_states = HashMap::new();
         for peer in peers {
-            peer_states.insert(peer.clone(), PeerState {
-                id: peer,
-                last_seen: Instant::now(),
-                is_healthy: true,
-                address: None,
-            });
+            peer_states.insert(
+                peer.clone(),
+                PeerState {
+                    id: peer,
+                    last_seen: Instant::now(),
+                    is_healthy: true,
+                    address: None,
+                },
+            );
         }
 
         Self {
@@ -489,8 +504,12 @@ impl SimpleMajorityConsensus {
 
     /// Submit a proposal for voting
     pub fn submit_proposal(&mut self, proposal: Vec<u8>) -> Result<String> {
-        let proposal_id = format!("proposal_{}_{}", 
-            SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis(),
+        let proposal_id = format!(
+            "proposal_{}_{}",
+            SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis(),
             rand::thread_rng().gen::<u64>()
         );
 
@@ -539,9 +558,9 @@ impl ConsensusManager for SimpleMajorityConsensus {
 
     fn get_state(&self) -> ConsensusState {
         ConsensusState {
-            term: 0, // No term concept in simple majority
+            term: 0,                            // No term concept in simple majority
             leader: Some(self.node_id.clone()), // Everyone can propose
-            node_state: NodeState::Leader, // Simplified
+            node_state: NodeState::Leader,      // Simplified
             log_length: self.votes.len(),
             committed_index: 0, // Simplified
         }
@@ -577,18 +596,15 @@ impl ConsensusFactory {
         config: ConsensusConfig,
     ) -> Result<Box<dyn ConsensusManager>> {
         match algorithm {
-            ConsensusAlgorithm::Raft => {
-                Ok(Box::new(RaftConsensus::new(node_id, peers, config)))
-            }
-            ConsensusAlgorithm::Pbft => {
-                Ok(Box::new(PbftConsensus::new(node_id, peers, config)))
-            }
-            ConsensusAlgorithm::SimpleMajority => {
-                Ok(Box::new(SimpleMajorityConsensus::new(node_id, peers, config)))
-            }
-            _ => Err(MetricsError::ConsensusError(
-                format!("Consensus algorithm {:?} not implemented", algorithm)
-            )),
+            ConsensusAlgorithm::Raft => Ok(Box::new(RaftConsensus::new(node_id, peers, config))),
+            ConsensusAlgorithm::Pbft => Ok(Box::new(PbftConsensus::new(node_id, peers, config))),
+            ConsensusAlgorithm::SimpleMajority => Ok(Box::new(SimpleMajorityConsensus::new(
+                node_id, peers, config,
+            ))),
+            _ => Err(MetricsError::ConsensusError(format!(
+                "Consensus algorithm {:?} not implemented",
+                algorithm
+            ))),
         }
     }
 }
@@ -602,7 +618,7 @@ mod tests {
         let config = ConsensusConfig::default();
         let peers = vec!["node1".to_string(), "node2".to_string()];
         let mut raft = RaftConsensus::new("node0".to_string(), peers, config);
-        
+
         assert_eq!(raft.current_term(), 0);
         assert_eq!(*raft.current_state(), NodeState::Follower);
         assert_eq!(raft.log_length(), 0);
@@ -613,7 +629,7 @@ mod tests {
         let config = ConsensusConfig::default();
         let peers = vec!["node1".to_string(), "node2".to_string()];
         let mut raft = RaftConsensus::new("node0".to_string(), peers, config);
-        
+
         raft.start_election().unwrap();
         assert_eq!(*raft.current_state(), NodeState::Candidate);
         assert_eq!(raft.current_term(), 1);
@@ -622,9 +638,13 @@ mod tests {
     #[test]
     fn test_pbft_consensus_creation() {
         let config = ConsensusConfig::default();
-        let peers = vec!["node1".to_string(), "node2".to_string(), "node3".to_string()];
+        let peers = vec![
+            "node1".to_string(),
+            "node2".to_string(),
+            "node3".to_string(),
+        ];
         let pbft = PbftConsensus::new("node0".to_string(), peers, config);
-        
+
         assert!(pbft.has_quorum());
     }
 
@@ -633,8 +653,10 @@ mod tests {
         let config = ConsensusConfig::default();
         let peers = vec!["node1".to_string(), "node2".to_string()];
         let mut consensus = SimpleMajorityConsensus::new("node0".to_string(), peers, config);
-        
-        let proposal_id = consensus.submit_proposal(b"test proposal".to_vec()).unwrap();
+
+        let proposal_id = consensus
+            .submit_proposal(b"test proposal".to_vec())
+            .unwrap();
         assert!(!consensus.has_majority(&proposal_id)); // Need more votes
     }
 
@@ -642,7 +664,7 @@ mod tests {
     fn test_consensus_factory() {
         let config = ConsensusConfig::default();
         let peers = vec!["node1".to_string()];
-        
+
         let raft = ConsensusFactory::create_consensus(
             ConsensusAlgorithm::Raft,
             "node0".to_string(),
@@ -650,7 +672,7 @@ mod tests {
             config.clone(),
         );
         assert!(raft.is_ok());
-        
+
         let pbft = ConsensusFactory::create_consensus(
             ConsensusAlgorithm::Pbft,
             "node0".to_string(),
@@ -658,7 +680,7 @@ mod tests {
             config.clone(),
         );
         assert!(pbft.is_ok());
-        
+
         let simple = ConsensusFactory::create_consensus(
             ConsensusAlgorithm::SimpleMajority,
             "node0".to_string(),

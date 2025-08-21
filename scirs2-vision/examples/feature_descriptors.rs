@@ -121,7 +121,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Create match visualization for ORB
         let mut match_img = create_side_by_side(&img, &img2);
-        for (idx1, idx2_distance) in orb_matches.iter().take(50) {
+        for (idx1, idx2, _distance) in orb_matches.iter().take(50) {
             let kp1 = &orb_descriptors[*idx1].keypoint;
             let kp2 = &orb_descriptors2[*idx2].keypoint;
 

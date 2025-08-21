@@ -318,7 +318,7 @@ where
         let gradients_perturbed = x_train.t().dot(&diff_perturbed) * (2.0 / (y_train.len() as f64));
 
         // Step 4: SAM second step - update original weights using gradients at perturbed point
-        weights = _optimizer
+        weights = optimizer
             .second_step(&weights, &gradients_perturbed)
             .unwrap();
 

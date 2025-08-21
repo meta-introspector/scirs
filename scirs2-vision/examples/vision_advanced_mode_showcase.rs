@@ -94,7 +94,7 @@ fn create_test_video_sequence(
         let t = i as f32 / _num_frames as f32;
 
         // Create dynamic patterns: moving edges, rotating patterns, noise
-        let data = Array2::fromshape_fn((height, width), |(y, x)| {
+        let data = Array2::from_shape_fn((height, width), |(y, x)| {
             let x_norm = x as f32 / width as f32;
             let y_norm = y as f32 / height as f32;
 
@@ -134,7 +134,7 @@ fn create_test_video_sequence(
         });
     }
 
-    Ok(_frames)
+    Ok(frames)
 }
 
 /// Demonstrate quantum-inspired streaming processing
@@ -294,7 +294,7 @@ fn ai_optimization_demo(frames: &[Frame]) -> Result<()> {
     let mut nas = NeuralArchitectureSearch::new(
         search_space,
         SearchStrategy::Evolutionary {
-            population_size: 20,
+            populationsize: 20,
         },
     );
 
@@ -324,7 +324,7 @@ fn ai_optimization_demo(frames: &[Frame]) -> Result<()> {
             let next_state = state.clone();
             let experience = Experience {
                 state: state.clone(),
-                action,
+                action_: action,
                 reward,
                 next_state,
                 done: false,

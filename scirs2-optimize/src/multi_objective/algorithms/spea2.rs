@@ -2,9 +2,9 @@
 //!
 //! An improved version of SPEA with better fitness assignment and archive truncation.
 
-use crate::error::OptimizeError;
-use crate::multi_objective::solutions::{Solution, Population};
 use super::{MultiObjectiveOptimizer, MultiObjectiveResult};
+use crate::error::OptimizeError;
+use crate::multi_objective::solutions::{Population, Solution};
 use ndarray::{Array1, ArrayView1};
 
 /// SPEA2 optimizer
@@ -38,7 +38,7 @@ impl SPEA2 {
     /// Calculate strength values
     fn calculate_strength(&self, population: &[Solution]) -> Vec<usize> {
         let mut strengths = vec![0; population.len()];
-        
+
         for (i, sol_i) in population.iter().enumerate() {
             for (j, sol_j) in population.iter().enumerate() {
                 if i != j && self.dominates(sol_i, sol_j) {
@@ -46,14 +46,14 @@ impl SPEA2 {
                 }
             }
         }
-        
+
         strengths
     }
 
     /// Check if solution a dominates solution b
     fn dominates(&self, a: &Solution, b: &Solution) -> bool {
         let mut at_least_one_better = false;
-        
+
         for i in 0..self.n_objectives {
             if a.objectives[i] > b.objectives[i] {
                 return false;
@@ -62,7 +62,7 @@ impl SPEA2 {
                 at_least_one_better = true;
             }
         }
-        
+
         at_least_one_better
     }
 
@@ -70,23 +70,27 @@ impl SPEA2 {
     fn kth_nearest_distance(&self, index: usize, population: &[Solution], k: usize) -> f64 {
         let mut distances = Vec::new();
         let current = &population[index];
-        
+
         for (i, other) in population.iter().enumerate() {
             if i != index {
                 let dist = self.euclidean_distance(
-                    current.objectives.as_slice().unwrap(), 
-                    other.objectives.as_slice().unwrap()
+                    current.objectives.as_slice().unwrap(),
+                    other.objectives.as_slice().unwrap(),
                 );
                 distances.push(dist);
             }
         }
-        
+
         distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        distances.get(k.min(distances.len() - 1)).copied().unwrap_or(0.0)
+        distances
+            .get(k.min(distances.len() - 1))
+            .copied()
+            .unwrap_or(0.0)
     }
 
     fn euclidean_distance(&self, a: &[f64], b: &[f64]) -> f64 {
-        a.iter().zip(b.iter())
+        a.iter()
+            .zip(b.iter())
             .map(|(x, y)| (x - y).powi(2))
             .sum::<f64>()
             .sqrt()

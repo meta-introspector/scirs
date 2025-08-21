@@ -117,7 +117,7 @@
 //! let park_vol = parkinson_volatility(&high, &low).unwrap();
 //!
 //! println!("Garman-Klass: {:?}", gk_vol);
-//! println!("Rogers-Satchell: {:?}", rs_vol); 
+//! println!("Rogers-Satchell: {:?}", rs_vol);
 //! println!("Yang-Zhang: {:?}", yz_vol);
 //! println!("Parkinson: {:?}", park_vol);
 //! ```
@@ -150,13 +150,7 @@ pub mod estimators;
 
 // Re-export commonly used estimators for convenience
 pub use estimators::{
-    realized_volatility,
-    garman_klass_volatility,
-    parkinson_volatility,
-    rogers_satchell_volatility,
+    ewma_volatility, garch_volatility_estimate, garman_klass_volatility, intraday_volatility,
+    parkinson_volatility, range_volatility, realized_volatility, rogers_satchell_volatility,
     yang_zhang_volatility,
-    garch_volatility_estimate,
-    ewma_volatility,
-    range_volatility,
-    intraday_volatility,
 };

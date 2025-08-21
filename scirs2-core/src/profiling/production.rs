@@ -990,8 +990,11 @@ mod tests {
         assert!(result.is_ok());
 
         // Finish analysis (this will work because we have a session)
-        let report = profiler
-            .finish_workload_analysis("test_workload", WorkloadType::ComputeIntensive, start_time);
+        let report = profiler.finish_workload_analysis(
+            "test_workload",
+            WorkloadType::ComputeIntensive,
+            start_time,
+        );
         assert!(report.is_ok());
 
         let report = report.unwrap();

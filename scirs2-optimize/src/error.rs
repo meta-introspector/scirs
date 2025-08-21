@@ -175,8 +175,10 @@ impl From<OptimizeError> for CoreError {
                     .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
             ),
             OptimizeError::MaxEvaluationsReached => CoreError::ComputationError(
-                scirs2_core::error::ErrorContext::new("Maximum number of function evaluations reached".to_string())
-                    .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
+                scirs2_core::error::ErrorContext::new(
+                    "Maximum number of function evaluations reached".to_string(),
+                )
+                .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
             ),
         }
     }

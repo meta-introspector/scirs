@@ -37,28 +37,28 @@ fn main() -> Result<()> {
     println!("==========================================");
 
     // Create synthetic test images
-    let (test_image, hdr_images) = create_test_images()?;
+    let (testimage, hdrimages) = create_testimages()?;
 
     // 1. Neural Feature Detection Demo
-    neural_feature_detection_demo(&test_image)?;
+    neural_feature_detection_demo(&testimage)?;
 
     // 2. HDR Processing Demo
-    hdr_processing_demo(&hdr_images)?;
+    hdr_processing_demo(&hdrimages)?;
 
     // 3. Super-Resolution Demo
-    super_resolution_demo(&test_image)?;
+    super_resolution_demo(&testimage)?;
 
     // 4. Advanced Denoising Demo
-    advanced_denoising_demo(&test_image)?;
+    advanced_denoising_demo(&testimage)?;
 
     // 5. Multi-Object Tracking Demo
     multi_object_tracking_demo()?;
 
     // 6. Attention-Based Feature Matching Demo
-    attention_matching_demo(&test_image)?;
+    attention_matching_demo(&testimage)?;
 
     // 7. Learned SIFT Demo
-    learned_sift_demo(&test_image)?;
+    learned_sift_demo(&testimage)?;
 
     println!("\n✅ All advanced neural vision demos completed successfully!");
     println!("💡 This demonstrates the production-ready state of scirs2-vision");
@@ -87,11 +87,11 @@ fn neural_feature_detection_demo(image: &Array2<f32>) -> Result<()> {
 
     let superpoint = SuperPointNet::new(Some(config))?;
 
-    // Resize _image to network input size
-    let resized_image = resize_image(_image, (480, 640))?;
+    // Resize image to network input size
+    let resizedimage = resizeimage(image, (480, 640))?;
 
     // Detect features and compute descriptors
-    let (keypoints, descriptors) = superpoint.detect_and_describe(&resized_image.view())?;
+    let (keypoints, descriptors) = superpoint.detect_and_describe(&resizedimage.view())?;
 
     let elapsed = start.elapsed();
 
@@ -141,7 +141,7 @@ fn hdr_processing_demo(_hdrimages: &[Array2<f32>]) -> Result<()> {
         let start = Instant::now();
 
         let processor = HDRProcessor::new(exposures.clone(), *method);
-        let hdr_views: Vec<_> = hdr_images.iter().map(|img| img.view()).collect();
+        let hdr_views: Vec<_> = _hdrimages.iter().map(|img| img.view()).collect();
         let result = processor.create_hdr(&hdr_views)?;
 
         let elapsed = start.elapsed();
@@ -177,18 +177,18 @@ fn super_resolution_demo(image: &Array2<f32>) -> Result<()> {
     ];
 
     let scale_factor = 2;
-    let small_image = downsample_image(_image, 2)?;
+    let smallimage = downsampleimage(image, 2)?;
 
     for (name, method) in &sr_methods {
         let start = Instant::now();
 
         let processor = SuperResolutionProcessor::new(scale_factor, *method)?;
-        let upscaled = processor.upscale(&small_image.view())?;
+        let upscaled = processor.upscale(&smallimage.view())?;
 
         let elapsed = start.elapsed();
 
         // Compute quality metrics
-        let psnr = compute_psnr(_image, &upscaled)?;
+        let psnr = compute_psnr(image, &upscaled)?;
 
         println!(
             "  ✓ {}: {:.2}ms, PSNR: {:.2} dB, Size: {}x{}",
@@ -210,7 +210,7 @@ fn advanced_denoising_demo(image: &Array2<f32>) -> Result<()> {
     println!("---------------------");
 
     // Add synthetic noise
-    let noisy_image = add_gaussian_noise(_image, 0.05)?;
+    let noisyimage = add_gaussian_noise(image, 0.05)?;
 
     // Test different denoising methods
     let denoising_methods = [
@@ -221,17 +221,17 @@ fn advanced_denoising_demo(image: &Array2<f32>) -> Result<()> {
         ("Neural Denoising", DenoisingMethod::NeuralDenoising),
     ];
 
-    let original_psnr = compute_psnr(_image, &noisy_image)?;
+    let original_psnr = compute_psnr(image, &noisyimage)?;
     println!("  📊 Original noise PSNR: {original_psnr:.2} dB");
 
     for (name, method) in &denoising_methods {
         let start = Instant::now();
 
         let denoiser = AdvancedDenoiser::new(*method, 0.0025);
-        let denoised = denoiser.denoise(&noisy_image.view())?;
+        let denoised = denoiser.denoise(&noisyimage.view())?;
 
         let elapsed = start.elapsed();
-        let denoised_psnr = compute_psnr(_image, &denoised)?;
+        let denoised_psnr = compute_psnr(image, &denoised)?;
         let improvement = denoised_psnr - original_psnr;
 
         println!(
@@ -303,8 +303,8 @@ fn attention_matching_demo(image: &Array2<f32>) -> Result<()> {
     let matcher = AttentionFeatureMatcher::new(256, 8);
 
     // Generate synthetic keypoints and descriptors for two images
-    let (keypoints1, descriptors1) = generate_synthetic_features(_image, 100)?;
-    let (keypoints2, descriptors2) = generate_synthetic_features(_image, 120)?;
+    let (keypoints1, descriptors1) = generate_synthetic_features(image, 100)?;
+    let (keypoints2, descriptors2) = generate_synthetic_features(image, 120)?;
 
     // Perform attention-based matching
     let matches = matcher.match_with_attention(
@@ -357,11 +357,11 @@ fn learned_sift_demo(image: &Array2<f32>) -> Result<()> {
     let learned_sift = LearnedSIFT::new(Some(config));
 
     // Detect keypoints
-    let keypoints = learned_sift.detect_keypoints(&_image.view())?;
+    let keypoints = learned_sift.detect_keypoints(&image.view())?;
 
     if !keypoints.is_empty() {
         // Compute enhanced descriptors
-        let descriptors = learned_sift.compute_descriptors(&_image.view(), &keypoints)?;
+        let descriptors = learned_sift.compute_descriptors(&image.view(), &keypoints)?;
 
         let elapsed = start.elapsed();
 
@@ -385,7 +385,7 @@ fn learned_sift_demo(image: &Array2<f32>) -> Result<()> {
             keypoints.len()
         );
     } else {
-        println!("  ℹ  No keypoints detected in this synthetic _image");
+        println!("  ℹ  No keypoints detected in this synthetic image");
     }
 
     Ok(())
@@ -394,12 +394,12 @@ fn learned_sift_demo(image: &Array2<f32>) -> Result<()> {
 // Utility functions for demo
 
 #[allow(dead_code)]
-fn create_test_images() -> Result<(Array2<f32>, Vec<Array2<f32>>)> {
+fn create_testimages() -> Result<(Array2<f32>, Vec<Array2<f32>>)> {
     let width = 640;
     let height = 480;
 
     // Create main test image with various features
-    let test_image = Array2::fromshape_fn((height, width), |(y, x)| {
+    let testimage = Array2::from_shape_fn((height, width), |(y, x)| {
         let fx = x as f32 / width as f32;
         let fy = y as f32 / height as f32;
 
@@ -413,19 +413,19 @@ fn create_test_images() -> Result<(Array2<f32>, Vec<Array2<f32>>)> {
     });
 
     // Create HDR images with different exposures
-    let hdr_images = vec![
-        test_image.mapv(|x| (x * 0.3).clamp(0.0, 1.0)), // Underexposed
-        test_image.clone(),                             // Normal
-        test_image.mapv(|x| (x * 3.0).clamp(0.0, 1.0)), // Overexposed
+    let hdrimages = vec![
+        testimage.mapv(|x| (x * 0.3).clamp(0.0, 1.0)), // Underexposed
+        testimage.clone(),                             // Normal
+        testimage.mapv(|x| (x * 3.0).clamp(0.0, 1.0)), // Overexposed
     ];
 
-    Ok((test_image, hdr_images))
+    Ok((testimage, hdrimages))
 }
 
 #[allow(dead_code)]
-fn resize_image(_image: &Array2<f32>, targetsize: (usize, usize)) -> Result<Array2<f32>> {
+fn resizeimage(image: &Array2<f32>, targetsize: (usize, usize)) -> Result<Array2<f32>> {
     let (src_height, src_width) = image.dim();
-    let (dst_height, dst_width) = target_size;
+    let (dst_height, dst_width) = targetsize;
 
     let mut resized = Array2::zeros((dst_height, dst_width));
 
@@ -444,7 +444,7 @@ fn resize_image(_image: &Array2<f32>, targetsize: (usize, usize)) -> Result<Arra
 }
 
 #[allow(dead_code)]
-fn downsample_image(image: &Array2<f32>, factor: usize) -> Result<Array2<f32>> {
+fn downsampleimage(image: &Array2<f32>, factor: usize) -> Result<Array2<f32>> {
     let (height, width) = image.dim();
     let new_height = height / factor;
     let new_width = width / factor;
@@ -461,11 +461,11 @@ fn downsample_image(image: &Array2<f32>, factor: usize) -> Result<Array2<f32>> {
 }
 
 #[allow(dead_code)]
-fn add_gaussian_noise(_image: &Array2<f32>, noisestd: f32) -> Result<Array2<f32>> {
+fn add_gaussian_noise(image: &Array2<f32>, noisestd: f32) -> Result<Array2<f32>> {
     let mut noisy = image.clone();
 
     for pixel in noisy.iter_mut() {
-        let noise = (rand::random::<f32>() - 0.5) * noise_std * 2.0;
+        let noise = (rand::random::<f32>() - 0.5) * noisestd * 2.0;
         *pixel = (*pixel + noise).clamp(0.0, 1.0);
     }
 
@@ -476,8 +476,8 @@ fn add_gaussian_noise(_image: &Array2<f32>, noisestd: f32) -> Result<Array2<f32>
 fn compute_psnr(reference: &Array2<f32>, test: &Array2<f32>) -> Result<f32> {
     if reference.shape() != test.shape() {
         // Resize test image to match _reference
-        let resized_test = resize_image(test, reference.dim())?;
-        return compute_psnr(_reference, &resized_test);
+        let resized_test = resizeimage(test, reference.dim())?;
+        return compute_psnr(reference, &resized_test);
     }
 
     let mut mse = 0.0;
@@ -522,7 +522,7 @@ fn create_detection_sequences() -> Vec<Vec<Detection>> {
                 TrackingBoundingBox::new(x, y, 50.0, 80.0, 0.8 + obj_id as f32 * 0.05, obj_id);
 
             // Add synthetic appearance feature
-            let feature = Array1::fromshape_fn(128, |i| {
+            let feature = Array1::from_shape_fn(128, |i| {
                 ((obj_id as f32 + i as f32) * 0.1).sin() * 0.5 + 0.5
             });
 

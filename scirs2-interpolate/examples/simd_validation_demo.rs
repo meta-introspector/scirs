@@ -3,14 +3,14 @@
 //! This example demonstrates the comprehensive SIMD performance validation system
 //! across different architectures and instruction sets.
 
-use scirs2__interpolate::{
+use scirs2_interpolate::{
     run_simd_validation, run_simd_validation_with_config, SimdValidationConfig,
 };
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("SIMD Performance Validation Demo");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     // Run quick validation with smaller test sizes for demo
     let config = SimdValidationConfig {
@@ -63,7 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Also run default validation for f32
-    println!("\n" + "=".repeat(50));
+    println!("{}", format!("\n{}", "=".repeat(50)));
     println!("Running default f32 validation...");
 
     match run_simd_validation::<f32>() {

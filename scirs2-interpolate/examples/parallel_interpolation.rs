@@ -1,7 +1,7 @@
 use ndarray::{Array1, Array2};
-use scirs2__interpolate::local::mls::{MovingLeastSquares, PolynomialBasis, WeightFunction};
-use scirs2__interpolate::local::polynomial::{LocalPolynomialConfig, LocalPolynomialRegression};
-use scirs2__interpolate::parallel::{
+use scirs2_interpolate::local::mls::{MovingLeastSquares, PolynomialBasis, WeightFunction};
+use scirs2_interpolate::local::polynomial::{LocalPolynomialConfig, LocalPolynomialRegression};
+use scirs2_interpolate::parallel::{
     ParallelConfig, ParallelLocalPolynomialRegression, ParallelMovingLeastSquares,
 };
 use std::error::Error;

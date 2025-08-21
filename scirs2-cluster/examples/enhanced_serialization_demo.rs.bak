@@ -13,7 +13,7 @@ use scirs2_cluster::{
     hierarchy::{LinkageMethod, Metric},
     preprocess::standardize,
     serialization::{
-        compatibility::{export_to_sklearn_json, import_sklearn_kmeans},
+        export_to_sklearn_json, import_sklearn_kmeans, compatibility,
         AlgorithmState, ClusteringWorkflow, ClusteringWorkflowManager, HierarchicalModel,
         KMeansModel, SerializableModel, TrainingStep, WorkflowConfig,
     },

@@ -11,7 +11,7 @@ pub fn hypervolume(pareto_front: &[Solution], reference_point: &[f64]) -> f64 {
     }
 
     let n_objectives = pareto_front[0].objectives.len();
-    
+
     // Simple 2D hypervolume calculation
     if n_objectives == 2 {
         hypervolume_2d(pareto_front, reference_point)
@@ -24,9 +24,7 @@ pub fn hypervolume(pareto_front: &[Solution], reference_point: &[f64]) -> f64 {
 /// Calculate 2D hypervolume
 fn hypervolume_2d(pareto_front: &[Solution], reference_point: &[f64]) -> f64 {
     let mut sorted_front = pareto_front.to_vec();
-    sorted_front.sort_by(|a, b| {
-        a.objectives[0].partial_cmp(&b.objectives[0]).unwrap()
-    });
+    sorted_front.sort_by(|a, b| a.objectives[0].partial_cmp(&b.objectives[0]).unwrap());
 
     let mut volume = 0.0;
     let mut prev_x = 0.0;
@@ -34,7 +32,7 @@ fn hypervolume_2d(pareto_front: &[Solution], reference_point: &[f64]) -> f64 {
     for solution in &sorted_front {
         let x = solution.objectives[0];
         let y = solution.objectives[1];
-        
+
         if x < reference_point[0] && y < reference_point[1] {
             let width = x - prev_x;
             let height = reference_point[1] - y;
@@ -55,23 +53,27 @@ fn hypervolume_2d(pareto_front: &[Solution], reference_point: &[f64]) -> f64 {
 }
 
 /// Monte Carlo approximation for hypervolume
-fn hypervolume_monte_carlo(pareto_front: &[Solution], reference_point: &[f64], n_samples: usize) -> f64 {
+fn hypervolume_monte_carlo(
+    pareto_front: &[Solution],
+    reference_point: &[f64],
+    n_samples: usize,
+) -> f64 {
     use rand::Rng;
     let mut rng = rand::thread_rng();
     let n_objectives = reference_point.len();
-    
+
     let mut count = 0;
-    
+
     for _ in 0..n_samples {
         let point: Vec<f64> = (0..n_objectives)
             .map(|i| rng.gen::<f64>() * reference_point[i])
             .collect();
-        
+
         if is_dominated_by_front(&point, pareto_front) {
             count += 1;
         }
     }
-    
+
     let total_volume: f64 = reference_point.iter().product();
     total_volume * (count as f64 / n_samples as f64)
 }
@@ -87,7 +89,7 @@ fn is_dominated_by_front(point: &[f64], pareto_front: &[Solution]) -> bool {
 
 fn dominates(a: &[f64], b: &[f64]) -> bool {
     let mut at_least_one_better = false;
-    
+
     for i in 0..a.len() {
         if a[i] > b[i] {
             return false;
@@ -96,7 +98,7 @@ fn dominates(a: &[f64], b: &[f64]) -> bool {
             at_least_one_better = true;
         }
     }
-    
+
     at_least_one_better
 }
 
@@ -106,10 +108,14 @@ pub fn igd(pareto_front: &[Solution], true_pareto_front: &[Vec<f64>]) -> f64 {
         return f64::INFINITY;
     }
 
-    let sum: f64 = true_pareto_front.iter()
+    let sum: f64 = true_pareto_front
+        .iter()
         .map(|true_point| {
-            pareto_front.iter()
-                .map(|solution| euclidean_distance(solution.objectives.as_slice().unwrap(), true_point))
+            pareto_front
+                .iter()
+                .map(|solution| {
+                    euclidean_distance(solution.objectives.as_slice().unwrap(), true_point)
+                })
                 .fold(f64::INFINITY, |a, b| a.min(b))
         })
         .sum();
@@ -123,10 +129,14 @@ pub fn generational_distance(pareto_front: &[Solution], true_pareto_front: &[Vec
         return f64::INFINITY;
     }
 
-    let sum: f64 = pareto_front.iter()
+    let sum: f64 = pareto_front
+        .iter()
         .map(|solution| {
-            true_pareto_front.iter()
-                .map(|true_point| euclidean_distance(solution.objectives.as_slice().unwrap(), true_point))
+            true_pareto_front
+                .iter()
+                .map(|true_point| {
+                    euclidean_distance(solution.objectives.as_slice().unwrap(), true_point)
+                })
                 .fold(f64::INFINITY, |a, b| a.min(b))
         })
         .sum();
@@ -140,26 +150,36 @@ pub fn spacing(pareto_front: &[Solution]) -> f64 {
         return 0.0;
     }
 
-    let distances: Vec<f64> = pareto_front.iter()
+    let distances: Vec<f64> = pareto_front
+        .iter()
         .map(|sol| {
-            pareto_front.iter()
+            pareto_front
+                .iter()
                 .filter(|other| !std::ptr::eq(*other, sol))
-                .map(|other| euclidean_distance(sol.objectives.as_slice().unwrap(), other.objectives.as_slice().unwrap()))
+                .map(|other| {
+                    euclidean_distance(
+                        sol.objectives.as_slice().unwrap(),
+                        other.objectives.as_slice().unwrap(),
+                    )
+                })
                 .fold(f64::INFINITY, |a, b| a.min(b))
         })
         .collect();
 
     let mean_distance = distances.iter().sum::<f64>() / distances.len() as f64;
-    
-    let variance = distances.iter()
+
+    let variance = distances
+        .iter()
         .map(|d| (d - mean_distance).powi(2))
-        .sum::<f64>() / distances.len() as f64;
-    
+        .sum::<f64>()
+        / distances.len() as f64;
+
     variance.sqrt()
 }
 
 fn euclidean_distance(a: &[f64], b: &[f64]) -> f64 {
-    a.iter().zip(b.iter())
+    a.iter()
+        .zip(b.iter())
         .map(|(x, y)| (x - y).powi(2))
         .sum::<f64>()
         .sqrt()

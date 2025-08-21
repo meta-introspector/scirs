@@ -6,49 +6,49 @@
 
 use num_traits::Float;
 
-use crate::error::{Result, TimeSeriesError};
 use super::utils::normal_cdf;
+use crate::error::{Result, TimeSeriesError};
 
 /// Black-Scholes option pricing model
-/// 
+///
 /// Calculates the theoretical price of European options using the Black-Scholes formula.
 /// This model assumes constant volatility, risk-free rate, and no dividends.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `spot_price` - Current price of the underlying asset
 /// * `strike_price` - Strike price of the option
 /// * `time_to_expiry` - Time to expiration in years
 /// * `risk_free_rate` - Risk-free interest rate (annual, continuously compounded)
 /// * `volatility` - Volatility of the underlying asset (annual)
 /// * `is_call` - true for call option, false for put option
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<F>` - Option price
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::pricing::options::black_scholes;
-/// 
+///
 /// // Price a call option
 /// let call_price = black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, true).unwrap();
 /// println!("Call option price: ${:.2}", call_price);
-/// 
+///
 /// // Price a put option
 /// let put_price = black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, false).unwrap();
 /// println!("Put option price: ${:.2}", put_price);
 /// ```
-/// 
+///
 /// # Formula
-/// 
+///
 /// For a call option:
 /// C = S₀ × N(d₁) - K × e^(-rT) × N(d₂)
-/// 
+///
 /// For a put option:
 /// P = K × e^(-rT) × N(-d₂) - S₀ × N(-d₁)
-/// 
+///
 /// Where:
 /// - d₁ = [ln(S₀/K) + (r + σ²/2)T] / (σ√T)
 /// - d₂ = d₁ - σ√T
@@ -109,21 +109,21 @@ pub fn black_scholes<F: Float + Clone>(
 }
 
 /// Calculate Black-Scholes Greeks for sensitivity analysis
-/// 
+///
 /// Returns the option Greeks (Delta, Gamma, Theta, Vega, Rho) which measure
 /// the sensitivity of option price to various parameters.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `spot_price` - Current price of the underlying asset
 /// * `strike_price` - Strike price of the option
 /// * `time_to_expiry` - Time to expiration in years
 /// * `risk_free_rate` - Risk-free interest rate
 /// * `volatility` - Volatility of the underlying asset
 /// * `is_call` - true for call option, false for put option
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<Greeks<F>>` - Structure containing all Greeks
 pub fn black_scholes_greeks<F: Float + Clone>(
     spot_price: F,
@@ -164,10 +164,10 @@ pub fn black_scholes_greeks<F: Float + Clone>(
 
     let norm_cdf_d1 = normal_cdf(d1);
     let norm_cdf_d2 = normal_cdf(d2);
-    
+
     // Standard normal PDF
-    let norm_pdf_d1 = (-d1.powi(2) / F::from(2.0).unwrap()).exp() 
-        / F::from(2.506628274631).unwrap(); // sqrt(2π)
+    let norm_pdf_d1 =
+        (-d1.powi(2) / F::from(2.0).unwrap()).exp() / F::from(2.506628274631).unwrap(); // sqrt(2π)
 
     let discount_factor = (-risk_free_rate * time_to_expiry).exp();
 
@@ -183,7 +183,7 @@ pub fn black_scholes_greeks<F: Float + Clone>(
     } else {
         let norm_cdf_neg_d1 = normal_cdf(-d1);
         let norm_cdf_neg_d2 = normal_cdf(-d2);
-        
+
         Greeks {
             delta: norm_cdf_d1 - F::one(),
             gamma: norm_pdf_d1 / (spot_price * volatility * sqrt_t),
@@ -198,21 +198,21 @@ pub fn black_scholes_greeks<F: Float + Clone>(
 }
 
 /// Calculate implied volatility using Newton-Raphson method
-/// 
+///
 /// Given an option's market price, calculates the implied volatility that
 /// would produce that price in the Black-Scholes model.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `market_price` - Observed market price of the option
 /// * `spot_price` - Current price of the underlying asset
 /// * `strike_price` - Strike price of the option
 /// * `time_to_expiry` - Time to expiration in years
 /// * `risk_free_rate` - Risk-free interest rate
 /// * `is_call` - true for call option, false for put option
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<F>` - Implied volatility
 pub fn implied_volatility<F: Float + Clone>(
     market_price: F,
@@ -235,8 +235,14 @@ pub fn implied_volatility<F: Float + Clone>(
     let max_iterations = 100;
 
     for _ in 0..max_iterations {
-        let price = black_scholes(spot_price, strike_price, time_to_expiry, 
-                                risk_free_rate, volatility, is_call)?;
+        let price = black_scholes(
+            spot_price,
+            strike_price,
+            time_to_expiry,
+            risk_free_rate,
+            volatility,
+            is_call,
+        )?;
         let price_diff = price - market_price;
 
         if price_diff.abs() < tolerance {
@@ -244,16 +250,22 @@ pub fn implied_volatility<F: Float + Clone>(
         }
 
         // Calculate vega (sensitivity to volatility)
-        let greeks = black_scholes_greeks(spot_price, strike_price, time_to_expiry,
-                                        risk_free_rate, volatility, is_call)?;
-        
+        let greeks = black_scholes_greeks(
+            spot_price,
+            strike_price,
+            time_to_expiry,
+            risk_free_rate,
+            volatility,
+            is_call,
+        )?;
+
         if greeks.vega.abs() < tolerance {
             break; // Avoid division by zero
         }
 
         // Newton-Raphson update
         volatility = volatility - price_diff / greeks.vega;
-        
+
         // Ensure volatility stays positive
         volatility = volatility.max(F::from(0.001).unwrap());
     }
@@ -281,11 +293,11 @@ pub struct Greeks<F: Float> {
 impl<F: Float> Greeks<F> {
     /// Check if all Greeks are finite and valid
     pub fn is_valid(&self) -> bool {
-        self.delta.is_finite() &&
-        self.gamma.is_finite() &&
-        self.theta.is_finite() &&
-        self.vega.is_finite() &&
-        self.rho.is_finite()
+        self.delta.is_finite()
+            && self.gamma.is_finite()
+            && self.theta.is_finite()
+            && self.vega.is_finite()
+            && self.rho.is_finite()
     }
 
     /// Get risk sensitivities as tuple for convenience
@@ -295,18 +307,18 @@ impl<F: Float> Greeks<F> {
 }
 
 /// Calculate option premium components
-/// 
+///
 /// Decomposes option price into intrinsic and time value components.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `spot_price` - Current price of the underlying
 /// * `strike_price` - Strike price of the option
 /// * `option_price` - Total option price
 /// * `is_call` - true for call, false for put
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `(F, F)` - (intrinsic_value, time_value)
 pub fn option_value_components<F: Float + Clone>(
     spot_price: F,
@@ -378,9 +390,9 @@ mod tests {
         let option_price = 15.0;
 
         let (intrinsic, time_value) = option_value_components(spot, strike, option_price, true);
-        
+
         assert_eq!(intrinsic, 10.0); // 110 - 100 for call
-        assert_eq!(time_value, 5.0);  // 15 - 10
+        assert_eq!(time_value, 5.0); // 15 - 10
     }
 
     #[test]
@@ -403,10 +415,10 @@ mod tests {
         // First calculate a price with known volatility
         let known_vol = 0.25;
         let price = black_scholes(100.0, 100.0, 1.0, 0.05, known_vol, true).unwrap();
-        
+
         // Then recover the implied volatility
         let result = implied_volatility(price, 100.0, 100.0, 1.0, 0.05, true);
-        
+
         if let Ok(implied_vol) = result {
             assert!((implied_vol - known_vol).abs() < 0.001);
         }

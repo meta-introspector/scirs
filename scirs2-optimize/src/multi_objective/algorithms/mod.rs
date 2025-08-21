@@ -6,18 +6,18 @@
 //! - MOEA/D (Multi-Objective Evolutionary Algorithm based on Decomposition)
 //! - SPEA2 (Strength Pareto Evolutionary Algorithm 2)
 
+pub mod moead;
 pub mod nsga2;
 pub mod nsga3;
-pub mod moead;
 pub mod spea2;
 
+pub use moead::MOEAD;
 pub use nsga2::NSGAII;
 pub use nsga3::NSGAIII;
-pub use moead::MOEAD;
 pub use spea2::SPEA2;
 
+use super::solutions::{MultiObjectiveResult, MultiObjectiveSolution, Population};
 use crate::error::OptimizeError;
-use super::solutions::{MultiObjectiveSolution, MultiObjectiveResult, Population};
 use ndarray::{Array1, ArrayView1};
 use rand::thread_rng;
 
@@ -81,24 +81,24 @@ pub trait MultiObjectiveOptimizer {
 
     /// Initialize the population
     fn initialize_population(&mut self) -> Result<(), OptimizeError>;
-    
+
     /// Perform one generation/iteration
     fn evolve_generation<F>(&mut self, objective_function: &F) -> Result<(), OptimizeError>
     where
         F: Fn(&ArrayView1<f64>) -> Array1<f64> + Send + Sync;
-    
+
     /// Check convergence criteria
     fn check_convergence(&self) -> bool;
-    
+
     /// Get current population
     fn get_population(&self) -> &Population;
-    
+
     /// Get current generation number
     fn get_generation(&self) -> usize;
-    
+
     /// Get number of function evaluations
     fn get_evaluations(&self) -> usize;
-    
+
     /// Get algorithm name
     fn name(&self) -> &str;
 }
@@ -112,7 +112,10 @@ pub enum MultiObjectiveOptimizerWrapper {
 }
 
 impl MultiObjectiveOptimizerWrapper {
-    pub fn optimize<F>(&mut self, objective_function: F) -> Result<MultiObjectiveResult, OptimizeError>
+    pub fn optimize<F>(
+        &mut self,
+        objective_function: F,
+    ) -> Result<MultiObjectiveResult, OptimizeError>
     where
         F: Fn(&ArrayView1<f64>) -> Array1<f64> + Send + Sync,
     {
@@ -146,7 +149,11 @@ impl OptimizerFactory {
         reference_points: Option<Vec<Array1<f64>>>,
     ) -> Result<NSGAIII, OptimizeError> {
         // TODO: Use reference_points when NSGA-III is fully implemented
-        Ok(NSGAIII::new(config.population_size, n_objectives, n_variables))
+        Ok(NSGAIII::new(
+            config.population_size,
+            n_objectives,
+            n_variables,
+        ))
     }
 
     /// Create optimizer by name
@@ -157,19 +164,18 @@ impl OptimizerFactory {
         n_variables: usize,
     ) -> Result<MultiObjectiveOptimizerWrapper, OptimizeError> {
         match algorithm.to_lowercase().as_str() {
-            "nsga2" | "nsga-ii" => {
-                Ok(MultiObjectiveOptimizerWrapper::NSGAII(
-                    Self::create_nsga2(config, n_objectives, n_variables)?
-                ))
-            }
-            "nsga3" | "nsga-iii" => {
-                Ok(MultiObjectiveOptimizerWrapper::NSGAIII(
-                    Self::create_nsga3(config, n_objectives, n_variables, None)?
-                ))
-            }
-            _ => Err(OptimizeError::InvalidInput(
-                format!("Unknown algorithm: {}", algorithm)
+            "nsga2" | "nsga-ii" => Ok(MultiObjectiveOptimizerWrapper::NSGAII(Self::create_nsga2(
+                config,
+                n_objectives,
+                n_variables,
+            )?)),
+            "nsga3" | "nsga-iii" => Ok(MultiObjectiveOptimizerWrapper::NSGAIII(
+                Self::create_nsga3(config, n_objectives, n_variables, None)?,
             )),
+            _ => Err(OptimizeError::InvalidInput(format!(
+                "Unknown algorithm: {}",
+                algorithm
+            ))),
         }
     }
 }
@@ -180,7 +186,10 @@ pub mod utils {
     use ndarray::Array2;
 
     /// Generate Das-Dennis reference points for NSGA-III
-    pub fn generate_das_dennis_points(n_objectives: usize, n_partitions: usize) -> Vec<Array1<f64>> {
+    pub fn generate_das_dennis_points(
+        n_objectives: usize,
+        n_partitions: usize,
+    ) -> Vec<Array1<f64>> {
         if n_objectives == 1 {
             return vec![Array1::from_vec(vec![1.0])];
         }
@@ -283,7 +292,7 @@ pub mod utils {
         use rand::prelude::*;
         let mut rng = thread_rng();
         let n_objectives = reference_point.len();
-        
+
         // Find bounds for sampling
         let mut min_bounds = Array1::from_elem(n_objectives, f64::INFINITY);
         for sol in pareto_front {
@@ -345,7 +354,8 @@ pub mod utils {
         let variance = distances
             .iter()
             .map(|d| (d - mean_distance).powi(2))
-            .sum::<f64>() / distances.len() as f64;
+            .sum::<f64>()
+            / distances.len() as f64;
 
         variance.sqrt()
     }
@@ -399,10 +409,7 @@ pub mod utils {
     }
 
     /// Apply bounds to a solution
-    pub fn apply_bounds(
-        individual: &mut Array1<f64>,
-        bounds: &Option<(Array1<f64>, Array1<f64>)>,
-    ) {
+    pub fn apply_bounds(individual: &mut Array1<f64>, bounds: &Option<(Array1<f64>, Array1<f64>)>) {
         if let Some((lower, upper)) = bounds {
             for (i, value) in individual.iter_mut().enumerate() {
                 *value = value.max(lower[i]).min(upper[i]);
@@ -428,7 +435,7 @@ mod tests {
     fn test_das_dennis_points_2d() {
         let points = utils::generate_das_dennis_points(2, 3);
         assert!(!points.is_empty());
-        
+
         // Check that points are normalized
         for point in &points {
             let sum: f64 = point.sum();
@@ -443,7 +450,7 @@ mod tests {
             MultiObjectiveSolution::new(array![2.0], array![2.0, 2.0]),
             MultiObjectiveSolution::new(array![3.0], array![3.0, 1.0]),
         ];
-        
+
         let reference_point = array![4.0, 4.0];
         let hv = utils::calculate_hypervolume(&solutions, &reference_point);
         assert!(hv > 0.0);
@@ -456,7 +463,7 @@ mod tests {
             MultiObjectiveSolution::new(array![2.0], array![2.0, 2.0]),
             MultiObjectiveSolution::new(array![3.0], array![3.0, 1.0]),
         ];
-        
+
         let spacing = utils::calculate_spacing(&solutions);
         assert!(spacing >= 0.0);
     }
@@ -465,10 +472,10 @@ mod tests {
     fn test_random_population_generation() {
         let bounds = Some((array![0.0, -1.0], array![1.0, 1.0]));
         let population = utils::generate_random_population(10, 2, &bounds);
-        
+
         assert_eq!(population.len(), 10);
         assert_eq!(population[0].len(), 2);
-        
+
         // Check bounds
         for individual in &population {
             assert!(individual[0] >= 0.0 && individual[0] <= 1.0);
@@ -480,9 +487,9 @@ mod tests {
     fn test_apply_bounds() {
         let bounds = Some((array![0.0, -1.0], array![1.0, 1.0]));
         let mut individual = array![-0.5, 2.0];
-        
+
         utils::apply_bounds(&mut individual, &bounds);
-        
+
         assert_eq!(individual[0], 0.0); // Clamped to lower bound
         assert_eq!(individual[1], 1.0); // Clamped to upper bound
     }
@@ -490,13 +497,13 @@ mod tests {
     #[test]
     fn test_optimizer_factory() {
         let config = MultiObjectiveConfig::default();
-        
+
         let nsga2 = OptimizerFactory::create_by_name("nsga2", config.clone(), 2, 3);
         assert!(nsga2.is_ok());
-        
+
         let nsga3 = OptimizerFactory::create_by_name("nsga3", config.clone(), 2, 3);
         assert!(nsga3.is_ok());
-        
+
         let unknown = OptimizerFactory::create_by_name("unknown", config, 2, 3);
         assert!(unknown.is_err());
     }

@@ -93,21 +93,17 @@
 //! let rsi_momentum = basic::rsi(&prices, 6).unwrap();
 //! ```
 
-pub mod basic;
 pub mod advanced;
+pub mod basic;
 
 // Re-export commonly used types and functions for convenience
-pub use basic::{
-    sma, ema, rsi, macd, bollinger_bands, stochastic, atr, williams_r, cci, obv
-};
+pub use basic::{atr, bollinger_bands, cci, ema, macd, obv, rsi, sma, stochastic, williams_r};
 
 pub use advanced::{
-    MovingAverageType, BollingerBandsConfig, StochasticConfig, IchimokuConfig,
-    BollingerBands as AdvancedBollingerBands,
+    adx, aroon, bollinger_bands as advanced_bollinger_bands, chaikin_oscillator,
+    fibonacci_retracement, ichimoku_cloud, kama, mfi, parabolic_sar,
+    stochastic_oscillator as advanced_stochastic_oscillator, vwap,
+    BollingerBands as AdvancedBollingerBands, BollingerBandsConfig, FibonacciLevels, IchimokuCloud,
+    IchimokuConfig, MovingAverageType, StochasticConfig,
     StochasticOscillator as AdvancedStochasticOscillator,
-    IchimokuCloud, FibonacciLevels,
-    bollinger_bands as advanced_bollinger_bands,
-    stochastic_oscillator as advanced_stochastic_oscillator,
-    ichimoku_cloud, adx, parabolic_sar, mfi, aroon, vwap, chaikin_oscillator,
-    fibonacci_retracement, kama
 };

@@ -315,7 +315,7 @@ fn demonstrate_advanced_ensemble_techniques(
             error_function: ErrorFunction::DisagreementRate,
             adaptive_boosting: true,
         },
-        stacking_config: StackingConfig {
+        stackingconfig: StackingConfig {
             base_algorithms: vec![
                 ClusteringAlgorithm::KMeans { k_range: (2, 4) },
                 ClusteringAlgorithm::DBSCAN {

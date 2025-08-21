@@ -64,7 +64,7 @@ fn test_descriptor_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<
 
     // Advanced brute force matching
     let bf_matcher = BruteForceMatcher::new(BruteForceConfig {
-        distance_metric: DistanceMetric::Euclidean,
+        distancemetric: DistanceMetric::Euclidean,
         max_distance: 0.8,
         cross_check: true,
         use_ratio_test: true,
@@ -114,7 +114,7 @@ fn test_orb_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
     // Detect and compute ORB descriptors
     let orb_config = OrbConfig {
         num_features: 100,
-        scale_factor: 1.2,
+        scalefactor: 1.2,
         num_levels: 8,
         fast_threshold: 20,
         use_harris_detector: true,
@@ -141,7 +141,7 @@ fn test_orb_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
     let orb_descriptors2: Vec<Vec<u32>> = orb_desc2.iter().map(|d| d.descriptor.clone()).collect();
 
     let bf_config = BruteForceConfig {
-        distance_metric: DistanceMetric::Hamming,
+        distancemetric: DistanceMetric::Hamming,
         max_distance: 80.0,
         cross_check: true,
         use_ratio_test: true,
@@ -223,7 +223,7 @@ fn test_various_matchers(img1: &DynamicImage, img2: &DynamicImage) -> Result<()>
         DistanceMetric::Cosine,
     ] {
         let matcher = BruteForceMatcher::new(BruteForceConfig {
-            distance_metric: metric,
+            distancemetric: metric,
             max_distance: 1.0,
             cross_check: false,
             use_ratio_test: false,

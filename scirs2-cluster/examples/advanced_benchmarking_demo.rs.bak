@@ -97,18 +97,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn create_test_datasets() -> Vec<(String, Array2<f64>)> {
     vec![
-        ("Small Dense", create_dense_dataset(300, 4)),
-        ("Medium Sparse", create_sparse_dataset(1000, 8)),
-        ("Large Multi-Dimensional", create_high_dim_dataset(2000, 25)),
-        ("Noisy Real-World", create_noisy_dataset(800, 6)),
+        ("Small Dense".to_string(), create_dense_dataset(300, 4)),
+        ("Medium Sparse".to_string(), create_sparse_dataset(1000, 8)),
+        ("Large Multi-Dimensional".to_string(), create_high_dim_dataset(2000, 25)),
+        ("Noisy Real-World".to_string(), create_noisy_dataset(800, 6)),
     ]
 }
 
 /// Create benchmark configuration optimized for each dataset type
 #[allow(dead_code)]
 fn create_benchmark_config(_datasetname: &str) -> BenchmarkConfig {
-    match _dataset_name {
-        _name if name.contains("Small") => BenchmarkConfig {
+    match _datasetname {
+        name if name.contains("Small") => BenchmarkConfig {
             warmup_iterations: 10,
             measurement_iterations: 100,
             statistical_significance: 0.01,
@@ -120,7 +120,7 @@ fn create_benchmark_config(_datasetname: &str) -> BenchmarkConfig {
             cross_platform: true,
             ..Default::default()
         },
-        _name if name.contains("Large") => BenchmarkConfig {
+        name if name.contains("Large") => BenchmarkConfig {
             warmup_iterations: 3,
             measurement_iterations: 20,
             statistical_significance: 0.05,
@@ -153,7 +153,7 @@ fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::Be
     println!("   📈 Performance Summary:");
 
     // Find fastest and slowest algorithms
-    let mut algorithm_times: Vec<_> = _results
+    let mut algorithm_times: Vec<_> = results
         .algorithm_results
         .iter()
         .map(|(name, result)| (name, result.performance.mean))
@@ -169,7 +169,7 @@ fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::Be
     }
 
     // Show memory usage summary
-    let memory_users: Vec<_> = _results
+    let memory_users: Vec<_> = results
         .algorithm_results
         .iter()
         .filter_map(|(name, result)| result.memory.as_ref().map(|mem| (name, mem.peak_memory_mb)))
@@ -182,7 +182,7 @@ fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::Be
     }
 
     // Show quality metrics summary
-    let quality_scores: Vec<_> = _results
+    let quality_scores: Vec<_> = results
         .algorithm_results
         .iter()
         .filter_map(|(name, result)| {
@@ -210,7 +210,7 @@ fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::Be
     }
 
     // Show critical optimization suggestions
-    let critical_suggestions = _results
+    let critical_suggestions = results
         .algorithm_results
         .values()
         .flat_map(|result| &result.optimization_suggestions)
@@ -246,12 +246,12 @@ fn demonstrate_advanced_analytics(
 /// Analyze performance patterns across algorithms
 #[allow(dead_code)]
 fn analyze_performance_patterns(
-    _results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults,
+    results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults,
 ) {
     println!("      📊 Performance Pattern Analysis:");
 
     // Calculate performance variance
-    let performance_values: Vec<f64> = _results
+    let performance_values: Vec<f64> = results
         .algorithm_results
         .values()
         .map(|result| result.performance.mean.as_secs_f64())
@@ -276,11 +276,11 @@ fn analyze_performance_patterns(
     }
 
     // Identify stable vs unstable algorithms
-    let unstable_algos: Vec<&str> = _results
+    let unstable_algos: Vec<&str> = results
         .algorithm_results
         .iter()
         .filter(|(_, result)| !result.performance.is_stable)
-        .map(|(name_)| name.as_str())
+        .map(|(name_, _)| name_.as_str())
         .collect();
 
     if !unstable_algos.is_empty() {
@@ -301,7 +301,7 @@ fn analyze_optimization_opportunities(
     let mut total_expected_improvement = 0.0;
     let mut suggestion_count = 0;
 
-    for result in results.algorithm_results.values() {
+    for result in results.algorithmresults.values() {
         for suggestion in &result.optimization_suggestions {
             *category_counts.entry(&suggestion.category).or_insert(0) += 1;
             total_expected_improvement += suggestion.expected_improvement;
@@ -330,20 +330,20 @@ fn analyze_optimization_opportunities(
 /// Analyze scalability insights
 #[allow(dead_code)]
 fn analyze_scalability_insights(
-    _results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults,
+    results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults,
 ) {
     println!("      📈 Scalability Analysis:");
 
-    let scalability_results: Vec<_> = _results
+    let scalabilityresults: Vec<_> = results
         .algorithm_results
         .iter()
         .filter_map(|(name, result)| result.scalability.as_ref().map(|s| (name, s)))
         .collect();
 
-    if !scalability_results.is_empty() {
+    if !scalabilityresults.is_empty() {
         // Analyze complexity classes
         let mut complexity_distribution = std::collections::HashMap::new();
-        for (_, scalability) in &scalability_results {
+        for (_, scalability) in &scalabilityresults {
             *complexity_distribution
                 .entry(&scalability.complexity_estimate)
                 .or_insert(0) += 1;
@@ -355,13 +355,13 @@ fn analyze_scalability_insights(
         }
 
         // Find best scaling algorithms
-        let linear_algos: Vec<&str> = scalability_results
+        let linear_algos: Vec<&str> = scalabilityresults
             .iter()
             .filter(|(_, s)| {
                 s.complexity_estimate
                     == scirs2_cluster::advanced_benchmarking::ComplexityClass::Linear
             })
-            .map(|(name_)| name.as_str())
+            .map(|(name_, _)| name_.as_str())
             .collect();
 
         if !linear_algos.is_empty() {
@@ -387,7 +387,7 @@ fn analyze_regression_patterns(results: &scirs2_cluster::advanced_benchmarking::
 
     // Categorize by severity
     let mut severity_counts = std::collections::HashMap::new();
-    for alert in &_results.regression_alerts {
+    for alert in &results.regression_alerts {
         *severity_counts.entry(&alert.severity).or_insert(0) += 1;
     }
 
@@ -416,15 +416,15 @@ fn analyze_regression_patterns(results: &scirs2_cluster::advanced_benchmarking::
 
 /// Create dense dataset with well-separated clusters
 #[allow(dead_code)]
-fn create_dense_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
+fn create_dense_dataset(n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
     use rand_distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(12345);
-    let mut data = Vec::with_capacity(_n_samples * n_features);
+    let mut data = Vec::with_capacity(n_samples * nfeatures);
 
     let n_clusters = 4;
-    let samples_per_cluster = _n_samples / n_clusters;
+    let samples_per_cluster = n_samples / n_clusters;
 
     // Create distinct cluster centers
     let cluster_centers = vec![
@@ -436,13 +436,13 @@ fn create_dense_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
 
     for (i, center) in cluster_centers.iter().enumerate() {
         let cluster_samples = if i == cluster_centers.len() - 1 {
-            _n_samples - i * samples_per_cluster
+            n_samples - i * samples_per_cluster
         } else {
             samples_per_cluster
         };
 
         for _ in 0..cluster_samples {
-            for j in 0..n_features {
+            for j in 0..nfeatures {
                 let center_val = if j < center.len() { center[j] } else { 0.0 };
                 let normal = Normal::new(center_val, 0.5).unwrap();
                 data.push(rng.sample(normal));
@@ -450,19 +450,19 @@ fn create_dense_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples, nfeatures), data).unwrap()
 }
 
 /// Create sparse dataset with noise
 #[allow(dead_code)]
-fn create_sparse_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
+fn create_sparse_dataset(n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
 
     let mut rng = StdRng::seed_from_u64(54321);
-    let mut data = Vec::with_capacity(_n_samples * n_features);
+    let mut data = Vec::with_capacity(n_samples * nfeatures);
 
-    for _ in 0.._n_samples {
-        for _ in 0..n_features {
+    for _ in 0..n_samples {
+        for _ in 0..nfeatures {
             // 20% chance of non-zero value
             if rng.random::<f64>() < 0.2 {
                 data.push(rng.random_range(-5.0..5.0));
@@ -472,25 +472,25 @@ fn create_sparse_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples, nfeatures), data).unwrap()
 }
 
 /// Create high-dimensional dataset
 #[allow(dead_code)]
-fn create_high_dim_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
+fn create_high_dim_dataset(n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
     use rand_distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(98765);
-    let mut data = Vec::with_capacity(_n_samples * n_features);
+    let mut data = Vec::with_capacity(n_samples * nfeatures);
 
     // Only first few dimensions contain signal
     let signal_dims = 5;
 
-    for i in 0.._n_samples {
+    for i in 0..n_samples {
         let cluster_id = i % 3;
 
-        for dim in 0..n_features {
+        for dim in 0..nfeatures {
             if dim < signal_dims {
                 // Signal dimensions
                 let center = cluster_id as f64 * 2.0;
@@ -503,26 +503,26 @@ fn create_high_dim_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples, nfeatures), data).unwrap()
 }
 
 /// Create noisy dataset simulating real-world conditions
 #[allow(dead_code)]
-fn create_noisy_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
+fn create_noisy_dataset(n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
     use rand_distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(13579);
-    let mut data = Vec::with_capacity(_n_samples * n_features);
+    let mut data = Vec::with_capacity(n_samples * nfeatures);
 
     let n_clusters = 3;
     let noise_level = 1.5;
     let outlier_probability = 0.05; // 5% outliers
 
-    for i in 0.._n_samples {
+    for i in 0..n_samples {
         let cluster_id = i % n_clusters;
 
-        for j in 0..n_features {
+        for j in 0..nfeatures {
             let base_value = match cluster_id {
                 0 => 1.0 + j as f64 * 0.5,
                 1 => -1.0 + j as f64 * 0.3,
@@ -542,7 +542,7 @@ fn create_noisy_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples, nfeatures), data).unwrap()
 }
 
 #[cfg(test)]

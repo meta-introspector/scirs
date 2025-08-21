@@ -52,14 +52,14 @@ fn evaluate_clustering(data: &Array2<f64>, labels: &Array1<usize>) {
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
 
     // Calculate silhouette score
-    let silhouette = silhouette_score(_data.view(), labels_i32.view()).unwrap_or_else(|e| {
+    let silhouette = silhouette_score(data.view(), labels_i32.view()).unwrap_or_else(|e| {
         eprintln!("Failed to calculate silhouette score: {}", e);
         0.0
     });
 
     // Calculate Davies-Bouldin score
     let davies_bouldin =
-        davies_bouldin_score(_data.view(), labels_i32.view()).unwrap_or_else(|e| {
+        davies_bouldin_score(data.view(), labels_i32.view()).unwrap_or_else(|e| {
             eprintln!("Failed to calculate Davies-Bouldin score: {}", e);
             f64::INFINITY
         });
@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Clustering Evaluation Metrics Demo");
     println!("=================================\n");
 
-    let (data_true_labels) = generate_dataset();
+    let (data, true_labels) = generate_dataset();
 
     // Test with different numbers of clusters
     let test_k_values = vec![2, 3, 4, 5];

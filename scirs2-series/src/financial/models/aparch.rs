@@ -198,10 +198,10 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
 
         // Initialize parameters with typical values for financial data
         let omega = F::from(0.00001).unwrap(); // Small positive constant
-        let alpha = F::from(0.05).unwrap();    // Magnitude effect
-        let beta = F::from(0.90).unwrap();     // High persistence
-        let gamma = F::from(0.1).unwrap();     // Asymmetry parameter
-        let delta = F::from(2.0).unwrap();     // Power parameter (GARCH specification)
+        let alpha = F::from(0.05).unwrap(); // Magnitude effect
+        let beta = F::from(0.90).unwrap(); // High persistence
+        let gamma = F::from(0.1).unwrap(); // Asymmetry parameter
+        let delta = F::from(2.0).unwrap(); // Power parameter (GARCH specification)
 
         // Calculate mean and center the returns
         let mean = returns.sum() / F::from(n).unwrap();
@@ -255,7 +255,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
                 new_std_power.sqrt().max(F::from(1e-8).unwrap()) // Ensure positivity
             } else {
                 // For general δ, take δ-th root
-                new_std_power.powf(F::one() / delta).max(F::from(1e-8).unwrap())
+                new_std_power
+                    .powf(F::one() / delta)
+                    .max(F::from(1e-8).unwrap())
             };
         }
 
@@ -277,8 +279,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
             let std_dev = conditional_std[i];
             if std_dev > F::zero() {
                 let term = -F::from(0.5).unwrap()
-                    * (ln_2pi + F::from(2.0).unwrap() * std_dev.ln() + 
-                       centered_returns[i].powi(2) / std_dev.powi(2));
+                    * (ln_2pi
+                        + F::from(2.0).unwrap() * std_dev.ln()
+                        + centered_returns[i].powi(2) / std_dev.powi(2));
                 log_likelihood = log_likelihood + term;
             }
         }
@@ -345,7 +348,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
     /// # Returns
     /// * `Option<Array1<F>>` - Conditional variance if fitted, None otherwise
     pub fn get_conditional_variance(&self) -> Option<Array1<F>> {
-        self.conditional_std.as_ref().map(|std| std.mapv(|x| x.powi(2)))
+        self.conditional_std
+            .as_ref()
+            .map(|std| std.mapv(|x| x.powi(2)))
     }
 }
 
@@ -368,7 +373,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
         self.parameters.as_ref().map(|p| {
             let delta = p.delta;
             let gamma = p.gamma;
-            
+
             if (delta - F::from(2.0).unwrap()).abs() < F::from(0.1).unwrap() {
                 if gamma.abs() < F::from(0.01).unwrap() {
                     "Standard GARCH".to_string()
@@ -394,7 +399,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
     /// # Returns
     /// * `Option<bool>` - True if asymmetric effects present, None if not fitted
     pub fn has_asymmetric_effects(&self) -> Option<bool> {
-        self.parameters.as_ref().map(|p| p.gamma.abs() > F::from(0.01).unwrap())
+        self.parameters
+            .as_ref()
+            .map(|p| p.gamma.abs() > F::from(0.01).unwrap())
     }
 
     /// Get the asymmetry parameter
@@ -459,7 +466,7 @@ mod tests {
         ]);
 
         assert!(!model.is_fitted());
-        
+
         let result = model.fit(&returns);
         assert!(result.is_ok());
 
@@ -534,7 +541,7 @@ mod tests {
     #[test]
     fn test_model_getters() {
         let model = AparchModel::<f64>::new();
-        
+
         assert!(model.get_parameters().is_none());
         assert!(model.get_conditional_std().is_none());
         assert!(model.get_conditional_variance().is_none());
@@ -562,12 +569,12 @@ mod tests {
     fn test_model_classification() {
         let mut model = AparchModel::<f64>::new();
         let returns = arr1(&[
-            0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004,
-            0.009, -0.006, 0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006,
+            0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004, 0.009, -0.006,
+            0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006,
         ]);
 
         model.fit(&returns).unwrap();
-        
+
         let classification = model.classify_model().unwrap();
         // With δ = 2.0 and γ > 0, should be classified as GJR-GARCH or Standard GARCH
         assert!(classification.contains("GARCH"));

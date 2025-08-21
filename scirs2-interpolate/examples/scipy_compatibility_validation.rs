@@ -6,7 +6,7 @@
 //! This is particularly useful when migrating from SciPy to scirs2-interpolate
 //! to ensure equivalent functionality and results.
 
-use scirs2__interpolate::{
+use scirs2_interpolate::{
     create_compatibility_checker, quick_compatibility_check, CompatibilityConfig, FeaturePriority,
     InterpolateResult,
 };

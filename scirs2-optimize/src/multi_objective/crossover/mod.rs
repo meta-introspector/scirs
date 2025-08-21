@@ -75,7 +75,9 @@ pub struct UniformCrossover {
 
 impl UniformCrossover {
     pub fn new(crossover_probability: f64) -> Self {
-        Self { crossover_probability }
+        Self {
+            crossover_probability,
+        }
     }
 }
 

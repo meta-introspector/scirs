@@ -1,42 +1,42 @@
 //! Portfolio performance metrics and calculation functions
 //!
 //! This module provides comprehensive portfolio performance analysis tools,
-//! including risk-adjusted returns, volatility measures, and various 
+//! including risk-adjusted returns, volatility measures, and various
 //! performance ratios used in quantitative portfolio management.
 
 use ndarray::Array1;
 use num_traits::Float;
 
-use crate::error::{Result, TimeSeriesError};
 use super::core::PortfolioMetrics;
+use crate::error::{Result, TimeSeriesError};
 
 /// Calculate comprehensive portfolio metrics
-/// 
+///
 /// Computes a full suite of portfolio performance metrics including returns,
 /// risk measures, and risk-adjusted performance ratios.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `returns` - Portfolio return time series
 /// * `prices` - Portfolio value time series for drawdown calculation
 /// * `risk_free_rate` - Annual risk-free rate for ratio calculations
 /// * `periods_per_year` - Number of periods per year for annualization
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<PortfolioMetrics<F>>` - Complete performance metrics structure
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::portfolio::metrics::calculate_portfolio_metrics;
 /// use ndarray::array;
-/// 
+///
 /// let returns = array![0.01, -0.02, 0.015, -0.008, 0.012];
 /// let prices = array![1000.0, 1010.0, 989.8, 1004.64, 996.6, 1008.6];
 /// let risk_free_rate = 0.02;
 /// let periods_per_year = 252;
-/// 
+///
 /// let metrics = calculate_portfolio_metrics(&returns, &prices, risk_free_rate, periods_per_year).unwrap();
 /// ```
 pub fn calculate_portfolio_metrics<F: Float + Clone + std::iter::Sum>(
@@ -67,8 +67,8 @@ pub fn calculate_portfolio_metrics<F: Float + Clone + std::iter::Sum>(
 
     // Volatility (annualized)
     let mean_return = returns.sum() / F::from(returns.len()).unwrap();
-    let variance = returns.mapv(|r| (r - mean_return).powi(2)).sum() 
-        / F::from(returns.len() - 1).unwrap();
+    let variance =
+        returns.mapv(|r| (r - mean_return).powi(2)).sum() / F::from(returns.len() - 1).unwrap();
     let volatility = variance.sqrt() * F::from(periods_per_year).unwrap().sqrt();
 
     // Risk metrics using imported functions
@@ -93,20 +93,18 @@ pub fn calculate_portfolio_metrics<F: Float + Clone + std::iter::Sum>(
 }
 
 /// Calculate portfolio return statistics
-/// 
+///
 /// Computes basic return statistics including mean, standard deviation,
 /// skewness, and kurtosis of the return distribution.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `returns` - Portfolio return time series
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<(F, F, F, F)>` - (mean, std_dev, skewness, kurtosis)
-pub fn calculate_return_statistics<F: Float + Clone>(
-    returns: &Array1<F>,
-) -> Result<(F, F, F, F)> {
+pub fn calculate_return_statistics<F: Float + Clone>(returns: &Array1<F>) -> Result<(F, F, F, F)> {
     if returns.len() < 4 {
         return Err(TimeSeriesError::InsufficientData {
             message: "Need at least 4 observations for return statistics".to_string(),
@@ -117,37 +115,37 @@ pub fn calculate_return_statistics<F: Float + Clone>(
 
     let n = F::from(returns.len()).unwrap();
     let mean = returns.sum() / n;
-    
+
     // Calculate centered moments
     let mut second_moment = F::zero();
     let mut third_moment = F::zero();
     let mut fourth_moment = F::zero();
-    
+
     for &ret in returns.iter() {
         let deviation = ret - mean;
         let dev_squared = deviation.powi(2);
         let dev_cubed = deviation.powi(3);
         let dev_fourth = deviation.powi(4);
-        
+
         second_moment = second_moment + dev_squared;
         third_moment = third_moment + dev_cubed;
         fourth_moment = fourth_moment + dev_fourth;
     }
-    
+
     second_moment = second_moment / (n - F::one());
     third_moment = third_moment / n;
     fourth_moment = fourth_moment / n;
-    
+
     let std_dev = second_moment.sqrt();
     let variance = second_moment;
-    
+
     // Skewness
     let skewness = if variance > F::zero() {
         third_moment / variance.powf(F::from(1.5).unwrap())
     } else {
         F::zero()
     };
-    
+
     // Excess kurtosis
     let kurtosis = if variance > F::zero() {
         (fourth_moment / variance.powi(2)) - F::from(3.0).unwrap()
@@ -159,19 +157,19 @@ pub fn calculate_return_statistics<F: Float + Clone>(
 }
 
 /// Calculate rolling performance metrics
-/// 
+///
 /// Computes performance metrics over rolling windows to analyze
 /// time-varying portfolio characteristics.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `returns` - Portfolio return time series
 /// * `window` - Rolling window size
 /// * `risk_free_rate` - Annual risk-free rate
 /// * `periods_per_year` - Number of periods per year
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<(Array1<F>, Array1<F>, Array1<F>)>` - (rolling_sharpe, rolling_volatility, rolling_returns)
 pub fn calculate_rolling_metrics<F: Float + Clone>(
     returns: &Array1<F>,
@@ -196,19 +194,19 @@ pub fn calculate_rolling_metrics<F: Float + Clone>(
 
     for i in 0..n_windows {
         let window_returns = returns.slice(ndarray::s![i..i + window]);
-        
+
         // Calculate window metrics
         let mean_return = window_returns.sum() / F::from(window).unwrap();
         let excess_return = mean_return - annualized_rf;
-        
-        let variance = window_returns.mapv(|r| (r - mean_return).powi(2)).sum() 
-            / F::from(window - 1).unwrap();
+
+        let variance =
+            window_returns.mapv(|r| (r - mean_return).powi(2)).sum() / F::from(window - 1).unwrap();
         let std_dev = variance.sqrt();
-        
+
         // Annualize metrics
         rolling_returns[i] = mean_return * F::from(periods_per_year).unwrap();
         rolling_volatility[i] = std_dev * F::from(periods_per_year).unwrap().sqrt();
-        
+
         rolling_sharpe[i] = if std_dev > F::zero() {
             (excess_return * F::from(periods_per_year).unwrap()) / rolling_volatility[i]
         } else {
@@ -220,17 +218,17 @@ pub fn calculate_rolling_metrics<F: Float + Clone>(
 }
 
 /// Calculate tracking error relative to benchmark
-/// 
+///
 /// Measures the standard deviation of active returns (portfolio - benchmark),
 /// indicating how closely the portfolio tracks a benchmark.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `portfolio_returns` - Portfolio return series
 /// * `benchmark_returns` - Benchmark return series
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<F>` - Annualized tracking error
 pub fn calculate_tracking_error<F: Float + Clone>(
     portfolio_returns: &Array1<F>,
@@ -252,31 +250,32 @@ pub fn calculate_tracking_error<F: Float + Clone>(
     }
 
     // Calculate active returns
-    let active_returns: Array1<F> = portfolio_returns.iter()
+    let active_returns: Array1<F> = portfolio_returns
+        .iter()
         .zip(benchmark_returns.iter())
         .map(|(&p, &b)| p - b)
         .collect();
 
     // Calculate tracking error (standard deviation of active returns)
     let mean_active = active_returns.sum() / F::from(active_returns.len()).unwrap();
-    let variance = active_returns.mapv(|r| (r - mean_active).powi(2)).sum() 
+    let variance = active_returns.mapv(|r| (r - mean_active).powi(2)).sum()
         / F::from(active_returns.len() - 1).unwrap();
 
     Ok(variance.sqrt())
 }
 
 /// Calculate information ratio
-/// 
+///
 /// Measures risk-adjusted active return by dividing mean active return
 /// by tracking error. Higher values indicate better active management.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `portfolio_returns` - Portfolio return series
 /// * `benchmark_returns` - Benchmark return series
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<F>` - Information ratio
 pub fn calculate_information_ratio<F: Float + Clone>(
     portfolio_returns: &Array1<F>,
@@ -289,7 +288,8 @@ pub fn calculate_information_ratio<F: Float + Clone>(
         });
     }
 
-    let active_returns: Array1<F> = portfolio_returns.iter()
+    let active_returns: Array1<F> = portfolio_returns
+        .iter()
         .zip(benchmark_returns.iter())
         .map(|(&p, &b)| p - b)
         .collect();
@@ -305,17 +305,17 @@ pub fn calculate_information_ratio<F: Float + Clone>(
 }
 
 /// Calculate portfolio beta relative to benchmark
-/// 
+///
 /// Measures systematic risk by calculating the covariance between
 /// portfolio and benchmark returns divided by benchmark variance.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `portfolio_returns` - Portfolio return series
 /// * `benchmark_returns` - Benchmark return series
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<F>` - Portfolio beta
 pub fn calculate_portfolio_beta<F: Float + Clone>(
     portfolio_returns: &Array1<F>,
@@ -364,17 +364,17 @@ pub fn calculate_portfolio_beta<F: Float + Clone>(
 }
 
 /// Calculate up/down capture ratios
-/// 
+///
 /// Measures how well a portfolio captures upside vs downside market movements.
 /// Values above 1.0 indicate the portfolio moves more than the benchmark.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `portfolio_returns` - Portfolio return series
 /// * `benchmark_returns` - Benchmark return series
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<(F, F)>` - (upside_capture, downside_capture) ratios
 pub fn calculate_capture_ratios<F: Float + Clone>(
     portfolio_returns: &Array1<F>,
@@ -407,15 +407,15 @@ pub fn calculate_capture_ratios<F: Float + Clone>(
     }
 
     let upside_capture = if upside_count > 0 && upside_benchmark != F::zero() {
-        (upside_portfolio / F::from(upside_count).unwrap()) /
-        (upside_benchmark / F::from(upside_count).unwrap())
+        (upside_portfolio / F::from(upside_count).unwrap())
+            / (upside_benchmark / F::from(upside_count).unwrap())
     } else {
         F::zero()
     };
 
     let downside_capture = if downside_count > 0 && downside_benchmark != F::zero() {
-        (downside_portfolio / F::from(downside_count).unwrap()) /
-        (downside_benchmark / F::from(downside_count).unwrap())
+        (downside_portfolio / F::from(downside_count).unwrap())
+            / (downside_benchmark / F::from(downside_count).unwrap())
     } else {
         F::zero()
     };
@@ -435,9 +435,10 @@ mod tests {
         let risk_free_rate = 0.02;
         let periods_per_year = 252;
 
-        let result = calculate_portfolio_metrics(&returns, &prices, risk_free_rate, periods_per_year);
+        let result =
+            calculate_portfolio_metrics(&returns, &prices, risk_free_rate, periods_per_year);
         assert!(result.is_ok());
-        
+
         let metrics = result.unwrap();
         assert!(metrics.is_valid());
         assert!(metrics.volatility > 0.0);
@@ -446,10 +447,10 @@ mod tests {
     #[test]
     fn test_return_statistics() {
         let returns = arr1(&[0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.008]);
-        
+
         let result = calculate_return_statistics(&returns);
         assert!(result.is_ok());
-        
+
         let (mean, std_dev, skewness, kurtosis) = result.unwrap();
         assert!(std_dev > 0.0);
         assert!(mean.is_finite());
@@ -461,10 +462,10 @@ mod tests {
     fn test_tracking_error() {
         let portfolio = arr1(&[0.01, -0.02, 0.015, -0.008, 0.012]);
         let benchmark = arr1(&[0.008, -0.018, 0.012, -0.006, 0.010]);
-        
+
         let result = calculate_tracking_error(&portfolio, &benchmark);
         assert!(result.is_ok());
-        
+
         let te = result.unwrap();
         assert!(te >= 0.0);
         assert!(te.is_finite());
@@ -474,10 +475,10 @@ mod tests {
     fn test_portfolio_beta() {
         let portfolio = arr1(&[0.01, -0.02, 0.015, -0.008, 0.012]);
         let benchmark = arr1(&[0.008, -0.018, 0.012, -0.006, 0.010]);
-        
+
         let result = calculate_portfolio_beta(&portfolio, &benchmark);
         assert!(result.is_ok());
-        
+
         let beta = result.unwrap();
         assert!(beta.is_finite());
     }
@@ -486,10 +487,10 @@ mod tests {
     fn test_capture_ratios() {
         let portfolio = arr1(&[0.01, -0.02, 0.015, -0.008, 0.012]);
         let benchmark = arr1(&[0.008, -0.018, 0.012, -0.006, 0.010]);
-        
+
         let result = calculate_capture_ratios(&portfolio, &benchmark);
         assert!(result.is_ok());
-        
+
         let (upside, downside) = result.unwrap();
         assert!(upside >= 0.0);
         assert!(downside >= 0.0);
@@ -499,7 +500,7 @@ mod tests {
     fn test_dimension_mismatch() {
         let portfolio = arr1(&[0.01, -0.02]);
         let benchmark = arr1(&[0.008, -0.018, 0.012]);
-        
+
         let result = calculate_tracking_error(&portfolio, &benchmark);
         assert!(result.is_err());
     }
@@ -507,7 +508,7 @@ mod tests {
     #[test]
     fn test_insufficient_data() {
         let returns = arr1(&[0.01]);
-        
+
         let result = calculate_return_statistics(&returns);
         assert!(result.is_err());
     }

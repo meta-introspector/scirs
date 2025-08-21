@@ -359,7 +359,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Scaling analysis for different matrix sizes:");
     println!("   Size        Aspect     Algorithm      Time (ms)  Complexity");
 
-    for (m, n_description) in testsizes {
+    for (m, n, _description) in testsizes {
         let testmatrix =
             Array2::from_shape_fn((m, n), |(i, j)| (i + j + 1) as f64 / (m + n) as f64);
 

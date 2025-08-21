@@ -5,7 +5,7 @@
 
 use ndarray::Array2;
 use scirs2_cluster::vq::{
-    kmeans, kmeans_simd, vq, vq_simd, whiten, whiten_simd, KMeansOptions, SimdOptimizationConfig,
+    kmeans, kmeans_simd, vq, vq_simd, whiten, whiten_simd, KMeansOptions, KMeansInit, SimdOptimizationConfig,
 };
 use std::time::Instant;
 
@@ -118,8 +118,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         tol: 1e-4,
         random_seed: Some(42),
         n_init: 1,
-        init_method: scirs2,
-        _cluster: vq::KMeansInit::KMeansPlusPlus,
+        init_method: KMeansInit::KMeansPlusPlus,
+        // _cluster: removed invalid field
     };
 
     let start = Instant::now();
@@ -156,7 +156,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sizes = [100, 500, 1000, 5000];
 
     for &size in &sizes {
-        let (test_data_) = generate_synthetic_data(size, 10, 3);
+        let (test_data, _labels) = generate_synthetic_data(size, 10, 3);
 
         let start = Instant::now();
         let _ = kmeans(
@@ -308,7 +308,7 @@ fn generate_synthetic_data(
         while sample_idx < end_idx {
             for j in 0..n_features {
                 let noise = rng.random_range(-1.0..1.0);
-                data[[sample_idx..j]] = centers[[cluster, j]] + noise;
+                data[[sample_idx, j]] = centers[[cluster, j]] + noise;
             }
             labels.push(cluster);
             sample_idx += 1;
@@ -320,14 +320,14 @@ fn generate_synthetic_data(
 
 /// Generate random centroids for testing
 #[allow(dead_code)]
-fn generate_centroids(_n_clusters: usize, nfeatures: usize) -> Array2<f64> {
+fn generate_centroids(n_clusters: usize, nfeatures: usize) -> Array2<f64> {
     use rand::Rng;
 
     let mut rng = rand::rng();
-    let mut centroids = Array2::zeros((_n_clusters, n_features));
+    let mut centroids = Array2::zeros((n_clusters, nfeatures));
 
-    for i in 0.._n_clusters {
-        for j in 0..n_features {
+    for i in 0..n_clusters {
+        for j in 0..nfeatures {
             centroids[[i, j]] = rng.random_range(-5.0..5.0);
         }
     }

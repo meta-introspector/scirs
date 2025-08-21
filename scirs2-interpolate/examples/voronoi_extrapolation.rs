@@ -5,18 +5,18 @@
 
 use ndarray::{Array1, Array2};
 use rand::Rng;
-use scirs2__interpolate::voronoi::{
+use scirs2_interpolate::voronoi::{
     constant_value_extrapolation, inverse_distance_extrapolation, linear_gradient_extrapolation,
     make_sibson_interpolator, nearest_neighbor_extrapolation,
 };
-use scirs2__interpolate::Extrapolation;
+use scirs2_interpolate::Extrapolation;
 use std::error::Error;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     // Generate scattered data points in a unit square
     let n_points = 50;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Create points in a specific region (unit square)
     let mut points_vec = Vec::with_capacity(n_points * 2);
@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         points_vec.push(y);
     }
 
-    let points = Array2::from_shape_vec((n_points..2), points_vec)?;
+    let points = Array2::from_shape_vec((n_points, 2), points_vec)?;
 
     // Create values with a test function
     let mut values_vec = Vec::with_capacity(n_points);

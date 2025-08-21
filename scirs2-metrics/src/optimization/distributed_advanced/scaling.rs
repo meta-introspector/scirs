@@ -100,18 +100,27 @@ impl AdvancedScalingManager {
         Ok(decisions)
     }
 
-    fn should_scale(&self, service_name: &str, policy: &ScalingPolicy, monitor: &ResourceMonitor) -> Result<Option<ScalingDecision>> {
+    fn should_scale(
+        &self,
+        service_name: &str,
+        policy: &ScalingPolicy,
+        monitor: &ResourceMonitor,
+    ) -> Result<Option<ScalingDecision>> {
         let cpu_pressure = monitor.cpu_utilization > policy.scale_up_threshold;
         let memory_pressure = monitor.memory_utilization > policy.scale_up_threshold;
-        let under_utilized = monitor.cpu_utilization < policy.scale_down_threshold && 
-                            monitor.memory_utilization < policy.scale_down_threshold;
+        let under_utilized = monitor.cpu_utilization < policy.scale_down_threshold
+            && monitor.memory_utilization < policy.scale_down_threshold;
 
         if cpu_pressure || memory_pressure {
             return Ok(Some(ScalingDecision {
                 service_name: service_name.to_string(),
                 action: ScalingAction::ScaleUp,
                 target_instances: self.calculate_scale_up_target(policy, monitor),
-                reason: format!("CPU: {:.2}%, Memory: {:.2}%", monitor.cpu_utilization * 100.0, monitor.memory_utilization * 100.0),
+                reason: format!(
+                    "CPU: {:.2}%, Memory: {:.2}%",
+                    monitor.cpu_utilization * 100.0,
+                    monitor.memory_utilization * 100.0
+                ),
             }));
         }
 
@@ -120,7 +129,11 @@ impl AdvancedScalingManager {
                 service_name: service_name.to_string(),
                 action: ScalingAction::ScaleDown,
                 target_instances: self.calculate_scale_down_target(policy, monitor),
-                reason: format!("Under-utilized - CPU: {:.2}%, Memory: {:.2}%", monitor.cpu_utilization * 100.0, monitor.memory_utilization * 100.0),
+                reason: format!(
+                    "Under-utilized - CPU: {:.2}%, Memory: {:.2}%",
+                    monitor.cpu_utilization * 100.0,
+                    monitor.memory_utilization * 100.0
+                ),
             }));
         }
 
@@ -132,9 +145,15 @@ impl AdvancedScalingManager {
         policy.max_instances.min(policy.min_instances + 1)
     }
 
-    fn calculate_scale_down_target(&self, policy: &ScalingPolicy, _monitor: &ResourceMonitor) -> u32 {
+    fn calculate_scale_down_target(
+        &self,
+        policy: &ScalingPolicy,
+        _monitor: &ResourceMonitor,
+    ) -> u32 {
         // Simple scale down by 1 instance, could be more sophisticated
-        policy.min_instances.max(policy.min_instances.saturating_sub(1))
+        policy
+            .min_instances
+            .max(policy.min_instances.saturating_sub(1))
     }
 
     pub fn execute_scaling(&mut self, decision: ScalingDecision) -> Result<()> {

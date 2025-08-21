@@ -715,7 +715,7 @@ mod tests {
         let data = arr1(&[1.0, 2.0, 3.0, 4.0, 5.0]);
         let result = sma(&data, 3).unwrap();
         let expected = arr1(&[2.0, 3.0, 4.0]);
-        
+
         for (actual, expected) in result.iter().zip(expected.iter()) {
             assert!((actual - expected).abs() < 1e-10);
         }
@@ -725,7 +725,7 @@ mod tests {
     fn test_ema() {
         let data = arr1(&[1.0, 2.0, 3.0, 4.0, 5.0]);
         let result = ema(&data, 0.5).unwrap();
-        
+
         assert_eq!(result[0], 1.0);
         assert!((result[1] - 1.5).abs() < 1e-10); // 0.5*2 + 0.5*1
         assert!(result.len() == data.len());
@@ -736,7 +736,7 @@ mod tests {
         let data = arr1(&[44.0, 44.25, 44.5, 43.75, 44.5, 45.0, 45.25, 45.5]);
         let result = rsi(&data, 3);
         assert!(result.is_ok());
-        
+
         let rsi_values = result.unwrap();
         // All values should be between 0 and 100
         for &value in rsi_values.iter() {
@@ -748,7 +748,7 @@ mod tests {
     fn test_bollinger_bands() {
         let data = arr1(&[20.0, 21.0, 19.5, 22.0, 21.5]);
         let (upper, middle, lower) = bollinger_bands(&data, 3, 2.0).unwrap();
-        
+
         // Upper band should be above middle, middle above lower
         for i in 0..upper.len() {
             assert!(upper[i] > middle[i]);
@@ -761,7 +761,7 @@ mod tests {
         let data = arr1(&[12.0, 13.0, 14.0, 13.5, 15.0, 16.0, 15.5, 17.0]);
         let result = macd(&data, 3, 6, 2);
         assert!(result.is_ok());
-        
+
         let (macd_line, signal_line, histogram) = result.unwrap();
         assert_eq!(macd_line.len(), data.len());
         assert_eq!(signal_line.len(), data.len());
@@ -773,10 +773,10 @@ mod tests {
         let high = arr1(&[15.0, 16.0, 14.5, 17.0, 16.5]);
         let low = arr1(&[13.0, 14.0, 13.5, 15.0, 15.5]);
         let close = arr1(&[14.5, 15.5, 14.0, 16.0, 16.0]);
-        
+
         let result = atr(&high, &low, &close, 3);
         assert!(result.is_ok());
-        
+
         let atr_values = result.unwrap();
         // All ATR values should be positive
         for &value in atr_values.iter() {
@@ -794,11 +794,11 @@ mod tests {
     #[test]
     fn test_invalid_parameters() {
         let data = arr1(&[1.0, 2.0, 3.0]);
-        
+
         // Zero window
         let result = sma(&data, 0);
         assert!(result.is_err());
-        
+
         // Invalid alpha for EMA
         let result = ema(&data, 1.5);
         assert!(result.is_err());

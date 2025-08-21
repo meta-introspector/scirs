@@ -3,7 +3,7 @@
 //! This example demonstrates how to use the documentation enhancement tools
 //! to analyze and improve documentation quality for the stable release.
 
-use scirs2__interpolate::{
+use scirs2_interpolate::{
     enhance_documentation_for_stable_release, enhance_documentation_with_config,
     quick_documentation_analysis, AudienceLevel, DocumentationConfig, DocumentationReadiness,
     ValidationStatus,

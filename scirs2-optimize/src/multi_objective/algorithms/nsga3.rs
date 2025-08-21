@@ -2,9 +2,9 @@
 //!
 //! Reference-point-based many-objective evolutionary algorithm.
 
-use crate::error::OptimizeError;
-use crate::multi_objective::solutions::{Solution, Population};
 use super::{MultiObjectiveOptimizer, MultiObjectiveResult};
+use crate::error::OptimizeError;
+use crate::multi_objective::solutions::{Population, Solution};
 use ndarray::{Array1, ArrayView1};
 
 /// NSGA-III optimizer for many-objective optimization

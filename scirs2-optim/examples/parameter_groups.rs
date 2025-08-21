@@ -52,7 +52,7 @@ impl SimpleNetwork {
 /// Simulate gradients for demonstration
 #[allow(dead_code)]
 fn compute_gradients_2d(params: &[Array2<f64>]) -> Vec<Array2<f64>> {
-    _params
+    params
         .iter()
         .map(|p| Array2::from_shape_vec(p.dim(), vec![0.01; p.len()]).unwrap())
         .collect()
@@ -60,7 +60,7 @@ fn compute_gradients_2d(params: &[Array2<f64>]) -> Vec<Array2<f64>> {
 
 #[allow(dead_code)]
 fn compute_gradients_1d(params: &[Array1<f64>]) -> Vec<Array1<f64>> {
-    _params
+    params
         .iter()
         .map(|p| Array1::from_vec(vec![0.01; p.len()]))
         .collect()

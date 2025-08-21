@@ -605,9 +605,13 @@ mod tests {
     fn test_realized_volatility() {
         let returns = arr1(&[0.01, -0.02, 0.015, -0.008, 0.012]);
         let rv = realized_volatility(&returns);
-        
+
         // Should equal sum of squared returns
-        let expected: f64 = 0.01_f64.powi(2) + 0.02_f64.powi(2) + 0.015_f64.powi(2) + 0.008_f64.powi(2) + 0.012_f64.powi(2);
+        let expected: f64 = 0.01_f64.powi(2)
+            + 0.02_f64.powi(2)
+            + 0.015_f64.powi(2)
+            + 0.008_f64.powi(2)
+            + 0.012_f64.powi(2);
         assert!((rv - expected).abs() < 1e-10);
     }
 
@@ -620,10 +624,10 @@ mod tests {
 
         let result = garman_klass_volatility(&high, &low, &close, &open);
         assert!(result.is_ok());
-        
+
         let gk_vol = result.unwrap();
         assert_eq!(gk_vol.len(), 3);
-        
+
         // All values should be non-negative
         for &vol in gk_vol.iter() {
             assert!(vol >= 0.0);
@@ -637,10 +641,10 @@ mod tests {
 
         let result = parkinson_volatility(&high, &low);
         assert!(result.is_ok());
-        
+
         let park_vol = result.unwrap();
         assert_eq!(park_vol.len(), 3);
-        
+
         // All values should be non-negative
         for &vol in park_vol.iter() {
             assert!(vol >= 0.0);
@@ -656,7 +660,7 @@ mod tests {
 
         let result = rogers_satchell_volatility(&high, &low, &close, &open);
         assert!(result.is_ok());
-        
+
         let rs_vol = result.unwrap();
         assert_eq!(rs_vol.len(), 3);
     }
@@ -671,7 +675,7 @@ mod tests {
 
         let result = yang_zhang_volatility(&high, &low, &close, &open, k);
         assert!(result.is_ok());
-        
+
         let yz_vol = result.unwrap();
         assert_eq!(yz_vol.len(), 3); // n-1 for n observations
     }
@@ -683,13 +687,13 @@ mod tests {
 
         let result = ewma_volatility(&returns, lambda);
         assert!(result.is_ok());
-        
+
         let ewma_vol = result.unwrap();
         assert_eq!(ewma_vol.len(), returns.len());
-        
+
         // First value should be sqrt of first squared return
         assert!((ewma_vol[0] - (returns[0] * returns[0]).sqrt()).abs() < 1e-10);
-        
+
         // All values should be positive
         for &vol in ewma_vol.iter() {
             assert!(vol >= 0.0);
@@ -703,10 +707,10 @@ mod tests {
 
         let result = garch_volatility_estimate(&returns, window);
         assert!(result.is_ok());
-        
+
         let garch_vol = result.unwrap();
         assert_eq!(garch_vol.len(), returns.len() - window + 1);
-        
+
         // All values should be positive
         for &vol in garch_vol.iter() {
             assert!(vol > 0.0);
@@ -721,10 +725,10 @@ mod tests {
 
         let result = range_volatility(&high, &low, period);
         assert!(result.is_ok());
-        
+
         let range_vol = result.unwrap();
         assert_eq!(range_vol.len(), high.len() - period + 1);
-        
+
         // All values should be non-negative
         for &vol in range_vol.iter() {
             assert!(vol >= 0.0);
@@ -738,7 +742,7 @@ mod tests {
 
         let result = intraday_volatility(&prices, sampling_freq);
         assert!(result.is_ok());
-        
+
         let vol = result.unwrap();
         assert!(vol >= 0.0);
     }
@@ -747,7 +751,7 @@ mod tests {
     fn test_dimension_mismatch() {
         let high = arr1(&[102.0, 105.0]);
         let low = arr1(&[98.0, 101.0, 99.5]);
-        
+
         let result = parkinson_volatility(&high, &low);
         assert!(result.is_err());
     }
@@ -756,7 +760,7 @@ mod tests {
     fn test_insufficient_data() {
         let returns = arr1(&[0.01]);
         let window = 5;
-        
+
         let result = garch_volatility_estimate(&returns, window);
         assert!(result.is_err());
     }
@@ -764,11 +768,11 @@ mod tests {
     #[test]
     fn test_invalid_parameters() {
         let returns = arr1(&[0.01, -0.02, 0.015]);
-        
+
         // Invalid lambda > 1
         let result = ewma_volatility(&returns, 1.1);
         assert!(result.is_err());
-        
+
         // Invalid lambda <= 0
         let result = ewma_volatility(&returns, 0.0);
         assert!(result.is_err());

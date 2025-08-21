@@ -46,7 +46,7 @@ impl ProofOfStakeConsensus {
     pub fn new(node_id: String, initial_stake: u64) -> Self {
         let mut validators = HashMap::new();
         validators.insert(node_id.clone(), initial_stake);
-        
+
         Self {
             node_id,
             stake: initial_stake,
@@ -63,20 +63,22 @@ impl ProofOfStakeConsensus {
     pub fn select_validator(&self) -> Result<String> {
         let total_stake: u64 = self.validators.values().sum();
         if total_stake == 0 {
-            return Err(MetricsError::InvalidOperation("No validators with stake".into()));
+            return Err(MetricsError::InvalidOperation(
+                "No validators with stake".into(),
+            ));
         }
 
         // Simple deterministic selection based on stake
         let mut max_stake = 0;
         let mut selected = self.node_id.clone();
-        
+
         for (id, &stake) in &self.validators {
             if stake > max_stake {
                 max_stake = stake;
                 selected = id.clone();
             }
         }
-        
+
         Ok(selected)
     }
 

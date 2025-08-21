@@ -82,7 +82,7 @@ fn train_model(
     let _duration = start_time.elapsed();
 
     // Final evaluation
-    let (final_loss__) = compute_loss_and_gradient(&weights, &bias, x, y);
+    let (final_loss, _, _) = compute_loss_and_gradient(&weights, &bias, x, y);
 
     Ok((weights, bias, final_loss))
 }

@@ -68,16 +68,33 @@ pub struct OptimizationProblem {
 
 #[derive(Debug, Clone)]
 pub enum Constraint {
-    Equality { coefficients: Vec<f64>, rhs: f64 },
-    Inequality { coefficients: Vec<f64>, rhs: f64 },
-    Bounds { variable_index: usize, lower: f64, upper: f64 },
+    Equality {
+        coefficients: Vec<f64>,
+        rhs: f64,
+    },
+    Inequality {
+        coefficients: Vec<f64>,
+        rhs: f64,
+    },
+    Bounds {
+        variable_index: usize,
+        lower: f64,
+        upper: f64,
+    },
 }
 
 #[derive(Debug, Clone)]
 pub enum ObjectiveFunction {
-    Linear { coefficients: Vec<f64> },
-    Quadratic { q_matrix: Vec<Vec<f64>>, linear: Vec<f64> },
-    NonLinear { function_id: String },
+    Linear {
+        coefficients: Vec<f64>,
+    },
+    Quadratic {
+        q_matrix: Vec<Vec<f64>>,
+        linear: Vec<f64>,
+    },
+    NonLinear {
+        function_id: String,
+    },
 }
 
 impl AdvancedDistributedOptimizer {
@@ -94,29 +111,70 @@ impl AdvancedDistributedOptimizer {
         self.optimization_strategies.insert(name, strategy);
     }
 
-    pub fn optimize(&mut self, problem: OptimizationProblem, strategy_name: &str, max_iterations: usize) -> Result<OptimizationResult> {
+    pub fn optimize(
+        &mut self,
+        problem: OptimizationProblem,
+        strategy_name: &str,
+        max_iterations: usize,
+    ) -> Result<OptimizationResult> {
         let start_time = Instant::now();
-        
-        let strategy = self.optimization_strategies.get(strategy_name)
+
+        let strategy = self
+            .optimization_strategies
+            .get(strategy_name)
             .ok_or_else(|| MetricsError::InvalidOperation("Strategy not found".into()))?;
 
         let result = match strategy {
-            OptimizationStrategy::GradientDescent { learning_rate, momentum, adaptive } => {
-                self.gradient_descent(&problem, *learning_rate, *momentum, *adaptive, max_iterations)?
-            }
-            OptimizationStrategy::SimulatedAnnealing { initial_temperature, cooling_rate, min_temperature } => {
-                self.simulated_annealing(&problem, *initial_temperature, *cooling_rate, *min_temperature, max_iterations)?
-            }
-            OptimizationStrategy::GeneticAlgorithm { population_size, mutation_rate, crossover_rate } => {
-                self.genetic_algorithm(&problem, *population_size, *mutation_rate, *crossover_rate, max_iterations)?
-            }
-            OptimizationStrategy::ParticleSwarm { swarm_size, inertia_weight, cognitive_weight, social_weight } => {
-                self.particle_swarm(&problem, *swarm_size, *inertia_weight, *cognitive_weight, *social_weight, max_iterations)?
-            }
+            OptimizationStrategy::GradientDescent {
+                learning_rate,
+                momentum,
+                adaptive,
+            } => self.gradient_descent(
+                &problem,
+                *learning_rate,
+                *momentum,
+                *adaptive,
+                max_iterations,
+            )?,
+            OptimizationStrategy::SimulatedAnnealing {
+                initial_temperature,
+                cooling_rate,
+                min_temperature,
+            } => self.simulated_annealing(
+                &problem,
+                *initial_temperature,
+                *cooling_rate,
+                *min_temperature,
+                max_iterations,
+            )?,
+            OptimizationStrategy::GeneticAlgorithm {
+                population_size,
+                mutation_rate,
+                crossover_rate,
+            } => self.genetic_algorithm(
+                &problem,
+                *population_size,
+                *mutation_rate,
+                *crossover_rate,
+                max_iterations,
+            )?,
+            OptimizationStrategy::ParticleSwarm {
+                swarm_size,
+                inertia_weight,
+                cognitive_weight,
+                social_weight,
+            } => self.particle_swarm(
+                &problem,
+                *swarm_size,
+                *inertia_weight,
+                *cognitive_weight,
+                *social_weight,
+                max_iterations,
+            )?,
         };
 
         let execution_time = start_time.elapsed();
-        
+
         let event = OptimizationEvent {
             timestamp: start_time,
             strategy_name: strategy_name.to_string(),
@@ -130,14 +188,22 @@ impl AdvancedDistributedOptimizer {
         Ok(result)
     }
 
-    fn gradient_descent(&self, problem: &OptimizationProblem, learning_rate: f64, _momentum: f64, _adaptive: bool, max_iterations: usize) -> Result<OptimizationResult> {
+    fn gradient_descent(
+        &self,
+        problem: &OptimizationProblem,
+        learning_rate: f64,
+        _momentum: f64,
+        _adaptive: bool,
+        max_iterations: usize,
+    ) -> Result<OptimizationResult> {
         let mut variables = problem.variables.clone();
-        let mut objective_value = self.evaluate_objective(&problem.objective_function, &variables)?;
+        let mut objective_value =
+            self.evaluate_objective(&problem.objective_function, &variables)?;
         let initial_value = objective_value;
 
         for _iteration in 0..max_iterations {
             let gradient = self.compute_gradient(&problem.objective_function, &variables)?;
-            
+
             for (i, var) in variables.iter_mut().enumerate() {
                 *var -= learning_rate * gradient[i];
             }
@@ -153,9 +219,17 @@ impl AdvancedDistributedOptimizer {
         })
     }
 
-    fn simulated_annealing(&self, problem: &OptimizationProblem, mut temperature: f64, cooling_rate: f64, min_temperature: f64, max_iterations: usize) -> Result<OptimizationResult> {
+    fn simulated_annealing(
+        &self,
+        problem: &OptimizationProblem,
+        mut temperature: f64,
+        cooling_rate: f64,
+        min_temperature: f64,
+        max_iterations: usize,
+    ) -> Result<OptimizationResult> {
         let mut variables = problem.variables.clone();
-        let mut objective_value = self.evaluate_objective(&problem.objective_function, &variables)?;
+        let mut objective_value =
+            self.evaluate_objective(&problem.objective_function, &variables)?;
         let initial_value = objective_value;
 
         for iteration in 0..max_iterations {
@@ -169,9 +243,12 @@ impl AdvancedDistributedOptimizer {
                 *var += rand::random::<f64>() * 0.1 - 0.05; // Small random perturbation
             }
 
-            let new_objective = self.evaluate_objective(&problem.objective_function, &new_variables)?;
-            
-            if new_objective < objective_value || rand::random::<f64>() < (-(new_objective - objective_value) / temperature).exp() {
+            let new_objective =
+                self.evaluate_objective(&problem.objective_function, &new_variables)?;
+
+            if new_objective < objective_value
+                || rand::random::<f64>() < (-(new_objective - objective_value) / temperature).exp()
+            {
                 variables = new_variables;
                 objective_value = new_objective;
             }
@@ -187,7 +264,14 @@ impl AdvancedDistributedOptimizer {
         })
     }
 
-    fn genetic_algorithm(&self, _problem: &OptimizationProblem, _population_size: usize, _mutation_rate: f64, _crossover_rate: f64, _max_iterations: usize) -> Result<OptimizationResult> {
+    fn genetic_algorithm(
+        &self,
+        _problem: &OptimizationProblem,
+        _population_size: usize,
+        _mutation_rate: f64,
+        _crossover_rate: f64,
+        _max_iterations: usize,
+    ) -> Result<OptimizationResult> {
         // Simplified GA implementation
         Ok(OptimizationResult {
             variables: vec![0.0; 5],
@@ -197,7 +281,15 @@ impl AdvancedDistributedOptimizer {
         })
     }
 
-    fn particle_swarm(&self, _problem: &OptimizationProblem, _swarm_size: usize, _inertia: f64, _cognitive: f64, _social: f64, _max_iterations: usize) -> Result<OptimizationResult> {
+    fn particle_swarm(
+        &self,
+        _problem: &OptimizationProblem,
+        _swarm_size: usize,
+        _inertia: f64,
+        _cognitive: f64,
+        _social: f64,
+        _max_iterations: usize,
+    ) -> Result<OptimizationResult> {
         // Simplified PSO implementation
         Ok(OptimizationResult {
             variables: vec![0.0; 5],
@@ -209,26 +301,36 @@ impl AdvancedDistributedOptimizer {
 
     fn evaluate_objective(&self, objective: &ObjectiveFunction, variables: &[f64]) -> Result<f64> {
         match objective {
-            ObjectiveFunction::Linear { coefficients } => {
-                Ok(coefficients.iter().zip(variables.iter()).map(|(c, v)| c * v).sum())
-            }
-            ObjectiveFunction::Quadratic { q_matrix: _, linear } => {
-                Ok(linear.iter().zip(variables.iter()).map(|(c, v)| c * v).sum())
-            }
+            ObjectiveFunction::Linear { coefficients } => Ok(coefficients
+                .iter()
+                .zip(variables.iter())
+                .map(|(c, v)| c * v)
+                .sum()),
+            ObjectiveFunction::Quadratic {
+                q_matrix: _,
+                linear,
+            } => Ok(linear
+                .iter()
+                .zip(variables.iter())
+                .map(|(c, v)| c * v)
+                .sum()),
             ObjectiveFunction::NonLinear { function_id: _ } => {
                 Ok(variables.iter().map(|x| x * x).sum())
             }
         }
     }
 
-    fn compute_gradient(&self, objective: &ObjectiveFunction, variables: &[f64]) -> Result<Vec<f64>> {
+    fn compute_gradient(
+        &self,
+        objective: &ObjectiveFunction,
+        variables: &[f64],
+    ) -> Result<Vec<f64>> {
         match objective {
-            ObjectiveFunction::Linear { coefficients } => {
-                Ok(coefficients.clone())
-            }
-            ObjectiveFunction::Quadratic { q_matrix: _, linear } => {
-                Ok(linear.clone())
-            }
+            ObjectiveFunction::Linear { coefficients } => Ok(coefficients.clone()),
+            ObjectiveFunction::Quadratic {
+                q_matrix: _,
+                linear,
+            } => Ok(linear.clone()),
             ObjectiveFunction::NonLinear { function_id: _ } => {
                 Ok(variables.iter().map(|x| 2.0 * x).collect())
             }

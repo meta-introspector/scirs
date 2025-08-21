@@ -135,7 +135,7 @@
 //! println!("Average recovery time: {:.1} periods", avg_recovery);
 //!
 //! for (i, period) in dd_periods.iter().enumerate() {
-//!     println!("Period {}: {:.2}% drawdown, {} periods duration", 
+//!     println!("Period {}: {:.2}% drawdown, {} periods duration",
 //!              i + 1, period.max_drawdown * 100.0, period.duration);
 //! }
 //! ```
@@ -188,33 +188,17 @@
 //! - GIPS standards for performance measurement
 //! - CFA Institute guidelines for risk-adjusted returns
 
-pub mod metrics;
 pub mod drawdown;
+pub mod metrics;
 
 // Re-export commonly used functions for convenience
 pub use metrics::{
-    var_historical,
-    expected_shortfall,
-    parametric_var,
-    monte_carlo_var,
-    sharpe_ratio,
-    sortino_ratio,
-    information_ratio,
-    beta,
-    treynor_ratio,
-    jensens_alpha,
-    omega_ratio,
+    beta, expected_shortfall, information_ratio, jensens_alpha, monte_carlo_var, omega_ratio,
+    parametric_var, sharpe_ratio, sortino_ratio, treynor_ratio, var_historical,
 };
 
 pub use drawdown::{
-    max_drawdown,
-    calculate_drawdown_series,
-    pain_index,
-    ulcer_index,
-    calmar_ratio,
-    drawdown_recovery_analysis,
-    max_consecutive_losses,
-    average_drawdown_duration,
-    average_recovery_time,
+    average_drawdown_duration, average_recovery_time, calculate_drawdown_series, calmar_ratio,
+    drawdown_recovery_analysis, max_consecutive_losses, max_drawdown, pain_index, ulcer_index,
     DrawdownPeriod,
 };

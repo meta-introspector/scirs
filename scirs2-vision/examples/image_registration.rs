@@ -114,7 +114,7 @@ fn main() -> Result<()> {
     println!("--------------------------");
 
     // Apply feature-based transform
-    let registered_feature = "warp_image"(
+    let registered_feature = warp_image(
         &target_gray,
         &feature_result.registration.transform,
         (300, 300),
@@ -229,12 +229,12 @@ fn create_test_images() -> Result<(DynamicImage, DynamicImage, Array2<f64>)> {
     }
 
     // Add some noise
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     for _ in 0..500 {
         let x = rng.random_range(0..width);
         let y = rng.random_range(0..height);
         let intensity = rng.random_range(100u8..255u8);
-        ref_img.put_pixel(x..y, Luma([intensity]));
+        ref_img.put_pixel(x, y, Luma([intensity]));
     }
 
     let reference = DynamicImage::ImageLuma8(ref_img);
@@ -341,7 +341,7 @@ fn add_corner_pattern(
 #[allow(dead_code)]
 fn create_synthetic_matches(_nummatches: usize) -> Vec<PointMatch> {
     let mut _matches = Vec::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Create mostly good _matches with known transformation
     let true_transform = Array2::from_shape_vec(
@@ -360,30 +360,31 @@ fn create_synthetic_matches(_nummatches: usize) -> Vec<PointMatch> {
     )
     .unwrap();
 
-    for _ in 0..(_num_matches * 8 / 10) {
+    for _ in 0..(_nummatches * 8 / 10) {
         // 80% good _matches
-        let source = Point2D::new(rng.random_range(50.0..250.0)..rng.random_range(50.0..250.0));
+        let source = Point2D::new(rng.random_range(50.0..250.0), rng.random_range(50.0..250.0));
 
         let target = transform_point(source, &true_transform);
 
         // Add small amount of noise
         let noisy_target = Point2D::new(
-            target.x + rng.random_range(-2.0..2.0)..target.y + rng.random_range(-2.0..2.0),
+            target.x + rng.random_range(-2.0..2.0),
+            target.y + rng.random_range(-2.0..2.0),
         );
 
-        matches.push(PointMatch {
+        _matches.push(PointMatch {
             source,
             target: noisy_target,
-            confidence: rng.random_range(0.8..1.0)..,
+            confidence: rng.random_range(0.8..1.0),
         });
     }
 
     // Add outliers
-    for _ in (num_matches * 8 / 10)..num_matches {
-        matches.push(PointMatch {
-            source: Point2D::new(rng.random_range(50.0..250.0)..rng.random_range(50.0..250.0)),
-            target: Point2D::new(rng.random_range(50.0..250.0)..rng.random_range(50.0..250.0)),
-            confidence: rng.random_range(0.3..0.7)..,
+    for _ in (_nummatches * 8 / 10).._nummatches {
+        _matches.push(PointMatch {
+            source: Point2D::new(rng.random_range(50.0..250.0), rng.random_range(50.0..250.0)),
+            target: Point2D::new(rng.random_range(50.0..250.0), rng.random_range(50.0..250.0)),
+            confidence: rng.random_range(0.3..0.7),
         });
     }
 

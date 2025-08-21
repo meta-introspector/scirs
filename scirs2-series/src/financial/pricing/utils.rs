@@ -7,40 +7,40 @@
 use num_traits::Float;
 
 /// Normal cumulative distribution function approximation
-/// 
+///
 /// Calculates the cumulative distribution function of the standard normal
 /// distribution using the Abramowitz and Stegun approximation. This provides
 /// a good balance between accuracy and computational efficiency.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `x` - Input value
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `F` - Cumulative probability P(X ≤ x) where X ~ N(0,1)
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::pricing::utils::normal_cdf;
-/// 
+///
 /// let prob = normal_cdf(0.0); // Should be approximately 0.5
 /// assert!((prob - 0.5).abs() < 0.001);
-/// 
+///
 /// let prob = normal_cdf(1.96); // Should be approximately 0.975
 /// assert!((prob - 0.975).abs() < 0.001);
 /// ```
-/// 
+///
 /// # Algorithm
-/// 
+///
 /// Uses the Abramowitz and Stegun rational approximation:
 /// - For x ≥ 0: Φ(x) = 1 - φ(x) × (a₁t + a₂t² + a₃t³ + a₄t⁴ + a₅t⁵)
 /// - For x < 0: Φ(x) = 1 - Φ(-x)
-/// 
+///
 /// Where t = 1/(1 + px), φ(x) is the standard normal PDF, and
 /// p, a₁, a₂, a₃, a₄, a₅ are predefined constants.
-/// 
+///
 /// Maximum absolute error: ≈ 7.5 × 10⁻⁸
 pub fn normal_cdf<F: Float>(x: F) -> F {
     // Abramowitz and Stegun approximation constants
@@ -64,23 +64,23 @@ pub fn normal_cdf<F: Float>(x: F) -> F {
 }
 
 /// Normal probability density function
-/// 
+///
 /// Calculates the probability density function of the standard normal
 /// distribution at a given point.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `x` - Input value
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `F` - Probability density f(x) = (1/√2π) × e^(-x²/2)
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::pricing::utils::normal_pdf;
-/// 
+///
 /// let density = normal_pdf(0.0); // Should be approximately 1/sqrt(2π) ≈ 0.3989
 /// assert!((density - 0.3989).abs() < 0.001);
 /// ```
@@ -90,26 +90,26 @@ pub fn normal_pdf<F: Float>(x: F) -> F {
 }
 
 /// Inverse normal cumulative distribution function (quantile function)
-/// 
+///
 /// Calculates the inverse of the normal CDF using the Beasley-Springer-Moro
 /// approximation. Given a probability p, returns x such that Φ(x) = p.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `p` - Probability value (must be between 0 and 1)
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `F` - Quantile value x such that P(X ≤ x) = p
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::pricing::utils::normal_quantile;
-/// 
+///
 /// let quantile = normal_quantile(0.975); // Should be approximately 1.96
 /// assert!((quantile - 1.96).abs() < 0.01);
-/// 
+///
 /// let quantile = normal_quantile(0.5); // Should be approximately 0.0
 /// assert!(quantile.abs() < 0.001);
 /// ```
@@ -144,24 +144,24 @@ pub fn normal_quantile<F: Float>(p: F) -> F {
 }
 
 /// Present value calculation
-/// 
+///
 /// Calculates the present value of a future cash flow using continuous compounding.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `future_value` - Future cash flow amount
 /// * `rate` - Discount rate (continuously compounded)
 /// * `time` - Time to maturity
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `F` - Present value
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::pricing::utils::present_value;
-/// 
+///
 /// let pv = present_value(100.0, 0.05, 1.0); // $100 in 1 year at 5%
 /// assert!((pv - 95.123).abs() < 0.001); // ≈ $95.12
 /// ```
@@ -170,24 +170,24 @@ pub fn present_value<F: Float>(future_value: F, rate: F, time: F) -> F {
 }
 
 /// Future value calculation
-/// 
+///
 /// Calculates the future value of a present cash flow using continuous compounding.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `present_value` - Current cash flow amount
 /// * `rate` - Growth rate (continuously compounded)
 /// * `time` - Time to maturity
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `F` - Future value
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::pricing::utils::future_value;
-/// 
+///
 /// let fv = future_value(100.0, 0.05, 1.0); // $100 growing at 5% for 1 year
 /// assert!((fv - 105.127).abs() < 0.001); // ≈ $105.13
 /// ```
@@ -196,69 +196,63 @@ pub fn future_value<F: Float>(present_value: F, rate: F, time: F) -> F {
 }
 
 /// Calculate d1 parameter for Black-Scholes formula
-/// 
+///
 /// Helper function to calculate the d1 parameter used in Black-Scholes
 /// and other log-normal option pricing models.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `spot` - Current spot price
 /// * `strike` - Strike price
 /// * `rate` - Risk-free rate
 /// * `volatility` - Volatility
 /// * `time` - Time to expiration
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `F` - d1 parameter value
-pub fn calculate_d1<F: Float>(
-    spot: F,
-    strike: F,
-    rate: F,
-    volatility: F,
-    time: F,
-) -> F {
+pub fn calculate_d1<F: Float>(spot: F, strike: F, rate: F, volatility: F, time: F) -> F {
     ((spot / strike).ln() + (rate + volatility.powi(2) / F::from(2.0).unwrap()) * time)
         / (volatility * time.sqrt())
 }
 
 /// Calculate d2 parameter for Black-Scholes formula
-/// 
+///
 /// Helper function to calculate the d2 parameter used in Black-Scholes
 /// and other log-normal option pricing models.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `d1` - Previously calculated d1 parameter
 /// * `volatility` - Volatility
 /// * `time` - Time to expiration
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `F` - d2 parameter value
 pub fn calculate_d2<F: Float>(d1: F, volatility: F, time: F) -> F {
     d1 - volatility * time.sqrt()
 }
 
 /// Bivariate normal cumulative distribution function approximation
-/// 
+///
 /// Calculates the cumulative probability of a bivariate normal distribution
 /// using Drezner's approximation. Useful for pricing spread options and
 /// other multi-asset derivatives.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `x` - First variable value
 /// * `y` - Second variable value  
 /// * `rho` - Correlation coefficient between variables
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `F` - Cumulative probability P(X ≤ x, Y ≤ y)
 pub fn bivariate_normal_cdf<F: Float>(x: F, y: F, rho: F) -> F {
     // Simplified approximation for bivariate normal CDF
     // This is a basic implementation - more sophisticated methods exist
-    
+
     if rho.abs() < F::from(0.001).unwrap() {
         // If correlation is near zero, variables are independent
         return normal_cdf(x) * normal_cdf(y);
@@ -269,34 +263,34 @@ pub fn bivariate_normal_cdf<F: Float>(x: F, y: F, rho: F) -> F {
     // like Drezner-Wesolowsky or Genz methods
     let cdf_x = normal_cdf(x);
     let cdf_y = normal_cdf(y);
-    
+
     // Simple correction for correlation (approximation)
     let correction = rho * normal_pdf(x) * normal_pdf(y) / F::from(4.0).unwrap();
-    
+
     (cdf_x * cdf_y + correction).min(F::one()).max(F::zero())
 }
 
 /// Calculate annualized return from continuously compounded rate
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `rate` - Continuously compounded rate
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `F` - Annualized simple return
 pub fn continuous_to_simple_return<F: Float>(rate: F) -> F {
     rate.exp() - F::one()
 }
 
 /// Calculate continuously compounded rate from annualized return
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `simple_return` - Annualized simple return
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `F` - Continuously compounded rate
 pub fn simple_to_continuous_return<F: Float>(simple_return: F) -> F {
     (F::one() + simple_return).ln()

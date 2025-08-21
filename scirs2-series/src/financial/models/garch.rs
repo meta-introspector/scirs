@@ -883,12 +883,14 @@ mod tests {
     #[test]
     fn test_garch_11_basic() {
         let mut model = GarchModel::<f64>::garch_11();
-        let data = arr1(&[0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004,
-                          0.009, -0.006, 0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006]);
-        
+        let data = arr1(&[
+            0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004, 0.009, -0.006,
+            0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006,
+        ]);
+
         let result = model.fit(&data);
         assert!(result.is_ok());
-        
+
         let result = result.unwrap();
         assert_eq!(result.parameters.garch_params.len(), 3); // omega, alpha, beta
         assert!(result.log_likelihood < 0.0); // Log-likelihood should be negative
@@ -898,11 +900,13 @@ mod tests {
     #[test]
     fn test_garch_forecasting() {
         let mut model = GarchModel::<f64>::garch_11();
-        let data = arr1(&[0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004,
-                          0.009, -0.006, 0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006]);
-        
+        let data = arr1(&[
+            0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004, 0.009, -0.006,
+            0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006,
+        ]);
+
         model.fit(&data).unwrap();
-        
+
         let forecasts = model.forecast_variance(5).unwrap();
         assert_eq!(forecasts.len(), 5);
         assert!(forecasts.iter().all(|&x| x > 0.0)); // All forecasts should be positive
@@ -912,7 +916,7 @@ mod tests {
     fn test_insufficient_data() {
         let mut model = GarchModel::<f64>::garch_11();
         let data = arr1(&[0.01, -0.02]); // Too few observations
-        
+
         let result = model.fit(&data);
         assert!(result.is_err());
     }
@@ -928,15 +932,17 @@ mod tests {
             tolerance: 1e-4,
             use_numerical_derivatives: true,
         };
-        
+
         let mut model = GarchModel::<f64>::new(config);
-        let data = arr1(&[0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004,
-                          0.009, -0.006, 0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006,
-                          0.014, -0.01, 0.018, -0.005, 0.007, 0.002, -0.009, 0.013, 0.001, -0.003]);
-        
+        let data = arr1(&[
+            0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004, 0.009, -0.006,
+            0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006, 0.014, -0.01, 0.018, -0.005,
+            0.007, 0.002, -0.009, 0.013, 0.001, -0.003,
+        ]);
+
         let result = model.fit(&data);
         assert!(result.is_ok());
-        
+
         let result = result.unwrap();
         // For GARCH(2,1): 1 omega + 1 alpha + 2 betas = 4 parameters
         assert_eq!(result.parameters.garch_params.len(), 4);

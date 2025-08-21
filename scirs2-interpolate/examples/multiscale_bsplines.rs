@@ -1,5 +1,5 @@
 use ndarray::Array1;
-use scirs2__interpolate::{
+use scirs2_interpolate::{
     make_adaptive_bspline, make_lsq_bspline, BSplineExtrapolateMode, ExtrapolateMode,
     MultiscaleBSpline, RefinementCriterion,
 };

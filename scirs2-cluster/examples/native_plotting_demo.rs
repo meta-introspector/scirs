@@ -5,7 +5,7 @@
 
 use ndarray::Array2;
 use scirs2_cluster::preprocess::standardize;
-use scirs2_cluster::vq::kmeans;
+use scirs2_cluster::vq::{kmeans, vq};
 
 #[cfg(feature = "plotters")]
 use scirs2_cluster::{save_clustering_plot, PlotFormat, PlotOutput};
@@ -30,14 +30,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Perform K-means clustering
     let k = 3;
-    let (centroids, labels) = kmeans(
+    let (centroids, _distortion) = kmeans(
         standardized.view(),
         k,
         Some(100),  // max_iter
         Some(1e-4), // tolerance
+        Some(true), // check_finite
         Some(42),   // random_seed
-        None,       // initial_centroids
     )?;
+    // Generate labels using vq
+    let (labels, _) = vq(standardized.view(), centroids.view())?;
 
     println!("K-means clustering completed with {} clusters", k);
 
@@ -48,18 +50,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Create visualization configuration
         let vis_config = VisualizationConfig {
-            color_scheme: scirs2,
-            _cluster: ColorScheme::ColorblindFriendly,
+            color_scheme: ColorScheme::ColorblindFriendly,
             point_size: 4.0,
             point_opacity: 0.8,
             show_centroids: true,
             show_boundaries: false,
-            boundary_type: scirs2,
-            _cluster: BoundaryType::ConvexHull,
+            boundary_type: BoundaryType::ConvexHull,
             interactive: false,
             animation: None,
-            dimensionality_reduction: scirs2,
-            _cluster: DimensionalityReduction::None,
+            dimensionality_reduction: DimensionalityReduction::None,
         };
 
         // PNG output configuration
@@ -122,18 +121,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Use mouse to pan and zoom, click clusters in the legend to highlight them.");
 
         let vis_config = VisualizationConfig {
-            color_scheme: scirs2,
-            _cluster: ColorScheme::Viridis,
+            color_scheme: ColorScheme::Viridis,
             point_size: 6.0,
             point_opacity: 0.9,
             show_centroids: true,
             show_boundaries: false,
-            boundary_type: scirs2,
-            _cluster: BoundaryType::Ellipse,
+            boundary_type: BoundaryType::Ellipse,
             interactive: true,
             animation: None,
-            dimensionality_reduction: scirs2,
-            _cluster: DimensionalityReduction::None,
+            dimensionality_reduction: DimensionalityReduction::None,
         };
 
         // Launch interactive visualization

@@ -3,55 +3,55 @@
 //! This module provides implementations of various consensus algorithms
 //! including Raft, PBFT, Proof of Stake, and simple majority consensus.
 
-pub mod raft;
+pub mod coordinator;
+pub mod majority;
 pub mod pbft;
 pub mod proof_of_stake;
-pub mod majority;
-pub mod coordinator;
+pub mod raft;
 
 use crate::error::{MetricsError, Result};
+use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::time::{Duration, SystemTime, Instant};
-use num_traits::Float;
+use std::time::{Duration, Instant, SystemTime};
 
 // Re-export main components
-pub use raft::*;
+pub use coordinator::*;
+pub use majority::*;
 pub use pbft::*;
 pub use proof_of_stake::*;
-pub use majority::*;
-pub use coordinator::*;
+pub use raft::*;
 
 /// Consensus algorithm configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsensusConfig {
     /// Algorithm to use
     pub algorithm: ConsensusAlgorithm,
-    
+
     /// Minimum number of nodes for quorum
     pub quorum_size: usize,
-    
+
     /// Election timeout (milliseconds)
     pub election_timeout_ms: u64,
-    
+
     /// Heartbeat interval (milliseconds)
     pub heartbeat_interval_ms: u64,
-    
+
     /// Maximum entries per append
     pub max_entries_per_append: usize,
-    
+
     /// Log compaction threshold
     pub log_compaction_threshold: usize,
-    
+
     /// Snapshot creation interval
     pub snapshot_interval: Duration,
-    
+
     /// Byzantine fault tolerance threshold
     pub byzantine_threshold: usize,
-    
+
     /// Enable consensus optimization
     pub enable_optimization: bool,
-    
+
     /// Consensus timeout (milliseconds)
     pub consensus_timeout_ms: u64,
 }
@@ -61,16 +61,16 @@ pub struct ConsensusConfig {
 pub enum ConsensusAlgorithm {
     /// Raft consensus algorithm
     Raft,
-    
+
     /// Practical Byzantine Fault Tolerance
     PBFT,
-    
+
     /// Proof of Stake consensus
     ProofOfStake,
-    
+
     /// Simple majority consensus
     SimpleMajority,
-    
+
     /// Custom consensus algorithm
     Custom(String),
 }
@@ -80,19 +80,19 @@ pub enum ConsensusAlgorithm {
 pub struct ConsensusSystemState {
     /// Current consensus leader
     pub current_leader: Option<String>,
-    
+
     /// Active participants
     pub active_participants: HashSet<String>,
-    
+
     /// Current term/epoch
     pub current_term: u64,
-    
+
     /// Last consensus timestamp
     pub last_consensus: SystemTime,
-    
+
     /// Consensus statistics
     pub consensus_stats: ConsensusStats,
-    
+
     /// Algorithm-specific state
     pub algorithm_state: AlgorithmSpecificState,
 }
@@ -102,16 +102,16 @@ pub struct ConsensusSystemState {
 pub enum AlgorithmSpecificState {
     /// Raft-specific state
     Raft(raft::RaftState),
-    
+
     /// PBFT-specific state
     PBFT(pbft::PbftState),
-    
+
     /// Proof of Stake specific state
     ProofOfStake(proof_of_stake::PoSState),
-    
+
     /// Simple majority state
     SimpleMajority(majority::MajorityState),
-    
+
     /// Custom algorithm state
     Custom(HashMap<String, String>),
 }
@@ -121,22 +121,22 @@ pub enum AlgorithmSpecificState {
 pub struct ConsensusStats {
     /// Total consensus decisions made
     pub total_decisions: u64,
-    
+
     /// Average consensus time (milliseconds)
     pub avg_consensus_time_ms: f64,
-    
+
     /// Failed consensus attempts
     pub failed_attempts: u64,
-    
+
     /// Leader changes
     pub leader_changes: u64,
-    
+
     /// Byzantine failures detected
     pub byzantine_failures: u64,
-    
+
     /// Network partitions handled
     pub network_partitions: u64,
-    
+
     /// Current consensus health (0.0-1.0)
     pub health_score: f64,
 }
@@ -146,22 +146,22 @@ pub struct ConsensusStats {
 pub struct ConsensusProposal<T> {
     /// Proposal identifier
     pub proposal_id: String,
-    
+
     /// Proposer node identifier
     pub proposer: String,
-    
+
     /// Proposal timestamp
     pub timestamp: SystemTime,
-    
+
     /// Proposal data
     pub data: T,
-    
+
     /// Proposal priority
     pub priority: u32,
-    
+
     /// Required quorum size
     pub required_quorum: usize,
-    
+
     /// Proposal metadata
     pub metadata: HashMap<String, String>,
 }
@@ -171,22 +171,22 @@ pub struct ConsensusProposal<T> {
 pub struct ConsensusDecision<T> {
     /// Decision identifier
     pub decision_id: String,
-    
+
     /// Original proposal
     pub proposal: ConsensusProposal<T>,
-    
+
     /// Decision outcome
     pub outcome: DecisionOutcome,
-    
+
     /// Participating nodes
     pub participants: HashSet<String>,
-    
+
     /// Decision timestamp
     pub timestamp: SystemTime,
-    
+
     /// Consensus algorithm used
     pub algorithm: ConsensusAlgorithm,
-    
+
     /// Decision metadata
     pub metadata: HashMap<String, String>,
 }
@@ -196,19 +196,19 @@ pub struct ConsensusDecision<T> {
 pub enum DecisionOutcome {
     /// Consensus reached, proposal accepted
     Accepted,
-    
+
     /// Consensus reached, proposal rejected
     Rejected,
-    
+
     /// Consensus failed, timeout occurred
     Timeout,
-    
+
     /// Consensus failed, insufficient participants
     InsufficientQuorum,
-    
+
     /// Consensus failed, Byzantine fault detected
     ByzantineFault,
-    
+
     /// Consensus failed, network partition
     NetworkPartition,
 }
@@ -218,16 +218,16 @@ pub enum DecisionOutcome {
 pub struct ConsensusVote {
     /// Voting node identifier
     pub voter: String,
-    
+
     /// Vote decision
     pub vote: VoteDecision,
-    
+
     /// Vote timestamp
     pub timestamp: SystemTime,
-    
+
     /// Vote signature/proof
     pub signature: Option<String>,
-    
+
     /// Vote metadata
     pub metadata: HashMap<String, String>,
 }
@@ -237,10 +237,10 @@ pub struct ConsensusVote {
 pub enum VoteDecision {
     /// Vote in favor
     Accept,
-    
+
     /// Vote against
     Reject,
-    
+
     /// Abstain from voting
     Abstain,
 }
@@ -249,28 +249,28 @@ pub enum VoteDecision {
 pub trait ConsensusManager<T>: Send + Sync {
     /// Initialize consensus manager
     async fn initialize(&mut self) -> Result<()>;
-    
+
     /// Propose a value for consensus
     async fn propose(&mut self, proposal: ConsensusProposal<T>) -> Result<String>;
-    
+
     /// Vote on a proposal
     async fn vote(&mut self, proposal_id: &str, vote: ConsensusVote) -> Result<()>;
-    
+
     /// Get consensus decision if available
     async fn get_decision(&self, proposal_id: &str) -> Result<Option<ConsensusDecision<T>>>;
-    
+
     /// Handle node failure
     async fn handle_node_failure(&mut self, node_id: &str) -> Result<()>;
-    
+
     /// Handle node recovery
     async fn handle_node_recovery(&mut self, node_id: &str) -> Result<()>;
-    
+
     /// Get current consensus state
     async fn get_state(&self) -> Result<ConsensusSystemState>;
-    
+
     /// Get health score
     async fn get_health_score(&self) -> Result<f64>;
-    
+
     /// Shutdown consensus manager
     async fn shutdown(&mut self) -> Result<()>;
 }
@@ -280,16 +280,16 @@ pub trait ConsensusManager<T>: Send + Sync {
 pub struct ConsensusEvent {
     /// Event identifier
     pub event_id: String,
-    
+
     /// Event type
     pub event_type: ConsensusEventType,
-    
+
     /// Event timestamp
     pub timestamp: SystemTime,
-    
+
     /// Affected nodes
     pub nodes: Vec<String>,
-    
+
     /// Event data
     pub data: HashMap<String, String>,
 }
@@ -299,31 +299,31 @@ pub struct ConsensusEvent {
 pub enum ConsensusEventType {
     /// New proposal submitted
     ProposalSubmitted,
-    
+
     /// Vote cast by node
     VoteCast,
-    
+
     /// Consensus decision reached
     DecisionReached,
-    
+
     /// Leader election started
     LeaderElection,
-    
+
     /// Leader change occurred
     LeaderChange,
-    
+
     /// Node failure detected
     NodeFailure,
-    
+
     /// Node recovery detected
     NodeRecovery,
-    
+
     /// Byzantine behavior detected
     ByzantineBehavior,
-    
+
     /// Network partition detected
     NetworkPartition,
-    
+
     /// Network partition healed
     PartitionHealed,
 }
@@ -333,19 +333,19 @@ pub enum ConsensusEventType {
 pub struct ConsensusPerformanceMetrics {
     /// Average proposal processing time
     pub avg_proposal_time_ms: f64,
-    
+
     /// Average voting time
     pub avg_voting_time_ms: f64,
-    
+
     /// Consensus success rate
     pub success_rate: f64,
-    
+
     /// Network message overhead
     pub message_overhead: f64,
-    
+
     /// Memory usage (bytes)
     pub memory_usage_bytes: usize,
-    
+
     /// CPU utilization (0.0-1.0)
     pub cpu_utilization: f64,
 }
@@ -380,19 +380,19 @@ impl<T> ConsensusProposal<T> {
             metadata: HashMap::new(),
         }
     }
-    
+
     /// Set proposal priority
     pub fn with_priority(mut self, priority: u32) -> Self {
         self.priority = priority;
         self
     }
-    
+
     /// Set required quorum size
     pub fn with_quorum(mut self, quorum: usize) -> Self {
         self.required_quorum = quorum;
         self
     }
-    
+
     /// Add metadata
     pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
@@ -411,13 +411,13 @@ impl ConsensusVote {
             metadata: HashMap::new(),
         }
     }
-    
+
     /// Add signature to vote
     pub fn with_signature(mut self, signature: String) -> Self {
         self.signature = Some(signature);
         self
     }
-    
+
     /// Add metadata to vote
     pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
@@ -428,7 +428,7 @@ impl ConsensusVote {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_consensus_config_default() {
         let config = ConsensusConfig::default();
@@ -436,20 +436,20 @@ mod tests {
         assert_eq!(config.quorum_size, 3);
         assert!(config.enable_optimization);
     }
-    
+
     #[test]
     fn test_consensus_proposal() {
         let proposal = ConsensusProposal::new(
             "test_proposal".to_string(),
             "node1".to_string(),
-            "test_data".to_string()
+            "test_data".to_string(),
         );
-        
+
         assert_eq!(proposal.proposal_id, "test_proposal");
         assert_eq!(proposal.proposer, "node1");
         assert_eq!(proposal.priority, 0);
     }
-    
+
     #[test]
     fn test_consensus_vote() {
         let vote = ConsensusVote::new("node1".to_string(), VoteDecision::Accept);
@@ -457,7 +457,7 @@ mod tests {
         assert_eq!(vote.vote, VoteDecision::Accept);
         assert!(vote.signature.is_none());
     }
-    
+
     #[test]
     fn test_consensus_stats() {
         let stats = ConsensusStats::default();

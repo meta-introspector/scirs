@@ -49,6 +49,10 @@ impl ArrayProtocol for MockDistributedArray {
         self
     }
 
+    fn shape(&self) -> &[usize] {
+        &self.shape
+    }
+
     fn box_clone(&self) -> Box<dyn ArrayProtocol> {
         Box::new(self.clone())
     }
@@ -85,6 +89,10 @@ impl ArrayProtocol for MockGPUArray {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn shape(&self) -> &[usize] {
+        &self.shape
     }
 
     fn box_clone(&self) -> Box<dyn ArrayProtocol> {
@@ -125,6 +133,10 @@ where
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn shape(&self) -> &[usize] {
+        self.inner.shape()
     }
 
     fn box_clone(&self) -> Box<dyn ArrayProtocol> {

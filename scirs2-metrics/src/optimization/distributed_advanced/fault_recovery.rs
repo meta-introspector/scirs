@@ -62,10 +62,16 @@ impl AdvancedFaultRecovery {
     pub fn new(node_id: String) -> Self {
         let mut recovery_strategies = HashMap::new();
         recovery_strategies.insert(FaultType::NetworkPartition, RecoveryStrategy::Retry(3));
-        recovery_strategies.insert(FaultType::NodeFailure, RecoveryStrategy::Failover("backup".to_string()));
+        recovery_strategies.insert(
+            FaultType::NodeFailure,
+            RecoveryStrategy::Failover("backup".to_string()),
+        );
         recovery_strategies.insert(FaultType::MessageLoss, RecoveryStrategy::Retry(5));
         recovery_strategies.insert(FaultType::ConsensusFailure, RecoveryStrategy::Rollback);
-        recovery_strategies.insert(FaultType::DataCorruption, RecoveryStrategy::RepairAndRestart);
+        recovery_strategies.insert(
+            FaultType::DataCorruption,
+            RecoveryStrategy::RepairAndRestart,
+        );
 
         Self {
             node_id,
@@ -75,8 +81,14 @@ impl AdvancedFaultRecovery {
         }
     }
 
-    pub fn handle_fault(&mut self, fault_type: FaultType, affected_nodes: Vec<String>) -> Result<()> {
-        let strategy = self.recovery_strategies.get(&fault_type)
+    pub fn handle_fault(
+        &mut self,
+        fault_type: FaultType,
+        affected_nodes: Vec<String>,
+    ) -> Result<()> {
+        let strategy = self
+            .recovery_strategies
+            .get(&fault_type)
             .ok_or_else(|| MetricsError::InvalidOperation("Unknown fault type".into()))?
             .clone();
 
@@ -94,7 +106,12 @@ impl AdvancedFaultRecovery {
         Ok(())
     }
 
-    fn execute_recovery(&mut self, fault_type: &FaultType, strategy: &RecoveryStrategy, nodes: &[String]) -> Result<bool> {
+    fn execute_recovery(
+        &mut self,
+        fault_type: &FaultType,
+        strategy: &RecoveryStrategy,
+        nodes: &[String],
+    ) -> Result<bool> {
         match strategy {
             RecoveryStrategy::Retry(attempts) => {
                 for _ in 0..*attempts {
@@ -104,18 +121,10 @@ impl AdvancedFaultRecovery {
                 }
                 Ok(false)
             }
-            RecoveryStrategy::Failover(backup) => {
-                self.initiate_failover(backup, nodes)
-            }
-            RecoveryStrategy::Rollback => {
-                self.perform_rollback(nodes)
-            }
-            RecoveryStrategy::Quarantine => {
-                self.quarantine_nodes(nodes)
-            }
-            RecoveryStrategy::RepairAndRestart => {
-                self.repair_and_restart(nodes)
-            }
+            RecoveryStrategy::Failover(backup) => self.initiate_failover(backup, nodes),
+            RecoveryStrategy::Rollback => self.perform_rollback(nodes),
+            RecoveryStrategy::Quarantine => self.quarantine_nodes(nodes),
+            RecoveryStrategy::RepairAndRestart => self.repair_and_restart(nodes),
         }
     }
 

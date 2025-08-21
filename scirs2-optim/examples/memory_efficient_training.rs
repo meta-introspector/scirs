@@ -15,8 +15,8 @@ struct Layer {
 
 impl Layer {
     fn new(_input_size: usize, outputsize: usize) -> Self {
-        let weights = Array2::random((_input_size, output_size), Uniform::new(-0.1, 0.1));
-        let bias = Array1::zeros(output_size);
+        let weights = Array2::random((_input_size, outputsize), Uniform::new(-0.1, 0.1));
+        let bias = Array1::zeros(outputsize);
         Self { weights, bias }
     }
 
@@ -70,7 +70,7 @@ fn train_memory_efficient(
         let (_, grad_weights, grad_bias) = layer.backward(training_data, &grad_output);
 
         // Process gradients (mutates the gradients in-place)
-        let mut grad_weights_processed = gradweights.clone();
+        let mut grad_weights_processed = grad_weights.clone();
         let mut grad_bias_processed = grad_bias.clone();
         grad_processor.process(&mut grad_weights_processed)?;
         grad_processor.process(&mut grad_bias_processed)?;
@@ -146,16 +146,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Create synthetic dataset
     let n_samples = 1000;
     let input_size = 50;
-    let output_size = 10;
+    let outputsize = 10;
 
     let training_data = Array2::random((n_samples, input_size), Uniform::new(-1.0, 1.0));
-    let true_weights = Array2::random((input_size, output_size), Uniform::new(-0.5, 0.5));
-    let true_bias = Array1::random(output_size, Uniform::new(-0.1, 0.1));
+    let true_weights = Array2::random((input_size, outputsize), Uniform::new(-0.5, 0.5));
+    let true_bias = Array1::random(outputsize, Uniform::new(-0.1, 0.1));
     let targets = training_data.dot(&true_weights) + &true_bias;
 
     // Initialize layers
-    let mut layer1 = Layer::new(input_size, output_size);
-    let mut layer2 = Layer::new(input_size, output_size);
+    let mut layer1 = Layer::new(input_size, outputsize);
+    let mut layer2 = Layer::new(input_size, outputsize);
 
     // Train with standard memory-efficient approach
     let losses1 = train_memory_efficient(&mut layer1, &training_data, &targets, 500)?;

@@ -1,9 +1,9 @@
 use ndarray::{array, Array1};
-use scirs2__interpolate::interp1d::monotonic::{
+use scirs2_interpolate::interp1d::monotonic::{
     hyman_interpolate, modified_akima_interpolate, monotonic_interpolate, steffen_interpolate,
     MonotonicMethod,
 };
-use scirs2__interpolate::pchip_interpolate;
+use scirs2_interpolate::pchip_interpolate;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

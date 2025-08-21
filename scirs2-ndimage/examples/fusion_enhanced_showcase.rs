@@ -30,24 +30,15 @@
 use ndarray::{Array1, Array2, Array3, ArrayView2};
 use scirs2_ndimage::{
     advanced_fusion_algorithms::{
-        enhanced_meta_learning_with_temporal_fusion,
-        enhanced_quantum_consciousness_evolution,
-        fusion_processing,
-        quantum_aware_resource_scheduling_optimization,
-        AdvancedConfig,
-        AdvancedState,
-        ConsciousnessState,
-        EnhancedMetaLearningSystem,
-        QuantumAwareResourceScheduler,
-        QuantumConsciousnessEvolution,
-        ResourceSchedulingDecision,
-        WorkloadCharacteristics,
-        NetworkProperties,
-        ResourceState,
+        enhanced_meta_learning_with_temporal_fusion, enhanced_quantum_consciousness_evolution,
+        fusion_processing, quantum_aware_resource_scheduling_optimization, AdvancedConfig,
+        AdvancedState, ConsciousnessState, EnhancedMetaLearningSystem, NetworkProperties,
+        QuantumAwareResourceScheduler, QuantumConsciousnessEvolution, ResourceSchedulingDecision,
+        ResourceState, WorkloadCharacteristics,
     },
-    quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
     neuromorphic_computing::NeuromorphicConfig,
     quantum_inspired::QuantumConfig,
+    quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
 };
 use statrs::statistics::Statistics;
 use std::collections::HashMap;

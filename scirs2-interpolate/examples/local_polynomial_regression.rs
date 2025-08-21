@@ -1,6 +1,6 @@
 use ndarray::{Array1, Axis};
-use scirs2__interpolate::local::mls::PolynomialBasis;
-use scirs2__interpolate::local::polynomial::{
+use scirs2_interpolate::local::mls::PolynomialBasis;
+use scirs2_interpolate::local::polynomial::{
     make_loess, make_robust_loess, LocalPolynomialConfig, LocalPolynomialRegression,
 };
 use std::error::Error;

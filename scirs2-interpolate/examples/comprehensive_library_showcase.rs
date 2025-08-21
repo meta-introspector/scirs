@@ -5,7 +5,7 @@
 //! from basic interpolation to advanced SIMD-optimized methods.
 
 use ndarray::{Array1, Array2};
-use scirs2__interpolate::{
+use scirs2_interpolate::{
     // Advanced methods
     advanced::rbf::{RBFInterpolator, RBFKernel},
     bspline::{BSpline, ExtrapolateMode},
@@ -38,7 +38,7 @@ use scirs2__interpolate::{
 };
 
 #[cfg(feature = "linalg")]
-use scirs2__interpolate::{
+use scirs2_interpolate::{
     // Fast Kriging methods
     CovarianceFunction,
     FastKrigingBuilder,
@@ -47,7 +47,7 @@ use scirs2__interpolate::{
 use std::time::Instant;
 
 #[cfg(feature = "simd")]
-use scirs2__interpolate::SimdBSplineEvaluator;
+use scirs2_interpolate::SimdBSplineEvaluator;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

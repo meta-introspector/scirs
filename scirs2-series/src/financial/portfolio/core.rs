@@ -11,7 +11,7 @@ use num_traits::Float;
 use crate::error::{Result, TimeSeriesError};
 
 /// Portfolio performance metrics
-/// 
+///
 /// Comprehensive performance measurement structure containing key risk and
 /// return metrics commonly used in portfolio analysis and reporting.
 #[derive(Debug, Clone)]
@@ -74,15 +74,15 @@ impl<F: Float> PortfolioMetrics<F> {
 
     /// Check if performance metrics are valid
     pub fn is_valid(&self) -> bool {
-        self.volatility.is_finite() &&
-        self.volatility >= F::zero() &&
-        self.total_return.is_finite() &&
-        self.annualized_return.is_finite()
+        self.volatility.is_finite()
+            && self.volatility >= F::zero()
+            && self.total_return.is_finite()
+            && self.annualized_return.is_finite()
     }
 }
 
 /// Portfolio weights and holdings
-/// 
+///
 /// Core portfolio structure managing asset allocations, names, and
 /// rebalancing parameters. Ensures weight constraints are maintained
 /// and provides utilities for portfolio manipulation.
@@ -98,22 +98,22 @@ pub struct Portfolio<F: Float> {
 
 impl<F: Float + Clone> Portfolio<F> {
     /// Create a new portfolio with given weights and asset names
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `weights` - Asset allocation weights (must sum to ~1.0)
     /// * `asset_names` - Corresponding asset identifiers
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Result<Self>` - Portfolio instance or error if constraints violated
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```rust
     /// use scirs2_series::financial::portfolio::core::Portfolio;
     /// use ndarray::array;
-    /// 
+    ///
     /// let weights = array![0.6, 0.4];
     /// let names = vec!["AAPL".to_string(), "GOOGL".to_string()];
     /// let portfolio = Portfolio::new(weights, names).unwrap();
@@ -142,23 +142,23 @@ impl<F: Float + Clone> Portfolio<F> {
     }
 
     /// Create equally weighted portfolio
-    /// 
+    ///
     /// Creates a portfolio where each asset receives equal allocation.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `n_assets` - Number of assets in the portfolio
     /// * `asset_names` - Asset identifiers
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Result<Self>` - Equally weighted portfolio
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```rust
     /// use scirs2_series::financial::portfolio::core::Portfolio;
-    /// 
+    ///
     /// let names = vec!["AAPL".to_string(), "GOOGL".to_string(), "MSFT".to_string()];
     /// let portfolio = Portfolio::equal_weight(3, names).unwrap();
     /// assert_eq!(portfolio.weights[0], 1.0/3.0);
@@ -184,13 +184,13 @@ impl<F: Float + Clone> Portfolio<F> {
     }
 
     /// Get portfolio weight for specific asset
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `asset_name` - Name of the asset to query
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Option<F>` - Weight if asset found, None otherwise
     pub fn get_weight(&self, asset_name: &str) -> Option<F> {
         self.asset_names
@@ -200,26 +200,27 @@ impl<F: Float + Clone> Portfolio<F> {
     }
 
     /// Set portfolio weight for specific asset
-    /// 
+    ///
     /// Updates the weight for a specific asset. Does not automatically
     /// rebalance other weights to maintain sum constraint.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `asset_name` - Name of the asset to update
     /// * `new_weight` - New weight value
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Result<()>` - Success or error if asset not found
     pub fn set_weight(&mut self, asset_name: &str, new_weight: F) -> Result<()> {
         if let Some(idx) = self.asset_names.iter().position(|name| name == asset_name) {
             self.weights[idx] = new_weight;
             Ok(())
         } else {
-            Err(TimeSeriesError::InvalidInput(
-                format!("Asset '{}' not found in portfolio", asset_name),
-            ))
+            Err(TimeSeriesError::InvalidInput(format!(
+                "Asset '{}' not found in portfolio",
+                asset_name
+            )))
         }
     }
 
@@ -229,11 +230,11 @@ impl<F: Float + Clone> Portfolio<F> {
     }
 
     /// Validate portfolio constraints
-    /// 
+    ///
     /// Checks that weights are non-negative and sum to approximately 1.0
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Result<()>` - Success if valid, error otherwise
     pub fn validate(&self) -> Result<()> {
         // Check non-negative weights
@@ -258,7 +259,7 @@ impl<F: Float + Clone> Portfolio<F> {
     }
 
     /// Normalize weights to sum to 1.0
-    /// 
+    ///
     /// Rescales all weights proportionally to ensure they sum to exactly 1.0
     pub fn normalize_weights(&mut self) {
         let weight_sum = self.weights.sum();
@@ -268,9 +269,9 @@ impl<F: Float + Clone> Portfolio<F> {
     }
 
     /// Set rebalancing frequency
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `frequency_days` - Rebalancing frequency in days
     pub fn set_rebalance_frequency(&mut self, frequency_days: usize) {
         self.rebalance_frequency = Some(frequency_days);
@@ -288,25 +289,25 @@ impl<F: Float + Clone> Portfolio<F> {
 }
 
 /// Calculate portfolio returns from asset returns and weights
-/// 
+///
 /// Computes the time series of portfolio returns by taking the weighted
 /// average of individual asset returns at each time period.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `asset_returns` - Matrix of asset returns (rows: time, cols: assets)
 /// * `weights` - Portfolio weights for each asset
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<Array1<F>>` - Time series of portfolio returns
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use scirs2_series::financial::portfolio::core::calculate_portfolio_returns;
 /// use ndarray::{array, Array2};
-/// 
+///
 /// let returns = Array2::from_shape_vec((3, 2), vec![0.01, 0.02, -0.01, 0.01, 0.015, -0.005]).unwrap();
 /// let weights = array![0.6, 0.4];
 /// let portfolio_returns = calculate_portfolio_returns(&returns, &weights).unwrap();
@@ -345,7 +346,7 @@ mod tests {
         let weights = arr1(&[0.6, 0.4]);
         let names = vec!["AAPL".to_string(), "GOOGL".to_string()];
         let portfolio = Portfolio::new(weights, names).unwrap();
-        
+
         assert_eq!(portfolio.num_assets(), 2);
         assert_eq!(portfolio.get_weight("AAPL"), Some(0.6));
         assert_eq!(portfolio.get_weight("GOOGL"), Some(0.4));
@@ -355,10 +356,10 @@ mod tests {
     fn test_equal_weight_portfolio() {
         let names = vec!["A".to_string(), "B".to_string(), "C".to_string()];
         let portfolio: Portfolio<f64> = Portfolio::equal_weight(3, names).unwrap();
-        
+
         assert_eq!(portfolio.num_assets(), 3);
         for weight in portfolio.weights.iter() {
-            assert!((*weight - 1.0/3.0).abs() < 1e-10);
+            assert!((*weight - 1.0 / 3.0).abs() < 1e-10);
         }
     }
 
@@ -367,7 +368,7 @@ mod tests {
         let weights = arr1(&[0.6, 0.4]);
         let names = vec!["A".to_string(), "B".to_string()];
         let portfolio = Portfolio::new(weights, names).unwrap();
-        
+
         assert!(portfolio.validate().is_ok());
     }
 
@@ -376,7 +377,7 @@ mod tests {
         let weights = arr1(&[0.6, 0.6]); // Sum > 1
         let names = vec!["A".to_string(), "B".to_string()];
         let result = Portfolio::new(weights, names);
-        
+
         assert!(result.is_err());
     }
 
@@ -385,34 +386,30 @@ mod tests {
         let weights = arr1(&[0.6, 0.4]);
         let names = vec!["A".to_string()]; // Only one name for two weights
         let result = Portfolio::new(weights, names);
-        
+
         assert!(result.is_err());
     }
 
     #[test]
     fn test_calculate_portfolio_returns() {
-        let asset_returns = Array2::from_shape_vec(
-            (3, 2), 
-            vec![0.01, 0.02, -0.01, 0.01, 0.015, -0.005]
-        ).unwrap();
+        let asset_returns =
+            Array2::from_shape_vec((3, 2), vec![0.01, 0.02, -0.01, 0.01, 0.015, -0.005]).unwrap();
         let weights = arr1(&[0.6, 0.4]);
-        
+
         let portfolio_returns = calculate_portfolio_returns(&asset_returns, &weights).unwrap();
-        
+
         assert_eq!(portfolio_returns.len(), 3);
-        
+
         // First period: 0.6 * 0.01 + 0.4 * 0.02 = 0.014
         assert!((portfolio_returns[0] - 0.014).abs() < 1e-10);
     }
 
     #[test]
     fn test_portfolio_metrics_creation() {
-        let metrics = PortfolioMetrics::new(
-            0.15, 0.12, 0.18, 0.67, 0.89, 0.08, 1.5, 0.05, 0.07
-        );
-        
+        let metrics = PortfolioMetrics::new(0.15, 0.12, 0.18, 0.67, 0.89, 0.08, 1.5, 0.05, 0.07);
+
         assert!(metrics.is_valid());
-        
+
         let (sharpe, sortino, calmar) = metrics.risk_adjusted_ratios();
         assert_eq!(sharpe, 0.67);
         assert_eq!(sortino, 0.89);

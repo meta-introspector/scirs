@@ -67,9 +67,11 @@ impl PbftConsensus {
 
     pub fn pre_prepare(&mut self, request: Vec<u8>) -> Result<PbftMessage> {
         if !self.is_primary {
-            return Err(MetricsError::InvalidOperation("Only primary can send pre-prepare".into()));
+            return Err(MetricsError::InvalidOperation(
+                "Only primary can send pre-prepare".into(),
+            ));
         }
-        
+
         self.sequence_number += 1;
         Ok(PbftMessage {
             view: self.view,

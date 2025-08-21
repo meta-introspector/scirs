@@ -140,8 +140,11 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
         // Adjust for minimum partition size constraints
         // If total is less than n_workers * min_partition_size, we can't satisfy the constraint
         // so we use the calculated sizes instead
-        let effective_min_size = self.config.min_partition_size.min(totalsize / self.config.n_workers + 1);
-        
+        let effective_min_size = self
+            .config
+            .min_partition_size
+            .min(totalsize / self.config.n_workers + 1);
+
         for size in &mut sizes {
             if *size < effective_min_size {
                 *size = effective_min_size;
@@ -688,7 +691,7 @@ mod tests {
     fn test_calculate_partition_sizes() {
         let config = PartitioningConfig {
             n_workers: 3,
-            min_partition_size: 1,  // Set a reasonable min_partition_size for the test
+            min_partition_size: 1, // Set a reasonable min_partition_size for the test
             ..Default::default()
         };
         let partitioner = DataPartitioner::<f64>::new(config);
@@ -707,7 +710,7 @@ mod tests {
         let config = PartitioningConfig {
             n_workers: 2,
             strategy: PartitioningStrategy::Random,
-            min_partition_size: 1,  // Set a reasonable min_partition_size for the test
+            min_partition_size: 1, // Set a reasonable min_partition_size for the test
             ..Default::default()
         };
         let mut partitioner = DataPartitioner::new(config);

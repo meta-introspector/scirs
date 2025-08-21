@@ -184,10 +184,9 @@ fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
     // 1. Bilateral filter - edge-preserving smoothing
     println!("Running SIMD bilateral filter...");
     let bilateral_result = bilateral_filter(
-        &image,
-        5.0,     // spatial sigma
-        10.0,    // range sigma
-        None,    // border mode
+        &image, 5.0,  // spatial sigma
+        10.0, // range sigma
+        None, // border mode
     )?;
     println!("Bilateral filter completed");
 
@@ -195,8 +194,7 @@ fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
     println!("Running SIMD guided filter...");
     // Guided filter not available, using bilateral filter instead
     let guided_result = bilateral_filter(
-        &image,
-        3.0,  // spatial sigma
+        &image, 3.0,  // spatial sigma
         5.0,  // range sigma
         None, // border mode
     )?;

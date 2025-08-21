@@ -64,7 +64,7 @@ impl MajorityConsensus {
         if vote.proposal_id != self.proposal_id {
             return Err(MetricsError::InvalidOperation("Invalid proposal ID".into()));
         }
-        
+
         self.votes.insert(vote.voter_id, vote.decision);
         Ok(())
     }
@@ -78,11 +78,11 @@ impl MajorityConsensus {
     pub fn is_decided(&self) -> bool {
         let total_votes = self.votes.len();
         let total_nodes = self.nodes.len();
-        
+
         // Check if we have enough votes to make a decision
         let yes_votes = self.votes.values().filter(|&&v| v).count();
         let no_votes = total_votes - yes_votes;
-        
+
         // Majority reached
         yes_votes > total_nodes / 2 || no_votes > total_nodes / 2
     }

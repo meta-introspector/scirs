@@ -78,13 +78,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Add some noise
     use rand::Rng;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for _ in 0..1000 {
         let x = rng.random_range(0..400);
         let y = rng.random_range(0..400);
         let val = rng.random_range(0..256) as u8;
-        img.put_pixel(x..y, Rgb([val, val, val]));
+        img.put_pixel(x, y, Rgb([val, val, val]));
     }
 
     // Save the image
@@ -101,14 +101,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn sign(p1: (f32, f32), p2: (f32, f32), p3: (f32, f32)) -> f32 {
-    (_p1.0 - p3.0) * (p2.1 - p3.1) - (p2.0 - p3.0) * (_p1.1 - p3.1)
+    (p1.0 - p3.0) * (p2.1 - p3.1) - (p2.0 - p3.0) * (p1.1 - p3.1)
 }
 
 #[allow(dead_code)]
 fn point_in_triangle(pt: (f32, f32), triangle: &[(f32, f32); 3]) -> bool {
-    let d1 = sign(_pt, triangle[0], triangle[1]);
-    let d2 = sign(_pt, triangle[1], triangle[2]);
-    let d3 = sign(_pt, triangle[2], triangle[0]);
+    let d1 = sign(pt, triangle[0], triangle[1]);
+    let d2 = sign(pt, triangle[1], triangle[2]);
+    let d3 = sign(pt, triangle[2], triangle[0]);
 
     let has_neg = (d1 < 0.0) || (d2 < 0.0) || (d3 < 0.0);
     let has_pos = (d1 > 0.0) || (d2 > 0.0) || (d3 > 0.0);

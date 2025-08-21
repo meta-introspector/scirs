@@ -1,5 +1,5 @@
 use ndarray::{array, Array1, Array2};
-use scirs2__interpolate::{
+use scirs2_interpolate::{
     BivariateInterpolator, RectBivariateSpline, SmoothBivariateSplineBuilder,
 };
 
@@ -16,9 +16,9 @@ fn generate_grid_data(nx: usize, ny: usize) -> (Array1<f64>, Array1<f64>, Array2
     let x = Array1::linspace(0.0, 1.0, nx);
     let y = Array1::linspace(0.0, 1.0, ny);
 
-    let mut z = Array2::zeros((_nx, ny));
+    let mut z = Array2::zeros((nx, ny));
 
-    for i in 0.._nx {
+    for i in 0..nx {
         for j in 0..ny {
             z[[i, j]] = test_function(x[i], y[j]);
         }
@@ -36,11 +36,11 @@ fn generate_scattered_data(_npoints: usize) -> (Array1<f64>, Array1<f64>, Array1
     // Create a seeded RNG for reproducibility
     let mut rng = StdRng::seed_from_u64(42);
 
-    let mut x = Array1::zeros(n_points);
-    let mut y = Array1::zeros(n_points);
-    let mut z = Array1::zeros(n_points);
+    let mut x = Array1::zeros(_npoints);
+    let mut y = Array1::zeros(_npoints);
+    let mut z = Array1::zeros(_npoints);
 
-    for i in 0..n_points {
+    for i in 0.._npoints {
         x[i] = rng.random::<f64>();
         y[i] = rng.random::<f64>();
         z[i] = test_function(x[i], y[i]);
@@ -55,8 +55,8 @@ fn compute_mse(predicted: &Array2<f64>, actual: &Array2<f64>) -> f64 {
     let mut sum_sq_error = 0.0;
     let n = predicted.len();
 
-    for i in 0.._predicted.shape()[0] {
-        for j in 0.._predicted.shape()[1] {
+    for i in 0..predicted.shape()[0] {
+        for j in 0..predicted.shape()[1] {
             let error = predicted[[i, j]] - actual[[i, j]];
             sum_sq_error += error * error;
         }

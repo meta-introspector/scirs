@@ -7,7 +7,7 @@ use ndarray::{Array1, Array2};
 use plotters::prelude::*;
 use plotters::style::colors::{BLACK, BLUE, RED};
 use rand::Rng;
-use scirs2__interpolate::voronoi::{make_laplace_interpolator, make_sibson_interpolator};
+use scirs2_interpolate::voronoi::{make_laplace_interpolator, make_sibson_interpolator};
 use std::error::Error;
 
 #[allow(dead_code)]

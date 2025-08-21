@@ -243,7 +243,7 @@ fn demonstrate_streaming_visualization(
         animate_cluster_updates: true,
         adaptive_bounds: true,
         show_streaming_stats: true,
-        data_point_lifetime_ms: 5000,
+        point_lifetime_ms: 5000,
     };
 
     let mut visualizer = StreamingVisualizer::new(streaming_config);

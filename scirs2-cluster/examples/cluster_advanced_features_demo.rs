@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=================================\n");
 
     // Generate sample data with 3 clear clusters
-    let data = generate_sample_data();
+    let data = generate_sampledata();
     println!(
         "Generated dataset with {} samples and {} features",
         data.shape()[0],
@@ -29,30 +29,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Standardize the data
-    let standardized_data = standardize(data.view(), true)?;
+    let standardizeddata = standardize(data.view(), true)?;
     println!("Data standardized for better clustering performance\n");
 
     // Demo 1: Standard K-means with different initialization methods
-    demo_initialization_methods(&standardized_data)?;
+    demo_initialization_methods(&standardizeddata)?;
 
     // Demo 2: Weighted K-means
-    demo_weighted_kmeans(&standardized_data)?;
+    demo_weighted_kmeans(&standardizeddata)?;
 
     // Demo 3: Parallel K-means
-    demo_parallel_kmeans(&standardized_data)?;
+    demo_parallel_kmeans(&standardizeddata)?;
 
     // Demo 4: Mini-batch K-means
-    demo_minibatch_kmeans(&standardized_data)?;
+    demo_minibatch_kmeans(&standardizeddata)?;
 
     // Demo 5: SIMD distance computations
-    demo_simd_distances(&standardized_data)?;
+    demo_simd_distances(&standardizeddata)?;
 
     println!("Demo completed successfully!");
     Ok(())
 }
 
 #[allow(dead_code)]
-fn generate_sample_data() -> Array2<f64> {
+fn generate_sampledata() -> Array2<f64> {
     // Create 3 clusters of data
     let mut data = Vec::new();
 
@@ -103,12 +103,12 @@ fn demo_initialization_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::er
         };
 
         let start = std::time::Instant::now();
-        let (_centroids, labels) = kmeans_with_options(_data.view(), 3, Some(options))?;
+        let (_centroids, labels) = kmeans_with_options(data.view(), 3, Some(options))?;
         let duration = start.elapsed();
 
         // Convert labels from usize to i32 for silhouette_score
         let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-        let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
+        let silhouette = silhouette_score(data.view(), labels_i32.view())?;
 
         println!(
             "  {:<12}: Silhouette = {:.3}, Time = {:?}",
@@ -137,11 +137,11 @@ fn demo_weighted_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
     };
 
     let start = std::time::Instant::now();
-    let (_centroids, labels) = weighted_kmeans(_data.view(), weights.view(), 3, Some(options))?;
+    let (_centroids, labels) = weighted_kmeans(data.view(), weights.view(), 3, Some(options))?;
     let duration = start.elapsed();
 
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-    let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
+    let silhouette = silhouette_score(data.view(), labels_i32.view())?;
 
     println!(
         "  Weighted K-means: Silhouette = {:.3}, Time = {:?}",
@@ -174,11 +174,11 @@ fn demo_parallel_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
     };
 
     let start = std::time::Instant::now();
-    let (_centroids, labels) = parallel_kmeans(_data.view(), 3, Some(options))?;
+    let (_centroids, labels) = parallel_kmeans(data.view(), 3, Some(options))?;
     let duration = start.elapsed();
 
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-    let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
+    let silhouette = silhouette_score(data.view(), labels_i32.view())?;
 
     println!(
         "  Parallel K-means: Silhouette = {:.3}, Time = {:?}",
@@ -201,11 +201,11 @@ fn demo_minibatch_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
     };
 
     let start = std::time::Instant::now();
-    let (_centroids, labels) = minibatch_kmeans(_data.view(), 3, Some(options))?;
+    let (_centroids, labels) = minibatch_kmeans(data.view(), 3, Some(options))?;
     let duration = start.elapsed();
 
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-    let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
+    let silhouette = silhouette_score(data.view(), labels_i32.view())?;
 
     println!(
         "  Mini-batch K-means: Silhouette = {:.3}, Time = {:?}",
@@ -222,7 +222,7 @@ fn demo_simd_distances(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Err
 
     // Compute pairwise distances using SIMD
     let start = std::time::Instant::now();
-    let pairwise_distances = pairwise_euclidean_simd(_data.view());
+    let pairwise_distances = pairwise_euclidean_simd(data.view());
     let simd_duration = start.elapsed();
 
     println!(
@@ -242,7 +242,7 @@ fn demo_simd_distances(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Err
     )?;
 
     let start = std::time::Instant::now();
-    let centroid_distances = distance_to_centroids_simd(_data.view(), centroids.view());
+    let centroid_distances = distance_to_centroids_simd(data.view(), centroids.view())?;
     let simd_centroid_duration = start.elapsed();
 
     println!(
@@ -253,8 +253,8 @@ fn demo_simd_distances(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Err
     );
 
     // Verify SIMD results by comparing with a few manual calculations
-    let manual_dist = ((_data[[0, 0]] - centroids[[0, 0]]).powi(2)
-        + (_data[[0, 1]] - centroids[[0, 1]]).powi(2))
+    let manual_dist = ((data[[0, 0]] - centroids[[0, 0]]).powi(2)
+        + (data[[0, 1]] - centroids[[0, 1]]).powi(2))
     .sqrt();
     let simd_dist = centroid_distances[[0, 0]];
     println!(

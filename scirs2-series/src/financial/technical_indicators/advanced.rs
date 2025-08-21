@@ -18,7 +18,7 @@
 //!
 //! - **Trend Analysis**: ADX, Parabolic SAR, Ichimoku Cloud, Aroon
 //! - **Volatility Indicators**: Enhanced Bollinger Bands with bandwidth analysis
-//! - **Volume Indicators**: MFI, VWAP, Chaikin Oscillator 
+//! - **Volume Indicators**: MFI, VWAP, Chaikin Oscillator
 //! - **Momentum Oscillators**: Enhanced Stochastic with configurable smoothing
 //! - **Adaptive Indicators**: KAMA (Kaufman's Adaptive Moving Average)
 //! - **Support/Resistance**: Fibonacci Retracement Levels
@@ -36,7 +36,7 @@
 //!     std_dev_multiplier: 2.0,
 //!     ma_type: MovingAverageType::Simple,
 //! };
-//! 
+//!
 //! let bands = bollinger_bands(&prices, &config).unwrap();
 //! println!("Bandwidth: {:?}", bands.bandwidth);
 //! println!("%B Position: {:?}", bands.percent_b);
@@ -840,8 +840,7 @@ pub fn aroon<F: Float + Clone>(
 
         // Calculate Aroon Up and Aroon Down
         aroon_up[i] = hundred * (period_f - F::from(period - 1 - max_pos).unwrap()) / period_f;
-        aroon_down[i] =
-            hundred * (period_f - F::from(period - 1 - min_pos).unwrap()) / period_f;
+        aroon_down[i] = hundred * (period_f - F::from(period - 1 - min_pos).unwrap()) / period_f;
     }
 
     // Calculate Aroon Oscillator
@@ -1100,13 +1099,13 @@ mod tests {
             std_dev_multiplier: 2.0,
             ma_type: MovingAverageType::Simple,
         };
-        
+
         let result = bollinger_bands(&data, &config);
         assert!(result.is_ok());
-        
+
         let bands = result.unwrap();
         assert_eq!(bands.upper_band.len(), data.len() - config.period + 1);
-        
+
         // Upper band should be above middle, middle above lower
         for i in 0..bands.upper_band.len() {
             assert!(bands.upper_band[i] > bands.middle_band[i]);
@@ -1123,9 +1122,9 @@ mod tests {
 
         let result = stochastic_oscillator(&high, &low, &close, &config);
         assert!(result.is_ok());
-        
+
         let stoch = result.unwrap();
-        
+
         // All values should be between 0 and 100
         for &value in stoch.percent_k.iter() {
             assert!(value >= 0.0 && value <= 100.0);
@@ -1137,29 +1136,29 @@ mod tests {
 
     #[test]
     fn test_ichimoku_cloud() {
-        let high = arr1(&[15.0, 16.0, 14.5, 17.0, 16.5, 18.0, 17.5, 19.0, 18.5, 20.0,
-                         19.5, 21.0, 20.5, 22.0, 21.5, 23.0, 22.5, 24.0, 23.5, 25.0,
-                         24.5, 26.0, 25.5, 27.0, 26.5, 28.0, 27.5, 29.0, 28.5, 30.0,
-                         29.5, 31.0, 30.5, 32.0, 31.5, 33.0, 32.5, 34.0, 33.5, 35.0,
-                         34.5, 36.0, 35.5, 37.0, 36.5, 38.0, 37.5, 39.0, 38.5, 40.0,
-                         39.5, 41.0, 40.5, 42.0]);
-        let low = arr1(&[13.0, 14.0, 13.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0,
-                        18.5, 19.0, 19.5, 20.0, 20.5, 21.0, 21.5, 22.0, 22.5, 23.0,
-                        23.5, 24.0, 24.5, 25.0, 25.5, 26.0, 26.5, 27.0, 27.5, 28.0,
-                        28.5, 29.0, 29.5, 30.0, 30.5, 31.0, 31.5, 32.0, 32.5, 33.0,
-                        33.5, 34.0, 34.5, 35.0, 35.5, 36.0, 36.5, 37.0, 37.5, 38.0,
-                        38.5, 39.0, 39.5, 40.0]);
-        let close = arr1(&[14.5, 15.5, 14.0, 16.0, 16.0, 17.0, 17.0, 18.0, 18.0, 19.0,
-                          19.0, 20.0, 20.0, 21.0, 21.0, 22.0, 22.0, 23.0, 23.0, 24.0,
-                          24.0, 25.0, 25.0, 26.0, 26.0, 27.0, 27.0, 28.0, 28.0, 29.0,
-                          29.0, 30.0, 30.0, 31.0, 31.0, 32.0, 32.0, 33.0, 33.0, 34.0,
-                          34.0, 35.0, 35.0, 36.0, 36.0, 37.0, 37.0, 38.0, 38.0, 39.0,
-                          39.0, 40.0, 40.0, 41.0]);
+        let high = arr1(&[
+            15.0, 16.0, 14.5, 17.0, 16.5, 18.0, 17.5, 19.0, 18.5, 20.0, 19.5, 21.0, 20.5, 22.0,
+            21.5, 23.0, 22.5, 24.0, 23.5, 25.0, 24.5, 26.0, 25.5, 27.0, 26.5, 28.0, 27.5, 29.0,
+            28.5, 30.0, 29.5, 31.0, 30.5, 32.0, 31.5, 33.0, 32.5, 34.0, 33.5, 35.0, 34.5, 36.0,
+            35.5, 37.0, 36.5, 38.0, 37.5, 39.0, 38.5, 40.0, 39.5, 41.0, 40.5, 42.0,
+        ]);
+        let low = arr1(&[
+            13.0, 14.0, 13.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0,
+            20.5, 21.0, 21.5, 22.0, 22.5, 23.0, 23.5, 24.0, 24.5, 25.0, 25.5, 26.0, 26.5, 27.0,
+            27.5, 28.0, 28.5, 29.0, 29.5, 30.0, 30.5, 31.0, 31.5, 32.0, 32.5, 33.0, 33.5, 34.0,
+            34.5, 35.0, 35.5, 36.0, 36.5, 37.0, 37.5, 38.0, 38.5, 39.0, 39.5, 40.0,
+        ]);
+        let close = arr1(&[
+            14.5, 15.5, 14.0, 16.0, 16.0, 17.0, 17.0, 18.0, 18.0, 19.0, 19.0, 20.0, 20.0, 21.0,
+            21.0, 22.0, 22.0, 23.0, 23.0, 24.0, 24.0, 25.0, 25.0, 26.0, 26.0, 27.0, 27.0, 28.0,
+            28.0, 29.0, 29.0, 30.0, 30.0, 31.0, 31.0, 32.0, 32.0, 33.0, 33.0, 34.0, 34.0, 35.0,
+            35.0, 36.0, 36.0, 37.0, 37.0, 38.0, 38.0, 39.0, 39.0, 40.0, 40.0, 41.0,
+        ]);
         let config = IchimokuConfig::default();
 
         let result = ichimoku_cloud(&high, &low, &close, &config);
         assert!(result.is_ok());
-        
+
         let cloud = result.unwrap();
         assert_eq!(cloud.tenkan_sen.len(), high.len());
         assert_eq!(cloud.kijun_sen.len(), high.len());
@@ -1172,13 +1171,13 @@ mod tests {
     fn test_parabolic_sar() {
         let high = arr1(&[15.0, 16.0, 14.5, 17.0, 16.5, 18.0, 17.5, 19.0, 18.5]);
         let low = arr1(&[13.0, 14.0, 13.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5]);
-        
+
         let result = parabolic_sar(&high, &low, 0.02, 0.2);
         assert!(result.is_ok());
-        
+
         let sar = result.unwrap();
         assert_eq!(sar.len(), high.len());
-        
+
         // All SAR values should be positive
         for &value in sar.iter() {
             assert!(value >= 0.0);
@@ -1189,7 +1188,7 @@ mod tests {
     fn test_fibonacci_retracement() {
         let result = fibonacci_retracement(100.0, 50.0);
         assert!(result.is_ok());
-        
+
         let fib = result.unwrap();
         assert_eq!(fib.level_100, 100.0);
         assert_eq!(fib.level_0, 50.0);
@@ -1202,15 +1201,15 @@ mod tests {
         let data = arr1(&[10.0, 12.0, 11.0, 13.0, 15.0, 14.0, 16.0, 18.0, 17.0, 19.0]);
         let result = kama(&data, 5, 2, 30);
         assert!(result.is_ok());
-        
+
         let kama_values = result.unwrap();
         assert_eq!(kama_values.len(), data.len());
-        
+
         // First period-1 values should be zero
         for i in 0..4 {
             assert_eq!(kama_values[i], 0.0);
         }
-        
+
         // KAMA should be initialized at period-1 with data value
         assert_eq!(kama_values[4], data[4]);
     }
@@ -1223,7 +1222,7 @@ mod tests {
             std_dev_multiplier: 2.0,
             ma_type: MovingAverageType::Simple,
         };
-        
+
         let result = bollinger_bands(&data, &config);
         assert!(result.is_err());
     }
@@ -1241,18 +1240,24 @@ mod tests {
 
     #[test]
     fn test_adx_basic() {
-        let high = arr1(&[15.0, 16.0, 14.5, 17.0, 16.5, 18.0, 17.5, 19.0, 18.5, 20.0,
-                         19.5, 21.0, 20.5, 22.0, 21.5]);
-        let low = arr1(&[13.0, 14.0, 13.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0,
-                        18.5, 19.0, 19.5, 20.0, 20.5]);
-        let close = arr1(&[14.5, 15.5, 14.0, 16.0, 16.0, 17.0, 17.0, 18.0, 18.0, 19.0,
-                          19.0, 20.0, 20.0, 21.0, 21.0]);
+        let high = arr1(&[
+            15.0, 16.0, 14.5, 17.0, 16.5, 18.0, 17.5, 19.0, 18.5, 20.0, 19.5, 21.0, 20.5, 22.0,
+            21.5,
+        ]);
+        let low = arr1(&[
+            13.0, 14.0, 13.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0,
+            20.5,
+        ]);
+        let close = arr1(&[
+            14.5, 15.5, 14.0, 16.0, 16.0, 17.0, 17.0, 18.0, 18.0, 19.0, 19.0, 20.0, 20.0, 21.0,
+            21.0,
+        ]);
 
         let result = adx(&high, &low, &close, 5);
         assert!(result.is_ok());
-        
+
         let adx_values = result.unwrap();
-        
+
         // All ADX values should be between 0 and 100
         for &value in adx_values.iter() {
             assert!(value >= 0.0 && value <= 100.0);

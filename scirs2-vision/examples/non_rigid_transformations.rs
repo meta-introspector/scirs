@@ -124,7 +124,7 @@ fn thin_plate_spline_example(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
     DynamicImage::ImageRgba8(composite).save("output/tps_smile_comparison.png")?;
 
     // Create an animation to show the transformation
-    create_tps_animation(_img, source_points, target_points, 10)?;
+    create_tps_animation(img, source_points, target_points, 10)?;
 
     Ok(())
 }
@@ -198,7 +198,7 @@ fn elastic_deformation_example(img: &DynamicImage) -> Result<(), Box<dyn Error>>
     DynamicImage::ImageRgba8(composite).save("output/elastic_deformation_comparison.png")?;
 
     // Create animation with varying parameters
-    create_elastic_animation(_img, 10)?;
+    create_elastic_animation(img, 10)?;
 
     Ok(())
 }
@@ -211,20 +211,20 @@ fn grid_deformation_example() -> Result<(), Box<dyn Error>> {
     let height = 400;
     let grid_spacing = 20;
 
-    let mut grid_img = RgbImage::new(width, height);
+    let mut gridimg = RgbImage::new(width, height);
 
     // Draw grid lines
     for y in 0..height {
         for x in 0..width {
             if x % grid_spacing == 0 || y % grid_spacing == 0 {
-                grid_img.put_pixel(x, y, Rgb([0, 0, 0]));
+                gridimg.put_pixel(x, y, Rgb([0, 0, 0]));
             } else {
-                grid_img.put_pixel(x, y, Rgb([255, 255, 255]));
+                gridimg.put_pixel(x, y, Rgb([255, 255, 255]));
             }
         }
     }
 
-    let grid_dynamic = DynamicImage::ImageRgb8(grid_img);
+    let grid_dynamic = DynamicImage::ImageRgb8(gridimg);
 
     // Create source and target points for deformation
     // We'll create a bulge in the center
@@ -300,7 +300,7 @@ fn compare_border_modes(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
         let start = Instant::now();
 
         // Apply the same deformation with different border modes
-        let result = warp_non_rigid(_img, &elastic, *mode)?;
+        let result = warp_non_rigid(img, &elastic, *mode)?;
 
         let duration = start.elapsed();
         println!("  Border mode {}: {}ms", name, duration.as_millis());
@@ -387,7 +387,7 @@ fn create_elastic_animation(img: &DynamicImage, frames: usize) -> Result<(), Box
         let elastic = ElasticDeformation::new(width, height, alpha, sigma, Some(seed))?;
 
         // Apply deformation
-        let result = warp_non_rigid(_img, &elastic, BorderMode::Replicate)?;
+        let result = warp_non_rigid(img, &elastic, BorderMode::Replicate)?;
 
         // Save frame
         result.save(format!("output/animation/elastic_frame_{frame:02}.png"))?;
