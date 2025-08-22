@@ -1,6 +1,6 @@
 use ndarray::{array, Array1, Array2};
 use rand::Rng;
-use scirs2__spatial::interpolate::{
+use scirs2_spatial::interpolate::{
     IDWInterpolator, NaturalNeighborInterpolator, RBFInterpolator, RBFKernel,
 };
 
@@ -153,7 +153,7 @@ fn generate_test_function(points: &Array2<f64>) -> Array1<f64> {
 
 /// Create a regular grid of points
 #[allow(dead_code)]
-fn create_grid(_x_min: f64, x_max: f64, y_min: f64, ymax: f64, size: usize) -> Array2<f64> {
+fn create_grid(x_min: f64, x_max: f64, y_min: f64, y_max: f64, size: usize) -> Array2<f64> {
     let n_points = size * size;
     let mut grid = Array2::zeros((n_points, 2));
 
@@ -164,7 +164,7 @@ fn create_grid(_x_min: f64, x_max: f64, y_min: f64, ymax: f64, size: usize) -> A
     for i in 0..size {
         let y = y_min + i as f64 * y_step;
         for j in 0..size {
-            let x = _x_min + j as f64 * x_step;
+            let x = x_min + j as f64 * x_step;
             grid[[idx, 0]] = x;
             grid[[idx, 1]] = y;
             idx += 1;
@@ -176,13 +176,13 @@ fn create_grid(_x_min: f64, x_max: f64, y_min: f64, ymax: f64, size: usize) -> A
 
 /// Generate random points in a given range
 #[allow(dead_code)]
-fn generate_random_points(n: usize, x_min: f64, x_max: f64, y_min: f64, ymax: f64) -> Array2<f64> {
+fn generate_random_points(n: usize, x_min: f64, x_max: f64, y_min: f64, y_max: f64) -> Array2<f64> {
     let mut rng = rand::rng();
     let mut points = Array2::zeros((n, 2));
 
     for i in 0..n {
         points[[i, 0]] = rng.random_range(x_min..x_max);
-        points[[i..1]] = rng.random_range(y_min..y_max);
+        points[[i, 1]] = rng.random_range(y_min..y_max);
     }
 
     points
@@ -191,10 +191,10 @@ fn generate_random_points(n: usize, x_min: f64, x_max: f64, y_min: f64, ymax: f6
 /// Print interpolation results as a grid
 #[allow(dead_code)]
 fn print_grid(size: usize, values: &Array1<f64>) {
-    for i in 0.._size {
+    for i in 0..size {
         let mut row = String::new();
-        for j in 0.._size {
-            let idx = i * _size + j;
+        for j in 0..size {
+            let idx = i * size + j;
             row.push_str(&format!("{:.4}  ", values[idx]));
         }
         println!("  {row}");

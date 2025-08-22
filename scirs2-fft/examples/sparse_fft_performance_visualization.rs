@@ -66,8 +66,8 @@ fn benchmark_and_visualize() {
     let mut speedups = Vec::new();
 
     for &algorithm in &algorithms {
-        let mut cpu_size_times = Vec::new();
-        let mut gpu_size_times = Vec::new();
+        let mut cpusize_times = Vec::new();
+        let mut gpusize_times = Vec::new();
         let mut algorithm_speedups = Vec::new();
 
         for &size in &sizes {
@@ -91,7 +91,7 @@ fn benchmark_and_visualize() {
             )
             .unwrap();
             let cpu_time = cpu_start.elapsed().as_millis() as f64;
-            cpu_size_times.push(cpu_time);
+            cpusize_times.push(cpu_time);
 
             // GPU benchmark (if available)
             if cuda_available {
@@ -105,7 +105,7 @@ fn benchmark_and_visualize() {
                 )
                 .unwrap();
                 let gpu_time = gpu_start.elapsed().as_millis() as f64;
-                gpu_size_times.push(gpu_time);
+                gpusize_times.push(gpu_time);
 
                 // Calculate speedup
                 let speedup = if gpu_time > 0.0 {
@@ -119,14 +119,14 @@ fn benchmark_and_visualize() {
                     "Algorithm: {algorithm:?}, Size: {size}, CPU: {cpu_time:.2} ms, GPU: {gpu_time:.2} ms, Speedup: {speedup:.2}x"
                 );
             } else {
-                gpu_size_times.push(0.0);
+                gpusize_times.push(0.0);
                 algorithm_speedups.push(0.0);
                 println!("Algorithm: {algorithm:?}, Size: {size}, CPU: {cpu_time:.2} ms, GPU: N/A");
             }
         }
 
-        cpu_times.push(cpu_size_times);
-        gpu_times.push(gpu_size_times);
+        cpu_times.push(cpusize_times);
+        gpu_times.push(gpusize_times);
         speedups.push(algorithm_speedups);
     }
 
@@ -164,11 +164,11 @@ fn benchmark_and_visualize() {
     // Set layouts
     cpu_plot.set_layout(
         Layout::new()
-            .title(Title::withtext("<b>CPU Execution Time</b>"))
-            .x_axis(plotly::layout::Axis::new().title(Title::withtext("Signal Size")))
+            .title(Title::with_text("<b>CPU Execution Time</b>"))
+            .x_axis(plotly::layout::Axis::new().title(Title::with_text("Signal Size")))
             .y_axis(
                 plotly::layout::Axis::new()
-                    .title(Title::withtext("Time (ms)"))
+                    .title(Title::with_text("Time (ms)"))
                     .type_(plotly::layout::AxisType::Log),
             ),
     );
@@ -176,20 +176,20 @@ fn benchmark_and_visualize() {
     if cuda_available {
         gpu_plot.set_layout(
             Layout::new()
-                .title(Title::withtext("<b>GPU Execution Time</b>"))
-                .x_axis(plotly::layout::Axis::new().title(Title::withtext("Signal Size")))
+                .title(Title::with_text("<b>GPU Execution Time</b>"))
+                .x_axis(plotly::layout::Axis::new().title(Title::with_text("Signal Size")))
                 .y_axis(
                     plotly::layout::Axis::new()
-                        .title(Title::withtext("Time (ms)"))
+                        .title(Title::with_text("Time (ms)"))
                         .type_(plotly::layout::AxisType::Log),
                 ),
         );
 
         speedup_plot.set_layout(
             Layout::new()
-                .title(Title::withtext("<b>GPU vs CPU Speedup</b>"))
-                .x_axis(plotly::layout::Axis::new().title(Title::withtext("Signal Size")))
-                .y_axis(plotly::layout::Axis::new().title(Title::withtext("Speedup (x)"))),
+                .title(Title::with_text("<b>GPU vs CPU Speedup</b>"))
+                .x_axis(plotly::layout::Axis::new().title(Title::with_text("Signal Size")))
+                .y_axis(plotly::layout::Axis::new().title(Title::with_text("Speedup (x)"))),
         );
     }
 
@@ -301,11 +301,11 @@ fn benchmark_accuracy() {
     // Set layout
     accuracy_plot.set_layout(
         Layout::new()
-            .title(Title::withtext("<b>Algorithm Accuracy vs Noise Level</b>"))
-            .x_axis(plotly::layout::Axis::new().title(Title::withtext("Noise Level (σ)")))
+            .title(Title::with_text("<b>Algorithm Accuracy vs Noise Level</b>"))
+            .x_axis(plotly::layout::Axis::new().title(Title::with_text("Noise Level (σ)")))
             .y_axis(
                 plotly::layout::Axis::new()
-                    .title(Title::withtext("Accuracy"))
+                    .title(Title::with_text("Accuracy"))
                     .range(vec![0.0, 1.0]),
             ),
     );

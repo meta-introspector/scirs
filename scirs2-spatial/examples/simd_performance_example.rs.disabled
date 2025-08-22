@@ -6,7 +6,7 @@
 
 use ndarray::Array2;
 use rand::Rng;
-use scirs2__spatial::simd_distance::{
+use scirs2_spatial::simd_distance::{
     bench, parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch, simd_knn_search,
 };
 use std::time::Instant;

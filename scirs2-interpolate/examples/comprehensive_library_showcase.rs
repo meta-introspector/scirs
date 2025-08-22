@@ -182,7 +182,7 @@ fn demonstrate_advanced_methods() -> InterpolateResult<()> {
     if let Some(report) = rbf.condition_report() {
         println!(
             "   RBF Matrix Condition: {:.2e} ({})",
-            report.condition_number,
+            report._conditionnumber,
             match report.stability_level {
                 StabilityLevel::Excellent => "Excellent",
                 StabilityLevel::Good => "Good",
@@ -312,7 +312,7 @@ fn demonstrate_numerical_stability() -> InterpolateResult<()> {
     let good_report = assess_matrix_condition(&good_matrix.view())?;
     println!(
         "   Identity matrix: condition {:.2e} ({})",
-        good_report.condition_number,
+        good_report._conditionnumber,
         if good_report.is_well_conditioned {
             "Well-conditioned"
         } else {
@@ -326,7 +326,7 @@ fn demonstrate_numerical_stability() -> InterpolateResult<()> {
     let bad_report = assess_matrix_condition(&bad_matrix.view())?;
     println!(
         "   Near-singular matrix: condition {:.2e} ({})",
-        bad_report.condition_number,
+        bad_report._conditionnumber,
         if bad_report.is_well_conditioned {
             "Well-conditioned"
         } else {
@@ -356,7 +356,7 @@ fn demonstrate_numerical_stability() -> InterpolateResult<()> {
             if let Some(report) = interpolator.condition_report() {
                 println!(
                     "   Challenging RBF condition: {:.2e}",
-                    report.condition_number
+                    report._conditionnumber
                 );
                 if !report.is_well_conditioned {
                     println!("   ⚠️  Potential numerical issues detected!");
@@ -412,7 +412,7 @@ fn demonstrate_high_dimensional() -> InterpolateResult<()> {
     }
 
     let hd_interpolator = HighDimensionalInterpolatorBuilder::new()
-        .with_dimension_reduction(DimensionReductionMethod::PCA { targetdims: 3 })
+        .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 3 })
         .build(&hd_points.view(), &hd_values.view())?;
 
     println!("   10D -> 3D dimension reduction successful");

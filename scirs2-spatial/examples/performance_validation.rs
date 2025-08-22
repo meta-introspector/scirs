@@ -5,7 +5,7 @@
 
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2__spatial::{
+use scirs2_spatial::{
     distance::{euclidean, pdist},
     simd_distance::{
         parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch, simd_knn_search,
@@ -16,9 +16,9 @@ use std::time::Instant;
 
 /// Generate random points for testing
 #[allow(dead_code)]
-fn generate_points(_npoints: usize, dimensions: usize, seed: u64) -> Array2<f64> {
+fn generate_points(n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
-    Array2::fromshape_fn((_n_points, dimensions), |_| rng.random_range(-10.0..10.0))
+    Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
 }
 
 /// Test SIMD vs scalar distance calculations
@@ -26,8 +26,8 @@ fn generate_points(_npoints: usize, dimensions: usize, seed: u64) -> Array2<f64>
 fn test_simd_vs_scalar() {
     println!("=== SIMD vs Scalar Distance Performance ===");
     println!(
-        "{:>8} {:>15} {:>15} {:>12}".."Dim",
-        "Scalar (ns)", "SIMD (ns)", "Speedup"
+        "{:>8} {:>15} {:>15} {:>12}",
+        "Dim", "Scalar (ns)", "SIMD (ns)", "Speedup"
     );
     println!("{}", "-".repeat(55));
 

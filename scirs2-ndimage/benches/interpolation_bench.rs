@@ -11,7 +11,7 @@ fn bench_interpolation_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("interpolation_operations");
     group.measurement_time(Duration::from_secs(10));
 
-    let input = Array2::fromshape_fn((100, 100), |(i, j)| (i * j) as f64);
+    let input = Array2::from_shape_fn((100, 100), |(i, j)| (i * j) as f64);
 
     group.bench_function("shift", |b| {
         b.iter(|| shift(black_box(&input), &[2.5, 3.5], None, None, None, None).unwrap())
@@ -38,7 +38,7 @@ fn bench_affine_transform(c: &mut Criterion) {
     let mut group = c.benchmark_group("affine_transform");
     group.measurement_time(Duration::from_secs(10));
 
-    let input = Array2::fromshape_fn((100, 100), |(i, j)| (i * j) as f64);
+    let input = Array2::from_shape_fn((100, 100), |(i, j)| (i * j) as f64);
 
     // Identity matrix (no transformation)
     let identity_matrix =
@@ -111,7 +111,7 @@ fn bench_interpolation_orders(c: &mut Criterion) {
     let mut group = c.benchmark_group("interpolation_orders");
     group.measurement_time(Duration::from_secs(10));
 
-    let input = Array2::fromshape_fn((50, 50), |(i, j)| (i * j) as f64);
+    let input = Array2::from_shape_fn((50, 50), |(i, j)| (i * j) as f64);
 
     let orders = vec![
         InterpolationOrder::Nearest,
@@ -138,11 +138,11 @@ fn bench_map_coordinates(c: &mut Criterion) {
     let mut group = c.benchmark_group("map_coordinates");
     group.measurement_time(Duration::from_secs(10));
 
-    let input = Array2::fromshape_fn((50, 50), |(i, j)| (i * j) as f64);
+    let input = Array2::from_shape_fn((50, 50), |(i, j)| (i * j) as f64);
 
     // Create simple coordinate transformation (identity with slight offset)
     let (rows, cols) = input.dim();
-    let coordinates = Array2::fromshape_fn((rows, cols), |(i, j)| (i * j) as f64 + 0.5);
+    let coordinates = Array2::from_shape_fn((rows, cols), |(i, j)| (i * j) as f64 + 0.5);
 
     group.bench_function("map_coordinates_linear", |b| {
         b.iter(|| {
@@ -182,7 +182,7 @@ fn bench_3d_interpolation(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(15));
 
     // Smaller 3D array for feasible benchmarking
-    let input = Array3::fromshape_fn((20, 20, 20), |(i, j, k)| (i * j * k) as f64);
+    let input = Array3::from_shape_fn((20, 20, 20), |(i, j, k)| (i * j * k) as f64);
 
     group.bench_function("shift_3d", |b| {
         b.iter(|| shift(black_box(&input), &[1.5, 2.5, 1.0], None, None, None, None).unwrap())
@@ -204,7 +204,7 @@ fn bench_scaling_behavior(c: &mut Criterion) {
     let sizes = vec![(25, 25), (50, 50), (100, 100), (150, 150)];
 
     for (rows, cols) in sizes {
-        let input = Array2::fromshape_fn((rows, cols), |(i, j)| (i * j) as f64);
+        let input = Array2::from_shape_fn((rows, cols), |(i, j)| (i * j) as f64);
 
         group.bench_with_input(
             BenchmarkId::new("shift", format!("{}x{}", rows, cols)),

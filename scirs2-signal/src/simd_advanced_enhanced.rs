@@ -371,9 +371,9 @@ pub fn advanced_simd_stft(
     }
 
     // Create time and frequency axes
-    let time_axis = Array1::fromshape_fn(num_frames, |i| i as f64 * hop_size as f64);
+    let time_axis = Array1::from_shape_fn(num_frames, |i| i as f64 * hop_size as f64);
     let frequency_axis =
-        Array1::fromshape_fn(num_freqs, |i| i as f64 * 0.5 / (num_freqs - 1) as f64);
+        Array1::from_shape_fn(num_freqs, |i| i as f64 * 0.5 / (num_freqs - 1) as f64);
 
     let total_time = start_time.elapsed().as_nanos() as u64;
     let per_frame_time = total_time as f64 / num_frames as f64;
@@ -1047,7 +1047,7 @@ fn bluestein_fft(
 fn pack_real_to_complex(input: &Array1<f64>) -> Array1<Complex64> {
     let n = input.len();
     let complex_len = n / 2;
-    Array1::fromshape_fn(complex_len, |i| {
+    Array1::from_shape_fn(complex_len, |i| {
         Complex64::new(
             input[2 * i],
             if 2 * i + 1 < n {

@@ -59,14 +59,14 @@ fn main() {
 
     // Demonstrate pre-computing common sizes
     println!("Pre-computing common sizes...");
-    let common_sizes = vec![128, 256, 512, 1024];
+    let commonsizes = vec![128, 256, 512, 1024];
 
     // Clear cache and pre-compute
     cache.clear();
 
     // Pre-compute sizes
     let mut planner = FftPlanner::new();
-    cache.precompute_common_sizes(&common_sizes, &mut planner);
+    cache.precompute_common_sizes(&commonsizes, &mut planner);
 
     // Show updated stats
     let stats = cache.get_stats();

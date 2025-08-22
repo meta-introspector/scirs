@@ -801,7 +801,7 @@ fn validate_simd_implementation_complete() -> SignalResult<CompleteSimdValidatio
     let n = 1024;
     let mut rng = rand::rng();
     let t: Array1<f64> =
-        Array1::fromshape_fn(n, |i| i as f64 * 0.01 + 0.001 * rng.random_range(-1.0..1.0));
+        Array1::from_shape_fn(n, |i| i as f64 * 0.01 + 0.001 * rng.random_range(-1.0..1.0));
     let y: Array1<f64> =
         t.mapv(|ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
 
@@ -930,7 +930,7 @@ fn validate_false_alarm_probability() -> SignalResult<FalseAlarmValidation> {
 
     for _ in 0..n_trials {
         let t = Array1::linspace(0.0, 10.0, n_samples);
-        let y: Array1<f64> = Array1::fromshape_fn(n_samples, |_| rng.random_range(-1.0..1.0));
+        let y: Array1<f64> = Array1::from_shape_fn(n_samples, |_| rng.random_range(-1.0..1.0));
 
         let (_, power) = lombscargle(
             &t,
@@ -965,7 +965,7 @@ fn compare_with_theoretical_psd() -> SignalResult<PsdTheoreticalComparison> {
     let n = 512;
     let mut rng = rand::rng();
     let t = Array1::linspace(0.0, 10.0, n);
-    let white_noise: Array1<f64> = Array1::fromshape_fn(n, |_| rng.random_range(-1.0..1.0));
+    let white_noise: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(-1.0..1.0));
 
     let (freqs, power) = lombscargle(
         &t,

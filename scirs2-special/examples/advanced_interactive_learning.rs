@@ -273,7 +273,7 @@ impl AdaptiveLearningSession {
         );
 
         // Add more concepts...
-        Self::add_advanced_concepts(_graph);
+        Self::add_advanced_concepts(graph);
     }
 
     fn add_advanced_concepts(graph: &mut HashMap<String, ConceptNode>) {
@@ -373,11 +373,12 @@ impl AdaptiveLearningSession {
 
         // Sort by score and return the best candidate
         candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        candidates.first().map(|(topic_)| topic.clone())
+        candidates.first().map(|(topic_, _)| topic_.clone())
     }
 
     fn calculate_topic_score(
-        self_topic: &str,
+        &self,
+        topic: &str,
         node: &ConceptNode,
         skill: f64,
         difficulty: f64,
@@ -427,7 +428,7 @@ impl AdaptiveLearningSession {
                 .iter()
                 .rev()
                 .take(3)
-                .map(|(_, score_)| *score)
+                .map(|(_, score_, _)| *score_)
                 .sum::<f64>()
                 / 3.0;
 
@@ -452,7 +453,7 @@ impl AdaptiveLearningSession {
                 .iter()
                 .rev()
                 .take(3)
-                .map(|(_, score_)| *score)
+                .map(|(_, score_, _)| *score_)
                 .collect();
 
             let avg_score = recent_scores.iter().sum::<f64>() / recent_scores.len() as f64;
@@ -479,16 +480,16 @@ impl AdaptiveLearningSession {
             (score * 10.0) as u32
         );
 
-        if time_taken <= expected_time {
+        if timetaken <= expected_time {
             println!(
                 "⏱️ Excellent time management! Completed in {:.1} minutes (expected: {:.1})",
-                time_taken.as_secs_f64() / 60.0,
+                timetaken.as_secs_f64() / 60.0,
                 expected_time.as_secs_f64() / 60.0
             );
         } else {
             println!(
                 "⏱️ Took {:.1} minutes (expected: {:.1}). Consider reviewing fundamentals.",
-                time_taken.as_secs_f64() / 60.0,
+                timetaken.as_secs_f64() / 60.0,
                 expected_time.as_secs_f64() / 60.0
             );
         }
@@ -524,7 +525,7 @@ impl AdaptiveLearningSession {
         let mut recommendations = Vec::new();
 
         for (_topic, node) in &self.knowledge_graph {
-            if node.prerequisites.contains(&current_topic.to_string())
+            if node.prerequisites.contains(&currenttopic.to_string())
                 && !self.profile.completed_modules.contains(_topic)
             {
                 recommendations.push(node.name.clone());
@@ -586,7 +587,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("============================================================\n");
 
     // Initialize or load user profile
-    let profile = create_or_load_profile()?;
+    let profile = create_or_loadprofile()?;
 
     // Create adaptive learning session
     let mut session = AdaptiveLearningSession::new(profile.clone());
@@ -616,7 +617,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(6) => run_proof_exploration()?,
             Ok(7) => adjust_learning_preferences(&mut session.profile)?,
             Ok(8) => {
-                save_profile(&session.profile)?;
+                saveprofile(&session.profile)?;
                 println!("👋 Progress saved! See you next time!");
                 break;
             }
@@ -628,7 +629,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn create_or_load_profile() -> Result<LearningProfile, Box<dyn std::error::Error>> {
+fn create_or_loadprofile() -> Result<LearningProfile, Box<dyn std::error::Error>> {
     // In a real implementation, this would load from a file or database
     let user_id = get_user_input("Enter your name or user ID: ")?;
 
@@ -660,12 +661,12 @@ fn display_learning_dashboard(profile: &LearningProfile) {
     println!("==========================");
 
     let total_modules = profile.skill_levels.len();
-    let mastered_modules = _profile
+    let mastered_modules = profile
         .skill_levels
         .values()
         .filter(|&&level| level >= 0.8)
         .count();
-    let in_progress = _profile
+    let in_progress = profile
         .skill_levels
         .values()
         .filter(|&&level| level >= 0.3 && level < 0.8)
@@ -678,7 +679,7 @@ fn display_learning_dashboard(profile: &LearningProfile) {
     println!("📖 Modules in progress: {}", in_progress);
     println!("🎯 Learning style: {:?}", profile.preferred_learning_style);
 
-    if !_profile.mastery_goals.is_empty() {
+    if !profile.mastery_goals.is_empty() {
         println!("🎯 Current goals: {}", profile.mastery_goals.join(", "));
     }
 
@@ -1293,15 +1294,15 @@ fn run_assessment_question(
 
 #[allow(dead_code)]
 fn offer_hints_and_retry(
-    _question: &AssessmentQuestion,
+    question: &AssessmentQuestion,
 ) -> Result<f64, Box<dyn std::error::Error>> {
-    if !_question.hints.is_empty() {
+    if !question.hints.is_empty() {
         let want_hint = get_user_input("Would you like a hint? (y/n): ")?;
         if want_hint.to_lowercase() == "y" {
             println!("\n💡 Hint: {}", question.hints[0]);
             let retry = get_user_input("Try again? (y/n): ")?;
             if retry.to_lowercase() == "y" {
-                return run_assessment_question(_question);
+                return run_assessment_question(question);
             }
         }
     }
@@ -1310,7 +1311,7 @@ fn offer_hints_and_retry(
 
 #[allow(dead_code)]
 fn explore_topics(
-    _session: &mut AdaptiveLearningSession,
+    session: &mut AdaptiveLearningSession,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔍 Topic Explorer");
     println!("=================\n");
@@ -1354,15 +1355,15 @@ fn explore_topics(
                 let explore = get_user_input("\nStart learning this topic? (y/n): ")?;
                 if explore.to_lowercase() == "y" {
                     let start_time = Instant::now();
-                    let score = run_learning_module(topic, &node, &_session.profile)?;
+                    let score = run_learning_module(topic, &node, &session.profile)?;
                     let time_taken = start_time.elapsed();
 
                     // Update profile
-                    _session
+                    session
                         .profile
                         .skill_levels
                         .insert(topic.to_string(), score);
-                    _session
+                    session
                         .profile
                         .time_spent
                         .insert(topic.to_string(), time_taken);
@@ -1479,19 +1480,19 @@ fn run_comprehensive_assessment(
 
 #[allow(dead_code)]
 fn display_learning_analytics(
-    _profile: &LearningProfile,
+    profile: &LearningProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Learning Analytics Dashboard");
     println!("===============================\n");
 
     // Progress overview
     let total_skills = profile.skill_levels.len();
-    let mastered = _profile
+    let mastered = profile
         .skill_levels
         .values()
         .filter(|&&level| level >= 0.8)
         .count();
-    let learning = _profile
+    let learning = profile
         .skill_levels
         .values()
         .filter(|&&level| level >= 0.3 && level < 0.8)
@@ -1522,13 +1523,13 @@ fn display_learning_analytics(
         "  Total study time: {:.1} hours",
         total_time.as_secs_f64() / 3600.0
     );
-    if !_profile.time_spent.is_empty() {
+    if !profile.time_spent.is_empty() {
         let avg_time = total_time.as_secs_f64() / profile.time_spent.len() as f64;
         println!("  Average per topic: {:.1} minutes", avg_time / 60.0);
     }
 
     // Assessment history
-    if !_profile.assessment_scores.is_empty() {
+    if !profile.assessment_scores.is_empty() {
         println!("\n📝 Assessment History:");
         let recent_scores: Vec<_> = profile.assessment_scores.iter().rev().take(5).collect();
 
@@ -1547,7 +1548,7 @@ fn display_learning_analytics(
     println!("  Preferred style: {:?}", profile.preferred_learning_style);
     println!("  Reading speed: {:.0} WPM", profile.learning_speed);
 
-    if !_profile.mistake_patterns.is_empty() {
+    if !profile.mistake_patterns.is_empty() {
         println!("\n❌ Common Mistake Patterns:");
         let mut mistakes: Vec<_> = profile.mistake_patterns.iter().collect();
         mistakes.sort_by(|a, b| b.1.cmp(a.1));
@@ -2101,7 +2102,7 @@ fn adjust_learning_preferences(
 }
 
 #[allow(dead_code)]
-fn save_profile(profile: &LearningProfile) -> Result<(), Box<dyn std::error::Error>> {
+fn saveprofile(profile: &LearningProfile) -> Result<(), Box<dyn std::error::Error>> {
     // In a real implementation, this would save to a file or database
     println!("💾 Profile saved successfully!");
     Ok(())

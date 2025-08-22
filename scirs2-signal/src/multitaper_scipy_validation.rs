@@ -616,7 +616,7 @@ fn test_signal_processing(signal: &Array1<f64>) -> SignalResult<()> {
 fn generate_test_signal(config: &EnhancedTestSignalConfig) -> SignalResult<Array1<f64>> {
     let mut rng = rand::rng();
     let dt = 1.0 / config.fs;
-    let t: Array1<f64> = Array1::fromshape_fn(_config.n_samples, |i| i as f64 * dt);
+    let t: Array1<f64> = Array1::from_shape_fn(_config.n_samples, |i| i as f64 * dt);
 
     let signal = match &_config.signal_type {
         TestSignalType::Sinusoid {
@@ -651,7 +651,7 @@ fn generate_test_signal(config: &EnhancedTestSignalConfig) -> SignalResult<Array
                 }
                 _ => {
                     // White noise fallback
-                    Array1::fromshape_fn(_config.n_samples, |_| {
+                    Array1::from_shape_fn(_config.n_samples, |_| {
                         amplitude * rng.random_range(-1.0..1.0)
                     })
                 }
@@ -695,7 +695,7 @@ fn perform_statistical_validation() -> SignalResult<StatisticalValidationMetrics
 #[allow(dead_code)]
 fn validate_simd_implementation() -> SignalResult<SimdValidationMetrics> {
     // Test SIMD operations if available
-    let test_data = Array1::fromshape_fn(1024, |i| i as f64);
+    let test_data = Array1::from_shape_fn(1024, |i| i as f64);
 
     // Test basic SIMD operations
     let simd_result = f64::simd_add(&test_data.view(), &test_data.view());

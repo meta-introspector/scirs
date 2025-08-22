@@ -152,7 +152,7 @@ impl LateralConnection {
         target_layer: usize,
         source_dim: usize,
         target_dim: usize,
-        let weights = Array2::fromshape_fn((target_dim, source_dim), |_| {
+        let weights = Array2::from_shape_fn((target_dim, source_dim), |_| {
             use rand::Rng;
             rng().random_range(-0.1..0.1)
         });

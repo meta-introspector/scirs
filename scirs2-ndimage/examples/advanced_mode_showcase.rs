@@ -56,6 +56,7 @@ use scirs2_ndimage::{
     NeuromorphicConfig,
     QuantumConfig,
 };
+use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -184,7 +185,7 @@ fn create_advanced_test_dataset() -> AdvancedTestData {
 
         // Add temporal evolution
         for y in 0..size {
-            for x in 0..width {
+            for x in 0..size {
                 let original = frame[(y, x)];
                 let temporal_mod = (time_factor * 2.0 * PI + x as f64 * 0.2).sin() * 0.1;
                 frame[(y, x)] = (original + temporal_mod).tanh();
@@ -671,12 +672,12 @@ fn demonstrate_multiscale_analysis(
 
 #[allow(dead_code)]
 fn create_gaussian_kernel(size: usize, sigma: f64) -> Array2<f64> {
-    let mut kernel = Array2::zeros((_size, size));
-    let center = _size as f64 / 2.0;
+    let mut kernel = Array2::zeros((size, size));
+    let center = size as f64 / 2.0;
     let mut sum = 0.0;
 
-    for y in 0.._size {
-        for x in 0.._size {
+    for y in 0..size {
+        for x in 0..size {
             let dx = x as f64 - center;
             let dy = y as f64 - center;
             let value = (-(dx * dx + dy * dy) / (2.0 * sigma * sigma)).exp();
@@ -709,7 +710,7 @@ fn create_enhancement_kernel() -> Array2<f64> {
 
 #[allow(dead_code)]
 fn calculate_noise_reduction(noisy: &Array2<f64>, corrected: &Array2<f64>) -> f64 {
-    let original_variance = calculate_variance(_noisy);
+    let original_variance = calculate_variance(noisy);
     let corrected_variance = calculate_variance(corrected);
     ((original_variance - corrected_variance) / original_variance * 100.0).max(0.0)
 }
@@ -723,8 +724,8 @@ fn calculate_variance(image: &Array2<f64>) -> f64 {
 #[allow(dead_code)]
 fn calculate_filter_complexity(filter: &Array2<f64>) -> f64 {
     // Measure complexity based on entropy and variance
-    let variance = calculate_variance(_filter);
-    let entropy = calculate_entropy(_filter);
+    let variance = calculate_variance(filter);
+    let entropy = calculate_entropy(filter);
     variance * entropy
 }
 
@@ -732,7 +733,7 @@ fn calculate_filter_complexity(filter: &Array2<f64>) -> f64 {
 fn calculate_entropy(data: &Array2<f64>) -> f64 {
     // Simple entropy calculation
     let mut histogram = vec![0; 256];
-    let (min_val, max_val) = _data
+    let (min_val, max_val) = data
         .iter()
         .fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), &x| {
             (min.min(x), max.max(x))
@@ -742,7 +743,7 @@ fn calculate_entropy(data: &Array2<f64>) -> f64 {
         return 0.0;
     }
 
-    for &value in _data {
+    for &value in data {
         let bin = ((value - min_val) / (max_val - min_val) * 255.0) as usize;
         histogram[bin.min(255)] += 1;
     }
@@ -761,15 +762,15 @@ fn calculate_entropy(data: &Array2<f64>) -> f64 {
 #[allow(dead_code)]
 fn calculate_adaptation_score(original: &Array2<f64>, adapted: &Array2<f64>) -> f64 {
     // Measure how well adaptation preserved important features while reducing noise
-    let edge_preservation = calculate_edge_preservation(_original, adapted);
-    let noise_reduction = 1.0 - calculate_correlation(_original, adapted).abs();
+    let edge_preservation = calculate_edge_preservation(original, adapted);
+    let noise_reduction = 1.0 - calculate_correlation(original, adapted).abs();
     (edge_preservation + noise_reduction) / 2.0
 }
 
 #[allow(dead_code)]
 fn calculate_edge_preservation(original: &Array2<f64>, processed: &Array2<f64>) -> f64 {
     // Simplified edge preservation metric
-    let orig_edges = calculate_edge_strength(_original);
+    let orig_edges = calculate_edge_strength(original);
     let proc_edges = calculate_edge_strength(processed);
     (1.0 - (orig_edges - proc_edges).abs() / orig_edges.max(1e-10)).max(0.0)
 }
@@ -813,9 +814,9 @@ fn calculate_correlation(a: &Array2<f64>, b: &Array2<f64>) -> f64 {
 
 #[allow(dead_code)]
 fn calculate_enhancement_quality(original: &Array2<f64>, enhanced: &Array2<f64>) -> f64 {
-    let sharpness_orig = calculate_edge_strength(_original);
+    let sharpness_orig = calculate_edge_strength(original);
     let sharpness_enh = calculate_edge_strength(enhanced);
-    let contrast_orig = calculate_contrast(_original);
+    let contrast_orig = calculate_contrast(original);
     let contrast_enh = calculate_contrast(enhanced);
 
     let sharpness_improvement = (sharpness_enh / sharpness_orig.max(1e-10)).min(2.0);
@@ -837,8 +838,8 @@ fn calculate_contrast(image: &Array2<f64>) -> f64 {
 #[allow(dead_code)]
 fn calculate_liquid_dynamics(output: &Array2<f64>) -> f64 {
     // Measure the complexity of liquid state dynamics
-    let temporal_complexity = calculate_variance(_output);
-    let spatial_entropy = calculate_entropy(_output);
+    let temporal_complexity = calculate_variance(output);
+    let spatial_entropy = calculate_entropy(output);
     (temporal_complexity * spatial_entropy).sqrt()
 }
 
@@ -855,7 +856,7 @@ fn calculate_amplification_effectiveness(amplified: &Array2<f64>) -> f64 {
 fn calculate_segmentation_quality(segmentation: &Array2<usize>) -> f64 {
     // Measure _segmentation quality based on region coherence
     let mut segment_sizes = std::collections::HashMap::new();
-    for &segment in _segmentation {
+    for &segment in segmentation {
         *segment_sizes.entry(segment).or_insert(0) += 1;
     }
 
@@ -880,7 +881,7 @@ fn calculate_segmentation_quality(segmentation: &Array2<usize>) -> f64 {
 #[allow(dead_code)]
 fn calculate_frequency_complexity(_qftresult: &Array2<num_complex::Complex<f64>>) -> f64 {
     // Measure complexity in frequency domain
-    let magnitude_spectrum: Vec<f64> = qft_result.iter().map(|c| c.norm()).collect();
+    let magnitude_spectrum: Vec<f64> = _qftresult.iter().map(|c| c.norm()).collect();
     let mean_magnitude = magnitude_spectrum.iter().sum::<f64>() / magnitude_spectrum.len() as f64;
     let variance = magnitude_spectrum
         .iter()
@@ -943,12 +944,12 @@ fn combine_multiscale_results(
 #[allow(dead_code)]
 fn calculate_synthesis_quality(original: &Array2<f64>, synthesized: &Array2<f64>) -> f64 {
     // Comprehensive quality metric combining multiple factors
-    let correlation = calculate_correlation(_original, synthesized).abs();
-    let edge_preservation = calculate_edge_preservation(_original, synthesized);
+    let correlation = calculate_correlation(original, synthesized).abs();
+    let edge_preservation = calculate_edge_preservation(original, synthesized);
     let contrast_enhancement =
-        calculate_contrast(synthesized) / calculate_contrast(_original).max(1e-10);
+        calculate_contrast(synthesized) / calculate_contrast(original).max(1e-10);
     let noise_reduction =
-        1.0 - calculate_variance(synthesized) / calculate_variance(_original).max(1e-10);
+        1.0 - calculate_variance(synthesized) / calculate_variance(original).max(1e-10);
 
     // Weighted combination
     0.3 * correlation

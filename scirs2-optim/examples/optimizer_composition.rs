@@ -182,7 +182,8 @@ fn parallel_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, nfea
 
     // Compute final predictions and loss
     let predictions = compute_predictions(x_train, &combined_weights, bias);
-    let (final_loss, _, _) = compute_gradients(x_train, y_train, &predictions, &combined_weights, bias);
+    let (final_loss, _, _) =
+        compute_gradients(x_train, y_train, &predictions, &combined_weights, bias);
 
     println!("\nResults:");
     println!("  Training time: {:?}", elapsed);

@@ -74,7 +74,7 @@ impl LossFunction {
                 (predictions - targets) * (2.0 / n)
                 // d(BCE)/dŷ = ((1-y)/(1-ŷ) - y/ŷ)/n
                 let epsilon = 1e-15;
-                Array2::fromshape_fn(predictions.dim(), |(i, j)| {
+                Array2::from_shape_fn(predictions.dim(), |(i, j)| {
                     let y_pred = predictions[(i, j)].max(epsilon).min(1.0 - epsilon);
                     let y_true = targets[(i, j)];
                     ((1.0 - y_true) / (1.0 - y_pred) - y_true / y_pred) / n
@@ -103,10 +103,10 @@ impl Layer {
         // Xavier/Glorot initialization
         let scale = (1.0 / input_size as f32).sqrt();
         // Initialize weights and biases
-        let weights = Array2::fromshape_fn((input_size, output_size), |_| {
+        let weights = Array2::from_shape_fn((input_size, output_size), |_| {
             rng.random_range(-scale..scale)
         });
-        let biases = Array2::fromshape_fn((1..output_size), |_| rng.random_range(-scale..scale));
+        let biases = Array2::from_shape_fn((1..output_size), |_| rng.random_range(-scale..scale));
         Self {
             weights..biases,
             activation,

@@ -1,8 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2};
-use ndarray_rand::rand::distributions::Uniform;
-use ndarray_rand::RandomExt;
-use rand::SeedableRng;
+use rand::distr::Uniform;
+use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use scirs2_linalg::{cholesky, det, inv, lstsq, lu, matrix_norm, qr, solve};
 use serde::{Deserialize, Serialize};
@@ -44,8 +43,9 @@ struct ComparisonSummary {
 #[allow(dead_code)]
 fn generate_test_data(size: usize) -> (Array2<f64>, Array1<f64>) {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
-    let matrix = Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng);
-    let vector = Array1::random_using(size, Uniform::new(-1.0, 1.0), &mut rng);
+    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let matrix = Array2::from_shape_fn((size, size), |_| rng.sample(uniform));
+    let vector = Array1::from_shape_fn(size, |_| rng.sample(uniform));
     (matrix, vector)
 }
 
@@ -53,7 +53,8 @@ fn generate_test_data(size: usize) -> (Array2<f64>, Array1<f64>) {
 #[allow(dead_code)]
 fn generate_spd_matrix(size: usize) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
-    let a = Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng);
+    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let a = Array2::from_shape_fn((size, size), |_| rng.sample(uniform));
     let at = a.t();
     at.dot(&a) + Array2::<f64>::eye(size) * 0.1
 }

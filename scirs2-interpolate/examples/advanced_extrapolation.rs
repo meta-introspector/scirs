@@ -291,7 +291,7 @@ fn main() {
                         let diff_b = f64::abs(mapped_x - *b);
                         diff_a.partial_cmp(&diff_b).unwrap()
                     })
-                    .map(|(idx_)| idx)
+                    .map(|(idx_, _)| idx_)
                     .unwrap();
                 println!(
                     "  f({:.2}) → mapped to: f({:.2}) ≈ {:.6}",
@@ -316,7 +316,7 @@ fn main() {
                         let diff_b = f64::abs(mapped_x - *b);
                         diff_a.partial_cmp(&diff_b).unwrap()
                     })
-                    .map(|(idx_)| idx)
+                    .map(|(idx_, _)| idx_)
                     .unwrap();
                 println!(
                     "  f({:.2}) → mapped to: f({:.2}) ≈ {:.6}",

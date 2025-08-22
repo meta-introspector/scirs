@@ -68,7 +68,7 @@ fn record_benchmark(
 // Print the benchmark summary
 #[allow(dead_code)]
 fn print_summary(_benchmarkresults: &[BenchmarkResult]) {
-    for result in _benchmark_results {
+    for result in _benchmarkresults {
         let speedup = result.standard_time.as_secs_f64() / result.simd_time.as_secs_f64();
         println!(
             "{:<14} | {:<10} | {:<14.6} | {:<14.2}x",
@@ -83,9 +83,9 @@ fn print_summary(_benchmarkresults: &[BenchmarkResult]) {
 // Generate a test signal
 #[allow(dead_code)]
 fn generate_test_signal(size: usize) -> Vec<f64> {
-    let mut signal = Vec::with_capacity(_size);
-    for i in 0.._size {
-        let t = i as f64 / _size as f64;
+    let mut signal = Vec::with_capacity(size);
+    for i in 0..size {
+        let t = i as f64 / size as f64;
         let value = (2.0 * PI * 4.0 * t).sin() + 0.5 * (2.0 * PI * 16.0 * t).sin();
         signal.push(value);
     }
@@ -95,9 +95,9 @@ fn generate_test_signal(size: usize) -> Vec<f64> {
 // Generate a complex test signal
 #[allow(dead_code)]
 fn generate_complex_signal(size: usize) -> Vec<Complex64> {
-    let mut signal = Vec::with_capacity(_size);
-    for i in 0.._size {
-        let t = i as f64 / _size as f64;
+    let mut signal = Vec::with_capacity(size);
+    for i in 0..size {
+        let t = i as f64 / size as f64;
         let re = (2.0 * PI * 4.0 * t).sin();
         let im = (2.0 * PI * 4.0 * t).cos() * 0.5;
         signal.push(Complex64::new(re, im));

@@ -15,7 +15,7 @@ use std::time::{Duration, Instant};
 #[derive(Debug, Clone)]
 pub struct MemoryProfile {
     pub operation: String,
-    pub input_size: usize,
+    pub inputsize: usize,
     pub elapsed_time: Duration,
     pub estimated_memory_mb: f64,
 }
@@ -71,7 +71,7 @@ fn profile_memory<F: FnOnce() -> R, R>(operation: &str, size: usize, f: F) -> Me
 
     MemoryProfile {
         operation: operation.to_string(),
-        input_size: size,
+        inputsize: size,
         elapsed_time: elapsed,
         estimated_memory_mb,
     }
@@ -169,11 +169,11 @@ pub fn generate_memory_report(profiles: &[MemoryProfile]) {
     println!("Operation | Size | Est. Memory (MB) | Time (ms)");
     println!("{}", "-".repeat(70));
 
-    for profile in _profiles {
+    for profile in profiles {
         println!(
             "{:9} | {:6} | {:16.2} | {:9.2}",
             profile.operation,
-            profile.input_size,
+            profile.inputsize,
             profile.estimated_memory_mb,
             profile.elapsed_time.as_secs_f64() * 1000.0
         );
@@ -192,11 +192,11 @@ mod tests {
         // Just test smaller sizes to keep test time reasonable
         let small_1d: Vec<_> = profiles_1d
             .into_iter()
-            .filter(|p| p.input_size <= 1024)
+            .filter(|p| p.inputsize <= 1024)
             .collect();
         let small_2d: Vec<_> = profiles_2d
             .into_iter()
-            .filter(|p| p.input_size <= 64 * 64)
+            .filter(|p| p.inputsize <= 64 * 64)
             .collect();
 
         println!("\n1D FFT Memory Profiling:");

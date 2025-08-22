@@ -18,25 +18,25 @@ fn main() {
     println!("SIMD acceleration available: {}", simd_available);
 
     // Parameters for the analysis
-    let sample_rate = 1000.0; // Hz
+    let samplerate = 1000.0; // Hz
     let duration = 1.0; // seconds
-    let num_samples = (sample_rate * duration) as usize;
+    let num_samples = (samplerate * duration) as usize;
 
     println!("\nGenerating test signal:");
-    println!("  - Sample rate: {} Hz", sample_rate);
+    println!("  - Sample rate: {} Hz", samplerate);
     println!("  - Duration: {} seconds", duration);
     println!("  - Number of samples: {}", num_samples);
 
     // Generate a test signal with multiple frequency components
     let time = linspace(0.0, duration, num_samples);
-    let signal = generate_test_signal(&time);
+    let signal = generate_testsignal(&time);
 
     println!("\nSignal contains frequencies: 10 Hz, 50 Hz, 120 Hz, and noise");
 
     // Perform spectral analysis
     println!("\nPerforming spectral analysis...");
     let start = Instant::now();
-    let (frequencies, power_spectrum) = spectral_analysis(&signal, sample_rate);
+    let (frequencies, power_spectrum) = spectral_analysis(&signal, samplerate);
     let elapsed = start.elapsed();
 
     println!("Analysis completed in {:?}", elapsed);
@@ -52,14 +52,14 @@ fn main() {
     // Apply a bandpass filter in the frequency domain
     println!("\nApplying a bandpass filter (40-60 Hz)...");
     let start = Instant::now();
-    let filtered_signal = bandpass_filter(&signal, sample_rate, 40.0, 60.0);
+    let filteredsignal = bandpass_filter(&signal, samplerate, 40.0, 60.0);
     let elapsed = start.elapsed();
 
     println!("Filtering completed in {:?}", elapsed);
 
     // Compare signal energy before and after filtering
     let original_energy = signal.iter().map(|&x| x * x).sum::<f64>();
-    let filtered_energy = filtered_signal.iter().map(|&x| x * x).sum::<f64>();
+    let filtered_energy = filteredsignal.iter().map(|&x| x * x).sum::<f64>();
     let energy_ratio = filtered_energy / original_energy;
 
     println!("\nSignal energy:");
@@ -69,12 +69,12 @@ fn main() {
 
     // Perform time-frequency analysis
     println!("\nPerforming time-frequency analysis...");
-    let window_size = 128;
+    let windowsize = 128;
     let overlap = 64;
 
     let start = Instant::now();
     let (time_points, freq_bins, spectrogram) =
-        compute_spectrogram(&signal, sample_rate, window_size, overlap);
+        compute_spectrogram(&signal, samplerate, windowsize, overlap);
     let elapsed = start.elapsed();
 
     println!("Time-frequency analysis completed in {:?}", elapsed);
@@ -91,13 +91,13 @@ fn main() {
     // Performance comparison
     println!("\nPerformance comparison with larger signals:");
     for &size in &[4096, 16384, 65536, 262144] {
-        let large_signal = generate_large_signal(size);
+        let largesignal = generate_largesignal(size);
 
         println!("\nSignal size: {} samples", size);
 
         // Measure FFT performance
         let start = Instant::now();
-        let _ = fft_adaptive(&large_signal, None);
+        let _ = fft_adaptive(&largesignal, None);
         let elapsed = start.elapsed();
 
         println!("  FFT computation time: {:?}", elapsed);
@@ -112,15 +112,15 @@ fn main() {
 #[allow(dead_code)]
 fn linspace(start: f64, end: f64, num: usize) -> Vec<f64> {
     let step = (end - start) / (num - 1) as f64;
-    (0..num).map(|i| _start + i as f64 * step).collect()
+    (0..num).map(|i| start + i as f64 * step).collect()
 }
 
 // Generate a test signal with multiple frequency components
 #[allow(dead_code)]
-fn generate_test_signal(time: &[f64]) -> Vec<f64> {
-    let mut signal = Vec::with_capacity(_time.len());
+fn generate_testsignal(time: &[f64]) -> Vec<f64> {
+    let mut signal = Vec::with_capacity(time.len());
 
-    for &t in _time {
+    for &t in time {
         // Components at 10 Hz, 50 Hz and 120 Hz
         let value = 1.0 * (2.0 * PI * 10.0 * t).sin()
             + 2.0 * (2.0 * PI * 50.0 * t).sin()
@@ -137,10 +137,10 @@ fn generate_test_signal(time: &[f64]) -> Vec<f64> {
 
 // Generate a larger signal for performance testing
 #[allow(dead_code)]
-fn generate_large_signal(size: usize) -> Vec<f64> {
-    let mut signal = Vec::with_capacity(_size);
+fn generate_largesignal(size: usize) -> Vec<f64> {
+    let mut signal = Vec::with_capacity(size);
 
-    for i in 0.._size {
+    for i in 0..size {
         let t = i as f64 / 1000.0;
 
         // Multiple frequency components
@@ -166,26 +166,26 @@ fn rand_normal(mean: f64, stddev: f64) -> f64 {
     let y: f64 = rand::random::<f64>();
 
     let normal = (-2.0 * x.ln()).sqrt() * (2.0 * PI * y).cos();
-    _mean + stddev * normal
+    mean + stddev * normal
 }
 
 // Perform spectral analysis on the signal
 #[allow(dead_code)]
-fn spectral_analysis(_signal: &[f64], samplerate: f64) -> (Vec<f64>, Vec<f64>) {
+fn spectral_analysis(signal: &[f64], samplerate: f64) -> (Vec<f64>, Vec<f64>) {
     // Apply a window function to reduce spectral leakage
     let window_func = window::get_window(window::Window::Hann, signal.len(), true).unwrap();
 
-    let windowed_signal: Vec<f64> = _signal
+    let windowedsignal: Vec<f64> = signal
         .iter()
         .zip(window_func.iter())
         .map(|(&s, &w)| s * w)
         .collect();
 
     // Compute FFT with adaptive SIMD acceleration
-    let spectrum = fft_adaptive(&windowed_signal, None).unwrap();
+    let spectrum = fft_adaptive(&windowedsignal, None).unwrap();
 
     // Calculate frequency axis
-    let freqs = fftfreq(_signal.len(), 1.0 / sample_rate).unwrap();
+    let freqs = fftfreq(signal.len(), 1.0 / samplerate).unwrap();
 
     // Create our own fftshift since we're working with Vec instead of ndarray
     let mut shifted_freqs = vec![0.0; freqs.len()];
@@ -220,7 +220,7 @@ fn spectral_analysis(_signal: &[f64], samplerate: f64) -> (Vec<f64>, Vec<f64>) {
 fn find_peak_frequencies(_freqs: &[f64], power: &[f64], thresholdfactor: f64) -> Vec<(f64, f64)> {
     // Find maximum power value for threshold calculation
     let max_power = power.iter().fold(0.0f64, |a, &b| a.max(b));
-    let threshold = max_power * threshold_factor;
+    let threshold = max_power * thresholdfactor;
 
     let mut peaks = Vec::new();
 
@@ -242,7 +242,7 @@ fn find_peak_frequencies(_freqs: &[f64], power: &[f64], thresholdfactor: f64) ->
 #[allow(dead_code)]
 fn bandpass_filter(
     signal: &[f64],
-    sample_rate: f64,
+    samplerate: f64,
     low_cutoff: f64,
     high_cutoff: f64,
 ) -> Vec<f64> {
@@ -250,7 +250,7 @@ fn bandpass_filter(
     let mut spectrum = fft_adaptive(signal, None).unwrap();
 
     // Calculate frequency resolution
-    let freq_resolution = sample_rate / signal.len() as f64;
+    let freq_resolution = samplerate / signal.len() as f64;
 
     // Create bandpass filter mask
     for i in 0..spectrum.len() {
@@ -268,44 +268,44 @@ fn bandpass_filter(
     }
 
     // Compute inverse FFT to get filtered signal
-    let filtered_signal = ifft_adaptive(&spectrum, None).unwrap();
+    let filteredsignal = ifft_adaptive(&spectrum, None).unwrap();
 
     // Extract real part
-    filtered_signal.iter().map(|c| c.re).collect()
+    filteredsignal.iter().map(|c| c.re).collect()
 }
 
 // Compute spectrogram using STFT
 #[allow(dead_code)]
 fn compute_spectrogram(
     signal: &[f64],
-    sample_rate: f64,
-    window_size: usize,
+    samplerate: f64,
+    windowsize: usize,
     overlap: usize,
 ) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
-    // Calculate hop _size (step between windows)
-    let hop_size = window_size - overlap;
+    // Calculate hop size (step between windows)
+    let hopsize = windowsize - overlap;
 
     // Calculate number of frames
-    let num_frames = (signal.len() - overlap) / hop_size;
+    let num_frames = (signal.len() - overlap) / hopsize;
 
     // Create window function
-    let window_func = window::get_window(window::Window::Hann, window_size, true).unwrap();
+    let window_func = window::get_window(window::Window::Hann, windowsize, true).unwrap();
 
     // Prepare output structures
-    let mut spectrogram = Vec::with_capacity(num_frames * (window_size / 2 + 1));
+    let mut spectrogram = Vec::with_capacity(num_frames * (windowsize / 2 + 1));
 
     // Process each frame
     for frame in 0..num_frames {
-        let start_idx = frame * hop_size;
-        let end_idx = start_idx + window_size;
+        let start_idx = frame * hopsize;
+        let end_idx = start_idx + windowsize;
 
         if end_idx > signal.len() {
             break;
         }
 
         // Extract frame and apply window
-        let mut windowed_frame = Vec::with_capacity(window_size);
-        for i in 0..window_size {
+        let mut windowed_frame = Vec::with_capacity(windowsize);
+        for i in 0..windowsize {
             windowed_frame.push(signal[start_idx + i] * window_func[i]);
         }
 
@@ -313,21 +313,21 @@ fn compute_spectrogram(
         let spectrum = fft_adaptive(&windowed_frame, None).unwrap();
 
         // Calculate power for each frequency bin (use only positive frequencies)
-        for i in 0..=window_size / 2 {
-            let power = spectrum[i].norm_sqr() / window_size as f64;
+        for i in 0..=windowsize / 2 {
+            let power = spectrum[i].norm_sqr() / windowsize as f64;
             spectrogram.push(power);
         }
     }
 
     // Create time axis
     let time_points = (0..num_frames)
-        .map(|i| i as f64 * hop_size as f64 / sample_rate)
+        .map(|i| i as f64 * hopsize as f64 / samplerate)
         .collect();
 
     // Create frequency axis
-    let nyquist = sample_rate / 2.0;
-    let freq_bins = (0..=window_size / 2)
-        .map(|i| i as f64 * nyquist / (window_size / 2) as f64)
+    let nyquist = samplerate / 2.0;
+    let freq_bins = (0..=windowsize / 2)
+        .map(|i| i as f64 * nyquist / (windowsize / 2) as f64)
         .collect();
 
     (time_points, freq_bins, spectrogram)

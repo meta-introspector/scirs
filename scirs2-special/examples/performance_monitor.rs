@@ -3,7 +3,7 @@
 //! This example provides comprehensive performance monitoring for special functions
 //! used in the CI/CD pipeline to detect performance regressions.
 //!
-//! Run with: cargo run --release --example performance_monitor --all-features
+//! Run with: cargo run --release --example performancemonitor --all-features
 
 use ndarray::Array1;
 use scirs2_special::*;
@@ -225,7 +225,7 @@ impl PerformanceMonitor {
         println!("{}", "-".repeat(80));
 
         let mut sorted_results: Vec<_> = self.results.iter().collect();
-        sorted_results.sort_by_key(|(name_)| name.as_str());
+        sorted_results.sort_by_key(|(name_, _)| name_.as_str());
 
         for (name, result) in sorted_results {
             println!(
@@ -389,7 +389,7 @@ fn create_ci_analysis(monitor: &PerformanceMonitor) -> Result<(), Box<dyn std::e
     let mut erf_times = Vec::new();
     let mut array_times = HashMap::new();
 
-    for (name, result) in &_monitor.results {
+    for (name, result) in &monitor.results {
         if name.contains("gamma") {
             gamma_times.push(result.mean_time_ns);
         } else if name.contains("bessel") || name.contains("j0") || name.contains("i0") {
@@ -434,12 +434,12 @@ fn create_ci_analysis(monitor: &PerformanceMonitor) -> Result<(), Box<dyn std::e
 
     // Performance quality metrics
     let total_functions = monitor.results.len();
-    let slow_functions = _monitor
+    let slow_functions = monitor
         .results
         .iter()
         .filter(|(_, r)| r.mean_time_ns > 1000.0)
         .count();
-    let variable_functions = _monitor
+    let variable_functions = monitor
         .results
         .iter()
         .filter(|(_, r)| r.std_dev_ns / r.mean_time_ns > 0.3)

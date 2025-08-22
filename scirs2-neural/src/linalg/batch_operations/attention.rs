@@ -148,18 +148,18 @@ where
 /// let d_model = 8;
 /// let num_heads = 2;
 /// // Initialize inputs with placeholder values
-/// let query = Array::fromshape_fn(
+/// let query = Array::from_shape_fn(
 ///     (batch_size, seq_len_q, d_model),
 ///     |_| 0.1
 /// );
-/// let key = Array::fromshape_fn(
+/// let key = Array::from_shape_fn(
 ///     (batch_size, seq_len_k, d_model),
-/// let value = Array::fromshape_fn(
+/// let value = Array::from_shape_fn(
 /// // Initialize weight matrices
-/// let wq = Array::fromshape_fn((d_model, d_model), |_| 0.1);
-/// let wk = Array::fromshape_fn((d_model, d_model), |_| 0.1);
-/// let wv = Array::fromshape_fn((d_model, d_model), |_| 0.1);
-/// let wo = Array::fromshape_fn((d_model, d_model), |_| 0.1);
+/// let wq = Array::from_shape_fn((d_model, d_model), |_| 0.1);
+/// let wk = Array::from_shape_fn((d_model, d_model), |_| 0.1);
+/// let wv = Array::from_shape_fn((d_model, d_model), |_| 0.1);
+/// let wo = Array::from_shape_fn((d_model, d_model), |_| 0.1);
 /// // Compute multi-head attention
 /// let output = multi_head_attention(
 ///     &wq.view(),
@@ -311,12 +311,12 @@ pub fn positional_encoding<F: Float + Debug>(
 /// let d_model = 4;
 /// let d_ff = 8;
 /// // Initialize inputs and weights
-/// let x = Array::fromshape_fn(
+/// let x = Array::from_shape_fn(
 ///     (batch_size, seq_len, d_model),
-/// let w1 = Array::fromshape_fn((d_model, d_ff), |_| 0.1);
-/// let b1 = Array::fromshape_fn(d_ff, |_| 0.1);
-/// let w2 = Array::fromshape_fn((d_ff, d_model), |_| 0.1);
-/// let b2 = Array::fromshape_fn(d_model, |_| 0.1);
+/// let w1 = Array::from_shape_fn((d_model, d_ff), |_| 0.1);
+/// let b1 = Array::from_shape_fn(d_ff, |_| 0.1);
+/// let w2 = Array::from_shape_fn((d_ff, d_model), |_| 0.1);
+/// let b2 = Array::from_shape_fn(d_model, |_| 0.1);
 /// // Apply transformer feed-forward network
 /// let output = transformer_ffn(
 ///     &x.view(),
@@ -375,11 +375,11 @@ pub fn transformer_ffn<F>(
 /// * Tuple of (dx, dw1, db1, dw2, db2) containing gradients for all inputs
 /// use scirs2_neural::linalg::{transformer_ffn, transformer_ffn_backward};
 /// // Setup (same as forward example)
-/// let x = Array::fromshape_fn((batch_size, seq_len, d_model), |_| 0.1);
+/// let x = Array::from_shape_fn((batch_size, seq_len, d_model), |_| 0.1);
 /// // Forward pass
 /// let out = transformer_ffn(&x.view(), &w1.view(), &b1.view(), &w2.view(), &b2.view()).unwrap();
 /// // Assume gradient of loss with respect to output
-/// let dout = Array::fromshape_fn(out.raw_dim(), |_| 0.01);
+/// let dout = Array::from_shape_fn(out.raw_dim(), |_| 0.01);
 /// // Backward pass
 /// let (dx, dw1, db1, dw2, db2) = transformer_ffn_backward(
 ///     &dout.view(), &x.view(), &w1.view(), &b1.view(), &w2.view(), &b2.view()

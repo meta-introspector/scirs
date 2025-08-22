@@ -1,5 +1,5 @@
 use ndarray::{array, Array2, ArrayView2};
-use scirs2__spatial::{error::SpatialResult, procrustes, procrustes_extended};
+use scirs2_spatial::{error::SpatialResult, procrustes, procrustes_extended};
 
 #[allow(dead_code)]
 fn main() -> SpatialResult<()> {

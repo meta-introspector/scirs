@@ -4,7 +4,7 @@
 //! from the `scirs2-spatial` crate, which measure the similarity between sets of points.
 
 use ndarray::{array, ArrayView2};
-use scirs2__spatial::set_distance::{
+use scirs2_spatial::set_distance::{
     directed_hausdorff, gromov_hausdorff_distance, hausdorff_distance, wasserstein_distance,
 };
 

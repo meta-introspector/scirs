@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__spatial::voronoi::Voronoi;
+use scirs2_spatial::voronoi::Voronoi;
 
 #[allow(dead_code)]
 fn main() {
@@ -40,7 +40,7 @@ fn main() {
 
     // Print ridge information
     println!("\nVoronoi ridges:");
-    let ridge_points = vor.ridge_points();
+    let ridge_points = vor.ridgepoints();
     let ridge_vertices = vor.ridge_vertices();
     for i in 0..ridge_points.len() {
         println!(

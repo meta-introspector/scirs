@@ -122,13 +122,13 @@ fn large_array_processing() {
 
     // Process the signal in chunks
     println!("Processing signal in chunks...");
-    let chunk_size = 1024;
-    let num_chunks = n.div_ceil(chunk_size);
-    println!("  Chunk size: {chunk_size}");
+    let chunksize = 1024;
+    let num_chunks = n.div_ceil(chunksize);
+    println!("  Chunk size: {chunksize}");
     println!("  Number of chunks: {num_chunks}");
 
     let start_time = Instant::now();
-    let _result = fft_streaming(&signal, None, FftMode::Forward, Some(chunk_size)).unwrap();
+    let _result = fft_streaming(&signal, None, FftMode::Forward, Some(chunksize)).unwrap();
     let streaming_time = start_time.elapsed();
 
     println!("Streaming FFT completed in {streaming_time:.2?}");
@@ -138,7 +138,7 @@ fn large_array_processing() {
     println!("\nProcessing with custom operation (finding peaks in each chunk):");
 
     let start_time = Instant::now();
-    let chunks_result = process_in_chunks(&signal, chunk_size, |chunk| {
+    let chunks_result = process_in_chunks(&signal, chunksize, |chunk| {
         // Just compute FFT of each chunk
         fft(chunk, None)
     })
@@ -153,10 +153,10 @@ fn large_array_processing() {
     );
 
     // Compare with standard FFT (on a smaller subset to avoid memory issues)
-    let subset_size = 10_000; // Use only a small subset for comparison
-    println!("\nComparing with standard FFT (on a {subset_size} point subset)...");
+    let subsetsize = 10_000; // Use only a small subset for comparison
+    println!("\nComparing with standard FFT (on a {subsetsize} point subset)...");
 
-    let subset = &signal[0..subset_size];
+    let subset = &signal[0..subsetsize];
     let start_time = Instant::now();
     let standard_result = fft(subset, None).unwrap();
     let standard_time = start_time.elapsed();
@@ -170,7 +170,7 @@ fn large_array_processing() {
 
     // Verify results match
     let mut max_diff: f64 = 0.0;
-    for i in 0..subset_size.min(standard_result.len()) {
+    for i in 0..subsetsize.min(standard_result.len()) {
         let diff = (standard_result[i] - streaming_subset[i]).norm();
         if diff > max_diff {
             max_diff = diff;

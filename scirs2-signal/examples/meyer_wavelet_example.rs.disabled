@@ -1,5 +1,6 @@
 use plotly::common::Mode;
 use plotly::{Plot, Scatter};
+use rand::Rng;
 use scirs2_signal::dwt::{wavedec, waverec, Wavelet};
 use scirs2_signal::waveforms::chirp;
 
@@ -14,11 +15,11 @@ fn main() {
     let mut rng = rand::rng();
     let noisy_signal = signal
         .iter()
-        .map(|&x| x + 0.1 * rng.random_range(-1.0..1.0))
+        .map(|&x| x + 0.1 * (rng.random::<f64>() * 2.0 - 1.0))
         .collect::<Vec<f64>>();
 
     // Perform DWT with Meyer wavelet (3 levels)
-    let coeffs = wavedec(&noisy_signal..Wavelet::Meyer, Some(3), None).unwrap();
+    let coeffs = wavedec(&noisy_signal, Wavelet::Meyer, Some(3), None).unwrap();
 
     // Extract the coefficients
     let approx = &coeffs[0]; // Final approximation (cA3)
@@ -135,7 +136,7 @@ fn apply_threshold(coeffs: &mut [f64], threshold: f64) {
 
 // Compare the Meyer wavelet with other wavelet families
 #[allow(dead_code)]
-fn compare_wavelets(_signal: &[f64], noisysignal: &[f64], t: &[f64]) {
+fn compare_wavelets(signal: &[f64], noisysignal: &[f64], t: &[f64]) {
     // Wavelet families to compare
     let wavelets = vec![
         (Wavelet::Haar, "Haar"),
@@ -163,7 +164,7 @@ fn compare_wavelets(_signal: &[f64], noisysignal: &[f64], t: &[f64]) {
     // Process with each wavelet
     for (wavelet, name) in wavelets {
         // Decompose
-        let coeffs = wavedec(noisy_signal, wavelet, Some(3), None).unwrap();
+        let coeffs = wavedec(noisysignal, wavelet, Some(3), None).unwrap();
 
         // Apply thresholding
         let mut denoised_coeffs = coeffs.clone();

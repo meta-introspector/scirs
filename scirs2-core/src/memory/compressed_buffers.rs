@@ -561,7 +561,7 @@ mod tests {
     #[test]
     fn test_compressed_array_non_standard_layout() {
         // Create a transposed array (non-standard layout)
-        let array = Array2::<f64>::fromshape_fn((50, 50), |(i, j)| (i * 50 + j) as f64);
+        let array = Array2::<f64>::from_shape_fn((50, 50), |(i, j)| (i * 50 + j) as f64);
         let transposed = array.t();
 
         let compressed = CompressedArray::from_array(

@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__spatial::pathplanning::VisibilityGraphPlanner;
+use scirs2_spatial::pathplanning::VisibilityGraphPlanner;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -149,10 +149,10 @@ fn print_ascii_visualization(path: &[[f64; 2]], planner: &VisibilityGraphPlanner
         }
     }
 
-    // Draw _path
-    for i in 0.._path.len() - 1 {
-        let (x1, y1) = (_path[i][0] as usize, path[i][1] as usize);
-        let (x2, y2) = (_path[i + 1][0] as usize, path[i + 1][1] as usize);
+    // Draw path
+    for i in 0..path.len() - 1 {
+        let (x1, y1) = (path[i][0] as usize, path[i][1] as usize);
+        let (x2, y2) = (path[i + 1][0] as usize, path[i + 1][1] as usize);
 
         // Draw line segments
         let steps = ((x2 as i32 - x1 as i32)
@@ -176,7 +176,7 @@ fn print_ascii_visualization(path: &[[f64; 2]], planner: &VisibilityGraphPlanner
     }
 
     // Mark start and goal
-    let (start_x, start_y) = (_path[0][0] as usize, path[0][1] as usize);
+    let (start_x, start_y) = (path[0][0] as usize, path[0][1] as usize);
     let (goal_x, goal_y) = (
         path.last().unwrap()[0] as usize,
         path.last().unwrap()[1] as usize,

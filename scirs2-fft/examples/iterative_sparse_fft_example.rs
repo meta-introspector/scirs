@@ -60,10 +60,10 @@ fn evaluate_accuracy(
     // For each found frequency, check if it corresponds to a true frequency
     for &idx in &result.indices {
         let mut found = false;
-        for (i, &(freq_)) in true_frequencies.iter().enumerate() {
+        for (i, &(freq_, _)) in true_frequencies.iter().enumerate() {
             // Consider _frequencies within a small tolerance window as matches
             let tolerance = std::cmp::max(1, n / 1000);
-            if (idx as i64 - freq as i64).abs() <= tolerance as i64 {
+            if (idx as i64 - freq_ as i64).abs() <= tolerance as i64 {
                 found = true;
                 found_indices[i] = true;
                 break;
@@ -243,16 +243,16 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
     // Set plot layouts
     time_domain_plot.set_layout(
         Layout::new()
-            .title(Title::withtext("<b>Time Domain Signal</b>"))
-            .x_axis(plotly::layout::Axis::new().title(Title::withtext("Sample")))
-            .y_axis(plotly::layout::Axis::new().title(Title::withtext("Amplitude"))),
+            .title(Title::with_text("<b>Time Domain Signal</b>"))
+            .x_axis(plotly::layout::Axis::new().title(Title::with_text("Sample")))
+            .y_axis(plotly::layout::Axis::new().title(Title::with_text("Amplitude"))),
     );
 
     frequency_domain_plot.set_layout(
         Layout::new()
-            .title(Title::withtext("<b>Frequency Domain Components</b>"))
-            .x_axis(plotly::layout::Axis::new().title(Title::withtext("Frequency Bin")))
-            .y_axis(plotly::layout::Axis::new().title(Title::withtext("Magnitude"))),
+            .title(Title::with_text("<b>Frequency Domain Components</b>"))
+            .x_axis(plotly::layout::Axis::new().title(Title::with_text("Frequency Bin")))
+            .y_axis(plotly::layout::Axis::new().title(Title::with_text("Magnitude"))),
     );
 
     // Save plots
@@ -264,7 +264,7 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
 
 /// Run benchmark for different signal sizes
 #[allow(dead_code)]
-fn run_size_benchmark() {
+fn runsize_benchmark() {
     println!("\nRunning size benchmark:");
 
     if !is_cuda_available() {
@@ -383,8 +383,8 @@ fn run_noise_benchmark() {
             )
             .unwrap();
 
-            let (_, recall_) = evaluate_accuracy(&result, &frequencies, n);
-            accuracies.push(recall);
+            let (_, recall_, _) = evaluate_accuracy(&result, &frequencies, n);
+            accuracies.push(recall_);
         }
 
         println!(
@@ -492,9 +492,9 @@ fn run_iteration_comparison() {
             for (i, (idx, val)) in components.iter().take(10).enumerate() {
                 // Check if this is a true component
                 let mut is_true = false;
-                for &(freq_) in &frequencies {
+                for &(freq_, _) in &frequencies {
                     let tolerance = std::cmp::max(1, n / 1000);
-                    if (*idx as i64 - freq as i64).abs() <= tolerance as i64 {
+                    if (*idx as i64 - freq_ as i64).abs() <= tolerance as i64 {
                         is_true = true;
                         break;
                     }
@@ -518,13 +518,13 @@ fn run_iteration_comparison() {
     // Set plot layout
     plot.set_layout(
         Layout::new()
-            .title(Title::withtext(
+            .title(Title::with_text(
                 "<b>Effect of Iterations on Iterative Sparse FFT Accuracy</b>",
             ))
-            .x_axis(plotly::layout::Axis::new().title(Title::withtext("Number of Iterations")))
+            .x_axis(plotly::layout::Axis::new().title(Title::with_text("Number of Iterations")))
             .y_axis(
                 plotly::layout::Axis::new()
-                    .title(Title::withtext("Recall (%)"))
+                    .title(Title::with_text("Recall (%)"))
                     .range(vec![0.0, 100.0]),
             ),
     );
@@ -576,9 +576,9 @@ fn run_iteration_comparison() {
     for (i, (idx, val)) in components.iter().take(10).enumerate() {
         // Check if this is a true component
         let mut is_true = false;
-        for &(freq_) in &frequencies {
+        for &(freq_, _) in &frequencies {
             let tolerance = std::cmp::max(1, n / 1000);
-            if (*idx as i64 - freq as i64).abs() <= tolerance as i64 {
+            if (*idx as i64 - freq_ as i64).abs() <= tolerance as i64 {
                 is_true = true;
                 break;
             }
@@ -622,7 +622,7 @@ fn main() {
     run_algorithm_comparison(16 * 1024, 6, 0.05);
 
     // Run benchmarks
-    run_size_benchmark();
+    runsize_benchmark();
     run_noise_benchmark();
 
     println!("\nExample completed successfully!");

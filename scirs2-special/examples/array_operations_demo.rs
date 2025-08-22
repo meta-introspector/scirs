@@ -6,6 +6,7 @@
 
 use ndarray::{arr1, arr2, Array1};
 use num_complex::Complex64;
+#[cfg(feature = "gpu")]
 use scirs2_special::array_ops::{
     broadcasting, complex, convenience, memory_efficient, ArrayConfig,
 };
@@ -14,30 +15,41 @@ use std::time::Instant;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== SCIRS2-SPECIAL Array Operations Demo ===\n");
+    #[cfg(not(feature = "gpu"))]
+    {
+        println!("This example requires the 'gpu' feature to be enabled.");
+        println!("Run with: cargo run --example array_operations_demo --features gpu");
+        return Ok(());
+    }
+    
+    #[cfg(feature = "gpu")]
+    {
+        println!("=== SCIRS2-SPECIAL Array Operations Demo ===\n");
 
-    // 1. Basic Vectorized Operations
-    demo_vectorized_operations().await?;
+        // 1. Basic Vectorized Operations
+        demo_vectorized_operations().await?;
 
-    // 2. Multidimensional Arrays
-    demo_multidimensional_arrays().await?;
+        // 2. Multidimensional Arrays
+        demo_multidimensional_arrays().await?;
 
-    // 3. Broadcasting Operations
-    demo_broadcasting()?;
+        // 3. Broadcasting Operations
+        demo_broadcasting()?;
 
-    // 4. Complex Number Arrays
-    demo_complex_arrays()?;
+        // 4. Complex Number Arrays
+        demo_complex_arrays()?;
 
-    // 5. Memory-Efficient Processing
-    demo_memory_efficiency()?;
+        // 5. Memory-Efficient Processing
+        demo_memory_efficiency()?;
 
-    // 6. Performance Comparison
-    demo_performance_comparison().await?;
+        // 6. Performance Comparison
+        demo_performance_comparison().await?;
 
-    println!("=== Array operations demo completed successfully! ===");
+        println!("=== Array operations demo completed successfully! ===");
+    }
     Ok(())
 }
 
+#[cfg(feature = "gpu")]
 async fn demo_vectorized_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Vectorized Special Function Operations");
     println!("========================================");
@@ -83,6 +95,7 @@ async fn demo_vectorized_operations() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[cfg(feature = "gpu")]
 async fn demo_multidimensional_arrays() -> Result<(), Box<dyn std::error::Error>> {
     println!("2. Multidimensional Array Operations");
     println!("====================================");
@@ -117,6 +130,7 @@ async fn demo_multidimensional_arrays() -> Result<(), Box<dyn std::error::Error>
 }
 
 #[allow(dead_code)]
+#[cfg(feature = "gpu")]
 fn demo_broadcasting() -> Result<(), Box<dyn std::error::Error>> {
     println!("3. Broadcasting Operations");
     println!("==========================");
@@ -160,6 +174,7 @@ fn demo_broadcasting() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
+#[cfg(feature = "gpu")]
 fn demo_complex_arrays() -> Result<(), Box<dyn std::error::Error>> {
     println!("4. Complex Number Array Operations");
     println!("==================================");
@@ -201,6 +216,7 @@ fn demo_complex_arrays() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
+#[cfg(feature = "gpu")]
 fn demo_memory_efficiency() -> Result<(), Box<dyn std::error::Error>> {
     println!("5. Memory-Efficient Processing");
     println!("==============================");
@@ -260,6 +276,7 @@ fn demo_memory_efficiency() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "gpu")]
 async fn demo_performance_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("6. Performance Comparison");
     println!("=========================");

@@ -130,7 +130,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     let (leaders_orig, _labels_orig) = leader_clustering(data.view(), 1.5, euclidean_distance)?;
-    let (leaders_shuf, _labels_shuf) = leader_clustering(shuffled_data.view(), 1.5, euclidean_distance)?;
+    let (leaders_shuf, _labels_shuf) =
+        leader_clustering(shuffled_data.view(), 1.5, euclidean_distance)?;
 
     println!("Original order - {} clusters", leaders_orig.nrows());
     println!("Shuffled order - {} clusters", leaders_shuf.nrows());

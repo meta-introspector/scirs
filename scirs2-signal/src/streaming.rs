@@ -564,7 +564,7 @@ impl StreamingProcessor {
             let n_freq = spectrum.len();
             let fs = self.config.sample_rate;
             let frequencies =
-                Array1::fromshape_fn(n_freq, |i| i as f64 * fs / (2.0 * (n_freq - 1) as f64));
+                Array1::from_shape_fn(n_freq, |i| i as f64 * fs / (2.0 * (n_freq - 1) as f64));
 
             // Compute magnitude spectrum
             let magnitude = spectrum.mapv(|c| c.norm());
@@ -1084,7 +1084,7 @@ mod tests {
 
         let mut processor = StreamingProcessor::new(config).unwrap();
 
-        let input = Array2::fromshape_fn((256, 2), |(i, ch)| (i as f64 + ch as f64).sin());
+        let input = Array2::from_shape_fn((256, 2), |(i, ch)| (i as f64 + ch as f64).sin());
 
         let results = processor.process_multichannel(&input).unwrap();
         assert_eq!(results.len(), 2);

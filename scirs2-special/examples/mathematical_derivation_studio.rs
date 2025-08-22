@@ -224,7 +224,7 @@ fn stirling_asymptotic_derivation() -> Result<(), Box<dyn std::error::Error>> {
 
     // Numerical verification
     println!("NUMERICAL VERIFICATION:");
-    let test_values = vec![5.0, 10.0, 20.0, 50.0];
+    let test_values: Vec<f64> = vec![5.0, 10.0, 20.0, 50.0];
     for &z in &test_values {
         let exact = gammaln(z);
         let stirling = (z - 0.5) * z.ln() - z + 0.5 * (2.0 * PI).ln();
@@ -479,8 +479,8 @@ fn elliptic_integral_connections() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Verify Legendre's relation
-    let k = 0.6;
-    let k_prime = (1.0 - k * k).sqrt();
+    let k: f64 = 0.6;
+    let k_prime: f64 = (1.0 - k * k).sqrt();
     let k_k = elliptic_k(k)?;
     let e_k = elliptic_e(k)?;
     let k_k_prime = elliptic_k(k_prime)?;
@@ -572,7 +572,7 @@ fn wright_function_asymptotic_analysis() -> Result<(), Box<dyn std::error::Error
 
     let alpha = 0.5;
     let beta = 1.0;
-    let z_values = vec![5.0, 10.0, 20.0, 50.0];
+    let z_values: Vec<f64> = vec![5.0, 10.0, 20.0, 50.0];
 
     for &z in &z_values {
         // Asymptotic approximation
@@ -587,7 +587,7 @@ fn wright_function_asymptotic_analysis() -> Result<(), Box<dyn std::error::Error
             let exact = wright_phi(alpha, beta, z)?;
             let relative_error = ((exact - asymptotic) / exact).abs();
             println!(
-                "           Exact      = {:.6e}, Error = {:.1%}",
+                "           Exact      = {:.6e}, Error = {:.1}%",
                 exact, relative_error
             );
         }
@@ -916,7 +916,7 @@ fn wright_phi(alpha: f64, beta: f64, z: f64) -> Result<f64, Box<dyn std::error::
     sum += term;
 
     for n in 1..20 {
-        term *= z / (n as f64 * gamma(_alpha * n as f64 + beta));
+        term *= z / (n as f64 * gamma(alpha * n as f64 + beta));
         sum += term;
         if term.abs() < 1e-12 {
             break;

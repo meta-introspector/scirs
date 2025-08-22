@@ -2209,7 +2209,7 @@ mod tests {
         let mut rng = rand::rng();
         let noise_level = 0.1;
         let noisy_signal =
-            &clean_signal + &Array1::fromshape_fn(n, |_| noise_level * rng.random_range(-1.0..1.0));
+            &clean_signal + &Array1::from_shape_fn(n, |_| noise_level * rng.random_range(-1.0..1.0));
 
         let config = DenoiseConfig::default();
         let result = denoise_wavelet_1d(&noisy_signal, &config).unwrap();
@@ -2225,7 +2225,7 @@ mod tests {
     #[test]
     fn test_enhanced_features() {
         let n = 128;
-        let signal = Array1::fromshape_fn(n, |i| (i as f64 / n as f64).sin());
+        let signal = Array1::from_shape_fn(n, |i| (i as f64 / n as f64).sin());
 
         // Test SIMD-optimized configuration
         let mut config = DenoiseConfig::default();
@@ -2242,7 +2242,7 @@ mod tests {
     #[test]
     fn test_memory_optimization() {
         let n = 2048; // Large enough to trigger memory optimization
-        let signal = Array1::fromshape_fn(n, |i| (i as f64 * 0.01).sin());
+        let signal = Array1::from_shape_fn(n, |i| (i as f64 * 0.01).sin());
 
         let mut config = DenoiseConfig::default();
         config.memory_optimized = true;

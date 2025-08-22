@@ -124,11 +124,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_array(&diagonalimage);
 
     println!("\n9a. Sobel Gradient on Diagonal:");
-    let sobel_diagonal = gradient_edges(&diagonalimage, Some(GradientMethod::Sobel), None, None);
+    let sobel_diagonal = gradient_edges(&diagonalimage, Some(GradientMethod::Sobel), None, None)?;
     print_array(&sobel_diagonal);
 
     println!("\n9b. Scharr Gradient on Diagonal:");
-    let scharr_diagonal = gradient_edges(&diagonalimage, Some(GradientMethod::Scharr), None, None);
+    let scharr_diagonal = gradient_edges(&diagonalimage, Some(GradientMethod::Scharr), None, None)?;
     print_array(&scharr_diagonal);
 
     // Note the higher values in the diagonal with Scharr compared to Sobel

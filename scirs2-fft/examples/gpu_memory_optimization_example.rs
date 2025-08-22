@@ -105,10 +105,10 @@ fn main() {
 
     // 5. Process a very large signal with memory optimization
     println!("\nProcessing a very large signal with memory optimization:");
-    let large_size = 1_000_000;
-    println!("  - Creating large signal of size {large_size}");
+    let largesize = 1_000_000;
+    println!("  - Creating large signal of size {largesize}");
     let frequencies = vec![(3, 1.0), (7, 0.5), (15, 0.25), (30, 0.1)];
-    let large_signal = create_sparse_signal(large_size, &frequencies);
+    let large_signal = create_sparse_signal(largesize, &frequencies);
 
     // Process with memory optimization
     println!("  - Processing with memory optimization...");

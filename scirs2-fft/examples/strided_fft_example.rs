@@ -92,7 +92,7 @@ fn main() {
 // Implement standard FFT along axis 0 (for comparison)
 #[allow(dead_code)]
 fn perform_standard_fft_axis0(arr: &Array2<f64>) -> Array2<Complex64> {
-    let (rows, cols) = (_arr.shape()[0], arr.shape()[1]);
+    let (rows, cols) = (arr.shape()[0], arr.shape()[1]);
     let mut result = Array2::zeros((rows, cols));
 
     // Process each column
@@ -112,7 +112,7 @@ fn perform_standard_fft_axis0(arr: &Array2<f64>) -> Array2<Complex64> {
 // Implement standard FFT along axis 1 (for comparison)
 #[allow(dead_code)]
 fn perform_standard_fft_axis1(arr: &Array2<f64>) -> Array2<Complex64> {
-    let (rows, cols) = (_arr.shape()[0], arr.shape()[1]);
+    let (rows, cols) = (arr.shape()[0], arr.shape()[1]);
     let mut result = Array2::zeros((rows, cols));
 
     // Process each row

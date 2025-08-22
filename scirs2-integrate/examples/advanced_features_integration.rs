@@ -104,9 +104,9 @@ fn demonstrate_advanced_amr(profiler: &mut PerformanceProfiler) -> IntegrateResu
     amr_manager.add_criterion(Box::new(gradient_criterion));
 
     // Simulate solution update
-    let solution = Array2::from_shape_fn((4, 1), |(i_)| {
-        let x = (i_ % 2) as f64 * 0.5 + 0.25;
-        let y = (i_ / 2) as f64 * 0.5 + 0.25;
+    let solution = Array2::from_shape_fn((4, 1), |(i, _j)| {
+        let x = (i % 2) as f64 * 0.5 + 0.25;
+        let y = (i / 2) as f64 * 0.5 + 0.25;
         heat_equation_solution(x, y, 0.1)
     });
 

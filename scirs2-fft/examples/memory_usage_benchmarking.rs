@@ -38,7 +38,7 @@ fn benchmark_1d_ffts(sizes: &[usize], iterations: usize) {
     // Create plan cache for reuse
     let mut _plan_cache = PlanCache::new();
 
-    for &size in _sizes {
+    for &size in sizes {
         // Create test signal
         let signal = create_test_signal(size);
 
@@ -132,7 +132,7 @@ fn benchmark_2d_ffts(sizes: &[(usize, usize)], iterations: usize) {
     // Create plan cache for reuse
     let mut _plan_cache = PlanCache::new();
 
-    for &(rows, cols) in _sizes {
+    for &(rows, cols) in sizes {
         // Create test array
         let signal = create_test_array(rows, cols);
 
@@ -216,7 +216,7 @@ fn benchmark_2d_ffts(sizes: &[(usize, usize)], iterations: usize) {
     );
     println!("{:-<70}", "");
 
-    for &(rows, cols) in _sizes {
+    for &(rows, cols) in sizes {
         let size = rows * cols;
         let std_mem =
             size as f64 * std::mem::size_of::<Complex64>() as f64 * 3.5 / (1024.0 * 1024.0);
@@ -234,9 +234,9 @@ fn benchmark_2d_ffts(sizes: &[(usize, usize)], iterations: usize) {
 /// Create a test signal with sine waves for 1D FFT
 #[allow(dead_code)]
 fn create_test_signal(size: usize) -> Vec<f64> {
-    let mut signal = Vec::with_capacity(_size);
-    for i in 0.._size {
-        let x = i as f64 / _size as f64;
+    let mut signal = Vec::with_capacity(size);
+    for i in 0..size {
+        let x = i as f64 / size as f64;
         let value = (2.0 * PI * 4.0 * x).sin() + 0.5 * (2.0 * PI * 8.0 * x).sin();
         signal.push(value);
     }
@@ -246,10 +246,10 @@ fn create_test_signal(size: usize) -> Vec<f64> {
 /// Create a test array with 2D patterns for 2D FFT
 #[allow(dead_code)]
 fn create_test_array(rows: usize, cols: usize) -> Array2<Complex64> {
-    let mut array = Array2::zeros((_rows, cols));
-    for i in 0.._rows {
+    let mut array = Array2::zeros((rows, cols));
+    for i in 0..rows {
         for j in 0..cols {
-            let x = i as f64 / _rows as f64;
+            let x = i as f64 / rows as f64;
             let y = j as f64 / cols as f64;
             let value = (2.0 * PI * 4.0 * x).sin() * (2.0 * PI * 4.0 * y).cos();
             array[[i, j]] = Complex64::new(value, 0.0);
@@ -275,7 +275,7 @@ fn optimized_fft2(
     shape: Option<(usize, usize)>,
 ) -> scirs2_fft::error::FFTResult<Array2<Complex64>> {
     // Get shape
-    let (_rows_cols) = match shape {
+    let (rows_cols) = match shape {
         Some(s) => s,
         None => {
             let shape = input.shape();
@@ -322,7 +322,7 @@ mod memory_tracking {
     #[allow(dead_code)]
     pub fn record_allocation(size: usize) {
         ACTIVE_ALLOCATIONS.fetch_add(1, Ordering::SeqCst);
-        TOTAL_ALLOCATED.fetch_add(_size, Ordering::SeqCst);
+        TOTAL_ALLOCATED.fetch_add(size, Ordering::SeqCst);
 
         // Update peak memory usage
         loop {
@@ -346,7 +346,7 @@ mod memory_tracking {
     #[allow(dead_code)]
     pub fn record_deallocation(size: usize) {
         ACTIVE_ALLOCATIONS.fetch_sub(1, Ordering::SeqCst);
-        TOTAL_ALLOCATED.fetch_sub(_size, Ordering::SeqCst);
+        TOTAL_ALLOCATED.fetch_sub(size, Ordering::SeqCst);
     }
 
     /// Memory usage statistics
@@ -361,22 +361,22 @@ mod memory_tracking {
     impl MemoryStats {
         /// Format memory size in human-readable form
         #[allow(dead_code)]
-        pub fn format_size(size: usize) -> String {
-            if _size < 1024 {
+        pub fn formatsize(size: usize) -> String {
+            if size < 1024 {
                 format!("{} B", size)
-            } else if _size < 1024 * 1024 {
-                format!("{:.2} KB", _size as f64 / 1024.0)
-            } else if _size < 1024 * 1024 * 1024 {
-                format!("{:.2} MB", _size as f64 / (1024.0 * 1024.0))
+            } else if size < 1024 * 1024 {
+                format!("{:.2} KB", size as f64 / 1024.0)
+            } else if size < 1024 * 1024 * 1024 {
+                format!("{:.2} MB", size as f64 / (1024.0 * 1024.0))
             } else {
-                format!("{:.2} GB", _size as f64 / (1024.0 * 1024.0 * 1024.0))
+                format!("{:.2} GB", size as f64 / (1024.0 * 1024.0 * 1024.0))
             }
         }
 
         /// Get peak memory usage in human-readable form
         #[allow(dead_code)]
         pub fn peak_memory_str(&self) -> String {
-            Self::format_size(self.peak_allocated)
+            Self::formatsize(self.peak_allocated)
         }
     }
 }

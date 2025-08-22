@@ -573,7 +573,7 @@ mod tests {
         let mut manager = AugmentationManager::<f64>::new(Some(42));
         manager.add_image_transform(ImageAugmentation::RandomHorizontalFlip { probability: 1.0 });
         let input =
-            Array4::<f64>::fromshape_fn((2, 3, 4, 4), |(____)| rand::random()).into_dyn();
+            Array4::<f64>::from_shape_fn((2, 3, 4, 4), |(____)| rand::random()).into_dyn();
         let result = manager.augment_images(&input).unwrap();
         assert_eq!(result.shape(), input.shape());
         assert!(manager.stats.samples_processed > 0);

@@ -13,7 +13,7 @@ use scirs2_ndimage::{
     domain_specific::{
         medical::{detect_lung_nodules, enhance_bone_structure, frangi_vesselness},
         microscopy::{colocalization_analysis, detect_nuclei, segment_cells},
-        satellite::{compute_ndvi, detect_water_bodies, pan_sharpen},
+        satellite::{compute_ndvi, detect_water_bodies, pan_sharpen, PanSharpenMethod},
     },
     features::{canny, fast_corners, harris_corners, LearnedEdgeDetector, ObjectProposalGenerator},
     filters::{
@@ -53,19 +53,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Vessel enhancement using Frangi filter
     let vessels = frangi_vesselness(
-        medical_volume.view(),
-        &[0.5, 1.0, 2.0, 4.0], // scales
-        0.5,                   // alpha
-        0.5,                   // beta
-        500.0,                 // gamma
+        &medical_volume.slice(ndarray::s![.., .., 0]),
+        None,
     )?;
 
     // Bone structure enhancement
     let enhanced_bone = enhance_bone_structure(
-        medical_volume.view(),
-        2.0,  // sigma
-        0.1,  // threshold
-        true, // enhance_contrast
+        &medical_volume.slice(ndarray::s![.., .., 0]),
+        2,  // usize parameter
     )?;
 
     // Lung nodule detection
@@ -157,8 +152,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sharpened = pan_sharpen(
         panchromatic.view(),
         multispectral.view(),
-        scirs2_ndimage::domain,
-        _specific::satellite::PanSharpenMethod::Brovey,
+        PanSharpenMethod::Brovey,
     )?;
 
     println!("✓ Satellite image processing completed");
@@ -513,7 +507,7 @@ fn generate_synthetic_medical_volume() -> Array3<f32> {
 
 #[allow(dead_code)]
 fn generate_synthetic_microscopyimage() -> Array3<f32> {
-    Array3::fromshape_fn((256, 256, 3), |(i, j_channel)| {
+    Array3::fromshape_fn((256, 256, 3), |(i, j, channel)| {
         let x = i as f32 / 256.0;
         let y = j as f32 / 256.0;
 

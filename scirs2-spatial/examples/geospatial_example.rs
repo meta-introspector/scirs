@@ -6,7 +6,7 @@
 //! - Coordinate system transformations
 //! - Spherical geometry operations
 
-use scirs2__spatial::geospatial::*;
+use scirs2_spatial::geospatial::*;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -524,7 +524,7 @@ fn geospatial_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
     // Find the centroid of the monitoring network
     let centroid_lat = monitoring_stations
         .iter()
-        .map(|(_, (lat_))| lat)
+        .map(|(_, (lat, _))| lat)
         .sum::<f64>()
         / monitoring_stations.len() as f64;
     let centroid_lon = monitoring_stations
@@ -568,14 +568,14 @@ fn geospatial_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Helper function to format coordinates in degrees, minutes, seconds
 #[allow(dead_code)]
-fn format_dms(_decimal_degrees: f64, islatitude: bool) -> String {
+fn format_dms(decimal_degrees: f64, is_latitude: bool) -> String {
     let abs_degrees = decimal_degrees.abs();
     let _degrees = abs_degrees.floor() as i32;
     let minutes = ((abs_degrees - _degrees as f64) * 60.0).floor() as i32;
     let seconds = ((abs_degrees - _degrees as f64) * 60.0 - minutes as f64) * 60.0;
 
     let direction = if is_latitude {
-        if _decimal_degrees >= 0.0 {
+        if decimal_degrees >= 0.0 {
             "N"
         } else {
             "S"
@@ -600,7 +600,7 @@ fn geographic_centroid(points: &[(f64, f64)]) -> (f64, f64) {
     let mut y_sum = 0.0;
     let mut z_sum = 0.0;
 
-    for (lat, lon) in _points {
+    for (lat, lon) in points {
         let lat_rad = lat * PI / 180.0;
         let lon_rad = lon * PI / 180.0;
 

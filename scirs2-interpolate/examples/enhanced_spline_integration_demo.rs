@@ -17,7 +17,7 @@ fn main() -> InterpolateResult<()> {
     let y = Array1::from(vec![0.0, 1.0, 4.0, 9.0]);
 
     // Create a natural cubic spline
-    let spline = CubicSpline::natural(&x.view(), &y.view())?;
+    let spline = CubicSpline::new(&x.view(), &y.view())?;
 
     println!("Created cubic spline for f(x) = x^2 over domain [0, 3]");
     println!("Data points: {:?}", x);
@@ -56,7 +56,10 @@ fn main() -> InterpolateResult<()> {
     // With constant extrapolation
     let integral_const_extrap =
         spline.integrate_with_extrapolation(-1.0, 4.0, Some(ExtrapolateMode::Nearest))?;
-    println!("   ∫[-1, 4] with constant extrapolation = {:.6}\n");
+    println!(
+        "   ∫[-1, 4] with constant extrapolation = {:.6}\n",
+        integral_const_extrap
+    );
 
     // 3. Demonstrate different extrapolation regions
     println!("3. Integration in different extrapolation regions:");
@@ -79,7 +82,10 @@ fn main() -> InterpolateResult<()> {
     // Mixed: interior + right extrapolation
     let mixed_right =
         spline.integrate_with_extrapolation(1.0, 4.0, Some(ExtrapolateMode::Extrapolate))?;
-    println!("   ∫[1, 4] (interior + right extrap) = {:.6}\n");
+    println!(
+        "   ∫[1, 4] (interior + right extrap) = {:.6}\n",
+        mixed_right
+    );
 
     // 4. Compare constant vs linear extrapolation
     println!("4. Extrapolation method comparison:");
@@ -99,7 +105,7 @@ fn main() -> InterpolateResult<()> {
         println!("     Linear extrapolation:   {:.6}", linear_result);
         println!(
             "     Difference:             {:.6}",
-            (linear_result - const_result).abs()
+            f64::abs(linear_result - const_result)
         );
     }
 

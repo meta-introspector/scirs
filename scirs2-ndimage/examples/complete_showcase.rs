@@ -72,7 +72,7 @@ pub fn complete_advanced_showcase() -> NdimageResult<()> {
     // Final performance analysis
     println!("\n📊 Final Performance Analysis");
     let summary = validator.get_performance_summary();
-    print_comprehensive_analysis(&summary);
+    // print_comprehensive_analysis(&summary); // TODO: Implement ComprehensiveSummary type
 
     println!("\n🎉 Complete Advanced Showcase Finished!");
     println!("All enhanced features validated and operational.");
@@ -104,7 +104,7 @@ fn adaptive_learning_showcase(validator: &mut ComprehensiveValidator) -> Ndimage
                 let duration = start_time.elapsed();
                 println!("    ✓ Completed in {:?}", duration);
                 println!("    📈 Quality: {:.3}", report.quality_score);
-                println!("    🎛️  Adaptive adjustments: {}", state.adaptation_count);
+                println!("    🎛️  Processing cycles: {}", state.processing_cycles);
                 validate_adaptive_output(&output, name)?;
             }
             Err(e) => {
@@ -138,10 +138,7 @@ fn quantum_coherence_showcase(validator: &mut ComprehensiveValidator) -> Ndimage
             Ok((output, state, report)) => {
                 let duration = start_time.elapsed();
                 println!("    ✓ Completed in {:?}", duration);
-                println!(
-                    "    ⚛️  Quantum coherence: {:.3}",
-                    state.quantum_coherence_level
-                );
+                println!("    ⚛️  Processing cycles: {}", state.processing_cycles);
                 println!("    📊 Quality: {:.3}", report.quality_score);
                 validate_quantum_output(&output, threshold)?;
             }
@@ -176,7 +173,7 @@ fn neuromorphic_plasticity_showcase(validator: &mut ComprehensiveValidator) -> N
             Ok((output, state, report)) => {
                 let duration = start_time.elapsed();
                 println!("    ✓ Completed in {:?}", duration);
-                println!("    🧠 Network adaptations: {}", state.network_adaptations);
+                println!("    🧠 Processing cycles: {}", state.processing_cycles);
                 println!("    📊 Quality: {:.3}", report.quality_score);
                 validate_neuromorphic_output(&output, plasticity)?;
             }
@@ -211,10 +208,7 @@ fn processing_intensity_showcase(validator: &mut ComprehensiveValidator) -> Ndim
             Ok((output, state, report)) => {
                 let duration = start_time.elapsed();
                 println!("    ✓ Completed in {:?}", duration);
-                println!(
-                    "    ⚡ Processing operations: {}",
-                    state.processing_operations
-                );
+                println!("    ⚡ Processing cycles: {}", state.processing_cycles);
                 println!("    📊 Quality: {:.3}", report.quality_score);
                 println!("    ⏱️  Pixels/sec: {:.0}", report.get_pixels_per_second());
                 validate_intensity_output(&output, intensity)?;
@@ -268,16 +262,10 @@ fn comprehensive_integration_test(validator: &mut ComprehensiveValidator) -> Ndi
                 "   - Processing rate: {:.0} pixels/sec",
                 report.get_pixels_per_second()
             );
-            println!(
-                "   - Quantum coherence: {:.3}",
-                state.quantum_coherence_level
-            );
-            println!("   - Adaptive iterations: {}", state.adaptation_count);
-            println!("   - Network adaptations: {}", state.network_adaptations);
-            println!(
-                "   - Processing operations: {}",
-                state.processing_operations
-            );
+            println!("   - Processing cycles: {}", state.processing_cycles);
+            println!("   - Processing cycles: {}", state.processing_cycles);
+            println!("   - Processing cycles: {}", state.processing_cycles);
+            println!("   - Processing cycles: {}", state.processing_cycles);
 
             // Validate comprehensive output
             validate_comprehensive_output(&output)?;
@@ -370,11 +358,11 @@ fn create_optimal_integration_config() -> AdvancedConfig {
 
 #[allow(dead_code)]
 fn create_adaptive_testimage(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((_height, width));
+    let mut image = Array2::zeros((height, width));
 
-    for y in 0.._height {
+    for y in 0..height {
         for x in 0..width {
-            let y_norm = y as f64 / _height as f64;
+            let y_norm = y as f64 / height as f64;
             let x_norm = x as f64 / width as f64;
 
             // Create patterns that benefit from adaptive learning
@@ -394,11 +382,11 @@ fn create_adaptive_testimage(height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_quantum_testimage(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((_height, width));
+    let mut image = Array2::zeros((height, width));
 
-    for y in 0.._height {
+    for y in 0..height {
         for x in 0..width {
-            let y_norm = y as f64 / _height as f64;
+            let y_norm = y as f64 / height as f64;
             let x_norm = x as f64 / width as f64;
 
             // Create quantum-coherence sensitive patterns
@@ -419,11 +407,11 @@ fn create_quantum_testimage(height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_neuromorphic_testimage(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((_height, width));
+    let mut image = Array2::zeros((height, width));
 
-    for y in 0.._height {
+    for y in 0..height {
         for x in 0..width {
-            let y_norm = y as f64 / _height as f64;
+            let y_norm = y as f64 / height as f64;
             let x_norm = x as f64 / width as f64;
 
             // Create bio-inspired patterns
@@ -441,11 +429,11 @@ fn create_neuromorphic_testimage(height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_intensity_testimage(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((_height, width));
+    let mut image = Array2::zeros((height, width));
 
-    for y in 0.._height {
+    for y in 0..height {
         for x in 0..width {
-            let y_norm = y as f64 / _height as f64;
+            let y_norm = y as f64 / height as f64;
             let x_norm = x as f64 / width as f64;
 
             // Create high-detail patterns that benefit from processing intensity
@@ -469,11 +457,11 @@ fn create_intensity_testimage(height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_comprehensive_testimage(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((_height, width));
+    let mut image = Array2::zeros((height, width));
 
-    for y in 0.._height {
+    for y in 0..height {
         for x in 0..width {
-            let y_norm = y as f64 / _height as f64;
+            let y_norm = y as f64 / height as f64;
             let x_norm = x as f64 / width as f64;
 
             // Combine all pattern types for comprehensive testing
@@ -497,7 +485,7 @@ fn create_comprehensive_testimage(height: usize, width: usize) -> Array2<f64> {
 // Validation functions
 
 #[allow(dead_code)]
-fn validate_adaptive_output<T>(_output: &Array2<T>, configname: &str) -> NdimageResult<()>
+fn validate_adaptive_output<T>(output: &Array2<T>, configname: &str) -> NdimageResult<()>
 where
     T: num_traits::Float + Copy,
 {
@@ -514,7 +502,7 @@ where
     if finite_count != total_pixels {
         return Err(scirs2_ndimage::NdimageError::ComputationError(format!(
             "Adaptive learning _output contains non-finite values for config: {}",
-            config_name
+            configname
         )));
     }
 
@@ -528,7 +516,7 @@ where
     T: num_traits::Float + Copy,
 {
     // Validate quantum coherence properties
-    let variance = calculate_variance(_output);
+    let variance = calculate_variance(output);
 
     // Higher coherence threshold should lead to more coherent (lower variance) _output
     println!("    📊 Output variance: {:.6}", variance);
@@ -549,7 +537,7 @@ where
     T: num_traits::Float + Copy,
 {
     // Validate neuromorphic adaptation properties
-    let edge_strength = calculate_edge_strength(_output);
+    let edge_strength = calculate_edge_strength(output);
 
     println!("    📊 Edge strength: {:.6}", edge_strength);
 
@@ -569,7 +557,7 @@ where
     T: num_traits::Float + Copy,
 {
     // Validate processing intensity effects
-    let detail_preservation = calculate_detail_preservation(_output);
+    let detail_preservation = calculate_detail_preservation(output);
 
     println!("    📊 Detail preservation: {:.6}", detail_preservation);
 
@@ -589,9 +577,9 @@ where
     T: num_traits::Float + Copy,
 {
     // Comprehensive validation of all aspects
-    let variance = calculate_variance(_output);
-    let edge_strength = calculate_edge_strength(_output);
-    let detail_preservation = calculate_detail_preservation(_output);
+    let variance = calculate_variance(output);
+    let edge_strength = calculate_edge_strength(output);
+    let detail_preservation = calculate_detail_preservation(output);
 
     println!("   📊 Comprehensive metrics:");
     println!("     - Variance: {:.6}", variance);
@@ -615,12 +603,12 @@ fn calculate_variance<T>(array: &Array2<T>) -> f64
 where
     T: num_traits::Float + Copy,
 {
-    let mean = _array
+    let mean = array
         .iter()
         .map(|&x| x.to_f64().unwrap_or(0.0))
         .sum::<f64>()
         / array.len() as f64;
-    let variance = _array
+    let variance = array
         .iter()
         .map(|&x| (x.to_f64().unwrap_or(0.0) - mean).powi(2))
         .sum::<f64>()
@@ -678,7 +666,7 @@ where
                 for dx in -2i32..=2 {
                     let ny = (y as i32 + dy) as usize;
                     let nx = (x as i32 + dx) as usize;
-                    local_values.push(_array[(ny, nx)].to_f64().unwrap_or(0.0));
+                    local_values.push(array[(ny, nx)].to_f64().unwrap_or(0.0));
                 }
             }
 
@@ -701,15 +689,17 @@ where
     }
 }
 
+// TODO: Implement when ComprehensiveSummary type is available
+/*
 #[allow(dead_code)]
-fn print_comprehensive_analysis(summary: &scirs2, ndimage: PerformanceSummary) {
+fn print_comprehensive_analysis(summary: &ComprehensiveSummary) {
     println!("🔍 Comprehensive Performance Analysis");
     println!("=====================================");
     println!("📈 Overall Statistics:");
     println!("   - Total operations: {}", summary.total_operations);
     println!(
         "   - Success rate: {:.1}%",
-        ((_summary.total_operations - summary.error_count) as f64
+        ((summary.total_operations - summary.error_count) as f64
             / summary.total_operations as f64)
             * 100.0
     );
@@ -719,7 +709,7 @@ fn print_comprehensive_analysis(summary: &scirs2, ndimage: PerformanceSummary) {
         summary.total_processing_time()
     );
 
-    if !_summary.benchmarks.is_empty() {
+    if !summary.benchmarks.is_empty() {
         println!("\n🏆 Feature Performance Rankings:");
         let mut sorted_benchmarks: Vec<_> = summary.benchmarks.iter().collect();
         sorted_benchmarks
@@ -742,6 +732,7 @@ fn print_comprehensive_analysis(summary: &scirs2, ndimage: PerformanceSummary) {
     println!("   - Neuromorphic plasticity: Better pattern recognition");
     println!("   - Processing intensity: Scalable performance control");
 }
+*/
 
 /// Main demonstration function
 #[allow(dead_code)]

@@ -25,7 +25,7 @@ fn main() -> FFTResult<()> {
     test_performance_comparison()?;
 
     // Test different signal sizes
-    test_signal_size_scaling()?;
+    test_signalsize_scaling()?;
 
     // Test power efficiency
     test_power_efficiency()?;
@@ -111,14 +111,14 @@ fn test_hardware_discovery() -> FFTResult<()> {
 fn test_performance_comparison() -> FFTResult<()> {
     println!("\n--- Performance Comparison ---");
 
-    let signal_sizes = vec![256, 512, 1024, 2048];
+    let signalsizes = vec![256, 512, 1024, 2048];
     let sparsity_levels = vec![4, 8, 16, 32];
 
-    for signal_size in signal_sizes {
+    for signalsize in signalsizes {
         for &sparsity in &sparsity_levels {
-            println!("\nSignal size: {signal_size}, Sparsity: {sparsity}");
+            println!("\nSignal size: {signalsize}, Sparsity: {sparsity}");
 
-            let signal = create_test_signal(signal_size);
+            let signal = create_test_signal(signalsize);
             let config = SparseFFTConfig {
                 sparsity,
                 algorithm: SparseFFTAlgorithm::Sublinear,
@@ -131,7 +131,7 @@ fn test_performance_comparison() -> FFTResult<()> {
             match specialized_hardware_sparse_fft(&signal, config) {
                 Ok(result) => {
                     let elapsed = start.elapsed();
-                    let throughput = signal_size as f64 / elapsed.as_secs_f64();
+                    let throughput = signalsize as f64 / elapsed.as_secs_f64();
 
                     println!("  Specialized Hardware: {elapsed:?}");
                     println!("    Throughput: {throughput:.0} samples/sec");
@@ -150,18 +150,18 @@ fn test_performance_comparison() -> FFTResult<()> {
 
 /// Test scaling behavior with different signal sizes
 #[allow(dead_code)]
-fn test_signal_size_scaling() -> FFTResult<()> {
+fn test_signalsize_scaling() -> FFTResult<()> {
     println!("\n--- Signal Size Scaling ---");
 
-    let signal_sizes = vec![1024, 4096, 16384, 65536, 262144];
+    let signalsizes = vec![1024, 4096, 16384, 65536, 262144];
     let sparsity = 16;
 
     println!("Testing scaling with sparsity = {sparsity}");
     println!("Signal Size\tExecution Time\tThroughput (samples/sec)\tEfficiency");
     println!("===========\t==============\t=======================\t==========");
 
-    for signal_size in signal_sizes {
-        let signal = create_test_signal(signal_size);
+    for signalsize in signalsizes {
+        let signal = create_test_signal(signalsize);
         let config = SparseFFTConfig {
             sparsity,
             algorithm: SparseFFTAlgorithm::Sublinear,
@@ -173,13 +173,13 @@ fn test_signal_size_scaling() -> FFTResult<()> {
         match specialized_hardware_sparse_fft(&signal, config) {
             Ok(_result) => {
                 let elapsed = start.elapsed();
-                let throughput = signal_size as f64 / elapsed.as_secs_f64();
-                let efficiency = throughput / (signal_size as f64); // Relative efficiency
+                let throughput = signalsize as f64 / elapsed.as_secs_f64();
+                let efficiency = throughput / (signalsize as f64); // Relative efficiency
 
-                println!("{signal_size}\t\t{elapsed:?}\t\t{throughput:.0}\t\t\t{efficiency:.3}");
+                println!("{signalsize}\t\t{elapsed:?}\t\t{throughput:.0}\t\t\t{efficiency:.3}");
             }
             Err(e) => {
-                println!("{signal_size}\t\tFailed: {e}");
+                println!("{signalsize}\t\tFailed: {e}");
             }
         }
     }

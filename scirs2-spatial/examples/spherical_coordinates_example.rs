@@ -1,9 +1,9 @@
 use ndarray::array;
-use scirs2__spatial::transform::spherical::{
+use scirs2_spatial::transform::spherical::{
     cart_to_spherical, cart_to_spherical_batch, geodesic_distance, spherical_to_cart,
     spherical_to_cart_batch, spherical_triangle_area,
 };
-use scirs2__spatial::SpatialResult;
+use scirs2_spatial::SpatialResult;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

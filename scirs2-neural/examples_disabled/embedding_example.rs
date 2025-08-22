@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create fixed sinusoidal positional embeddings
     let pos_embedding = PositionalEmbedding::<f32>::new(10, 8, false)?;
     // Create dummy input (like token embeddings)
-    let token_embeddings = Array::fromshape_fn(IxDyn(&[2, 5, 8]), |_| 1.0f32);
+    let token_embeddings = Array::from_shape_fn(IxDyn(&[2, 5, 8]), |_| 1.0f32);
     // Add positional information
     let output = pos_embedding.forward(&token_embeddings)?;
     println!("Token embeddings shape: {:?}", token_embeddings.shape());
@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create patch embedding for a vision transformer
     let patch_embedding = PatchEmbedding::<f32>::new((32, 32), (8, 8), 3, 96, true)?;
     // Create random image input
-    let image_input = Array::fromshape_fn(IxDyn(&[1, 3, 32, 32]), |_| rand::random::<f32>());
+    let image_input = Array::from_shape_fn(IxDyn(&[1, 3, 32, 32]), |_| rand::random::<f32>());
     // Extract patch embeddings
     let output = patch_embedding.forward(&image_input)?;
     println!("Input image shape: {:?}", image_input.shape());

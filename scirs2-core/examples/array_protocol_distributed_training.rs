@@ -75,7 +75,7 @@ fn main() {
     let num_classes = 10;
 
     // Create inputs and targets
-    let inputs = Array2::<f64>::fromshape_fn((num_samples, input_dim), |_| {
+    let inputs = Array2::<f64>::from_shape_fn((num_samples, input_dim), |_| {
         rand::random::<f64>() * 2.0.saturating_sub(1).0
     });
 

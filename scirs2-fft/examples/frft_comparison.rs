@@ -206,14 +206,14 @@ fn test_cascaded_transforms() {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.norm_sqr().partial_cmp(&b.norm_sqr()).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap();
 
     let peak_ozaktas = final_ozaktas
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.norm_sqr().partial_cmp(&b.norm_sqr()).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap();
 
     println!("Peak preservation:");

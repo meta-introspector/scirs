@@ -139,7 +139,7 @@ fn test_strategy(
     config: MultiGPUConfig,
     signal: &[f64],
     _sparsity: usize,
-) -> FFTResult<(scirs2_fft::sparse, _fft::SparseFFTResult, String)> {
+) -> FFTResult<(scirs2_fft::sparse_fft::SparseFFTResult, String)> {
     let mut processor = MultiGPUSparseFFT::new(config);
     processor.initialize()?;
 
@@ -163,12 +163,12 @@ fn test_strategy(
 fn test_performance_scaling() -> FFTResult<()> {
     println!("\n--- Performance Scaling Test ---");
 
-    let signal_sizes = vec![2048, 4096, 8192, 16384];
+    let signalsizes = vec![2048, 4096, 8192, 16384];
     let max_devices_configs = vec![1, 2, 4];
 
-    for signal_size in signal_sizes {
-        println!("\nSignal size: {} elements", signal_size);
-        let signal = create_test_signal(signal_size);
+    for signalsize in signalsizes {
+        println!("\nSignal size: {} elements", signalsize);
+        let signal = create_test_signal(signalsize);
 
         for max_devices in &max_devices_configs {
             let config = MultiGPUConfig {
@@ -182,16 +182,16 @@ fn test_performance_scaling() -> FFTResult<()> {
             let start = Instant::now();
 
             match test_strategy(config, &signal, 10) {
-                Ok((result_)) => {
+                Ok((result_, _)) => {
                     let elapsed = start.elapsed();
-                    let throughput = signal_size as f64 / elapsed.as_secs_f64();
+                    let throughput = signalsize as f64 / elapsed.as_secs_f64();
 
                     println!(
                         "  {} device(s): {:?} ({:.0} samples/sec, {} components)",
                         *max_devices,
                         elapsed,
                         throughput,
-                        result.indices.len()
+                        result_.indices.len()
                     );
                 }
                 Err(e) => {
@@ -315,10 +315,7 @@ fn display_system_info() {
 
         let gpu_count = devices
             .iter()
-            .filter(
-                |d| d.backend != scirs2_fft::sparse_fft,
-                _gpu::GPUBackend::CPUFallback,
-            )
+            .filter(|d| d.backend != scirs2_fft::sparse_fft_gpu::GPUBackend::CPUFallback)
             .count();
         let total_memory: usize = devices.iter().map(|d| d.memory_total).sum();
         let total_compute_units: usize = devices.iter().map(|d| d.compute_units).sum();

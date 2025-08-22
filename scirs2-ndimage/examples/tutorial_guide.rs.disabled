@@ -1240,12 +1240,12 @@ fn count_white_pixels<T>(image: &Array2<T>) -> usize
 where
     T: PartialOrd + From<u8>,
 {
-    image.iter().filter(|&&x| x > T::from(0u8)).count()
+    image.iter().filter(|&x| *x > T::from(0u8)).count()
 }
 
 #[allow(dead_code)]
 fn create_multi_objectimage(height: usize, width: usize) -> Array2<f64> {
-    Array2::fromshape_fn((_height, width), |(i, j)| {
+    Array2::from_shape_fn((height, width), |(i, j)| {
         // Create multiple objects of different sizes and intensities
         let objects = [
             ((20, 20), 8.0, 0.8), // (center, radius, intensity)
@@ -1268,8 +1268,8 @@ fn create_multi_objectimage(height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_test_patternimage(height: usize, width: usize) -> Array2<f64> {
-    Array2::fromshape_fn((_height, width), |(i, j)| {
-        let x = i as f64 / _height as f64;
+    Array2::from_shape_fn((height, width), |(i, j)| {
+        let x = i as f64 / height as f64;
         let y = j as f64 / width as f64;
 
         // Create a test pattern with various frequencies
@@ -1283,8 +1283,8 @@ fn create_test_patternimage(height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_complex_testimage(height: usize, width: usize) -> Array2<f64> {
-    Array2::fromshape_fn((_height, width), |(i, j)| {
-        let x = i as f64 / _height as f64;
+    Array2::from_shape_fn((height, width), |(i, j)| {
+        let x = i as f64 / height as f64;
         let y = j as f64 / width as f64;
 
         // Complex pattern with multiple features

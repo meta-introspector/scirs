@@ -1,6 +1,6 @@
 use ndarray::{array, Array2};
 use rand::prelude::*;
-use scirs2__spatial::{Octree, OctreeBoundingBox as BoundingBox};
+use scirs2_spatial::{Octree, OctreeBoundingBox as BoundingBox};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -158,7 +158,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Test radius search performance
     let start = std::time::Instant::now();
-    let (indices) = large_octree.query_radius(&query_point.view(), 10.0)?;
+    let (indices, _distances) = large_octree.query_radius(&query_point.view(), 10.0)?;
     let radius_time = start.elapsed();
 
     println!(

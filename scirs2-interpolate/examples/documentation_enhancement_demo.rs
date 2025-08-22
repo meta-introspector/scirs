@@ -3,10 +3,10 @@
 //! This example demonstrates how to use the documentation enhancement tools
 //! to analyze and improve documentation quality for the stable release.
 
+use scirs2_interpolate::documentation_enhancement::{DocumentationReport, ValidationStatus};
 use scirs2_interpolate::{
     enhance_documentation_for_stable_release, enhance_documentation_with_config,
     quick_documentation_analysis, AudienceLevel, DocumentationConfig, DocumentationReadiness,
-    ValidationStatus,
 };
 
 #[allow(dead_code)]
@@ -161,13 +161,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Analyze the generated content from documentation enhancement
 #[allow(dead_code)]
-fn analyze_generated_content(report: &scirs2, interpolate: DocumentationReport) {
+fn analyze_generated_content(report: &DocumentationReport) {
     println!("Generated Content Analysis:");
 
     // User guides analysis
-    if !_report.user_guides.is_empty() {
+    if !report.user_guides.is_empty() {
         println!("  User Guides Generated ({}):", report.user_guides.len());
-        for guide in &_report.user_guides {
+        for guide in &report.user_guides {
             println!(
                 "    - {} (Target: {:?}, {} sections, ~{} min read)",
                 guide.title,
@@ -179,9 +179,9 @@ fn analyze_generated_content(report: &scirs2, interpolate: DocumentationReport) 
     }
 
     // Tutorials analysis
-    if !_report.tutorials.is_empty() {
+    if !report.tutorials.is_empty() {
         println!("  Tutorials Created ({}):", report.tutorials.len());
-        for tutorial in &_report.tutorials {
+        for tutorial in &report.tutorials {
             println!(
                 "    - {} (Target: {:?}, {} steps, ~{} min)",
                 tutorial.title,
@@ -193,22 +193,22 @@ fn analyze_generated_content(report: &scirs2, interpolate: DocumentationReport) 
     }
 
     // Example validations
-    if !_report.example_validations.is_empty() {
+    if !report.example_validations.is_empty() {
         println!(
             "  Example Validations ({}):",
             report.example_validations.len()
         );
-        let valid_count = _report
+        let valid_count = report
             .example_validations
             .iter()
             .filter(|v| v.status == ValidationStatus::Valid)
             .count();
-        let invalid_count = _report
+        let invalid_count = report
             .example_validations
             .iter()
             .filter(|v| v.status == ValidationStatus::Invalid)
             .count();
-        let warning_count = _report
+        let warning_count = report
             .example_validations
             .iter()
             .filter(|v| v.status == ValidationStatus::ValidWithWarnings)
@@ -227,27 +227,27 @@ fn analyze_generated_content(report: &scirs2, interpolate: DocumentationReport) 
 
 /// Analyze documentation by target audience
 #[allow(dead_code)]
-fn analyze_by_audience_level(report: &scirs2, interpolate: DocumentationReport) {
+fn analyze_by_audience_level(report: &DocumentationReport) {
     use std::collections::HashMap;
 
     let mut audience_content: HashMap<String, (usize, usize)> = HashMap::new();
 
     // Count guides by audience
-    for guide in &_report.user_guides {
+    for guide in &report.user_guides {
         let audience_name = format!("{:?}", guide.audience);
         let entry = audience_content.entry(audience_name).or_insert((0, 0));
         entry.0 += 1;
     }
 
     // Count tutorials by audience
-    for tutorial in &_report.tutorials {
+    for tutorial in &report.tutorials {
         let audience_name = format!("{:?}", tutorial.audience);
         let entry = audience_content.entry(audience_name).or_insert((0, 0));
         entry.1 += 1;
     }
 
     println!("Content by Audience Level:");
-    for (audience, (guides, tutorials)) in audience_content {
+    for (audience, (guides, tutorials)) in &audience_content {
         println!("  {}: {} guides, {} tutorials", audience, guides, tutorials);
     }
 
@@ -259,13 +259,14 @@ fn analyze_by_audience_level(report: &scirs2, interpolate: DocumentationReport) 
         .collect();
 
     if !missing_audiences.is_empty() {
-        println!("  Missing content for: {}", missing_audiences.join(", "));
+        let missing_str: Vec<String> = missing_audiences.iter().map(|s| s.to_string()).collect();
+        println!("  Missing content for: {}", missing_str.join(", "));
     }
 }
 
 /// Analyze example validation results
 #[allow(dead_code)]
-fn analyze_example_validation(report: &scirs2, interpolate: DocumentationReport) {
+fn analyze_example_validation(report: &DocumentationReport) {
     println!("Example Validation Results:");
 
     let total_examples = report.example_validations.len();
@@ -274,19 +275,19 @@ fn analyze_example_validation(report: &scirs2, interpolate: DocumentationReport)
         return;
     }
 
-    let valid_examples = _report
+    let valid_examples = report
         .example_validations
         .iter()
         .filter(|v| v.status == ValidationStatus::Valid)
         .count();
 
-    let warning_examples = _report
+    let warning_examples = report
         .example_validations
         .iter()
         .filter(|v| v.status == ValidationStatus::ValidWithWarnings)
         .count();
 
-    let invalid_examples = _report
+    let invalid_examples = report
         .example_validations
         .iter()
         .filter(|v| v.status == ValidationStatus::Invalid)
@@ -310,7 +311,7 @@ fn analyze_example_validation(report: &scirs2, interpolate: DocumentationReport)
     );
 
     // Show examples that need attention
-    let problematic_examples: Vec<_> = _report
+    let problematic_examples: Vec<_> = report
         .example_validations
         .iter()
         .filter(|v| v.status != ValidationStatus::Valid)
@@ -335,7 +336,7 @@ fn analyze_example_validation(report: &scirs2, interpolate: DocumentationReport)
 
 /// Assess overall documentation quality
 #[allow(dead_code)]
-fn assess_documentation_quality(report: &scirs2, interpolate: DocumentationReport) {
+fn assess_documentation_quality(report: &DocumentationReport) {
     println!("Documentation Quality Assessment:");
 
     if report.analysis_results.is_empty() {
@@ -345,28 +346,28 @@ fn assess_documentation_quality(report: &scirs2, interpolate: DocumentationRepor
 
     // Calculate average quality scores
     let total_items = report.analysis_results.len() as f32;
-    let avg_overall_score = _report
+    let avg_overall_score = report
         .analysis_results
         .iter()
         .map(|r| r.quality_assessment.overall_score)
         .sum::<f32>()
         / total_items;
 
-    let avg_clarity = _report
+    let avg_clarity = report
         .analysis_results
         .iter()
         .map(|r| r.quality_assessment.clarity_score)
         .sum::<f32>()
         / total_items;
 
-    let avg_completeness = _report
+    let avg_completeness = report
         .analysis_results
         .iter()
         .map(|r| r.quality_assessment.completeness_score)
         .sum::<f32>()
         / total_items;
 
-    let avg_usefulness = _report
+    let avg_usefulness = report
         .analysis_results
         .iter()
         .map(|r| r.quality_assessment.usefulness_score)
@@ -380,13 +381,13 @@ fn assess_documentation_quality(report: &scirs2, interpolate: DocumentationRepor
     println!("    Usefulness: {:.2}/1.0", avg_usefulness);
 
     // Quality distribution
-    let high_quality = _report
+    let high_quality = report
         .analysis_results
         .iter()
         .filter(|r| r.quality_assessment.overall_score >= 0.8)
         .count();
 
-    let medium_quality = _report
+    let medium_quality = report
         .analysis_results
         .iter()
         .filter(|r| {
@@ -394,7 +395,7 @@ fn assess_documentation_quality(report: &scirs2, interpolate: DocumentationRepor
         })
         .count();
 
-    let low_quality = _report
+    let low_quality = report
         .analysis_results
         .iter()
         .filter(|r| r.quality_assessment.overall_score < 0.6)
@@ -415,7 +416,7 @@ fn assess_documentation_quality(report: &scirs2, interpolate: DocumentationRepor
 
 /// Provide actionable documentation improvement plan
 #[allow(dead_code)]
-fn provide_documentation_action_plan(report: &scirs2, interpolate: DocumentationReport) {
+fn provide_documentation_action_plan(report: &DocumentationReport) {
     match report.readiness {
         DocumentationReadiness::Ready => {
             println!("✅ DOCUMENTATION READY FOR STABLE RELEASE");
@@ -432,7 +433,7 @@ fn provide_documentation_action_plan(report: &scirs2, interpolate: Documentation
             let mut action_count = 1;
 
             // Critical issues first
-            if !_report.critical_issues.is_empty() {
+            if !report.critical_issues.is_empty() {
                 println!(
                     "    {}. Fix {} critical documentation issues",
                     action_count,
@@ -461,7 +462,7 @@ fn provide_documentation_action_plan(report: &scirs2, interpolate: Documentation
             }
 
             // Example issues
-            let broken_examples = _report
+            let broken_examples = report
                 .example_validations
                 .iter()
                 .filter(|v| v.status == ValidationStatus::Invalid)
@@ -483,14 +484,14 @@ fn provide_documentation_action_plan(report: &scirs2, interpolate: Documentation
                 report.coverage_percentage
             );
 
-            if !_report.critical_issues.is_empty() {
+            if !report.critical_issues.is_empty() {
                 println!(
                     "    2. Resolve {} critical documentation issues",
                     report.critical_issues.len()
                 );
             }
 
-            let missing_examples = _report
+            let missing_examples = report
                 .analysis_results
                 .iter()
                 .filter(|r| !r.examples_status.has_examples)
@@ -500,7 +501,7 @@ fn provide_documentation_action_plan(report: &scirs2, interpolate: Documentation
                 println!("    3. Add examples to {} API items", missing_examples);
             }
 
-            let broken_examples = _report
+            let broken_examples = report
                 .example_validations
                 .iter()
                 .filter(|v| v.status == ValidationStatus::Invalid)

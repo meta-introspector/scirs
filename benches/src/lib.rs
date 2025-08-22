@@ -31,10 +31,9 @@
 /// Common utilities for benchmarking
 pub mod common {
     use ndarray::{Array1, Array2};
-    use ndarray_rand::rand::distributions::Uniform;
-    use ndarray_rand::rand::rngs::SmallRng;
-    use ndarray_rand::rand::SeedableRng;
-    use ndarray_rand::RandomExt;
+    use rand::distr::Uniform;
+    use rand::rngs::SmallRng;
+    use rand::{Rng, SeedableRng};
 
     /// Standard seed for reproducible benchmarks
     pub const BENCHMARK_SEED: u64 = 42;
@@ -42,19 +41,22 @@ pub mod common {
     /// Generate a random matrix with controlled properties
     pub fn generate_random_matrix(n: usize, seed: u64) -> Array2<f64> {
         let mut rng = SmallRng::seed_from_u64(seed);
-        Array2::random_using((n, n), Uniform::new(-1.0, 1.0), &mut rng)
+        let uniform = Uniform::new(-1.0, 1.0).unwrap();
+        Array2::from_shape_fn((n, n), |_| rng.sample(uniform))
     }
 
     /// Generate a random vector with controlled properties
     pub fn generate_random_vector(n: usize, seed: u64) -> Array1<f64> {
         let mut rng = SmallRng::seed_from_u64(seed);
-        Array1::random_using(n, Uniform::new(-1.0, 1.0), &mut rng)
+        let uniform = Uniform::new(-1.0, 1.0).unwrap();
+        Array1::from_shape_fn(n, |_| rng.sample(uniform))
     }
 
     /// Generate a symmetric positive definite matrix
     pub fn generate_spd_matrix(n: usize, seed: u64) -> Array2<f64> {
         let mut rng = SmallRng::seed_from_u64(seed);
-        let a = Array2::random_using((n, n), Uniform::new(-1.0, 1.0), &mut rng);
+        let uniform = Uniform::new(-1.0, 1.0).unwrap();
+        let a = Array2::from_shape_fn((n, n), |_| rng.sample(uniform));
 
         // A^T * A is always positive definite
         let at = a.t();

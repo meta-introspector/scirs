@@ -26,8 +26,8 @@ fn main() {
 
     // Plan ahead of time for common sizes
     println!("Planning ahead for common FFT sizes...");
-    let common_sizes = [128, 256, 512, 1024, 2048];
-    plan_ahead_of_time(&common_sizes, Some("./fft_plans.json")).unwrap();
+    let commonsizes = [128, 256, 512, 1024, 2048];
+    plan_ahead_of_time(&commonsizes, Some("./fft_plans.json")).unwrap();
 
     // Create test data
     println!("Creating test arrays...");

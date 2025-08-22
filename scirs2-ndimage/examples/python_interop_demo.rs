@@ -160,10 +160,8 @@ fn main() -> NdimageResult<()> {
     for error in errors {
         let py_error: PyError = error.into();
         println!(
-            "   • {:?} -> {}: {}",
-            std::mem::discriminant(&py_error),
-            py_error.error_type,
-            py_error.message
+            "   • {} -> {}: {}",
+            py_error.error_type, py_error.error_type, py_error.message
         );
     }
 

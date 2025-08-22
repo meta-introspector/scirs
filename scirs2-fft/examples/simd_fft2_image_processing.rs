@@ -73,11 +73,11 @@ fn main() {
 /// Generate a test image with various frequency components
 #[allow(dead_code)]
 fn generate_test_image(width: usize, height: usize) -> Vec<f64> {
-    let mut image = vec![0.0; _width * height];
+    let mut image = vec![0.0; width * height];
 
     for y in 0..height {
-        for x in 0.._width {
-            let x_norm = x as f64 / _width as f64;
+        for x in 0..width {
+            let x_norm = x as f64 / width as f64;
             let y_norm = y as f64 / height as f64;
 
             // Create a pattern with various frequency components
@@ -86,7 +86,7 @@ fn generate_test_image(width: usize, height: usize) -> Vec<f64> {
             let high_freq = 0.25 * (16.0 * PI * x_norm).sin() * (16.0 * PI * y_norm).cos();
 
             // Combine the frequencies
-            image[y * _width + x] = low_freq + mid_freq + high_freq;
+            image[y * width + x] = low_freq + mid_freq + high_freq;
         }
     }
 

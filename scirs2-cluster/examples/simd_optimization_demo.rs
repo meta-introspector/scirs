@@ -5,7 +5,8 @@
 
 use ndarray::Array2;
 use scirs2_cluster::vq::{
-    kmeans, kmeans_simd, vq, vq_simd, whiten, whiten_simd, KMeansOptions, KMeansInit, SimdOptimizationConfig,
+    kmeans, kmeans_simd, vq, vq_simd, whiten, whiten_simd, KMeansInit, KMeansOptions,
+    SimdOptimizationConfig,
 };
 use std::time::Instant;
 

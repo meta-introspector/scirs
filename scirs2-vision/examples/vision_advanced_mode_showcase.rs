@@ -293,9 +293,7 @@ fn ai_optimization_demo(frames: &[Frame]) -> Result<()> {
 
     let mut nas = NeuralArchitectureSearch::new(
         search_space,
-        SearchStrategy::Evolutionary {
-            populationsize: 20,
-        },
+        SearchStrategy::Evolutionary { populationsize: 20 },
     );
 
     // Predictive scaler

@@ -1,6 +1,6 @@
 use ndarray::{array, Array1};
 use plotters::prelude::*;
-use scirs2__spatial::transform::{Rotation, RotationSpline};
+use scirs2_spatial::transform::{Rotation, RotationSpline};
 use std::error::Error;
 use std::f64::consts::PI;
 
@@ -207,7 +207,7 @@ fn visualize_spline_rotations(
     ))?;
 
     // Draw interpolation type and info
-    root.drawtext(
+    root.draw_text(
         &format!("Interpolation: {}", spline.interpolation_type()),
         &TextStyle::from(("sans-serif", 20)).color(&BLACK),
         (50, 20),
@@ -336,7 +336,7 @@ fn visualize_spline_rotations_3d(
     ))?;
 
     // Draw interpolation type and info
-    root.drawtext(
+    root.draw_text(
         &format!("Interpolation: {}", spline.interpolation_type()),
         &TextStyle::from(("sans-serif", 20)).color(&BLACK),
         (50, 20),

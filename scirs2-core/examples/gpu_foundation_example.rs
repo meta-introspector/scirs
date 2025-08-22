@@ -143,8 +143,8 @@ fn run_gpu_foundation_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("-----------------------------");
 
     // Create small matrices for testing
-    let a = Array2::fromshape_fn((4, 4), |(i, j)| (i * 4 + j) as f32);
-    let b = Array2::fromshape_fn((4, 4), |(i, j)| ((i + j) as f32).cos());
+    let a = Array2::from_shape_fn((4, 4), |(i, j)| (i * 4 + j) as f32);
+    let b = Array2::from_shape_fn((4, 4), |(i, j)| ((i + j) as f32).cos());
 
     println!("Matrix A (4x4):");
     for row in a.outer_iter() {

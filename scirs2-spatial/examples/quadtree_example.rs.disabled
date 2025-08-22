@@ -1,6 +1,6 @@
 use ndarray::{array, Array2};
 use rand::prelude::*;
-use scirs2__spatial::{BoundingBox2D, Quadtree};
+use scirs2_spatial::{BoundingBox2D, Quadtree};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

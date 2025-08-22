@@ -1,8 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2};
-use ndarray_rand::RandomExt;
-use rand::distributions::Uniform;
-use rand::SeedableRng;
+use rand::distr::Uniform;
+use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use scirs2_core::memory::BufferPool;
 use scirs2_linalg::{det, solve};
@@ -15,7 +14,8 @@ const MEMORY_TEST_SIZES: &[usize] = &[100, 500, 1000, 2000];
 #[allow(dead_code)]
 fn generate_memory_test_data(size: usize) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
-    Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng)
+    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    Array2::from_shape_fn((size, size), |_| rng.sample(uniform))
 }
 
 /// Benchmark buffer pool efficiency

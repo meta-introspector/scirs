@@ -493,7 +493,7 @@ fn validate_wavelet2d_module(
     let mut boundary_validation_passed = true;
 
     // Test with small image
-    let test_data = Array2::fromshape_fn((16, 16), |(i, j)| ((i as f64 + j as f64) / 2.0).sin());
+    let test_data = Array2::from_shape_fn((16, 16), |(i, j)| ((i as f64 + j as f64) / 2.0).sin());
 
     let dwt_config = Dwt2dConfig {
         boundary_mode: BoundaryMode::Symmetric,

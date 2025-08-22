@@ -34,7 +34,7 @@ use scirs2_ndimage::{
         fusion_processing, quantum_aware_resource_scheduling_optimization, AdvancedConfig,
         AdvancedState, ConsciousnessState, EnhancedMetaLearningSystem, NetworkProperties,
         QuantumAwareResourceScheduler, QuantumConsciousnessEvolution, ResourceSchedulingDecision,
-        ResourceState, WorkloadCharacteristics,
+        ResourceState, WorkloadCharacteristics, EfficiencyMetrics, PerformanceRequirements,
     },
     neuromorphic_computing::NeuromorphicConfig,
     quantum_inspired::QuantumConfig,
@@ -586,10 +586,10 @@ fn create_advanced_advanced_config() -> AdvancedConfig {
 }
 
 #[allow(dead_code)]
-fn create_mock_advancedfeatures(image: &Array2<f64>, config: &AdvancedConfig) -> Array3<f64> {
-    // Simplified mock advanced-features for demonstration
+fn create_mock_advancedfeatures(image: &Array2<f64>, config: &AdvancedConfig) -> ndarray::ArrayBase<ndarray::OwnedRepr<f64>, ndarray::Dim<[usize; 5]>> {
+    // Simplified mock advanced-features for demonstration (5D as expected by the function)
     let (height, width) = image.dim();
-    Array3::zeros((height, width, config.advanced_dimensions))
+    ndarray::ArrayBase::zeros((height, width, config.advanced_dimensions, 2, 2))
 }
 
 #[allow(dead_code)]
@@ -620,8 +620,8 @@ fn create_mock_advancedstate(shape: (usize, usize), config: &AdvancedConfig) -> 
             quantum_allocation: Some(0.5),
             allocationhistory: std::collections::VecDeque::new(),
         },
-        efficiencymetrics: scirs2,
-        _ndimage: fusion,
+        efficiencymetrics: create_mock_efficiency_metrics(),
+        _ndimage: create_mock_ndimage_metrics(),
         core: EfficiencyMetrics {
             ops_per_second: 10000.0,
             memory_efficiency: 0.85,
@@ -673,8 +673,8 @@ fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
         task_types,
         intensity_pattern: vec![0.5, 0.7, 0.9, 0.8, 0.6, 0.4, 0.3, 0.5, 0.8, 0.9],
         dependencies: vec![("task1".to_string(), "task2".to_string())],
-        performance_requirements: scirs2,
-        _ndimage: fusion,
+        performance_requirements: create_mock_performance_requirements(),
+        _ndimage: create_mock_ndimage_reqs(),
         core: PerformanceRequirements {
             max_latency: 100.0,
             min_throughput: 1000.0,
@@ -775,4 +775,45 @@ fn analyze_scheduling_insights(scheduler: &QuantumAwareResourceScheduler) -> Vec
     ));
 
     insights
+}
+#[allow(dead_code)]
+fn create_mock_efficiency_metrics() -> EfficiencyMetrics {
+    EfficiencyMetrics {
+        ops_per_second: 10000.0,
+        memory_efficiency: 0.85,
+        energy_efficiency: 0.75,
+        quality_efficiency: 0.9,
+        temporal_efficiency: 0.8,
+    }
+}
+
+#[allow(dead_code)]
+fn create_mock_ndimage_metrics() -> EfficiencyMetrics {
+    EfficiencyMetrics {
+        ops_per_second: 8000.0,
+        memory_efficiency: 0.80,
+        energy_efficiency: 0.70,
+        quality_efficiency: 0.85,
+        temporal_efficiency: 0.75,
+    }
+}
+
+#[allow(dead_code)]
+fn create_mock_performance_requirements() -> PerformanceRequirements {
+    PerformanceRequirements {
+        max_latency: 100.0,
+        min_throughput: 1000.0,
+        accuracy_requirement: 0.95,
+        energy_budget: 500.0,
+    }
+}
+
+#[allow(dead_code)]
+fn create_mock_ndimage_reqs() -> PerformanceRequirements {
+    PerformanceRequirements {
+        max_latency: 150.0,
+        min_throughput: 800.0,
+        accuracy_requirement: 0.90,
+        energy_budget: 400.0,
+    }
 }

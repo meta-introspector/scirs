@@ -2028,7 +2028,7 @@ mod tests {
     #[test]
     fn test_cross_validation() {
         let n = 200;
-        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.1).sin());
+        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
         let mut output = Array1::zeros(n);
 
         // Generate ARMAX system
@@ -2052,7 +2052,7 @@ mod tests {
     #[test]
     fn test_robust_identification() {
         let n = 100;
-        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.1).sin());
+        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
         let mut output = Array1::zeros(n);
 
         // Generate system with outliers
@@ -2081,7 +2081,7 @@ mod tests {
     #[test]
     fn test_simd_optimization() {
         let n = 1000;
-        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.01).sin());
+        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.01).sin());
         let mut output = Array1::zeros(n);
 
         // Generate system
@@ -2106,14 +2106,14 @@ mod tests {
     #[test]
     fn test_mimo_identification() {
         let n = 100;
-        let inputs = Array2::fromshape_fn((n, 2), |(i, j)| {
+        let inputs = Array2::from_shape_fn((n, 2), |(i, j)| {
             if j == 0 {
                 (i as f64 * 0.1).sin()
             } else {
                 (i as f64 * 0.1).cos()
             }
         });
-        let outputs = Array2::fromshape_fn((n, 2), |(i, j)| {
+        let outputs = Array2::from_shape_fn((n, 2), |(i, j)| {
             if j == 0 {
                 if i > 0 {
                     0.8 * i as f64 + 0.2 * inputs[[i - 1, 0]]
@@ -2148,7 +2148,7 @@ mod tests {
         let mut identifier = AdaptiveIdentifier::new(EnhancedSysIdConfig::default());
 
         let n = 100;
-        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.1).sin());
+        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
         let mut output = Array1::zeros(n);
 
         // Generate changing system
@@ -2174,7 +2174,7 @@ mod tests {
     #[test]
     fn test_model_selection() {
         let n = 200;
-        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.05).sin());
+        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.05).sin());
         let mut output = Array1::zeros(n);
 
         // Generate ARMAX system

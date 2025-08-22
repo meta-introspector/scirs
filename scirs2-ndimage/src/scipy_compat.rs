@@ -4,14 +4,15 @@
 //! making it easier to migrate existing Python code to Rust.
 
 use ndarray::{
-    Array, Array1, Array2, ArrayBase, ArrayView, ArrayView2, ArrayViewMut, Data, DataMut, Dimension, Ix1, Ix2, IxDyn,
+    Array, Array1, Array2, ArrayBase, ArrayView, ArrayView2, ArrayViewMut, Data, DataMut,
+    Dimension, Ix1, Ix2, IxDyn,
 };
 use num_traits::{Float, FromPrimitive, NumAssign};
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{self, BorderMode as FilterBoundaryMode};
-use crate::interpolation::{self, InterpolationOrder, BoundaryMode as InterpolationBoundaryMode};
+use crate::interpolation::{self, BoundaryMode as InterpolationBoundaryMode, InterpolationOrder};
 use crate::measurements;
 use crate::morphology;
 
@@ -132,13 +133,9 @@ where
         sigma[0].to_f64().unwrap()
     };
     let truncate_f64 = truncate.map(|t| t.to_f64().unwrap());
-    
-    crate::filters::gaussian_filter(
-        &input_f64,
-        sigma_f64,
-        Some(boundary_mode),
-        truncate_f64,
-    ).map(|arr| arr.map(|x| T::from_f64(*x).unwrap()))
+
+    crate::filters::gaussian_filter(&input_f64, sigma_f64, Some(boundary_mode), truncate_f64)
+        .map(|arr| arr.map(|x| T::from_f64(*x).unwrap()))
 }
 
 /// Uniform filter with SciPy-compatible interface
@@ -170,12 +167,7 @@ where
 
     let input_array = input.to_owned();
     let origin_vec = origin.unwrap_or_else(|| vec![0; input.ndim()]);
-    crate::filters::uniform_filter(
-        &input_array,
-        &size,
-        Some(boundary_mode),
-        Some(&origin_vec),
-    )
+    crate::filters::uniform_filter(&input_array, &size, Some(boundary_mode), Some(&origin_vec))
 }
 
 /// Median filter with SciPy-compatible interface
@@ -237,15 +229,15 @@ where
     let input_array = input.to_owned();
     let structure_array = structure.map(|s| s.to_owned());
     let mask_array = mask.map(|m| m.to_owned());
-    
+
     crate::morphology::binary_erosion(
         &input_array,
         structure_array.as_ref(),
         Some(iterations.unwrap_or(1)),
         mask_array.as_ref(),
         Some(border_value.unwrap_or(true)),
-        None,  // origin
-        None,  // brute_force
+        None, // origin
+        None, // brute_force
     )
 }
 
@@ -264,15 +256,15 @@ where
     let input_array = input.to_owned();
     let structure_array = structure.map(|s| s.to_owned());
     let mask_array = mask.map(|m| m.to_owned());
-    
+
     crate::morphology::binary_dilation(
         &input_array,
         structure_array.as_ref(),
         Some(iterations.unwrap_or(1)),
         mask_array.as_ref(),
         Some(border_value.unwrap_or(false)),
-        None,  // origin
-        None,  // brute_force
+        None, // origin
+        None, // brute_force
     )
 }
 
@@ -293,7 +285,9 @@ where
         Some(fp) => fp.to_owned(),
         None => {
             // For now, just pass None and let the underlying function handle defaults
-            return Err(NdimageError::ImplementationError("grey_erosion without footprint not implemented".into()));
+            return Err(NdimageError::ImplementationError(
+                "grey_erosion without footprint not implemented".into(),
+            ));
         }
     };
 
@@ -306,16 +300,22 @@ where
     // Use grey_erosion_2d for 2D arrays from simple_morph module
     if input.ndim() == 2 {
         let input_2d = input.to_owned().into_dimensionality::<Ix2>().unwrap();
-        let structure_2d = structure_array.to_owned().into_dimensionality::<Ix2>().unwrap();
+        let structure_2d = structure_array
+            .to_owned()
+            .into_dimensionality::<Ix2>()
+            .unwrap();
         crate::morphology::simple_morph::grey_erosion_2d(
-            &input_2d, 
-            Some(&structure_2d), 
-            None,  // iterations
-            Some(cval.unwrap_or(T::zero())),  // border_value
-            None  // origin
-        ).map(|arr| arr.into_dimensionality::<D>().unwrap())
+            &input_2d,
+            Some(&structure_2d),
+            None,                            // iterations
+            Some(cval.unwrap_or(T::zero())), // border_value
+            None,                            // origin
+        )
+        .map(|arr| arr.into_dimensionality::<D>().unwrap())
     } else {
-        Err(NdimageError::DimensionError("grayscale_erosion only supports 2D arrays".to_string()))
+        Err(NdimageError::DimensionError(
+            "grayscale_erosion only supports 2D arrays".to_string(),
+        ))
     }
 }
 
@@ -334,11 +334,12 @@ where
     let structure_array = structure.map(|s| s.to_owned());
 
     crate::morphology::label(
-        &bool_input, 
+        &bool_input,
         structure_array.as_ref(),
-        None,  // connectivity
-        None   // background
-    ).map(|(labels, num_features)| {
+        None, // connectivity
+        None, // background
+    )
+    .map(|(labels, num_features)| {
         // Convert usize labels to i32 for compatibility
         (labels.map(|&x| x as i32), num_features)
     })
@@ -359,7 +360,8 @@ where
     // TODO: Handle labels and index parameters if needed
     let input_array = input.to_owned();
     crate::measurements::center_of_mass(&input_array)
-        .map(|com| vec![com.into_iter().map(|x| x.to_f64().unwrap_or(0.0)).collect()])  // Convert to f64
+        .map(|com| vec![com.into_iter().map(|x| x.to_f64().unwrap_or(0.0)).collect()])
+    // Convert to f64
 }
 
 /// Affine transform with SciPy-compatible interface
@@ -389,10 +391,13 @@ where
     let input_array = input.to_owned();
     let matrix_t = matrix.map(|x| T::from_f64(*x).unwrap());
     let offset_t = {
-        let arr: Vec<T> = offset_vec.iter().map(|x| T::from_f64(*x).unwrap()).collect();
+        let arr: Vec<T> = offset_vec
+            .iter()
+            .map(|x| T::from_f64(*x).unwrap())
+            .collect();
         Array1::from_vec(arr)
     };
-    
+
     crate::interpolation::affine_transform(
         &input_array,
         &matrix_t,
@@ -420,7 +425,7 @@ where
     // This function requires dimension-specific implementations due to ndarray constraints
     // For now, return an error indicating this needs to be implemented
     Err(NdimageError::ImplementationError(
-        "distance_transform_edt with generic dimensions not yet implemented".into()
+        "distance_transform_edt with generic dimensions not yet implemented".into(),
     ))
 }
 
@@ -455,7 +460,7 @@ where
     // This function has complex dimension requirements that need specific implementations
     // For now, return an error indicating this needs to be implemented
     Err(NdimageError::ImplementationError(
-        "map_coordinates with generic dimensions not yet implemented".into()
+        "map_coordinates with generic dimensions not yet implemented".into(),
     ))
 }
 
@@ -495,7 +500,7 @@ where
     } else {
         T::from_f64(zoom_factors[0]).unwrap()
     };
-    
+
     let input_array = input.to_owned();
     crate::interpolation::zoom(
         &input_array,
@@ -538,16 +543,16 @@ where
 
     let input_array = input.to_owned();
     let angle_t = T::from_f64(angle).unwrap();
-    
+
     crate::interpolation::rotate(
         &input_array,
         angle_t,
-        axes,  // axes parameter
+        axes, // axes parameter
         Some(reshape.unwrap_or(false)),
-        Some(InterpolationOrder::Cubic),  // order 3
+        Some(InterpolationOrder::Cubic), // order 3
         Some(boundary_mode),
         Some(cval.unwrap_or(T::zero())),
-        None,  // prefilter
+        None, // prefilter
     )
 }
 
@@ -574,7 +579,7 @@ where
 
     let input_array = input.to_owned();
     let shift_t: Vec<T> = shift.iter().map(|&x| T::from_f64(x).unwrap()).collect();
-    
+
     crate::interpolation::shift(
         &input_array,
         &shift_t,
@@ -674,7 +679,7 @@ where
         function,
         &size,
         Some(boundary_mode),
-        Some(cval.unwrap_or(T::zero()))
+        Some(cval.unwrap_or(T::zero())),
     )
 }
 
@@ -705,12 +710,7 @@ where
     let size = size.unwrap_or_else(|| vec![3; input.ndim()]);
     let input_array = input.to_owned();
     let origin_ref = origin.as_ref().map(|o| o.as_slice());
-    crate::filters::maximum_filter(
-        &input_array,
-        &size,
-        Some(boundary_mode),
-        origin_ref
-    )
+    crate::filters::maximum_filter(&input_array, &size, Some(boundary_mode), origin_ref)
 }
 
 /// Minimum filter with SciPy-compatible interface
@@ -740,12 +740,7 @@ where
     let size = size.unwrap_or_else(|| vec![3; input.ndim()]);
     let input_array = input.to_owned();
     let origin_ref = origin.as_ref().map(|o| o.as_slice());
-    crate::filters::minimum_filter(
-        &input_array,
-        &size,
-        Some(boundary_mode),
-        origin_ref
-    )
+    crate::filters::minimum_filter(&input_array, &size, Some(boundary_mode), origin_ref)
 }
 
 /// Percentile filter with SciPy-compatible interface
@@ -780,12 +775,7 @@ where
     } else {
         let size = size.unwrap_or_else(|| vec![3; input.ndim()]);
         let input_array = input.to_owned();
-        crate::filters::percentile_filter(
-            &input_array,
-            percentile,
-            &size,
-            Some(boundary_mode),
-        )
+        crate::filters::percentile_filter(&input_array, percentile, &size, Some(boundary_mode))
     }
 }
 
@@ -953,12 +943,22 @@ pub mod convenience {
                     uniform_filter(&result, size, None, None, None)?
                 }
                 FilterOperation::Median { size } => median_filter(&result, size, None, None)?,
-                FilterOperation::Maximum { size } => {
-                    maximum_filter(&result, Some(size), None::<&Array<bool, D>>, None, None, None)?
-                }
-                FilterOperation::Minimum { size } => {
-                    minimum_filter(&result, Some(size), None::<&Array<bool, D>>, None, None, None)?
-                }
+                FilterOperation::Maximum { size } => maximum_filter(
+                    &result,
+                    Some(size),
+                    None::<&Array<bool, D>>,
+                    None,
+                    None,
+                    None,
+                )?,
+                FilterOperation::Minimum { size } => minimum_filter(
+                    &result,
+                    Some(size),
+                    None::<&Array<bool, D>>,
+                    None,
+                    None,
+                    None,
+                )?,
             };
         }
 
@@ -1124,7 +1124,14 @@ mod tests {
     #[test]
     fn test_scipy_compat_binary_erosion() {
         let input = array![[true, false], [false, true]];
-        let result = binary_erosion(&input, None::<&ndarray::Array2<bool>>, None::<usize>, None::<&ndarray::Array2<bool>>, None::<bool>).unwrap();
+        let result = binary_erosion(
+            &input,
+            None::<&ndarray::Array2<bool>>,
+            None::<usize>,
+            None::<&ndarray::Array2<bool>>,
+            None::<bool>,
+        )
+        .unwrap();
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -1159,7 +1166,15 @@ mod tests {
     #[test]
     fn test_scipy_compat_maximum_filter() {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
-        let result = maximum_filter(&input, Some(vec![3, 3]), None::<&ndarray::Array2<bool>>, None, None, None).unwrap();
+        let result = maximum_filter(
+            &input,
+            Some(vec![3, 3]),
+            None::<&ndarray::Array2<bool>>,
+            None,
+            None,
+            None,
+        )
+        .unwrap();
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -1168,8 +1183,16 @@ mod tests {
         let input = array![[1.0f64, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
         let mean_func =
             |values: &[f64]| -> f64 { values.iter().sum::<f64>() / values.len() as f64 };
-        let result =
-            generic_filter(&input, mean_func, Some(vec![3, 3]), None::<&ndarray::Array2<bool>>, None, None, None).unwrap();
+        let result = generic_filter(
+            &input,
+            mean_func,
+            Some(vec![3, 3]),
+            None::<&ndarray::Array2<bool>>,
+            None,
+            None,
+            None,
+        )
+        .unwrap();
         assert_eq!(result.shape(), input.shape());
     }
 }

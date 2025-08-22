@@ -30,19 +30,19 @@ fn main() {
     );
 
     // Generate a test volumetric dataset with various frequency components
-    let volume_data = generate_test_volume(width, height, depth);
+    let volume_data = generate_testvolume(width, height, depth);
 
     // Apply a low-pass filter in the frequency domain
     println!("\nApplying 3D low-pass filter in the frequency domain...");
     let start = Instant::now();
-    let filtered_volume = frequency_domain_filter_3d(&volume_data, &shape, "lowpass");
+    let filteredvolume = frequency_domain_filter_3d(&volume_data, &shape, "lowpass");
     let processing_time = start.elapsed();
     println!("Processing time: {processing_time:?}");
 
     // Measure the difference between original and filtered data
     let mut sum_diff = 0.0;
     for i in 0..total_voxels {
-        sum_diff += (volume_data[i] - filtered_volume[i]).abs();
+        sum_diff += (volume_data[i] - filteredvolume[i]).abs();
     }
     let mean_diff = sum_diff / total_voxels as f64;
     println!("Mean absolute difference after filtering: {mean_diff:.6}");
@@ -52,11 +52,11 @@ fn main() {
     for &size in &[16, 32, 64] {
         let testshape = [size, size, size];
         let test_total = size * size * size;
-        let test_data = generate_test_volume(size, size, size);
+        let test_data = generate_testvolume(size, size, size);
 
         println!("\nVolume size: {size} x {size} x {size} = {test_total} voxels");
         let start = Instant::now();
-        let _filtered = frequency_domain_filter_3d(&test_data, &testshape, "lowpass");
+        let filtered = frequency_domain_filter_3d(&test_data, &testshape, "lowpass");
         let time = start.elapsed();
         println!("Processing time: {time:?}");
 
@@ -68,13 +68,13 @@ fn main() {
 
 /// Generate a test volume with various frequency components
 #[allow(dead_code)]
-fn generate_test_volume(width: usize, height: usize, depth: usize) -> Vec<f64> {
-    let mut volume = vec![0.0; _width * height * depth];
+fn generate_testvolume(width: usize, height: usize, depth: usize) -> Vec<f64> {
+    let mut volume = vec![0.0; width * height * depth];
 
     for z in 0..depth {
         for y in 0..height {
-            for x in 0.._width {
-                let x_norm = x as f64 / _width as f64;
+            for x in 0..width {
+                let x_norm = x as f64 / width as f64;
                 let y_norm = y as f64 / height as f64;
                 let z_norm = z as f64 / depth as f64;
 
@@ -97,7 +97,7 @@ fn generate_test_volume(width: usize, height: usize, depth: usize) -> Vec<f64> {
                     * (12.0 * PI * z_norm).sin();
 
                 // Combine the frequency components
-                let idx = z * _width * height + y * _width + x;
+                let idx = z * width * height + y * width + x;
                 volume[idx] = low_freq + mid_freq + high_freq;
             }
         }
@@ -108,9 +108,9 @@ fn generate_test_volume(width: usize, height: usize, depth: usize) -> Vec<f64> {
 
 /// Apply a frequency domain filter to volumetric (3D) data
 #[allow(dead_code)]
-fn frequency_domain_filter_3d(_volume: &[f64], shape: &[usize], filtertype: &str) -> Vec<f64> {
-    // Step 1: Compute the N-dimensional FFT of the _volume
-    let spectrum = fftn_adaptive(_volume, Some(shape), None, None).unwrap();
+fn frequency_domain_filter_3d(volume: &[f64], shape: &[usize], filtertype: &str) -> Vec<f64> {
+    // Step 1: Compute the N-dimensional FFT of the volume
+    let spectrum = fftn_adaptive(volume, Some(shape), None, None).unwrap();
 
     // Step 2: Create a frequency domain filter
     let mut filter = vec![Complex64::new(0.0, 0.0); volume.len()];
@@ -149,7 +149,7 @@ fn frequency_domain_filter_3d(_volume: &[f64], shape: &[usize], filtertype: &str
                     ((freq_x.pow(2) + freq_y.pow(2) + freq_z.pow(2)) as f64) / max_distance;
 
                 // Apply different filter types
-                let filter_value = match filter_type {
+                let filter_value = match filtertype {
                     "lowpass" => {
                         // Lowpass: keep low frequencies, attenuate high frequencies
                         let cutoff = 0.1;
@@ -210,13 +210,13 @@ fn frequency_domain_filter_3d(_volume: &[f64], shape: &[usize], filtertype: &str
         .collect();
 
     // Step 4: Compute the inverse N-dimensional FFT
-    let filtered_volume_complex =
+    let filteredvolume_complex =
         ifftn_adaptive(&filtered_spectrum, Some(shape), None, None).unwrap();
 
     // Step 5: Extract real part (the filtered volume)
-    let filtered_volume: Vec<f64> = filtered_volume_complex.iter().map(|c| c.re).collect();
+    let filteredvolume: Vec<f64> = filteredvolume_complex.iter().map(|c| c.re).collect();
 
-    filtered_volume
+    filteredvolume
 }
 
 /// Visualization information (simulation for a real system)
@@ -231,7 +231,7 @@ fn simulate_visualization(volume: &[f64], shape: &[usize]) {
     // Find data range
     let mut min_val = f64::MAX;
     let mut max_val = f64::MIN;
-    for &val in _volume {
+    for &val in volume {
         min_val = min_val.min(val);
         max_val = max_val.max(val);
     }
@@ -252,5 +252,5 @@ fn simulate_visualization(volume: &[f64], shape: &[usize]) {
     println!(
         "In a real application, this data would be rendered using 3D visualization techniques"
     );
-    println!("such as _volume rendering, isosurfaces, or slice views.");
+    println!("such as volume rendering, isosurfaces, or slice views.");
 }

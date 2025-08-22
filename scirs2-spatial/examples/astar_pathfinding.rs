@@ -2,8 +2,8 @@
 
 #![allow(clippy::needless_range_loop)]
 
-use scirs2__spatial::error::SpatialResult;
-use scirs2__spatial::pathplanning::{ContinuousAStarPlanner, GridAStarPlanner};
+use scirs2_spatial::error::SpatialResult;
+use scirs2_spatial::pathplanning::{ContinuousAStarPlanner, GridAStarPlanner};
 
 #[allow(dead_code)]
 fn main() -> SpatialResult<()> {

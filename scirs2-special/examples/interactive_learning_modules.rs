@@ -34,21 +34,21 @@ impl LearningProgress {
     }
 
     fn complete_module(&mut self, modulename: &str) {
-        if !self.modules_completed.contains(&module_name.to_string()) {
-            self.modules_completed.push(module_name.to_string());
+        if !self.modules_completed.contains(&modulename.to_string()) {
+            self.modules_completed.push(modulename.to_string());
         }
     }
 
     fn add_quiz_score(&mut self, quizname: &str, score: f64) {
-        self.quiz_scores.insert(quiz_name.to_string(), score);
+        self.quiz_scores.insert(quizname.to_string(), score);
     }
 
     fn complete_exercise(&mut self, exercisename: &str) {
         if !self
             .exercises_completed
-            .contains(&exercise_name.to_string())
+            .contains(&exercisename.to_string())
         {
-            self.exercises_completed.push(exercise_name.to_string());
+            self.exercises_completed.push(exercisename.to_string());
         }
     }
 
@@ -118,11 +118,11 @@ fn display_main_menu(progress: &LearningProgress) {
     println!("q. Quit and Show Progress");
     println!();
 
-    // Show _progress indicators
-    if !_progress.modules_completed.is_empty() {
+    // Show progress indicators
+    if !progress.modules_completed.is_empty() {
         println!("✅ Completed: {}", progress.modules_completed.join(", "));
     }
-    if !_progress.quiz_scores.is_empty() {
+    if !progress.quiz_scores.is_empty() {
         let avg_score: f64 =
             progress.quiz_scores.values().sum::<f64>() / progress.quiz_scores.len() as f64;
         println!("📈 Current average: {:.1}%", avg_score * 100.0);
@@ -213,7 +213,7 @@ fn fundamentals_module(progress: &mut LearningProgress) -> Result<(), Box<dyn st
 
     // Exercise
     println!("\n💪 Exercise: Series Convergence");
-    series_convergence_exercise(_progress)?;
+    series_convergence_exercise(progress)?;
 
     progress.complete_module("Fundamentals");
     println!("\n✅ Fundamentals module completed!\n");
@@ -1085,7 +1085,7 @@ fn show_challenge_statistics(progress: &LearningProgress) {
         "Exercises completed: {}",
         progress.exercises_completed.len()
     );
-    for exercise in &_progress.exercises_completed {
+    for exercise in &progress.exercises_completed {
         println!("✅ {}", exercise);
     }
     println!();

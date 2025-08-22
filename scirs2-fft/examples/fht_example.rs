@@ -220,7 +220,7 @@ fn example_radial_transform() {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(idx_)| idx)
+        .map(|(idx, _)| idx)
         .unwrap();
 
     println!("Peak frequency at k ≈ {:.3}", k[max_idx]);

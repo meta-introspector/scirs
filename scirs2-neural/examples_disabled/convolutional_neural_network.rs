@@ -91,7 +91,7 @@ impl LossFunction {
                 // d(CCE)/dŷ = -y/ŷ / n
                 let epsilon = 1e-15;
                 let n = predictions.shape()[0] as f32;
-                Array2::fromshape_fn(predictions.dim(), |(i, j)| {
+                Array2::from_shape_fn(predictions.dim(), |(i, j)| {
                     let y_pred = predictions[(i, j)].max(epsilon).min(1.0 - epsilon);
                     let y_true = targets[(i, j)];
                     if y_true > 0.0 {
@@ -149,7 +149,7 @@ impl Conv2D {
         let std_dev = (2.0 / fan_in as f32).sqrt();
         let dist = Uniform::new_inclusive(-std_dev, std_dev);
         // Initialize weights: [filters, input_channels, kernel_h, kernel_w]
-        let weights = Array4::fromshape_fn(
+        let weights = Array4::from_shape_fn(
             [filters, input_channels, kernel_size.0, kernel_size.1],
             |_| dist.sample(rng),
         );
@@ -461,7 +461,7 @@ impl Dense {
         output_size: usize,
         let std_dev = (2.0 / input_size as f32).sqrt();
         // Initialize weights and biases
-        let weights = Array2::fromshape_fn((input_size, output_size), |_| dist.sample(rng));
+        let weights = Array2::from_shape_fn((input_size, output_size), |_| dist.sample(rng));
         let biases = Array1::zeros(output_size);
             input_size,
             output_size,
@@ -632,7 +632,7 @@ fn create_synthetic_dataset(
     let mut class_patterns = Vec::with_capacity(num_classes);
     for _ in 0..num_classes {
         let pattern =
-            Array2::fromshape_fn(
+            Array2::from_shape_fn(
                 image_size,
                 |_| {
                     if rng.random::<f32>() > 0.7 {

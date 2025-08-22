@@ -1,6 +1,6 @@
 use ndarray::array;
 use rand::Rng;
-use scirs2__spatial::Delaunay;
+use scirs2_spatial::Delaunay;
 
 #[allow(dead_code)]
 fn main() {

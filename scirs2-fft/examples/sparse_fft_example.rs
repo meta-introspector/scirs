@@ -62,7 +62,7 @@ fn main() {
             .iter()
             .zip(sparse_result.values.iter())
         {
-            if !unique_components.iter().any(|(i_)| *i == idx) {
+            if !unique_components.iter().any(|(i, _)| *i == idx) {
                 unique_components.push((idx, val));
             }
         }
@@ -133,7 +133,7 @@ fn main() {
         .iter()
         .zip(pruning_result.values.iter())
     {
-        if !unique_components.iter().any(|(i_)| *i == idx) {
+        if !unique_components.iter().any(|(i, _)| *i == idx) {
             unique_components.push((idx, val));
         }
     }
@@ -193,7 +193,7 @@ fn main() {
         .iter()
         .zip(flatness_result.values.iter())
     {
-        if !unique_components.iter().any(|(i_)| *i == idx) {
+        if !unique_components.iter().any(|(i, _)| *i == idx) {
             unique_components.push((idx, val));
         }
     }
@@ -261,7 +261,7 @@ fn main() {
 
     // 8. Create visualization
     println!("\nCreating visualization...");
-    create_plots(&signal, &full_magnitudes, &pruning_result);
+    create_plots(&signal, &full_magnitudes, &pruning_result, &sparse_2d_result);
 
     println!("\nExample completed successfully!");
 }
@@ -284,11 +284,11 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 // Helper function to create a 2D sparse signal
 #[allow(dead_code)]
 fn create_2d_sparse_signal(rows: usize, cols: usize) -> Vec<f64> {
-    let mut signal = vec![0.0; _rows * cols];
+    let mut signal = vec![0.0; rows * cols];
 
-    for i in 0.._rows {
+    for i in 0..rows {
         for j in 0..cols {
-            let x = 2.0 * PI * (i as f64) / (_rows as f64);
+            let x = 2.0 * PI * (i as f64) / (rows as f64);
             let y = 2.0 * PI * (j as f64) / (cols as f64);
             signal[i * cols + j] = (2.0 * x + 3.0 * y).sin() + 0.5 * (5.0 * x).sin();
         }
@@ -301,7 +301,7 @@ fn create_2d_sparse_signal(rows: usize, cols: usize) -> Vec<f64> {
 #[allow(dead_code)]
 fn compute_relative_error(original: &[Complex64], reconstructed: &[Complex64]) -> f64 {
     // Make sure we're comparing signals of the same length
-    let len = std::cmp::min(_original.len(), reconstructed.len());
+    let len = std::cmp::min(original.len(), reconstructed.len());
 
     if len == 0 {
         return 1.0; // Return max error if signals are empty
@@ -341,8 +341,8 @@ fn compute_relative_error(original: &[Complex64], reconstructed: &[Complex64]) -
 fn create_plots(
     signal: &[f64],
     full_magnitudes: &[f64],
-    sparse_result: &scirs2,
-    _fft: sparse_fft::SparseFFTResult,
+    sparse_result: &scirs2_fft::sparse_fft::SparseFFTResult,
+    sparse_result2: &scirs2_fft::sparse_fft::SparseFFTResult,
 ) {
     // Create time domain plot
     let mut time_plot = Plot::new();
@@ -353,9 +353,9 @@ fn create_plots(
     time_plot.add_trace(time_trace);
     time_plot.set_layout(
         Layout::new()
-            .title(Title::withtext("Time Domain Signal"))
-            .x_axis(Axis::new().title(Title::withtext("Time")))
-            .y_axis(Axis::new().title(Title::withtext("Amplitude"))),
+            .title(Title::with_text("Time Domain Signal"))
+            .x_axis(Axis::new().title(Title::with_text("Time")))
+            .y_axis(Axis::new().title(Title::with_text("Amplitude"))),
     );
 
     time_plot.write_html("sparse_fft_time_domain.html");
@@ -383,9 +383,9 @@ fn create_plots(
     freq_plot.add_trace(sparse_trace);
     freq_plot.set_layout(
         Layout::new()
-            .title(Title::withtext("Frequency Domain Comparison"))
-            .x_axis(Axis::new().title(Title::withtext("Frequency Bin")))
-            .y_axis(Axis::new().title(Title::withtext("Magnitude"))),
+            .title(Title::with_text("Frequency Domain Comparison"))
+            .x_axis(Axis::new().title(Title::with_text("Frequency Bin")))
+            .y_axis(Axis::new().title(Title::with_text("Magnitude"))),
     );
 
     freq_plot.write_html("sparse_fft_frequency_domain.html");

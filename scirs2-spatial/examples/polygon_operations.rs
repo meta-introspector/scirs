@@ -7,7 +7,7 @@
 #![allow(clippy::needless_range_loop)]
 
 use ndarray::{array, ArrayView2};
-use scirs2__spatial::polygon::{
+use scirs2_spatial::polygon::{
     convex_hull_graham, is_simple_polygon, point_in_polygon, point_on_boundary, polygon_area,
     polygon_centroid, polygon_contains_polygon,
 };
@@ -35,18 +35,18 @@ fn visualize_polygon(polygon: &ArrayView2<f64>, title: &str) {
         (grid_x, grid_y)
     };
 
-    // Draw the _polygon vertices with 'V'
-    for i in 0.._polygon.shape()[0] {
-        let (x, y) = to_grid(_polygon[[i, 0]], polygon[[i, 1]]);
+    // Draw the polygon vertices with 'V'
+    for i in 0..polygon.shape()[0] {
+        let (x, y) = to_grid(polygon[[i, 0]], polygon[[i, 1]]);
         grid[y][x] = 'V';
     }
 
-    // Draw the _polygon edges with 'E'
+    // Draw the polygon edges with 'E'
     let n = polygon.shape()[0];
     for i in 0..n {
         let j = (i + 1) % n;
-        let (x1, y1) = to_grid(_polygon[[i, 0]], polygon[[i, 1]]);
-        let (x2, y2) = to_grid(_polygon[[j, 0]], polygon[[j, 1]]);
+        let (x1, y1) = to_grid(polygon[[i, 0]], polygon[[i, 1]]);
+        let (x2, y2) = to_grid(polygon[[j, 0]], polygon[[j, 1]]);
 
         // Draw line between vertices
         let steps = ((x2 as i32 - x1 as i32)

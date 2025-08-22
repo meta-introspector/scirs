@@ -696,7 +696,7 @@ mod tests {
 
     #[test]
     fn test_multilevel_validation() {
-        let image = Array2::fromshape_fn((128, 128), |(i, j)| ((i + j) as f64).sin());
+        let image = Array2::from_shape_fn((128, 128), |(i, j)| ((i + j) as f64).sin());
 
         assert!(validate_multilevel_dwt2d(&image, Wavelet::Sym(8), 4, 1e-10).unwrap());
     }

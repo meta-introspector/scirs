@@ -141,8 +141,8 @@ fn main() {
     let mut freq_magnitude: Vec<(f64, f64)> = Vec::new();
     for i in 0..n_samples/2 {
         let freq = i as f64 * sample_rate / n_samples as f64;
-        let mag_original = original_fft[i].norm();
-        freq_magnitude.push((freq, mag_original));
+        let magoriginal = original_fft[i].norm();
+        freq_magnitude.push((freq, magoriginal));
     }
 
     // Find the top 3 peaks

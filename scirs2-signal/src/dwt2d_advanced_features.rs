@@ -919,7 +919,7 @@ mod tests {
     #[test]
     fn test_advanced_wavelet_denoising() {
         // Create test image with noise
-        let clean_image = Array2::fromshape_fn((64, 64), |(i, j)| {
+        let clean_image = Array2::from_shape_fn((64, 64), |(i, j)| {
             let x = i as f64 / 64.0;
             let y = j as f64 / 64.0;
             (2.0 * PI * x).sin() * (2.0 * PI * y).sin()

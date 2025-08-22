@@ -28,7 +28,7 @@ fn main() {
     let planner = ParallelPlanner::new(Some(config.clone()));
 
     // Define FFT sizes we want to plan for
-    let fft_sizes = [
+    let fftsizes = [
         vec![1024],          // 1D FFT of size 1024
         vec![512, 512],      // 2D FFT of size 512x512
         vec![128, 128, 128], // 3D FFT of size 128x128x128
@@ -36,7 +36,7 @@ fn main() {
     ];
 
     // Convert to the format expected by plan_multiple
-    let plan_specs: Vec<_> = fft_sizes
+    let plan_specs: Vec<_> = fftsizes
         .iter()
         .map(|shape| (shape.clone(), true, Default::default()))
         .collect();
@@ -79,9 +79,9 @@ fn main() {
 // Create a simple test signal
 #[allow(dead_code)]
 fn create_signal(size: usize) -> Vec<Complex64> {
-    (0.._size)
+    (0..size)
         .map(|i| {
-            let x = i as f64 / _size as f64;
+            let x = i as f64 / size as f64;
             // Create a sinusoidal signal with a few frequencies
             let val = (2.0 * std::f64::consts::PI * x * 5.0).sin()
                 + 0.5 * (2.0 * std::f64::consts::PI * x * 10.0).sin();

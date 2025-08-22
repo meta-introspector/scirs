@@ -43,12 +43,12 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)], noise_level: f64
 
 /// Calculate relative error between identified frequencies and ground truth
 #[allow(dead_code)]
-fn calculate_frequency_error(_result: &SparseFFTResult, truefrequencies: &[(usize, f64)]) -> f64 {
+fn calculate_frequency_error(result: &SparseFFTResult, truefrequencies: &[(usize, f64)]) -> f64 {
     let mut min_error_sum = 0.0;
     let mut found_count = 0;
 
     // For each true frequency, find the closest detected frequency
-    for &(true_freq_true_amp) in true_frequencies {
+    for &(true_freq, _true_amp) in truefrequencies {
         let mut min_error = f64::MAX;
 
         // Find the closest detected frequency
@@ -86,7 +86,7 @@ fn run_algorithm_benchmarks() {
     println!("{:-<80}", "");
 
     // List of signal sizes to test
-    let signal_sizes = [1024, 8 * 1024, 64 * 1024, 256 * 1024];
+    let signalsizes = [1024, 8 * 1024, 64 * 1024, 256 * 1024];
 
     // List of noise levels to test
     let noise_levels = [0.0, 0.05, 0.2, 0.5];
@@ -110,7 +110,7 @@ fn run_algorithm_benchmarks() {
     ];
 
     // Test over different signal sizes
-    for &size in &signal_sizes {
+    for &size in &signalsizes {
         // Create frequency components (scaled by signal size)
         let frequencies = vec![
             (size / 100, 1.0),
@@ -282,24 +282,24 @@ fn analyze_algorithm_accuracy() {
     // Set layouts
     accuracy_plot.set_layout(
         Layout::new()
-            .title(Title::withtext("<b>Algorithm Accuracy vs Noise Level</b>"))
-            .x_axis(plotly::layout::Axis::new().title(Title::withtext("Noise Level (σ)")))
+            .title(Title::with_text("<b>Algorithm Accuracy vs Noise Level</b>"))
+            .x_axis(plotly::layout::Axis::new().title(Title::with_text("Noise Level (σ)")))
             .y_axis(
                 plotly::layout::Axis::new()
-                    .title(Title::withtext("Frequency Error (%)"))
+                    .title(Title::with_text("Frequency Error (%)"))
                     .range(vec![0.0, 30.0]),
             ),
     );
 
     time_plot.set_layout(
         Layout::new()
-            .title(Title::withtext(
+            .title(Title::with_text(
                 "<b>Algorithm Execution Time vs Noise Level</b>",
             ))
-            .x_axis(plotly::layout::Axis::new().title(Title::withtext("Noise Level (σ)")))
+            .x_axis(plotly::layout::Axis::new().title(Title::with_text("Noise Level (σ)")))
             .y_axis(
                 plotly::layout::Axis::new()
-                    .title(Title::withtext("Execution Time (ms)"))
+                    .title(Title::with_text("Execution Time (ms)"))
                     .type_(plotly::layout::AxisType::Log),
             ),
     );
@@ -401,15 +401,15 @@ fn analyze_scaling_behavior() {
     // Set layout
     scaling_plot.set_layout(
         Layout::new()
-            .title(Title::withtext("<b>Algorithm Scaling with Signal Size</b>"))
+            .title(Title::with_text("<b>Algorithm Scaling with Signal Size</b>"))
             .x_axis(
                 plotly::layout::Axis::new()
-                    .title(Title::withtext("Signal Size (samples)"))
+                    .title(Title::with_text("Signal Size (samples)"))
                     .type_(plotly::layout::AxisType::Log),
             )
             .y_axis(
                 plotly::layout::Axis::new()
-                    .title(Title::withtext("Execution Time (ms)"))
+                    .title(Title::with_text("Execution Time (ms)"))
                     .type_(plotly::layout::AxisType::Log),
             ),
     );

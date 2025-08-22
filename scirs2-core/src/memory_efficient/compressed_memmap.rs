@@ -1231,7 +1231,7 @@ mod tests {
         let file_path = dir.path().join("test_compressed_2d.cmm");
 
         // Create test data - 10x10 matrix
-        let data = Array2::<f64>::fromshape_fn((10, 10), |(i, j)| (i * 10 + j) as f64);
+        let data = Array2::<f64>::from_shape_fn((10, 10), |(i, j)| (i * 10 + j) as f64);
 
         // Create a builder
         let builder = CompressedMemMapBuilder::new()

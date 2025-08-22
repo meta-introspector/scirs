@@ -331,7 +331,7 @@ fn demo_ndarray_integration() -> CoreResult<()> {
     let converter = BatchConverter::with_default_config();
 
     // Create a 2D array
-    let array_f64 = Array2::<f64>::fromshape_fn((100, 50), |(i, j)| (i * j) as f64 * 0.01);
+    let array_f64 = Array2::<f64>::from_shape_fn((100, 50), |(i, j)| (i * j) as f64 * 0.01);
 
     println!(
         "Converting {}x{} ndarray from f64 to f32",

@@ -55,7 +55,7 @@ fn main() {
     println!("");
     println!("// Launch optimized sparse FFT kernel");
     println!("let stats = launcher.launch_sparse_fft_kernel(");
-    println!("    input_size, sparsity, algorithm, window");
+    println!("    inputsize, sparsity, algorithm, window");
     println!(");");
     println!("```");
 }

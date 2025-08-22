@@ -30,7 +30,7 @@ fn bench_binary_morphology(c: &mut Criterion) {
 
     for (rows, cols) in sizes {
         // Create binary test image with some structure
-        let input = Array2::fromshape_fn((rows, cols), |(i, j)| (i % 10 < 5) && (j % 10 < 5));
+        let input = Array2::from_shape_fn((rows, cols), |(i, j)| (i % 10 < 5) && (j % 10 < 5));
 
         // 3x3 structuring element
         let structure = Array2::from_elem((3, 3), true);
@@ -83,7 +83,7 @@ fn bench_grayscale_morphology(c: &mut Criterion) {
     let mut group = c.benchmark_group("grayscale_morphology");
     group.measurement_time(Duration::from_secs(10));
 
-    let input = Array2::fromshape_fn((100, 100), |(i, j)| (i * j) as f64);
+    let input = Array2::from_shape_fn((100, 100), |(i, j)| (i * j) as f64);
     let structure = Array2::from_elem((3, 3), true);
 
     group.bench_function("grey_erosion", |b| {
@@ -127,12 +127,12 @@ fn bench_hit_or_miss(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(10));
 
     // Create test pattern
-    let input = Array2::fromshape_fn((100, 100), |(i, j)| {
+    let input = Array2::from_shape_fn((100, 100), |(i, j)| {
         ((i / 10) % 2 == 0) && ((j / 10) % 2 == 0)
     });
 
     // Simple 3x3 structure for pattern detection
-    let structure1 = Array2::fromshape_fn((3, 3), |(i, j)| i == 1 && j == 1);
+    let structure1 = Array2::from_shape_fn((3, 3), |(i, j)| i == 1 && j == 1);
 
     group.bench_function("binary_hit_or_miss", |b| {
         b.iter(|| {
@@ -158,7 +158,7 @@ fn bench_structuring_sizes(c: &mut Criterion) {
     let mut group = c.benchmark_group("structuring_sizes");
     group.measurement_time(Duration::from_secs(10));
 
-    let input = Array2::fromshape_fn((100, 100), |(i, j)| (i * j) as f64);
+    let input = Array2::from_shape_fn((100, 100), |(i, j)| (i * j) as f64);
 
     let sizes = vec![3, 5, 7, 9, 11];
 
@@ -184,7 +184,7 @@ fn bench_3d_morphology(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(15));
 
     // Smaller 3D arrays for feasible benchmarking
-    let input = Array3::fromshape_fn((30, 30, 30), |(i, j, k)| {
+    let input = Array3::from_shape_fn((30, 30, 30), |(i, j, k)| {
         (i % 5 < 3) && (j % 5 < 3) && (k % 5 < 3)
     });
 
@@ -234,11 +234,11 @@ fn bench_optimized_vs_simple(c: &mut Criterion) {
 
     for size in sizes {
         // Create test data
-        let grayscale_input = Array2::fromshape_fn((size, size), |(i, j)| {
+        let grayscale_input = Array2::from_shape_fn((size, size), |(i, j)| {
             ((i as f64) * (j as f64)).sin() * 255.0
         });
         let binary_input =
-            Array2::fromshape_fn((size, size), |(i, j)| (i % 10 < 5) && (j % 10 < 5));
+            Array2::from_shape_fn((size, size), |(i, j)| (i % 10 < 5) && (j % 10 < 5));
 
         // Compare grayscale erosion
         group.bench_with_input(

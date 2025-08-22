@@ -33,7 +33,7 @@ mod tests {
         let file_path = dir.path().join("test_mmap_rw.bin");
 
         // Create test data
-        let data = Array2::<f32>::fromshape_fn((10, 5), |(i, j)| (i * 5 + j) as f32);
+        let data = Array2::<f32>::from_shape_fn((10, 5), |(i, j)| (i * 5 + j) as f32);
 
         // Create memory-mapped array in write mode
         let mut mmap = create_mmap::<f32>(&data, &file_path, AccessMode::Write, 0).unwrap();

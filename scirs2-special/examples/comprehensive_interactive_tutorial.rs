@@ -568,7 +568,7 @@ struct ProgressRecord {
 impl TutorialSystem {
     fn new(_username: String) -> Self {
         Self {
-            user_profile: UserProfile::new(_user_name),
+            user_profile: UserProfile::new(_username),
             available_modules: Self::initialize_modules(),
             current_session: TutorialSession::new(),
             learning_analytics: LearningAnalytics::new(),
@@ -1100,7 +1100,7 @@ impl TutorialSystem {
         let dominant_style = style_scores
             .iter()
             .max_by_key(|(_, &score)| score)
-            .map(|(style_)| style.clone())
+            .map(|(style_, _)| style_.clone())
             .unwrap_or("Hybrid".to_string());
 
         self.user_profile.learning_style = match dominant_style.as_str() {

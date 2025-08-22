@@ -145,7 +145,7 @@ fn create_sparse_signal(n: usize, components: &[(usize, f64)]) -> Vec<f64> {
 /// Compare acceleration methods for a given signal
 #[allow(dead_code)]
 fn perform_acceleration_comparison(signal: &[f64]) -> FFTResult<()> {
-    let sparsity = (_signal.len() / 64).max(4).min(32); // Adaptive sparsity
+    let sparsity = (signal.len() / 64).max(4).min(32); // Adaptive sparsity
     let config = SparseFFTConfig {
         sparsity,
         algorithm: SparseFFTAlgorithm::Sublinear,
@@ -158,7 +158,7 @@ fn perform_acceleration_comparison(signal: &[f64]) -> FFTResult<()> {
 
     // 1. CPU Reference Implementation
     print_performance_result("CPU Sparse FFT", || {
-        sparse_fft(_signal, sparsity, Some(SparseFFTAlgorithm::Sublinear), None)
+        sparse_fft(signal, sparsity, Some(SparseFFTAlgorithm::Sublinear), None)
     });
 
     // 2. GPU Acceleration Tests
@@ -206,7 +206,7 @@ fn perform_acceleration_comparison(signal: &[f64]) -> FFTResult<()> {
 fn demonstrate_multi_gpu_processing(signal: &[f64]) -> FFTResult<()> {
     println!("\n  🔄 Multi-GPU Processing:");
 
-    let sparsity = (_signal.len() / 64).max(4).min(32);
+    let sparsity = (signal.len() / 64).max(4).min(32);
 
     // Test different workload distribution strategies
     let strategies = [
@@ -216,9 +216,9 @@ fn demonstrate_multi_gpu_processing(signal: &[f64]) -> FFTResult<()> {
         ("Adaptive", WorkloadDistribution::Adaptive),
     ];
 
-    for (strategy_name_strategy) in &strategies {
+    for (strategy_name, _strategy) in &strategies {
         print_performance_result(&format!("Multi-GPU ({strategy_name})"), || {
-            multi_gpu_sparse_fft(_signal, sparsity, Some(SparseFFTAlgorithm::Sublinear), None)
+            multi_gpu_sparse_fft(signal, sparsity, Some(SparseFFTAlgorithm::Sublinear), None)
         });
     }
 
@@ -230,7 +230,7 @@ fn demonstrate_multi_gpu_processing(signal: &[f64]) -> FFTResult<()> {
 fn demonstrate_specialized_hardware(signal: &[f64]) -> FFTResult<()> {
     println!("\n  ⚡ Specialized Hardware:");
 
-    let sparsity = (_signal.len() / 64).max(4).min(32);
+    let sparsity = (signal.len() / 64).max(4).min(32);
     let config = SparseFFTConfig {
         sparsity,
         algorithm: SparseFFTAlgorithm::Sublinear,
@@ -239,7 +239,7 @@ fn demonstrate_specialized_hardware(signal: &[f64]) -> FFTResult<()> {
     };
 
     print_performance_result("Specialized Hardware", || {
-        specialized_hardware_sparse_fft(_signal, config.clone())
+        specialized_hardware_sparse_fft(signal, config.clone())
     });
 
     // Detailed hardware analysis
@@ -285,7 +285,7 @@ where
             );
         }
         Err(e) => {
-            println!("    ❌ {_name:<20}: Failed ({e})");
+            println!("    ❌ {name:<20}: Failed ({e})");
         }
     }
 }

@@ -23,7 +23,7 @@ use scirs2_ndimage::{
     // Advanced filters
     filters::{
         advanced::{gabor_filter, log_gabor_filter, steerable_filter, GaborParams},
-        wavelets::{wavelet_denoise, WaveletFamily},
+        wavelets::{wavelet_denoise, WaveletFamily, WaveletFilter},
         BorderMode,
     },
     // Standard filters
@@ -337,7 +337,7 @@ fn demonstrate_advanced_filtering(image: &Array2<f64>) -> NdimageResult<()> {
     );
 
     // Standard filters for comparison
-    let gaussian_result = gaussian_filter(image.clone(), &vec![2.0, 2.0], None, None, None)?;
+    let gaussian_result = gaussian_filter(&image, 2.0, None, None)?;
     println!("  Gaussian filter: Applied (sigma: 2.0)");
     println!(
         "    Output range: [{:.3}, {:.3}]",
@@ -351,7 +351,7 @@ fn demonstrate_advanced_filtering(image: &Array2<f64>) -> NdimageResult<()> {
             .fold(f64::NEG_INFINITY, f64::max)
     );
 
-    let sobel_result = sobel(&image.clone(), None)?;
+    let sobel_result = sobel(&image, 0, None)?;
     println!("  Sobel edge detection: Applied");
     println!(
         "    Output range: [{:.3}, {:.3}]",
@@ -382,7 +382,9 @@ fn demonstrate_wavelet_analysis(image: &Array2<f64>) -> NdimageResult<()> {
     ];
 
     for (name, family) in &wavelets {
-        match wavelet_denoise(&noisyimage.view(), *family, 0.05, BorderMode::Reflect) {
+        match WaveletFilter::new(*family).and_then(|filter| {
+            wavelet_denoise(&noisyimage.view(), &filter, 0.05, 3, BorderMode::Reflect)
+        }) {
             Ok(denoised) => {
                 let original_mse = noisyimage
                     .iter()
@@ -524,12 +526,12 @@ fn demonstrate_performance_comparison(image: &Array2<f64>) -> NdimageResult<()> 
 
     // Gaussian filter timing
     let start = Instant::now();
-    let _gaussian = gaussian_filter(image.clone(), &vec![2.0, 2.0], None, None, None)?;
+    let _gaussian = gaussian_filter(&image, 2.0, None, None)?;
     let gaussian_time = start.elapsed();
 
     // Sobel filter timing
     let start = Instant::now();
-    let _sobel = sobel(&image.clone(), None)?;
+    let _sobel = sobel(&image, 0, None)?;
     let sobel_time = start.elapsed();
 
     // Gabor filter timing

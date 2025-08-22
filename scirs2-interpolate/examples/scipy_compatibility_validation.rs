@@ -120,7 +120,7 @@ fn main() -> InterpolateResult<()> {
         for diff in &report.parameter_compatibility.parameter_differences {
             println!(
                 "     {}.{}: {} -> {} (severity: {:?})",
-                diff.function_name,
+                diff.functionname,
                 diff.parameter_name,
                 diff.scipy_param,
                 diff.scirs2_param,
@@ -216,7 +216,7 @@ fn main() -> InterpolateResult<()> {
 
 #[allow(dead_code)]
 fn get_compatibility_level(score: f64) -> &'static str {
-    match _score {
+    match score {
         s if s >= 0.95 => "Excellent - Full production ready",
         s if s >= 0.90 => "Very Good - Suitable for most use cases",
         s if s >= 0.80 => "Good - Some limitations, mostly compatible",
@@ -250,17 +250,17 @@ fn print_migration_guidance(report: &scirs2_interpolate::CompatibilityReport) {
     println!("     - Array indexing is bounds-checked by default");
     println!("     - Memory management is automatic (no manual cleanup needed)");
 
-    if !_report
+    if !report
         .parameter_compatibility
         .parameter_differences
         .is_empty()
     {
         println!("   📝 Parameter mapping required for:");
-        let functions: std::collections::HashSet<_> = _report
+        let functions: std::collections::HashSet<_> = report
             .parameter_compatibility
             .parameter_differences
             .iter()
-            .map(|d| &d.function_name)
+            .map(|d| &d.functionname)
             .collect();
         for func in functions {
             println!("     - {}", func);

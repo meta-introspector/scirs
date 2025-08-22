@@ -11,27 +11,27 @@ use scirs2_special::{j0_zeros, j1_zeros};
 use std::io::{self, Write};
 
 /// Helper function to generate multiple J0 zeros
-fn generate_j0_zeros(_numzeros: usize) -> Result<Vec<f64>, String> {
-    let mut _zeros = Vec::new();
-    for k in 1..=_num_zeros {
+fn generate_j0_zeros(num_zeros: usize) -> Result<Vec<f64>, String> {
+    let mut zeros = Vec::new();
+    for k in 1..=num_zeros {
         match j0_zeros::<f64>(k) {
             Ok(zero) => zeros.push(zero),
             Err(e) => return Err(format!("Error computing J₀ zero {}: {}", k, e)),
         }
     }
-    Ok(_zeros)
+    Ok(zeros)
 }
 
 /// Helper function to generate multiple J1 zeros
-fn generate_j1_zeros(_numzeros: usize) -> Result<Vec<f64>, String> {
-    let mut _zeros = Vec::new();
-    for k in 1..=_num_zeros {
+fn generate_j1_zeros(num_zeros: usize) -> Result<Vec<f64>, String> {
+    let mut zeros = Vec::new();
+    for k in 1..=num_zeros {
         match j1_zeros::<f64>(k) {
             Ok(zero) => zeros.push(zero),
             Err(e) => return Err(format!("Error computing J₁ zero {}: {}", k, e)),
         }
     }
-    Ok(_zeros)
+    Ok(zeros)
 }
 
 #[allow(dead_code)]

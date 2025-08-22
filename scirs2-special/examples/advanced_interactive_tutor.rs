@@ -129,7 +129,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("===============================================\n");
 
     // Setup user profile
-    let mut profile = setup_user_profile()?;
+    let mut profile = setup_userprofile()?;
 
     loop {
         display_personalized_menu(&profile);
@@ -157,7 +157,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn setup_user_profile() -> Result<UserProfile, Box<dyn std::error::Error>> {
+fn setup_userprofile() -> Result<UserProfile, Box<dyn std::error::Error>> {
     println!("👋 Welcome to the Advanced Special Functions Tutor!");
     let name = get_user_input("What's your name? ")?;
     let mut profile = UserProfile::new(name);
@@ -287,15 +287,15 @@ fn adaptive_learning_session(profile: &mut UserProfile) -> Result<(), Box<dyn st
     println!("============================\n");
 
     // Select topic based on mastery scores and preferences
-    let topic = select_adaptive_topic(_profile);
+    let topic = select_adaptive_topic(profile);
     println!("📚 Today's focus: {}", topic);
 
     match topic.as_str() {
-        "Gamma Functions" => gamma_adaptive_session(_profile),
-        "Bessel Functions" => bessel_adaptive_session(_profile),
-        "Error Functions" => error_function_adaptive_session(_profile),
-        "Orthogonal Polynomials" => orthogonal_polynomial_adaptive_session(_profile),
-        _ => advanced_topic_session(_profile, &topic),
+        "Gamma Functions" => gamma_adaptive_session(profile),
+        "Bessel Functions" => bessel_adaptive_session(profile),
+        "Error Functions" => error_function_adaptive_session(profile),
+        "Orthogonal Polynomials" => orthogonal_polynomial_adaptive_session(profile),
+        _ => advanced_topic_session(profile, &topic),
     }
 }
 
@@ -425,7 +425,7 @@ fn gamma_adaptive_session(profile: &mut UserProfile) -> Result<(), Box<dyn std::
     profile.add_experience(xp_gained);
 
     // Check for achievements
-    check_gamma_achievements(_profile, score, hints_used);
+    check_gamma_achievements(profile, score, hints_used);
 
     println!("\n📊 Session complete!");
     println!("Score: {:.1}/1.0", score);
@@ -881,7 +881,7 @@ fn stirling_approximation_proof(
 
 #[allow(dead_code)]
 fn bessel_orthogonality_proof(
-    _profile: &mut UserProfile,
+    profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Bessel Function Orthogonality");
     println!("=================================\n");
@@ -980,7 +980,7 @@ fn error_function_series_proof(
 
 #[allow(dead_code)]
 fn interactive_problem_solver(
-    _profile: &mut UserProfile,
+    profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎯 Interactive Problem Solver");
     println!("=============================\n");
@@ -995,11 +995,11 @@ fn interactive_problem_solver(
     let choice = get_user_input("Enter your choice (1-5): ")?;
 
     match choice.parse::<u32>() {
-        Ok(1) => solve_probability_problems(_profile),
-        Ok(2) => solve_physics_problems(_profile),
-        Ok(3) => solve_engineering_problems(_profile),
-        Ok(4) => solve_financial_problems(_profile),
-        Ok(5) => solve_custom_problem(_profile),
+        Ok(1) => solve_probability_problems(profile),
+        Ok(2) => solve_physics_problems(profile),
+        Ok(3) => solve_engineering_problems(profile),
+        Ok(4) => solve_financial_problems(profile),
+        Ok(5) => solve_custom_problem(profile),
         _ => {
             println!("Invalid choice.");
             Ok(())
@@ -1009,7 +1009,7 @@ fn interactive_problem_solver(
 
 #[allow(dead_code)]
 fn solve_probability_problems(
-    _profile: &mut UserProfile,
+    profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Probability Problem Solver");
     println!("==============================\n");
@@ -1122,7 +1122,7 @@ fn solve_physics_problems(profile: &mut UserProfile) -> Result<(), Box<dyn std::
 
 #[allow(dead_code)]
 fn solve_engineering_problems(
-    _profile: &mut UserProfile,
+    profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 Engineering Problem Solver");
     println!("==============================\n");
@@ -1145,7 +1145,7 @@ fn solve_engineering_problems(
     let T_base = 100.0; // °C
     let T_inf = 20.0; // °C
 
-    let m: f64 = (h / (k * delta)).sqrt();
+    let m: f64 = ((h / (k * delta)) as f64).sqrt();
     println!("\n🔢 Parameters:");
     println!("m = √(h/kδ) = {:.2} m⁻¹", m);
 
@@ -1156,7 +1156,7 @@ fn solve_engineering_problems(
 
     println!("C₁ = {:.2} °C", C1);
 
-    // Temperature _profile
+    // Temperature profile
     println!("\n🌡️  Temperature distribution:");
     let r_values = vec![0.0, 0.01, 0.02, 0.03, 0.04, 0.05];
     for &r in &r_values {
@@ -1271,7 +1271,7 @@ fn visual_function_explorer(profile: &mut UserProfile) -> Result<(), Box<dyn std
     println!("\n📈 Visual Function Explorer");
     println!("===========================\n");
 
-    if !_profile.learning_preferences.visual_learner {
+    if !profile.learning_preferences.visual_learner {
         println!("💡 Tip: Visual representations can help build intuition for special functions!");
         println!("Consider enabling visual learning in your preferences.");
     }
@@ -1285,10 +1285,10 @@ fn visual_function_explorer(profile: &mut UserProfile) -> Result<(), Box<dyn std
     let choice = get_user_input("Enter your choice (1-4): ")?;
 
     match choice.parse::<u32>() {
-        Ok(1) => explore_gamma_visual(_profile),
-        Ok(2) => explore_bessel_visual(_profile),
-        Ok(3) => explore_error_visual(_profile),
-        Ok(4) => explore_polynomial_visual(_profile),
+        Ok(1) => explore_gamma_visual(profile),
+        Ok(2) => explore_bessel_visual(profile),
+        Ok(3) => explore_error_visual(profile),
+        Ok(4) => explore_polynomial_visual(profile),
         _ => {
             println!("Invalid choice.");
             Ok(())
@@ -1744,13 +1744,13 @@ fn mastery_challenge(profile: &mut UserProfile) -> Result<(), Box<dyn std::error
     println!("Test your knowledge with progressively difficult challenges!");
     println!("Current level: {}", profile.level);
 
-    let challenge_level = determine_challenge_level(_profile);
+    let challenge_level = determine_challenge_level(profile);
 
     match challenge_level {
-        1 => basic_mastery_challenge(_profile),
-        2 => intermediate_mastery_challenge(_profile),
-        3 => advanced_mastery_challenge(_profile),
-        _ => expert_mastery_challenge(_profile),
+        1 => basic_mastery_challenge(profile),
+        2 => intermediate_mastery_challenge(profile),
+        3 => advanced_mastery_challenge(profile),
+        _ => expert_mastery_challenge(profile),
     }
 }
 
@@ -1964,7 +1964,7 @@ fn intermediate_mastery_challenge(
 
 #[allow(dead_code)]
 fn advanced_mastery_challenge(
-    _profile: &mut UserProfile,
+    profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Advanced Mastery Challenge");
     println!("=============================\n");
@@ -2126,11 +2126,11 @@ fn peer_comparison_mode(profile: &mut UserProfile) -> Result<(), Box<dyn std::er
 
     // Recommendations
     println!("\n💡 Personalized Recommendations:");
-    let weakest_subject = _profile
+    let weakest_subject = profile
         .mastery_scores
         .iter()
         .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-        .map(|(subject_score)| subject.clone());
+        .map(|(subject, _score)| subject.clone());
 
     if let Some(subject) = weakest_subject {
         println!("Focus on: {}", subject);
@@ -2148,7 +2148,7 @@ fn profile_settings(profile: &mut UserProfile) -> Result<(), Box<dyn std::error:
     println!("\n⚙️ Profile Settings");
     println!("===================\n");
 
-    println!("Current _profile for: {}", profile.name);
+    println!("Current profile for: {}", profile.name);
     println!("Level: {}", profile.level);
     println!("Experience Points: {}", profile.experience_points);
     println!("Current Streak: {}", profile.current_streak);
@@ -2172,13 +2172,13 @@ fn profile_settings(profile: &mut UserProfile) -> Result<(), Box<dyn std::error:
     );
 
     println!("\n🏆 Achievements ({}):", profile.achievements.len());
-    for achievement in &_profile.achievements {
+    for achievement in &profile.achievements {
         println!("  🏅 {} - {}", achievement.name, achievement.description);
     }
 
     println!("\n📈 Performance History:");
     let recent_sessions = profile.performance_history.len().min(5);
-    for record in _profile
+    for record in profile
         .performance_history
         .iter()
         .rev()
@@ -2221,11 +2221,11 @@ fn select_adaptive_topic(profile: &UserProfile) -> String {
         return "Gamma Functions".to_string();
     }
 
-    let weakest_topic = _profile
+    let weakest_topic = profile
         .mastery_scores
         .iter()
         .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-        .map(|(topic_score)| topic.clone())
+        .map(|(topic, _score)| topic.clone())
         .unwrap_or_else(|| "Gamma Functions".to_string());
 
     // Introduce new topics based on level
@@ -2281,8 +2281,8 @@ fn select_adaptive_topic(profile: &UserProfile) -> String {
 }
 
 #[allow(dead_code)]
-fn check_gamma_achievements(_profile: &mut UserProfile, score: f64, hintsused: u32) {
-    if score >= 1.0 && hints_used == 0 {
+fn check_gamma_achievements(profile: &mut UserProfile, score: f64, hintsused: u32) {
+    if score >= 1.0 && hintsused == 0 {
         profile.earn_achievement(Achievement {
             id: "gamma_perfectionist".to_string(),
             name: "Gamma Perfectionist".to_string(),
@@ -2292,7 +2292,7 @@ fn check_gamma_achievements(_profile: &mut UserProfile, score: f64, hintsused: u
         });
     }
 
-    if _profile
+    if profile
         .mastery_scores
         .get("Gamma Functions")
         .unwrap_or(&0.0)
@@ -2342,7 +2342,7 @@ fn display_session_summary(profile: &UserProfile) {
     println!("Achievements Earned: {}", profile.achievements.len());
     println!("Topics Studied: {}", profile.mastery_scores.len());
 
-    if !_profile.mastery_scores.is_empty() {
+    if !profile.mastery_scores.is_empty() {
         let avg_mastery: f64 =
             profile.mastery_scores.values().sum::<f64>() / profile.mastery_scores.len() as f64;
         println!("Average Mastery: {:.1}%", avg_mastery * 100.0);
@@ -2469,7 +2469,7 @@ fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn get_yes_noinput(prompt: &str) -> Result<bool, Box<dyn std::error::Error>> {
-    let input = get_user_input(_prompt)?;
+    let input = get_user_input(prompt)?;
     Ok(input.to_lowercase().starts_with('y'))
 }
 
@@ -2509,7 +2509,7 @@ fn numerical_orthogonality_check(n: u32, m: u32) -> f64 {
 }
 
 #[allow(dead_code)]
-fn numerical_bessel_orthogonality(_nu: u32, alpha_m: f64, alphan: f64) -> f64 {
+fn numerical_bessel_orthogonality(nu: u32, alpha_m: f64, alphan: f64) -> f64 {
     // Numerical integration for Bessel function orthogonality
     let num_points = 1000;
     let dx = 1.0 / num_points as f64;
@@ -2517,7 +2517,7 @@ fn numerical_bessel_orthogonality(_nu: u32, alpha_m: f64, alphan: f64) -> f64 {
 
     for i in 1..=num_points {
         let x = (i as f64) * dx;
-        integral += x * jn(_nu, alpha_m * x) * jn(_nu, alpha_n * x) * dx;
+        integral += x * jn(nu, alpha_m * x) * jn(nu, alphan * x) * dx;
     }
 
     integral
@@ -2526,7 +2526,7 @@ fn numerical_bessel_orthogonality(_nu: u32, alpha_m: f64, alphan: f64) -> f64 {
 // Placeholder for jn function (Bessel function of order nu)
 #[allow(dead_code)]
 fn jn(nu: u32, x: f64) -> f64 {
-    match _nu {
+    match nu {
         0 => j0(x),
         1 => j1(x),
         _ => {
@@ -2534,8 +2534,8 @@ fn jn(nu: u32, x: f64) -> f64 {
             let mut j_prev = j0(x);
             let mut j_curr = j1(x);
 
-            for _ in 2..=_nu {
-                let j_next = (2.0 * (_nu as f64 - 1.0) / x) * j_curr - j_prev;
+            for _ in 2..=nu {
+                let j_next = (2.0 * (nu as f64 - 1.0) / x) * j_curr - j_prev;
                 j_prev = j_curr;
                 j_curr = j_next;
             }

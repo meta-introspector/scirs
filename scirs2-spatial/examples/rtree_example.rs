@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__spatial::rtree::RTree;
+use scirs2_spatial::rtree::RTree;
 
 #[allow(dead_code)]
 fn main() {

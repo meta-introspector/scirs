@@ -76,7 +76,7 @@ impl LossFunction {
                 (predictions - targets) * (2.0 / n)
                 // d(BCE)/dŷ = ((1-y)/(1-ŷ) - y/ŷ)/n
                 let epsilon = 1e-15;
-                Array2::fromshape_fn(predictions.dim(), |(i, j)| {
+                Array2::from_shape_fn(predictions.dim(), |(i, j)| {
                     let y_pred = predictions[(i, j)].max(epsilon).min(1.0 - epsilon);
                     let y_true = targets[(i, j)];
                     ((1.0 - y_true) / (1.0 - y_pred) - y_true / y_pred) / n
@@ -114,7 +114,7 @@ impl Dropout {
             // During inference or if dropout is disabled, just pass through
             return x.clone();
         // Generate binary mask (1 = keep, 0 = drop)
-        let mask = Array2::fromshape_fn(x.dim(), |_| {
+        let mask = Array2::from_shape_fn(x.dim(), |_| {
             if rng.random::<f32>() > self._drop_prob {
                 1.0
             } else {

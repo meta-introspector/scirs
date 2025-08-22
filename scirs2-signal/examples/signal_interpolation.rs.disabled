@@ -1,10 +1,10 @@
-use crate::error::{SignalError, SignalResult};
+use scirs2_signal::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
 // use plotters::prelude::*;
 use num_complex::Complex64;
 use rand::{rng, Rng};
 use rand_distr::{Distribution, Normal};
-use scirs2_signal::{interpolate, SignalError, SignalResult};
+// use scirs2_signal::{interpolate}; // Module not available yet
 use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
@@ -33,19 +33,19 @@ fn main() -> SignalResult<()> {
 
 /// Generate a sine wave signal with some missing values
 #[allow(dead_code)]
-fn generate_test_signal(_n_samples: usize, missingrate: f64) -> Array1<f64> {
-    let mut signal = Array1::zeros(_n_samples);
+fn generate_test_signal(n_samples: usize, missingrate: f64) -> Array1<f64> {
+    let mut signal = Array1::zeros(n_samples);
     let x = Array1::linspace(0.0, 10.0, n_samples);
 
     // Generate sine wave
-    for i in 0.._n_samples {
+    for i in 0..n_samples {
         signal[i] = (x[i] * PI / 2.0).sin() + 0.5 * (x[i] * PI).cos();
     }
 
     // Randomly set some values as missing (NaN)
     let mut rng = rand::rng();
     for i in 0..n_samples {
-        if rng.random::<f64>() < missing_rate {
+        if rng.random::<f64>() < missingrate {
             signal[i] = f64::NAN;
         }
     }
@@ -57,12 +57,12 @@ fn generate_test_signal(_n_samples: usize, missingrate: f64) -> Array1<f64> {
 #[allow(dead_code)]
 fn export_to_csv(_filename: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
     let mut file =
-        File::create(_file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
+        File::create(_filename).map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     // Write header
     let header = signals
         .iter()
-        .map(|(name_)| name.to_string())
+        .map(|(name_,)| name_.to_string())
         .collect::<Vec<String>>()
         .join(",");
     writeln!(file, "{}", header).map_err(|e| SignalError::ComputationError(e.to_string()))?;
@@ -86,7 +86,7 @@ fn export_to_csv(_filename: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
         writeln!(file, "{}", line).map_err(|e| SignalError::ComputationError(e.to_string()))?;
     }
 
-    println!("Data exported to {}", file_name);
+    println!("Data exported to {}", _filename);
     Ok(())
 }
 
@@ -94,7 +94,7 @@ fn export_to_csv(_filename: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
 #[allow(dead_code)]
 fn export_2d_to_csv(_filename: &str, data: &Array2<f64>) -> SignalResult<()> {
     let mut file =
-        File::create(_file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
+        File::create(_filename).map_err(|e| SignalError::ComputationError(e.to_string()))?;
     let (n_rows, n_cols) = data.dim();
 
     for i in 0..n_rows {
@@ -111,7 +111,7 @@ fn export_2d_to_csv(_filename: &str, data: &Array2<f64>) -> SignalResult<()> {
         writeln!(file, "{}", line).map_err(|e| SignalError::ComputationError(e.to_string()))?;
     }
 
-    println!("2D data exported to {}", file_name);
+    println!("2D data exported to {}", _filename);
     Ok(())
 }
 

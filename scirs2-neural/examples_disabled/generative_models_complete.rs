@@ -624,6 +624,6 @@ mod tests {
         let error = metrics.reconstruction_error(&original, &reconstructed);
         assert_eq!(error, 1.0); // MSE between all 1s and all 0s
         // Test diversity
-        let samples = Array2::<f32>::fromshape_fn((3, 4), |(i, j)| i as f32 + j as f32).into_dyn();
+        let samples = Array2::<f32>::from_shape_fn((3, 4), |(i, j)| i as f32 + j as f32).into_dyn();
         let diversity = metrics.sample_diversity(&samples);
         assert!(diversity > 0.0);

@@ -4,7 +4,7 @@
 //! and functional by testing basic operations from each module.
 
 use ndarray::{array, Array1};
-use scirs2__spatial::{
+use scirs2_spatial::{
     ai_driven_optimization::AIAlgorithmSelector,
     distance::euclidean,
 

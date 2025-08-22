@@ -3,13 +3,17 @@
 //! This example demonstrates the enhanced array operations in scirs2-special,
 //! including lazy evaluation, GPU acceleration, and multidimensional support.
 
+#[cfg(feature = "gpu")]
 use ndarray::{Array, Array1};
+#[cfg(feature = "gpu")]
 use scirs2_special::array_ops::{
     convenience::{self, ConfigBuilder},
     ArrayConfig, Backend,
 };
+#[cfg(feature = "gpu")]
 use statrs::statistics::Statistics;
 
+#[cfg(feature = "gpu")]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== SCIRS2-SPECIAL Advanced Array Operations Demo ===\n");
@@ -41,6 +45,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(not(feature = "gpu"))]
+fn main() {
+    println!("This example requires the 'gpu' feature to be enabled.");
+    println!("Please run with: cargo run --features gpu --example advanced_array_operations");
+}
+
+#[cfg(feature = "gpu")]
 async fn demo_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Basic Array Operations");
     println!("========================");
@@ -73,6 +84,7 @@ async fn demo_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "gpu")]
 async fn demo_configuration_options() -> Result<(), Box<dyn std::error::Error>> {
     println!("2. Configuration Options and Backend Selection");
     println!("=============================================");
@@ -219,6 +231,7 @@ async fn demo_gpu_acceleration() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "gpu")]
 async fn demo_large_array_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("5. Large Array Processing");
     println!("=========================");
@@ -258,6 +271,7 @@ async fn demo_large_array_processing() -> Result<(), Box<dyn std::error::Error>>
     Ok(())
 }
 
+#[cfg(feature = "gpu")]
 async fn demo_batch_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("6. Batch Processing");
     println!("==================");
@@ -288,6 +302,7 @@ async fn demo_batch_processing() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "gpu")]
 async fn demo_memory_efficient_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("7. Memory-Efficient Operations");
     println!("==============================");

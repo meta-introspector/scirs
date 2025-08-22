@@ -794,7 +794,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<
 #[allow(dead_code)]
 fn initialize_quantum_states(_nparams: usize) -> Array2<Complex64> {
     // Initialize quantum superposition states
-    Array2::fromshape_fn((_n_params, 8), |(i, j)| {
+    Array2::from_shape_fn((_n_params, 8), |(i, j)| {
         Complex64::new(
             (i as f64 * 0.1 + j as f64 * 0.05).cos(),
             (i as f64 * 0.1 + j as f64 * 0.05).sin(),
@@ -1234,7 +1234,7 @@ fn setup_real_time_adaptation(
     let adaptive_coefficients = Array2::ones((n, n_params));
 
     // Learning curve (placeholder)
-    let learning_curve = Array1::fromshape_fn(n, |i| (-0.01 * i as f64).exp());
+    let learning_curve = Array1::from_shape_fn(n, |i| (-0.01 * i as f64).exp());
 
     // Change detection (simplified)
     let change_detection = ChangeDetectionResults {
@@ -1245,7 +1245,7 @@ fn setup_real_time_adaptation(
     };
 
     // Forgetting factor evolution
-    let forgetting_factor_evolution = Array1::fromshape_fn(n, |_| 0.995);
+    let forgetting_factor_evolution = Array1::from_shape_fn(n, |_| 0.995);
 
     Ok(AdaptationResults {
         adaptive_coefficients,
@@ -1419,8 +1419,8 @@ mod tests {
     fn test_advanced_enhanced_system_identification() {
         // Create test signals
         let n = 100;
-        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.1).sin());
-        let output = Array1::fromshape_fn(n, |i| (i as f64 * 0.1 + 0.5).sin() * 0.8);
+        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
+        let output = Array1::from_shape_fn(n, |i| (i as f64 * 0.1 + 0.5).sin() * 0.8);
 
         let config = AdvancedEnhancedSysIdConfig {
             max_order: 5,
@@ -1471,7 +1471,7 @@ mod tests {
             confidence_score: 0.9,
         };
 
-        let input = Array1::fromshape_fn(50, |i| (i as f64 * 0.1).sin());
+        let input = Array1::from_shape_fn(50, |i| (i as f64 * 0.1).sin());
         let output =
             simulate_model_response(model.transfer_function.as_ref().unwrap(), &input).unwrap();
 
@@ -1486,8 +1486,8 @@ mod tests {
 
     #[test]
     fn test_structure_selection() {
-        let input = Array1::fromshape_fn(50, |i| (i as f64 * 0.1).sin());
-        let output = Array1::fromshape_fn(50, |i| (i as f64 * 0.1 + 0.2).cos());
+        let input = Array1::from_shape_fn(50, |i| (i as f64 * 0.1).sin());
+        let output = Array1::from_shape_fn(50, |i| (i as f64 * 0.1 + 0.2).cos());
 
         let config = AdvancedEnhancedSysIdConfig {
             max_order: 3,

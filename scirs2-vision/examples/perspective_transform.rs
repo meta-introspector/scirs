@@ -130,10 +130,10 @@ fn create_tilt_transform(_width: u32, height: u32, tiltfactor: f64) -> Perspecti
 fn create_birds_eye_transform(width: u32, height: u32) -> PerspectiveTransform {
     // Create a transform that makes the image appear as if viewed from above
     let src_points = [
-        (0.0, 0.0),                     // Top-left
+        (0.0, 0.0),                    // Top-left
         (width as f64, 0.0),           // Top-right
         (width as f64, height as f64), // Bottom-right
-        (0.0, height as f64),           // Bottom-left
+        (0.0, height as f64),          // Bottom-left
     ];
 
     let dst_points = [

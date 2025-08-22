@@ -453,7 +453,7 @@ fn calculate_mse(signal1: &Array1<f64>, signal2: &Array1<f64>) -> f64 {
 
     let mut sum_squared_diff = 0.0;
 
-    for i in 0.._signal1.len() {
+    for i in 0..signal1.len() {
         let diff = signal1[i] - signal2[i];
         sum_squared_diff += diff * diff;
     }
@@ -545,7 +545,7 @@ fn save_signal_to_csv(
 /// Saves a 2D image to a CSV file for visualization
 #[allow(dead_code)]
 fn save_image_to_csv(filename: &str, image: &Array2<f64>) {
-    let mut file = File::create(_filename).expect("Failed to create file");
+    let mut file = File::create(filename).expect("Failed to create file");
 
     let (height, width) = image.dim();
 

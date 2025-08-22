@@ -22,7 +22,7 @@ struct BenchmarkData {
 
 /// Parse benchmark results from files
 #[allow(dead_code)]
-fn parse_benchmark_results() -> Result<Vec<BenchmarkData>, Box<dyn Error>> {
+fn parsebenchmark_results() -> Result<Vec<BenchmarkData>, Box<dyn Error>> {
     let mut results = Vec::new();
 
     // This is a placeholder - in practice, you would parse actual benchmark output files
@@ -50,9 +50,9 @@ fn parse_benchmark_results() -> Result<Vec<BenchmarkData>, Box<dyn Error>> {
 fn create_performance_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut plot = Plot::new();
 
-    // Group _data by operation
+    // Group data by operation
     let mut grouped: HashMap<String, Vec<&BenchmarkData>> = HashMap::new();
-    for item in _data {
+    for item in data {
         grouped
             .entry(item.operation.clone())
             .or_default()
@@ -76,15 +76,15 @@ fn create_performance_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>>
     }
 
     let layout = Layout::new()
-        .title(Title::withtext("FFT Performance Comparison"))
+        .title(Title::with_text("FFT Performance Comparison"))
         .x_axis(
             Axis::new()
-                .title(Title::withtext("Input Size"))
+                .title(Title::with_text("Input Size"))
                 .type_(AxisType::Log),
         )
         .y_axis(
             Axis::new()
-                .title(Title::withtext("Time (ms)"))
+                .title(Title::with_text("Time (ms)"))
                 .type_(AxisType::Log),
         );
 
@@ -99,9 +99,9 @@ fn create_performance_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>>
 fn create_memory_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut plot = Plot::new();
 
-    // Group _data by operation
+    // Group data by operation
     let mut grouped: HashMap<String, Vec<&BenchmarkData>> = HashMap::new();
-    for item in _data {
+    for item in data {
         if item.memory_kb.is_some() {
             grouped
                 .entry(item.operation.clone())
@@ -127,15 +127,15 @@ fn create_memory_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     }
 
     let layout = Layout::new()
-        .title(Title::withtext("FFT Memory Usage Comparison"))
+        .title(Title::with_text("FFT Memory Usage Comparison"))
         .x_axis(
             Axis::new()
-                .title(Title::withtext("Input Size"))
+                .title(Title::with_text("Input Size"))
                 .type_(AxisType::Log),
         )
         .y_axis(
             Axis::new()
-                .title(Title::withtext("Memory (KB)"))
+                .title(Title::with_text("Memory (KB)"))
                 .type_(AxisType::Log),
         );
 
@@ -150,9 +150,9 @@ fn create_memory_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
 fn create_accuracy_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut plot = Plot::new();
 
-    // Group _data by operation
+    // Group data by operation
     let mut grouped: HashMap<String, Vec<&BenchmarkData>> = HashMap::new();
-    for item in _data {
+    for item in data {
         if item.accuracy.is_some() {
             grouped
                 .entry(item.operation.clone())
@@ -178,15 +178,15 @@ fn create_accuracy_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     }
 
     let layout = Layout::new()
-        .title(Title::withtext("FFT Accuracy Comparison"))
+        .title(Title::with_text("FFT Accuracy Comparison"))
         .x_axis(
             Axis::new()
-                .title(Title::withtext("Input Size"))
+                .title(Title::with_text("Input Size"))
                 .type_(AxisType::Log),
         )
         .y_axis(
             Axis::new()
-                .title(Title::withtext("Error"))
+                .title(Title::with_text("Error"))
                 .type_(AxisType::Log),
         );
 
@@ -239,7 +239,7 @@ fn create_comparison_table(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>>
 "#,
     );
 
-    for item in _data {
+    for item in data {
         html.push_str(&format!(
             "<tr>
                 <td class='operation'>{}</td>
@@ -273,7 +273,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     fs::create_dir_all("benchmark_results")?;
 
     // Parse benchmark results
-    let data = parse_benchmark_results()?;
+    let data = parsebenchmark_results()?;
 
     // Create visualizations
     println!("Creating performance comparison plot...");

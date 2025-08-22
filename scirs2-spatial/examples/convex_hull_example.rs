@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__spatial::convex_hull::{convex_hull, ConvexHull};
+use scirs2_spatial::convex_hull::{convex_hull, ConvexHull};
 
 #[allow(dead_code)]
 fn main() {

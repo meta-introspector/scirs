@@ -48,12 +48,12 @@ fn main() {
     println!("-------------------------------------");
 
     // Create a large array
-    let large_size = (512, 512, 16);
-    let large_array = Array3::from_shape_fn(large_size, |(i, j, k)| (i + j + k) as f64);
+    let largesize = (512, 512, 16);
+    let large_array = Array3::from_shape_fn(largesize, |(i, j, k)| (i + j + k) as f64);
 
     let memory_gb =
         (large_array.len() * std::mem::size_of::<f64>()) as f64 / (1024.0 * 1024.0 * 1024.0);
-    println!("Array size: {large_size:?}, Memory: {memory_gb:.2} GB");
+    println!("Array size: {largesize:?}, Memory: {memory_gb:.2} GB");
 
     // Test memory-efficient FFT with different memory limits
     let memory_limits = vec![0.5, 1.0, 2.0];

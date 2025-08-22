@@ -1167,7 +1167,7 @@ fn show_session_progress(session: &DerivationSession) {
         );
     }
 
-    if !_session.is_complete() {
+    if !session.is_complete() {
         let remaining =
             session.steps.len() - session.completed_steps.iter().filter(|&&x| x).count();
         println!("\n{} steps remaining.", remaining);

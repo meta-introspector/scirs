@@ -394,7 +394,7 @@ impl DifferentiableSearch {
     /// Apply Gumbel softmax for continuous relaxation
     fn gumbel_softmax(&self, logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
         // Add Gumbel noise
-        let gumbel_noise: Array1<f32> = Array1::fromshape_fn(logits.len(), |_| {
+        let gumbel_noise: Array1<f32> = Array1::from_shape_fn(logits.len(), |_| {
             let u: f32 = rng.random();
             -((-u.ln()).ln())
         let noisy_logits = logits + &gumbel_noise;

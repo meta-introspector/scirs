@@ -1,5 +1,6 @@
 use plotly::common::Mode;
 use plotly::{Plot, Scatter};
+use rand::Rng;
 use scirs2_signal::dwt::Wavelet;
 use scirs2_signal::swt::{iswt, swt};
 use scirs2_signal::waveforms::chirp;
@@ -15,11 +16,11 @@ fn main() {
     let mut rng = rand::rng();
     let noisy_signal = signal
         .iter()
-        .map(|&x| x + 0.1 * rng.random_range(-1.0..1.0))
+        .map(|&x| x + 0.1 * (rng.random::<f64>() * 2.0 - 1.0))
         .collect::<Vec<f64>>();
 
     // Perform SWT decomposition with 3 levels
-    let (details..approx) = swt(&noisy_signal, Wavelet::DB(4), 3, None).unwrap();
+    let (details, approx) = swt(&noisy_signal, Wavelet::DB(4), 3, None).unwrap();
 
     // Modify detail coefficients to denoise (simple hard threshold)
     let mut modified_details = details.clone();

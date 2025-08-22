@@ -497,7 +497,7 @@ impl ProofExplorer {
     }
 
     fn start_proof_exploration(&self, proofid: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let proof = self.get_proof_by_id(proof_id).unwrap();
+        let proof = self.get_proof_by_id(proofid).unwrap();
 
         println!("\n🎯 Starting Proof: {}", proof.title);
         println!("=================={}", "=".repeat(proof.title.len()));
@@ -655,7 +655,7 @@ impl ProofExplorer {
 
                         if attempts >= 3 {
                             println!("🔍 Expected answer: {}", expected_answer);
-                            return Ok(ElementResult::Incorrect(response, attempts));
+                            return Ok(ElementResult::Incorrect(response, attempts as u32));
                         }
                     }
                 }
@@ -742,14 +742,14 @@ impl ProofExplorer {
     }
 
     fn create_visualization(&self, plottype: &PlotType) -> Result<(), Box<dyn std::error::Error>> {
-        match plot_type {
+        match plottype {
             PlotType::FunctionGraph { domain, functions } => {
                 println!("📈 Function Graph:");
                 println!("Domain: [{}, {}]", domain.0, domain.1);
                 println!("Functions: {}", functions.join(", "));
 
                 // Simple ASCII visualization
-                self.create_ascii_plot(domain, functions)?;
+                self.create_ascii_plot(domain, &functions)?;
             }
 
             PlotType::ComplexPlane { radius, function } => {
@@ -881,7 +881,7 @@ impl ProofExplorer {
 
         if series.contains("gamma") {
             // Demonstrate Stirling series convergence
-            let x = 10.0;
+            let x: f64 = 10.0;
             let exact = gamma(x);
             let mut sum = (x - 0.5) * x.ln() - x + 0.5 * (2.0 * PI).ln();
 
@@ -1047,10 +1047,7 @@ impl ProofExplorer {
         println!();
 
         println!("🌟 What you've learned:");
-        for objective in &proof.main_theorem.statement {
-            println!("  • Understanding of the reflection formula");
-            break; // Just show one for demo
-        }
+        println!("  • Understanding of: {}", proof.main_theorem.statement);
         println!("  • Complex analysis techniques");
         println!("  • Connection between discrete and continuous mathematics");
         println!();
@@ -1603,7 +1600,7 @@ fn gamma_complex(z: Complex64) -> Complex64 {
         let t = z_shifted + Complex64::new(g + 0.5, 0.0);
         let sqrt_2pi = Complex64::new((2.0 * PI).sqrt(), 0.0);
 
-        sqrt_2pi * t.powf(z_shifted + Complex64::new(0.5, 0.0)) * (-t).exp() * x
+        sqrt_2pi * t.powc(z_shifted + Complex64::new(0.5, 0.0)) * (-t).exp() * x
     } else {
         // Use reflection formula for negative real part
         let pi_z = Complex64::new(PI, 0.0) * z;

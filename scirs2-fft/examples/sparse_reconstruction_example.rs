@@ -144,11 +144,11 @@ fn compute_error(original: &[f64], reconstructed: &[Complex64]) -> f64 {
         // Handle simple case for high-resolution where lengths don't match
         // by just comparing overlapping parts
         let min_len = original.len().min(reconstructed.len());
-        return compute_error(&_original[..min_len], &reconstructed[..min_len]);
+        return compute_error(&original[..min_len], &reconstructed[..min_len]);
     }
 
-    // Convert _original signal to complex for comparison
-    let _original_complex: Vec<Complex64> =
+    // Convert original signal to complex for comparison
+    let original_complex: Vec<Complex64> =
         original.iter().map(|&x| Complex64::new(x, 0.0)).collect();
 
     // Normalize signals before comparing
@@ -161,7 +161,7 @@ fn compute_error(original: &[f64], reconstructed: &[Complex64]) -> f64 {
 
     // Compute error between normalized signals
     let mut error_sum = 0.0;
-    for i in 0.._original.len() {
+    for i in 0..original.len() {
         let orig = original_complex[i] * orig_scale;
         let recon = reconstructed[i] * recon_scale;
         error_sum += (orig - recon).norm_sqr();
@@ -235,9 +235,9 @@ fn create_plots(
     // Set layout
     time_plot.set_layout(
         Layout::new()
-            .title(Title::withtext("Time Domain Signal Comparison"))
-            .x_axis(Axis::new().title(Title::withtext("Sample Index")))
-            .y_axis(Axis::new().title(Title::withtext("Amplitude"))),
+            .title(Title::with_text("Time Domain Signal Comparison"))
+            .x_axis(Axis::new().title(Title::with_text("Sample Index")))
+            .y_axis(Axis::new().title(Title::with_text("Amplitude"))),
     );
 
     // Save the plot
@@ -284,9 +284,9 @@ fn create_plots(
     // Set layout
     highres_plot.set_layout(
         Layout::new()
-            .title(Title::withtext("High-Resolution Reconstruction"))
-            .x_axis(Axis::new().title(Title::withtext("Sample Index")))
-            .y_axis(Axis::new().title(Title::withtext("Amplitude"))),
+            .title(Title::with_text("High-Resolution Reconstruction"))
+            .x_axis(Axis::new().title(Title::with_text("Sample Index")))
+            .y_axis(Axis::new().title(Title::with_text("Amplitude"))),
     );
 
     // Save the plot

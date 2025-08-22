@@ -349,7 +349,7 @@ fn compute_tv_gradient_1d(
 /// use ndarray::Array2;
 /// use scirs2_signal::tv::{tv_denoise_2d, TvConfig};
 ///
-/// let image = Array2::fromshape_fn((10, 10), |(i, j)| (i + j) as f64 / 20.0);
+/// let image = Array2::from_shape_fn((10, 10), |(i, j)| (i + j) as f64 / 20.0);
 /// let config = TvConfig::default();
 /// let denoised = tv_denoise_2d(&image, 0.5, &config).unwrap();
 /// ```

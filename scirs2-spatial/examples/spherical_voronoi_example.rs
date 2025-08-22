@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__spatial::spherical_voronoi::SphericalVoronoi;
+use scirs2_spatial::spherical_voronoi::SphericalVoronoi;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

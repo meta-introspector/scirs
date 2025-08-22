@@ -139,7 +139,7 @@ fn demo_memory_aware_batch_processing() -> Result<()> {
     );
     // Create a large dataset that needs to be processed in chunks
     println!("Creating large dataset (1000 samples x 784 features)...");
-    let large_dataset = Array2::fromshape_fn((1000, 784), |(i, j)| {
+    let large_dataset = Array2::from_shape_fn((1000, 784), |(i, j)| {
         (i as f32 * 0.01 + j as f32 * 0.001).sin()
     })
     println!("Dataset shape: {:?}", large_dataset.shape());
@@ -172,7 +172,7 @@ fn demo_memory_efficient_layer() -> Result<()> {
     println!("Created memory-efficient layer: 784 -> 128");
     // Create input data
     let input =
-        Array2::fromshape_fn((256, 784), |(i, j)| ((i + j) as f32 * 0.01).sin()).into_dyn();
+        Array2::from_shape_fn((256, 784), |(i, j)| ((i + j) as f32 * 0.01).sin()).into_dyn();
     println!("Input shape: {:?}", input.shape());
     // Forward pass
     println!("Performing forward pass...");

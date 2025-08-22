@@ -1,9 +1,9 @@
 //! Example demonstrating streaming operations for large images
 
-use ndarray::{Array2, ArrayView2};
+use ndarray::{Array2, ArrayView2, ArrayViewMut2};
 use scirs2_ndimage::{
-    filters::fourier::{fourier_gaussian_file, fourier_uniform_file},
-    stream_process_file, StreamConfig, StreamableOp, StreamingGaussianFilter,
+    stream_process_file, streaming::OverlapInfo, StreamConfig, StreamableOp,
+    StreamingGaussianFilter,
 };
 use std::path::Path;
 
@@ -97,7 +97,7 @@ fn process_with_custom_op() {
             chunk: &ArrayView2<f64>,
         ) -> scirs2_ndimage::NdimageResult<Array2<f64>> {
             // Apply Laplacian for edge detection
-            let edges = scirs2_ndimage::laplace(chunk.to_owned(), None)?;
+            let edges = scirs2_ndimage::laplace(&chunk.to_owned(), None, None)?;
 
             // Enhance edges
             let enhanced = chunk.to_owned() - edges * self.strength;
@@ -109,10 +109,10 @@ fn process_with_custom_op() {
         }
 
         fn merge_overlap(
-            self_output: &mut ndarray::ArrayViewMut2<f64>,
+            &self,
+            self_output: &mut ArrayViewMut2<f64>,
             _new_chunk: &ArrayView2<f64>,
-            _overlap_info: &scirs2,
-            _ndimage: streaming::OverlapInfo,
+            _overlap_info: &OverlapInfo,
         ) -> scirs2_ndimage::NdimageResult<()> {
             // Simple blending in overlap regions
             Ok(())

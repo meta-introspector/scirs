@@ -1,7 +1,7 @@
 //! Example demonstrating the RRT and RRT* path planning algorithms
 
-use scirs2__spatial::error::SpatialResult;
-use scirs2__spatial::pathplanning::{RRT2DPlanner, RRTConfig};
+use scirs2_spatial::error::SpatialResult;
+use scirs2_spatial::pathplanning::{RRT2DPlanner, RRTConfig};
 
 #[allow(dead_code)]
 fn main() -> SpatialResult<()> {

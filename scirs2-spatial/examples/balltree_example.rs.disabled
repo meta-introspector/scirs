@@ -1,8 +1,8 @@
 use ndarray::Array2;
 use rand::{Rng, SeedableRng};
 use rand__chacha::ChaCha8Rng;
-use scirs2__spatial::balltree::BallTree;
-use scirs2__spatial::distance::{manhattan, ChebyshevDistance, ManhattanDistance};
+use scirs2_spatial::balltree::BallTree;
+use scirs2_spatial::distance::{manhattan, ChebyshevDistance, ManhattanDistance};
 use std::time::Instant;
 
 /// Generate random points in a unit hypercube

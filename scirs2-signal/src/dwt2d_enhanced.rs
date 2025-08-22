@@ -3025,7 +3025,7 @@ mod tests {
     fn test_perfect_reconstruction() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
-        let data = Array2::fromshape_fn((8, 8), |(i, j)| (i * j) as f64);
+        let data = Array2::from_shape_fn((8, 8), |(i, j)| (i * j) as f64);
         let config = Dwt2dConfig::default();
 
         // Test with different wavelets
@@ -3050,7 +3050,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_decomposition() {
-        let data = Array2::fromshape_fn((16, 16), |(i, j)| {
+        let data = Array2::from_shape_fn((16, 16), |(i, j)| {
             (2.0 * std::f64::consts::PI * i as f64 / 8.0).sin()
                 + (2.0 * std::f64::consts::PI * j as f64 / 8.0).cos()
         });
@@ -3070,7 +3070,7 @@ mod tests {
 
     #[test]
     fn test_memory_optimized_processing() {
-        let data = Array2::fromshape_fn((64, 64), |(i, j)| (i + j) as f64);
+        let data = Array2::from_shape_fn((64, 64), |(i, j)| (i + j) as f64);
         let config = Dwt2dConfig {
             memory_optimized: true,
             block_size: 16,
@@ -3085,7 +3085,7 @@ mod tests {
 
     #[test]
     fn test_quality_metrics() {
-        let data = Array2::fromshape_fn((16, 16), |(i, j)| (i * j) as f64);
+        let data = Array2::from_shape_fn((16, 16), |(i, j)| (i * j) as f64);
         let config = Dwt2dConfig {
             compute_metrics: true,
             ..Default::default()
@@ -3110,7 +3110,7 @@ mod tests {
     fn test_denoising() {
         // Create noisy image
         let mut rng = rand::rng();
-        let clean_data = Array2::fromshape_fn((32, 32), |(i, j)| {
+        let clean_data = Array2::from_shape_fn((32, 32), |(i, j)| {
             (2.0 * std::f64::consts::PI * i as f64 / 16.0).sin()
                 * (2.0 * std::f64::consts::PI * j as f64 / 16.0).cos()
         });

@@ -30,13 +30,13 @@ use crate::error::{NeuralError, Result};
 /// let out_channels = 2;
 /// let kernel_size = 3;
 /// // Initialize with sample values
-/// let input = Array::fromshape_fn(
+/// let input = Array::from_shape_fn(
 ///     (batch_size, in_channels, height, width),
 ///     |_| 0.1
 /// );
-/// let weight = Array::fromshape_fn(
+/// let weight = Array::from_shape_fn(
 ///     (out_channels, in_channels, kernel_size, kernel_size),
-/// let bias = Some(Array::fromshape_fn(out_channels, |_| 0.1));
+/// let bias = Some(Array::from_shape_fn(out_channels, |_| 0.1));
 /// // Apply convolution with stride 1 and padding 1
 /// let output = conv2d(&input.view(), &weight.view(), bias.as_ref().map(|b| b.view()), 1, 1).unwrap();
 /// // Output shape should be [batch_size, out_channels, height, width] with padding 1 and stride 1
@@ -136,7 +136,7 @@ where
 /// let height = 6;
 /// let width = 6;
 /// // Initialize with incrementing values for clear max pooling results
-/// let mut input = Array::fromshape_fn(
+/// let mut input = Array::from_shape_fn(
 ///     (batch_size, channels, height, width),
 ///     |(b, c, h, w)| (h * width + w) as f32 + 0.1
 /// // Apply max pooling with kernel_size 2, stride 2, padding 0
@@ -317,7 +317,7 @@ pub fn adaptive_avg_pool2d<F>(
 /// // Forward pass
 /// let output = conv2d(&input.view(), &weight.view(), None, 1, 1).unwrap();
 /// // Gradient of loss with respect to output
-/// let dout = Array::fromshape_fn(output.raw_dim(), |_| 0.01);
+/// let dout = Array::from_shape_fn(output.raw_dim(), |_| 0.01);
 /// // Backward pass
 /// let (d_input, d_weight, d_bias) = conv2d_backward(
 ///     &dout.view(), &input.view(), &weight.view(), 1, 1

@@ -2,8 +2,8 @@
 
 use ndarray::Array2;
 use scirs2_ndimage::{
-    auto_backend, gaussian_filter, Backend, BackendBuilder, BackendConfig, BackendExecutor,
-    BackendOp, GaussianFilterOp, NdimageResult,
+    auto_backend, backend::GaussianFilterOp, gaussian_filter, Backend, BackendBuilder,
+    BackendConfig, BackendExecutor, BackendOp, NdimageResult,
 };
 
 #[allow(dead_code)]
@@ -34,12 +34,13 @@ fn automatic_backend_selection() {
     let op = GaussianFilterOp::new(vec![2.0, 2.0], Some(4.0));
 
     println!("Processing small array (100x100) - should use CPU");
-    let _result = executor.execute(&small_array.view(), op.clone()).unwrap();
+    let op2 = GaussianFilterOp::new(vec![2.0, 2.0], Some(4.0));
+    let _result = executor.execute(&small_array.view(), op).unwrap();
 
     // Large array - will use GPU if available
     let large_array = Array2::from_elem((5000, 5000), 1.0f32);
     println!("Processing large array (5000x5000) - should use GPU if available");
-    let _result = executor.execute(&large_array.view(), op).unwrap();
+    let _result = executor.execute(&large_array.view(), op2).unwrap();
 }
 
 /// Force GPU backend for all operations
@@ -135,7 +136,8 @@ impl BackendOp<f32, ndarray::Ix2> for CustomBlurOp {
 
         // Apply Gaussian blur multiple times
         for _ in 0..self.iterations {
-            result = gaussian_filter(result, &[self.sigma, self.sigma], None, None, None)?;
+            result = gaussian_filter(&result.mapv(|x| x as f64), self.sigma as f64, None, None)?
+                .mapv(|x| x as f32);
         }
 
         Ok(result)
@@ -163,7 +165,7 @@ impl BackendOp<f32, ndarray::Ix2> for CustomBlurOp {
 
     fn benefits_from_gpu(&self, arraysize: usize) -> bool {
         // Multiple iterations benefit more from GPU
-        array_size > 50_000 || (array_size > 10_000 && self.iterations > 3)
+        arraysize > 50_000 || (arraysize > 10_000 && self.iterations > 3)
     }
 }
 

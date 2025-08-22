@@ -50,19 +50,19 @@ impl GraphGenerator {
     }
 
     fn complete(&self, n: usize) -> Graph<usize, f64> {
-        complete_graph(n)
+        complete_graph(n).expect("Failed to create complete graph")
     }
 
     fn grid_2d(&self, rows: usize, cols: usize) -> Graph<usize, f64> {
-        grid_2d_graph(rows, cols)
+        grid_2d_graph(rows, cols).expect("Failed to create grid graph")
     }
 
     fn path(&self, n: usize) -> Graph<usize, f64> {
-        path_graph(n)
+        path_graph(n).expect("Failed to create path graph")
     }
 
     fn star(&self, n: usize) -> Graph<usize, f64> {
-        star_graph(n)
+        star_graph(n).expect("Failed to create star graph")
     }
 }
 
@@ -93,7 +93,7 @@ fn bench_centrality_algorithms(c: &mut Criterion) {
 
         // PageRank
         group.bench_with_input(BenchmarkId::new("pagerank", graph_name), &graph, |b, g| {
-            b.iter(|| pagerank(black_box(g), 0.85, Some(1e-6)).unwrap())
+            b.iter(|| pagerank_centrality(black_box(g), 0.85, 1e-6).unwrap())
         });
 
         // Betweenness centrality (only for smaller graphs)

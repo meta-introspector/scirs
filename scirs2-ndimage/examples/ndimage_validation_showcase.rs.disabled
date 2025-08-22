@@ -227,7 +227,7 @@ mod tests {
         let testimage = create_testimage(32, 32);
         let config = create_advanced_config();
 
-        let (resultstate) = fusion_processing(testimage.view(), &config, None)?;
+        let (result, _state) = fusion_processing(testimage.view(), &config, None)?;
 
         assert_eq!(result.dim(), (32, 32));
         assert!(result.iter().all(|&x| x.is_finite()));

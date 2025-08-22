@@ -238,7 +238,7 @@ fn calculate_rms(signal: &[f64]) -> f64 {
 /// Format coefficients for display
 #[allow(dead_code)]
 fn format_coeffs(coeffs: &[f64]) -> String {
-    _coeffs
+    coeffs
         .iter()
         .map(|&c| format!("{:.4}", c))
         .collect::<Vec<_>>()

@@ -713,8 +713,8 @@ pub mod benchmark {
         signal_size: usize,
         kernel_size: usize,
     ) -> SignalResult<BenchmarkResult> {
-        let signal = Array1::fromshape_fn(signal_size, |i| (i as f64 * 0.01).sin());
-        let kernel = Array1::fromshape_fn(kernel_size, |i| {
+        let signal = Array1::from_shape_fn(signal_size, |i| (i as f64 * 0.01).sin());
+        let kernel = Array1::from_shape_fn(kernel_size, |i| {
             (-((i as f64 - kernel_size as f64 / 2.0).powi(2)) / 10.0).exp()
         });
 

@@ -6,9 +6,9 @@
 
 use ndarray::{array, Array2};
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2__spatial::kdtree::KDTree;
-use scirs2__spatial::kdtree_optimized::KDTreeOptimized;
-use scirs2__spatial::set_distance::hausdorff_distance;
+use scirs2_spatial::kdtree::KDTree;
+use scirs2_spatial::kdtree_optimized::KDTreeOptimized;
+use scirs2_spatial::set_distance::hausdorff_distance;
 use std::time::Instant;
 
 /// Generate random points in the unit square

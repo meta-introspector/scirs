@@ -7,7 +7,7 @@
 //! Run with: cargo run --example comprehensive_performance_benchmark --features gpu,simd,parallel
 
 use scirs2_special::performance_benchmarks::{
-    comprehensive_benchmark, quick_benchmark, BenchmarkConfig, GammaBenchmarks,
+    comprehensive_benchmark, quick_benchmark, BenchmarkConfig, BenchmarkResult, BenchmarkSuite, GammaBenchmarks,
 };
 use std::env;
 use std::fs;
@@ -63,8 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn run_custom_benchmark(
-) -> Result<scirs2_special::performance, _benchmarks::BenchmarkSuite, Box<dyn std::error::Error>> {
+fn run_custom_benchmark() -> Result<BenchmarkSuite, Box<dyn std::error::Error>> {
     let config = BenchmarkConfig {
         arraysizes: vec![
             100,       // Small arrays
@@ -155,14 +154,11 @@ fn generate_performance_recommendations(
 
         size_recommendations
             .entry(size_range)
-            .and_modify(
-                |current: &mut &scirs2_special::performance, _benchmarks::BenchmarkResult| {
-                    if result.speedup_factor.unwrap_or(1.0) > current.speedup_factor.unwrap_or(1.0)
-                    {
-                        *current = result;
-                    }
-                },
-            )
+            .and_modify(|current: &mut &BenchmarkResult| {
+                if result.speedup_factor.unwrap_or(1.0) > current.speedup_factor.unwrap_or(1.0) {
+                    *current = result;
+                }
+            })
             .or_insert(result);
     }
 
@@ -328,13 +324,11 @@ fn analyze_results_programmatically(
         if result.success {
             fastest_bysize
                 .entry(result.arraysize)
-                .and_modify(
-                    |current: &mut &scirs2_special::performance, _benchmarks::BenchmarkResult| {
-                        if result.average_time < current.average_time {
-                            *current = result;
-                        }
-                    },
-                )
+                .and_modify(|current: &mut &BenchmarkResult| {
+                    if result.average_time < current.average_time {
+                        *current = result;
+                    }
+                })
                 .or_insert(result);
         }
     }

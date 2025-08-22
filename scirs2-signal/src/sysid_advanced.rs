@@ -1124,7 +1124,7 @@ fn compute_parameter_statistics(
 
     // Simplified: assume diagonal covariance
     let covariance = Array2::eye(k) * sigma2;
-    let std_errors = Array1::fromshape_fn(k, |i| covariance[[i, i]].sqrt());
+    let std_errors = Array1::from_shape_fn(k, |i| covariance[[i, i]].sqrt());
 
     let confidence_intervals: Vec<(f64, f64)> = params
         .iter()
@@ -1239,8 +1239,8 @@ mod tests {
     #[test]
     fn test_state_space_identification() {
         let n = 100;
-        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.1).sin());
-        let output = Array1::fromshape_fn(n, |i| (i as f64 * 0.1 + 0.5).sin());
+        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
+        let output = Array1::from_shape_fn(n, |i| (i as f64 * 0.1 + 0.5).sin());
 
         let (model__, converged_) = identify_state_space_complete(&input, &output, 2).unwrap();
 

@@ -1,8 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2, ArrayView2};
-use ndarray_rand::RandomExt;
-use rand::distributions::Uniform;
-use rand::SeedableRng;
+use rand::distr::Uniform;
+use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use scirs2_linalg::{det, inv, lu, matrix_norm, qr, solve, svd, vector_norm};
 use serde::{Deserialize, Serialize};
@@ -28,8 +27,9 @@ fn generate_conditioned_matrix(size: usize, conditionnumber: f64) -> Array2<f64>
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
 
     // Generate random orthogonal matrices U and V via QR decomposition
-    let u_raw = Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng);
-    let v_raw = Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng);
+    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let u_raw = Array2::from_shape_fn((size, size), |_| rng.sample(uniform));
+    let v_raw = Array2::from_shape_fn((size, size), |_| rng.sample(uniform));
 
     let (u_) = qr(&u_raw.view(), None).unwrap();
     let (v_) = qr(&v_raw.view(), None).unwrap();

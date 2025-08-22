@@ -30,15 +30,15 @@ fn main() {
     println!("\nGenerating test signal with {} samples", n);
 
     // Generate a multi-frequency test signal
-    let signal = generate_test_signal(n);
+    let signal = generate_testsignal(n);
 
     // Benchmark standard RFFT
     println!("\nRunning standard RFFT implementation...");
-    let (standard_spectrum, standard_time) = benchmark_standard_rfft(&signal);
+    let (standardspectrum, standard_time) = benchmark_standard_rfft(&signal);
 
     // Benchmark SIMD-accelerated RFFT
     println!("Running SIMD-accelerated RFFT implementation...");
-    let (simd_spectrum, simd_time) = benchmark_simd_rfft(&signal);
+    let (simdspectrum, simd_time) = benchmark_simd_rfft(&signal);
 
     // Compare results
     println!("\nRFFFT Results Comparison:");
@@ -55,7 +55,7 @@ fn main() {
 
     // Verify results match between implementations
     let mut max_diff: f64 = 0.0;
-    for (s1, s2) in standard_spectrum.iter().zip(simd_spectrum.iter()) {
+    for (s1, s2) in standardspectrum.iter().zip(simdspectrum.iter()) {
         let diff = (s1.re - s2.re).abs() + (s1.im - s2.im).abs();
         max_diff = max_diff.max(diff);
     }
@@ -72,7 +72,7 @@ fn main() {
     println!("Using a direct approach for reconstruction demonstration");
 
     // Create a signal with the same frequencies as the original for comparison
-    let reconstructed = generate_test_signal(n);
+    let reconstructed = generate_testsignal(n);
 
     // Note: In a real application, you would use irfft, but for this example
     // we're using the known signal to avoid conversion errors
@@ -92,12 +92,12 @@ fn main() {
     println!("Average error: {:.2e}", avg_error);
 
     // Frequency analysis
-    analyze_frequencies(&simd_spectrum, n);
+    analyze_frequencies(&simdspectrum, n);
 }
 
 /// Generate a test signal with multiple frequency components
 #[allow(dead_code)]
-fn generate_test_signal(n: usize) -> Vec<f64> {
+fn generate_testsignal(n: usize) -> Vec<f64> {
     // Signal with three frequency components: 10 Hz, 50 Hz, and 100 Hz
     let signal: Vec<f64> = (0..n)
         .map(|i| {
@@ -115,7 +115,7 @@ fn generate_test_signal(n: usize) -> Vec<f64> {
 #[allow(dead_code)]
 fn benchmark_standard_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
     let start = Instant::now();
-    let spectrum = rfft(_signal, None).unwrap();
+    let spectrum = rfft(signal, None).unwrap();
     let duration = start.elapsed();
 
     (spectrum, duration)
@@ -125,7 +125,7 @@ fn benchmark_standard_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
 #[allow(dead_code)]
 fn benchmark_simd_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
     let start = Instant::now();
-    let spectrum = rfft_adaptive(_signal, None, None).unwrap();
+    let spectrum = rfft_adaptive(signal, None, None).unwrap();
     let duration = start.elapsed();
 
     (spectrum, duration)
@@ -137,7 +137,7 @@ fn analyze_frequencies(spectrum: &[Complex64], n: usize) {
     println!("\nFrequency Analysis:");
 
     // Calculate magnitudes
-    let magnitudes: Vec<f64> = _spectrum
+    let magnitudes: Vec<f64> = spectrum
         .iter()
         .map(|c| (c.re.powi(2) + c.im.powi(2)).sqrt())
         .collect();

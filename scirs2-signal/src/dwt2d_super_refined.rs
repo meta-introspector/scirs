@@ -251,7 +251,7 @@ impl Default for AdvancedRefinedConfig {
 /// use ndarray::Array2;
 ///
 /// // Create test image
-/// let image = Array2::fromshape_fn((128, 128), |(i, j)| {
+/// let image = Array2::from_shape_fn((128, 128), |(i, j)| {
 ///     ((i as f64 / 8.0).sin() * (j as f64 / 8.0).cos() + 1.0) / 2.0
 /// });
 ///
@@ -2123,7 +2123,7 @@ mod tests {
 
     #[test]
     fn test_advanced_refined_wavelet_packet_2d() {
-        let image = Array2::fromshape_fn((64, 64), |(i, j)| {
+        let image = Array2::from_shape_fn((64, 64), |(i, j)| {
             ((i as f64 / 8.0).sin() * (j as f64 / 8.0).cos() + 1.0) / 2.0
         });
 

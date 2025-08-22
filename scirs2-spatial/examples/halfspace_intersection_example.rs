@@ -6,7 +6,7 @@
 //! computational geometry, and constraint satisfaction.
 
 use ndarray::arr1;
-use scirs2__spatial::halfspace::{Halfspace, HalfspaceIntersection};
+use scirs2_spatial::halfspace::{Halfspace, HalfspaceIntersection};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

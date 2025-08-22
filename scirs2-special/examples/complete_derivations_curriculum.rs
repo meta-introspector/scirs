@@ -1225,7 +1225,7 @@ impl DerivationCurriculum {
     }
 
     fn explore_module(&mut self, moduleindex: usize) -> Result<(), Box<dyn std::error::Error>> {
-        let module = &self.modules[module_index].clone();
+        let module = &self.modules[moduleindex].clone();
 
         println!("\n📖 MODULE: {}", module.title);
         println!("===============================================\n");
@@ -1259,9 +1259,9 @@ impl DerivationCurriculum {
         let choice = self.get_user_input("Your choice (1-4): ")?;
 
         match choice.parse::<u32>() {
-            Ok(1) => self.start_module_sequential_study(module_index)?,
-            Ok(2) => self.select_specific_derivation_from_module(module_index)?,
-            Ok(3) => self.view_module_prerequisites(module_index)?,
+            Ok(1) => self.start_module_sequential_study(moduleindex)?,
+            Ok(2) => self.select_specific_derivation_from_module(moduleindex)?,
+            Ok(3) => self.view_module_prerequisites(moduleindex)?,
             Ok(4) => {} // Return to module list
             _ => println!("❌ Invalid choice."),
         }

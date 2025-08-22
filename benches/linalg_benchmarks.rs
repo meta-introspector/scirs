@@ -3,9 +3,8 @@ use criterion::{
     PlotConfiguration,
 };
 use ndarray::{Array1, Array2};
-use ndarray_rand::RandomExt;
-use rand::distributions::Uniform;
-use rand::SeedableRng;
+use rand::distr::Uniform;
+use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use scirs2_linalg::{
     cholesky, det, eigen, inv, lstsq, lu, matrix_norm, qr, solve, solve_triangular, svd,
@@ -24,7 +23,8 @@ fn generate_matrix(n: usize, conditionnumber: Option<f64>) -> Array2<f64> {
     match condition_number {
         Some(cond) => {
             // Generate matrix with specific condition number for numerical stability tests
-            let u = Array2::random_using((n, n), Uniform::new(-1.0, 1.0), &mut rng);
+            let uniform = Uniform::new(-1.0, 1.0).unwrap();
+            let u = Array2::from_shape_fn((n, n), |_| rng.sample(uniform));
             let mut s = Array1::linspace(1.0, 1.0 / cond, n);
             s.mapv_inplace(|x| x.abs()); // Ensure positive singular values
 
@@ -41,7 +41,8 @@ fn generate_matrix(n: usize, conditionnumber: Option<f64>) -> Array2<f64> {
         }
         None => {
             // Generate well-conditioned random matrix
-            Array2::random_using((n, n), Uniform::new(-1.0, 1.0), &mut rng)
+            let uniform = Uniform::new(-1.0, 1.0).unwrap();
+            Array2::from_shape_fn((n, n), |_| rng.sample(uniform))
         }
     }
 }
@@ -50,7 +51,8 @@ fn generate_matrix(n: usize, conditionnumber: Option<f64>) -> Array2<f64> {
 #[allow(dead_code)]
 fn generate_spd_matrix(n: usize) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
-    let a = Array2::random_using((n, n), Uniform::new(-1.0, 1.0), &mut rng);
+    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let a = Array2::from_shape_fn((n, n), |_| rng.sample(uniform));
 
     // A^T * A is always positive definite
     let at = a.t();

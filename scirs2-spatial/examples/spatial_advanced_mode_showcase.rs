@@ -6,7 +6,7 @@
 
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2__spatial::{
+use scirs2_spatial::{
     // AI-driven optimization (basic usage)
     ai_driven_optimization::AIAlgorithmSelector,
 
@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for i in 0..n_points {
         points[[i, 0]] = rng.random_range(0.0..100.0);
-        points[[i..1]] = rng.random_range(0.0..100.0);
+        points[[i, 1]] = rng.random_range(0.0..100.0);
     }
 
     println!("📊 Generated {n_points} test points");

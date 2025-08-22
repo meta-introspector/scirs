@@ -6,7 +6,7 @@
 //! applications, and computer graphics.
 
 use ndarray::{array, Array2};
-use scirs2__spatial::boolean_ops::{
+use scirs2_spatial::boolean_ops::{
     compute_polygon_area, is_convex_polygon, is_self_intersecting, polygon_difference,
     polygon_intersection, polygon_symmetric_difference, polygon_union,
 };
@@ -338,7 +338,7 @@ fn self_intersection_example() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create a regular hexagon with given radius and center
 #[allow(dead_code)]
-fn regular_hexagon(_radius: f64, center_x: f64, centery: f64) -> Array2<f64> {
+fn regular_hexagon(_radius: f64, center_x: f64, center_y: f64) -> Array2<f64> {
     let mut vertices = Vec::with_capacity(12); // 6 vertices * 2 coordinates
 
     for i in 0..6 {

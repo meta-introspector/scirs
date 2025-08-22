@@ -320,7 +320,7 @@ fn adaptive_median_filter_1d(
 /// use ndarray::Array2;
 /// use scirs2signal::median::{median_filter_2d, MedianConfig};
 ///
-/// let image = Array2::fromshape_fn((5, 5), |(i, j)| {
+/// let image = Array2::from_shape_fn((5, 5), |(i, j)| {
 ///     if i == 2 && j == 2 { 100.0 } else { 1.0 }  // Center pixel is an outlier
 /// });
 /// let config = MedianConfig::default();

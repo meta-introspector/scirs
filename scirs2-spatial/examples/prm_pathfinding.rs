@@ -1,5 +1,5 @@
 use ndarray::Array1;
-use scirs2__spatial::pathplanning::{PRM2DPlanner, PRMConfig, PRMPlanner};
+use scirs2_spatial::pathplanning::{PRM2DPlanner, PRMConfig, PRMPlanner};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -311,10 +311,10 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f6
         }
     }
 
-    // Draw the _path
-    for i in 0.._path.len() - 1 {
-        let (x1, y1) = (_path[i][0], path[i][1]);
-        let (x2, y2) = (_path[i + 1][0], path[i + 1][1]);
+    // Draw the path
+    for i in 0..path.len() - 1 {
+        let (x1, y1) = (path[i][0], path[i][1]);
+        let (x2, y2) = (path[i + 1][0], path[i + 1][1]);
 
         // Scale to grid coordinates
         let (gx1, gy1) = (
@@ -349,12 +349,12 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f6
 
     // Mark start and goal
     let (start_x, start_y) = (
-        (_path[0][0] / 10.0 * SIZE as f64) as usize,
-        (_path[0][1] / 10.0 * SIZE as f64) as usize,
+        (path[0][0] / 10.0 * SIZE as f64) as usize,
+        (path[0][1] / 10.0 * SIZE as f64) as usize,
     );
     let (goal_x, goal_y) = (
-        (_path.last().unwrap()[0] / 10.0 * SIZE as f64) as usize,
-        (_path.last().unwrap()[1] / 10.0 * SIZE as f64) as usize,
+        (path.last().unwrap()[0] / 10.0 * SIZE as f64) as usize,
+        (path.last().unwrap()[1] / 10.0 * SIZE as f64) as usize,
     );
 
     if start_x < SIZE && start_y < SIZE {
@@ -375,10 +375,10 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f6
 /// Check if a point is inside a polygon using the ray casting algorithm
 #[allow(dead_code)]
 fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
-    let (x, y) = (_point[0], point[1]);
+    let (x, y) = (point[0], point[1]);
     let mut inside = false;
 
-    // Ray casting algorithm determines if the _point is inside the polygon
+    // Ray casting algorithm determines if the point is inside the polygon
     let n = polygon.len();
     for i in 0..n {
         let (x1, y1) = (polygon[i][0], polygon[i][1]);

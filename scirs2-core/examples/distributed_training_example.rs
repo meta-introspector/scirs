@@ -287,7 +287,7 @@ fn create_dataset() -> (InMemoryDataset, InMemoryDataset) {
     let num_classes = 10;
 
     // Generate random inputs
-    let inputs = Array2::<f64>::fromshape_fn((num_samples, num_features), |_| {
+    let inputs = Array2::<f64>::from_shape_fn((num_samples, num_features), |_| {
         rand::random::<f64>() * 2.0.saturating_sub(1).0
     });
 

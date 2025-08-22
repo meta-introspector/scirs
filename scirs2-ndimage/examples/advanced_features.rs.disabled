@@ -12,7 +12,7 @@ use scirs2_ndimage::{
     backend::{Backend, BackendBuilder},
     error::NdimageResult,
     filters::laplace,
-    filters::{bilateral_filter, gaussian_filter as filters_gaussian_filter, median_filter},
+    filters::{bilateral_filter, gaussian_filter as filters_gaussian_filter, median_filter, BorderMode},
     profiling::{
         disable_profiling, display_performance_report, enable_memory_profiling, enable_profiling,
         get_memory_report, OptimizationAdvisor,

@@ -264,7 +264,7 @@ pub fn nlm_denoise_1d(signal: &Array1<f64>, config: &NlmConfig) -> SignalResult<
 /// use ndarray::Array2;
 /// use scirs2_signal::nlm::{nlm_denoise_2d, NlmConfig};
 ///
-/// let image = Array2::fromshape_fn((10, 10), |(i, j)| (i + j) as f64 / 20.0);
+/// let image = Array2::from_shape_fn((10, 10), |(i, j)| (i + j) as f64 / 20.0);
 /// let config = NlmConfig::default();
 /// let denoised = nlm_denoise_2d(&image, &config).unwrap();
 /// ```

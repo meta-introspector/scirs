@@ -76,7 +76,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Embedding<F> {
         let weightshape = IxDyn(&[config.num_embeddings, config.embedding_dim]);
         // Use standard distribution and scale it
         let mut rng = rng();
-        let mut weight = Array::fromshape_fn(weightshape.clone(), |_| {
+        let mut weight = Array::from_shape_fn(weightshape.clone(), |_| {
             let value: f64 = rng.random::<f64>();
             // Scale to approximate normal distribution N(0, 1)
             let scaled_value = (value * 2.0 - 1.0) * 0.5;
@@ -642,7 +642,7 @@ mod tests {
         assert!(pos_emb_learned.weight.is_some());
         assert_eq!(pos_emb_learned.weight.as_ref().unwrap().shape(), &[10, 8]);
         // Create dummy input
-        let input = Array::fromshape_fn(IxDyn(&[2, 5, 8]), |_| 1.0f32);
+        let input = Array::from_shape_fn(IxDyn(&[2, 5, 8]), |_| 1.0f32);
         let output = pos_emb_learned.forward(&input).unwrap();
         assert_eq!(output.shape(), &[2, 5, 8]);
         // Test fixed sinusoidal positional embeddings
@@ -660,7 +660,7 @@ mod tests {
         assert_eq!(patch_emb.num_patches(), 16); // 4x4 patches of 8x8 in a 32x32 image
         // Create random input
         let mut rand_gen = rng();
-        let input = Array::fromshape_fn(IxDyn(&[2, 3, 32, 32]), |_| rand_gen.random::<f32>());
+        let input = Array::from_shape_fn(IxDyn(&[2, 3, 32, 32]), |_| rand_gen.random::<f32>());
         let output = patch_emb.forward(&input).unwrap();
         // Check output shape [batch_size, num_patches, embedding_dim]
         assert_eq!(output.shape(), &[2, 16, 96]);

@@ -26,9 +26,9 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 
 // Helper to add noise to signals
 #[allow(dead_code)]
-fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
+fn add_noise(signal: &[f64], noise_level: f64) -> Vec<f64> {
     let mut rng = rand::rng();
-    _signal
+    signal
         .iter()
         .map(|&x| x + rng.gen_range(-noise_level..noise_level))
         .collect()
@@ -37,10 +37,10 @@ fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
 // Helper to create a batch of signals with varying parameters
 #[allow(dead_code)]
 fn create_test_batch(count: usize) -> Vec<Vec<f64>> {
-    let mut signals = Vec::with_capacity(_count);
+    let mut signals = Vec::with_capacity(count);
     let _rng = rand::rng();
 
-    for i in 0.._count {
+    for i in 0..count {
         // Vary signal parameters slightly for each signal
         let n = 1024 + (i % 5) * 256; // Different sizes
         let noise_level = 0.05 + (i as f64 * 0.01); // Gradually increasing noise
@@ -50,7 +50,7 @@ fn create_test_batch(count: usize) -> Vec<Vec<f64>> {
         let freq2 = 50 + i % 30;
         let freq3 = 100 + i % 50;
 
-        let frequencies = vec![(freq1..1.0), (freq2, 0.7), (freq3, 0.4)];
+        let frequencies = vec![(freq1, 1.0), (freq2, 0.7), (freq3, 0.4)];
 
         // Create signal and add noise
         let base_signal = create_sparse_signal(n, &frequencies);
@@ -68,9 +68,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("===================================\n");
 
     // Create a batch of test signals
-    let batch_size = 20;
-    println!("Creating {batch_size} test signals with varying parameters...");
-    let signals = create_test_batch(batch_size);
+    let batchsize = 20;
+    println!("Creating {batchsize} test signals with varying parameters...");
+    let signals = create_test_batch(batchsize);
 
     // 1. Sequential CPU processing (baseline)
     println!("\n1. Sequential CPU Processing:");
@@ -84,7 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     let config = BatchConfig {
         use_parallel: true,
-        max_batch_size: batch_size,
+        max_batch_size: batchsize,
         ..BatchConfig::default()
     };
     let results_cpu_batch = batch_sparse_fft(
@@ -106,7 +106,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     let config = BatchConfig {
         use_parallel: true,
-        max_batch_size: batch_size,
+        max_batch_size: batchsize,
         ..BatchConfig::default()
     };
     let results_spectral = spectral_flatness_batch_sparse_fft(
@@ -171,7 +171,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn process_signals_sequentially(
     signals: &[Vec<f64>],
-) -> Result<Vec<scirs2_fft::sparse, _fft::SparseFFTResult>, Box<dyn std::error::Error>> {
+) -> Result<Vec<scirs2_fft::sparse_fft::SparseFFTResult>, Box<dyn std::error::Error>> {
     let mut results = Vec::with_capacity(signals.len());
 
     for (i, signal) in signals.iter().enumerate() {

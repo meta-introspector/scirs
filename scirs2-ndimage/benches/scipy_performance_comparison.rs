@@ -27,7 +27,7 @@ fn bench_filter_performance_comparison(c: &mut Criterion) {
     ];
 
     for (rows, cols) in sizes {
-        let input = Array2::fromshape_fn((rows, cols), |(i, j)| {
+        let input = Array2::from_shape_fn((rows, cols), |(i, j)| {
             ((i as f64 * 0.1).sin() * (j as f64 * 0.1).cos() * 100.0)
         });
 
@@ -91,7 +91,7 @@ fn bench_morphology_performance_scaling(c: &mut Criterion) {
 
     for (rows, cols) in sizes {
         // Create binary test image with complex structure
-        let binary_input = Array2::fromshape_fn((rows, cols), |(i, j)| {
+        let binary_input = Array2::from_shape_fn((rows, cols), |(i, j)| {
             let x = i as f64 / rows as f64;
             let y = j as f64 / cols as f64;
             ((x * 10.0).sin() + (y * 10.0).cos()) > 0.0
@@ -143,11 +143,11 @@ fn bench_measurements_performance(c: &mut Criterion) {
 
     for (rows, cols) in sizes {
         // Create test data with multiple regions
-        let values = Array2::fromshape_fn((rows, cols), |(i, j)| {
+        let values = Array2::from_shape_fn((rows, cols), |(i, j)| {
             (i as f64 * j as f64).sqrt() + (i + j) as f64 * 0.1
         });
 
-        let labels = Array2::fromshape_fn((rows, cols), |(i, j)| {
+        let labels = Array2::from_shape_fn((rows, cols), |(i, j)| {
             ((i / 20) * 10 + (j / 20)) + 1 // Create grid of labeled regions
         });
 
@@ -194,7 +194,7 @@ fn bench_interpolation_performance(c: &mut Criterion) {
     let base_sizes = vec![(64, 64), (128, 128), (256, 256)];
 
     for (rows, cols) in base_sizes {
-        let input = Array2::fromshape_fn((rows, cols), |(i, j)| {
+        let input = Array2::from_shape_fn((rows, cols), |(i, j)| {
             ((i as f64 / 10.0).sin() * (j as f64 / 10.0).cos())
         });
 
@@ -275,7 +275,7 @@ fn bench_3d_operations_performance(c: &mut Criterion) {
     let sizes = vec![(32, 32, 32), (64, 64, 64), (100, 100, 100)];
 
     for (depth, rows, cols) in sizes {
-        let volume = Array3::fromshape_fn((depth, rows, cols), |(d, i, j)| {
+        let volume = Array3::from_shape_fn((depth, rows, cols), |(d, i, j)| {
             ((d + i + j) as f64 / 10.0).sin() * 100.0
         });
 
@@ -316,7 +316,7 @@ fn bench_border_mode_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("border_mode_performance");
     group.measurement_time(Duration::from_secs(8));
 
-    let input = Array2::fromshape_fn((200, 200), |(i, j)| (i + j) as f64);
+    let input = Array2::from_shape_fn((200, 200), |(i, j)| (i + j) as f64);
     let kernel_size = [9, 9]; // Larger kernel to emphasize border effects
 
     let border_modes = [
@@ -367,7 +367,7 @@ fn bench_high_dimensional_performance(c: &mut Criterion) {
 
     // 4D array (e.g., video data: time x height x width x channels)
     let shape_4d = (10, 32, 32, 3);
-    let array_4d = Array4::fromshape_fn(shape_4d, |(t, i, j, c)| (t + i + j + c) as f64);
+    let array_4d = Array4::from_shape_fn(shape_4d, |(t, i, j, c)| (t + i + j + c) as f64);
 
     group.bench_with_input(
         BenchmarkId::new(
@@ -409,7 +409,7 @@ fn bench_distance_transform_performance(c: &mut Criterion) {
 
     for (rows, cols) in sizes {
         // Create binary test image with complex patterns
-        let binary_input = Array2::fromshape_fn((rows, cols), |(i, j)| {
+        let binary_input = Array2::from_shape_fn((rows, cols), |(i, j)| {
             let x = i as f64 / rows as f64;
             let y = j as f64 / cols as f64;
             let circle1 = ((x - 0.3).powi(2) + (y - 0.3).powi(2)).sqrt() < 0.2;
@@ -486,7 +486,7 @@ fn bench_edge_detection_performance(c: &mut Criterion) {
 
     for (rows, cols) in sizes {
         // Create test image with edges and textures
-        let input = Array2::fromshape_fn((rows, cols), |(i, j)| {
+        let input = Array2::from_shape_fn((rows, cols), |(i, j)| {
             let x = i as f64 / rows as f64;
             let y = j as f64 / cols as f64;
             let circles = ((x - 0.5).powi(2) + (y - 0.5).powi(2)).sqrt();
@@ -543,11 +543,11 @@ fn bench_data_type_performance(c: &mut Criterion) {
     let size = (256, 256);
 
     // Generate test data for both f32 and f64
-    let input_f32 = Array2::fromshape_fn(size, |(i, j)| {
+    let input_f32 = Array2::from_shape_fn(size, |(i, j)| {
         ((i as f32 * 0.1).sin() * (j as f32 * 0.1).cos()) as f32
     });
 
-    let input_f64 = Array2::fromshape_fn(size, |(i, j)| {
+    let input_f64 = Array2::from_shape_fn(size, |(i, j)| {
         (i as f64 * 0.1).sin() * (j as f64 * 0.1).cos()
     });
 
@@ -593,7 +593,7 @@ fn bench_memory_intensive_operations(c: &mut Criterion) {
 
     // Large array that will stress memory subsystem
     let large_size = (1024, 1024);
-    let large_array = Array2::fromshape_fn(large_size, |(i, j)| {
+    let large_array = Array2::from_shape_fn(large_size, |(i, j)| {
         ((i * j) as f64).sqrt() * ((i + j) as f64 * 0.001).sin()
     });
 
@@ -639,7 +639,7 @@ fn bench_small_array_performance(c: &mut Criterion) {
     let small_sizes = vec![(8, 8), (16, 16), (32, 32)];
 
     for (rows, cols) in small_sizes {
-        let input = Array2::fromshape_fn((rows, cols), |(i, j)| (i as f64 + j as f64) * 0.1);
+        let input = Array2::from_shape_fn((rows, cols), |(i, j)| (i as f64 + j as f64) * 0.1);
 
         // Test operations on small arrays to measure overhead
         group.bench_with_input(

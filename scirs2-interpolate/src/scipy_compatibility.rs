@@ -123,7 +123,7 @@ pub struct BehaviorTestFailure {
 }
 
 /// Priority level for missing features
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum FeaturePriority {
     /// Critical for basic compatibility
     Critical,

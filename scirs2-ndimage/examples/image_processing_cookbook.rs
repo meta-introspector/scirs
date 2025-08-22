@@ -1135,9 +1135,9 @@ fn interpolate_missing_pixels(
 }
 
 #[allow(dead_code)]
-fn estimate_perimeter(prop: &scirs2_ndimage::measurements::RegionProperties) -> f64 {
+fn estimate_perimeter(prop: &scirs2_ndimage::measurements::RegionProperties<f64>) -> f64 {
     // Simplified perimeter estimation
-    4.0 * (prop.area / std::f64::consts::PI).sqrt()
+    4.0 * (prop.area as f64 / std::f64::consts::PI).sqrt()
 }
 
 #[allow(dead_code)]

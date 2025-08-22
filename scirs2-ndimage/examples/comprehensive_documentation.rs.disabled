@@ -157,7 +157,7 @@ fn demonstrate_filtering(image: &Array2<f64>, noisyimage: &Array2<f64>) -> Ndima
 
     // 1. Basic filters
     println!("  • Gaussian filtering (noise reduction):");
-    let gaussian = gaussian_filter(&image.view(), 2.0, None, None)?;
+    let gaussian = gaussian_filter(&image, 2.0, None, None)?;
     println!(
         "    Input: {}x{}, Output: {}x{}",
         image.nrows(),
@@ -168,19 +168,19 @@ fn demonstrate_filtering(image: &Array2<f64>, noisyimage: &Array2<f64>) -> Ndima
 
     // 2. Edge detection filters
     println!("  • Edge detection filters:");
-    let sobel_result = sobel(&image.view(), 0, None)?;
-    let laplace_result = laplace(&image.view(), None)?;
+    let sobel_result = sobel(&image, 0, None)?;
+    let laplace_result = laplace(&image, None, None)?;
     println!("    Sobel edges detected, Laplacian computed");
 
     // 3. Rank filters
     println!("  • Rank filters (noise removal):");
-    let median = median_filter(&noisyimage.view(), None, None, None)?;
-    let max_filter = maximum_filter(&image.view(), None, None, None)?;
+    let median = median_filter(&noisyimage, &[3, 3], None)?;
+    let max_filter = maximum_filter(&image, &[3, 3], None, None)?;
     println!("    Median filter applied, maximum filter computed");
 
     // 4. Advanced filters
     println!("  • Advanced filters:");
-    let bilateral = bilateral_filter(image.view(), 2.0, 0.1, Some(5))?;
+    let bilateral = bilateral_filter(image.view(), 2.0, 0.1, None)?;
     println!("    Bilateral filter (edge-preserving smoothing) applied");
 
     // 5. Generic filters with custom functions
@@ -560,7 +560,7 @@ fn demonstrate_streaming() -> NdimageResult<()> {
 fn demonstrate_memory_management(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🧠 Memory Management");
 
-    use crate::memory_management::*;
+    use scirs2_ndimage::memory_management::*;
 
     // 1. Memory estimation
     println!("  • Memory usage estimation:");

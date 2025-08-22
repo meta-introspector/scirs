@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let model =
         VisionTransformer::<f32>::vit_base(image_size, patch_size, in_channels, num_classes)?;
     // Create dummy input (batch_size=1, channels=3, height=224, width=224)
-    let input = Array::fromshape_fn(IxDyn(&[1, in_channels, image_size.0, image_size.1]), |_| {
+    let input = Array::from_shape_fn(IxDyn(&[1, in_channels, image_size.0, image_size.1]), |_| {
         rand::random::<f32>()
     });
     println!("Input shape: {:?}", input.shape());
@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let custom_model = VisionTransformer::<f32>::new(custom_config)?;
     // Create dummy input for CIFAR-10 (batch_size=1, channels=3, height=32, width=32)
-    let small_input = Array::fromshape_fn(IxDyn(&[1, 3, 32, 32]), |_| rand::random::<f32>());
+    let small_input = Array::from_shape_fn(IxDyn(&[1, 3, 32, 32]), |_| rand::random::<f32>());
     println!("Custom input shape: {:?}", small_input.shape());
     let custom_output = custom_model.forward(&small_input)?;
     println!("Custom output shape: {:?}", custom_output.shape());
