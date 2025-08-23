@@ -4,7 +4,7 @@
 //! and establishes baseline performance metrics for various graph operations.
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use rand::{rngs::StdRng, SeedableRng};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_graph::*;
 use std::time::Duration;
 
@@ -101,7 +101,7 @@ fn bench_centrality_algorithms(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("betweenness_centrality", graph_name),
                 &graph,
-                |b, g| b.iter(|| betweenness_centrality(black_box(g), true).unwrap()),
+                |b, g| b.iter(|| betweenness_centrality(black_box(g), true)),
             );
         }
 
@@ -109,7 +109,7 @@ fn bench_centrality_algorithms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("eigenvector_centrality", graph_name),
             &graph,
-            |b, g| b.iter(|| eigenvector_centrality(black_box(g)).unwrap()),
+            |b, g| b.iter(|| eigenvector_centrality(black_box(g), 100, 1e-6).unwrap()),
         );
 
         // Closeness centrality (only for smaller graphs)
@@ -117,7 +117,7 @@ fn bench_centrality_algorithms(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("closeness_centrality", graph_name),
                 &graph,
-                |b, g| b.iter(|| closeness_centrality(black_box(g)).unwrap()),
+                |b, g| b.iter(|| closeness_centrality(black_box(g), true)),
             );
         }
     }
@@ -175,14 +175,14 @@ fn bench_community_detection(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("louvain_communities", graph_name),
             &graph,
-            |b, g| b.iter(|| louvain_communities_result(black_box(g)).unwrap()),
+            |b, g| b.iter(|| louvain_communities_result(black_box(g)).communities),
         );
 
         // Label propagation
         group.bench_with_input(
             BenchmarkId::new("label_propagation", graph_name),
             &graph,
-            |b, g| b.iter(|| label_propagation_result(black_box(g)).unwrap()),
+            |b, g| b.iter(|| label_propagation_result(black_box(g), 100).communities),
         );
 
         // Modularity optimization
@@ -192,8 +192,8 @@ fn bench_community_detection(c: &mut Criterion) {
                 &graph,
                 |b, g| {
                     b.iter(|| {
-                        modularity_optimization_result(black_box(g), 0.5, 1000, 100.0, 0.95)
-                            .unwrap()
+                        modularity_optimization_result(black_box(g), 0.5, 100.0, 1000)
+                            .communities
                     })
                 },
             );
@@ -222,7 +222,7 @@ fn bench_path_algorithms(c: &mut Criterion) {
     for (graph_name, graph) in &graph_configs {
         group.throughput(Throughput::Elements(graph.node_count() as u64));
 
-        let nodes: Vec<_> = graph.nodes().collect();
+        let nodes: Vec<_> = graph.nodes().into_iter().collect();
         if nodes.len() >= 2 {
             let source = nodes[0];
             let target = nodes[nodes.len() - 1];
@@ -282,7 +282,7 @@ fn bench_graph_measures(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("connected_components", graph_name),
             &graph,
-            |b, g| b.iter(|| connected_components(black_box(g)).unwrap()),
+            |b, g| b.iter(|| connected_components(black_box(g))),
         );
 
         // Clustering coefficient
@@ -303,7 +303,7 @@ fn bench_graph_measures(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("k_core_decomposition", graph_name),
             &graph,
-            |b, g| b.iter(|| k_core_decomposition(black_box(g)).unwrap()),
+            |b, g| b.iter(|| k_core_decomposition(black_box(g))),
         );
     }
 
@@ -342,7 +342,7 @@ fn bench_spanning_and_matching(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("maximum_cardinality_matching", graph_name),
                 &graph,
-                |b, g| b.iter(|| maximum_cardinality_matching(black_box(g)).unwrap()),
+                |b, g| b.iter(|| maximum_cardinality_matching(black_box(g))),
             );
         }
     }
@@ -433,11 +433,11 @@ fn bench_memory_operations(c: &mut Criterion) {
         );
 
         // Subgraph creation
-        let nodes: Vec<_> = graph.nodes().take(graph.node_count() / 2).collect();
+        let nodes: std::collections::HashSet<_> = graph.nodes().into_iter().take(graph.node_count() / 2).cloned().collect();
         group.bench_with_input(
             BenchmarkId::new("subgraph_creation", graph_name),
             &(graph, &nodes),
-            |b, (g, nodes)| b.iter(|| subgraph(black_box(g), black_box(nodes)).unwrap()),
+            |b, (g, nodes)| b.iter(|| subgraph(black_box(g), black_box(nodes))),
         );
 
         // Memory profiling
@@ -446,8 +446,7 @@ fn bench_memory_operations(c: &mut Criterion) {
             &graph,
             |b, g| {
                 b.iter(|| {
-                    let profiler = MemoryProfiler::new();
-                    black_box(profiler.profile_graph(g).unwrap())
+                    black_box(MemoryProfiler::profile_graph(g))
                 })
             },
         );
@@ -486,7 +485,7 @@ fn bench_parallel_algorithms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("parallel_louvain", graph_name),
             &graph,
-            |b, g| b.iter(|| parallel_louvain_communities_result(black_box(g)).unwrap()),
+            |b, g| b.iter(|| parallel_louvain_communities_result(black_box(g)).communities),
         );
 
         // Compare with sequential versions
@@ -499,7 +498,7 @@ fn bench_parallel_algorithms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("sequential_louvain", graph_name),
             &graph,
-            |b, g| b.iter(|| louvain_communities_result(black_box(g)).unwrap()),
+            |b, g| b.iter(|| louvain_communities_result(black_box(g)).communities),
         );
     }
 
@@ -539,7 +538,7 @@ fn bench_large_graph_scalability(c: &mut Criterion) {
             &graph,
             |b, g| {
                 b.iter(|| {
-                    pagerank(black_box(g), 0.85, Some(1e-3)).unwrap() // Relaxed tolerance for speed
+                    pagerank_centrality(black_box(g), 0.85, 1e-3).unwrap() // Relaxed tolerance for speed
                 })
             },
         );
@@ -547,7 +546,7 @@ fn bench_large_graph_scalability(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("large_connected_components", graph_name),
             &graph,
-            |b, g| b.iter(|| connected_components(black_box(g)).unwrap()),
+            |b, g| b.iter(|| connected_components(black_box(g))),
         );
 
         group.bench_with_input(
@@ -561,7 +560,7 @@ fn bench_large_graph_scalability(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("large_label_propagation", graph_name),
                 &graph,
-                |b, g| b.iter(|| label_propagation_result(black_box(g)).unwrap()),
+                |b, g| b.iter(|| label_propagation_result(black_box(g), 100).communities),
             );
         }
     }

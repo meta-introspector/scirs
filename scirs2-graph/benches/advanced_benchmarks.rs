@@ -188,7 +188,7 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
                     BenchmarkId::new("dijkstra_standard", format!("{}_{}", size, density)),
                     &(&graph, start_node),
                     |b, (g, start)| {
-                        let target = (start + 1) % g.node_count();
+                        let target = (*start + 1) % (g.node_count() as i32);
                         b.iter(|| black_box(dijkstra_path(g, *start, &target).unwrap()))
                     },
                 );
@@ -206,7 +206,7 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
                                     g,
                                     "dijkstra_path",
                                     |graph| {
-                                let target = (start + 1) % graph.node_count();
+                                let target = (*start + 1) % (graph.node_count() as i32);
                                 dijkstra_path(graph, *start, &target)
                             },
                                 )

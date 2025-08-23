@@ -6,13 +6,13 @@ use std::hint::black_box;
 
 #[allow(dead_code)]
 fn generate_sparse_matrix(size: usize, density: f64) -> (Vec<usize>, Vec<usize>, Vec<f64>) {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut rows = Vec::new();
     let mut cols = Vec::new();
     let mut data = Vec::new();
 
-    for i in 0.._size {
-        for j in 0.._size {
+    for i in 0..size {
+        for j in 0..size {
             if rng.random::<f64>() < density {
                 rows.push(i);
                 cols.push(j);
@@ -34,7 +34,7 @@ fn bench_sparse_construction(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(data.len() as u64));
 
-        group.bench_with_input(BenchmarkId::new("csr_from_triplets", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("csr_from_triplets", size), size, |b, &size| {
             b.iter(|| {
                 CsrArray::from_triplets(
                     black_box(&rows),
@@ -47,7 +47,7 @@ fn bench_sparse_construction(c: &mut Criterion) {
             })
         });
 
-        group.bench_with_input(BenchmarkId::new("csc_from_triplets", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("csc_from_triplets", size), size, |b, &size| {
             b.iter(|| {
                 CscArray::from_triplets(
                     black_box(&rows),
@@ -60,7 +60,7 @@ fn bench_sparse_construction(c: &mut Criterion) {
             })
         });
 
-        group.bench_with_input(BenchmarkId::new("coo_from_triplets", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("coo_from_triplets", size), size, |b, &size| {
             b.iter(|| {
                 CooArray::from_triplets(
                     black_box(&rows),
@@ -91,12 +91,12 @@ fn bench_sparse_operations(c: &mut Criterion) {
         group.throughput(Throughput::Elements(data.len() as u64));
 
         // Matrix-vector multiplication
-        group.bench_with_input(BenchmarkId::new("csr_matvec", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("csr_matvec", size), size, |b, &size| {
             b.iter(|| csr.dot_vector(&vector.view()).unwrap())
         });
 
         // Transpose operation
-        group.bench_with_input(BenchmarkId::new("csr_transpose", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("csr_transpose", size), size, |b, &size| {
             b.iter(|| csr.transpose().unwrap())
         });
     }
@@ -119,7 +119,7 @@ fn bench_sparse_sparse_ops(c: &mut Criterion) {
         group.throughput(Throughput::Elements((data1.len() + data2.len()) as u64));
 
         // Matrix-matrix multiplication
-        group.bench_with_input(BenchmarkId::new("csr_matmul", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("csr_matmul", size), size, |b, &size| {
             b.iter(|| black_box(&csr1).dot(black_box(&csr2)).unwrap())
         });
     }
@@ -141,15 +141,15 @@ fn bench_format_conversions(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(data.len() as u64));
 
-        group.bench_with_input(BenchmarkId::new("coo_to_csr", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("coo_to_csr", size), size, |b, &size| {
             b.iter(|| black_box(&coo).to_csr().unwrap())
         });
 
-        group.bench_with_input(BenchmarkId::new("csr_to_csc", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("csr_to_csc", size), size, |b, &size| {
             b.iter(|| black_box(&csr).to_csc().unwrap())
         });
 
-        group.bench_with_input(BenchmarkId::new("csc_to_csr", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("csc_to_csr", size), size, |b, &size| {
             b.iter(|| black_box(&csc).to_csr().unwrap())
         });
     }
@@ -175,7 +175,7 @@ fn bench_linear_solvers(c: &mut Criterion) {
         }
 
         // Add some off-diagonal elements
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         for i in 0..*size {
             for j in (i + 1)..*size {
                 if rng.random::<f64>() < 0.02 {
@@ -196,7 +196,7 @@ fn bench_linear_solvers(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(*size as u64));
 
-        group.bench_with_input(BenchmarkId::new("conjugate_gradient", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("conjugate_gradient", size), size, |b, &size| {
             b.iter(|| {
                 let _options = CGOptions {
                     max_iter: 100,
@@ -223,7 +223,7 @@ fn bench_symmetric_operations(c: &mut Criterion) {
         let mut rows = Vec::new();
         let mut cols = Vec::new();
         let mut data = Vec::new();
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         for i in 0..*size {
             for j in 0..=i {
@@ -243,7 +243,7 @@ fn bench_symmetric_operations(c: &mut Criterion) {
         group.throughput(Throughput::Elements(data.len() as u64));
 
         // Symmetric matrix-vector multiplication
-        group.bench_with_input(BenchmarkId::new("sym_csr_matvec", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("sym_csr_matvec", size), size, |b, &size| {
             b.iter(|| sym_csr.dot_vector(&vector.view()).unwrap())
         });
     }
@@ -270,12 +270,12 @@ fn bench_special_formats(c: &mut Criterion) {
         group.throughput(Throughput::Elements(*size as u64));
 
         // DIA matrix-vector multiplication
-        group.bench_with_input(BenchmarkId::new("dia_matvec", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("dia_matvec", size), size, |b, &size| {
             b.iter(|| dia.dot_vector(&vector.view()).unwrap())
         });
 
         // DIA to CSR conversion
-        group.bench_with_input(BenchmarkId::new("dia_to_csr", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("dia_to_csr", size), size, |b, &size| {
             b.iter(|| black_box(&dia).to_csr().unwrap())
         });
     }
@@ -291,11 +291,11 @@ fn bench_dok_lil_operations(c: &mut Criterion) {
         let shape = (*size, *size);
 
         // DOK operations
-        group.bench_with_input(BenchmarkId::new("dok_construction", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("dok_construction", size), size, |b, &size| {
             b.iter(|| {
                 let mut dok = DokArray::new(shape);
-                for i in 0..*size {
-                    for j in 0..*size {
+                for i in 0..size {
+                    for j in 0..size {
                         if (i + j) % 20 == 0 {
                             dok.set(i, j, (i + j) as f64).unwrap();
                         }
@@ -306,11 +306,11 @@ fn bench_dok_lil_operations(c: &mut Criterion) {
         });
 
         // LIL operations
-        group.bench_with_input(BenchmarkId::new("lil_construction", size), size, |b_| {
+        group.bench_with_input(BenchmarkId::new("lil_construction", size), size, |b, &size| {
             b.iter(|| {
                 let mut lil = LilArray::new(shape);
-                for i in 0..*size {
-                    for j in 0..*size {
+                for i in 0..size {
+                    for j in 0..size {
                         if (i + j) % 20 == 0 {
                             lil.set(i, j, (i + j) as f64).unwrap();
                         }

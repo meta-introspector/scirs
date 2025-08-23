@@ -6,7 +6,7 @@
 use crate::error::{IntegrateError, IntegrateResult};
 use ndarray::{Array1, Array2, ArrayView1};
 #[allow(unused_imports)]
-use std::f64::consts::SQRT_2;
+use std::f64::consts::{PI, SQRT_2};
 
 // Type alias for complex function type
 type InvariantFn = Box<dyn Fn(&ArrayView1<f64>) -> f64>;

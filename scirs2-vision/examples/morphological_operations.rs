@@ -10,6 +10,7 @@ use image::DynamicImage;
 use scirs2_vision::preprocessing::{
     black_hat, closing, dilate, erode, morphological_gradient, opening, top_hat, StructuringElement,
 };
+use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -15,9 +15,7 @@
 #![allow(dead_code)]
 
 use crate::error::Result;
-use rand::prelude::IndexedRandom;
-use rand::Rng;
-use scirs2_core::rng;
+use scirs2_core::{random::Random, rng};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -242,13 +240,10 @@ impl RLParameterOptimizer {
     pub fn select_action(&mut self, state: &StateDiscrete) -> ActionDiscrete {
         let mut rng = rng();
 
-        if rng.random::<f64>() < self.learning_params.epsilon {
+        if rng.random_f64() < self.learning_params.epsilon {
             // Explore: random action_
-            self.action_space
-                .as_slice()
-                .choose(&mut rng)
-                .expect("Action space should not be empty")
-                .clone()
+            let idx = rng.random_range(0, self.action_space.len());
+            self.action_space[idx].clone()
         } else {
             // Exploit: best known action_
             self.get_best_action(state)
@@ -354,7 +349,7 @@ impl RLParameterOptimizer {
 
         let mut rng = rng();
         let sample_indices: Vec<usize> = (0..batchsize)
-            .map(|_| rng.random_range(0..self.experience_buffer.len()))
+            .map(|_| rng.random_range(0, self.experience_buffer.len()))
             .collect();
 
         for &idx in &sample_indices {
@@ -514,7 +509,7 @@ impl NeuralNetworkPredictor {
         let input_weights = (0..hidden_size)
             .map(|_| {
                 (0.._input_size)
-                    .map(|_| rng.random_range(-0.5..0.5))
+                    .map(|_| rng.random_range(-0.5, 0.5))
                     .collect()
             })
             .collect();
@@ -522,16 +517,16 @@ impl NeuralNetworkPredictor {
         let hidden_weights = (0..outputsize)
             .map(|_| {
                 (0..hidden_size)
-                    .map(|_| rng.random_range(-0.5..0.5))
+                    .map(|_| rng.random_range(-0.5, 0.5))
                     .collect()
             })
             .collect();
 
         let output_weights = (0..outputsize)
-            .map(|_| rng.random_range(-0.5..0.5))
+            .map(|_| rng.random_range(-0.5, 0.5))
             .collect();
         let biases = (0..hidden_size + outputsize)
-            .map(|_| rng.random_range(-0.1..0.1))
+            .map(|_| rng.random_range(-0.1, 0.1))
             .collect();
 
         Self {
@@ -730,7 +725,7 @@ impl GeneticPipelineOptimizer {
             let mut genes = HashMap::new();
 
             for (param_name, &(min_val, max_val)) in parameter_ranges {
-                let value = rng.random_range(min_val..=max_val);
+                let value = rng.random_range(min_val, max_val + 1.0);
                 genes.insert(param_name.clone(), value);
             }
 
@@ -895,7 +890,7 @@ impl GeneticPipelineOptimizer {
             let parent2 = self.tournament_selection(&mut rng);
 
             // Crossover
-            if rng.random_range(0.0..1.0) < self.ga_params.crossover_rate {
+            if rng.random_range(0.0, 1.0) < self.ga_params.crossover_rate {
                 let (mut child1, mut child2) =
                     self.advanced_crossover(&parent1, &parent2, &mut rng);
 
@@ -916,12 +911,12 @@ impl GeneticPipelineOptimizer {
     }
 
     /// Tournament selection for parent selection
-    fn tournament_selection(&self, rng: &mut impl Rng) -> PipelineGenome {
+    fn tournament_selection(&self, rng: &mut Random) -> PipelineGenome {
         let tournament_size = 3;
-        let mut best = &self.population[rng.random_range(0..self.population.len())];
+        let mut best = &self.population[rng.random_range(0, self.population.len())];
 
         for _ in 1..tournament_size {
-            let candidate = &self.population[rng.random_range(0..self.population.len())];
+            let candidate = &self.population[rng.random_range(0, self.population.len())];
             if candidate.fitness > best.fitness {
                 best = candidate;
             }
@@ -935,7 +930,7 @@ impl GeneticPipelineOptimizer {
         &self,
         parent1: &PipelineGenome,
         parent2: &PipelineGenome,
-        rng: &mut impl Rng,
+        rng: &mut Random,
     ) -> (PipelineGenome, PipelineGenome) {
         let mut child1_genes = HashMap::new();
         let mut child2_genes = HashMap::new();
@@ -946,7 +941,7 @@ impl GeneticPipelineOptimizer {
 
             // Simulated Binary Crossover (SBX)
             let eta = 20.0;
-            let u = rng.random_range(0.0..1.0);
+            let u = rng.random_range(0.0, 1.0);
             let beta = if u <= 0.5 {
                 (2.0_f64 * u).powf(1.0 / (eta + 1.0))
             } else {
@@ -988,23 +983,23 @@ impl GeneticPipelineOptimizer {
     }
 
     /// Adaptive mutation using multiple strategies
-    fn adaptive_mutation(&mut self, genome: &mut PipelineGenome, rng: &mut impl Rng) -> Result<()> {
+    fn adaptive_mutation(&mut self, genome: &mut PipelineGenome, rng: &mut Random) -> Result<()> {
         // Select mutation strategy based on adaptive weights
         let strategy = self.select_mutation_strategy(rng);
 
         let mutation_strength = genome.mutation_effectiveness;
 
         for (_key, value) in genome.genes.iter_mut() {
-            if rng.random_range(0.0..1.0) < self.ga_params.mutation_rate * mutation_strength {
+            if rng.random_range(0.0, 1.0) < self.ga_params.mutation_rate * mutation_strength {
                 match strategy {
                     MutationStrategy::Gaussian => {
                         let delta =
-                            rng.random_range(-1.0..1.0) * self.adaptive_strategies.gaussian_sigma;
+                            rng.random_range(-1.0, 1.0) * self.adaptive_strategies.gaussian_sigma;
                         *value += delta;
                     }
                     MutationStrategy::Polynomial => {
                         let eta = self.adaptive_strategies.polynomial_eta;
-                        let u = rng.random_range(0.0..1.0);
+                        let u = rng.random_range(0.0, 1.0);
                         let delta = if u < 0.5 {
                             (2.0_f64 * u).powf(1.0 / (eta + 1.0)) - 1.0
                         } else {
@@ -1015,7 +1010,7 @@ impl GeneticPipelineOptimizer {
                     MutationStrategy::Cauchy => {
                         // Cauchy mutation with heavy tails
                         let cauchy_sample =
-                            (rng.random_range(0.0..1.0) - 0.5) * std::f64::consts::PI;
+                            (rng.random_range(0.0, 1.0) - 0.5) * std::f64::consts::PI;
                         let delta = cauchy_sample.tan() * 0.1;
                         *value += delta;
                     }
@@ -1026,7 +1021,7 @@ impl GeneticPipelineOptimizer {
                     }
                     _ => {
                         // Default to Gaussian
-                        let delta = rng.random_range(-1.0..1.0) * 0.1;
+                        let delta = rng.random_range(-1.0, 1.0) * 0.1;
                         *value += delta;
                     }
                 }
@@ -1040,9 +1035,9 @@ impl GeneticPipelineOptimizer {
     }
 
     /// Select mutation strategy based on adaptive weights
-    fn select_mutation_strategy(&self, rng: &mut impl Rng) -> MutationStrategy {
+    fn select_mutation_strategy(&self, rng: &mut Random) -> MutationStrategy {
         let mut cumulative_weight = 0.0;
-        let random_value = rng.random_range(0.0..1.0);
+        let random_value = rng.random_range(0.0, 1.0);
 
         for (strategy, weight) in &self.adaptive_strategies.strategy_weights {
             cumulative_weight += weight;
@@ -1055,14 +1050,14 @@ impl GeneticPipelineOptimizer {
     }
 
     /// Generate Lévy flight sample
-    fn levy_flight_sample(&self, rng: &mut impl Rng) -> f64 {
+    fn levy_flight_sample(&self, rng: &mut Random) -> f64 {
         let beta = 1.5;
         let sigma_u = (gamma_function(1.0 + beta) * (beta * std::f64::consts::PI / 2.0).sin()
             / (gamma_function((1.0 + beta) / 2.0) * beta * (2.0_f64).powf((beta - 1.0) / 2.0)))
         .powf(1.0 / beta);
 
-        let u = rng.random_range(-1.0..1.0) * sigma_u;
-        let v: f64 = rng.random_range(-1.0..1.0);
+        let u = rng.random_range(-1.0, 1.0) * sigma_u;
+        let v: f64 = rng.random_range(-1.0, 1.0);
 
         u / v.abs().powf(1.0 / beta)
     }
@@ -1281,14 +1276,14 @@ impl GeneticPipelineOptimizer {
             let parent2 = self.tournament_selection(&mut rng);
 
             // Crossover
-            let mut offspring = if rng.random::<f64>() < self.ga_params.crossover_rate {
+            let mut offspring = if rng.random_f64() < self.ga_params.crossover_rate {
                 self.crossover(&parent1, &parent2)
             } else {
                 parent1.clone()
             };
 
             // Mutation
-            if rng.random::<f64>() < self.ga_params.mutation_rate {
+            if rng.random_f64() < self.ga_params.mutation_rate {
                 self.mutate(&mut offspring);
             }
 
@@ -1311,7 +1306,7 @@ impl GeneticPipelineOptimizer {
 
         for (param_name, &value1) in &parent1.genes {
             if let Some(&value2) = parent2.genes.get(param_name) {
-                let offspring_value = if rng.random::<f64>() < 0.5 {
+                let offspring_value = if rng.random_f64() < 0.5 {
                     value1
                 } else {
                     value2
@@ -1339,7 +1334,7 @@ impl GeneticPipelineOptimizer {
         let mutation_strength = 0.1;
 
         for value in genome.genes.values_mut() {
-            let mutation = rng.random_range(-mutation_strength..=mutation_strength);
+            let mutation = rng.random_range(-mutation_strength, mutation_strength + f64::EPSILON);
             *value += mutation;
             *value = value.clamp(0.0, 1.0); // Keep in valid range
         }
@@ -1612,27 +1607,17 @@ impl NeuralArchitectureSearch {
 
         for i in 0..numcandidates {
             let depth =
-                rng.random_range(self._searchspace.depth_range.0..=self._searchspace.depth_range.1);
+                rng.random_range(self._searchspace.depth_range.0, self._searchspace.depth_range.1 + 1);
             let mut layers = Vec::new();
             let mut connections = Vec::new();
 
             for _ in 0..depth {
-                let layer_type = self
-                    ._searchspace
-                    .layer_types
-                    .as_slice()
-                    .choose(&mut rng)
-                    .expect("Layer types should not be empty")
-                    .clone();
+                let idx = rng.random_range(0, self._searchspace.layer_types.len());
+                let layer_type = self._searchspace.layer_types[idx].clone();
                 layers.push(layer_type);
 
-                let connection = self
-                    ._searchspace
-                    .connections
-                    .as_slice()
-                    .choose(&mut rng)
-                    .expect("Connections should not be empty")
-                    .clone();
+                let idx = rng.random_range(0, self._searchspace.connections.len());
+                let connection = self._searchspace.connections[idx].clone();
                 connections.push(connection);
             }
 
@@ -1685,16 +1670,10 @@ impl NeuralArchitectureSearch {
         // Generate offspring through mutation and crossover
         while new_population.len() < populationsize {
             if ranked_archs.len() >= 2 {
-                let parent1 = ranked_archs
-                    .as_slice()
-                    .choose(&mut rng)
-                    .expect("Ranked architectures should not be empty")
-                    .0;
-                let parent2 = ranked_archs
-                    .as_slice()
-                    .choose(&mut rng)
-                    .expect("Ranked architectures should not be empty")
-                    .0;
+                let idx = rng.random_range(0, ranked_archs.len());
+                let parent1 = ranked_archs[idx].0;
+                let idx = rng.random_range(0, ranked_archs.len());
+                let parent2 = ranked_archs[idx].0;
 
                 let offspring = self.crossover_architectures(parent1, parent2);
                 let mutated = self.mutate_architecture(offspring);
@@ -1764,7 +1743,7 @@ impl NeuralArchitectureSearch {
     ) -> ProcessingArchitecture {
         let mut rng = rng();
         let min_depth = parent1.layers.len().min(parent2.layers.len());
-        let crossover_point = rng.random_range(1..min_depth);
+        let crossover_point = rng.random_range(1, min_depth);
 
         let mut new_layers = Vec::new();
         let mut new_connections = Vec::new();
@@ -1799,15 +1778,10 @@ impl NeuralArchitectureSearch {
 
         // Randomly mutate some layers
         for layer in &mut architecture.layers {
-            if rng.random::<f64>() < 0.1 {
+            if rng.random_f64() < 0.1 {
                 // 10% mutation rate
-                *layer = self
-                    ._searchspace
-                    .layer_types
-                    .as_slice()
-                    .choose(&mut rng)
-                    .expect("Layer types should not be empty")
-                    .clone();
+                let idx = rng.random_range(0, self._searchspace.layer_types.len());
+                *layer = self._searchspace.layer_types[idx].clone();
             }
         }
 

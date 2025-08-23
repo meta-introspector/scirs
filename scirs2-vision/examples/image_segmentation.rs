@@ -11,6 +11,7 @@ use scirs2_vision::preprocessing::{gaussian_blur, normalize_brightness};
 use scirs2_vision::segmentation::{
     adaptive_threshold, connected_components, otsu_threshold, threshold_binary, AdaptiveMethod,
 };
+use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

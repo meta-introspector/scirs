@@ -17,7 +17,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "memory_compression")]
-use super::compressed__memmap::CompressedMemMappedArray;
+use super::compressed_memmap::CompressedMemMappedArray;
 use crate::error::CoreResult;
 #[cfg(feature = "memory_compression")]
 use crate::error::{CoreError, ErrorContext};

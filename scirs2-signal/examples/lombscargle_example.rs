@@ -1,6 +1,7 @@
 use rand::{rng, Rng};
 use scirs2_signal::lombscargle::{find_peaks, lombscargle, significance_levels, AutoFreqMethod};
 use std::error::Error;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {

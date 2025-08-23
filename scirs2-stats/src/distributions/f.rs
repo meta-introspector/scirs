@@ -6,6 +6,8 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand_distr::{Distribution, FisherF as RandFisherF};
+use std::f64::consts::PI;
+use scirs2_core::rng;
 
 /// F distribution structure
 pub struct F<T: Float> {
@@ -483,7 +485,7 @@ mod tests {
         assert_relative_eq!(beta_function(2.0, 3.0), 1.0 / 12.0, epsilon = 1e-10);
         assert_relative_eq!(
             beta_function(0.5, 0.5),
-            std::f64::consts::PI,
+            PI,
             epsilon = 1e-10
         );
     }

@@ -1153,28 +1153,28 @@ pub mod utils {
     use super::*;
 
     /// Compute π to specified precision
-    pub fn prec(prec: u32) -> CoreResult<ArbitraryFloat> {
+    pub fn pi(prec: u32) -> CoreResult<ArbitraryFloat> {
         ArbitraryFloat::pi(prec)
     }
 
     /// Compute e to specified precision
-    pub fn prec(prec: u32) -> CoreResult<ArbitraryFloat> {
+    pub fn e(prec: u32) -> CoreResult<ArbitraryFloat> {
         ArbitraryFloat::e(prec)
     }
 
     /// Compute ln(2) to specified precision
-    pub fn prec(prec: u32) -> CoreResult<ArbitraryFloat> {
+    pub fn ln2(prec: u32) -> CoreResult<ArbitraryFloat> {
         ArbitraryFloat::ln2(prec)
     }
 
     /// Compute sqrt(2) to specified precision
-    pub fn prec(prec: u32) -> CoreResult<ArbitraryFloat> {
+    pub fn sqrt2(prec: u32) -> CoreResult<ArbitraryFloat> {
         let two = ArbitraryFloat::from_f64_with_precision(2.0, prec)?;
         two.sqrt()
     }
 
     /// Compute golden ratio to specified precision
-    pub fn prec(prec: u32) -> CoreResult<ArbitraryFloat> {
+    pub fn golden_ratio(prec: u32) -> CoreResult<ArbitraryFloat> {
         let one = ArbitraryFloat::from_f64_with_precision(1.0, prec)?;
         let five = ArbitraryFloat::from_f64_with_precision(5.0, prec)?;
         let sqrt5 = five.sqrt()?;

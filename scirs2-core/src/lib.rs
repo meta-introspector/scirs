@@ -254,8 +254,7 @@ pub use crate::memory::metrics::{
     // Utility functions
     format_bytes,
     format_duration,
-    load_snapshots,
-    save_snapshots,
+    clear_snapshots,
     take_snapshot,
     MemoryEvent,
     MemoryEventType,

@@ -197,7 +197,7 @@
 
 use crate::error::{Result, TextError};
 use ndarray::{s, Array1, Array2, Array3, ArrayView2};
-use rand::{rng, Rng};
+use rand::Rng;
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
 

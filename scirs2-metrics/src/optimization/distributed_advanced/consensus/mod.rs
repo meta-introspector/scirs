@@ -246,6 +246,7 @@ pub enum VoteDecision {
 }
 
 /// Consensus manager trait for different algorithms
+#[allow(async_fn_in_trait)]
 pub trait ConsensusManager<T>: Send + Sync {
     /// Initialize consensus manager
     async fn initialize(&mut self) -> Result<()>;

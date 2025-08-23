@@ -8,7 +8,7 @@ use criterion::{
 };
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::prelude::*;
-use rand_distr::{Exponential, Gamma as GammaDist, Normal, StandardNormal, Uniform};
+use rand_distr::{Exp, Gamma as GammaDist, Normal, StandardNormal, Uniform};
 use scirs2_stats::*;
 use std::time::Duration;
 
@@ -293,7 +293,7 @@ fn bench_regression(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("linear_regression", n),
             &(&x, &y),
-            |b, (x, y)| b.iter(|| black_box(regression::linear::fit(&x.view(), &y.view()))),
+            |b, (x, y)| b.iter(|| black_box(regression::linregress(&x.view(), &y.view()))),
         );
 
         // Multiple linear regression
@@ -305,7 +305,7 @@ fn bench_regression(c: &mut Criterion) {
                 BenchmarkId::new("multiple_regression", n),
                 &(&x_multi, &y),
                 |b, (x, y)| {
-                    b.iter(|| black_box(regression::linear::fit_multiple(&x.view(), &y.view())))
+                    b.iter(|| black_box(regression::multilinear_regression(&x.view(), &y.view())))
                 },
             );
         }
@@ -314,7 +314,7 @@ fn bench_regression(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("polynomial_regression_deg3", n),
             &(&x, &y),
-            |b, (x, y)| b.iter(|| black_box(regression::polynomial::fit(&x.view(), &y.view(), 3))),
+            |b, (x, y)| b.iter(|| black_box(regression::polyfit(&x.view(), &y.view(), 3))),
         );
     }
 

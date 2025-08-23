@@ -7,7 +7,7 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2__spatial::{
+use scirs2_spatial::{
     distance::{euclidean, pdist},
     simd_distance::{parallel_pdist, simd_euclidean_distance_batch},
     KDTree,
@@ -123,12 +123,12 @@ struct MemoryBenchmark {
 
 impl MemoryBenchmark {
     fn new(seed: u64) -> Self {
-        Self { _seed }
+        Self { seed }
     }
 
     fn generate_points(&self, npoints: usize, dimensions: usize) -> Array2<f64> {
         let mut rng = StdRng::seed_from_u64(self.seed);
-        Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
+        Array2::from_shape_fn((npoints, dimensions), |_| rng.random_range(-10.0..10.0))
     }
 
     /// Analyze memory usage for different data sizes
@@ -254,7 +254,7 @@ impl MemoryBenchmark {
             // Random access pattern (simulate worst-case cache behavior)
             let mut rng = StdRng::seed_from_u64(self.seed);
             let indices: Vec<(usize, usize)> = (0..size * 10)
-                .map(|_| (rng.random_range(0..size)..rng.random_range(0..10)))
+                .map(|_| (rng.gen_range(0..size), rng.gen_range(0..10)))
                 .collect();
 
             let start = Instant::now();
@@ -436,7 +436,7 @@ fn bench_memory_distance_calculations(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("memory_efficient_pdist", size),
             &size,
-            |b_| {
+            |b, _| {
                 b.iter(|| {
                     MEMORY_TRACKER.reset();
                     let distances = parallel_pdist(&points.view(), "euclidean").unwrap();
@@ -462,8 +462,8 @@ fn bench_memory_data_structures(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(size as u64));
 
-        group.bench_with_input(BenchmarkId::new("kdtree_memory", size), &size, |b_| {
-            b.iter(|| {
+        group.bench_with_input(BenchmarkId::new("kdtree_memory", size), &size, |b_, _| {
+            b_.iter(|| {
                 MEMORY_TRACKER.reset();
                 let kdtree = KDTree::new(&points).unwrap();
                 let stats = MEMORY_TRACKER.get_stats();

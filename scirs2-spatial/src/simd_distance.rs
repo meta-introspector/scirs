@@ -39,7 +39,7 @@
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 
 /// Supported distance metrics for SIMD operations
 #[derive(Debug, Clone, Copy)]
@@ -212,7 +212,7 @@ pub fn simd_euclidean_distance_batch(
 /// * Condensed distance matrix, shape (n*(n-1)/2,)
 #[allow(dead_code)]
 pub fn parallel_pdist(points: &ArrayView2<'_, f64>, metric: &str) -> SpatialResult<Array1<f64>> {
-    use scirs2_core::parallel_ops::{ParallelBridge, ParallelIterator};
+    use scirs2_core::parallel_ops::ParallelIterator;
     let n_points = points.nrows();
     if n_points < 2 {
         return Err(SpatialError::ValueError(
@@ -288,7 +288,7 @@ pub fn parallel_cdist(
     points2: &ArrayView2<'_, f64>,
     metric: &str,
 ) -> SpatialResult<Array2<f64>> {
-    use scirs2_core::parallel_ops::{ParallelBridge, ParallelIterator};
+    use scirs2_core::parallel_ops::ParallelIterator;
     if points1.ncols() != points2.ncols() {
         return Err(SpatialError::ValueError(
             "Point arrays must have the same number of dimensions".to_string(),
@@ -477,9 +477,8 @@ fn linear_to_condensed_indices(_linearidx: usize, n: usize) -> (usize, usize) {
 /// Advanced-optimized SIMD-accelerated clustering algorithms
 pub mod advanced_simd_clustering {
     use crate::error::{SpatialError, SpatialResult};
-    use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-    use rand::random;
-    use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+    use ndarray::{Array1, Array2, ArrayView2};
+    use scirs2_core::simd_ops::SimdUnifiedOps;
 
     /// Advanced-optimized SIMD K-means implementation with vectorized operations
     pub struct AdvancedSimdKMeans {
@@ -1179,7 +1178,7 @@ pub mod mixed_precision_simd {
     use crate::error::{SpatialError, SpatialResult};
     use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
     use scirs2_core::parallel_ops::*;
-    use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+    use scirs2_core::simd_ops::SimdUnifiedOps;
 
     /// Mixed precision distance computation (f32 where precision allows)
     pub fn simd_euclidean_distance_f32(a: &[f32], b: &[f32]) -> SpatialResult<f32> {
@@ -1270,10 +1269,9 @@ pub mod mixed_precision_simd {
 /// Performance benchmarking utilities with advanced metrics
 pub mod bench {
     use super::mixed_precision_simd::simd_euclidean_distance_batch_f32;
-    use crate::error::{SpatialError, SpatialResult};
     use crate::simd_euclidean_distance_batch;
-    use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-    use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+    use ndarray::ArrayView2;
+    use scirs2_core::simd_ops::PlatformCapabilities;
     use std::time::Instant;
 
     /// Comprehensive SIMD performance benchmarking

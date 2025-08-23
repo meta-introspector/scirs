@@ -5,7 +5,7 @@
 //! to discover patterns in spatial data through biologically-inspired neural dynamics.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{Array1, ArrayView2};
 use rand::Rng;
 use std::collections::HashMap;
 

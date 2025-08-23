@@ -125,7 +125,7 @@ impl StressTestResult {
     /// Create a new stress test result
     pub fn new(testname: String) -> Self {
         Self {
-            test_name,
+            test_name: testname,
             peak_memory: 0,
             ops_per_second: 0.0,
             total_operations: 0,

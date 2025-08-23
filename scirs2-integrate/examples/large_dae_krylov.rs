@@ -5,6 +5,7 @@
 //! The example models a 2D heat equation on a grid with constraints.
 
 use ndarray::{Array1, ArrayView1};
+use std::f64::consts::PI;
 // use plotters::prelude::*;
 use scirs2_integrate::{
     bdf_semi_explicit_dae, krylov_bdf_semi_explicit_dae, DAEIndex, DAEOptions, DAEType, ODEMethod,

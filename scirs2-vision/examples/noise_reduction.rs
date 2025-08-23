@@ -10,6 +10,7 @@ use image::{DynamicImage, GenericImage, GenericImageView, ImageBuffer, Rgba};
 use rand::random;
 use scirs2_vision::preprocessing::{bilateral_filter, gaussian_blur, median_filter};
 use std::error::Error;
+use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {

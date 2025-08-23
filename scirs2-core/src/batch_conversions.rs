@@ -34,7 +34,7 @@
 
 use crate::error::{CoreError, CoreResult};
 use crate::types::{NumericConversion, NumericConversionError};
-use num__complex::Complex;
+use num_complex::Complex;
 use num_traits::{Bounded, Float, NumCast, Zero};
 use std::fmt;
 #[cfg(feature = "simd")]

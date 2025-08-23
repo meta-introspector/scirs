@@ -488,6 +488,7 @@ impl RigidTransform {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_rigid_transform_identity() {

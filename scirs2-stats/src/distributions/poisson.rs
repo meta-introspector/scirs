@@ -8,6 +8,7 @@ use crate::traits::{DiscreteDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand_distr::{Distribution as RandDistribution, Poisson as RandPoisson};
+use scirs2_core::rng;
 
 /// Poisson distribution structure
 pub struct Poisson<F: Float> {

@@ -7,6 +7,7 @@ use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use rand_distr::{ChiSquared, Distribution, Normal as RandNormal};
 use std::fmt::Debug;
+use scirs2_core::rng;
 
 // Import helper functions from the multivariate module
 use super::normal::{compute_cholesky, compute_inverse_from_cholesky};

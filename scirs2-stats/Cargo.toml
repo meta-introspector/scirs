@@ -17,7 +17,7 @@ num-complex = { workspace = true }
 thiserror = { workspace = true }
 # Linear algebra for PCA and other multivariate methods
 ndarray-linalg = { workspace = true, default-features = false, features = ["openblas-system"] }
-scirs2-core = { workspace = true, features = ["validation", "parallel", "simd", "linalg"] }
+scirs2-core = { workspace = true, features = ["validation", "parallel", "simd", "linalg", "random"] }
 scirs2-linalg = { workspace = true }
 
 # Statistics specific dependencies

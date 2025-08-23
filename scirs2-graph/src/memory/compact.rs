@@ -140,6 +140,11 @@ impl CSRGraph {
         self.row_ptr[node + 1] - self.row_ptr[node]
     }
 
+    /// Get number of nodes
+    pub fn node_count(&self) -> usize {
+        self.n_nodes
+    }
+
     /// Memory usage in bytes
     pub fn memory_usage(&self) -> usize {
         mem::size_of_val(&self.n_nodes)

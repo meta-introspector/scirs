@@ -17,6 +17,7 @@ use crate::parallel_ops::*;
 use super::config::{ErrorSeverity, ValidationErrorType};
 use super::constraints::{ArrayValidationConstraints, StatisticalConstraints};
 use super::errors::{ValidationError, ValidationResult, ValidationStats};
+#[cfg(feature = "validation")]
 use statrs::statistics::Statistics;
 
 /// Array validator with comprehensive validation capabilities

@@ -79,6 +79,10 @@ pollster = { workspace = true, optional = true }  # Async runtime for WebGPU
 reqwest = { workspace = true, optional = true }  # HTTP client for tracing export
 sha2 = { workspace = true, optional = true }  # Cryptographic hash functions
 
+# Testing and validation dependencies
+statrs = { workspace = true, optional = true }  # Statistical functions for validation
+quickcheck = { workspace = true, optional = true }  # Property-based testing
+
 # Arbitrary precision dependencies
 num-bigint = { workspace = true, optional = true }  # Arbitrary precision integers
 num-rational = { workspace = true, optional = true }  # Exact rational arithmetic
@@ -114,7 +118,7 @@ default = ["array", "serialization"]  # Enable array module by default
 simd = ["wide"]  # SIMD operations
 parallel = ["rayon", "ndarray/rayon", "crossbeam", "crossbeam-utils", "crossbeam-deque", "num_cpus"]  # Parallel processing with rayon
 cache = ["cached"]  # Caching and memoization functionality
-validation = ["regex"]  # Validation utilities
+validation = ["regex", "statrs"]  # Validation utilities
 cross_platform = ["libc", "sysinfo"]  # Cross-platform validation and compatibility
 logging = ["log"]  # Structured logging and diagnostics
 async = ["tokio", "async-trait"]  # Async error handling and recovery mechanisms
@@ -145,7 +149,7 @@ profiling = ["num_cpus"]  # Performance profiling tools
 random = []  # Random number generation utilities
 types = []  # Type conversion utilities
 ufuncs = []  # Universal Functions (ufuncs) system
-testing = ["tempfile", "serde", "serde_json"]  # Testing framework for production systems
+testing = ["tempfile", "serde", "serde_json", "quickcheck"]  # Testing framework for production systems
 benchmarking = ["testing", "serde", "serde_json"]  # Comprehensive benchmarking system
 linalg = ["ndarray-linalg"]  # Linear algebra with BLAS/LAPACK bindings
 # LAPACK backends - Note: On macOS, use system Accelerate; on Linux/Windows, use OpenBLAS

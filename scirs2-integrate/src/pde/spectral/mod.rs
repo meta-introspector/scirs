@@ -13,6 +13,7 @@
 //! - High accuracy for smooth solutions
 
 use ndarray::{Array1, Array2, ArrayView1};
+use std::f64::consts::PI;
 use std::time::Instant;
 
 // FFT functions would be implemented here or imported from another crate

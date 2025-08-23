@@ -518,7 +518,7 @@ pub trait OptimizationModel: Send + Sync + std::fmt::Debug {
     fn features(features: &KernelFeatures) -> OptimizationStrategy;
 
     /// Update model with feedback
-    fn features(features: &KernelFeatures, result: &OptimizationResult);
+    fn update_model(features: &KernelFeatures, result: &OptimizationResult);
 }
 
 /// Kernel feature extraction for ML optimization
@@ -1146,8 +1146,7 @@ kernel void reduction_op(global {datatype}* input, global {datatype}* output, in
     }}
 }}
 "#,
-            datatype = format!("{datatype:?}").to_lowercase(),
-            _operation = _operation
+            datatype = format!("{datatype:?}").to_lowercase()
         );
 
         KernelSource {

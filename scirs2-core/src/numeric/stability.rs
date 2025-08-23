@@ -734,6 +734,7 @@ pub fn factorial_stable(n: u64) -> CoreResult<f64> {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_kahan_sum() {

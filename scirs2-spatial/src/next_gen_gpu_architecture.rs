@@ -1027,6 +1027,7 @@ impl PhotonicAccelerator {
 mod tests {
     use super::*;
     use ndarray::array;
+    use std::f64::consts::PI;
 
     #[tokio::test]
     async fn test_quantum_gpu_processor() {

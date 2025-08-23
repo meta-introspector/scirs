@@ -132,7 +132,7 @@ impl LargeScaleTestResult {
     /// Create a new large-scale test result
     pub fn new(testname: String) -> Self {
         Self {
-            test_name,
+            test_name: testname,
             dataset_size: 0,
             peak_memory: 0,
             throughput: 0.0,
@@ -513,7 +513,7 @@ impl LargeScaleProcessor {
 
         // Create memory-mapped array
         let mmap_array =
-            MemoryMappedArray::<f64>::open(dataset_path, &[num_elements]).map_err(|e| {
+            MemoryMappedArray::<f64>::path(dataset_path, &[num_elements]).map_err(|e| {
                 CoreError::IoError(ErrorContext::new(format!(
                     "Failed to create memory map: {:?}",
                     e
@@ -617,7 +617,7 @@ impl LargeScaleProcessor {
     /// Verify reduction result using a different method
     fn verify_reduction_result(&self, datasetpath: &Path) -> CoreResult<f64> {
         // Simple verification: compute sum using smaller chunks
-        let mut file = fs::File::open(dataset_path).map_err(|e| {
+        let mut file = fs::File::open(datasetpath).map_err(|e| {
             CoreError::IoError(ErrorContext::new(format!(
                 "Failed to open dataset for verification: {}",
                 e

@@ -9,6 +9,7 @@ use ndarray::{Array1, ArrayBase, Data, Ix1};
 // use rand_distr::weighted::WeightedAliasIndex;
 use scirs2_core::validation::{check_probabilities, check_probabilities_sum_to_one};
 use scirs2_core::Rng;
+use scirs2_core::rng;
 use std::fmt::Debug;
 
 /// Implementation of the factorial function

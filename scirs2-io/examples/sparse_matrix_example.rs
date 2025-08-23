@@ -10,6 +10,7 @@
 
 use ndarray::array;
 use scirs2_io::sparse::{ops, SparseMatrix};
+use std::f64::consts::PI;
 use std::time::Instant;
 use tempfile::tempdir;
 

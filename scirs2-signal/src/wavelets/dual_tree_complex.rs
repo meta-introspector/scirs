@@ -912,6 +912,7 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
     use ndarray::{Array1, Array2};
+    use std::f64::consts::PI;
     #[test]
     fn test_dtcwt_processor_creation() {
         let config = DtcwtConfig::default();

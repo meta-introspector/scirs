@@ -7,6 +7,7 @@ use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::validation::*;
 use statrs::statistics::Statistics;
+use std::f64::consts::PI;
 
 /// Mean-field variational inference for Bayesian linear regression
 ///

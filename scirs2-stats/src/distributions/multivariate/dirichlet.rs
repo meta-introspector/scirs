@@ -7,6 +7,7 @@ use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, ArrayBase, Data, Ix1};
 use rand_distr::{Distribution, Gamma as RandGamma};
 use std::fmt::Debug;
+use scirs2_core::rng;
 
 /// Implementation of the natural logarithm of the gamma function
 ///

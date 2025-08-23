@@ -4,7 +4,7 @@
 //! crossbar arrays with multiple device types, advanced plasticity mechanisms,
 //! homeostatic regulation, metaplasticity, and neuromodulation for spatial learning.
 
-use crate::error::{SpatialError, SpatialResult};
+use crate::error::SpatialResult;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use rand::Rng;
 use std::collections::VecDeque;

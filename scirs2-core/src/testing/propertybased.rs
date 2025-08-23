@@ -1,5 +1,6 @@
 //! Property-based testing utilities
 
+#[cfg(feature = "testing")]
 use quickcheck::{Arbitrary, Gen, QuickCheck};
 
 /// Property test configuration
@@ -20,11 +21,11 @@ impl Default for PropertyTestConfig {
 /// Run property-based tests
 pub fn run_property_test<F, A>(property: F, config: PropertyTestConfig)
 where
-    F: Fn(A) -> bool,
-    A: Arbitrary,
+    F: Fn(A) -> bool + quickcheck::Testable,
+    A: Arbitrary + std::fmt::Debug,
 {
     QuickCheck::new()
         .tests(config.tests)
-        .max_tests(config.tests as usize)
-        .quickcheck(property as fn(A) -> bool);
+        .max_tests(config.tests)
+        .quickcheck(property);
 }

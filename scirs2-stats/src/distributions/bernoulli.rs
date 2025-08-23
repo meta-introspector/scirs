@@ -7,6 +7,7 @@ use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand_distr::{Bernoulli as RandBernoulli, Distribution};
 use scirs2_core::validation::check_probability;
+use scirs2_core::rng;
 
 /// Bernoulli distribution structure
 ///

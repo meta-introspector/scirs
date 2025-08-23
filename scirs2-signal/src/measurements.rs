@@ -407,6 +407,7 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
     use rand::Rng;
+    use std::f64::consts::PI;
     #[test]
     fn test_rms() {
         // DC signal

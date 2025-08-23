@@ -17,7 +17,7 @@
 
 use crate::error::Result;
 use ndarray::{Array1, Array2};
-use rand::{rng, Rng};
+use rand::Rng;
 
 /// Configuration for RANSAC algorithm
 #[derive(Debug, Clone)]
@@ -130,7 +130,7 @@ pub fn run_ransac<M: RansacModel>(
 
         // Fisher-Yates shuffle
         for i in (1..n_points).rev() {
-            let j = rng.random_range(0..=i);
+            let j = rng.random_range(0..i + 1);
             sample_indices.swap(i, j);
         }
 

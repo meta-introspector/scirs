@@ -9,6 +9,7 @@ use scirs2_vision::color::{
     hsv_to_rgb, lab_to_rgb, merge_channels, rgb_to_grayscale, rgb_to_hsv, rgb_to_lab,
     split_channels,
 };
+use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

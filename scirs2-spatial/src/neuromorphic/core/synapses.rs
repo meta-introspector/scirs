@@ -4,7 +4,6 @@
 //! plasticity (STDP), metaplasticity, and homeostatic synaptic scaling. These synapses
 //! form the connections between neurons and enable learning and adaptation.
 
-use crate::error::{SpatialError, SpatialResult};
 use std::collections::VecDeque;
 
 /// Synaptic connection with STDP learning

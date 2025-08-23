@@ -149,10 +149,10 @@ fn bench_connectivity(c: &mut Criterion) {
         }
         let mut rng = StdRng::seed_from_u64(43);
         for _ in 0..(size * 2) {
-            let u = rng.random_range(0..*size);
-            let v = rng.random_range(0..*size);
+            let u = rng.gen_range(0..*size);
+            let v = rng.gen_range(0..*size);
             if u != v {
-                let _ = directed_graph.add_edge(u..v, 1.0);
+                let _ = directed_graph.add_edge(u, v, 1.0);
             }
         }
 

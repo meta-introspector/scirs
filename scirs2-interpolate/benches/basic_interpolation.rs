@@ -1,8 +1,8 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array1;
-use scirs2__interpolate::interp1d::monotonic::{MonotonicInterpolator, MonotonicMethod};
-use scirs2__interpolate::spline::CubicSpline;
-use scirs2__interpolate::{cubic_interpolate, linear_interpolate, pchip_interpolate};
+use scirs2_interpolate::interp1d::monotonic::{MonotonicInterpolator, MonotonicMethod};
+use scirs2_interpolate::spline::CubicSpline;
+use scirs2_interpolate::{cubic_interpolate, linear_interpolate, pchip_interpolate};
 
 #[allow(dead_code)]
 fn generate_test_data(n: usize) -> (Array1<f64>, Array1<f64>) {
@@ -13,7 +13,7 @@ fn generate_test_data(n: usize) -> (Array1<f64>, Array1<f64>) {
 
 #[allow(dead_code)]
 fn generate_query_points(n: usize, x_min: f64, xmax: f64) -> Array1<f64> {
-    Array1::linspace(x_min + 0.1, x_max - 0.1, n)
+    Array1::linspace(x_min + 0.1, xmax - 0.1, n)
 }
 
 #[allow(dead_code)]
@@ -28,7 +28,7 @@ fn bench_linear_interpolation(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("data_points", data_size),
             data_size,
-            |b_| {
+            |b, _| {
                 b.iter(|| {
                     let _ = black_box(linear_interpolate(
                         black_box(&x.view()),
@@ -55,7 +55,7 @@ fn bench_cubic_interpolation(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("data_points", data_size),
             data_size,
-            |b_| {
+            |b, _| {
                 b.iter(|| {
                     let _ = black_box(cubic_interpolate(
                         black_box(&x.view()),
@@ -82,7 +82,7 @@ fn bench_pchip_interpolation(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("data_points", data_size),
             data_size,
-            |b_| {
+            |b, _| {
                 b.iter(|| {
                     let _ = black_box(pchip_interpolate(
                         black_box(&x.view()),
@@ -114,7 +114,7 @@ fn bench_monotonic_interpolation(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("data_points", data_size),
             data_size,
-            |b_| {
+            |b, _| {
                 b.iter(|| {
                     for &query in queries.iter() {
                         let _ = black_box(interpolator.evaluate(black_box(query)));
@@ -138,7 +138,7 @@ fn bench_cubic_spline(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("construction", data_size),
             data_size,
-            |b_| {
+            |b, _| {
                 b.iter(|| {
                     let _ = black_box(CubicSpline::new(black_box(&x.view()), black_box(&y.view())));
                 });
@@ -153,7 +153,7 @@ fn bench_cubic_spline(c: &mut Criterion) {
         let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
 
         group.throughput(Throughput::Elements(queries.len() as u64));
-        group.bench_with_input(BenchmarkId::new("evaluation", data_size), data_size, |b_| {
+        group.bench_with_input(BenchmarkId::new("evaluation", data_size), data_size, |b, _| {
             b.iter(|| {
                 for &query in queries.iter() {
                     let _ = black_box(spline.evaluate(black_box(query)));
@@ -169,7 +169,7 @@ fn bench_cubic_spline(c: &mut Criterion) {
         let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
 
         group.throughput(Throughput::Elements(queries.len() as u64));
-        group.bench_with_input(BenchmarkId::new("derivative", data_size), data_size, |b_| {
+        group.bench_with_input(BenchmarkId::new("derivative", data_size), data_size, |b, _| {
             b.iter(|| {
                 for &query in queries.iter() {
                     let _ = black_box(spline.derivative(black_box(query)));
@@ -195,7 +195,7 @@ fn bench_array_evaluation(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("cubic_spline_array", query_size),
             query_size,
-            |b_| {
+            |b, _| {
                 b.iter(|| {
                     let _ = black_box(spline.evaluate_array(black_box(&queries.view())));
                 });

@@ -3,7 +3,7 @@ use ndarray::{Array1, Array2, ArrayView2};
 use rand::distr::Uniform;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
-use scirs2_linalg::{det, inv, lu, matrix_norm, qr, solve, svd, vector_norm};
+use scirs2_linalg::{det, inv, lu, matrix_norm, qr, solve, svd, vector_norm, LinalgError};
 use serde::{Deserialize, Serialize};
 use std::f64;
 use std::fs;
@@ -392,7 +392,7 @@ fn bench_edge_cases(c: &mut Criterion) {
     group.bench_function("large_matrix_det", |b| {
         b.iter(|| {
             let start = std::time::Instant::now();
-            let result: Result<f64> = det(&large_matrix.view(), None);
+            let result: Result<f64, LinalgError> = det(&large_matrix.view(), None);
             let elapsed = start.elapsed().as_nanos() as u64;
 
             let success = result.is_ok() && result.as_ref().unwrap().is_finite();
@@ -418,7 +418,7 @@ fn bench_edge_cases(c: &mut Criterion) {
 #[allow(dead_code)]
 fn estimate_condition_number(matrix: &ArrayView2<f64>) -> f64 {
     match svd(matrix, false, None) {
-        Ok((_, s)) => {
+        Ok((_, s, _)) => {
             let max_sv = s.iter().cloned().fold(0.0, f64::max);
             let min_sv = s.iter().cloned().fold(f64::INFINITY, f64::min);
             if min_sv > 0.0 {

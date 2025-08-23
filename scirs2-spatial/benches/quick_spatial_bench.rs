@@ -5,7 +5,7 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2__spatial::distance::{euclidean, manhattan, pdist};
+use scirs2_spatial::distance::{euclidean, manhattan, pdist};
 use std::hint::black_box;
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ use std::time::Duration;
 #[allow(dead_code)]
 fn generate_test_data(_npoints: usize, dimensions: usize) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(42);
-    Array2::from_shape_fn((_n_points, dimensions), |_| rng.random_range(-10.0..10.0))
+    Array2::from_shape_fn((_npoints, dimensions), |_| rng.random_range(-10.0..10.0))
 }
 
 // Quick performance validation
@@ -24,7 +24,7 @@ fn bench_performance_validation(c: &mut Criterion) {
     group.warm_up_time(Duration::from_secs(1));
 
     // Single point distance calculations
-    let p1 = &[0.0..1.0, 2.0, 3.0, 4.0];
+    let p1 = &[0.0, 1.0, 2.0, 3.0, 4.0];
     let p2 = &[1.0, 2.0, 3.0, 4.0, 5.0];
 
     group.bench_function("single_euclidean_distance", |b| {
@@ -66,8 +66,8 @@ fn bench_performance_validation(c: &mut Criterion) {
     for &size in &[50, 100, 200] {
         let points = generate_test_data(size, 5);
 
-        group.bench_with_input(BenchmarkId::new("scaling_euclidean", size), &size, |b_| {
-            b.iter(|| {
+        group.bench_with_input(BenchmarkId::new("scaling_euclidean", size), &size, |b_, _| {
+            b_.iter(|| {
                 let distances = pdist(&points, euclidean);
                 black_box(distances.sum())
             })
@@ -98,8 +98,8 @@ fn bench_system_characterization(c: &mut Criterion) {
                     format!("{size}x{dim}_({data_size_kb:.1}KB)"),
                 ),
                 &(size, dim),
-                |b_| {
-                    b.iter(|| {
+                |b_, _| {
+                    b_.iter(|| {
                         // Simulate a typical workload
                         let mut total = 0.0;
                         for i in 0..points.nrows().min(20) {

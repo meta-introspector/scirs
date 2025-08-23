@@ -7,6 +7,7 @@ use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand_distr::Distribution;
 use scirs2_core::Rng;
+use scirs2_core::rng;
 use statrs::function::gamma::ln_gamma;
 
 /// Negative Binomial distribution structure
@@ -377,7 +378,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
                     // Generate geometric random variable (# failures before first success)
                     let u: f64 = rng.gen_range(0.0..1.0);
                     let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap_or(0.5);
-                    let geom_sample = (u.ln() / ((1.0_f64 - p_f64) as f64).ln()).floor() as usize;
+                    let geom_sample = (u.ln() / (1.0_f64 - p_f64).ln()).floor() as usize;
                     sum += geom_sample;
                 }
                 samples.push(F::from(sum).unwrap());

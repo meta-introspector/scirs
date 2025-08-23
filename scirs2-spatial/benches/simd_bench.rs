@@ -3,8 +3,8 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2__spatial::distance::euclidean;
-use scirs2__spatial::simd_distance::{
+use scirs2_spatial::distance::euclidean;
+use scirs2_spatial::simd_distance::{
     parallel_pdist, simd_euclidean_distance, simd_manhattan_distance,
 };
 use std::hint::black_box;
@@ -13,7 +13,7 @@ use std::time::Duration;
 #[allow(dead_code)]
 fn generate_test_data(_npoints: usize, dimensions: usize) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(42);
-    Array2::from_shape_fn((_n_points, dimensions), |_| rng.random_range(-10.0..10.0))
+    Array2::from_shape_fn((_npoints, dimensions), |_| rng.gen_range(-10.0..10.0))
 }
 
 #[allow(dead_code)]
@@ -22,7 +22,7 @@ fn simd_vs_scalar_benchmark(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(3));
 
     // Test different vector sizes to show SIMD benefits
-    for &size in &[4..8, 16, 32, 64, 128] {
+    for &size in &[4, 8, 16, 32, 64, 128] {
         let p1: Vec<f64> = (0..size).map(|i| i as f64).collect();
         let p2: Vec<f64> = (0..size).map(|i| (i + 1) as f64).collect();
 

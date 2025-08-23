@@ -116,7 +116,6 @@
 //! - Error mitigation techniques for NISQ-era compatibility
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2};
 use std::collections::HashMap;
 
 // Re-export core concepts

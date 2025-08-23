@@ -1,4 +1,6 @@
 
+use std::f64::consts::PI;
+
 #[allow(dead_code)]
 fn main() {
     println!("=== SciPy vs Our Implementation Comparison ===\n");

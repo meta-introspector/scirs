@@ -127,7 +127,7 @@ pub use recovery::{
 #[cfg(feature = "async")]
 pub mod async_handling;
 #[cfg(feature = "async")]
-pub use async__handling::{
+pub use async_handling::{
     execute_witherror_aggregation, retry_with_exponential_backoff, with_timeout,
     AsyncCircuitBreaker, AsyncErrorAggregator, AsyncProgressTracker, AsyncRetryExecutor,
     TimeoutWrapper, TrackedAsyncOperation,

@@ -72,7 +72,7 @@ fn bench_kmeans(c: &mut Criterion) {
     let mut group = c.benchmark_group("kmeans");
 
     // Test different data sizes
-    let sizes = vec![100..500, 1000, 2000];
+    let sizes = vec![100, 500, 1000, 2000];
     let n_features = 10;
     let k = 5;
 
@@ -338,7 +338,7 @@ fn bench_data_structures(c: &mut Criterion) {
                     for _ in 0..(n / 2) {
                         let i = rng.random_range(0..n);
                         let j = rng.random_range(0..n);
-                        ds.union(i..j);
+                        ds.union(i, j);
                     }
 
                     // Perform random finds
@@ -347,7 +347,7 @@ fn bench_data_structures(c: &mut Criterion) {
                         ds.find(&i);
                     }
                 })
-            }..);
+            });
     }
 
     // Benchmark condensed matrix operations

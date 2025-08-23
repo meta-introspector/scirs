@@ -206,11 +206,12 @@ pub fn convex_hull_with_algorithm(
 }
 
 /// Extended analysis and statistics for debugging and research
+///
+/// Advanced analysis functions for convex hulls
+/// 
+/// This module provides extended functionality for detailed hull analysis,
+/// research applications, and debugging purposes.
 pub mod advanced {
-    //! Advanced analysis functions for convex hulls
-    //!
-    //! This module provides extended functionality for detailed hull analysis,
-    //! research applications, and debugging purposes.
 
     use super::*;
 

@@ -12,8 +12,10 @@ use rand_distr::uniform::SampleUniform;
 use rand_distr::Distribution as RandDistribution;
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use scirs2_core::rng;
 // Use simple approximations for bessel functions
 use statrs::statistics::Statistics;
+use std::f64::consts::PI;
 
 /// Approximation of the modified Bessel function I0(x)
 fn bessel_i0(x: f64) -> f64 {
@@ -249,15 +251,15 @@ fn von_mises_cdf<F: Float + 'static>(kappa: F, x: F) -> F {
 
     // For small kappa, approximate with wrapped normal distribution
     if kappa_f64 < 1e-8 {
-        return F::from((x_f64 + std::f64::consts::PI) / (2.0 * std::f64::consts::PI)).unwrap();
+        return F::from((x_f64 + PI) / (2.0 * PI)).unwrap();
     }
 
     // Algorithm implementation based on SciPy's von_mises_cdf
     // This is a simplified version for now - we can optimize it later
 
     // Normalize x to [-π, π]
-    let two_pi = 2.0 * std::f64::consts::PI;
-    let pi = std::f64::consts::PI;
+    let two_pi = 2.0 * PI;
+    let pi = PI;
     let mut x_norm = x_f64 % two_pi;
     if x_norm > pi {
         x_norm -= two_pi;
@@ -268,7 +270,7 @@ fn von_mises_cdf<F: Float + 'static>(kappa: F, x: F) -> F {
     // For high kappa, use normal approximation
     if kappa_f64 > 50.0 {
         let sigma = 1.0 / kappa_f64.sqrt();
-        let z = x_norm / (std::f64::consts::SQRT_2 * sigma);
+        let z = x_norm / ((2.0_f64).sqrt() * sigma);
         // Use this approximation instead of erf which is unstable
         let cdf = 0.5 * (1.0 + z / (1.0 + z * z / 2.0).sqrt());
         return F::from(cdf).unwrap();

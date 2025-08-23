@@ -185,7 +185,7 @@ impl FuzzingEngine {
                     case_number,
                     input: format!("{input:?}"),
                     error: format!("{error:?}"),
-                    case_type: random.to_string(),
+                    case_type: "random".to_string(),
                 });
             }
             case_number += 1;
@@ -199,7 +199,7 @@ impl FuzzingEngine {
                     case_number,
                     input: format!("{input:?}"),
                     error: format!("{error:?}"),
-                    case_type: edge.to_string(),
+                    case_type: "edge".to_string(),
                 });
             }
             case_number += 1;
@@ -213,7 +213,7 @@ impl FuzzingEngine {
                     case_number,
                     input: format!("{input:?}"),
                     error: format!("{error:?}"),
-                    case_type: boundary.to_string(),
+                    case_type: "boundary".to_string(),
                 });
             }
             case_number += 1;
@@ -238,23 +238,23 @@ pub struct FloatFuzzingGenerator {
 
 impl FloatFuzzingGenerator {
     /// Create a new float fuzzing generator
-    pub fn value(val: f64) -> Self {
+    pub fn new(min_val: f64, max_val: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
             rng: StdRng::seed_from_u64(Default::default()),
-            min_value,
-            max_value,
+            min_value: min_val,
+            max_value: max_val,
         }
     }
 
     /// Create a generator with seed
     #[allow(unused_variables)]
-    pub fn value_2(f64: f64, seed: u64) -> Self {
+    pub fn with_seed(min_val: f64, max_val: f64, seed: u64) -> Self {
         Self {
             #[cfg(feature = "random")]
             rng: StdRng::seed_from_u64(seed),
-            min_value,
-            max_value,
+            min_value: min_val,
+            max_value: max_val,
         }
     }
 }
@@ -276,7 +276,8 @@ impl FuzzingGenerator<f64> for FloatFuzzingGenerator {
         #[cfg(feature = "random")]
         {
             let edge_cases = vec![
-                0.0..-0.0,
+                0.0,
+                -0.0,
                 f64::INFINITY,
                 f64::NEG_INFINITY,
                 f64::NAN,
@@ -340,12 +341,12 @@ pub struct VectorFuzzingGenerator {
 
 impl VectorFuzzingGenerator {
     /// Create a new vector fuzzing generator
-    pub fn value(val: f64) -> Self {
+    pub fn new(min_size: usize, max_size: usize, min_value: f64, max_value: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
             rng: StdRng::seed_from_u64(Default::default()),
-            minsize,
-            maxsize,
+            minsize: min_size,
+            maxsize: max_size,
             element_generator: FloatFuzzingGenerator::new(min_value, max_value),
         }
     }

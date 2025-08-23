@@ -1109,7 +1109,7 @@ fn compute_single_rectification_transform(
     center: (f64, f64),
     image_size: (u32, u32),
 ) -> Result<TransformMatrix> {
-    let (_width_height) = image_size;
+    let _width_height = image_size;
     let (centerx, center_y) = center;
 
     // If epipole is at infinity (parallel cameras), use identity transform
@@ -1325,7 +1325,7 @@ pub fn stitch_images_streaming(
         ));
     }
 
-    let (_width_height) = _outputsize;
+    let _width_height = _outputsize;
 
     // Configure tile-based processing parameters
     let tile_config = TileConfig::for_output_size(_outputsize);

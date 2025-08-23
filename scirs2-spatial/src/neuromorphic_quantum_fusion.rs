@@ -473,7 +473,7 @@ impl QuantumSpikingClusterer {
         points: &ArrayView2<'_, f64>,
         initial_centroids: &Array2<f64>,
     ) -> SpatialResult<(Array2<f64>, Vec<QuantumSpikePattern>)> {
-        let (_n_points_n_dims) = points.dim();
+        let _n_points_n_dims = points.dim();
         let mut centroids = initial_centroids.clone();
         let mut spike_patterns = Vec::new();
 

@@ -174,7 +174,7 @@ impl RRTPlanner {
         let mut point = Array1::zeros(self.dimension);
 
         for i in 0..self.dimension {
-            point[i] = self.rng.random_range(min_bounds[i], max_bounds[i]);
+            point[i] = self.rng.random_range(min_bounds[i]..max_bounds[i]);
         }
 
         Ok(point)

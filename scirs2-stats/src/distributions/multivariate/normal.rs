@@ -9,6 +9,7 @@ use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Axis, Data, 
 use rand_distr::{Distribution as RandDistribution, Normal as RandNormal};
 use statrs::statistics::Statistics;
 use std::fmt::Debug;
+use scirs2_core::rng;
 
 /// Multivariate Normal distribution structure
 #[derive(Debug, Clone)]

@@ -6,7 +6,7 @@
 //! to explore solution spaces more efficiently than classical methods.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2};
+use ndarray::Array2;
 
 // Import quantum concepts
 use super::super::concepts::QuantumState;

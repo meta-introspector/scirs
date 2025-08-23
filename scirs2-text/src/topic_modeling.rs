@@ -166,7 +166,7 @@ use crate::error::{Result, TextError};
 use ndarray::{Array1, Array2, Axis};
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-use rand::{rng, rngs::StdRng, SeedableRng};
+use rand::{rngs::StdRng, SeedableRng};
 use std::collections::HashMap;
 
 /// Learning method for LDA

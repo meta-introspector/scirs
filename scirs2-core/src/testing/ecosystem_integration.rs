@@ -794,7 +794,7 @@ impl EcosystemTestRunner {
                 let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
                 // Check if this looks like a scirs2 module
-                if dir_name.starts_with(scirs2) {
+                if dir_name.starts_with("scirs2") {
                     // Check if we should include this module
                     if !self.config.excluded_modules.contains(dir_name)
                         && (self.config.included_modules.is_empty()
@@ -816,7 +816,7 @@ impl EcosystemTestRunner {
 
     /// Analyze a specific module directory
     fn from_path(&self, modulepath: &Path) -> CoreResult<DiscoveredModule> {
-        let name = module_path
+        let name = modulepath
             .file_name()
             .and_then(|n| n.to_str())
             .ok_or_else(|| {
@@ -825,21 +825,21 @@ impl EcosystemTestRunner {
             .to_string();
 
         // Read Cargo.toml
-        let cargo_toml_path = module_path.join("Cargo.toml");
+        let cargo_toml_path = modulepath.join("Cargo.toml");
         let cargo_toml = self.parse_cargo_toml(&cargo_toml_path)?;
 
         // Detect features and dependencies
-        let features = self.detect_module_features(module_path)?;
-        let dependencies = self.detect_module_dependencies(module_path)?;
+        let features = self.detect_module_features(modulepath)?;
+        let dependencies = self.detect_module_dependencies(modulepath)?;
 
         // Classify module type
         let module_type = self.classify_module_type(&name);
 
         // Check build status
-        let build_status = self.check_module_build_status(module_path)?;
+        let build_status = self.check_module_build_status(modulepath)?;
 
         Ok(DiscoveredModule {
-            name_path: module_path.to_path_buf(),
+            name_path: modulepath.to_path_buf(),
             cargo_toml,
             features,
             dependencies,
@@ -850,7 +850,7 @@ impl EcosystemTestRunner {
 
     /// Parse Cargo.toml file
     fn parse_cargo_toml(&self, cargo_tomlpath: &Path) -> CoreResult<CargoTomlInfo> {
-        let content = fs::read_to_string(cargo_toml_path).map_err(|e| {
+        let content = fs::read_to_string(cargo_tomlpath).map_err(|e| {
             CoreError::IoError(ErrorContext::new(format!(
                 "Failed to read Cargo.toml: {}",
                 e
@@ -898,27 +898,27 @@ impl EcosystemTestRunner {
         let mut features = Vec::new();
 
         // Check for common features based on directory structure
-        let src_path = module_path.join(src);
+        let src_path = modulepath.join("src");
         if src_path.exists() {
-            if src_path.join(gpu).exists() {
-                features.push(gpu.to_string());
+            if src_path.join("gpu").exists() {
+                features.push("gpu".to_string());
             }
-            if src_path.join(parallel).exists() {
-                features.push(parallel.to_string());
+            if src_path.join("parallel").exists() {
+                features.push("parallel".to_string());
             }
-            if src_path.join(simd).exists() {
-                features.push(simd.to_string());
+            if src_path.join("simd").exists() {
+                features.push("simd".to_string());
             }
         }
 
         // Check examples directory
-        if module_path.join(examples).exists() {
-            features.push(examples.to_string());
+        if modulepath.join("examples").exists() {
+            features.push("examples".to_string());
         }
 
         // Check benchmarks
-        if module_path.join(benches).exists() {
-            features.push(benchmarks.to_string());
+        if modulepath.join("benches").exists() {
+            features.push("benchmarks".to_string());
         }
 
         Ok(features)
@@ -976,7 +976,7 @@ impl EcosystemTestRunner {
         // Try to build the module
         let output = Command::new("cargo")
             .args(["check", "--quiet"])
-            .current_dir(module_path)
+            .current_dir(modulepath)
             .output();
 
         let build_time = start_time.elapsed();
@@ -995,9 +995,9 @@ impl EcosystemTestRunner {
 
                 // Quick test check (don't run full tests to save time)
                 let tests_pass = if builds {
-                    let test_output = Command::new(cargo)
+                    let test_output = Command::new("cargo")
                         .args(["test", "--quiet", "--", "--nocapture", "--test-threads=1"])
-                        .current_dir(module_path)
+                        .current_dir(modulepath)
                         .output();
 
                     test_output.map(|o| o.status.success()).unwrap_or(false)
@@ -1186,10 +1186,10 @@ impl EcosystemTestRunner {
         let mut performance = HashMap::new();
 
         // Simulate cross-module operation performance
-        performance.insert(data_transfer.to_string(), 85.0);
-        performance.insert(api_calls.to_string(), 92.0);
-        performance.insert(memory_sharing.to_string(), 78.0);
-        performance.insert(error_propagation.to_string(), 88.0);
+        performance.insert("data_transfer".to_string(), 85.0);
+        performance.insert("api_calls".to_string(), 92.0);
+        performance.insert("memory_sharing".to_string(), 78.0);
+        performance.insert("error_propagation".to_string(), 88.0);
 
         Ok(performance)
     }

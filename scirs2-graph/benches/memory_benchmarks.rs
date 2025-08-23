@@ -99,7 +99,7 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
     }
 
     let adj_lists: Vec<Vec<_>> = (0..n)
-        .map(|u| graph.neighbors(&u).unwrap().collect())
+        .map(|u| graph.neighbors(&u).unwrap().into_iter().collect())
         .collect();
     let compressed = CompressedAdjacencyList::from_adjacency(adj_lists);
 
@@ -122,7 +122,7 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
             let mut sum = 0;
             for node in 0..n {
                 for neighbor in csr.neighbors(node) {
-                    sum += neighbor;
+                    sum += neighbor.0;
                 }
             }
             black_box(sum)
@@ -192,7 +192,7 @@ fn bench_edge_queries(c: &mut Criterion) {
         b.iter(|| {
             let mut count = 0;
             for &(u, v) in &query_pairs {
-                if graph.has_edge(u, v) {
+                if graph.has_edge(&u, &v) {
                     count += 1;
                 }
             }
@@ -238,7 +238,7 @@ fn bench_construction_time(c: &mut Criterion) {
             &edges,
             |b, edges| {
                 b.iter(|| {
-                    let mut graph = Graph::new();
+                    let mut graph = Graph::<usize, f64>::new();
                     for i in 0..size {
                         graph.add_node(i);
                     }

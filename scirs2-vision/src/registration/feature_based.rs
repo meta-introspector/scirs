@@ -261,7 +261,7 @@ fn detect_orb_features(
     params: &FeatureDetectorParams,
 ) -> Result<(Vec<Keypoint>, Vec<Vec<u8>>)> {
     let gray = image.to_luma8();
-    let (_width_height) = gray.dimensions();
+    let _width_height = gray.dimensions();
 
     // Build image pyramid
     let pyramid = build_orb_pyramid(&gray, &params.orb_params)?;

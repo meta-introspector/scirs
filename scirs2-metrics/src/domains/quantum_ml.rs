@@ -805,6 +805,7 @@ mod tests {
     use super::*;
     use ndarray::array;
     use num_complex::Complex64;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_quantum_state_fidelity() {

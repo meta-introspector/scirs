@@ -9,7 +9,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 #[allow(unused_imports)]
-
 /// Global configuration manager for SciRS2 integration
 pub struct ConfigManager {
     /// Current configuration

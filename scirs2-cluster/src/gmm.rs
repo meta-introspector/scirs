@@ -6,6 +6,7 @@
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use rand::{Rng, SeedableRng};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::iter::Sum;
 

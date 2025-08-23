@@ -9,6 +9,7 @@ use scirs2_signal::filter::{
     benchmark_parallel_filtering_operations, AdvancedParallelConfig, LockFreeStreamingFilter,
     ParallelMultiRateFilterBank, ParallelSpectralFilter, SparseParallelFilter,
 };
+use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

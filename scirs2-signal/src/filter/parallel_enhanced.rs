@@ -469,6 +469,7 @@ fn calculate_memory_optimal_chunk_size(
 mod tests {
     use super::*;
     use num_complex::Complex64;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_enhanced_parallel_filtfilt_basic() {

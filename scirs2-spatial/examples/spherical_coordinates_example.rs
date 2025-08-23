@@ -4,6 +4,7 @@ use scirs2_spatial::transform::spherical::{
     spherical_to_cart_batch, spherical_triangle_area,
 };
 use scirs2_spatial::SpatialResult;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> SpatialResult<()> {

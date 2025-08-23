@@ -3,6 +3,7 @@ use scirs2_signal::spline::{
     bspline_smooth, SplineOrder,
 };
 use std::error::Error;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {

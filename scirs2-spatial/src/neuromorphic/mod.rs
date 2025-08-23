@@ -384,7 +384,7 @@ impl NeuromorphicFactory {
 pub mod utils {
     use super::*;
     use crate::error::SpatialResult;
-    use ndarray::{Array1, Array2, ArrayView2};
+    use ndarray::ArrayView2;
 
     /// Convert spatial data to spike events
     ///

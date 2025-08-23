@@ -200,7 +200,7 @@ impl InputValidationTester {
     {
         let start_time = Instant::now();
         let mut result = SecurityTestResult {
-            test_name: malicious_input_validation.to_string(),
+            test_name: "malicious_input_validation".to_string(),
             tests_executed: 0,
             vulnerabilities_found: 0,
             duration: Duration::from_secs(0),
@@ -217,7 +217,7 @@ impl InputValidationTester {
             // Test with timeout
             let test_start = Instant::now();
             let test_result =
-                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| test_function(pattern)));
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| testfunction(pattern)));
 
             let test_duration = test_start.elapsed();
 
@@ -269,7 +269,7 @@ impl InputValidationTester {
     {
         let start_time = Instant::now();
         let mut result = SecurityTestResult {
-            test_name: bounds_checking.to_string(),
+            test_name: "bounds_checking".to_string(),
             tests_executed: 0,
             vulnerabilities_found: 0,
             duration: Duration::from_secs(0),
@@ -292,7 +292,7 @@ impl InputValidationTester {
             result.tests_executed += 1;
 
             let test_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                test_function(start, length)
+                testfunction(start, length)
             }));
 
             match test_result {
@@ -387,15 +387,15 @@ impl InputValidationTester {
     fn assess_security_level(&self, issues: &[SecurityIssue]) -> SecurityLevel {
         let critical_count = issues
             .iter()
-            .filter(|0| i.severity == SecuritySeverity::Critical)
+            .filter(|i| i.severity == SecuritySeverity::Critical)
             .count();
         let high_count = issues
             .iter()
-            .filter(|0| i.severity == SecuritySeverity::High)
+            .filter(|i| i.severity == SecuritySeverity::High)
             .count();
         let medium_count = issues
             .iter()
-            .filter(|0| i.severity == SecuritySeverity::Medium)
+            .filter(|i| i.severity == SecuritySeverity::Medium)
             .count();
 
         if critical_count > 0 {
@@ -431,7 +431,7 @@ impl MemorySafetyTester {
     {
         let start_time = Instant::now();
         let mut result = SecurityTestResult {
-            test_name: memory_leak_detection.to_string(),
+            test_name: "memory_leak_detection".to_string(),
             tests_executed: 0,
             vulnerabilities_found: 0,
             duration: Duration::from_secs(0),
@@ -446,7 +446,7 @@ impl MemorySafetyTester {
         for i in 0..100 {
             result.tests_executed += 1;
 
-            match test_function() {
+            match testfunction() {
                 Ok(()) => {}
                 Err(_) => {
                     // Function errors are not necessarily security issues
@@ -454,7 +454,7 @@ impl MemorySafetyTester {
             }
 
             // Check memory usage periodically
-            if 0 % 10 == 0 {
+            if i % 10 == 0 {
                 if let Ok(current_memory) = self.get_memory_usage() {
                     if let Ok(initial) = initial_memory {
                         let memory_growth = current_memory.saturating_sub(initial);
@@ -492,7 +492,7 @@ impl MemorySafetyTester {
     pub fn test_use_after_free(&self) -> CoreResult<SecurityTestResult> {
         let start_time = Instant::now();
         let result = SecurityTestResult {
-            test_name: use_after_free_detection.to_string(),
+            test_name: "use_after_free_detection".to_string(),
             tests_executed: 1,
             vulnerabilities_found: 0,
             duration: start_time.elapsed(),
@@ -546,15 +546,15 @@ impl MemorySafetyTester {
     fn assess_security_level(&self, issues: &[SecurityIssue]) -> SecurityLevel {
         let critical_count = issues
             .iter()
-            .filter(|0| i.severity == SecuritySeverity::Critical)
+            .filter(|i| i.severity == SecuritySeverity::Critical)
             .count();
         let high_count = issues
             .iter()
-            .filter(|0| i.severity == SecuritySeverity::High)
+            .filter(|i| i.severity == SecuritySeverity::High)
             .count();
         let medium_count = issues
             .iter()
-            .filter(|0| i.severity == SecuritySeverity::Medium)
+            .filter(|i| i.severity == SecuritySeverity::Medium)
             .count();
 
         if critical_count > 0 {
@@ -727,7 +727,7 @@ impl VulnerabilityAssessment {
             title: "Memory Safety Analysis".to_string(),
             description: "Rust's type system prevents most memory safety vulnerabilities"
                 .to_string(),
-            affected_component: core.to_string(),
+            affected_component: "core".to_string(),
             cve_id: None,
             mitigation: "Continue using Rust's safe abstractions".to_string(),
         }];
@@ -1035,7 +1035,7 @@ mod tests {
             severity: SecuritySeverity::Critical,
             category: SecurityCategory::BufferOverflow,
             description: "Test issue".to_string(),
-            trigger_input: test.to_string(),
+            trigger_input: "test".to_string(),
             mitigation: None,
         };
         let level = tester.assess_security_level(&[critical_issue]);
@@ -1095,7 +1095,7 @@ mod tests {
                 category: SecurityCategory::MemorySafety,
                 title: "Test vulnerability".to_string(),
                 description: "Test description".to_string(),
-                affected_component: test.to_string(),
+                affected_component: "test".to_string(),
                 cve_id: None,
                 mitigation: "Test mitigation".to_string(),
             }],

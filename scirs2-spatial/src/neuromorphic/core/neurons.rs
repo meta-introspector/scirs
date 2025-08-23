@@ -4,7 +4,6 @@
 //! computing, including the leaky integrate-and-fire model and more sophisticated
 //! neuron types with adaptive behaviors.
 
-use crate::error::{SpatialError, SpatialResult};
 
 /// Spiking neuron model using leaky integrate-and-fire dynamics
 ///

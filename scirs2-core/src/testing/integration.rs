@@ -379,26 +379,26 @@ impl IntegrationTestRunner {
         let errors = Vec::new();
 
         // Check API availability
-        for apiname in &module_spec.expected_apis {
-            let api_check = self.check_api_availability(apiname, &module_spec.name)?;
+        for apiname in &modulespec.expected_apis {
+            let api_check = self.check_api_availability(apiname, &modulespec.name)?;
             api_checks.push(api_check);
         }
 
         // Check feature availability
-        for feature in &module_spec.features {
-            let available = self.check_feature_availability(feature, &module_spec.name)?;
+        for feature in &modulespec.features {
+            let available = self.check_feature_availability(feature, &modulespec.name)?;
             feature_availability.insert(feature.clone(), available);
         }
 
         // Run module-specific tests
-        test_results.extend(self.run_module_specific_tests(module_spec)?);
+        test_results.extend(self.run_module_specific_tests(modulespec)?);
 
         let passed = test_results.iter().all(|r| r.passed)
             && api_checks.iter().all(|r| r.available)
             && feature_availability.values().all(|&available| available);
 
         Ok(ModuleTestResult {
-            modulename: module_spec.name.clone(),
+            modulename: modulespec.name.clone(),
             passed,
             test_results,
             api_checks,
@@ -489,36 +489,36 @@ impl IntegrationTestRunner {
         let mut results = Vec::new();
         let runner = TestRunner::new(self.config.base.clone());
 
-        match module_spec.name.as_str() {
+        match modulespec.name.as_str() {
             "scirs2-linalg" => {
                 results.push(runner.execute("linalg_core_integration", || {
-                    self.test_linalg_integration(module_spec)
+                    self.test_linalg_integration(modulespec)
                 })?);
             }
             "scirs2-stats" => {
                 results.push(runner.execute("stats_core_integration", || {
-                    self.test_stats_integration(module_spec)
+                    self.test_stats_integration(modulespec)
                 })?);
             }
             "scirs2-fft" => {
                 results.push(runner.execute("fft_core_integration", || {
-                    self.test_fft_integration(module_spec)
+                    self.test_fft_integration(modulespec)
                 })?);
             }
             "scirs2-signal" => {
                 results.push(runner.execute("signal_core_integration", || {
-                    self.test_signal_integration(module_spec)
+                    self.test_signal_integration(modulespec)
                 })?);
             }
             "scirs2-spatial" => {
                 results.push(runner.execute("spatial_core_integration", || {
-                    self.test_spatial_integration(module_spec)
+                    self.test_spatial_integration(modulespec)
                 })?);
             }
             _ => {
                 // Generic integration test for other modules
                 results.push(runner.execute("generic_core_integration", || {
-                    self.test_generic_integration(module_spec)
+                    self.test_generic_integration(modulespec)
                 })?);
             }
         }
@@ -831,7 +831,7 @@ impl IntegrationTestRunner {
         let min_version = &self.config.api_compatibility.min_version;
         let max_version = &self.config.api_compatibility.max_version;
 
-        let compatible = module_spec.version >= *min_version && module_spec.version <= *max_version;
+        let compatible = modulespec.version >= *min_version && modulespec.version <= *max_version;
 
         Ok(compatible)
     }

@@ -140,7 +140,7 @@ pub use quality::{
 };
 
 // Array validation
-pub use array__validation::ArrayValidator;
+pub use array_validation::ArrayValidator;
 
 // Main validator
 pub use validator::{ValidationRule, Validator};

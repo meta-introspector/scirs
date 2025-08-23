@@ -205,7 +205,7 @@ fn compute_polar_decomposition<F: Float + ndarray::ScalarOperand>(
     // A = UΣV^T => polar decomposition: A = (UV^T)(VΣV^T)
 
     // For simplicity, use power iteration to get dominant singular vectors
-    let (_u_vec_sigma) = power_iteration_svd(matrix, 20, F::epsilon() * F::from(100.0).unwrap());
+    let _u_vec_sigma = power_iteration_svd(matrix, 20, F::epsilon() * F::from(100.0).unwrap());
 
     if m == n && n <= 3 {
         // For small square matrices, use simplified approach

@@ -828,6 +828,7 @@ impl RotationSpline {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_rotation_spline_creation() {
