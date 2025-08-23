@@ -9,7 +9,6 @@ use crate::hilbert::hilbert;
 use ndarray::{Array1, ArrayView1};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use std::f64::consts::PI;
 use std::sync::Once;
 
 #[allow(unused_imports)]

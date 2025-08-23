@@ -33,7 +33,6 @@ fn rotation_from_euler(x: f64, y: f64, z: f64, convention: &str) -> SpatialResul
 /// ```
 /// use scirs2_spatial::transform::{Rotation, RotationSpline};
 /// use ndarray::array;
-/// use std::f64::consts::PI;
 ///
 /// // Create some rotations
 /// let rotations = vec![
@@ -83,7 +82,6 @@ impl RotationSpline {
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
-    /// use std::f64::consts::PI;
     ///
     /// let rotations = vec![
     ///     Rotation::identity(),
@@ -150,7 +148,6 @@ impl RotationSpline {
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
-    /// use std::f64::consts::PI;
     ///
     /// let rotations = vec![
     ///     Rotation::identity(),
@@ -334,7 +331,6 @@ impl RotationSpline {
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
-    /// use std::f64::consts::PI;
     ///
     /// let rotations = vec![
     ///     Rotation::identity(),
@@ -503,7 +499,6 @@ impl RotationSpline {
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
-    /// use std::f64::consts::PI;
     ///
     /// let rotations = vec![
     ///     Rotation::identity(),
@@ -555,7 +550,6 @@ impl RotationSpline {
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
-    /// use std::f64::consts::PI;
     ///
     /// let key_rots = vec![
     ///     Rotation::identity(),
@@ -610,7 +604,6 @@ impl RotationSpline {
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
-    /// use std::f64::consts::PI;
     ///
     /// let rotations = vec![
     ///     Rotation::identity(),
@@ -747,7 +740,6 @@ impl RotationSpline {
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
-    /// use std::f64::consts::PI;
     ///
     /// let rotations = vec![
     ///     Rotation::identity(),
@@ -836,7 +828,6 @@ impl RotationSpline {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_rotation_spline_creation() {

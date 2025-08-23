@@ -38,7 +38,6 @@ use crate::error::{CoreError, CoreResult, ErrorContext};
 use crate::testing::{TestConfig, TestResult, TestSuite};
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::path::PathBuf;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Arc, Mutex};

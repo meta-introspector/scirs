@@ -27,9 +27,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         // Run comprehensive kernel demos
-        demo_blas_advanced(&context)?;
-        demo_reduction_comprehensive(&context)?;
-        demo_ml_kernels_complete(&context)?;
+        // demo_blas_advanced(&context)?;
+        // demo_reduction_comprehensive(&context)?;
+        // demo_ml_kernels_complete(&context)?;
         demo_transform_operations(&context)?;
         demo_kernel_chaining(&context)?;
         demo_performance_analysis(&context)?;

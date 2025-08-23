@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Open as memory-mapped array
-    let mmap = MemoryMappedArray::<f64>::open(&file_path, &[rows, cols])?;
+    let mmap = MemoryMappedArray::<f64>::path(&file_path, &[rows, cols])?;
     println!("\nOpened as memory-mapped array");
     println!("Full array shape: {:?}", mmap.shape);
 
@@ -184,7 +184,7 @@ fn demo_slice_chaining(
     println!("First slice shape: {:?}", slice1.shape());
 
     // Save the first slice to a file to demonstrate memory mapping it
-    let slice1_path = base_path.with_file_name("slice1.bin");
+    let slice1_path = file_path.with_file_name("slice1.bin");
     let slice1_data = slice1.load()?;
 
     let mut file = File::create(&slice1_path)?;
@@ -195,7 +195,7 @@ fn demo_slice_chaining(
     println!("First slice saved to: {}", slice1_path.display());
 
     // Memory map the first slice
-    let slice1mmap = MemoryMappedArray::<f64>::open(&slice1_path, &[50, 50])?;
+    let slice1mmap = MemoryMappedArray::<f64>::path(&slice1_path, &[50, 50])?;
 
     // Create a further slice from the first slice
     println!("\nSecond slice: rows 10..20, columns 10..20 (from the first slice)");
@@ -218,7 +218,7 @@ fn demo_slice_chaining(
     println!("Second slice coordinates (0,0) -> Original coordinates (20,20)");
     println!(
         "Value at original[20,20]: {:.0}",
-        mmap.readonly_array()?[(20, 20)]
+        mmap.readonlyarray()?[(20, 20)]
     );
     println!("Value at slice2[0,0]: {:.0}", array2[(0, 0)]);
 

@@ -1,5 +1,4 @@
 use ndarray::{s, Array, Array1, Array2, Array3};
-use rand::rng;
 use rand_distr::{Distribution, Normal, Uniform};
 use serde::{Deserialize, Serialize};
 use std::f32;

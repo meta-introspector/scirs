@@ -1,5 +1,4 @@
 use num_complex::Complex64;
-use std::f64::consts::PI;
 // Removed legacy numeric constant imports
 
 // Simple implementation of Wright Omega function for demonstration purposes

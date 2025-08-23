@@ -1063,7 +1063,6 @@ fn decompress_delta_lz4(data: &[u8]) -> Result<Vec<u8>> {
 // Parallel Compression/Decompression
 //
 
-use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;

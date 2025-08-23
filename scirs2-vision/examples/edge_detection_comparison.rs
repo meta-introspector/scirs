@@ -13,7 +13,6 @@ use scirs2_vision::feature::{
     sobel_edges,
 };
 use scirs2_vision::preprocessing::{gaussian_blur, normalize_brightness};
-use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -8,6 +8,7 @@ use crate::error::{Result, VisionError};
 use image::{DynamicImage, GenericImageView, ImageBuffer, Pixel, Rgba};
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
+use scirs2_core::rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 
 /// Border handling methods for areas outside the image boundaries
@@ -485,7 +486,6 @@ impl PerspectiveTransform {
         let mut rng = if let Some(seed) = params.seed {
             StdRng::seed_from_u64(seed)
         } else {
-            use rand::rng;
             StdRng::from_rng(&mut rng())
         };
 

@@ -19,7 +19,6 @@ pub use spea2::SPEA2;
 use super::solutions::{MultiObjectiveResult, MultiObjectiveSolution, Population};
 use crate::error::OptimizeError;
 use ndarray::{Array1, ArrayView1};
-use rand::thread_rng;
 
 /// Configuration for multi-objective optimization algorithms
 #[derive(Debug, Clone)]
@@ -290,7 +289,7 @@ pub mod utils {
         n_samples: usize,
     ) -> f64 {
         use rand::prelude::*;
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         let n_objectives = reference_point.len();
 
         // Find bounds for sampling
@@ -389,7 +388,7 @@ pub mod utils {
         bounds: &Option<(Array1<f64>, Array1<f64>)>,
     ) -> Vec<Array1<f64>> {
         use rand::prelude::*;
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         let mut population = Vec::with_capacity(size);
 
         let (lower, upper) = match bounds {

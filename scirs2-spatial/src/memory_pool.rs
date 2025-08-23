@@ -33,7 +33,6 @@
 use ndarray::{Array2, ArrayViewMut1, ArrayViewMut2};
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::collections::VecDeque;
-use std::f64::consts::PI;
 use std::ptr::NonNull;
 use std::sync::Mutex;
 

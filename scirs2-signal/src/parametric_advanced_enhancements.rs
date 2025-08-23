@@ -14,7 +14,6 @@ use rand::prelude::*;
 use rand::Rng;
 use scirs2_core::validation::check_finite;
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Advanced model selection configuration

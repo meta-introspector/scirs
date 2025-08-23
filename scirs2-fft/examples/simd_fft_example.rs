@@ -6,7 +6,6 @@
 //! the most efficient implementation for the current hardware.
 
 use scirs2_fft::{fft, fft_adaptive, fft_simd, simd_support_available};
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

@@ -182,7 +182,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
 
         // Create random permutation of indices
         let mut indices: Vec<usize> = (0..n_samples).collect();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         indices.shuffle(&mut rng);
 
         let mut partitions = Vec::new();
@@ -307,7 +307,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
         let n_features = data.ncols();
 
         // Initialize centroids randomly
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut point_indices: Vec<usize> = (0..n_samples).collect();
         point_indices.shuffle(&mut rng);
 

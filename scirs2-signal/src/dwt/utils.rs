@@ -7,7 +7,6 @@
 use crate::error::SignalResult;
 use crate::dwt::Wavelet;
 use crate::error::SignalResult;
-use std::f64::consts::PI;
 use super::filters::WaveletFilters;
 
 #[allow(unused_imports)]

@@ -1066,7 +1066,7 @@ fn run_experiment(
 #[allow(dead_code)]
 fn display_current_parameters(parameters: &HashMap<String, ExperimentParameter>) {
     println!("🎛️  **Current Parameters:**");
-    for (_, param) in _parameters {
+    for (_, param) in parameters {
         println!(
             "  {} ({}) = {} {} - {}",
             param.name, param.symbol, param.current_value, param.units, param.physical_meaning
@@ -1081,7 +1081,7 @@ fn display_detailed_theory(experiment: &PhysicsExperiment) {
     println!();
 
     println!("🎯 **Special Functions Used:**");
-    for func in &_experiment.special_functions_used {
+    for func in &experiment.special_functions_used {
         println!("  • {}", func);
     }
     println!();
@@ -1384,7 +1384,7 @@ fn run_signal_processing_simulation() -> Result<(), Box<dyn std::error::Error>> 
 
     // Fresnel diffraction intensity at a straight edge
     let mut intensity = Array1::zeros(t_range.len());
-    for (i_t) in t_range.iter().enumerate() {
+    for (i, _t) in t_range.iter().enumerate() {
         let c_val = fresnel_c[i] + 0.5;
         let s_val = fresnel_s[i] + 0.5;
         intensity[i] = 0.25 * (c_val * c_val + s_val * s_val);
@@ -1400,7 +1400,7 @@ fn run_signal_processing_simulation() -> Result<(), Box<dyn std::error::Error>> 
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap();
 
     println!("\n🎯 First diffraction maximum:");

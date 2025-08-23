@@ -11,7 +11,6 @@ use num_traits::{Float, NumCast};
 use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::Arc;
 

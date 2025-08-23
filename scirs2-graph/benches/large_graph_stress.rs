@@ -6,7 +6,6 @@
 #![allow(unused_imports)]
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use rand::rng;
 use scirs2_graph::{algorithms, generators, measures, DiGraph, EdgeWeight, Graph, Node};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -129,7 +128,7 @@ mod memory {
     }
 
     pub fn check_memory_limit(_limitmb: usize) -> bool {
-        get_current_memory_mb() < _limit_mb as f64
+        get_current_memory_mb() < _limitmb as f64
     }
 }
 
@@ -232,11 +231,11 @@ fn bench_large_algorithms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("pagerank_10iter", size_name),
             graph,
-            |b, g| {
+            |b, _g| {
                 b.iter(|| {
                     // Skip pagerank for regular graphs as it requires DiGraph
-                    continue;
-                    black_box(result)
+                    // Just return a dummy value
+                    black_box(0)
                 });
             },
         );
@@ -301,7 +300,7 @@ fn bench_streaming_operations(c: &mut Criterion) {
 fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
     let start_time = Instant::now();
     let mut results = StressTestResults {
-        _config: config.clone(),
+        config: config.clone(),
         graph_generation: Vec::new(),
         algorithm_performance: Vec::new(),
         memory_profile: MemoryProfile {
@@ -321,8 +320,8 @@ fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
     let initial_memory = memory::get_current_memory_mb();
 
     // Test graph generation
-    for &node_count in &_config.node_counts {
-        if !memory::check_memory_limit(_config.memory_limit_mb) {
+    for &node_count in &config.node_counts {
+        if !memory::check_memory_limit(config.memory_limit_mb) {
             results
                 .summary
                 .warnings
@@ -353,8 +352,8 @@ fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
                 memory_samples.push(post_gen_memory);
 
                 // Test algorithms on this graph
-                for algorithm in &_config.algorithms {
-                    if let Some(result) = test_algorithm(&graph, algorithm, &_config) {
+                for algorithm in &config.algorithms {
+                    if let Some(result) = test_algorithm(&graph, algorithm, &config) {
                         results.algorithm_performance.push(result);
                     }
                 }
@@ -422,7 +421,7 @@ fn test_algorithm(
                     }
                 }
             }
-            format!("Avg clustering (sampled): {:.4}"..sum / config.sample_size as f64)
+            format!("Avg clustering (sampled): {:.4}", sum / config.sample_size as f64)
         }
         _ => return None,
     };
@@ -454,7 +453,7 @@ fn print_stress_test_report(results: &StressTestResults) {
     );
 
     println!("\n--- Graph Generation Performance ---");
-    for gen in &_results.graph_generation {
+    for gen in &results.graph_generation {
         println!(
             "  {} nodes, {} edges: {:.2}s, {:.1}MB",
             gen.nodes,
@@ -465,9 +464,9 @@ fn print_stress_test_report(results: &StressTestResults) {
     }
 
     println!("\n--- Algorithm Performance ---");
-    for algo_name in &_results.config.algorithms {
+    for algo_name in &results.config.algorithms {
         println!("\n  {}:", algo_name);
-        for result in _results
+        for result in results
             .algorithm_performance
             .iter()
             .filter(|r| r.algorithm == *algo_name)
@@ -496,16 +495,16 @@ fn print_stress_test_report(results: &StressTestResults) {
         results.memory_profile.memory_efficiency_ratio
     );
 
-    if !_results.summary.failures.is_empty() {
+    if !results.summary.failures.is_empty() {
         println!("\n--- Failures ---");
-        for failure in &_results.summary.failures {
+        for failure in &results.summary.failures {
             println!("  ❌ {}", failure);
         }
     }
 
-    if !_results.summary.warnings.is_empty() {
+    if !results.summary.warnings.is_empty() {
         println!("\n--- Warnings ---");
-        for warning in &_results.summary.warnings {
+        for warning in &results.summary.warnings {
             println!("  ⚠️  {}", warning);
         }
     }
@@ -516,7 +515,7 @@ fn print_stress_test_report(results: &StressTestResults) {
 /// Save results to JSON file
 #[allow(dead_code)]
 fn save_results(results: &StressTestResults, filename: &str) -> std::io::Result<()> {
-    let json = serde_json::to_string_pretty(_results)?;
+    let json = serde_json::to_string_pretty(results)?;
     std::fs::write(filename, json)?;
     Ok(())
 }

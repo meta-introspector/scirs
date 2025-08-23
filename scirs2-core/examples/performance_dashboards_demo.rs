@@ -392,7 +392,7 @@ fn demo_real_time_metrics_and_alerts() -> CoreResult<()> {
             dashboard.update_metric(metric_source, *value)?;
             println!(
                 "  📊 Updated {}: {:.1}",
-                format_metric_source(metric_source),
+                format!("{:?}", metric_source),
                 value
             );
         }
@@ -550,7 +550,7 @@ fn demo_export_import() -> CoreResult<()> {
     let mut imported_dashboard = PerformanceDashboard::new(new_config)?;
 
     // Import the configuration
-    imported_dashboard.import_config(&exported_config)?;
+    imported_dashboard.import_configuration(&exported_config)?;
 
     let imported_stats = imported_dashboard.get_statistics();
     println!("✅ Import completed");

@@ -7,7 +7,6 @@
 //! - Dynamic and static quantization schemes
 
 use crate::error::{Error, Result};
-use rand::rng;
 use ndarray::{ArrayD, ArrayView, Zip};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

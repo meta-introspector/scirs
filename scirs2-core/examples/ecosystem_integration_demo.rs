@@ -23,7 +23,6 @@ use scirs2_core::testing::ecosystem_integration::{
     EcosystemTestRunner,
 };
 use std::collections::HashSet;
-use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() -> CoreResult<()> {

@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate BLAS operations (GEMM, AXPY)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_blas_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 1: BLAS Operations");
     println!("-----------------------");
 
@@ -83,7 +83,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     let c_buffer = context.create_buffer::<f32>(m * n);
 
     // Get GEMM kernel
-    let gemm_kernel = context.get_kernel(gemm)?;
+    let gemm_kernel = context.get_kernel("gemm")?;
 
     // Set kernel parameters
     gemm_kernel.set_buffer("a", &a_buffer);
@@ -118,7 +118,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     let y_buffer = context.create_buffer_from_slice(&y_data);
 
     // Get AXPY kernel
-    let axpy_kernel = context.get_kernel(axpy)?;
+    let axpy_kernel = context.get_kernel("axpy")?;
 
     // Set kernel parameters
     axpy_kernel.set_buffer("x", &x_buffer);
@@ -142,7 +142,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate reduction operations (sum, min, max, mean, std)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_reduction_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 2: Reduction Operations");
     println!("----------------------------");
 
@@ -152,7 +152,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
     // Sum reduction
     println!("2.1 Sum Reduction");
-    let sum_kernel = context.get_kernel(sum_reduce)?;
+    let sum_kernel = context.get_kernel("sum_reduce")?;
     let sum_buffer = context.create_buffer::<f32>(1);
 
     sum_kernel.set_buffer("input", &input_buffer);
@@ -167,7 +167,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
     // Min reduction
     println!("\n2.2 Min Reduction");
-    let min_kernel = context.get_kernel(min_reduce)?;
+    let min_kernel = context.get_kernel("min_reduce")?;
     let min_buffer = context.create_buffer::<f32>(1);
 
     min_kernel.set_buffer("input", &input_buffer);
@@ -181,7 +181,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
     // Max reduction
     println!("\n2.3 Max Reduction");
-    let max_kernel = context.get_kernel(max_reduce)?;
+    let max_kernel = context.get_kernel("max_reduce")?;
     let max_buffer = context.create_buffer::<f32>(1);
 
     max_kernel.set_buffer("input", &input_buffer);
@@ -195,7 +195,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
     // Mean reduction
     println!("\n2.4 Mean Reduction");
-    let mean_kernel = context.get_kernel(mean_reduce)?;
+    let mean_kernel = context.get_kernel("mean_reduce")?;
     let mean_buffer = context.create_buffer::<f32>(1);
 
     mean_kernel.set_buffer("input", &input_buffer);
@@ -215,7 +215,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate machine learning operations (activations, pooling, softmax)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_ml_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 3: Machine Learning Operations");
     println!("----------------------------------");
 
@@ -227,7 +227,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     let input_buffer = context.create_buffer_from_slice(&data);
     let output_buffer = context.create_buffer::<f32>(size);
 
-    let relu_kernel = context.get_kernel(relu)?;
+    let relu_kernel = context.get_kernel("relu")?;
     relu_kernel.set_buffer("input", &input_buffer);
     relu_kernel.set_buffer("output", &output_buffer);
     relu_kernel.set_u32("n", size as u32);
@@ -249,7 +249,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
     // Sigmoid activation
     println!("\n3.2 Sigmoid Activation");
-    let sigmoid_kernel = context.get_kernel(sigmoid)?;
+    let sigmoid_kernel = context.get_kernel("sigmoid")?;
     sigmoid_kernel.set_buffer("input", &input_buffer);
     sigmoid_kernel.set_buffer("output", &output_buffer);
     sigmoid_kernel.set_u32("n", size as u32);
@@ -267,7 +267,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
     // Tanh activation
     println!("\n3.3 Tanh Activation");
-    let tanh_kernel = context.get_kernel(tanh)?;
+    let tanh_kernel = context.get_kernel("tanh")?;
     tanh_kernel.set_buffer("input", &input_buffer);
     tanh_kernel.set_buffer("output", &output_buffer);
     tanh_kernel.set_u32("n", size as u32);
@@ -288,7 +288,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate transform operations (FFT)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_transform_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 4: Transform Operations");
     println!("---------------------------");
 
@@ -320,7 +320,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     let output_buffer = context.create_buffer::<f32>(complex_data.len());
 
     // Get FFT kernel (note: this is currently a placeholder implementation)
-    let fft_kernel = context.get_kernel(fft_1d_forward)?;
+    let fft_kernel = context.get_kernel("fft_1d_forward")?;
     fft_kernel.set_buffer("input", &input_buffer);
     fft_kernel.set_buffer("output", &output_buffer);
     fft_kernel.set_u32("n", size as u32);
@@ -342,7 +342,7 @@ fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate kernel specialization capabilities
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_kernel_specialization(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 5: Kernel Specialization");
     println!("-----------------------------");
 

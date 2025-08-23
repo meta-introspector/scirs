@@ -134,7 +134,6 @@ mod tests {
     use super::*;
     use crate::symplectic::potential::SeparableHamiltonian;
     use ndarray::array;
-    use std::f64::consts::PI;
 
     /// Test with simple harmonic oscillator
     #[test]

@@ -49,7 +49,7 @@ impl QuantumAnnealer {
         j_matrix: &Array2<f64>,
         h_fields: &Array1<f64>,
     ) -> Result<(Array1<i8>, f64)> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Initialize random spin configuration
         let mut spins: Array1<i8> = Array1::zeros(self.n_qubits);
@@ -167,7 +167,7 @@ impl VariationalQuantumEigensolver {
 
     /// Find ground state energy using VQE
     pub fn find_ground_state(&self, hamiltonian: &Array2<Complex64>) -> Result<(f64, Array1<f64>)> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Initialize random variational parameters
         let n_params = self.n_qubits * self.circuit_depth * 3; // 3 angles per layer per qubit
@@ -542,7 +542,7 @@ impl QuantumErrorCorrection {
 
         // Simplified syndrome measurement
         let mut syndromes = Array1::zeros(n_syndromes);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for syndrome in syndromes.iter_mut() {
             *syndrome = if rng.gen::<f64>() < self.noise_parameters.measurement_error_rate {

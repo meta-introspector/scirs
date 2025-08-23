@@ -5,7 +5,6 @@ use ndarray::s;
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use num_traits::Float;
-use std::f64::consts::PI;
 
 // Synchrosqueezed Wavelet Transform Implementation
 //

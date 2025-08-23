@@ -4,7 +4,6 @@
 //! of visualization including output formats, styling, interactivity, and performance.
 
 use serde::Serialize;
-use std::path::PathBuf;
 /// Visualization configuration
 #[derive(Debug, Clone, Serialize)]
 pub struct VisualizationConfig {

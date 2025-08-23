@@ -7,7 +7,6 @@ use crate::data::Dataset;
 use crate::error::{NeuralError, Result};
 use crate::layers::Layer;
 use rand::SeedableRng;
-use rand::rng;
 use ndarray::ScalarOperand;
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;

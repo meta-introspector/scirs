@@ -9,7 +9,6 @@ use crate::serving::PackageMetadata;
 use num_traits::Float;
 use std::fmt::Debug;
 use std::fs;
-use std::path::PathBuf;
 use super::build__system::BuildSystemGenerator;
 use super::config::{BindingConfig, BindingResult};
 use super::examples__docs::ExamplesDocsGenerator;

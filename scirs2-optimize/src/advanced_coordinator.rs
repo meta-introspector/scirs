@@ -26,8 +26,7 @@ use crate::neuromorphic::{BasicNeuromorphicOptimizer, NeuromorphicConfig, Neurom
 use crate::quantum_inspired::{QuantumInspiredOptimizer, QuantumOptimizationStats};
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
-use rand::rng;
-use scirs2_core::Rng;
+use scirs2_core::{rng, Rng};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 

@@ -142,14 +142,16 @@ fn bench_map_coordinates(c: &mut Criterion) {
 
     // Create simple coordinate transformation (identity with slight offset)
     let (rows, cols) = input.dim();
-    let coordinates = Array2::from_shape_fn((rows, cols), |(i, j)| (i * j) as f64 + 0.5);
+    let coordinates = Array2::from_shape_fn((rows, cols), |(i, j)| (i * j) as f64 + 0.5)
+        .into_dimensionality::<ndarray::IxDyn>()
+        .unwrap();
 
     group.bench_function("map_coordinates_linear", |b| {
         b.iter(|| {
             map_coordinates(
                 black_box(&input),
                 black_box(&coordinates),
-                Some(InterpolationOrder::Linear),
+                Some(1), // Linear interpolation
                 None,
                 None,
                 None,
@@ -163,7 +165,7 @@ fn bench_map_coordinates(c: &mut Criterion) {
             map_coordinates(
                 black_box(&input),
                 black_box(&coordinates),
-                Some(InterpolationOrder::Cubic),
+                Some(3), // Cubic interpolation
                 None,
                 None,
                 None,

@@ -635,7 +635,6 @@ mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
     use ndarray::arr1;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_simple_integral() {

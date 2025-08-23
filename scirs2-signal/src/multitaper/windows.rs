@@ -3,7 +3,6 @@ use ndarray::s;
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Compute Discrete Prolate Spheroidal Sequences (DPSS), also known as Slepian sequences.

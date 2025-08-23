@@ -16,25 +16,25 @@ fn main() -> LinalgResult<()> {
     let mut rng = ChaCha8Rng::seed_from_u64(42);
 
     // Example 1: General random matrix
-    demo_generalmatrix(rng)?;
+    demo_generalmatrix(&mut rng)?;
 
     // Example 2: Symmetric matrix
-    demo_symmetricmatrix(rng)?;
+    demo_symmetricmatrix(&mut rng)?;
 
     // Example 3: Positive definite matrix
-    demo_positive_definite(rng)?;
+    demo_positive_definite(&mut rng)?;
 
     // Example 4: Orthogonal matrix
-    demo_orthogonalmatrix(rng)?;
+    demo_orthogonalmatrix(&mut rng)?;
 
     // Example 5: Correlation matrix
-    demo_correlationmatrix(rng)?;
+    demo_correlationmatrix(&mut rng)?;
 
     // Example 6: Sparse matrix
-    demo_sparsematrix(rng)?;
+    demo_sparsematrix(&mut rng)?;
 
     // Example 7: Complex matrices
-    demo_complex_matrices(rng)?;
+    demo_complex_matrices(&mut rng)?;
 
     Ok(())
 }

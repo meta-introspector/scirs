@@ -7,7 +7,6 @@ use crate::sampling::SampleableDistribution;
 use crate::traits::{DiscreteDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
-use rand::rng;
 use rand_distr::{Distribution as RandDistribution, Poisson as RandPoisson};
 
 /// Poisson distribution structure

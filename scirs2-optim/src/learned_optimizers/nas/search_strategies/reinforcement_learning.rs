@@ -398,7 +398,7 @@ impl<T: Float + Default + Clone> RLArchitectureAgent<T> {
     /// Select action using epsilon-greedy policy
     fn select_action(&self, state: &StateRepresentation<T>) -> Result<Action> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         // Epsilon-greedy exploration
         if rng.gen::<f64>() < self.config.exploration_rate.to_f64().unwrap_or(0.1) {
@@ -413,7 +413,7 @@ impl<T: Float + Default + Clone> RLArchitectureAgent<T> {
     /// Select random action for exploration
     fn select_random_action(&self, state: &StateRepresentation<T>) -> Result<Action> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         // Randomly choose action type
         let action_type = rng.gen_range(0..3);
@@ -669,7 +669,7 @@ impl<T: Float + Default + Clone> ReplayBuffer<T> {
             ));
         }
         
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut batch = Vec::with_capacity(batch_size);
         
         for _ in 0..batch_size {

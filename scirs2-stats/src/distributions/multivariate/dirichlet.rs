@@ -5,7 +5,6 @@
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, ArrayBase, Data, Ix1};
-use rand::rng;
 use rand_distr::{Distribution, Gamma as RandGamma};
 use std::fmt::Debug;
 

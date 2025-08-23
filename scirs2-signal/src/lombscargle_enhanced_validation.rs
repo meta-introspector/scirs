@@ -18,7 +18,6 @@ use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng};
 use scirs2_core::parallel_ops::*;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]

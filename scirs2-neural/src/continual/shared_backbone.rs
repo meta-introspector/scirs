@@ -4,7 +4,6 @@
 //! including shared feature extractors and task-specific heads.
 
 use crate::error::{NeuralError, Result};
-use rand::rng;
 use crate::layers::{Dense, Layer};
 use ndarray::prelude::*;
 use std::collections::HashMap;

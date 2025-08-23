@@ -20,10 +20,8 @@ use rand::Rng;
 use scirs2_core::validation::check_finite;
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
-// use std::f64::consts::PI;
 
 /// Advanced adaptive denoising configuration
 #[derive(Debug, Clone)]

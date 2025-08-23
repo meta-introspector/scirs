@@ -3,7 +3,6 @@
 //! This example shows how to use Advanced mode optimizations
 //! for graph processing algorithms.
 
-use rand::rng;
 use scirs2_graph::advanced::{
     create_advanced_processor, execute_with_advanced, AdvancedConfig, AdvancedProcessor,
 };
@@ -26,7 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         graph_size, edge_count
     );
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let probability = edge_count as f64 / (graph_size * (graph_size - 1) / 2) as f64;
     let graph = erdos_renyi_graph(graph_size, probability, &mut rng)?;
 
@@ -236,7 +235,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing advanced performance scaling...");
 
     for &size in &graph_sizes {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let probability = (size * 3) as f64 / (size * (size - 1) / 2) as f64;
         let test_graph = erdos_renyi_graph(size, probability.min(1.0), &mut rng)?;
         let mut processor = create_advanced_processor();
@@ -278,7 +277,7 @@ mod tests {
 
     #[test]
     fn test_advanced_basic_functionality() {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let graph = erdos_renyi_graph(100, 0.02, &mut rng).unwrap();
         let mut processor = create_advanced_processor();
 
@@ -315,7 +314,7 @@ mod tests {
 
     #[test]
     fn test_advanced_performance_metrics() {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let graph = erdos_renyi_graph(50, 0.04, &mut rng).unwrap();
         let mut processor = create_advanced_processor();
 

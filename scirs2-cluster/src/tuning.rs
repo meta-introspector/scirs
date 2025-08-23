@@ -3819,7 +3819,6 @@ impl StandardSearchSpaces {
 pub mod advanced_optimization {
     use super::*;
     use ndarray::{s, Array3, ArrayView1, Axis};
-    use std::f64::consts::PI;
 
     /// Configuration for advanced Bayesian optimization
     #[derive(Debug, Clone)]

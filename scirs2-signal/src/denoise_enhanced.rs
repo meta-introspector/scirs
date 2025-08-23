@@ -22,7 +22,6 @@ use std::f64;
 
 #[allow(unused_imports)]
 // use num_complex::Complex64;
-// use std::f64::consts::PI;
 
 /// Enhanced denoising configuration
 #[derive(Debug, Clone)]

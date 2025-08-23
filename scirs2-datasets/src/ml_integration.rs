@@ -13,6 +13,7 @@ use ndarray::{Array1, Array2, Axis};
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
 use rand::{rng, SeedableRng};
+use rand_distr::Uniform;
 use serde::{Deserialize, Serialize};
 
 use crate::error::{DatasetsError, Result};
@@ -495,7 +496,7 @@ impl MLPipeline {
 
             if samples_needed > 0 {
                 for _ in 0..samples_needed {
-                    let random_idx = rng.random_range(0..indices.len());
+                    let random_idx = rng.sample(Uniform::new(0, indices.len()).unwrap());
                     all_indices.push(indices[random_idx]);
                 }
             }
@@ -885,6 +886,7 @@ pub mod convenience {
 #[cfg(test)]
 mod tests {
     use super::*;
+use rand_distr::Uniform;
     use crate::generators::make_classification;
 
     #[test]

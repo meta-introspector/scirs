@@ -11,7 +11,6 @@ use num_traits::Float;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
 use rand::Rng;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]

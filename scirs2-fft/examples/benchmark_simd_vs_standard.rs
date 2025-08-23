@@ -5,7 +5,6 @@
 
 use num_complex::Complex64;
 use scirs2_fft::{fft, fft2, fft2_simd, fft_simd, fftn, fftn_simd, simd_support_available};
-use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]

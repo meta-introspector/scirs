@@ -36,7 +36,6 @@ use std::fmt::Debug;
 /// ```
 /// use scirs2_signal::lombscargle::{lombscargle, AutoFreqMethod};
 /// use ndarray::Array1;
-/// use std::f64::consts::PI;
 /// use rand::prelude::*;
 ///
 /// // Generate unevenly sampled data with a 1 Hz sinusoid

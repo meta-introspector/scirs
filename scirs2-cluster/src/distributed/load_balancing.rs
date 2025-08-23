@@ -502,7 +502,7 @@ impl LoadBalancingCoordinator {
         let mut new_assignments = current_assignments.clone();
 
         // ε-greedy exploration strategy
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for (&worker_id, &current_assignment) in current_assignments {
             if rng.gen::<f64>() < exploration_rate {
@@ -556,7 +556,7 @@ impl LoadBalancingCoordinator {
             let mut remaining_data = datasize;
 
             // Random assignment generation
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             for (i, &worker_id) in worker_ids.iter().enumerate() {
                 let assignment = if i == worker_ids.len() - 1 {
                     remaining_data

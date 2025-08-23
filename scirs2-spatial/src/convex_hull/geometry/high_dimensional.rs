@@ -5,7 +5,7 @@
 //! convex hull algorithms.
 
 use crate::error::SpatialResult;
-use ndarray::{Array2, ArrayView2};
+use ndarray::ArrayView2;
 
 /// Compute volume for high-dimensional convex hulls using facet equations
 ///

@@ -218,7 +218,6 @@ impl UFunc for AbsUFunc {
 /// ```
 /// use ndarray::array;
 /// use scirs2_core::ufuncs::sin;
-/// use std::f64::consts::PI;
 ///
 /// let a = array![0.0, PI/2.0, PI];
 /// let result = sin(&a);
@@ -259,7 +258,6 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_core::ufuncs::cos;
-/// use std::f64::consts::PI;
 ///
 /// let a = array![0.0, PI/2.0, PI];
 /// let result = cos(&a);
@@ -300,7 +298,6 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_core::ufuncs::tan;
-/// use std::f64::consts::PI;
 ///
 /// let a = array![0.0, PI/4.0];
 /// let result = tan(&a);
@@ -483,7 +480,6 @@ where
 mod tests {
     use super::*;
     use ndarray::array;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_sin() {

@@ -17,7 +17,6 @@ use crate::error::{SpatialError, SpatialResult};
 use crate::voronoi::Voronoi;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::fmt;
 
 /// Natural Neighbor interpolator for scattered data

@@ -14,7 +14,6 @@ use rand::Rng;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
 #[allow(unused_imports)]

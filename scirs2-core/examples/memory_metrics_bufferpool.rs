@@ -31,7 +31,7 @@ fn main() {
     reset_memory_metrics();
 
     // Create a tracked buffer pool
-    let mut pool = TrackedBufferPool::<f64>::new(NumericalComputation);
+    let mut pool = TrackedBufferPool::<f64>::new("NumericalComputation");
     println!("Created TrackedBufferPool for numerical computations");
 
     // Acquire and release vectors of different sizes

@@ -1480,7 +1480,6 @@ impl AdvancedMetaLearningSystem {
 
         // For high-dimensional data, use sampling approach
         let sample_size = 1000.min(n_samples);
-        use rand::rng;
         use rand::seq::SliceRandom;
 
         let mut rng = rng();
@@ -1744,7 +1743,6 @@ impl AdvancedMetaLearningSystem {
 
         // Build correlation adjacency matrix (sampled)
         let sample_size = 20.min(n_features);
-        use rand::rng;
         use rand::seq::SliceRandom;
 
         let mut rng = rng();

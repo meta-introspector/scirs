@@ -52,7 +52,6 @@
 
 use crate::error::SignalResult;
 use ndarray::{Array1, Array2};
-use std::f64::consts::PI;
 
 // Re-export all submodules
 #[allow(unused_imports)]

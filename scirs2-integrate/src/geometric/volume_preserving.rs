@@ -5,7 +5,6 @@
 
 use crate::error::{IntegrateError, IntegrateResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use std::f64::consts::PI;
 #[allow(unused_imports)]
 use std::f64::consts::SQRT_2;
 

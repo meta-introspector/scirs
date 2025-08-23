@@ -4,7 +4,6 @@
 //! Progressive Neural Networks, PackNet, Meta-Learning approaches, and more.
 
 use crate::continual::shared__backbone::{MultiTaskArchitecture, TaskType};
-use rand::rng;
 use crate::error::{NeuralError, Result};
 use crate::layers::{Dense, Layer};
 use ndarray::prelude::*;

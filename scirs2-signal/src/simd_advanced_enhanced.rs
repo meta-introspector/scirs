@@ -13,7 +13,6 @@ use num_complex::Complex64;
 use num_traits::{Float, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 #[allow(dead_code)]

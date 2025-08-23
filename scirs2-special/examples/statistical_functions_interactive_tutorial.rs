@@ -7,7 +7,6 @@
 
 use ndarray::Array1;
 use scirs2_special::*;
-use std::f64::consts::PI;
 use std::io::{self, Write};
 
 #[allow(dead_code)]

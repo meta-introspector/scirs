@@ -7,7 +7,6 @@ use crate::error::Result;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-// use std::path::PathBuf; // Duplicate import
 
 /// Documentation analyzer for API completeness and quality
 #[derive(Debug)]

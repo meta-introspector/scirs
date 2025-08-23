@@ -1,5 +1,4 @@
 use ndarray::{s, Array1, Array2, Array3, Array4};
-use rand::rng;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

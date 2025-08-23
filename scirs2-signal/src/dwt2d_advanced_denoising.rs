@@ -19,7 +19,6 @@ use scirs2_core::Rng as CoreRng;
 use statrs::statistics::Statistics;
 
 #[allow(unused_imports)]
-// use std::f64::consts::PI;
 
 /// Advanced 2D wavelet denoising configuration
 #[derive(Debug, Clone)]

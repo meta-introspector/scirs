@@ -102,7 +102,6 @@ fn main() {
     }
 
     // Test function values
-    use std::f64::consts::PI;
     let x_values = [0.0, PI / 4.0, PI / 2.0];
 
     println!("\nMathieu function values:");

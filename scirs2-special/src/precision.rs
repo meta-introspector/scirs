@@ -347,7 +347,7 @@ pub mod extreme {
     /// Rational approximation using Padé approximants
     ///
     /// Computes P(x)/Q(x) where P and Q are polynomials
-    pub fn pade_approximant(x: f64, p_coeffs: &[f64], qcoeffs: &[f64]) -> SpecialResult<f64> {
+    pub fn pade_approximant(x: f64, p_coeffs: &[f64], _qcoeffs: &[f64]) -> SpecialResult<f64> {
         if p_coeffs.is_empty() || p_coeffs.is_empty() {
             return Err(SpecialError::DomainError(
                 "Coefficient arrays cannot be empty".to_string(),

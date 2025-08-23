@@ -5,7 +5,6 @@
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
-use rand::rng;
 use rand_distr::{Distribution, Geometric as RandGeometric};
 
 /// Geometric distribution structure

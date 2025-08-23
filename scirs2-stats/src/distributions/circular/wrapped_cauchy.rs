@@ -9,9 +9,9 @@ use ndarray::Array1;
 use num_traits::Float;
 use rand::{rng, Rng};
 use rand_distr::uniform::SampleUniform;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::f64::consts::PI;
 
 /// Wrapped Cauchy distribution
 ///
@@ -177,12 +177,12 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
         let gamma_f64 = self.gamma.to_f64().unwrap();
         let mu_f64 = self.mu.to_f64().unwrap();
 
-        let pi_u = PI * u_f64;
-        let angle = 2.0 * (pi_u.tan() / gamma_f64).atan();
+        let pi_u = (PI as f64) * u_f64;
+        let angle = 2.0_f64 * (pi_u.tan() / gamma_f64).atan();
 
         // Add the mean direction and normalize to [-π, π]
         let result = angle + mu_f64;
-        let normalized = ((result + PI) % (2.0 * PI)) - PI;
+        let normalized = ((result + (PI as f64)) % (2.0_f64 * (PI as f64))) - (PI as f64);
 
         Ok(F::from(normalized).unwrap())
     }
@@ -237,7 +237,6 @@ mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
     use scirs2_core::ScientificNumber;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_wrapped_cauchy_creation() {

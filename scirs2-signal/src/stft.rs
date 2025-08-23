@@ -17,7 +17,6 @@ use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Configuration options for STFT

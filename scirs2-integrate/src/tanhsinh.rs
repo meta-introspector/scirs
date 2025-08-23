@@ -813,7 +813,6 @@ where
 mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_basic_integral() {

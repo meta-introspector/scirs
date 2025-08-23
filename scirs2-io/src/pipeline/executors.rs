@@ -8,7 +8,6 @@ use crate::error::Result;
 use crossbeam_channel::Receiver;
 #[cfg(feature = "async")]
 use futures::stream::{self, StreamExt};
-use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 use std::time::Instant;

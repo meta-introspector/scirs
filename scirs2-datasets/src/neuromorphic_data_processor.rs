@@ -9,6 +9,7 @@ use crate::utils::Dataset;
 use ndarray::{s, Array1, Array2, Array3};
 use rand::prelude::*;
 use rand::{rng, rngs::StdRng, SeedableRng};
+use rand_distr::Uniform;
 use statrs::statistics::Statistics;
 use std::time::{Duration, Instant};
 
@@ -353,7 +354,7 @@ impl NeuromorphicProcessor {
                 if rng.random::<f64>() < self.network_config.connection_probability {
                     let weight =
                         (rng.random::<f64>() - 0.5) * 2.0 * self.plasticity_config.max_weight;
-                    let delay = Duration::from_millis(rng.random_range(1..=5));
+                    let delay = Duration::from_millis(rng.sample(Uniform::new(1, 5).unwrap()));
 
                     network[pre_idx].push(Synapse {
                         weight,
@@ -669,7 +670,7 @@ impl NeuromorphicProcessor {
                 {
                     let weight =
                         (rng.random::<f64>() - 0.5) * self.plasticity_config.max_weight * 0.5;
-                    let delay = Duration::from_millis(rng.random_range(2..=10));
+                    let delay = Duration::from_millis(rng.sample(Uniform::new(2, 10).unwrap()));
 
                     network[pre_idx].push(Synapse {
                         weight,
@@ -714,6 +715,7 @@ pub fn create_neuromorphic_processor_with_topology(
 mod tests {
     use super::*;
     use ndarray::Array2;
+use rand_distr::Uniform;
 
     #[test]
     fn test_neuromorphic_dataset_transformation() {

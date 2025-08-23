@@ -16,7 +16,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ffi::{CString, c_int, c_void};
 use std::sync::{Arc, Mutex, RwLock};
-use std::path::PathBuf;
 
 /// MPI integration layer for distributed linear algebra
 #[derive(Debug)]

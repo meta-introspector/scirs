@@ -1,4 +1,3 @@
-use std::f64::consts::PI;
 // Spatial transformations module
 //
 // This module provides functionality for spatial transformations including rotations,

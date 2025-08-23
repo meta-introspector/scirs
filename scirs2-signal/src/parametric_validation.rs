@@ -9,7 +9,6 @@ use crate::parametric_arma::{estimate_arma, ArmaMethod, ArmaModel};
 use ndarray::Array1;
 use num_complex::Complex64;
 use rand::Rng;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]

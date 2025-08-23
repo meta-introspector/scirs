@@ -6,6 +6,7 @@
 use ndarray::{s, Array1};
 use num_traits::Float;
 use std::fmt::Debug;
+use std::f64::consts::PI;
 
 use crate::error::{Result, TimeSeriesError};
 
@@ -874,7 +875,6 @@ pub mod fft {
     use super::*;
     use ndarray::{Array1, Array2};
     use num_traits::Float;
-    use std::f64::consts::PI;
 
     /// GPU-accelerated FFT processor
     #[derive(Debug)]

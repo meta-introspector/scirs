@@ -9,7 +9,6 @@ use ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
-use rand::rng;
 /// Fusion methods for multi-modal inputs
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FusionMethod {

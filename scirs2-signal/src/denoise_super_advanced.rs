@@ -18,9 +18,7 @@ use rand::Rng;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::check_finite;
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 
-// use std::f64::consts::PI;
 
 /// Advanced-advanced denoising result with comprehensive analysis
 #[derive(Debug, Clone)]

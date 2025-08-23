@@ -9,7 +9,6 @@ use scirs2_fft::{
     sparse_fft_gpu_cuda::cuda_sparse_fft,
     sparse_fft_gpu_memory::{init_global_memory_manager, AllocationStrategy},
 };
-use std::f64::consts::PI;
 
 // Helper function to create a sparse signal
 #[allow(dead_code)]

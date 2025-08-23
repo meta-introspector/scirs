@@ -14,7 +14,6 @@ use num_complex::Complex64;
 use num_traits::Float;
 use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 // use super::dpss_enhanced::validate_dpss_implementation; // Commented out for now

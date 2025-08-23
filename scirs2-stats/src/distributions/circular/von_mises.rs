@@ -8,10 +8,8 @@ use crate::error::{StatsError, StatsResult};
 use crate::traits::{CircularDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::Float;
-use rand::rng;
 use rand_distr::uniform::SampleUniform;
 use rand_distr::Distribution as RandDistribution;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 // Use simple approximations for bessel functions
@@ -431,7 +429,6 @@ mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
     use scirs2_core::ScientificNumber;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_von_mises_creation() {

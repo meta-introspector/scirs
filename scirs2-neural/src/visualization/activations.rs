@@ -11,7 +11,6 @@ use num_traits::Float;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::path::PathBuf;
 use statrs::statistics::Statistics;
 /// Layer activation visualizer
 #[allow(dead_code)]

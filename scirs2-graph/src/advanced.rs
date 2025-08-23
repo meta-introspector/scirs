@@ -234,7 +234,7 @@ impl NeuralRLAgent {
     ) -> Self {
         // Initialize weights randomly (simplified neural network)
         let mut q_weights = Vec::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Input to hidden layer
         let mut input_hidden = Vec::new();
@@ -303,7 +303,7 @@ impl NeuralRLAgent {
 
         match &self.exploration_strategy {
             ExplorationStrategy::EpsilonGreedy { epsilon } => {
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 if rng.random::<f64>() < *epsilon {
                     rng.random_range(0..q_values.len())
                 } else {
@@ -351,7 +351,7 @@ impl NeuralRLAgent {
 
     /// Select action using Thompson Sampling
     fn select_thompson_sampling_action(&self, qvalues: &[f64], alpha: f64, beta: f64) -> usize {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut best_action = 0;
         let mut best_sample = f64::NEG_INFINITY;
 
@@ -509,7 +509,7 @@ impl NeuralRLAgent {
         Ix: petgraph::graph::IndexType,
     {
         let features = self.extract_features(graph);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         if rng.random::<f64>() < self.epsilon {
             // Exploration: random algorithm
@@ -547,7 +547,7 @@ impl NeuralRLAgent {
         // Sample random batch from experience buffer
         let batch_size = 32.min(self.experience_buffer.len());
         let mut batch_indices = Vec::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for _ in 0..batch_size {
             batch_indices.push(rng.random_range(0..self.experience_buffer.len()));
@@ -673,7 +673,7 @@ impl NeuromorphicProcessor {
         let neuron_potentials = vec![0.0; _num_neurons];
         let mut synaptic_weights = Vec::new();
         let spike_history = vec![Vec::new(); _num_neurons];
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Initialize synaptic weights
         for _ in 0.._num_neurons {

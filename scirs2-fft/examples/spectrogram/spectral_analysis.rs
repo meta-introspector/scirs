@@ -7,7 +7,6 @@ use num_complex::Complex64;
 use scirs2_fft::{
     fft, fftfreq, fftshift, get_window, spectrogram, stft, window::Window, hilbert,
 };
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

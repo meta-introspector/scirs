@@ -10,7 +10,6 @@ use rand::Rng;
 use scirs2_core::simd_ops::PlatformCapabilities;
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Methods for thresholding wavelet coefficients

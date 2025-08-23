@@ -13,7 +13,6 @@ use rand::prelude::*;
 use rand::Rng;
 use scirs2_core::validation::{check_finite, checkshape};
 use scirs2_linalg::{eig, eigh, inv, matrix_norm, solve, svd};
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 // Enhanced with robust controllability/observability analysis

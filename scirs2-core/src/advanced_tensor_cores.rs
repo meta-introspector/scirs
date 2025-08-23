@@ -4443,8 +4443,7 @@ mod gpu_implementation {
     } // End of tests module
 
     // Re-export extracted quantum optimization components
-    #[cfg(feature = "gpu")]
-    pub use crate::tensor_cores::quantum_optimization::*;
+    // Note: Quantum optimization components currently not implemented
 } // End of gpu_implementation module
 
 #[cfg(feature = "gpu")]

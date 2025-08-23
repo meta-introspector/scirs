@@ -627,7 +627,7 @@ impl PatternNetwork {
     fn new(pattern_type: &str, input_size: usize, hidden_size: usize, _output_size: usize) -> Self {
         // Xavier initialization for weights
         let scale = (2.0 / (input_size + hidden_size) as f32).sqrt();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let weights = Array2::from_shape_fn((hidden_size, input_size), |_| {
             (rng.random::<f32>() - 0.5) * 2.0 * scale
         });
@@ -972,7 +972,7 @@ mod tests {
     #[test]
     fn test_pattern_network() {
         let mut network = PatternNetwork::new("test", 10, 5, 3);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let features = Array2::from_shape_fn((2, 5), |_| rng.random::<f32>());
 
         let score = network.analyze(&features).unwrap();

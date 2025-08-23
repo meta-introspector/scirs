@@ -23,7 +23,6 @@ use crate::filter::{butter, lfilter, FilterType};
 use ndarray::Array1;
 
 #[allow(unused_imports)]
-// use std::f64::consts::PI; // Unused import removed
 /// Configuration for multi-band separation
 #[derive(Debug, Clone)]
 pub struct MultibandConfig {

@@ -8,7 +8,6 @@
 
 use num_complex::Complex64;
 use scirs2_fft::{fft2_adaptive, ifft2_adaptive, simd_support_available};
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

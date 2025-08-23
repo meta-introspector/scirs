@@ -24,7 +24,7 @@ impl TournamentSelection {
     }
 
     fn binary_tournament(&self, population: &[Solution]) -> Solution {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let idx1 = rng.gen_range(0..population.len());
         let idx2 = rng.gen_range(0..population.len());
 
@@ -71,7 +71,7 @@ impl RandomSelection {
 
 impl SelectionOperator for RandomSelection {
     fn select(&self, population: &[Solution], n_select: usize) -> Vec<Solution> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut selected = Vec::with_capacity(n_select);
         for _ in 0..n_select.min(population.len()) {
             let idx = rng.gen_range(0..population.len());
@@ -93,7 +93,7 @@ impl RouletteWheelSelection {
 
 impl SelectionOperator for RouletteWheelSelection {
     fn select(&self, population: &[Solution], n_select: usize) -> Vec<Solution> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut selected = Vec::with_capacity(n_select);
 
         // Calculate fitness scores (inverse of rank for maximization)

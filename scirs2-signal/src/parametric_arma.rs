@@ -13,7 +13,6 @@ use num_complex::Complex64;
 use num_traits::Float;
 use scirs2_core::validation::check_finite;
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// ARMA model parameters

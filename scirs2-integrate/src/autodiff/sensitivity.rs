@@ -9,7 +9,6 @@ use crate::ode::{solve_ivp, ODEOptions};
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::Rng;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 
 // Type alias for complex return type
 type SensitivityResult<F> = IntegrateResult<(HashMap<usize, Array1<F>>, HashMap<usize, Array1<F>>)>;
@@ -651,14 +650,14 @@ impl<F: IntegrateFloat + std::default::Default> SobolSensitivity<F> {
     /// Generate Sobol sample matrices
     pub fn generate_samples(&self) -> (Array2<F>, Array2<F>) {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Generate base sample matrix A
         let mut a_matrix = Array2::zeros((self.n_samples, self.n_params));
         for i in 0..self.n_samples {
             for j in 0..self.n_params {
                 let (lower, upper) = self.param_bounds[j];
-                let u: f64 = rng.gen();
+                let u: f64 = rng.random();
                 a_matrix[[i, j]] = lower + (upper - lower) * F::from(u).unwrap();
             }
         }
@@ -668,7 +667,7 @@ impl<F: IntegrateFloat + std::default::Default> SobolSensitivity<F> {
         for i in 0..self.n_samples {
             for j in 0..self.n_params {
                 let (lower, upper) = self.param_bounds[j];
-                let u: f64 = rng.gen();
+                let u: f64 = rng.random();
                 b_matrix[[i, j]] = lower + (upper - lower) * F::from(u).unwrap();
             }
         }
@@ -849,7 +848,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
     /// Generate Morris trajectories
     pub fn generate_trajectories(&self) -> Vec<Array2<F>> {
         use rand::seq::SliceRandom;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut trajectories = Vec::new();
 
@@ -859,7 +858,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
             // Generate base point
             for j in 0..self.n_params {
                 let (lower, upper) = self.param_bounds[j];
-                let u: f64 = rng.gen();
+                let u: f64 = rng.random();
                 trajectory[[0, j]] = lower + (upper - lower) * F::from(u).unwrap();
             }
 

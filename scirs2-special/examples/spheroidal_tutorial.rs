@@ -15,7 +15,6 @@
 use scirs2_special::{
     obl_ang1, obl_cv, obl_cv_seq, obl_rad1, pro_ang1, pro_cv, pro_cv_seq, pro_rad1,
 };
-use std::f64::consts::PI;
 
 /// Educational demonstration of characteristic value behavior
 #[allow(dead_code)]
@@ -196,8 +195,8 @@ fn demonstrate_spheroidal_functions() {
 
     for &xi in &xi_large {
         match pro_rad1(0, 0, c_test, xi) {
-            Ok((r_val_)) => {
-                println!("    R₀,₀⁽¹⁾({c_test},ξ={xi}) = {r_val:12.4e}");
+            Ok((r_val_, _)) => {
+                println!("    R₀,₀⁽¹⁾({c_test},ξ={xi}) = {r_val_:12.4e}");
             }
             Err(_) => {
                 println!("    Computation failed for ξ = {xi}");
@@ -233,11 +232,11 @@ fn compare_prolate_oblate() {
     let eta = 0.5;
 
     match (pro_ang1(0, 1, c, eta), obl_ang1(0, 1, c, eta)) {
-        (Ok((s_pro_)), Ok((s_obl_))) => {
+        (Ok((s_pro_, _)), Ok((s_obl_, _))) => {
             println!("    At η = {eta}, c = {c}:");
-            println!("      Prolate S₀,₁({c},{eta}) = {s_pro:8.4}");
-            println!("      Oblate  S₀,₁({c},{eta}) = {s_obl:8.4}");
-            println!("      Ratio = {:.4}", s_pro / s_obl);
+            println!("      Prolate S₀,₁({c},{eta}) = {s_pro_:8.4}");
+            println!("      Oblate  S₀,₁({c},{eta}) = {s_obl_:8.4}");
+            println!("      Ratio = {:.4}", s_pro_ / s_obl_);
         }
         _ => println!("    Computation failed for angular functions"),
     }

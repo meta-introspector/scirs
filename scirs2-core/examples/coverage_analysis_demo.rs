@@ -9,7 +9,6 @@ use scirs2_core::profiling::coverage::{
 };
 use scirs2_core::profiling::dashboards::MetricTimeSeries;
 use std::collections::BTreeMap;
-use std::path::PathBuf;
 use std::time::SystemTime;
 
 #[allow(dead_code)]
@@ -97,7 +96,7 @@ fn demo_development_coverage() -> Result<(), Box<dyn std::error::Error>> {
         ])
         .with_threshold(75.0)
         .with_report_format(ReportFormat::Html)
-        .with_diff_coverage(main);
+        .with_diff_coverage("main");
 
     println!("✅ Created development coverage configuration:");
     println!(
@@ -643,7 +642,7 @@ fn create_sample_file_coverage() -> FileCoverage {
 /// Create sample metrics time series
 #[allow(dead_code)]
 fn create_sample_metrics() -> MetricTimeSeries {
-    let mut series = MetricTimeSeries::new(testexecution_time);
+    let mut series = MetricTimeSeries::new("test_execution_time");
 
     // Add some sample data points
     series.add_point(120.5, None);
@@ -653,4 +652,21 @@ fn create_sample_metrics() -> MetricTimeSeries {
     series.add_point(116.8, None);
 
     series
+}
+
+/// Simulate test execution with coverage recording
+#[allow(dead_code)]
+fn simulate_test_execution(analyzer: &CoverageAnalyzer) -> Result<(), Box<dyn std::error::Error>> {
+    // Simulate recording coverage for a few functions and files
+    println!("🏃 Simulating test execution...");
+    
+    // This is a simplified simulation - in a real scenario, the coverage
+    // would be recorded automatically during actual test execution
+    std::thread::sleep(std::time::Duration::from_millis(100));
+    
+    println!("   • Executed test suite with coverage instrumentation");
+    println!("   • Recorded line, branch, and condition coverage");
+    println!("   • Coverage data collection completed");
+    
+    Ok(())
 }

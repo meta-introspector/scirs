@@ -1288,7 +1288,7 @@ impl<F: Float> QuantumProcessor<F> {
         for i in 0..numqubits {
             self.apply_hadamard(i)?;
             for j in (i + 1)..numqubits {
-                let angle = PI / (2_f64.powi((j - i) as i32));
+                let angle: f64 = PI / (2_f64.powi((j - i) as i32));
                 self.apply_controlled_phase(j, i, angle)?;
             }
         }

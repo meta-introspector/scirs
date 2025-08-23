@@ -18,15 +18,15 @@ fn main() {
 
     // Create a sequence of data distributions with drift
     println!("Creating sequence of data with distribution drift...");
-    let data_sequence = create_drifting_data_sequence(10, 0.3);
+    let datasequence = create_drifting_data_sequence(10, 0.3);
 
     // Demonstrate static vs dynamic calibration
     println!("\nComparing static vs dynamic calibration:");
-    compare_static_vs_dynamic_calibration(&data_sequence, 8);
+    compare_static_vs_dynamic_calibration(&datasequence, 8);
 
     // Demonstrate effect of EMA factor
     println!("\nComparing different EMA factors:");
-    compare_ema_factors(&data_sequence, 8);
+    compare_ema_factors(&datasequence, 8);
 
     // Real-world example: streaming data scenario
     println!("\nSimulating streaming data scenario:");
@@ -58,7 +58,7 @@ fn create_drifting_data_sequence(_num_matrices: usize, driftfactor: f32) -> Vec<
         if i % 3 == 0 {
             let r = rng.random_range(0..10);
             let c = rng.random_range(0..10);
-            matrix[[r..c]] = if rng.random_bool(0.5) {
+            matrix[[r, c]] = if rng.random_bool(0.5) {
                 mean + std_dev * 5.0
             } else {
                 mean - std_dev * 5.0
@@ -68,8 +68,8 @@ fn create_drifting_data_sequence(_num_matrices: usize, driftfactor: f32) -> Vec<
         result.push(matrix);
 
         // Drift the distribution parameters
-        mean += drift_factor * rng.random_range(-1.0..1.0);
-        std_dev = (std_dev + drift_factor * rng.random_range(-0.1..0.3)).clamp(0.5..3.0);
+        mean += driftfactor * rng.random_range(-1.0..1.0);
+        std_dev = (std_dev + driftfactor * rng.random_range(-0.1..0.3)).clamp(0.5f32, 3.0f32);
     }
 
     result
@@ -90,7 +90,7 @@ fn compare_static_vs_dynamic_calibration(datasequence: &[Array2<f32>], bits: u8)
         symmetric: true,
         ..Default::default()
     };
-    let static_params = calibrate_matrix(&data_sequence[0].view(), bits, &static_config).unwrap();
+    let static_params = calibrate_matrix(&datasequence[0].view(), bits, &static_config).unwrap();
 
     // Dynamic calibration using EMA
     let dynamic_config = CalibrationConfig {
@@ -100,13 +100,13 @@ fn compare_static_vs_dynamic_calibration(datasequence: &[Array2<f32>], bits: u8)
         ..Default::default()
     };
     let mut dynamic_params =
-        calibrate_matrix(&data_sequence[0].view(), bits, &dynamic_config).unwrap();
+        calibrate_matrix(&datasequence[0].view(), bits, &dynamic_config).unwrap();
 
     let mut total_static_mse = 0.0;
     let mut total_dynamic_mse = 0.0;
 
     // Process each data batch
-    for (i, data) in data_sequence.iter().enumerate() {
+    for (i, data) in datasequence.iter().enumerate() {
         // Static calibration always uses the same parameters
         let (static_quantized_, _) = quantize_matrix(&data.view(), bits, static_params.method);
         let static_dequantized = dequantize_matrix(&static_quantized_, &static_params);
@@ -139,8 +139,8 @@ fn compare_static_vs_dynamic_calibration(datasequence: &[Array2<f32>], bits: u8)
     }
 
     // Print overall summary
-    let avg_static_mse = total_static_mse / data_sequence.len() as f32;
-    let avg_dynamic_mse = total_dynamic_mse / data_sequence.len() as f32;
+    let avg_static_mse = total_static_mse / datasequence.len() as f32;
+    let avg_dynamic_mse = total_dynamic_mse / datasequence.len() as f32;
     let overall_improvement = ((avg_static_mse - avg_dynamic_mse) / avg_static_mse) * 100.0;
 
     println!("\nOverall Results:");
@@ -178,12 +178,12 @@ fn compare_ema_factors(datasequence: &[Array2<f32>], bits: u8) {
 
         // Initialize with first batch
         let params =
-            calibrate_matrix(&data_sequence[0].view(), bits, configs.last().unwrap()).unwrap();
+            calibrate_matrix(&datasequence[0].view(), bits, configs.last().unwrap()).unwrap();
         params_list.push(params);
     }
 
     // Process each data batch
-    for (i, data) in data_sequence.iter().enumerate().skip(1) {
+    for (i, data) in datasequence.iter().enumerate().skip(1) {
         let mut mse_values = Vec::new();
 
         // Test each EMA factor
@@ -192,7 +192,7 @@ fn compare_ema_factors(datasequence: &[Array2<f32>], bits: u8) {
             params_list[j] = calibrate_matrix(&data.view(), bits, &configs[j]).unwrap();
 
             // Quantize and measure error
-            let quantized = quantize_matrix(&data.view(), bits, params_list[j].method);
+            let (quantized, _) = quantize_matrix(&data.view(), bits, params_list[j].method);
             let dequantized = dequantize_matrix(&quantized, &params_list[j]);
             let mse = (data - &dequantized).mapv(|x| x * x).sum() / data.len() as f32;
 

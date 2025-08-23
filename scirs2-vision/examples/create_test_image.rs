@@ -78,7 +78,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Add some noise
     use rand::Rng;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for _ in 0..1000 {
         let x = rng.random_range(0..400);

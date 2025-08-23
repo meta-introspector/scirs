@@ -10,7 +10,6 @@
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 #[cfg(feature = "serde")]

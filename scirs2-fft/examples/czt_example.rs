@@ -9,7 +9,6 @@ use ndarray::Array1;
 use num_complex::Complex;
 use plotly::{Plot, Scatter};
 use scirs2_fft::{czt, czt_points, zoom_fft, CZT};
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

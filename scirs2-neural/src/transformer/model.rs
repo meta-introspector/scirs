@@ -4,7 +4,6 @@
 //! as described in "Attention Is All You Need" by Vaswani et al.
 
 use crate::error::{NeuralError, Result};
-use rand::rng;
 use crate::layers::Layer;
 use crate::transformer::{TransformerDecoder, TransformerEncoder};
 use crate::utils::{PositionalEncoding, PositionalEncodingFactory, PositionalEncodingType};

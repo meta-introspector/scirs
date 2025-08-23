@@ -20,7 +20,6 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, check_positive, checkshape};
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Advanced-enhanced system identification result with quantum-inspired optimization

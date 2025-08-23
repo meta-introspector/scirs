@@ -10,7 +10,6 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, RwLock};
-// use std::path::PathBuf; // Duplicate import
 
 /// Central plugin registry for managing all optimizer plugins
 #[derive(Debug)]

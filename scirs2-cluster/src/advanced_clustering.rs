@@ -52,7 +52,6 @@ use crate::vq::euclidean_distance;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
 use std::collections::{HashMap, VecDeque};
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[cfg(feature = "serde")]

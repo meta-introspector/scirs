@@ -11,7 +11,6 @@ use crate::error::SignalResult;
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
 use crate::lti::design::tf;
 use rand::Rng;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]

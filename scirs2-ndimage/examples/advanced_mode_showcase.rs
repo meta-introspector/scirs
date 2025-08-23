@@ -34,6 +34,7 @@
 //! - Bio-quantum hybrid feature detection
 
 use ndarray::{Array1, Array2, Array3};
+use std::f64::consts::PI;
 use scirs2_ndimage::{
     // Neuromorphic algorithms
     event_driven_processing,
@@ -56,7 +57,6 @@ use scirs2_ndimage::{
     NeuromorphicConfig,
     QuantumConfig,
 };
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

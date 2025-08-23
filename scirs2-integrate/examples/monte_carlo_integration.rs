@@ -2,7 +2,6 @@ use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
 use rand_distr::{Distribution, Normal};
 use scirs2_integrate::monte_carlo::{importance_sampling, monte_carlo, MonteCarloOptions};
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

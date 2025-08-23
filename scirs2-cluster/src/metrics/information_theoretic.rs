@@ -8,7 +8,6 @@
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive};
 use rand::prelude::*;
-use rand::rng;
 use std::collections::HashMap;
 use std::fmt::Debug;
 

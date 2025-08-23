@@ -397,7 +397,7 @@ where
         .map(|(i, n)| (n.clone(), i))
         .collect();
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut changed = true;
     let mut _iterations = 0;
 
@@ -669,7 +669,7 @@ where
     let mut best_modularity = current_modularity;
 
     let mut temp = initial_temp;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for _iteration in 0..max_iterations {
         // Choose a random node to move
@@ -1302,7 +1302,7 @@ where
     }
 
     let num_communities = num_communities.min(n);
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Initialize fluids - each node starts with a random fluid
     let mut node_fluids: HashMap<N, Vec<f64>> = HashMap::new();
@@ -2070,7 +2070,7 @@ where
         .map(|(i, node)| (node.clone(), i))
         .collect();
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for _ in 0..max_iter {
         // Create a shuffled order for processing nodes

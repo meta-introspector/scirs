@@ -5,7 +5,6 @@ use scirs2_fft::{
     reconstruct_filtered, reconstruct_high_resolution, reconstruct_time_domain, sparse_fft,
     sparse_fft::SparseFFTAlgorithm,
 };
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

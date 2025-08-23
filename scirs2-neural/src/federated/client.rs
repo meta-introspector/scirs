@@ -107,7 +107,6 @@ impl FederatedClient {
         // Shuffle indices
         let mut indices: Vec<usize> = (0..num_samples).collect();
         use rand::prelude::*;
-use rand::rng;
 use ndarray::ArrayView1;
 use rand::seq::SliceRandom;
         indices.shuffle(&mut rng());

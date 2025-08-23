@@ -27,7 +27,6 @@ use scirs2_core::ufuncs::{
     square,
     std,
 };
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn print_title(title: &str) {

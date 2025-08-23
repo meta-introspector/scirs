@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use ndarray::array;
-use scirs2__linalg::matrix_norm;
-use scirs2__linalg::{det, inv};
+use scirs2_linalg::matrix_norm;
+use scirs2_linalg::{det, inv};
 use std::hint::black_box;
 
 #[allow(dead_code)]

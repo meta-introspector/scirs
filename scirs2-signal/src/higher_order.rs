@@ -14,7 +14,6 @@ use ndarray::s;
 // ```
 // use ndarray::Array1;
 // use scirs2_signal::higher_order::{bispectrum, bicoherence};
-// use std::f64::consts::PI;
 //
 // // Create a signal with quadratic phase coupling
 // let n = 1024;

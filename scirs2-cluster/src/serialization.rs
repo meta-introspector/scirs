@@ -18,7 +18,6 @@ use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::Path;
-use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid;
 
@@ -2521,7 +2520,6 @@ pub mod compatibility {
 pub mod persistence {
     use super::*;
     use std::collections::BTreeMap;
-    use std::path::PathBuf;
 
     /// Model registry for managing multiple clustering models
     #[derive(Debug, Clone)]

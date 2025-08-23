@@ -22,7 +22,6 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::check_positive;
 use statrs::distribution::{ChiSquared, ContinuousCDF};
-use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::Arc;
 

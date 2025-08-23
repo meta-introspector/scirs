@@ -3,7 +3,6 @@
 use crate::error::SignalResult;
 use ndarray::Array2;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Extract edge-based features from an image

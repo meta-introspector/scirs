@@ -1,6 +1,5 @@
 use approx::assert_relative_eq;
 use ndarray::array;
-use std::f64::consts::PI;
 
 use scirs2_spatial::transform::{Rotation, RotationSpline, Slerp};
 

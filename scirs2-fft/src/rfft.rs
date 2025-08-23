@@ -931,7 +931,6 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
     use ndarray::arr2; // 2次元配列リテラル用
-    use std::f64::consts::PI;
 
     #[test]
     fn test_rfft_and_irfft() {

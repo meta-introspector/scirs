@@ -430,7 +430,7 @@ mod tests {
         let file_path = temp_dir.path().join("testimage.bin");
 
         // Create test data
-        let data = Array2::<f64>::from_elem((50, 50), 3.14);
+        let data = Array2::<f64>::from_elem((50, 50), std::f64::consts::PI);
 
         // Save as memory-mapped
         let _saved_mmap = saveimage_mmap(&data.view(), &file_path, 0).unwrap();

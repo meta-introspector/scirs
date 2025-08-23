@@ -991,7 +991,6 @@ where
 mod tests {
     use super::*;
     use ndarray::array;
-    use std::f64::consts::PI;
 
     #[test]
     fn testmatrix_exp_action_simple() {

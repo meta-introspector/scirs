@@ -241,7 +241,7 @@ fn bench_memmap_operations(c: &mut Criterion) {
                 b.iter(|| {
                     let mut total = 0;
                     for node in 0..g.n_nodes.min(1000) {
-                        for (neighbor_weight) in g.neighbors(node) {
+                        for neighbor in g.neighbors(node) {
                             total += neighbor;
                         }
                     }
@@ -259,7 +259,7 @@ fn bench_memmap_operations(c: &mut Criterion) {
                     let mut total = 0;
                     for node in 0..g.node_count().min(1000) {
                         if let Ok(neighbors) = g.neighbors(node) {
-                            for (neighbor_weight) in neighbors {
+                            for neighbor in neighbors {
                                 total += neighbor;
                             }
                         }

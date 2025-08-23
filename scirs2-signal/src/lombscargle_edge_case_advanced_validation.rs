@@ -14,7 +14,6 @@ use crate::lombscargle::lombscargle;
 use ndarray::Array1;
 use num_traits::Float;
 use rand::Rng;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]

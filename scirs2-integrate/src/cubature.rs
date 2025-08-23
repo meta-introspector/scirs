@@ -590,7 +590,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_simple_2d_integral() {

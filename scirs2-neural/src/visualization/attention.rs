@@ -11,7 +11,6 @@ use num_traits::Float;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::path::PathBuf;
 /// Attention mechanism visualizer
 #[allow(dead_code)]
 pub struct AttentionVisualizer<F: Float + Debug + ScalarOperand> {

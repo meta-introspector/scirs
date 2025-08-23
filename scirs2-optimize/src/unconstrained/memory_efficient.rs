@@ -11,7 +11,6 @@ use crate::unconstrained::utils::check_convergence;
 use crate::unconstrained::Options;
 use ndarray::{Array1, ArrayView1};
 use std::collections::VecDeque;
-use std::path::PathBuf;
 
 /// Memory optimization options for large-scale problems
 #[derive(Debug, Clone)]

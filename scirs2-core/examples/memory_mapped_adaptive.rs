@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Create test arrays of different shapes and sizes
 #[allow(dead_code)]
-fn path(
+fn create_test_arrays(
     dir_path: &std::path::Path,
 ) -> Result<Vec<MemoryMappedArray<f64>>, Box<dyn std::error::Error>> {
     let mut arrays = Vec::new();
@@ -78,7 +78,7 @@ fn path(
     }
     drop(file);
 
-    let small_array = MemoryMappedArray::<f64>::open(&file_path, &[size_1d])?;
+    let small_array = MemoryMappedArray::<f64>::path(&file_path, &[size_1d])?;
     arrays.push(small_array);
 
     // 2. Create a medium 2D matrix (5000x2000 elements, ~80MB)
@@ -99,7 +99,7 @@ fn path(
     }
     drop(file);
 
-    let medium_array = MemoryMappedArray::<f64>::open(&file_path, &[rows, cols])?;
+    let medium_array = MemoryMappedArray::<f64>::path(&file_path, &[rows, cols])?;
     arrays.push(medium_array);
 
     // 3. Create a large 1D array (50 million elements, ~400MB)
@@ -121,7 +121,7 @@ fn path(
     }
     drop(file);
 
-    let large_array = MemoryMappedArray::<f64>::open(&file_path, &[size_large])?;
+    let large_array = MemoryMappedArray::<f64>::path(&file_path, &[size_large])?;
     arrays.push(large_array);
 
     Ok(arrays)
@@ -169,7 +169,7 @@ fn benchmark_fixed_chunks(
         // Process chunks by summing all elements (simple operation)
         // Note: process_chunks method not available on MemoryMappedArray
         // For demo purposes, we'll process the whole array
-        let data = array.asarray::<ndarray::Ix1>()?;
+        let data = array.as_array::<ndarray::Ix1>()?;
         let sums = [data.sum()]; // Just one "chunk" for now
 
         let elapsed = start.elapsed();
@@ -222,8 +222,8 @@ fn benchmark_adaptive_chunks(
         // Create adaptive chunking parameters
         let params = AdaptiveChunkingBuilder::new()
             .with_target_memory(kb * 1024)  // Convert KB to bytes
-            .with_min_chunk_size(1000)      // Minimum 1000 elements
-            .with_max_chunk_size(10_000_000) // Maximum 10M elements
+            .with_min_chunksize(1000)      // Minimum 1000 elements
+            .with_max_chunksize(10_000_000) // Maximum 10M elements
             .build();
 
         // Get the recommended chunking strategy
@@ -243,7 +243,7 @@ fn benchmark_adaptive_chunks(
         let start = Instant::now();
 
         // Process chunks using adaptive chunking
-        let result = array.process_chunks_adaptive(params, |chunk| chunk.iter().sum::<f64>())?;
+        let result = array.process_chunks_adaptive(params, |chunk, _chunk_idx| chunk.iter().sum::<f64>())?;
 
         let elapsed = start.elapsed();
 
@@ -304,7 +304,7 @@ fn benchmark_adaptive_parallel(
     let seq_start = Instant::now();
     // Note: process_chunks_adaptive not available on MemoryMappedArray
     // For demo purposes, we'll process the whole array
-    let data = array.asarray::<ndarray::Ix1>()?;
+    let data = array.as_array::<ndarray::Ix1>()?;
     let seq_result = [data.iter().map(|&x| (x * x).sqrt()).sum::<f64>()];
     let seq_elapsed = seq_start.elapsed();
 
@@ -326,7 +326,7 @@ fn benchmark_adaptive_parallel(
         let params = AdaptiveChunkingBuilder::new()
             .with_target_memory(1024 * 1024)  // 1MB target
             .optimize_for_parallel(true)
-            .with_num_workers(workers)
+            .with_numworkers(workers)
             .build();
 
         // Get the recommended chunking strategy
@@ -341,7 +341,7 @@ fn benchmark_adaptive_parallel(
 
         // Note: process_chunks_parallel_adaptive not available on MemoryMappedArray
         // For demo purposes, we'll process the whole array
-        let data = array.asarray::<ndarray::Ix1>()?;
+        let data = array.as_array::<ndarray::Ix1>()?;
         let result = [data.iter().map(|&x| (x * x).sqrt()).sum::<f64>()];
 
         let elapsed = start.elapsed();

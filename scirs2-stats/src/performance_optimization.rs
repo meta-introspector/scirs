@@ -15,6 +15,7 @@ use crate::{
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_cpus;
+use scirs2_core::rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use statrs::statistics::Statistics;
 use std::time::Instant;
@@ -716,7 +717,6 @@ impl PerformanceBenchmark {
         n_features: usize,
         n_classes: usize,
     ) -> Result<(Array2<f64>, Array1<i32>)> {
-        use rand::rng;
         use rand_distr::{Distribution, Normal};
 
         let mut rng = rng();

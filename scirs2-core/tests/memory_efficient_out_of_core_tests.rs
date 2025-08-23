@@ -188,7 +188,7 @@ mod tests {
         let array = OutOfCoreArray::new_temp(&data, ChunkingStrategy::Fixed(25)).unwrap();
 
         // Test that map works - sum all elements in each chunk
-        let result: Result<Vec<f64>> = array.map(|chunk| chunk.sum());
+        let result: Result<Vec<f64>, _> = array.map(|chunk| chunk.sum());
 
         // The map should succeed (though the specific results depend on chunking implementation)
         assert!(result.is_ok());

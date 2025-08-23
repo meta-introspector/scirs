@@ -2,7 +2,7 @@ use ndarray::Array2;
 use rand::Rng;
 use scirs2_core::array::{mask_array, MaskedArray};
 use scirs2_core::memory_efficient::{create_disk_array, ChunkingStrategy};
-use statrs::statistics::Statistics;
+// Removed unused statrs import
 use std::time::Instant;
 use tempfile::tempdir;
 
@@ -10,7 +10,7 @@ use tempfile::tempdir;
 #[allow(dead_code)]
 fn load_dataset_chunk(chunk_size: usize, nfeatures: usize) -> Array2<f64> {
     let mut rng = rand::rng();
-    Array2::from_shape_fn((chunk_size, n_features), |_| rng.random_range(0.0..100.0))
+    Array2::from_shape_fn((chunk_size, nfeatures), |_| rng.random_range(0.0..100.0))
 }
 
 /// Normalizes data (center and scale)
@@ -123,7 +123,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Process the first chunk to initialize the disk-backed array
     println!("  Processing chunk 1/{}", n_chunks);
-    let chunk1 = load_data_chunk(0, chunk_size, n_features);
+    let chunk1 = load_dataset_chunk(chunk_size, n_features);
     let normalized1 = normalize_chunk(&chunk1);
 
     // Create disk-backed array
@@ -137,7 +137,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Now process remaining chunks
     for i in 1..n_chunks {
         println!("  Processing chunk {}/{}", i + 1, n_chunks);
-        let chunk = load_data_chunk(i, chunk_size, n_features);
+        let chunk = load_dataset_chunk(chunk_size, n_features);
         let normalized = normalize_chunk(&chunk);
 
         // In a real implementation, we would append this to the disk array

@@ -7,7 +7,6 @@ use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use num_traits::Float;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]

@@ -11,7 +11,6 @@ use num_traits::Float;
 use rustfft::{num_complex::Complex, FftPlanner};
 use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, VecDeque};
-use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -799,7 +798,6 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
     use num_complex::Complex64;
-    use std::f64::consts::PI;
     #[test]
     fn test_parallel_multirate_filter_bank() {
         // Create simple 2-band filter bank

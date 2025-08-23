@@ -5,9 +5,7 @@
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
-use rand::rng;
 use rand_distr::{Distribution, FisherF as RandFisherF};
-use std::f64::consts::PI;
 
 /// F distribution structure
 pub struct F<T: Float> {

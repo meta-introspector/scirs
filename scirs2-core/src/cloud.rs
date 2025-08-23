@@ -25,7 +25,6 @@ use tokio::io::{AsyncRead, AsyncWrite};
 
 #[cfg(feature = "async")]
 use async__trait::async_trait;
-use std::path::PathBuf;
 
 /// Cloud storage error types
 #[derive(Error, Debug)]

@@ -24,12 +24,12 @@ fn main() {
         let console_handler = Arc::new(ConsoleLogHandler {
             format: "[{timestamp}] {level} [{module}] {message}".to_string(),
         });
-        scirs2_core::logging::registerlog_handler(console_handler);
+        scirs2_core::logging::set_handler(console_handler);
 
         // Create loggers for different modules
-        let mathlogger = Logger::new(math).with_field("precision", "double");
+        let mathlogger = Logger::new("math").with_field("precision", "double");
 
-        let iologger = Logger::new(io).with_field("mode", "async");
+        let iologger = Logger::new("io").with_field("mode", "async");
 
         // Log some messages at different levels
         mathlogger.info("Starting calculation");
@@ -60,11 +60,11 @@ fn simulate_long_operation() {
         thread::sleep(Duration::from_millis(300));
 
         // Update progress
-        progress.update_model(i);
+        progress.update(i);
 
         // Log detailed information occasionally
         if i % 3 == 0 {
-            Logger::new(process)
+            Logger::new("process")
                 .with_field("step", i)
                 .with_field("memory_usage", format!("{} MB", 100 + i * 5))
                 .debug(&format!("Completed processing step {}/{}", i, total_steps));
@@ -75,5 +75,5 @@ fn simulate_long_operation() {
     progress.complete();
 
     // Log final result
-    Logger::new(process).info("Data processing completed successfully");
+    Logger::new("process").info("Data processing completed successfully");
 }

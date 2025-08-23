@@ -126,7 +126,7 @@ fn test_algorithm_execution() -> HashMap<String, Duration> {
     let mut results = HashMap::new();
 
     // Create test graph
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let test_graph = match erdos_renyi_graph(1000, 0.01, &mut rng) {
         Ok(graph) => graph,
         Err(e) => {
@@ -228,7 +228,7 @@ fn test_memory_efficiency() -> f64 {
     let mut profiler = AdvancedMemoryProfiler::new(config);
 
     // Test with medium-sized graph
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let test_graph = match barabasi_albert_graph(5000, 3, &mut rng) {
         Ok(graph) => graph,
         Err(e) => {
@@ -315,7 +315,7 @@ fn test_performance_improvements() -> HashMap<String, f64> {
     println!("⚡ Testing performance improvements with Advanced mode...");
     let mut improvements = HashMap::new();
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let test_graph = match watts_strogatz_graph(2000, 6, 0.3, &mut rng) {
         Ok(graph) => graph,
         Err(e) => {

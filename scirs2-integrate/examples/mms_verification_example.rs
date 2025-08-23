@@ -11,7 +11,6 @@ use scirs2_integrate::{
         MMSODEProblem, MMSPDEProblem,
     },
 };
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

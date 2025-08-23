@@ -7,7 +7,6 @@
 //! enabling zero-shot transfer to various visual classification tasks.
 
 use crate::error::Result;
-use rand::rng;
 use crate::layers::{Dense, Layer, LayerNorm, Sequential};
 use crate::models::architectures::{ViTConfig, VisionTransformer};
 use crate::transformer::TransformerEncoderLayer;

@@ -6,7 +6,7 @@
 use super::lanczos::{lanczos, EigenResult, LanczosOptions};
 use crate::error::{SparseError, SparseResult};
 use crate::sym_csr::SymCsrMatrix;
-use ndarray::{Array1, ArrayView1};
+use ndarray::Array1;
 use num_traits::Float;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};

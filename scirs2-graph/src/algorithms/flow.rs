@@ -108,7 +108,7 @@ where
     let mut best_partition = vec![false; n];
 
     // Try a few random partitions
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for _ in 0..10 {
         let mut partition = vec![false; n];

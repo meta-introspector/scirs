@@ -5,7 +5,6 @@
 
 use ndarray::{array, Array2};
 use scirs2_linalg::compat;
-use std::f64::consts::PI;
 
 /// Tolerance for numerical comparisons
 const VALIDATION_TOL: f64 = 1e-12;

@@ -166,7 +166,6 @@ impl FederatedLearning {
     /// Select clients for a round
     fn select_clients(&self) -> Result<Vec<usize>> {
         use rand::prelude::*;
-use rand::rng;
 use ndarray::ArrayView1;
 use rand::seq::SliceRandom;
         let mut rng = rng();

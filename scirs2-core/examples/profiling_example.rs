@@ -42,7 +42,7 @@ fn main() {
 #[allow(dead_code)]
 fn basic_timing_example() {
     // Time a block of code using a timer
-    let timer = Timer::start(basic_operation);
+    let timer = Timer::start("basic_operation");
 
     // Simulate some work
     println!("Performing a basic operation...");
@@ -70,7 +70,7 @@ fn function_timing_example() {
 #[allow(dead_code)]
 fn hierarchical_timing_example() {
     // Create a parent timer
-    let parent_timer = Timer::start(parent_operation);
+    let parent_timer = Timer::start("parent_operation");
 
     println!("Starting parent operation...");
     thread::sleep(Duration::from_millis(200));
@@ -101,7 +101,7 @@ fn hierarchical_timing_example() {
 fn memory_tracking_example() {
     // Create some example operations with memory tracking
     {
-        let mem_tracker = scirs2_core::profiling::MemoryTracker::start(allocate_vector);
+        let mem_tracker = scirs2_core::profiling::MemoryTracker::start("allocate_vector");
         println!("Allocating a vector...");
 
         // Allocate a large vector (this is an example of what would be tracked)
@@ -114,7 +114,7 @@ fn memory_tracking_example() {
     }
 
     {
-        let mem_tracker = scirs2_core::profiling::MemoryTracker::start(allocatematrix);
+        let mem_tracker = scirs2_core::profiling::MemoryTracker::start("allocatematrix");
         println!("Allocating a matrix...");
 
         // Allocate a matrix (this is an example of what would be tracked)

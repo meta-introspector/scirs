@@ -1327,7 +1327,6 @@ Add this plugin to your `Cargo.toml`:
 use scirs2_optim::plugin::*;
 use {}::*;
 use ndarray::Array1;
-use std::path::PathBuf;
 
 // Create optimizer configuration
 let _config = {}Config {{

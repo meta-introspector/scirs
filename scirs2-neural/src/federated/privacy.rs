@@ -95,7 +95,6 @@ impl SecureAggregation {
     ) -> Result<Vec<Array2<f32>>> {
         // Simplified masking - in practice would use cryptographic PRG
         use rand::rngs::StdRng;
-use rand::rng;
         use rand::{Rng, SeedableRng};
         let mut masked = Vec::new();
         for update in updates.iter() {

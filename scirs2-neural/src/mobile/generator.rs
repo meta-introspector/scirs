@@ -15,7 +15,6 @@ use super::platform::{
     MobileOptimizationConfig, MobilePlatform, MobilePruningStrategy, PruningType, QuantizationPrecision,
     QuantizationStrategy,
 };
-use std::path::PathBuf;
 /// Mobile deployment generator
 pub struct MobileDeploymentGenerator<F: Float + Debug + ndarray::ScalarOperand> {
     /// Model to deploy

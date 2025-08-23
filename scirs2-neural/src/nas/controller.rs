@@ -1,7 +1,6 @@
 //! NAS controller for building and managing architectures
 
 use crate::error::Result;
-use rand::rng;
 use crate::layers::{Layer, ParamLayer};
 use crate::models::sequential::Sequential;
 use crate::nas::{

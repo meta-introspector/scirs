@@ -23,7 +23,7 @@ fn test_large_erdos_renyi_graph() -> CoreResult<()> {
 
         // Generate graph
         let gen_start = Instant::now();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let graph = generators::erdos_renyi_graph(n, edge_probability, &mut rng)
             .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         let gen_time = gen_start.elapsed();
@@ -78,7 +78,7 @@ fn test_large_barabasi_albert_graph() -> CoreResult<()> {
 
         // Generate graph
         let gen_start = Instant::now();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let graph = generators::barabasi_albert_graph(n, m, &mut rng)
             .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         let gen_time = gen_start.elapsed();
@@ -201,7 +201,7 @@ fn test_large_directed_graph_algorithms() -> CoreResult<()> {
 
     // Add edges with preferential attachment pattern
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for i in 1..n {
         // Add edges from new nodes to existing nodes
@@ -262,7 +262,7 @@ fn test_memory_efficient_operations() -> CoreResult<()> {
     let start = Instant::now();
 
     // Generate a sparse graph
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let graph = generators::barabasi_albert_graph(n, m, &mut rng)
         .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
     println!("  Generation time: {:.2}s", start.elapsed().as_secs_f64());
@@ -337,7 +337,7 @@ fn test_parallel_algorithms_on_large_graphs() -> CoreResult<()> {
         let edge_probability = 0.00002;
 
         println!("\nGenerating graph with {} nodes", n);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let graph = generators::erdos_renyi_graph(n, edge_probability, &mut rng)
             .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         println!("  Nodes: {}", graph.node_count());
@@ -374,7 +374,7 @@ fn test_parallel_algorithms_on_large_graphs() -> CoreResult<()> {
 #[allow(dead_code)]
 fn estimate_diameter(graph: &Graph<usize, f64>, samples: usize) -> CoreResult<usize> {
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut max_distance = 0;
 
     for _ in 0..samples {
@@ -436,7 +436,7 @@ fn test_extreme_scale_graph() -> CoreResult<()> {
     let start = Instant::now();
 
     // Generate graph
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let graph = generators::barabasi_albert_graph(n, m, &mut rng)
         .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
     let gen_time = start.elapsed();
@@ -497,7 +497,7 @@ fn test_algorithm_scaling() -> CoreResult<()> {
         println!("\n--- Graph size: {n} nodes ---");
 
         // Generate test graph
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let graph = generators::barabasi_albert_graph(n, 3, &mut rng)
             .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         println!("  Edges: {}", graph.edge_count());

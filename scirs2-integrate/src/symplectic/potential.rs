@@ -340,7 +340,6 @@ mod tests {
     use crate::symplectic::leapfrog::StormerVerlet;
     use crate::symplectic::SymplecticIntegrator;
     use ndarray::array;
-    use std::f64::consts::PI;
 
     /// Test SeparableHamiltonian implementation with harmonic oscillator
     #[test]

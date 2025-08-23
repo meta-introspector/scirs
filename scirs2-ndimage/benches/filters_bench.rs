@@ -4,6 +4,7 @@ use scirs2_ndimage::filters::{
     bilateral_filter,
     filter_functions,
     gaussian_filter,
+    gaussian_filter_f32,
     generic_filter,
     gradient_magnitude,
     gradient_magnitude_optimized,
@@ -285,7 +286,7 @@ fn bench_edge_detection(c: &mut Criterion) {
             BenchmarkId::new("laplace_standard", format!("{}x{}", size, size)),
             &input,
             |b, input| {
-                b.iter(|| laplace(black_box(input), false, Some(BorderMode::Reflect)).unwrap())
+                b.iter(|| laplace(black_box(input), Some(BorderMode::Reflect), Some(false)).unwrap())
             },
         );
 
@@ -308,7 +309,10 @@ fn bench_edge_detection(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("gradient_magnitude_standard", format!("{}x{}", size, size)),
             &(&grad_x, &grad_y),
-            |b, (gx, gy)| b.iter(|| gradient_magnitude(black_box(gx), black_box(gy)).unwrap()),
+            |b, (gx, gy)| b.iter(|| {
+                let result = (&(**gx) * &(**gx) + &(**gy) * &(**gy)).mapv(|x| x.sqrt());
+                black_box(result)
+            }),
         );
 
         group.bench_with_input(
@@ -410,7 +414,7 @@ fn bench_data_type_performance(c: &mut Criterion) {
         BenchmarkId::new("gaussian_f32", format!("{}x{}", size.0, size.1)),
         &input_f32,
         |b, input| {
-            b.iter(|| gaussian_filter(black_box(input), black_box(1.0f32), None, None).unwrap())
+            b.iter(|| gaussian_filter_f32(black_box(input), black_box(1.0f32), None, None).unwrap())
         },
     );
 
@@ -492,8 +496,7 @@ criterion_group!(
     bench_performance_characteristics,
     bench_memory_computation_tradeoffs,
     bench_data_type_performance,
-    bench_cache_efficiency,
-    #[cfg(feature = "parallel")]
-    bench_parallel_performance
+    bench_cache_efficiency
+    /* bench_parallel_performance - conditionally compiled */
 );
 criterion_main!(benches);

@@ -1,4 +1,3 @@
-use std::f64::consts::PI;
 // Geometric primitives used for collision detection
 //
 // This module provides the geometric primitives that are used for collision

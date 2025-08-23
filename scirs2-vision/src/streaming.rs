@@ -15,7 +15,6 @@ use crate::error::Result;
 use crossbeam_channel::{bounded, Receiver};
 use image::GenericImageView;
 use ndarray::{Array1, Array2};
-use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};

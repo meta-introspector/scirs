@@ -1,6 +1,5 @@
 use ndarray::array;
 use scirs2_spatial::spherical_voronoi::SphericalVoronoi;
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

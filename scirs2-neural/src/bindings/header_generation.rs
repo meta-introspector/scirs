@@ -5,7 +5,6 @@
 
 use crate::error::{NeuralError, Result};
 use std::fs;
-use std::path::PathBuf;
 use super::config::{ApiStyle, ArrayMapping, BindingConfig, BindingLanguage, StringMapping};
 /// Header file generator
 pub struct HeaderGenerator<'a> {

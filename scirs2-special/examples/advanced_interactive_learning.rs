@@ -15,7 +15,6 @@ use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
 use std::collections::{HashMap, VecDeque};
-use std::f64::consts::PI;
 use std::io::{self, Write};
 use std::time::{Duration, Instant};
 

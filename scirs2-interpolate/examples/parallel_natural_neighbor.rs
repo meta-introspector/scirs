@@ -14,7 +14,7 @@ use std::time::Instant;
 fn main() -> Result<(), Box<dyn Error>> {
     // Generate scattered data points
     let n_points = 500;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Create points in a 2D domain
     let mut points_vec = Vec::with_capacity(n_points * 2);

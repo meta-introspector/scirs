@@ -4,7 +4,6 @@
 //! that mirror SciPy's special module.
 
 use num_traits::{Float, FloatConst, FromPrimitive};
-use std::f64::consts::PI;
 
 use crate::error::{SciRS2Error, SciRS2Result, check_domain};
 

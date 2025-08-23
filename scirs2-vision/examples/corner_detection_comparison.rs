@@ -11,7 +11,6 @@ use scirs2_vision::feature::{
     shi_tomasi_corners_simple,
 };
 use scirs2_vision::preprocessing::gaussian_blur;
-use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

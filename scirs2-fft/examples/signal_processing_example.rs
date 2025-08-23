@@ -20,7 +20,6 @@ use scirs2_fft::signal_processing::{
     convolve, cross_correlate, design_fir_filter, fir_filter, frequency_filter, FilterSpec,
     FilterType, FilterWindow,
 };
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

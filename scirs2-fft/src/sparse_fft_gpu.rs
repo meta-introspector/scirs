@@ -281,7 +281,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::f64::consts::PI;
 
     // Helper function to create a sparse signal
     fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {

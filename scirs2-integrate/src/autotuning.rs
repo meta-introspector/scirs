@@ -29,7 +29,6 @@
 
 use crate::common::IntegrateFloat;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 

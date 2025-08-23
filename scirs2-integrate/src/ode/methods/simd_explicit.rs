@@ -9,7 +9,6 @@ use crate::error::IntegrateResult;
 use crate::ode::types::{ODEOptions, ODEResult};
 use crate::ode::utils::common::{estimate_initial_step, ODEState, StepResult};
 use ndarray::{Array1, ArrayView1};
-use std::f64::consts::PI;
 
 #[cfg(feature = "simd")]
 use crate::ode::utils::simd_ops::{SimdOdeOps};

@@ -5,7 +5,6 @@ use ndarray::ScalarOperand;
 use num_traits::Float;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-use std::path::PathBuf;
 /// Type alias for checkpoint loading result
 type LoadResult<F> = Result<(usize, F, Option<Vec<(String, F)>>)>;
 /// Checkpoint storage for model state during training

@@ -2834,7 +2834,6 @@ fn apply_differential_privacy(
 ) -> Result<EnsembleResult> {
     // Apply differential privacy mechanisms to the clustering result
     // For now, just add small amount of noise to consensus labels
-    use rand::rng;
     let mut rng = rand::rng();
 
     for label in result.consensus_labels.iter_mut() {

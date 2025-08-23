@@ -6,6 +6,7 @@
 
 use super::super::{_extend, _len_guards, _truncate};
 use crate::error::{SignalError, SignalResult};
+use std::f64::consts::PI;
 
 /// Boxcar window (rectangular/uniform window)
 ///
@@ -219,7 +220,6 @@ pub fn rectangular_window_spectrum(
     window_length: usize,
 ) -> Vec<num_complex::Complex64> {
     use num_complex::Complex64;
-    use std::f64::consts::PI;
 
     frequencies
         .iter()

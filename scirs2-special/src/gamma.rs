@@ -68,6 +68,7 @@ use crate::validation;
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::validation::check_finite;
 use std::f64;
+use std::f64::consts::PI;
 use std::fmt::{Debug, Display};
 
 /// High-precision constants for gamma function computation
@@ -176,7 +177,6 @@ mod constants {
 ///
 /// ```
 /// use scirs2_special::gamma;
-/// use std::f64::consts::PI;
 ///
 /// // Integer factorial relationship
 /// assert!((gamma(5.0) - 24.0).abs() < 1e-14);    // Γ(5) = 4! = 24
@@ -2505,7 +2505,6 @@ fn improved_initial_guess<F: Float + FromPrimitive>(y: F, a: F, b: F) -> F {
 pub mod complex {
     use super::*;
     use num_complex::Complex64;
-    use std::f64::consts::PI;
 
     /// Complex gamma function using Lanczos approximation
     ///

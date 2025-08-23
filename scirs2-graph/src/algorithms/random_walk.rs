@@ -30,7 +30,7 @@ where
 
     let mut walk = vec![start.clone()];
     let mut current = start.clone();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     use rand::Rng;
 
@@ -356,7 +356,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> BatchRandomWalker<N> {
             .par_iter()
             .map(|start| {
                 let mut local_walks = Vec::with_capacity(num_walks_per_node);
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
 
                 for _ in 0..num_walks_per_node {
                     if let Ok(walk) = self.single_walk(graph, start, walk_length, &mut rng) {
@@ -539,7 +539,7 @@ where
         .map(|i| {
             let start_idx = i % starts.len();
             let start = &starts[start_idx];
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             node2vec_walk(graph, start, walk_length, p, q, &mut rng)
         })
         .collect()

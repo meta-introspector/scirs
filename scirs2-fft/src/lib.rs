@@ -327,7 +327,6 @@ pub use padding::{
 ///
 /// ```
 /// use scirs2_fft::{stft, window::Window};
-/// use std::f64::consts::PI;
 ///
 /// // Generate a simple sine wave
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -401,7 +400,6 @@ where
 ///
 /// ```
 /// use scirs2_fft::hilbert;
-/// use std::f64::consts::PI;
 ///
 /// // Generate a cosine signal
 /// let n = 100;
@@ -565,7 +563,6 @@ pub fn fft_bounds(shape: &[usize]) -> Vec<(i32, i32)> {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_fft_bounds() {

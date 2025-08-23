@@ -8,7 +8,6 @@ use crate::error::{SignalError, SignalResult};
 use num_complex::Complex;
 use rustfft::FftPlanner;
 use scirs2_core::parallel_ops::*;
-use std::f64::consts::PI;
 use std::fs;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};

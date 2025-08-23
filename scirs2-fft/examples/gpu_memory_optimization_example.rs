@@ -6,7 +6,6 @@ use scirs2_fft::{
         AllocationStrategy,
     },
 };
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

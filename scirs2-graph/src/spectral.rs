@@ -299,7 +299,7 @@ fn deflated_lanczos_iteration(
     }
 
     // Generate random starting vector
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut v: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random::<f64>() - 0.5);
 
     // Deflate against previous _eigenvectors
@@ -1009,7 +1009,7 @@ where
 
     // For testing, we'll just make up some random cluster assignments
     let mut labels = Vec::with_capacity(graph.node_count());
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     for _ in 0..graph.node_count() {
         labels.push(rng.random_range(0..n_clusters));
     }
@@ -1274,7 +1274,7 @@ fn parallel_deflated_lanczos_iteration(
     let n = matrix.shape()[0];
 
     // Generate random starting vector using parallel RNG
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut v: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random::<f64>() - 0.5);
 
     // Parallel deflation against previous _eigenvectors
@@ -1330,7 +1330,7 @@ fn parallel_random_clustering(n: usize, k: usize) -> Vec<usize> {
     (0..n)
         .into_par_iter()
         .map(|_i| {
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             rng.random_range(0..k)
         })
         .collect()

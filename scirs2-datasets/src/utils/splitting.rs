@@ -8,10 +8,10 @@ use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::Array1;
 use rand::prelude::*;
-use rand::rng;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
+use scirs2_core::rng;
 
 /// Cross-validation fold indices
 ///

@@ -7,7 +7,6 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_fft::{fft, fft2, fftn, frft, ifft, irfft, rfft};
-use std::f64::consts::PI;
 
 /// Benchmark basic 1D FFT operations
 #[allow(dead_code)]

@@ -6,7 +6,6 @@
 use ndarray::{Array, ArrayBase, Data, Dimension, Ix1, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::Rng;
-use rand::rng;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 use crate::error::{Error, Result};

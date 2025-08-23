@@ -7,10 +7,11 @@
 use crate::error::{DatasetsError, Result};
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
-use rand::rng;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
+use rand_distr::Uniform;
 use std::collections::HashMap;
+use scirs2_core::rng;
 
 /// Balancing strategies for handling imbalanced datasets
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
@@ -101,7 +102,7 @@ pub fn random_oversample(
         if class_size < max_class_size {
             let samples_needed = max_class_size - class_size;
             for _ in 0..samples_needed {
-                let random_idx = rng.random_range(0..class_size);
+                let random_idx = rng.sample(Uniform::new(0, class_size).unwrap());
                 resampled_indices.push(indices[random_idx]);
             }
         }
@@ -288,7 +289,7 @@ pub fn generate_synthetic_samples(
 
     for i in 0..n_synthetic {
         // Randomly select a sample from the target _class
-        let base_idx = class_indices[rng.random_range(0..class_indices.len())];
+        let base_idx = class_indices[rng.sample(Uniform::new(0, class_indices.len()).unwrap())];
         let base_sample = data.row(base_idx);
 
         // Find k nearest _neighbors within the same _class
@@ -311,11 +312,11 @@ pub fn generate_synthetic_samples(
         let k_nearest = &distances[0..k_neighbors.min(distances.len())];
 
         // Select a random neighbor from the k nearest
-        let neighbor_idx = k_nearest[rng.random_range(0..k_nearest.len())].0;
+        let neighbor_idx = k_nearest[rng.sample(Uniform::new(0, k_nearest.len()).unwrap())].0;
         let neighbor_sample = data.row(neighbor_idx);
 
         // Generate _synthetic sample by interpolation
-        let alpha = rng.random_range(0.0..1.0);
+        let alpha = rng.gen_range(0.0..1.0);
         for (j, synthetic_feature) in synthetic_data.row_mut(i).iter_mut().enumerate() {
             *synthetic_feature = base_sample[j] + alpha * (neighbor_sample[j] - base_sample[j]);
         }
@@ -411,6 +412,7 @@ pub fn create_balanced_dataset(
 #[cfg(test)]
 mod tests {
     use super::*;
+use rand_distr::Uniform;
 
     #[test]
     fn test_random_oversample() {

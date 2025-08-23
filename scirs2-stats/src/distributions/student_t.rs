@@ -7,8 +7,8 @@ use crate::sampling::SampleableDistribution;
 use crate::traits::{ContinuousCDF, ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
-use rand::rng;
 use rand_distr::{Distribution, StudentT as RandStudentT};
+use scirs2_core::rng;
 use std::f64::consts::PI;
 
 /// Student's t distribution structure

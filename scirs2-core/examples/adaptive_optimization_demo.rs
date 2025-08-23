@@ -150,7 +150,7 @@ fn demo_workload_profiling() -> CoreResult<()> {
 
     // Create different workload profiles
     let compute_workload = WorkloadProfile::builder()
-        .name_2(matrix_multiplication)
+        .with_name("matrix_multiplication")
         .with_data_size(10_000_000)
         .with_compute_intensity(0.9)
         .with_workload_type(WorkloadType::ComputeIntensive)
@@ -181,7 +181,7 @@ fn demo_workload_profiling() -> CoreResult<()> {
     );
 
     let memory_workload = WorkloadProfile::builder()
-        .name_2(large_array_processing)
+        .with_name("large_array_processing")
         .with_data_size(100_000_000)
         .with_compute_intensity(0.3)
         .with_workload_type(WorkloadType::MemoryIntensive)
@@ -211,7 +211,7 @@ fn demo_workload_profiling() -> CoreResult<()> {
     );
 
     let interactive_workload = WorkloadProfile::builder()
-        .name_2(real_time_analytics)
+        .with_name("real_time_analytics")
         .with_data_size(1_000_000)
         .with_compute_intensity(0.6)
         .with_workload_type(WorkloadType::Interactive)
@@ -294,18 +294,18 @@ fn demo_basic_adaptive_optimization() -> CoreResult<()> {
     // Register workloads
     let workloads = [
         WorkloadProfile::builder()
-            .name_2(data_processing)
+            .with_name("data_processing")
             .with_workload_type(WorkloadType::Balanced)
             .with_compute_intensity(0.7)
             .build(),
         WorkloadProfile::builder()
-            .name_2(image_processing)
+            .with_name("image_processing")
             .with_workload_type(WorkloadType::ComputeIntensive)
             .with_compute_intensity(0.9)
             .with_parallelism(true, Some(8))
             .build(),
         WorkloadProfile::builder()
-            .name_2(database_queries)
+            .with_name("database_queries")
             .with_workload_type(WorkloadType::IOIntensive)
             .with_io_profile(0.8, IOType::Disk)
             .build(),
@@ -396,20 +396,21 @@ fn demo_basic_adaptive_optimization() -> CoreResult<()> {
 
     // Get workload-specific hints
     println!("\n🎯 Workload-Specific Optimization Hints:");
-    for workload_name in ["data_processing", "image_processing", "database_queries"] {
-        if let Ok(hints) = optimizer.get_workload_hints(workload_name) {
-            println!("  📊 {}:", workload_name);
-            println!(
-                "    - Preferred Threads: {:?}",
-                hints.preferred_thread_count
-            );
-            println!(
-                "    - Memory Strategy: {:?}",
-                hints.memory_allocation_strategy
-            );
-            println!("    - Algorithm Prefs: {:?}", hints.algorithm_preferences);
-        }
-    }
+    // TODO: Re-enable when get_workload_hints method is available
+    // for workload_name in ["data_processing", "image_processing", "database_queries"] {
+    //     if let Ok(hints) = optimizer.get_workload_hints(workload_name) {
+    //         println!("  📊 {}:", workload_name);
+    //         println!(
+    //             "    - Preferred Threads: {:?}",
+    //             hints.preferred_thread_count
+    //         );
+    //         println!(
+    //             "    - Memory Strategy: {:?}",
+    //             hints.memory_allocation_strategy
+    //         );
+    //         println!("    - Algorithm Prefs: {:?}", hints.algorithm_preferences);
+    //     }
+    // }
 
     optimizer.stop_optimization()?;
     println!("\n🛑 Optimization stopped");
@@ -432,7 +433,7 @@ fn demo_multi_objective_optimization() -> CoreResult<()> {
 
     // Register a complex workload
     let ml_workload = WorkloadProfile::builder()
-        .name_2(machine_learning_training)
+        .with_name("machine_learning_training")
         .with_data_size(50_000_000)
         .with_compute_intensity(0.85)
         .with_workload_type(WorkloadType::ComputeIntensive)
@@ -553,7 +554,7 @@ fn demo_real_time_adaptation() -> CoreResult<()> {
 
     // Register real-time workload
     let realtime_workload = WorkloadProfile::builder()
-        .name_2(real_time_processing)
+        .with_name("real_time_processing")
         .with_workload_type(WorkloadType::RealTime)
         .with_priority(Priority::Critical)
         .with_compute_intensity(0.6)
@@ -682,21 +683,21 @@ fn demo_enterprise_features() -> CoreResult<()> {
     // Register enterprise workloads
     let enterprise_workloads = [
         WorkloadProfile::builder()
-            .name_2(financial_risk_calculation)
+            .with_name("financial_risk_calculation")
             .with_workload_type(WorkloadType::ComputeIntensive)
             .with_priority(Priority::Critical)
             .with_compute_intensity(0.95)
             .with_expected_duration(Duration::from_secs(1800))
             .build(),
         WorkloadProfile::builder()
-            .name_2(customer_data_analytics)
+            .with_name("customer_data_analytics")
             .with_workload_type(WorkloadType::MemoryIntensive)
             .with_priority(Priority::High)
             .with_data_size(100_000_000)
             .with_io_profile(0.6, IOType::Disk)
             .build(),
         WorkloadProfile::builder()
-            .name_2(real_time_fraud_detection)
+            .with_name("real_time_fraud_detection")
             .with_workload_type(WorkloadType::Interactive)
             .with_priority(Priority::Critical)
             .with_compute_intensity(0.7)
@@ -805,7 +806,7 @@ fn demo_enterprise_features() -> CoreResult<()> {
             println!(
                 "       Implementation Priority: {}",
                 match rec.risk_level {
-                    RiskLevel::Low => Immediate,
+                    RiskLevel::Low => "Immediate",
                     RiskLevel::Medium => "Next Maintenance Window",
                     RiskLevel::High => "Planned Change",
                     RiskLevel::Critical => "Executive Approval Required",

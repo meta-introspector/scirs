@@ -14,7 +14,7 @@ use ndarray::{Array1, ArrayView1};
 use scirs2_core::memory_efficient::{
     create_mmap, AccessMode, ChunkingStrategy, MemoryMappedArray, MemoryMappedChunks,
 };
-use statrs::statistics::Statistics;
+// Removed unused statrs import
 #[cfg(feature = "memory_efficient")]
 use std::path::Path;
 #[cfg(feature = "memory_efficient")]
@@ -52,7 +52,7 @@ impl OnlineStats {
     // Update stats with a batch of values
     fn update_batch(&mut self, values: ArrayView1<f64>) {
         for &x in values.iter() {
-            self.update_model(x);
+            self.update(x);
         }
     }
 
@@ -253,7 +253,7 @@ fn calculate_statistics(
     // Process each chunk
     let chunk_stats = mmap.process_chunks(strategy, |chunk_data, chunk_idx| {
         // Create a temporary view for this chunk
-        let chunk = ArrayView1::fromshape(chunk_data.len(), chunk_data).unwrap();
+        let chunk = ArrayView1::from_shape(chunk_data.len(), chunk_data).unwrap();
 
         // Create a stats accumulator for this chunk
         let mut chunk_stats = OnlineStats::new();
@@ -344,7 +344,7 @@ fn normalize_data(
             // Calculate and print statistics of normalized data
             let mut norm_stats = OnlineStats::new();
             for &x in chunk_data.iter() {
-                norm_stats.update_model(x);
+                norm_stats.update(x);
             }
 
             println!(
@@ -383,11 +383,11 @@ fn calculate_verification_stats(
     let sample_size = mmap.size.min(1_000_000); // Max 1 million elements
     let stride = (mmap.size / sample_size).max(1);
 
-    let array = mmap.asarray::<ndarray::Ix1>()?;
+    let array = mmap.as_array::<ndarray::Ix1>()?;
     let mut stats = OnlineStats::new();
 
     for i in (0..mmap.size).step_by(stride) {
-        stats.update_model(array[i]);
+        stats.update(array[i]);
     }
 
     Ok(stats)

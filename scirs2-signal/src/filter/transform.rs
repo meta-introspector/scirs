@@ -10,7 +10,6 @@ use crate::lti::design::tf;
 use crate::lti::TransferFunction;
 use num_complex::Complex64;
 use num_traits::Zero;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Apply bilinear transform to convert analog filter to digital

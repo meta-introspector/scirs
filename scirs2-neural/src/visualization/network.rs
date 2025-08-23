@@ -10,7 +10,6 @@ use num_traits::Float;
 use serde::Serialize;
 use std::fmt::Debug;
 use std::fs;
-use std::path::PathBuf;
 /// Network architecture visualizer
 #[allow(dead_code)]
 pub struct NetworkVisualizer<F: Float + Debug + ndarray::ScalarOperand> {

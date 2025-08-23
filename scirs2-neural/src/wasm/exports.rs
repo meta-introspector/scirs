@@ -16,7 +16,6 @@ use num_traits::Float;
 use std::fmt::Debug;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::path::PathBuf;
 /// WebAssembly compilation configuration
 #[derive(Debug, Clone)]
 pub struct WasmCompilationConfig {

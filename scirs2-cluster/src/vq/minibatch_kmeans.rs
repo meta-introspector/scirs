@@ -116,7 +116,7 @@ where
     // Setup RNG
     let mut rng = match opts.random_seed {
         Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
-        None => rand::rngs::StdRng::seed_from_u64(rand::rng().gen()),
+        None => rand::rngs::StdRng::seed_from_u64(rand::rng().random()),
     };
 
     // Determine initialization size

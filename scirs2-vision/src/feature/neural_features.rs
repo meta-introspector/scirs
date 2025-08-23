@@ -569,7 +569,7 @@ impl SuperPointNet {
         ];
 
         // Detection head
-        let fc_weights = vec![Array2::from_shape_fn((65, 128), |(__)| {
+        let fc_weights = vec![Array2::from_shape_fn((65, 128), |_| {
             rand::random::<f32>() * 0.1
         })];
 
@@ -592,7 +592,7 @@ impl SuperPointNet {
         // Descriptor head weights
         let fc_weights = vec![Array2::from_shape_fn(
             (config.descriptor_dim, 128),
-            |(__)| rand::random::<f32>() * 0.1,
+            |_| rand::random::<f32>() * 0.1,
         )];
 
         let fc_biases = vec![Array1::zeros(config.descriptor_dim)];

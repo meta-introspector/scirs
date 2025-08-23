@@ -61,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{:-^10} | {:-^25} | {:-^25}", "", "", "");
 
     for &x in &test_points {
-        let (be, ke__) = kelvin(x)?;
+        let (be, ke, _, _) = kelvin(x)?;
 
         println!(
             "{:^10.2} | {:^12.6} + {:^10.6}i | {:^12.6} + {:^10.6}i",
@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Asymptotic behavior
     println!("\nAsymptotic Behavior as x approaches zero:");
     let small_x = 1e-5;
-    let (be_small, ke_small__) = kelvin(small_x)?;
+    let (be_small, ke_small, _, _) = kelvin(small_x)?;
 
     println!(
         "ber({}) + i·bei({}) ≈ {} + {}i",

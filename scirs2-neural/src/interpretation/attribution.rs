@@ -719,7 +719,6 @@ pub fn compute_smoothgrad_attribution<F>(
     base_method: &AttributionMethod,
     noise_std: f64,
     use rand::prelude::*;
-use rand::rng;
 use statrs::statistics::Statistics;
     let mut rng = rng();
     let noise_std_f = F::from(noise_std).unwrap();

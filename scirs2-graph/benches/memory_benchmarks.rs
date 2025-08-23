@@ -22,7 +22,7 @@ fn bench_memory_usage(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("standard_graph", size), &size, |b, &n| {
             b.iter(|| {
                 let graph =
-                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::thread_rng())
+                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::rng())
                         .unwrap();
                 let stats = MemoryProfiler::profile_graph(&graph);
                 black_box(stats.total_bytes)
@@ -33,7 +33,7 @@ fn bench_memory_usage(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("csr_graph", size), &size, |b, &n| {
             b.iter(|| {
                 let graph =
-                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::thread_rng())
+                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::rng())
                         .unwrap();
                 let edges: Vec<_> = (0..graph.node_count())
                     .flat_map(|u| {
@@ -54,7 +54,7 @@ fn bench_memory_usage(c: &mut Criterion) {
             b.iter(|| {
                 let mut bitpacked = BitPackedGraph::new(n, false);
                 let graph =
-                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::thread_rng())
+                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::rng())
                         .unwrap();
 
                 for u in 0..graph.node_count() {
@@ -82,17 +82,17 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
     let m = 5; // Average degree of 10
 
     // Generate test graph
-    let graph = generators::barabasi_albert_graph(n, m, None).unwrap();
+    let graph = generators::barabasi_albert_graph(n, m, &mut rand::rng()).unwrap();
 
     // Create different representations
     let edges: Vec<_> = (0..graph.node_count())
-        .flat_map(|u| graph.neighbors(&u).unwrap().map(move |v| (u, v, 1.0)))
+        .flat_map(|u| graph.neighbors(&u).unwrap().into_iter().map(move |v| (u, v, 1.0)))
         .collect();
 
     let csr = CSRGraph::from_edges(n, edges.clone()).unwrap();
 
     let mut bitpacked = BitPackedGraph::new(n, false);
-    for (u, v_) in &edges {
+    for (u, v, _) in &edges {
         if u <= v {
             bitpacked.add_edge(*u, *v).unwrap();
         }
@@ -108,7 +108,7 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
         b.iter(|| {
             let mut sum = 0;
             for node in 0..n {
-                for neighbor in graph.neighbors(node) {
+                for neighbor in graph.neighbors(&node).unwrap() {
                     sum += neighbor;
                 }
             }
@@ -121,7 +121,7 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
         b.iter(|| {
             let mut sum = 0;
             for node in 0..n {
-                for (neighbor_) in csr.neighbors(node) {
+                for neighbor in csr.neighbors(node) {
                     sum += neighbor;
                 }
             }
@@ -168,7 +168,7 @@ fn bench_edge_queries(c: &mut Criterion) {
 
     // Generate test graph
     let graph =
-        generators::erdos_renyi_graph(n, edge_probability, &mut rand::thread_rng()).unwrap();
+        generators::erdos_renyi_graph(n, edge_probability, &mut rand::rng()).unwrap();
 
     // Create bit-packed representation
     let mut bitpacked = BitPackedGraph::new(n, false);
@@ -182,9 +182,9 @@ fn bench_edge_queries(c: &mut Criterion) {
 
     // Generate random query pairs
     use rand::prelude::*;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let query_pairs: Vec<(usize, usize)> = (0..1000)
-        .map(|_| (rng.random_range(0..n)..rng.random_range(0..n)))
+        .map(|_| (rng.random_range(0..n), rng.random_range(0..n)))
         .collect();
 
     // Benchmark standard graph
@@ -225,7 +225,7 @@ fn bench_construction_time(c: &mut Criterion) {
 
     for size in sizes {
         let edges: Vec<(usize, usize, f64)> =
-            generators::barabasi_albert_graph(size, 3, &mut rand::thread_rng())
+            generators::barabasi_albert_graph(size, 3, &mut rand::rng())
                 .unwrap()
                 .edges()
                 .into_iter()
@@ -293,7 +293,7 @@ fn bench_fragmentation_analysis(c: &mut Criterion) {
             &size,
             |b, &n| {
                 let graph =
-                    generators::barabasi_albert_graph(n, 5, &mut rand::thread_rng()).unwrap();
+                    generators::barabasi_albert_graph(n, 5, &mut rand::rng()).unwrap();
                 b.iter(|| {
                     let report = MemoryProfiler::analyze_fragmentation(&graph);
                     black_box(report.fragmentation_ratio)

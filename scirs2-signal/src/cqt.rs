@@ -5,7 +5,6 @@ use ndarray::s;
 use ndarray::{Array, Array1, Array2};
 use num_complex::{Complex64, ComplexFloat};
 use scirs2_fft;
-use std::f64::consts::PI;
 
 // Constant-Q Transform Implementation
 //

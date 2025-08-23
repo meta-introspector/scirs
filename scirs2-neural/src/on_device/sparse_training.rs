@@ -72,7 +72,6 @@ impl SparseTrainer {
     /// Random pruning
     fn random_pruning(
         use rand::seq::SliceRandom;
-use rand::rng;
         let mut rng = rng();
         // Get all indices
         let mut indices: Vec<(usize, usize)> = weights

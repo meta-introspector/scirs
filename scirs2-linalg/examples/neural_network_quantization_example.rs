@@ -4,7 +4,6 @@
 //! for quantizing different components of a neural network.
 
 use ndarray::{Array2, ArrayView2};
-use rand::rng;
 use rand_distr::{Distribution, Normal};
 use scirs2_linalg::prelude::*;
 
@@ -165,13 +164,13 @@ fn quantize_network(
         println!("  Weights shape: {:?}", layer.weights.dim());
         let weights_params =
             calibrate_matrix(&layer.weights.view(), bits, &weights_config).unwrap();
-        let (quantized_weights) =
+        let (quantized_weights, _) =
             quantize_matrix(&layer.weights.view(), bits, weights_params.method);
 
         // Quantize biases
         println!("  Biases shape: {:?}", layer.biases.dim());
         let bias_params = calibrate_matrix(&layer.biases.view(), bits, &bias_config).unwrap();
-        let (quantized_biases) = quantize_matrix(&layer.biases.view(), bits, bias_params.method);
+        let (quantized_biases, _) = quantize_matrix(&layer.biases.view(), bits, bias_params.method);
 
         // Save quantized weights and biases
         quantized_layers.push((quantized_weights, quantized_biases));
@@ -213,16 +212,16 @@ fn run_network_quantized(
         ..CalibrationConfig::default()
     };
     let act_params = calibrate_matrix(&input.view(), 8, &activation_config).unwrap();
-    let (q_input) = quantize_matrix(&input.view(), 8, act_params.method);
+    let (q_input, q_input_params) = quantize_matrix(&input.view(), 8, act_params.method);
 
     // Perform quantized matrix multiplication for first layer
-    let hidden = match quantized_matmul(q_weights, weights_params, &q_input, &act_params) {
+    let hidden = match quantized_matmul(q_weights, weights_params, &q_input, &q_input_params) {
         Ok(result) => result,
         Err(e) => {
             println!("Error in quantized matmul: {:?}", e);
             // Fallback to dequantized computation
             let dq_weights = dequantize_matrix(q_weights, weights_params);
-            let dq_input = dequantize_matrix(&q_input, &act_params);
+            let dq_input = dequantize_matrix(&q_input, &q_input_params);
             dq_input.dot(&dq_weights.t())
         }
     };
@@ -241,20 +240,20 @@ fn run_network_quantized(
         ..CalibrationConfig::default()
     };
     let hidden_params = calibrate_matrix(&hidden_activated.view(), 8, &hidden_config).unwrap();
-    let (q_hidden) = quantize_matrix(&hidden_activated.view(), 8, hidden_params.method);
+    let (q_hidden, q_hidden_params) = quantize_matrix(&hidden_activated.view(), 8, hidden_params.method);
 
     // Second layer
     let (q_weights2, q_biases2) = &quantized_network[1];
     let (weights_params2, bias_params2) = &quantization_params[1];
 
     // Perform quantized matrix multiplication for second layer
-    let output = match quantized_matmul(q_weights2, weights_params2, &q_hidden, &hidden_params) {
+    let output = match quantized_matmul(q_weights2, weights_params2, &q_hidden, &q_hidden_params) {
         Ok(result) => result,
         Err(e) => {
             println!("Error in quantized matmul: {:?}", e);
             // Fallback to dequantized computation
             let dq_weights = dequantize_matrix(q_weights2, weights_params2);
-            let dq_hidden = dequantize_matrix(&q_hidden, &hidden_params);
+            let dq_hidden = dequantize_matrix(&q_hidden, &q_hidden_params);
             dq_hidden.dot(&dq_weights.t())
         }
     };
@@ -390,21 +389,21 @@ fn mixed_precision_quantization(network: &[SimpleLayer], input: &Array2<f32>) {
         ..CalibrationConfig::default()
     };
     let act_params = calibrate_matrix(&input.view(), a_bits0, &activation_config).unwrap();
-    let (q_input) = quantize_matrix(&input.view(), a_bits0, act_params.method);
+    let (q_input, q_input_params) = quantize_matrix(&input.view(), a_bits0, act_params.method);
 
     // First layer quantized matmul
-    let hidden = match quantized_matmul(q_weights0, weights_params0, &q_input, &act_params) {
+    let hidden = match quantized_matmul(&q_weights0.0, &q_weights0.1, &q_input, &q_input_params) {
         Ok(result) => result,
         Err(_) => {
             // Fallback to dequantized computation
-            let dq_weights = dequantize_matrix(q_weights0, weights_params0);
-            let dq_input = dequantize_matrix(&q_input, &act_params);
+            let dq_weights = dequantize_matrix(&q_weights0.0, &q_weights0.1);
+            let dq_input = dequantize_matrix(&q_input, &q_input_params);
             dq_input.dot(&dq_weights.t())
         }
     };
 
     // Add biases and apply ReLU
-    let dq_biases0 = dequantize_matrix(q_biases0, bias_params0);
+    let dq_biases0 = dequantize_matrix(&q_biases0.0, &q_biases0.1);
     let hidden_bias = &hidden + &dq_biases0.t();
     let hidden_activated = relu(&hidden_bias.view());
 
@@ -417,25 +416,25 @@ fn mixed_precision_quantization(network: &[SimpleLayer], input: &Array2<f32>) {
     };
     let hidden_params =
         calibrate_matrix(&hidden_activated.view(), a_bits1, &hidden_config).unwrap();
-    let (q_hidden) = quantize_matrix(&hidden_activated.view(), a_bits1, hidden_params.method);
+    let (q_hidden, q_hidden_params) = quantize_matrix(&hidden_activated.view(), a_bits1, hidden_params.method);
 
     // Second layer forward pass
     let (q_weights1, q_biases1) = &quantized_layers[1];
     let (weights_params1, bias_params1) = &quantization_params[1];
 
     // Second layer quantized matmul
-    let output = match quantized_matmul(q_weights1, weights_params1, &q_hidden, &hidden_params) {
+    let output = match quantized_matmul(&q_weights1.0, &q_weights1.1, &q_hidden, &q_hidden_params) {
         Ok(result) => result,
         Err(_) => {
             // Fallback to dequantized computation
-            let dq_weights = dequantize_matrix(q_weights1, weights_params1);
-            let dq_hidden = dequantize_matrix(&q_hidden, &hidden_params);
+            let dq_weights = dequantize_matrix(&q_weights1.0, &q_weights1.1);
+            let dq_hidden = dequantize_matrix(&q_hidden, &q_hidden_params);
             dq_hidden.dot(&dq_weights.t())
         }
     };
 
     // Add biases
-    let dq_biases1 = dequantize_matrix(q_biases1, bias_params1);
+    let dq_biases1 = dequantize_matrix(&q_biases1.0, &q_biases1.1);
     let output_bias = &output + &dq_biases1.t();
 
     // Compare with full precision

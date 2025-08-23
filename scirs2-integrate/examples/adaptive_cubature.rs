@@ -4,7 +4,6 @@ use ndarray::{Array1, ArrayView1};
 use scirs2_integrate::error::{IntegrateError, IntegrateResult};
 use scirs2_integrate::gaussian::GaussLegendreQuadrature;
 use std::collections::VecDeque;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Result of adaptive cubature integration

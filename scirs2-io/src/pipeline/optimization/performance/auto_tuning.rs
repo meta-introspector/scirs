@@ -106,7 +106,7 @@ impl AutoTuner {
     }
 
     fn apply_exploration(&self, mut params: OptimalParameters) -> Result<OptimalParameters> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         if rng.random::<f64>() < self.exploration_rate {
             // Apply random perturbation for exploration
             params.thread_count =

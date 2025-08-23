@@ -1,5 +1,4 @@
 use ndarray::{s, Array1, Array2, Array3, Axis};
-use rand::rng;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};

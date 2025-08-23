@@ -22,7 +22,6 @@ use std::io::BufReader;
 use std::path::Path;
 
 use crate::error::{IoError, Result};
-use std::path::PathBuf;
 
 /// Image color mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

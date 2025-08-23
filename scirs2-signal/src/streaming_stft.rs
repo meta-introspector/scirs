@@ -54,7 +54,6 @@ use ndarray::s;
 use ndarray::Array1;
 use num_complex::Complex64;
 use std::collections::VecDeque;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Configuration for streaming STFT

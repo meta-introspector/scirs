@@ -18,7 +18,6 @@ use std::rc::Rc;
 use ndarray::ArrayView1;
 
 use crate::error::{SpatialError, SpatialResult};
-use std::f64::consts::PI;
 
 /// A path found by the A* algorithm
 #[derive(Debug, Clone)]

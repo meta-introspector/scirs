@@ -145,7 +145,6 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
         let mut indices: Vec<usize> = (0..dataset.len()).collect();
         if self.config.shuffle {
             // use rand::rngs::SmallRng;
-use rand::rng;
             use rand::seq::SliceRandom;
             // use rand::SeedableRng;
             let mut rng = rng();

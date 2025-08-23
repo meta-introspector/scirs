@@ -12,7 +12,6 @@ use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
 use rand_distr::uniform::SampleUniform;
 use rand_distr::{Distribution, Uniform};
-use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};

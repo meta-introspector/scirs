@@ -1,6 +1,5 @@
 //! Tanh activation function implementation
 
-use rand::rng;
 use crate::activations::Activation;
 use crate::error::Result;
 use crate::layers::Layer;

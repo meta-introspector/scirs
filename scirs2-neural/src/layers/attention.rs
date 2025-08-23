@@ -5,7 +5,6 @@
 //! as used in transformer architectures.
 
 use crate::error::{NeuralError, Result};
-use rand::rng;
 use crate::layers::{Layer, ParamLayer};
 use ndarray::{s, Array, ArrayView, IxDyn, ScalarOperand};
 use num_traits::Float;

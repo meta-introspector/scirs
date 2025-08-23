@@ -3,7 +3,6 @@ use scirs2_signal::{
     waveforms::chirp,
     wavelets::{complex_gaussian, complex_morlet, cwt, fbsp, shannon},
 };
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

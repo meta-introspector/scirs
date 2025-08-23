@@ -144,7 +144,7 @@ pub enum OptimizationStepType {
 impl<T: Float + Default + std::fmt::Debug> SearchStrategy<T> {
     /// Create new search strategy
     pub fn new(strategy_type: SearchStrategyType, config: SearchConfig) -> Self {
-        let rng = Box::new(rand::thread_rng());
+        let rng = Box::new(rand::rng());
         
         let state = match strategy_type {
             SearchStrategyType::Random => {

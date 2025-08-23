@@ -19,12 +19,10 @@ use crate::simd_memory_optimization::{simd_optimized_convolution, SimdMemoryConf
 use crate::spectral::{periodogram, spectrogram, welch};
 use crate::wavelets::{cwt, morlet};
 use ndarray::Array1;
-use num_cpus::get;
 use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
 use std::time::Instant;

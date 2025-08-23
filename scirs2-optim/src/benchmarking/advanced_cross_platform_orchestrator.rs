@@ -17,7 +17,6 @@ use std::time::{Duration, Instant, SystemTime};
 use std::process::{Command, Child, Stdio};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::path::PathBuf;
 
 /// Advanced cross-platform testing orchestrator
 #[derive(Debug)]

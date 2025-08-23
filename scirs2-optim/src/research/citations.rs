@@ -7,7 +7,6 @@ use crate::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
-use std::path::PathBuf;
 
 /// Citation manager for handling bibliographic references
 #[derive(Debug, Clone, Serialize, Deserialize)]

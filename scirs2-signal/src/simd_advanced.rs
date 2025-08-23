@@ -22,7 +22,6 @@ use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::check_finite;
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]

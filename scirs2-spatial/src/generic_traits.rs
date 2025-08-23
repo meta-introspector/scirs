@@ -36,7 +36,6 @@
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Trait for scalar types that can be used in spatial computations

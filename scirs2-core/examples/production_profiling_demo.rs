@@ -6,7 +6,7 @@
 use scirs2_core::profiling::production::{ProductionProfiler, ProfileConfig, WorkloadType};
 use scirs2_core::CoreResult;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 #[allow(dead_code)]
 fn main() -> CoreResult<()> {
@@ -130,13 +130,14 @@ fn demo_basic_workload_analysis() -> CoreResult<()> {
 
     // Analyze a compute-intensive workload
     println!("🔍 Starting workload analysis for 'matrix_operations'...");
-    profiler.start_workload_analysis("matrix_operations", WorkloadType::ComputeIntensive)?;
+    let start_time = SystemTime::now();
+    profiler.start_profiling_workload("matrix_operations", WorkloadType::ComputeIntensive)?;
 
     // Simulate matrix operations
     simulatematrix_operations();
 
     let report = profiler
-        .finish_workload_analysis_by_id("matrix_operations", WorkloadType::ComputeIntensive)?;
+        .finish_workload_analysis("matrix_operations", WorkloadType::ComputeIntensive, start_time)?;
 
     println!("📊 Analysis Results:");
     println!("  - Workload ID: {}", report.workload_id);
@@ -224,7 +225,8 @@ fn demo_enterprise_features() -> CoreResult<()> {
             workload_name, workload_type
         );
 
-        profiler.start_workload_analysis(workload_name, workload_type.clone())?;
+        let start_time = SystemTime::now();
+        profiler.start_profiling_workload(workload_name, workload_type.clone())?;
 
         // Simulate different types of work
         match workload_type {
@@ -237,7 +239,7 @@ fn demo_enterprise_features() -> CoreResult<()> {
         }
 
         let report =
-            profiler.finish_workload_analysis_by_id(workload_name, workload_type.clone())?;
+            profiler.finish_workload_analysis(workload_name, workload_type.clone(), start_time)?;
 
         println!(
             "  ✅ Completed - Quality: {}/100, Samples: {}",
@@ -255,10 +257,11 @@ fn demo_enterprise_features() -> CoreResult<()> {
 
     println!("\n📄 Executive Summary Generation:");
     // Use the last report for executive summary demo
-    profiler.start_workload_analysis("executive_demo", WorkloadType::Mixed)?;
+    let start_time = SystemTime::now();
+    profiler.start_profiling_workload("executive_demo", WorkloadType::Mixed)?;
     simulate_mixed_work();
     let final_report =
-        profiler.finish_workload_analysis_by_id("executive_demo", WorkloadType::Mixed)?;
+        profiler.finish_workload_analysis("executive_demo", WorkloadType::Mixed, start_time)?;
 
     println!("{}", final_report.executive_summary());
 
@@ -275,13 +278,14 @@ fn demo_bottleneck_identification() -> CoreResult<()> {
     let mut profiler = ProductionProfiler::new(config)?;
 
     println!("🎯 Simulating workload with intentional bottlenecks...");
-    profiler.start_workload_analysis("bottleneck_demo", WorkloadType::ComputeIntensive)?;
+    let start_time = SystemTime::now();
+    profiler.start_profiling_workload("bottleneck_demo", WorkloadType::ComputeIntensive)?;
 
     // Simulate work with bottlenecks
     simulate_bottleneck_workload();
 
     let report = profiler
-        .finish_workload_analysis_by_id("bottleneck_demo", WorkloadType::ComputeIntensive)?;
+        .finish_workload_analysis("bottleneck_demo", WorkloadType::ComputeIntensive, start_time)?;
 
     if report.has_bottlenecks() {
         println!("\n🚨 Bottleneck Analysis Results:");
@@ -327,23 +331,24 @@ fn demo_regression_detection() -> CoreResult<()> {
 
     // Record baseline performance
     println!("📊 Recording baseline performance...");
-    profiler.record_performance("regression_test", Duration::from_millis(100))?;
-    profiler.record_performance("regression_test", Duration::from_millis(95))?;
-    profiler.record_performance("regression_test", Duration::from_millis(105))?;
-    profiler.record_performance("regression_test", Duration::from_millis(98))?;
-    profiler.record_performance("regression_test", Duration::from_millis(102))?;
+    profiler.record_performance_data("regression_test", "baseline_function", Duration::from_millis(100))?;
+    profiler.record_performance_data("regression_test", "baseline_function", Duration::from_millis(95))?;
+    profiler.record_performance_data("regression_test", "baseline_function", Duration::from_millis(105))?;
+    profiler.record_performance_data("regression_test", "baseline_function", Duration::from_millis(98))?;
+    profiler.record_performance_data("regression_test", "baseline_function", Duration::from_millis(102))?;
 
     println!("⏱️  Baseline established: ~100ms average");
 
     // Simulate a performance regression
     println!("\n🔍 Analyzing current performance (simulating regression)...");
-    profiler.start_workload_analysis("regression_test", WorkloadType::ComputeIntensive)?;
+    let start_time = SystemTime::now();
+    profiler.start_profiling_workload("regression_test", WorkloadType::ComputeIntensive)?;
 
     // Simulate slower performance
     thread::sleep(Duration::from_millis(120)); // Simulate 20% performance regression
 
     let report = profiler
-        .finish_workload_analysis_by_id("regression_test", WorkloadType::ComputeIntensive)?;
+        .finish_workload_analysis("regression_test", WorkloadType::ComputeIntensive, start_time)?;
 
     if report.has_regressions() {
         println!("\n⚠️  Performance Regression Detected!");
@@ -392,9 +397,8 @@ fn demo_resourcemonitoring() -> CoreResult<()> {
     );
 
     println!("\n📤 Data Export Capabilities:");
-    let export_data = profiler.export_data(resource_demo)?;
-    println!("  - Export Format: JSON");
-    println!("  - Data Size: {} bytes", export_data.len());
+    // TODO: Implement export_data method when available
+    println!("  - Export Format: JSON (planned)");
     println!("  - Contains: Configuration, resource metrics, timestamps");
 
     Ok(())

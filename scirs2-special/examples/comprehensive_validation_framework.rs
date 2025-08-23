@@ -16,7 +16,6 @@
 use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -221,7 +220,8 @@ fn validate_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
         let k0_val = k0(x);
         let wronskian = i0_val * k0(x) + iv(1.0, x) * k0_val; // Should be 1/x
         let expected_wronskian = 1.0 / x;
-        let error: f64 = (wronskian - expected_wronskian).abs();
+        let diff: f64 = wronskian - expected_wronskian;
+        let error = diff.abs();
 
         println!(
             "x = {:.1}: I₀K₁ + I₁K₀ = {:.6} (expected {:.6}), error = {:.2e}",
@@ -245,7 +245,8 @@ fn validate_error_functions() -> Result<(), Box<dyn std::error::Error>> {
 
     for &x in &test_values {
         let sum = erf(x) + erfc(x);
-        let error: f64 = (sum - 1.0).abs();
+        let diff: f64 = sum - 1.0;
+        let error = diff.abs();
         max_error = max_error.max(error);
 
         if error > 1e-14 {
@@ -263,7 +264,8 @@ fn validate_error_functions() -> Result<(), Box<dyn std::error::Error>> {
         if x != 0.0 {
             let erf_pos = erf(x);
             let erf_neg = erf(-x);
-            let symmetry_error: f64 = (erf_pos + erf_neg).abs();
+            let sum: f64 = erf_pos + erf_neg;
+            let symmetry_error = sum.abs();
 
             if symmetry_error > 1e-14 {
                 println!("⚠️  Symmetry error at x = {}: {:.2e}", x, symmetry_error);
@@ -279,7 +281,8 @@ fn validate_error_functions() -> Result<(), Box<dyn std::error::Error>> {
     for &p in &probability_values {
         let x = erfinv(2.0 * p - 1.0);
         let recovered_p = 0.5 * (1.0 + erf(x));
-        let error: f64 = (recovered_p - p).abs();
+        let diff: f64 = recovered_p - p;
+        let error = diff.abs();
 
         println!(
             "p = {:.2}: erfinv -> erf gives {:.8}, error = {:.2e}",
@@ -392,7 +395,8 @@ fn validate_elliptic_functions() -> Result<(), Box<dyn std::error::Error>> {
     let k_values = vec![0.1, 0.3, 0.5, 0.7, 0.9];
 
     for &k in &k_values {
-        let k_prime: f64 = (1.0 - k * k).sqrt();
+        let expr: f64 = 1.0 - k * k;
+        let k_prime = expr.sqrt();
 
         let k_k = elliptic_k(k).unwrap_or(0.0);
         let e_k = elliptic_e(k).unwrap_or(0.0);
@@ -419,10 +423,12 @@ fn validate_elliptic_functions() -> Result<(), Box<dyn std::error::Error>> {
             let dn = jacobi_dn(u, m);
 
             // Test fundamental identity: sn²(u) + cn²(u) = 1
-            let identity1_error: f64 = (sn * sn + cn * cn - 1.0).abs();
+            let expr: f64 = sn * sn + cn * cn - 1.0;
+            let identity1_error = expr.abs();
 
             // Test: dn²(u) + m·sn²(u) = 1
-            let identity2_error: f64 = (dn * dn + m * sn * sn - 1.0).abs();
+            let expr: f64 = dn * dn + m * sn * sn - 1.0;
+            let identity2_error = expr.abs();
 
             if identity1_error > 1e-12 || identity2_error > 1e-12 {
                 println!(

@@ -475,10 +475,11 @@ impl BenchmarkRunner {
     }
 
     fn compare_with_baseline(
-        self_results: &[BenchmarkSuiteResult],
+        &self,
+        results: &[BenchmarkSuiteResult],
     ) -> Result<Option<BenchmarkComparison>, Box<dyn std::error::Error>> {
         // Placeholder for baseline comparison logic
-        // This would load baseline _results and compare performance metrics
+        // This would load baseline results and compare performance metrics
         Ok(None)
     }
 
@@ -652,7 +653,7 @@ trait CommandExt {
 }
 
 impl CommandExt for Command {
-    fn timeout(&mut selftimeout: Duration) -> &mut Self {
+    fn timeout(&mut self, timeout: Duration) -> &mut Self {
         // Simplified implementation - would need platform-specific _timeout logic
         self
     }

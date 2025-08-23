@@ -10,8 +10,8 @@ use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array2;
-use scirs2__linalg::matrix_functions;
-use scirs2__linalg::prelude::*;
+use scirs2_linalg::matrix_functions;
+use scirs2_linalg::prelude::*;
 use std::time::Duration;
 
 /// Create a well-conditioned test matrix scaled for matrix functions

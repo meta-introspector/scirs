@@ -18,7 +18,6 @@ use rand::random;
 use std::fmt;
 
 use crate::error::{IntegrateError, IntegrateResult};
-use std::f64::consts::PI;
 
 /// Result type for QMC integration
 #[derive(Clone, Debug)]

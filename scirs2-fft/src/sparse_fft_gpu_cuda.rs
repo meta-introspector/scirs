@@ -518,7 +518,6 @@ pub fn get_cuda_devices() -> FFTResult<Vec<GpuDeviceInfo>> {
 mod tests {
     use super::*;
     use crate::sparse_fft_gpu_memory::AllocationStrategy;
-    use std::f64::consts::PI;
 
     // Helper function to create a sparse signal
     fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {

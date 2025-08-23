@@ -287,7 +287,6 @@ mod tests {
     use crate::symplectic::leapfrog::StormerVerlet;
     use crate::symplectic::potential::SeparableHamiltonian;
     use ndarray::array;
-    use std::f64::consts::PI;
 
     /// Test accuracy of high-order methods
     #[test]

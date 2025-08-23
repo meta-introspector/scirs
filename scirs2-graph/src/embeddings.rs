@@ -1883,7 +1883,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FastGraphEmbedding<N> {
         }
 
         // Initialize random projection matrix
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let projection_size = dimensions * qualityfactor;
         let mut projection_matrix = Vec::new();
         for _ in 0..projection_size {
@@ -1917,7 +1917,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FastGraphEmbedding<N> {
     {
         // Use frequency sketching for fast approximation
         let mut sketch = vec![0.0f32; self.dimensions];
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Sample random walks and update sketch
         for _ in 0..num_samples {
@@ -2133,7 +2133,7 @@ impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
         }
 
         // Initialize graph embeddings
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for graph_id in graph_patterns.keys() {
             let embedding: Vec<f64> = (0..self.dimensions)
                 .map(|_| rng.random_range(-0.1..0.1))

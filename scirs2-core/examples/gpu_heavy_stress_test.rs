@@ -44,13 +44,13 @@ fn run_gpu_stress_test() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Test 1: Large Matrix Operations
-    test_largematrix_ops(&ctx)?;
+    test_largematrix_operations(&ctx)?;
 
     // Test 2: Massive Data Transfer
     test_massive_data_transfer(&ctx)?;
 
     // Test 3: Intensive Computation Loop
-    test_intensive_computation(&ctx)?;
+    test_intensive_computation_loop(&ctx)?;
 
     println!("\n=== All GPU stress tests completed! ===");
     Ok(())

@@ -5,7 +5,6 @@ use ndarray::ScalarOperand;
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::path::PathBuf;
 
 /// Callback for visualizing training metrics in real-time
 pub struct VisualizationCallback<F: Float + Debug + ScalarOperand> {

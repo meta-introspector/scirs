@@ -1197,7 +1197,7 @@ impl<T: Float + Default + Clone> SearchSpace<T> {
     /// Sample random architecture
     fn sample_random_architecture(&mut self) -> Result<ArchitectureSample<T>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         let num_ops = rng.gen_range(1..=self.config.max_depth);
         let mut architecture = Vec::new();

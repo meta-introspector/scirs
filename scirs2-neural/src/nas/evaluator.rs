@@ -1,7 +1,6 @@
 //! Architecture evaluation utilities for NAS
 
 use crate::error::Result;
-use rand::rng;
 use crate::models::sequential::Sequential;
 use ndarray::prelude::*;
 use std::collections::HashMap;

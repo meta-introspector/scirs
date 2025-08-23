@@ -17,7 +17,6 @@ use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
 use std::collections::VecDeque;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 

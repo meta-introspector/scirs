@@ -17,7 +17,6 @@ use crate::validation_runner::{validate_signal_processing_library, ValidationCon
 use ndarray::{Array1, Array2};
 use rand::Rng;
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Comprehensive signal processing pipeline for biomedical signal analysis

@@ -9,7 +9,6 @@
 
 use crate::error::{NeuralError, Result};
 use std::fs;
-use std::path::PathBuf;
 /// Web binding language target
 #[derive(Debug, Clone, PartialEq)]
 pub enum WebBindingLanguage {

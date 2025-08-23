@@ -15,7 +15,6 @@ use num_complex::Complex64;
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, checkshape};
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Vector Autoregressive (VAR) model

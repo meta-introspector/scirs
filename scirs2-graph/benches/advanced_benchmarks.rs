@@ -111,13 +111,13 @@ impl BenchmarkResults {
 /// Generate test graphs for benchmarking
 #[allow(dead_code)]
 fn generate_test_graph(size: usize, density: f64) -> Graph<i32, f64> {
-    let mut rng = rand::thread_rng();
-    let graph = erdos_renyi_graph(_size, density, &mut rng).unwrap();
+    let mut rng = rand::rng();
+    let graph = erdos_renyi_graph(size, density, &mut rng).unwrap();
 
     // Convert Graph<usize, f64> to Graph<i32, f64>
     let mut result = Graph::new();
     for node in graph.nodes() {
-        result.add_node(node as i32);
+        result.add_node(*node as i32);
     }
     for edge in graph.edges() {
         result
@@ -187,7 +187,10 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
                 group.bench_with_input(
                     BenchmarkId::new("dijkstra_standard", format!("{}_{}", size, density)),
                     &(&graph, start_node),
-                    |b, (g, start)| b.iter(|| black_box(dijkstra_path(g, *start).unwrap())),
+                    |b, (g, start)| {
+                        let target = (start + 1) % g.node_count();
+                        b.iter(|| black_box(dijkstra_path(g, *start, &target).unwrap()))
+                    },
                 );
 
                 // Benchmark advanced optimized Dijkstra
@@ -202,7 +205,10 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
                                     &mut processor,
                                     g,
                                     "dijkstra_path",
-                                    |graph| dijkstra_path(graph, *start),
+                                    |graph| {
+                                let target = (start + 1) % graph.node_count();
+                                dijkstra_path(graph, *start, &target)
+                            },
                                 )
                                 .unwrap(),
                             )
@@ -271,7 +277,7 @@ fn benchmark_community_detection(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("louvain_standard", format!("{}_{}", size, density)),
                 &graph,
-                |b, g| b.iter(|| black_box(louvain_communities_result(g).unwrap())),
+                |b, g| b.iter(|| black_box(louvain_communities_result(g))),
             );
 
             // Benchmark advanced optimized Louvain
@@ -286,7 +292,7 @@ fn benchmark_community_detection(c: &mut Criterion) {
                                 &mut processor,
                                 g,
                                 "louvain_communities",
-                                |graph| louvain_communities_result(graph),
+                                |graph| Ok(louvain_communities_result(graph)),
                             )
                             .unwrap(),
                         )
@@ -399,7 +405,7 @@ fn benchmark_advanced_comprehensive(c: &mut Criterion) {
                             // Run multiple algorithms in sequence
                             let _components = connected_components(graph);
                             let _pagerank = pagerank_centrality(graph, 0.85, 1e-6)?;
-                            let _communities = louvain_communities_result(graph)?;
+                            let _communities = louvain_communities_result(graph);
                             Ok(())
                         })
                         .unwrap(),

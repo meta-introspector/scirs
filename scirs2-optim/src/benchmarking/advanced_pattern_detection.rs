@@ -7,7 +7,6 @@ use crate::error::{OptimError, Result};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
-use std::f64::consts::PI;
 
 /// Advanced-advanced pattern detector using ML and signal processing
 #[derive(Debug)]

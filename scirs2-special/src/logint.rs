@@ -881,7 +881,6 @@ pub fn shichi(x: f64) -> SpecialResult<(f64, f64)> {
 ///
 /// ```
 /// use scirs2_special::spence;
-/// use std::f64::consts::PI;
 ///
 /// // Test spence(0) = π²/6
 /// let result = spence(0.0).unwrap();

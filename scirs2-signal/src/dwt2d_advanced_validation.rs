@@ -9,7 +9,6 @@ use crate::error::SignalResult;
 use ndarray::Array2;
 use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]

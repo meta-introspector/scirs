@@ -479,7 +479,6 @@ mod tests {
     use ndarray::{Array1, ArrayView1};
     use rand::rngs::StdRng;
     use rand_distr::Distribution;
-    use std::f64::consts::PI;
     use std::marker::PhantomData;
 
     // Helper function to check if result is within expected error margin

@@ -238,7 +238,7 @@ fn add_rectangle(
 #[allow(dead_code)]
 fn create_synthetic_matches(_num_matches: usize, truetransform: &Array2<f64>) -> Vec<PointMatch> {
     let mut _matches = Vec::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Create good _matches with known transformation
     for _ in 0..(_num_matches * 9 / 10) {

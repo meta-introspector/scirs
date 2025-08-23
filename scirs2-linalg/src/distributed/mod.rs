@@ -64,7 +64,6 @@ use crate::error::{LinalgError, LinalgResult};
 use ndarray::{Array2, ArrayView2};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 /// Configuration for distributed linear algebra operations
 #[derive(Debug, Clone, Serialize, Deserialize)]

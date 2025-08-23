@@ -117,7 +117,6 @@
 // - [`design`] - System creation and interconnection functions
 
 use num_complex::Complex64;
-use std::f64::consts::PI;
 
 // Re-export all public modules
 #[allow(unused_imports)]

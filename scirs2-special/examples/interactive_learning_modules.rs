@@ -12,7 +12,6 @@
 // Removed unused imports - fixed compilation warnings
 use scirs2_special::*;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::io::{self, Write};
 
 #[derive(Debug, Clone)]

@@ -45,7 +45,6 @@ use num_traits::Float;
 // use rand::rngs::StdRng;
 // use rand::{Rng, SeedableRng};
 // use std::collections::HashMap;
-// use std::f64::consts::PI;
 
 use crate::error::{SpatialError, SpatialResult};
 use crate::pathplanning::astar::Path;

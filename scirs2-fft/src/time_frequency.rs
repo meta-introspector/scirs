@@ -11,7 +11,6 @@ use ndarray::Array2;
 use num_complex::Complex64;
 use num_traits::NumCast;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Type of wavelet for continuous wavelet transform

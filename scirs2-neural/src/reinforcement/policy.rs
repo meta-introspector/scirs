@@ -1,7 +1,6 @@
 //! Policy-based reinforcement learning algorithms
 
 use crate::activations::Activation;
-use rand::rng;
 use crate::error::Result;
 use crate::layers::{Dense, Layer};
 use ndarray::prelude::*;

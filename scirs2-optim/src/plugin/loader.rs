@@ -19,7 +19,6 @@ use rsa::{traits::PaddingScheme, RsaPublicKey};
 use sha2::{Digest, Sha256};
 #[cfg(feature = "crypto")]
 use x509_parser::prelude::*;
-// use std::path::PathBuf; // Duplicate import
 
 /// Plugin loader for managing plugin loading and unloading
 #[derive(Debug)]

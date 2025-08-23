@@ -12,7 +12,6 @@ use ndarray::Array1;
 use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]

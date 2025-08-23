@@ -376,7 +376,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
     fn random_initialization(&self, data: ArrayView2<F>) -> Result<Array2<F>> {
         use rand::seq::SliceRandom;
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let data_indices: Vec<usize> = (0..data.nrows()).collect();
         let selected_indices: Vec<_> = data_indices
             .as_slice()
@@ -396,7 +396,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
     fn kmeans_plus_plus_initialization(&self, data: ArrayView2<F>) -> Result<Array2<F>> {
         use rand::Rng;
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut centroids = Array2::zeros((self.k, data.ncols()));
 
         // Choose first centroid randomly

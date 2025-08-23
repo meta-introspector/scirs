@@ -3,7 +3,6 @@ use crate::{spectral, window};
 use ndarray::s;
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
-use std::f64::consts::PI;
 
 // Reassigned Spectrogram Implementation
 //

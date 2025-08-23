@@ -673,7 +673,6 @@ impl ExplorationStrategy {
                 if rand::random::<f32>() < epsilon {
                     // Random action
                     use rand::prelude::*;
-use rand::rng;
 use ndarray::ArrayView1;
 use statrs::statistics::Statistics;
                     let mut rng = rng();

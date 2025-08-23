@@ -7,7 +7,6 @@
 use super::application::{evaluate_transfer_function, find_polynomial_roots, group_delay};
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Comprehensive filter analysis results

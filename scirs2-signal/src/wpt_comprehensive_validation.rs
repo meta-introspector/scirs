@@ -18,7 +18,6 @@ use num_traits::Float;
 use rand::rngs::StdRng;
 use rand::Rng;
 use scirs2_core::parallel_ops::*;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Comprehensive WPT validation result

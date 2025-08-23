@@ -64,7 +64,7 @@ fn basic_chunk_example(tempdir: &Path) -> Result<(), Box<dyn std::error::Error>>
     let data = Array1::<f64>::linspace(0., (size - 1) as f64, size);
 
     // Create a memory-mapped file
-    let file_path = temp_dir.join("chunk_example.bin");
+    let file_path = tempdir.join("chunk_example.bin");
     let mmap = create_mmap(&data, &file_path, AccessMode::Write, 0)?;
     println!("Created memory-mapped array at: {:?}", file_path);
 
@@ -112,7 +112,7 @@ fn aggregate_example(tempdir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let data = Array1::<i32>::from_shape_fn(size, |i| i as i32);
 
     // Create a memory-mapped array
-    let file_path = temp_dir.join("aggregate_example.bin");
+    let file_path = tempdir.join("aggregate_example.bin");
     let mmap = create_mmap(&data, &file_path, AccessMode::Write, 0)?;
     println!("Created memory-mapped array at: {:?}", file_path);
 
@@ -178,7 +178,7 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
     let data = Array1::<f32>::linspace(0., (size - 1) as f32, size);
 
     // Create a memory-mapped file
-    let file_path = temp_dir.join("perf_comparison.bin");
+    let file_path = tempdir.join("perf_comparison.bin");
     let mmap = create_mmap(&data, &file_path, AccessMode::Write, 0)?;
     println!("Created memory-mapped array at: {:?}", file_path);
 
@@ -189,7 +189,7 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
     println!("\nMethod 1: Process without chunking (whole array in memory)");
     let start = Instant::now();
 
-    let array = mmap.asarray::<ndarray::Ix1>()?;
+    let array = mmap.as_array::<ndarray::Ix1>()?;
     let sum_no_chunks: f32 = array.sum();
     let min_no_chunks = *array
         .iter()
@@ -215,7 +215,7 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
     let chunk_size = 1_000_000;
     let strategy = ChunkingStrategy::Fixed(chunk_size);
 
-    let chunk_results = mmap.process_chunks(strategy, |chunk_data| {
+    let chunk_results = mmap.process_chunks(strategy, |chunk_data, _idx| {
         let chunk = Array1::<f32>::from_vec(chunk_data.to_vec()); // Convert to Array1 for convenience
         let sum = chunk.sum();
         let min = *chunk

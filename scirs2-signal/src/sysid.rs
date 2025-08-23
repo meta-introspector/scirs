@@ -75,7 +75,6 @@ use crate::window::get_window;
 use ndarray::{Array1, Array2, Axis};
 use num_complex::Complex64;
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Methods for transfer function estimation

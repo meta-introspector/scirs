@@ -10,7 +10,6 @@ use crate::reinforcement::environments::Environment;
 use ndarray::concatenate;
 use ndarray::prelude::*;
 use rand::seq::SliceRandom;
-use rand::rng;
 use ndarray::ArrayView1;
 /// Dynamics model for predicting environment transitions
 pub struct DynamicsModel {

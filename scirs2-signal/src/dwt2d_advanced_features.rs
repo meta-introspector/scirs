@@ -16,7 +16,6 @@ use ndarray::Array2;
 use rand::Rng;
 use scirs2_core::validation::checkarray_finite;
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Advanced 2D wavelet processing configuration

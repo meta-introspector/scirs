@@ -18,8 +18,8 @@
 
 use ndarray::{s, Array1, Array2, Array3, Array4, ArrayView2, ArrayViewMut2, Axis};
 use num_traits::{Float, FromPrimitive};
-use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
+use std::collections::{HashMap, VecDeque};
 
 use crate::error::{NdimageError, NdimageResult};
 use scirs2_core::parallel_ops::*;

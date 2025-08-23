@@ -463,7 +463,7 @@ pub mod interactive {
             "[{}]",
             x_values
                 .iter()
-                .map(|x| format!("{}", x))
+                .map(|x| format!("{x}"))
                 .collect::<Vec<_>>()
                 .join(", ")
         );
@@ -471,7 +471,7 @@ pub mod interactive {
             "[{}]",
             y_values
                 .iter()
-                .map(|y| format!("{}", y))
+                .map(|y| format!("{y}"))
                 .collect::<Vec<_>>()
                 .join(", ")
         );

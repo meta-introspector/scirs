@@ -12,7 +12,6 @@ use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, Array3};
 use num_complex::Complex64;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Configuration for Dual-Tree Complex Wavelet Transform
@@ -913,7 +912,6 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
     use ndarray::{Array1, Array2};
-    use std::f64::consts::PI;
     #[test]
     fn test_dtcwt_processor_creation() {
         let config = DtcwtConfig::default();

@@ -15,7 +15,6 @@ use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, checkshape};
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Enhanced numerical robustness for system identification

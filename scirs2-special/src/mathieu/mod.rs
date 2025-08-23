@@ -199,7 +199,6 @@ where
 ///
 /// ```
 /// use scirs2_special::mathieu_cem;
-/// use std::f64::consts::PI;
 ///
 /// // Evaluate ce_0(π/4, 1.0) and its derivative
 /// let (ce, ce_prime) = mathieu_cem(0, 1.0f64, PI/4.0).unwrap();
@@ -239,7 +238,6 @@ where
 ///
 /// ```
 /// use scirs2_special::mathieu_sem;
-/// use std::f64::consts::PI;
 ///
 /// // Evaluate se_1(π/4, 1.0) and its derivative
 /// let (se, se_prime) = mathieu_sem(1, 1.0f64, PI/4.0).unwrap();
@@ -938,7 +936,6 @@ mod tests {
 
     #[test]
     fn test_mathieu_cem_sem_zero_q() {
-        use std::f64::consts::PI;
 
         // For q=0, ce₀(x) = 1
         let (ce0, ce0_prime) = mathieu_cem(0, 0.0, PI / 4.0).unwrap();

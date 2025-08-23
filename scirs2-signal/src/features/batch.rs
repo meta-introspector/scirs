@@ -28,7 +28,6 @@ use crate::utilities::spectral::spectral_centroid;
 ///
 /// ```
 /// use scirs2_signal::features::{extract_features, FeatureOptions};
-/// use std::f64::consts::PI;
 ///
 /// // Generate a sinusoidal signal
 /// let signal: Vec<f64> = (0..1000)
@@ -126,7 +125,6 @@ where
 ///
 /// ```
 /// use scirs2_signal::features::{extract_features_batch, FeatureOptions};
-/// use std::f64::consts::PI;
 /// use ndarray::Array2;
 ///
 /// // Generate multiple signals

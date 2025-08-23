@@ -1,5 +1,4 @@
 use ndarray::Array;
-use rand::rng;
 use rand::Rng;
 use scirs2_neural::error::Result;
 use scirs2_neural::{

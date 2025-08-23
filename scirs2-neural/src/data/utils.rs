@@ -4,7 +4,6 @@ use crate::error::Result;
 use ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::seq::SliceRandom;
-use rand::rng;
 use rand::SeedableRng;
 use std::fmt::Debug;
 /// Type alias for train-val split return type

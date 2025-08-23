@@ -48,7 +48,6 @@ use crate::window::{blackman, hamming, hann, tukey};
 use ndarray::Array1;
 use rand::Rng;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Configuration for SciPy validation

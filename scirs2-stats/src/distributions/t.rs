@@ -4,7 +4,6 @@
 
 use crate::error::{StatsError, StatsResult};
 use num_traits::{Float, NumCast};
-use rand::rng;
 use rand_distr::{Distribution, StudentT as RandStudentT};
 use std::fmt::Debug;
 

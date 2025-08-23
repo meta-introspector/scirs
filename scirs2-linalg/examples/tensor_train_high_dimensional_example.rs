@@ -41,9 +41,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         (r1 + i + r2 + 1) as f64 * 0.3
     });
 
-    let core3 = Array3::from_shape_fn((3, 2, 1), |(r1, i_)| {
+    let core3 = Array3::from_shape_fn((3, 2, 1), |(r1, i_, _)| {
         // Third core: rank-3 to rank-1 (boundary)
-        (r1 + i + 1) as f64 * 0.2
+        (r1 + i_ + 1) as f64 * 0.2
     });
 
     let tt_tensor = TTTensor::new(vec![core1, core2, core3])?;
@@ -179,10 +179,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("---------------------------");
 
     // Create two simple TT tensors for arithmetic
-    let core_a = Array3::from_shape_fn((1, 3, 1), |(_, i_)| (i + 1) as f64);
+    let core_a = Array3::from_shape_fn((1, 3, 1), |(_, i_, _)| (i_ + 1) as f64);
     let tt_a = TTTensor::new(vec![core_a])?;
 
-    let core_b = Array3::from_shape_fn((1, 3, 1), |(_, i_)| (i + 2) as f64);
+    let core_b = Array3::from_shape_fn((1, 3, 1), |(_, i_, _)| (i_ + 2) as f64);
     let tt_b = TTTensor::new(vec![core_b])?;
 
     println!(
@@ -250,9 +250,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let round_time = start_time.elapsed();
 
         // Check approximation quality
-        let error_0 = (high_rank_tensor.get_element(&[0])? - rounded.get_element(&[0])?).abs();
-        let error_1 = (high_rank_tensor.get_element(&[1])? - rounded.get_element(&[1])?).abs();
-        let error_2 = (high_rank_tensor.get_element(&[2])? - rounded.get_element(&[2])?).abs();
+        let error_0: f64 = (high_rank_tensor.get_element(&[0])? - rounded.get_element(&[0])?).abs();
+        let error_1: f64 = (high_rank_tensor.get_element(&[1])? - rounded.get_element(&[1])?).abs();
+        let error_2: f64 = (high_rank_tensor.get_element(&[2])? - rounded.get_element(&[2])?).abs();
         let max_error = error_0.max(error_1).max(error_2);
 
         println!("\n   🔄 Rounding (tolerance: {:.0e}):", tol);

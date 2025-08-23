@@ -31,7 +31,7 @@ impl SimulatedBinaryCrossover {
 
 impl CrossoverOperator for SimulatedBinaryCrossover {
     fn crossover(&self, parent1: &[f64], parent2: &[f64]) -> (Vec<f64>, Vec<f64>) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let n = parent1.len();
         let mut child1 = vec![0.0; n];
         let mut child2 = vec![0.0; n];
@@ -83,7 +83,7 @@ impl UniformCrossover {
 
 impl CrossoverOperator for UniformCrossover {
     fn crossover(&self, parent1: &[f64], parent2: &[f64]) -> (Vec<f64>, Vec<f64>) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let n = parent1.len();
         let mut child1 = vec![0.0; n];
         let mut child2 = vec![0.0; n];

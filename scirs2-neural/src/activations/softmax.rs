@@ -1,6 +1,5 @@
 //! Softmax activation function implementation
 
-use rand::rng;
 use crate::activations::Activation;
 use crate::error::{NeuralError, Result};
 use crate::layers::Layer;

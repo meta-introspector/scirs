@@ -6,7 +6,6 @@
 //! Vision Transformers, resulting in a pure convolutional model with excellent performance.
 
 use crate::activations::GELU;
-use rand::rng;
 use crate::error::Result;
 use crate::layers::{
     Conv2D, Dense, Dropout, GlobalAvgPool2D, Layer, LayerNorm2D, PaddingMode, Sequential,

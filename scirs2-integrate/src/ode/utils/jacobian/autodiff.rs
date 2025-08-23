@@ -8,7 +8,6 @@
 use crate::common::IntegrateFloat;
 use crate::error::IntegrateResult;
 use ndarray::{Array1, Array2, ArrayView1};
-use std::f64::consts::PI;
 
 /// Compute Jacobian matrix using automatic differentiation
 ///

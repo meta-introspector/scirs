@@ -565,8 +565,8 @@ pub fn generate_comparison_report() -> Result<(), Box<dyn std::error::Error>> {
 
     // Generate report
     let report_content = generate_markdown_report(&results);
-    let report_path = "benchmark_results/networkx_igraph_comparison.md";
-    std::fs::create_dir_all("benchmark_results")?;
+    let report_path = "benchmarkresults/networkx_igraph_comparison.md";
+    std::fs::create_dir_all("benchmarkresults")?;
     std::fs::write(report_path, report_content)?;
 
     println!("✅ Comparison report generated: {}", report_path);
@@ -574,7 +574,7 @@ pub fn generate_comparison_report() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn measure_scirs2_algorithm(_algorithm: &str, size: usize, graphtype: &str) -> f64 {
+fn measure_scirs2_algorithm(_algorithm: &str, size: usize, graph_type: &str) -> f64 {
     let mut rng = StdRng::seed_from_u64(42);
 
     let graph = match graph_type {
@@ -613,7 +613,7 @@ fn measure_scirs2_algorithm(_algorithm: &str, size: usize, graphtype: &str) -> f
 
 /// Measure scirs2-graph algorithm performance with advanced optimizations
 #[allow(dead_code)]
-fn measure_scirs2_algorithm_with_advanced<N: Node, E: scirs2, graph: EdgeWeight, Ix>(
+fn measure_scirs2_algorithm_with_advanced<N: Node, E: EdgeWeight, Ix>(
     algorithm: &str,
     graph: &Graph<N, E, Ix>,
 ) -> f64
@@ -671,7 +671,7 @@ where
 
 /// Measure scirs2-graph algorithm performance without advanced optimizations (standard mode)
 #[allow(dead_code)]
-fn measure_scirs2_algorithm_standard<N: Node, E: scirs2, graph: EdgeWeight, Ix>(
+fn measure_scirs2_algorithm_standard<N: Node, E: EdgeWeight, Ix>(
     algorithm: &str,
     graph: &Graph<N, E, Ix>,
 ) -> f64
@@ -683,28 +683,28 @@ where
 
     match algorithm {
         "bfs" => {
-            let _ = breadth_first_search(_graph, &0);
+            let _ = breadth_first_search(graph, &0);
         }
         "dfs" => {
-            let _ = depth_first_search(_graph, &0);
+            let _ = depth_first_search(graph, &0);
         }
         "pagerank" => {
-            let _ = pagerank_centrality(_graph, None, None, None);
+            let _ = pagerank_centrality(graph, None, None, None);
         }
         "betweenness_centrality" => {
-            let _ = betweenness_centrality(_graph);
+            let _ = betweenness_centrality(graph);
         }
         "shortest_path" => {
             let target = std::cmp::min(10, graph.node_count().saturating_sub(1));
             if target > 0 {
-                let _ = shortest_path(_graph, &0, &target);
+                let _ = shortest_path(graph, &0, &target);
             }
         }
         "connected_components" => {
-            let _ = connected_components(_graph);
+            let _ = connected_components(graph);
         }
         "louvain_communities" => {
-            let _ = louvain_communities_result(_graph, None, None);
+            let _ = louvain_communities_result(graph, None, None);
         }
         _ => {}
     }
@@ -722,7 +722,7 @@ fn generate_markdown_report(results: &[(String, String, usize, ComparisonMetrics
     report.push_str("| Algorithm | Graph Type | Size | scirs2-graph (ms) | NetworkX (ms) | Speedup | Status |\n");
     report.push_str("|-----------|------------|------|-------------------|---------------|---------|--------|\n");
 
-    for (algorithm, graph_type, size, metrics) in _results {
+    for (algorithm, graph_type, size, metrics) in results {
         let speedup_str = match metrics.speedup_vs_networkx {
             Some(speedup) => format!("{:.2}x", speedup),
             None => "N/A".to_string(),
@@ -749,7 +749,7 @@ fn generate_markdown_report(results: &[(String, String, usize, ComparisonMetrics
 
     report.push_str("\n## Detailed Analysis\n\n");
 
-    for (algorithm, graph_type, size, metrics) in _results {
+    for (algorithm, graph_type, size, metrics) in results {
         report.push_str(&format!(
             "### {} on {} graph ({} nodes)\n\n",
             algorithm, graph_type, size

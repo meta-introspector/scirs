@@ -7,7 +7,6 @@ use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::validation::*;
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 
 /// Mean-field variational inference for Bayesian linear regression
 ///
@@ -240,7 +239,7 @@ impl VariationalBayesianRegression {
             yty - 2.0 * self.mean_beta.dot(xty) + self.mean_beta.dot(&xtx.dot(&self.mean_beta));
         let trace_term = (xtx * &self.cov_beta).sum();
         let likelihood_term = 0.5 * n_samples_ * expected_log_tau
-            - 0.5 * n_samples_ * (2.0 * PI).ln()
+            - 0.5 * n_samples_ * (2.0_f64 * PI).ln()
             - 0.5 * expected_tau * (diff + trace_term);
 
         // E[log p(β)]
@@ -253,7 +252,7 @@ impl VariationalBayesianRegression {
         })?;
 
         let beta_prior_term = 0.5 * prior_det.ln()
-            - 0.5 * self.n_features as f64 * (2.0 * PI).ln()
+            - 0.5 * self.n_features as f64 * (2.0_f64 * PI).ln()
             - 0.5 * (beta_quad + beta_trace);
 
         // E[log p(τ)]
@@ -267,7 +266,7 @@ impl VariationalBayesianRegression {
             StatsError::ComputationError(format!("Failed to compute determinant: {}", e))
         })?;
         let beta_entropy =
-            0.5 * self.n_features as f64 * (1.0 + (2.0 * PI).ln()) + 0.5 * var_det.ln();
+            0.5 * self.n_features as f64 * (1.0 + (2.0_f64 * PI).ln()) + 0.5 * var_det.ln();
 
         // -E[log q(τ)]
         let tau_entropy = self.shape_tau - self.rate_tau.ln()
@@ -656,7 +655,7 @@ impl VariationalARD {
         }
 
         let likelihood_term = 0.5 * n_samples_ * expected_log_tau
-            - 0.5 * n_samples_ * (2.0 * PI).ln()
+            - 0.5 * n_samples_ * (2.0_f64 * PI).ln()
             - 0.5 * expected_tau * quadratic_form;
 
         // Prior terms
@@ -666,7 +665,7 @@ impl VariationalARD {
             let expected_log_alpha_i = digamma(self.shape_alpha[i]) - self.rate_alpha[i].ln();
 
             prior_term += 0.5 * expected_log_alpha_i
-                - 0.5 * (2.0 * PI).ln()
+                - 0.5 * (2.0_f64 * PI).ln()
                 - 0.5 * expected_alpha_i * (self.mean_beta[i].powi(2) + self.var_beta[i]);
         }
 
@@ -865,5 +864,5 @@ fn lgamma(x: f64) -> f64 {
     }
 
     // Stirling's approximation
-    0.5 * (2.0 * PI).ln() + (x - 0.5) * x.ln() - x + 1.0 / (12.0 * x)
+    0.5 * (2.0_f64 * PI).ln() + (x - 0.5) * x.ln() - x + 1.0 / (12.0 * x)
 }

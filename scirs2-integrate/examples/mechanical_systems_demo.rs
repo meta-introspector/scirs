@@ -6,7 +6,6 @@
 
 use ndarray::{Array1, Array2};
 use scirs2_integrate::ode::mechanical::{systems, MechanicalIntegrator, PositionIntegrationMethod};
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

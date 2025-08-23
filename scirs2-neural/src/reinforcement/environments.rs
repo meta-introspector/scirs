@@ -1,7 +1,6 @@
 //! Reinforcement learning environments
 
 use crate::error::Result;
-use rand::rng;
 use ndarray::prelude::*;
 use std::collections::HashMap;
 /// Observation from environment

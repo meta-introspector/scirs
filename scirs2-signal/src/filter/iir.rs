@@ -9,7 +9,6 @@ use crate::error::{SignalError, SignalResult};
 use crate::lti::TransferFunction;
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 #[allow(unused_imports)]

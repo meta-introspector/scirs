@@ -16,7 +16,6 @@ use crate::lombscargle::lombscargle;
 use num_traits::Float;
 use rand::Rng;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]

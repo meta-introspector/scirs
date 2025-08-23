@@ -3,7 +3,6 @@
 //! This example shows how to use the Fast Hankel Transform for various applications.
 
 use scirs2_fft::{fht, fht_sample_points, fhtoffset, ifht};
-// use std::f64::consts::PI;  // Unused import
 
 /// J0 Bessel function approximation for testing
 #[allow(dead_code)]

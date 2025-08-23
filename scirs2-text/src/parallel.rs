@@ -7,7 +7,6 @@ use crate::error::Result;
 use crate::tokenize::Tokenizer;
 use crate::vectorize::Vectorizer;
 use ndarray::Array2;
-use num_cpus::get;
 use scirs2_core::parallel_ops::*;
 use std::sync::{Arc, Mutex};
 

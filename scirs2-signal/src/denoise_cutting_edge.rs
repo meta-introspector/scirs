@@ -12,10 +12,8 @@ use ndarray::s;
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::parallel_ops::*;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
-// use std::f64::consts::PI;
 
 /// Dictionary learning denoising configuration
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]

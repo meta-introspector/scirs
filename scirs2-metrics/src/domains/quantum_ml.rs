@@ -43,7 +43,6 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
 use num_traits::{Float, One, Zero};
 use std::collections::HashMap;
-use std::f64::consts::PI;
 
 /// Quantum Machine Learning metrics suite
 #[derive(Debug, Clone)]

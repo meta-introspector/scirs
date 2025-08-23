@@ -10,6 +10,7 @@ use ndarray::{Array2, Axis};
 // Use local GPU implementation to avoid feature flag issues
 // TODO: Re-enable core GPU integration when features are stabilized
 use scirs2_core::parallel_ops::*;
+use rand_distr::Uniform;
 use std::collections::HashMap;
 use std::sync::Arc;
 

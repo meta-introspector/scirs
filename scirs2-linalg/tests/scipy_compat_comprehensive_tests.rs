@@ -7,7 +7,6 @@
 use ndarray::{array, Array1, Array2, ArrayView2};
 use scirs2_linalg::compat;
 // use scirs2_linalg::error::{LinalgError, LinalgResult};
-// use std::f64::consts::PI;
 
 /// Test tolerance for floating point comparisons
 const TEST_TOL: f64 = 1e-10;

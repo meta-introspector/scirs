@@ -6,7 +6,6 @@ use ndarray::ScalarOperand;
 use num_traits::Float;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-use std::path::PathBuf;
 /// TensorBoard logger callback that writes training metrics to TensorBoard.
 ///
 /// Note: This is a placeholder implementation. A full implementation would

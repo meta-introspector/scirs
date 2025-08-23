@@ -9,13 +9,12 @@
 //! - Cross-function relationship analysis
 //! - Advanced mathematical problem solving assistance
 //!
-//! Run with: cargo run --example interactive_math_laboratory
+//! Run with: cargo run --example interactive_mathlaboratory
 
 use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
 use std::collections::{HashMap, VecDeque};
-use std::f64::consts::PI;
 use std::io::{self, Write};
 use std::time::Instant;
 
@@ -36,7 +35,7 @@ struct TheoremExplorer {
     prerequisites: Vec<String>,
     proof_steps: Vec<ProofStep>,
     examples: Vec<TheoremExample>,
-    related_theorems: Vec<String>,
+    relatedtheorems: Vec<String>,
     applications: Vec<String>,
     difficulty_level: u32,
 }
@@ -92,7 +91,7 @@ enum InteractiveElement {
 #[derive(Debug, Clone)]
 struct MathLaboratory {
     expression_history: VecDeque<MathExpression>,
-    active_theorems: Vec<TheoremExplorer>,
+    activetheorems: Vec<TheoremExplorer>,
     workspace_variables: HashMap<String, f64>,
     computation_cache: HashMap<String, f64>,
     visualization_state: VisualizationState,
@@ -110,7 +109,7 @@ struct VisualizationState {
 #[derive(Debug, Clone)]
 struct PlotDefinition {
     id: String,
-    function_expr: String,
+    functionexpr: String,
     domain: (f64, f64),
     range: (f64, f64),
     plot_type: PlotType,
@@ -138,7 +137,7 @@ struct PlotStyle {
 #[derive(Debug, Clone)]
 struct PlotSettings {
     grid_enabled: bool,
-    axes_labels: bool,
+    axeslabels: bool,
     legend_enabled: bool,
     high_resolution: bool,
     export_format: String,
@@ -205,14 +204,14 @@ impl MathLaboratory {
     fn new() -> Self {
         let mut lab = Self {
             expression_history: VecDeque::with_capacity(100),
-            active_theorems: Vec::new(),
+            activetheorems: Vec::new(),
             workspace_variables: HashMap::new(),
             computation_cache: HashMap::new(),
             visualization_state: VisualizationState {
                 active_plots: Vec::new(),
                 plot_settings: PlotSettings {
                     grid_enabled: true,
-                    axes_labels: true,
+                    axeslabels: true,
                     legend_enabled: true,
                     high_resolution: false,
                     export_format: "ascii".to_string(),
@@ -230,14 +229,14 @@ impl MathLaboratory {
             },
         };
 
-        lab.initialize_theorems();
+        lab.initializetheorems();
         lab.setup_workspace();
         lab
     }
 
-    fn initialize_theorems(&mut self) {
+    fn initializetheorems(&mut self) {
         // Gamma Function Reflection Formula
-        self.active_theorems.push(TheoremExplorer {
+        self.activetheorems.push(TheoremExplorer {
             theorem_name: "Gamma Function Reflection Formula".to_string(),
             statement: "For z ∉ ℤ: Γ(z)Γ(1-z) = π/sin(πz)".to_string(),
             prerequisites: vec![
@@ -270,7 +269,7 @@ impl MathLaboratory {
                     explanation: "Γ(1/3)Γ(2/3) = 2π/√3".to_string(),
                 },
             ],
-            related_theorems: vec![
+            relatedtheorems: vec![
                 "Duplication formula".to_string(),
                 "Multiplication formula".to_string(),
             ],
@@ -283,7 +282,7 @@ impl MathLaboratory {
         });
 
         // Bessel Function Generating Function
-        self.active_theorems.push(TheoremExplorer {
+        self.activetheorems.push(TheoremExplorer {
             theorem_name: "Bessel Function Generating Function".to_string(),
             statement: "exp(x(t-1/t)/2) = Σ_{n=-∞}^∞ J_n(x) t^n".to_string(),
             prerequisites: vec![
@@ -304,7 +303,7 @@ impl MathLaboratory {
                 tolerance: 1e-12,
                 explanation: "Setting t = 1 extracts J₀(x)".to_string(),
             }],
-            related_theorems: vec![
+            relatedtheorems: vec![
                 "Addition formulas".to_string(),
                 "Integral representations".to_string(),
             ],
@@ -317,12 +316,12 @@ impl MathLaboratory {
         });
 
         // Add more theorems...
-        self.add_advanced_theorems();
+        self.add_advancedtheorems();
     }
 
-    fn add_advanced_theorems(&mut self) {
+    fn add_advancedtheorems(&mut self) {
         // Stirling's Asymptotic Formula
-        self.active_theorems.push(TheoremExplorer {
+        self.activetheorems.push(TheoremExplorer {
             theorem_name: "Stirling's Asymptotic Formula".to_string(),
             statement: "Γ(z) ~ √(2π/z) (z/e)^z as |z| → ∞".to_string(),
             prerequisites: vec![
@@ -342,7 +341,7 @@ impl MathLaboratory {
                 tolerance: 1e-6,
                 explanation: "Stirling approximation for Γ(10)".to_string(),
             }],
-            related_theorems: vec![
+            relatedtheorems: vec![
                 "Euler-Maclaurin formula".to_string(),
                 "Saddle point method".to_string(),
             ],
@@ -355,7 +354,7 @@ impl MathLaboratory {
         });
 
         // Wright Function Asymptotics
-        self.active_theorems.push(TheoremExplorer {
+        self.activetheorems.push(TheoremExplorer {
             theorem_name: "Wright Function Asymptotic Behavior".to_string(),
             statement: "Φ(α,β;z) ~ (2πα)^(-1/2) z^((β-1)/(2α)) exp((1/α)(z/α)^(1/α))".to_string(),
             prerequisites: vec![
@@ -377,7 +376,7 @@ impl MathLaboratory {
                 tolerance: 1e-6,
                 explanation: "Asymptotic approximation for large z".to_string(),
             }],
-            related_theorems: vec![
+            relatedtheorems: vec![
                 "Mittag-Leffler functions".to_string(),
                 "Fractional calculus".to_string(),
             ],
@@ -477,7 +476,7 @@ impl MathLaboratory {
     }
 
     fn extract_function_argument(&self, expr: &str, funcname: &str) -> Result<f64, String> {
-        let start = func_name.len() + 1; // Skip "func("
+        let start = funcname.len() + 1; // Skip "func("
         let end = expr.len() - 1; // Skip ")"
 
         if start >= end {
@@ -489,7 +488,7 @@ impl MathLaboratory {
     }
 
     fn extract_two_arguments(&self, expr: &str, funcname: &str) -> Result<(f64, f64), String> {
-        let start = func_name.len() + 1;
+        let start = funcname.len() + 1;
         let end = expr.len() - 1;
 
         if start >= end {
@@ -514,7 +513,7 @@ impl MathLaboratory {
 
         let plot = PlotDefinition {
             id: plot_id.clone(),
-            function_expr: function_expr.to_string(),
+            functionexpr: functionexpr.to_string(),
             domain,
             range: (0.0, 0.0), // Will be calculated
             plot_type: PlotType::Function2D,
@@ -540,7 +539,7 @@ impl MathLaboratory {
             .visualization_state
             .active_plots
             .iter()
-            .find(|p| p._id == plot_id)
+            .find(|p| p.id == plot_id)
             .ok_or("Plot not found")?;
 
         let mut output = String::new();
@@ -555,7 +554,7 @@ impl MathLaboratory {
             let x = plot.domain.0 + i as f64 * x_step;
 
             // Evaluate function (simplified)
-            let y = match plot.function_expr.as_str() {
+            let y = match plot.functionexpr.as_str() {
                 expr if expr.contains("gamma") => {
                     if x > 0.0 {
                         gamma(x)
@@ -583,7 +582,7 @@ impl MathLaboratory {
         // Create ASCII plot
         output.push_str(&format!(
             "Plot: {} over [{:.2}, {:.2}]\n",
-            plot.function_expr, plot.domain.0, plot.domain.1
+            plot.functionexpr, plot.domain.0, plot.domain.1
         ));
         output.push_str(&format!("Y range: [{:.3}, {:.3}]\n\n", ymin, ymax));
 
@@ -631,7 +630,7 @@ impl MathLaboratory {
 
     fn analyze_function_behavior(
         &mut self,
-        function_expr: &str,
+        functionexpr: &str,
         domain: (f64, f64),
     ) -> FunctionAnalysis {
         let num_points = 1000;
@@ -647,7 +646,7 @@ impl MathLaboratory {
 
         for i in 0..=num_points {
             let x = domain.0 + i as f64 * step;
-            let y = self.evaluate_function_at_point(function_expr, x);
+            let y = self.evaluate_function_at_point(functionexpr, x);
 
             if let Some(y_val) = y {
                 // Look for zeros
@@ -686,7 +685,7 @@ impl MathLaboratory {
         }
 
         FunctionAnalysis {
-            function_expr: function_expr.to_string(),
+            functionexpr: functionexpr.to_string(),
             domain,
             zeros,
             extrema,
@@ -698,7 +697,7 @@ impl MathLaboratory {
 
     fn evaluate_function_at_point(&self, functionexpr: &str, x: f64) -> Option<f64> {
         // Replace x with actual value and evaluate
-        let expr_with_value = function_expr.replace("x", &x.to_string());
+        let expr_with_value = functionexpr.replace("x", &x.to_string());
         self.parse_and_evaluate(&expr_with_value).ok()
     }
 
@@ -837,7 +836,7 @@ impl MathLaboratory {
 
 #[derive(Debug, Clone)]
 struct FunctionAnalysis {
-    function_expr: String,
+    functionexpr: String,
     domain: (f64, f64),
     zeros: Vec<f64>,
     extrema: Vec<(f64, f64)>, // (x, y) pairs
@@ -857,23 +856,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("This is your interactive workspace for exploring special functions.\n");
 
     // Setup session
-    setup_laboratory_session(&mut lab)?;
+    setuplaboratory_session(&mut lab)?;
 
     loop {
-        display_laboratory_menu();
+        displaylaboratory_menu();
         let choice = get_user_input("Enter your choice (1-9): ")?;
 
         match choice.parse::<u32>() {
             Ok(1) => run_expression_evaluator(&mut lab)?,
-            Ok(2) => explore_theorems_interactively(&mut lab)?,
+            Ok(2) => exploretheorems_interactively(&mut lab)?,
             Ok(3) => create_visualizations(&mut lab)?,
-            Ok(4) => run_function_analysis(&mut lab)?,
+            Ok(4) => run_functionanalysis(&mut lab)?,
             Ok(5) => run_mathematical_discovery(&mut lab)?,
             Ok(6) => run_proof_assistant(&mut lab)?,
             Ok(7) => run_computational_experiments(&mut lab)?,
             Ok(8) => display_session_summary(&lab)?,
             Ok(9) => {
-                save_laboratory_session(&lab)?;
+                savelaboratory_session(&lab)?;
                 println!("🔬 Laboratory session saved. Happy exploring! 👋");
                 break;
             }
@@ -885,7 +884,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn setup_laboratory_session(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
+fn setuplaboratory_session(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 Laboratory Setup");
     println!("===================\n");
 
@@ -927,7 +926,7 @@ fn setup_laboratory_session(lab: &mut MathLaboratory) -> Result<(), Box<dyn std:
 }
 
 #[allow(dead_code)]
-fn display_laboratory_menu() {
+fn displaylaboratory_menu() {
     println!("\n🧪 Mathematics Laboratory - Main Menu");
     println!("=====================================");
     println!("1. ⚡ Expression Evaluator & Calculator");
@@ -1076,14 +1075,14 @@ fn suggest_corrections(input: &str) {
 }
 
 #[allow(dead_code)]
-fn explore_theorems_interactively(
+fn exploretheorems_interactively(
     lab: &mut MathLaboratory,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Interactive Theorem Explorer");
     println!("===============================\n");
 
     println!("🎓 Available theorems:");
-    for (i, theorem) in lab.active_theorems.iter().enumerate() {
+    for (i, theorem) in lab.activetheorems.iter().enumerate() {
         println!(
             "  {}. {} (Level {}/5)",
             i + 1,
@@ -1099,9 +1098,9 @@ fn explore_theorems_interactively(
     }
 
     if let Ok(index) = choice.parse::<usize>() {
-        if index > 0 && index <= lab.active_theorems.len() {
-            let theorem = lab.active_theorems[index - 1].clone();
-            explore_specific_theorem(&theorem)?;
+        if index > 0 && index <= lab.activetheorems.len() {
+            let theorem = lab.activetheorems[index - 1].clone();
+            explore_specifictheorem(&theorem)?;
         }
     }
 
@@ -1109,9 +1108,9 @@ fn explore_theorems_interactively(
 }
 
 #[allow(dead_code)]
-fn explore_specific_theorem(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
+fn explore_specifictheorem(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📚 Theorem: {}", theorem.theorem_name);
-    println!("{}", "=".repeat(_theorem.theorem_name.len() + 10));
+    println!("{}", "=".repeat(theorem.theorem_name.len() + 10));
     println!();
 
     println!("📝 Statement: {}", theorem.statement);
@@ -1126,28 +1125,28 @@ fn explore_specific_theorem(theorem: &TheoremExplorer) -> Result<(), Box<dyn std
         println!("3. 🔗 See related theorems");
         println!("4. 🎯 View applications");
         println!("5. 🧪 Interactive verification");
-        println!("6. ← Back to _theorem list");
+        println!("6. ← Back to theorem list");
 
         let choice = get_user_input("Choice (1-6): ")?;
 
         match choice.as_str() {
-            "1" => step_through_proof(_theorem)?,
-            "2" => work_with_examples(_theorem)?,
+            "1" => step_through_proof(theorem)?,
+            "2" => work_with_examples(theorem)?,
             "3" => {
                 println!("\n🔗 Related theorems:");
-                for related in &_theorem.related_theorems {
+                for related in &theorem.relatedtheorems {
                     println!("  • {}", related);
                 }
                 wait_for_enter()?;
             }
             "4" => {
                 println!("\n🎯 Applications:");
-                for app in &_theorem.applications {
+                for app in &theorem.applications {
                     println!("  • {}", app);
                 }
                 wait_for_enter()?;
             }
-            "5" => interactive_verification(_theorem)?,
+            "5" => interactive_verification(theorem)?,
             "6" => break,
             _ => println!("❌ Invalid choice"),
         }
@@ -1159,7 +1158,7 @@ fn explore_specific_theorem(theorem: &TheoremExplorer) -> Result<(), Box<dyn std
 #[allow(dead_code)]
 fn step_through_proof(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Proof of: {}", theorem.theorem_name);
-    println!("{}", "=".repeat(_theorem.theorem_name.len() + 12));
+    println!("{}", "=".repeat(theorem.theorem_name.len() + 12));
     println!();
 
     for (i, step) in theorem.proof_steps.iter().enumerate() {
@@ -1269,8 +1268,8 @@ fn work_with_examples(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::erro
             println!("  {} = {}", var, value);
         }
 
-        // Calculate result based on _theorem
-        let calculated_result = calculate_theorem_result(_theorem, &example.input_values);
+        // Calculate result based on theorem
+        let calculated_result = calculatetheorem_result(theorem, &example.input_values);
 
         println!("\nExpected result: {:.12}", example.expected_result);
         if let Some(result) = calculated_result {
@@ -1302,14 +1301,14 @@ fn work_with_examples(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::erro
     if custominput != "done" {
         // Parse and test custom values
         println!("🧮 Testing custom values...");
-        // Implementation would depend on specific _theorem
+        // Implementation would depend on specific theorem
     }
 
     Ok(())
 }
 
 #[allow(dead_code)]
-fn calculate_theorem_result(
+fn calculatetheorem_result(
     theorem: &TheoremExplorer,
     input_values: &HashMap<String, f64>,
 ) -> Option<f64> {
@@ -1353,7 +1352,7 @@ fn interactive_verification(theorem: &TheoremExplorer) -> Result<(), Box<dyn std
     println!("===========================\n");
 
     println!("🎯 Let's verify the theorem: {}", theorem.theorem_name);
-    println!("Enter values to test the _theorem relationship.\n");
+    println!("Enter values to test the theorem relationship.\n");
 
     match theorem.theorem_name.as_str() {
         "Gamma Function Reflection Formula" => loop {
@@ -1410,11 +1409,11 @@ fn create_visualizations(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::er
     let choice = get_user_input("Choose visualization type (1-6): ")?;
 
     match choice.as_str() {
-        "1" => create_function_plots(_lab)?,
-        "2" => create_complex_visualizations(_lab)?,
-        "3" => create_animations(_lab)?,
-        "4" => create_comparative_plots(_lab)?,
-        "5" => interactive_parameter_exploration(_lab)?,
+        "1" => create_function_plots(lab)?,
+        "2" => create_complex_visualizations(lab)?,
+        "3" => create_animations(lab)?,
+        "4" => create_comparative_plots(lab)?,
+        "5" => interactive_parameter_exploration(lab)?,
         "6" => return Ok(()),
         _ => println!("❌ Invalid choice"),
     }
@@ -1442,18 +1441,18 @@ fn create_function_plots(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::er
 
     if analyze.to_lowercase() == "y" {
         let analysis = lab.analyze_function_behavior(&function, (xmin, xmax));
-        display_function_analysis(&analysis);
+        display_functionanalysis(&analysis);
     }
 
     Ok(())
 }
 
 #[allow(dead_code)]
-fn display_function_analysis(analysis: &FunctionAnalysis) {
-    println!("\n🔍 Function Analysis: {}", analysis.function_expr);
+fn display_functionanalysis(analysis: &FunctionAnalysis) {
+    println!("\n🔍 Function Analysis: {}", analysis.functionexpr);
     println!("{}", "=".repeat(30));
 
-    if !_analysis.zeros.is_empty() {
+    if !analysis.zeros.is_empty() {
         println!("🎯 Zeros found:");
         for (i, &zero) in analysis.zeros.iter().take(5).enumerate() {
             println!("  Zero {}: x ≈ {:.6}", i + 1, zero);
@@ -1463,7 +1462,7 @@ fn display_function_analysis(analysis: &FunctionAnalysis) {
         }
     }
 
-    if !_analysis.extrema.is_empty() {
+    if !analysis.extrema.is_empty() {
         println!("\n📊 Extrema found:");
         for (i, &(x, y)) in analysis.extrema.iter().take(3).enumerate() {
             println!("  Extremum {}: ({:.6}, {:.6})", i + 1, x, y);
@@ -1473,14 +1472,14 @@ fn display_function_analysis(analysis: &FunctionAnalysis) {
         }
     }
 
-    if !_analysis.asymptotes.is_empty() {
+    if !analysis.asymptotes.is_empty() {
         println!("\n📈 Potential asymptotes:");
         for &x in analysis.asymptotes.iter().take(3) {
             println!("  Near x = {:.6}", x);
         }
     }
 
-    if !_analysis.discontinuities.is_empty() {
+    if !analysis.discontinuities.is_empty() {
         println!("\n❌ Discontinuities:");
         for &x in analysis.discontinuities.iter().take(3) {
             println!("  At x = {:.6}", x);
@@ -1490,7 +1489,7 @@ fn display_function_analysis(analysis: &FunctionAnalysis) {
 
 #[allow(dead_code)]
 fn create_complex_visualizations(
-    _lab: &mut MathLaboratory,
+    lab: &mut MathLaboratory,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌀 Complex Function Visualization");
     println!("=================================\n");
@@ -1682,7 +1681,7 @@ fn create_comparative_plots(lab: &mut MathLaboratory) -> Result<(), Box<dyn std:
 
 #[allow(dead_code)]
 fn interactive_parameter_exploration(
-    _lab: &mut MathLaboratory,
+    lab: &mut MathLaboratory,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔍 Interactive Parameter Exploration");
     println!("====================================\n");
@@ -1839,7 +1838,7 @@ fn explore_erf_parameters() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn run_function_analysis(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
+fn run_functionanalysis(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔍 Function Analysis Tools");
     println!("==========================\n");
 
@@ -2188,7 +2187,7 @@ fn run_proof_assistant(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::erro
 
 #[allow(dead_code)]
 fn run_computational_experiments(
-    _lab: &mut MathLaboratory,
+    lab: &mut MathLaboratory,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧪 Computational Experiments");
     println!("============================\n");
@@ -2484,7 +2483,7 @@ fn display_session_summary(lab: &MathLaboratory) -> Result<(), Box<dyn std::erro
     );
     println!("  Discoveries logged: {}", lab.discovery_log.len());
 
-    if !_lab.expression_history.is_empty() {
+    if !lab.expression_history.is_empty() {
         println!("\n🧮 Recent Evaluations:");
         for (i, expr) in lab.expression_history.iter().rev().take(5).enumerate() {
             if let Some(result) = expr.result {
@@ -2493,9 +2492,9 @@ fn display_session_summary(lab: &MathLaboratory) -> Result<(), Box<dyn std::erro
         }
     }
 
-    if !_lab.discovery_log.is_empty() {
+    if !lab.discovery_log.is_empty() {
         println!("\n🔬 Discoveries:");
-        for discovery in &_lab.discovery_log {
+        for discovery in &lab.discovery_log {
             println!(
                 "  • {} (Significance: {}/10)",
                 discovery.description, discovery.significance
@@ -2504,7 +2503,7 @@ fn display_session_summary(lab: &MathLaboratory) -> Result<(), Box<dyn std::erro
     }
 
     println!("\n💡 Session Insights:");
-    analyze_session_patterns(_lab);
+    analyze_session_patterns(lab);
 
     Ok(())
 }
@@ -2514,7 +2513,7 @@ fn analyze_session_patterns(lab: &MathLaboratory) {
     // Analyze patterns in the user's exploration
     let mut function_usage = HashMap::new();
 
-    for expr in &_lab.expression_history {
+    for expr in &lab.expression_history {
         if expr.expression.contains("gamma") {
             *function_usage.entry("gamma").or_insert(0) += 1;
         }
@@ -2558,7 +2557,7 @@ fn analyze_session_patterns(lab: &MathLaboratory) {
 }
 
 #[allow(dead_code)]
-fn save_laboratory_session(lab: &MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
+fn savelaboratory_session(lab: &MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     // In a real implementation, this would save to file/database
     println!("💾 Session data saved successfully!");
     println!("🔬 Laboratory session complete.");

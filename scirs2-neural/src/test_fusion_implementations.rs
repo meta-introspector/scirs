@@ -1,4 +1,3 @@
-use rand::rng;
 //! Test file to verify fusion implementations
 
 #[cfg(test)]

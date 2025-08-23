@@ -55,7 +55,6 @@ use ndarray::{s, Array1, Array2, ArrayView2};
 use rand::Rng;
 use statrs::statistics::Statistics;
 use std::collections::{HashMap, VecDeque};
-use std::f64::consts::PI;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -1356,7 +1355,7 @@ impl TensorCoreClustering {
         let mut rng = rand::rng();
 
         // Choose first centroid randomly
-        let first_idx = rng.random_range(0..npoints);
+        let first_idx = rng.random_range(0, npoints);
         centroids.row_mut(0).assign(&points.row(first_idx));
 
         // Choose remaining centroids with probability proportional to distance

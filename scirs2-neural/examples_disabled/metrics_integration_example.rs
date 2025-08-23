@@ -9,7 +9,6 @@
 
 #[cfg(feature = "metrics_integration")]
 use ndarray::Array2;
-use rand::rng;
 // This example requires the metrics_integration feature
 #[cfg(not(feature = "metrics_integration"))]
 #[allow(dead_code)]

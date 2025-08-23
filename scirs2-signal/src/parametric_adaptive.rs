@@ -13,7 +13,6 @@ use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Adaptive AR model with time-varying parameters

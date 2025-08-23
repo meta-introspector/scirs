@@ -177,7 +177,7 @@ pub fn compute_volume_monte_carlo(hull: &ConvexHull, num_samples: usize) -> Spat
 
         // Generate random point within bounding box
         for d in 0..ndim {
-            sample_point[d] = rng.random_range(min_coords[d]..max_coords[d]);
+            sample_point[d] = rng.random_range(min_coords[d], max_coords[d]);
         }
 
         // Check if point is inside the convex hull
@@ -282,7 +282,7 @@ pub fn is_volume_computation_reliable(hull: &ConvexHull) -> bool {
     }
 
     // For high dimensions, check if we have enough structure
-    if hull.equations.is_some() && nvertices >= ndim + 1 {
+    if hull.equations.is_some() && nvertices > ndim {
         return true;
     }
 

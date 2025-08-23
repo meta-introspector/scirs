@@ -19,7 +19,6 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
 use num_traits::{Float, NumCast, Zero};
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 #[allow(unused_imports)]

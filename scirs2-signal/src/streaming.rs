@@ -54,7 +54,6 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
 use statrs::statistics::Statistics;
 use std::collections::VecDeque;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 // TODO: sosfilt_zi function not implemented yet

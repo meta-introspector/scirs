@@ -31,7 +31,6 @@ fn rotation_from_euler(x: f64, y: f64, z: f64, convention: &str) -> SpatialResul
 /// ```
 /// use scirs2_spatial::transform::{Rotation, RigidTransform};
 /// use ndarray::array;
-/// use std::f64::consts::PI;
 ///
 /// // Create a rotation around Z and a translation
 /// let rotation = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
@@ -264,7 +263,6 @@ impl RigidTransform {
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RigidTransform};
     /// use ndarray::array;
-    /// use std::f64::consts::PI;
     ///
     /// let rotation = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
     /// let translation = array![1.0, 2.0, 3.0];
@@ -471,7 +469,6 @@ impl RigidTransform {
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RigidTransform};
     /// use ndarray::array;
-    /// use std::f64::consts::PI;
     ///
     /// let rotation = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
     /// let transform = RigidTransform::from_rotation(rotation);
@@ -491,7 +488,6 @@ impl RigidTransform {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_rigid_transform_identity() {

@@ -168,7 +168,7 @@ fn bench_structuring_sizes(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("grey_erosion", format!("{}x{}", size, size)),
             &structure,
-            |b_structure| {
+            |b, _structure| {
                 b.iter(|| grey_erosion(black_box(&input), None, None, None, None, None).unwrap())
             },
         );

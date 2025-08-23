@@ -229,7 +229,7 @@ fn create_test_images() -> Result<(DynamicImage, DynamicImage, Array2<f64>)> {
     }
 
     // Add some noise
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     for _ in 0..500 {
         let x = rng.random_range(0..width);
         let y = rng.random_range(0..height);
@@ -341,7 +341,7 @@ fn add_corner_pattern(
 #[allow(dead_code)]
 fn create_synthetic_matches(_nummatches: usize) -> Vec<PointMatch> {
     let mut _matches = Vec::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Create mostly good _matches with known transformation
     let true_transform = Array2::from_shape_vec(

@@ -13,7 +13,6 @@ use crate::error::{SignalError, SignalResult};
 use crate::wpt::wp_decompose;
 use ndarray::Array1;
 use scirs2_core::parallel_ops::*;
-use std::f64::consts::PI;
 use std::sync::Arc;
 
 /// Advanced denoising configuration

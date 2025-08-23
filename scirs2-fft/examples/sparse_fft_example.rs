@@ -5,7 +5,6 @@ use scirs2_fft::{
     adaptive_sparse_fft, fft, frequency_pruning_sparse_fft, reconstruct_spectrum, sparse_fft,
     sparse_fft::SparseFFTAlgorithm, sparse_fft2, spectral_flatness_sparse_fft,
 };
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

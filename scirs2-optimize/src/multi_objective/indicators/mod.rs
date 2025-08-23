@@ -59,7 +59,7 @@ fn hypervolume_monte_carlo(
     n_samples: usize,
 ) -> f64 {
     use rand::Rng;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let n_objectives = reference_point.len();
 
     let mut count = 0;

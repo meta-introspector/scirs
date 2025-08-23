@@ -95,7 +95,7 @@ fn example_2_memory_mapped_processing() -> Result<(), Box<dyn std::error::Error>
 
     // Create and save a large test image
     let shape = vec![2000, 2000];
-    let test_data = Array2::<f64>::from_elem((2000, 2000), 3.14);
+    let test_data = Array2::<f64>::from_elem((2000, 2000), std::f64::consts::PI);
 
     println!("Creating memory-mapped image (2000x2000)...");
     let mmap = saveimage_mmap(&test_data.view(), &image_path, 0)?;

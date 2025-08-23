@@ -1,7 +1,6 @@
 // The GPU kernel modules are not fully implemented yet
 // This example demonstrates the planned features and interface
 
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

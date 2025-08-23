@@ -48,7 +48,6 @@ use std::f64::consts::PI;
 /// ```
 /// use scirs2_fft::spectrogram_stft;
 /// use scirs2_fft::window::Window;
-/// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -285,7 +284,6 @@ where
 /// ```
 /// use scirs2_fft::spectrogram;
 /// use scirs2_fft::window::Window;
-/// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -434,7 +432,6 @@ where
 ///
 /// ```
 /// use scirs2_fft::spectrogram_normalized;
-/// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -523,7 +520,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::f64::consts::PI;
 
     // Generate a test signal (sine wave)
     fn generate_sine_wave(_freq: f64, fs: f64, n_samples: usize) -> Vec<f64> {

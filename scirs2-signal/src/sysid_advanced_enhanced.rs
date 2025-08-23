@@ -17,7 +17,6 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::check_finite;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 use crate::sysid_enhanced::{

@@ -207,7 +207,7 @@ fn bench_interpolation_performance(c: &mut Criterion) {
                     b.iter(|| {
                         zoom(
                             black_box(input),
-                            black_box(&[zoom_factor, zoom_factor]),
+                            black_box(zoom_factor),
                             None,
                             None,
                             None,
@@ -228,6 +228,7 @@ fn bench_interpolation_performance(c: &mut Criterion) {
                     rotate(
                         black_box(input),
                         black_box(std::f64::consts::PI / 4.0), // 45 degrees
+                        None,
                         None,
                         None,
                         None,
@@ -499,14 +500,14 @@ fn bench_edge_detection_performance(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("sobel_filter", format!("{}x{}", rows, cols)),
             &input,
-            |b, input| b.iter(|| sobel(black_box(input), None, None).unwrap()),
+            |b, input| b.iter(|| sobel(black_box(input), 0, None).unwrap()),
         );
 
         // Benchmark Prewitt edge detection
         group.bench_with_input(
             BenchmarkId::new("prewitt_filter", format!("{}x{}", rows, cols)),
             &input,
-            |b, input| b.iter(|| prewitt(black_box(input), None, None).unwrap()),
+            |b, input| b.iter(|| prewitt(black_box(input), 0, None).unwrap()),
         );
 
         // Benchmark Laplacian edge detection
@@ -556,7 +557,7 @@ fn bench_data_type_performance(c: &mut Criterion) {
         BenchmarkId::new("gaussian_f32", format!("{}x{}", size.0, size.1)),
         &input_f32,
         |b, input| {
-            b.iter(|| gaussian_filter(black_box(input), black_box(1.0f32), None, None).unwrap())
+            b.iter(|| gaussian_filter_f32(black_box(input), black_box(1.0f32), None, None).unwrap())
         },
     );
 

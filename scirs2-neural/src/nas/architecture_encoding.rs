@@ -323,7 +323,6 @@ impl ArchitectureEncoding for GraphEncoding {
         1 + self.nodes.len() * 4 + self.edges.len() * self.edges.len()
     fn mutate(&self, mutationrate: f32) -> Result<Box<dyn ArchitectureEncoding>> {
         use rand::prelude::*;
-use rand::rng;
         let mut rng = rng();
         let mut mutated = self.clone();
         // Adaptive mutation rate based on architecture complexity

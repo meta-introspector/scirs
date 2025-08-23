@@ -22,7 +22,6 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 use crate::parametric::{

@@ -6,7 +6,6 @@ use ndarray::{Array, IxDyn, ScalarOperand};
 use num_integer::div_ceil;
 use num_traits::{Float, FromPrimitive};
 // use rand::rngs::SmallRng;
-use rand::rng;
 use rand::seq::SliceRandom;
 // use rand::SeedableRng;
 use std::fmt::Debug;

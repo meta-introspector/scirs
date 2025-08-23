@@ -16,7 +16,7 @@ use std::error::Error;
 fn main() -> Result<(), Box<dyn Error>> {
     // Generate scattered data points in a unit square
     let n_points = 50;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Create points in a specific region (unit square)
     let mut points_vec = Vec::with_capacity(n_points * 2);

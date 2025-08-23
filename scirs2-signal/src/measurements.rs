@@ -7,7 +7,6 @@
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use rand::Rng;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 #[allow(unused_imports)]
@@ -408,7 +407,6 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
     use rand::Rng;
-    use std::f64::consts::PI;
     #[test]
     fn test_rms() {
         // DC signal

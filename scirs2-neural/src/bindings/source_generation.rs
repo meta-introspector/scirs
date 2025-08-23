@@ -5,7 +5,6 @@
 
 use crate::error::{NeuralError, Result};
 use std::fs;
-use std::path::PathBuf;
 use super::config::{BindingConfig, BindingLanguage};
 /// Source file generator
 pub struct SourceGenerator<'a> {

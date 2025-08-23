@@ -3,7 +3,6 @@ use rand::Rng;
 use scirs2_fft::sparse_fft::{sparse_fft, SparseFFTAlgorithm, WindowFunction};
 use scirs2_fft::sparse_fft_batch::{batch_sparse_fft, BatchConfig};
 use scirs2_fft::sparse_fft_gpu::{gpu_batch_sparse_fft, gpu_sparse_fft, GPUBackend};
-use std::f64::consts::PI;
 
 // Helper function to create a sparse signal with specified frequencies
 #[allow(dead_code)]

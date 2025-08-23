@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Created temporary storage at: {:?}", temp_dir.path());
 
     // Create storage backend
-    let storage = Arc::new(FileStorageBackend::new(temp_dir.path())?);
+    let storage = Arc::new(FileStorageBackend::new(temp_dir.path(), temp_dir.path())?);
 
     // Configure out-of-core processing
     let config = OutOfCoreConfig {
@@ -83,7 +83,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let managedarray: Arc<OutOfCoreArray<f64>> =
         manager.create_array("managed_dataset".to_string(), vec![500, 500], None, None)?;
 
-    println!("   - Created managed array: {:?}", managed_array.shape());
+    println!("   - Created managed array: {:?}", managedarray.shape());
 
     // List all arrays
     let arrays = manager.list_arrays();

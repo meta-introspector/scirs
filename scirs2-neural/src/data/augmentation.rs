@@ -1,7 +1,6 @@
 //! Data augmentation for training neural networks
 
 use crate::error::Result;
-use rand::rng;
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::Rng;

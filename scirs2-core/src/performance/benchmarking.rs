@@ -2,10 +2,8 @@
 //!
 //! This module provides advanced benchmarking capabilities for scientific computing operations,
 //! including strategy comparison, scalability analysis, and bottleneck identification.
-
-use super::*;
 use crate::performance_optimization::{AdaptiveOptimizer, OptimizationStrategy};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 /// Benchmark configuration

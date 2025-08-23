@@ -1128,7 +1128,6 @@ mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
     use ndarray::Array1;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_polynomial_solution() {

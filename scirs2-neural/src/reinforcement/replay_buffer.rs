@@ -4,7 +4,6 @@ use crate::error::Result;
 use crate::reinforcement::ExperienceBatch;
 use ndarray::prelude::*;
 use rand::seq::SliceRandom;
-use rand::rng;
 use std::collections::VecDeque;
 /// Trait for experience replay buffers
 pub trait ReplayBufferTrait: Send + Sync {

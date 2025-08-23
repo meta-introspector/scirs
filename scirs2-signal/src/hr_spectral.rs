@@ -13,7 +13,6 @@ use num_traits::Zero;
 use scirs2_linalg::complex::complex_inverse;
 use scirs2_linalg::complex::decompositions::{complex_eig, complex_eigh};
 use scirs2_linalg::solve as compute_solve;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 // use ndarray__linalg::{Eig, Inverse};

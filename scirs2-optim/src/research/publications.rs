@@ -8,7 +8,6 @@ use crate::research::experiments::{Experiment, ExperimentResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
-use std::path::PathBuf;
 
 /// Academic publication representation
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -5,7 +5,6 @@
 
 use num_traits::Zero;
 use scirs2_signal::filter::{group_delay, minimum_phase};
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {
@@ -165,7 +164,6 @@ fn main() {
 #[allow(dead_code)]
 fn evaluate_filter_response(b: &[f64], w: f64) -> num_complex::Complex64 {
     use num_complex::Complex64;
-    use std::f64::consts::PI;
 
     let z = Complex64::new(w.cos(), w.sin());
     let mut response = Complex64::zero();

@@ -12,6 +12,7 @@ use ndarray::{s, Array1, Array2, ArrayBase, ArrayView2, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::{num_threads, par_chunks, parallel_map, ParallelIterator};
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+use std::f64::consts::PI;
 use std::sync::Arc;
 
 /// Adaptive threshold calculator based on system capabilities
@@ -236,7 +237,6 @@ where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
     D: Data<Elem = F> + Sync,
 {
-    use std::f64::consts::PI;
 
     if data.is_empty() || eval_points.is_empty() {
         return Err(StatsError::InvalidArgument("Empty input data".to_string()));

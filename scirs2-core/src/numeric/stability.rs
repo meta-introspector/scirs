@@ -866,7 +866,6 @@ mod tests {
 
     #[test]
     fn test_reduce_angle() {
-        use std::f64::consts::PI;
 
         // Test angle reduction
         assert_relative_eq!(reduce_angle(3.0 * PI), -PI, epsilon = 1e-10);

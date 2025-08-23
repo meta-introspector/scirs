@@ -21,7 +21,7 @@
 //! 4. **Research Applications Track** - Advanced topics and current research
 //! 5. **Software Development Track** - Implementation and optimization
 //!
-//! Run with: cargo run --example comprehensive_learning_center
+//! Run with: cargo run --example comprehensive_learningcenter
 
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -779,20 +779,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=====================================================");
     println!("Welcome to your personalized learning journey!\n");
 
-    let mut learning_center = LearningCenter::new();
+    let mut _learningcenter = LearningCenter::new();
 
     // User authentication/creation
     let username = get_user_input("Enter your username (or 'new' for new user): ")?;
 
     if username == "new" {
-        create_new_user(&mut learning_center)?;
+        create_new_user(&mut _learningcenter)?;
     } else {
-        load_or_create_user(&mut learning_center, username)?;
+        load_or_create_user(&mut _learningcenter, username)?;
     }
 
     // Main learning loop
     loop {
-        display_dashboard(&learning_center)?;
+        display_dashboard(&_learningcenter)?;
 
         let choice = get_user_input(
             "\nEnter your choice (track #, 'progress', 'resources', 'help', or 'quit'): ",
@@ -800,17 +800,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         match choice.to_lowercase().as_str() {
             "quit" | "q" => {
-                save_user_progress(&learning_center)?;
+                save_user_progress(&_learningcenter)?;
                 println!("🎓 Thank you for learning with us! Progress saved.");
                 break;
             }
-            "progress" | "p" => display_detailed_progress(&learning_center)?,
-            "resources" | "r" => explore_resources(&learning_center)?,
+            "progress" | "p" => display_detailed_progress(&_learningcenter)?,
+            "resources" | "r" => explore_resources(&_learningcenter)?,
             "help" | "h" => display_help()?,
             _ => {
                 if let Ok(track_num) = choice.parse::<usize>() {
-                    if track_num > 0 && track_num <= learning_center.learning_tracks.len() {
-                        enter_learning_track(&mut learning_center, track_num - 1)?;
+                    if track_num > 0 && track_num <= _learningcenter.learning_tracks.len() {
+                        enter_learning_track(&mut _learningcenter, track_num - 1)?;
                     } else {
                         println!("❌ Invalid track number. Please try again.");
                     }
@@ -826,7 +826,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn create_new_user(
-    _learning_center: &mut LearningCenter,
+    _learningcenter: &mut LearningCenter,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🆕 Creating new user profile...");
 
@@ -878,38 +878,38 @@ fn create_new_user(
         preferred_learning_style: learning_style,
     };
 
-    learning_center
+    _learningcenter
         .user_profiles
         .insert(username.clone(), profile);
-    learning_center.current_user = Some(username.clone());
+    _learningcenter.current_user = Some(username.clone());
 
     println!("✅ Profile created successfully for {}!", username);
 
     // Recommend initial track
-    recommend_starting_track(learning_center)?;
+    recommend_starting_track(_learningcenter)?;
 
     Ok(())
 }
 
 #[allow(dead_code)]
 fn load_or_create_user(
-    learning_center: &mut LearningCenter,
+    _learningcenter: &mut LearningCenter,
     username: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // In a real implementation, this would load from persistent storage
-    if !learning_center.user_profiles.contains_key(&username) {
+    if !_learningcenter.user_profiles.contains_key(&username) {
         println!(
             "👤 User not found. Creating new profile for {}...",
             username
         );
-        learning_center.current_user = Some(username.clone());
-        create_new_user(learning_center)?;
+        _learningcenter.current_user = Some(username.clone());
+        create_new_user(_learningcenter)?;
     } else {
-        learning_center.current_user = Some(username.clone());
+        _learningcenter.current_user = Some(username.clone());
         println!("👋 Welcome back, {}!", username);
 
         // Update last active time
-        if let Some(profile) = learning_center.user_profiles.get_mut(&username) {
+        if let Some(profile) = _learningcenter.user_profiles.get_mut(&username) {
             profile.last_active = SystemTime::now();
         }
     }
@@ -918,14 +918,14 @@ fn load_or_create_user(
 
 #[allow(dead_code)]
 fn recommend_starting_track(
-    learning_center: &LearningCenter,
+    _learningcenter: &LearningCenter,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    if let Some(username) = &learning_center.current_user {
-        if let Some(profile) = learning_center.user_profiles.get(username) {
+    if let Some(username) = &_learningcenter.current_user {
+        if let Some(profile) = _learningcenter.user_profiles.get(username) {
             println!("\n🎯 Based on your profile, we recommend starting with:");
 
             match (&profile.skill_level, &profile.preferred_learning_style) {
-                (DifficultyLevel::Beginner) => {
+                (DifficultyLevel::Beginner, _) => {
                     println!("   📚 Mathematical Foundations Track - Start with the basics");
                 }
                 (DifficultyLevel::Intermediate, LearningStyle::Applied) => {
@@ -934,10 +934,10 @@ fn recommend_starting_track(
                 (DifficultyLevel::Intermediate, LearningStyle::Practical) => {
                     println!("   💻 Software Development Track - Learn by coding");
                 }
-                (DifficultyLevel::Advanced) => {
+                (DifficultyLevel::Advanced, _) => {
                     println!("   🔬 Computational Methods Track - Advanced numerical techniques");
                 }
-                (DifficultyLevel::Expert) => {
+                (DifficultyLevel::Expert, _) => {
                     println!("   🚀 Research Applications Track - Cutting-edge topics");
                 }
                 _ => {
@@ -957,15 +957,15 @@ fn display_dashboard(_learningcenter: &LearningCenter) -> Result<(), Box<dyn std
     println!("🎓 LEARNING DASHBOARD");
     println!("{}", "=".repeat(60));
 
-    if let Some(username) = &learning_center.current_user {
-        if let Some(profile) = learning_center.user_profiles.get(username) {
+    if let Some(username) = &_learningcenter.current_user {
+        if let Some(profile) = _learningcenter.user_profiles.get(username) {
             println!(
                 "👤 User: {} | Level: {:?} | Style: {:?}",
                 username, profile.skill_level, profile.preferred_learning_style
             );
 
             let completed = profile.completed_modules.len();
-            let total_modules: usize = learning_center
+            let total_modules: usize = _learningcenter
                 .learning_tracks
                 .iter()
                 .map(|track| track.learning_modules.len())
@@ -995,8 +995,8 @@ fn display_dashboard(_learningcenter: &LearningCenter) -> Result<(), Box<dyn std
     }
 
     println!("\n📚 Available Learning Tracks:");
-    for (i, track) in learning_center.learning_tracks.iter().enumerate() {
-        let progress = calculate_track_progress(learning_center, &track.id);
+    for (i, track) in _learningcenter.learning_tracks.iter().enumerate() {
+        let progress = calculate_track_progress(_learningcenter, &track.id);
         println!(
             "{}. {} ({:.0}% complete)",
             i + 1,
@@ -1010,8 +1010,8 @@ fn display_dashboard(_learningcenter: &LearningCenter) -> Result<(), Box<dyn std
             track.estimated_hours
         );
 
-        if let Some(username) = &learning_center.current_user {
-            if let Some(profile) = learning_center.user_profiles.get(username) {
+        if let Some(username) = &_learningcenter.current_user {
+            if let Some(profile) = _learningcenter.user_profiles.get(username) {
                 if profile.current_track.as_ref() == Some(&track.id) {
                     println!("   📍 CURRENTLY ACTIVE");
                 }
@@ -1024,18 +1024,18 @@ fn display_dashboard(_learningcenter: &LearningCenter) -> Result<(), Box<dyn std
 }
 
 #[allow(dead_code)]
-fn calculate_track_progress(_learning_center: &LearningCenter, trackid: &str) -> f64 {
-    if let Some(username) = &_learning_center.current_user {
+fn calculate_track_progress(learning_center: &LearningCenter, trackid: &str) -> f64 {
+    if let Some(username) = &learning_center.current_user {
         if let Some(profile) = learning_center.user_profiles.get(username) {
-            if let Some(track) = _learning_center
+            if let Some(track) = learning_center
                 .learning_tracks
                 .iter()
-                .find(|t| t._id == track_id)
+                .find(|t| t.id == trackid)
             {
                 let completed_modules = track
                     .learning_modules
                     .iter()
-                    .filter(|module| profile.completed_modules.contains(&module._id))
+                    .filter(|module| profile.completed_modules.contains(&module.id))
                     .count();
                 return completed_modules as f64 / track.learning_modules.len() as f64;
             }
@@ -1046,15 +1046,15 @@ fn calculate_track_progress(_learning_center: &LearningCenter, trackid: &str) ->
 
 #[allow(dead_code)]
 fn display_detailed_progress(
-    learning_center: &LearningCenter,
+    _learningcenter: &LearningCenter,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 DETAILED PROGRESS REPORT");
     println!("{}", "=".repeat(40));
 
-    if let Some(username) = &learning_center.current_user {
-        if let Some(profile) = learning_center.user_profiles.get(username) {
-            for track in &learning_center.learning_tracks {
-                let progress = calculate_track_progress(learning_center, &track.id);
+    if let Some(username) = &_learningcenter.current_user {
+        if let Some(profile) = _learningcenter.user_profiles.get(username) {
+            for track in &_learningcenter.learning_tracks {
+                let progress = calculate_track_progress(_learningcenter, &track.id);
                 println!("\n🎯 {}: {:.1}%", track.title, progress * 100.0);
 
                 for module in &track.learning_modules {
@@ -1103,7 +1103,7 @@ fn explore_resources(_learningcenter: &LearningCenter) -> Result<(), Box<dyn std
     println!("{}", "=".repeat(30));
 
     println!("\n🖥️  Interactive Examples:");
-    for (_id, resource) in &learning_center.resource_catalog.examples {
+    for (_id, resource) in &_learningcenter.resource_catalog.examples {
         println!("  • {} - {}", resource.title, resource.description);
         println!(
             "    Topics: {} | Runtime: {:.0}min",
@@ -1113,7 +1113,7 @@ fn explore_resources(_learningcenter: &LearningCenter) -> Result<(), Box<dyn std
     }
 
     println!("\n📖 Documentation:");
-    for (_id, doc) in &learning_center.resource_catalog.documentation {
+    for (_id, doc) in &_learningcenter.resource_catalog.documentation {
         println!("  • {} ({})", doc.title, doc.section);
         println!(
             "    Topics: {} | Depth: {:?}",
@@ -1123,7 +1123,7 @@ fn explore_resources(_learningcenter: &LearningCenter) -> Result<(), Box<dyn std
     }
 
     println!("\n🌐 External Resources:");
-    for (_id, ext) in &learning_center.resource_catalog.external_links {
+    for (_id, ext) in &_learningcenter.resource_catalog.external_links {
         println!("  • {} - {}", ext.title, ext.description);
         println!(
             "    URL: {} | Reliability: {:.0}%",
@@ -1134,7 +1134,7 @@ fn explore_resources(_learningcenter: &LearningCenter) -> Result<(), Box<dyn std
 
     let choice = get_user_input("\nEnter resource ID to launch, or press Enter to return: ")?;
     if !choice.is_empty() {
-        launch_resource(learning_center, &choice)?;
+        launch_resource(_learningcenter, &choice)?;
     }
 
     Ok(())
@@ -1142,10 +1142,10 @@ fn explore_resources(_learningcenter: &LearningCenter) -> Result<(), Box<dyn std
 
 #[allow(dead_code)]
 fn launch_resource(
-    learning_center: &LearningCenter,
+    _learningcenter: &LearningCenter,
     resource_id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    if let Some(example) = learning_center.resource_catalog.examples.get(resource_id) {
+    if let Some(example) = _learningcenter.resource_catalog.examples.get(resource_id) {
         println!("🚀 Launching example: {}", example.title);
         println!("📁 File: {}", example.file_path);
         println!(
@@ -1157,14 +1157,14 @@ fn launch_resource(
                 .strip_suffix(".rs")
                 .unwrap_or(&example.file_path)
         );
-    } else if let Some(doc) = learning_center
+    } else if let Some(doc) = _learningcenter
         .resource_catalog
         .documentation
         .get(resource_id)
     {
         println!("📖 Opening documentation: {}", doc.title);
         println!("📁 File: {}", doc.file_path);
-    } else if let Some(ext) = learning_center
+    } else if let Some(ext) = _learningcenter
         .resource_catalog
         .external_links
         .get(resource_id)
@@ -1183,10 +1183,10 @@ fn launch_resource(
 
 #[allow(dead_code)]
 fn enter_learning_track(
-    learning_center: &mut LearningCenter,
+    _learningcenter: &mut LearningCenter,
     track_index: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let track = &learning_center.learning_tracks[track_index].clone();
+    let track = &_learningcenter.learning_tracks[track_index].clone();
 
     println!("\n🎯 Entering Learning Track: {}", track.title);
     println!("{}", "=".repeat(track.title.len() + 25));
@@ -1201,8 +1201,8 @@ fn enter_learning_track(
     }
 
     // Update current track
-    if let Some(username) = &learning_center.current_user {
-        if let Some(profile) = learning_center.user_profiles.get_mut(username) {
+    if let Some(username) = &_learningcenter.current_user {
+        if let Some(profile) = _learningcenter.user_profiles.get_mut(username) {
             profile.current_track = Some(track.id.clone());
         }
     }
@@ -1210,7 +1210,7 @@ fn enter_learning_track(
     loop {
         println!("\n📚 Learning Modules:");
         for (i, module) in track.learning_modules.iter().enumerate() {
-            let status = get_module_status(learning_center, &module.id);
+            let status = get_module_status(_learningcenter, &module.id);
             println!("{}. {} {}", i + 1, status, module.title);
             println!(
                 "   {} | Type: {:?} | Duration: {:.1}h",
@@ -1239,13 +1239,13 @@ fn enter_learning_track(
         match choice.to_lowercase().as_str() {
             "back" | "b" => break,
             "cert" | "certification" => {
-                check_certification_eligibility(learning_center, track)?;
+                check_certification_eligibility(_learningcenter, track)?;
             }
             _ => {
                 if let Ok(module_num) = choice.parse::<usize>() {
                     if module_num > 0 && module_num <= track.learning_modules.len() {
                         start_learning_module(
-                            learning_center,
+                            _learningcenter,
                             &track.learning_modules[module_num - 1],
                         )?;
                     } else {
@@ -1262,12 +1262,12 @@ fn enter_learning_track(
 }
 
 #[allow(dead_code)]
-fn get_module_status(_learning_center: &LearningCenter, moduleid: &str) -> &'static str {
-    if let Some(username) = &_learning_center.current_user {
-        if let Some(profile) = learning_center.user_profiles.get(username) {
-            if profile.completed_modules.contains(module_id) {
+fn get_module_status(_learningcenter: &LearningCenter, moduleid: &str) -> &'static str {
+    if let Some(username) = &_learningcenter.current_user {
+        if let Some(profile) = _learningcenter.user_profiles.get(username) {
+            if profile.completed_modules.contains(moduleid) {
                 return "✅";
-            } else if profile.learning_progress.contains_key(module_id) {
+            } else if profile.learning_progress.contains_key(moduleid) {
                 return "🔄";
             }
         }
@@ -1277,7 +1277,7 @@ fn get_module_status(_learning_center: &LearningCenter, moduleid: &str) -> &'sta
 
 #[allow(dead_code)]
 fn start_learning_module(
-    learning_center: &mut LearningCenter,
+    _learningcenter: &mut LearningCenter,
     module: &LearningModule,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Starting Module: {}", module.title);
@@ -1295,8 +1295,8 @@ fn start_learning_module(
     }
 
     // Initialize or update progress
-    if let Some(username) = &learning_center.current_user {
-        if let Some(profile) = learning_center.user_profiles.get_mut(username) {
+    if let Some(username) = &_learningcenter.current_user {
+        if let Some(profile) = _learningcenter.user_profiles.get_mut(username) {
             profile
                 .learning_progress
                 .entry(module.id.clone())
@@ -1315,7 +1315,7 @@ fn start_learning_module(
     let choice =
         get_user_input("\nPress Enter to continue with this module, or 'back' to return: ")?;
     if choice.to_lowercase() != "back" {
-        simulate_module_completion(learning_center, module)?;
+        simulate_module_completion(_learningcenter, module)?;
     }
 
     Ok(())
@@ -1323,7 +1323,7 @@ fn start_learning_module(
 
 #[allow(dead_code)]
 fn simulate_module_completion(
-    learning_center: &mut LearningCenter,
+    _learningcenter: &mut LearningCenter,
     module: &LearningModule,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔄 Working through module content...");
@@ -1341,9 +1341,9 @@ fn simulate_module_completion(
             let score = simulate_assessment(&module.assessments[0])?;
 
             // Update progress
-            let username = learning_center.current_user.clone();
+            let username = _learningcenter.current_user.clone();
             if let Some(ref username) = username {
-                if let Some(profile) = learning_center.user_profiles.get_mut(username) {
+                if let Some(profile) = _learningcenter.user_profiles.get_mut(username) {
                     if let Some(progress) = profile.learning_progress.get_mut(&module.id) {
                         progress.completion_percentage = 1.0;
                         progress.best_score = Some(score);
@@ -1365,14 +1365,14 @@ fn simulate_module_completion(
 
                 // Check for achievements after the mutable borrow is dropped
                 if score >= 0.8 {
-                    check_for_achievements(learning_center, username)?;
+                    check_for_achievements(_learningcenter, username)?;
                 }
             }
         }
     } else {
         // Mark as completed without assessment
-        if let Some(username) = &learning_center.current_user {
-            if let Some(profile) = learning_center.user_profiles.get_mut(username) {
+        if let Some(username) = &_learningcenter.current_user {
+            if let Some(profile) = _learningcenter.user_profiles.get_mut(username) {
                 profile.completed_modules.insert(module.id.clone());
                 if let Some(progress) = profile.learning_progress.get_mut(&module.id) {
                     progress.completion_percentage = 1.0;
@@ -1424,10 +1424,10 @@ fn simulate_assessment(assessment: &Assessment) -> Result<f64, Box<dyn std::erro
 
 #[allow(dead_code)]
 fn check_for_achievements(
-    learning_center: &mut LearningCenter,
+    _learningcenter: &mut LearningCenter,
     username: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    if let Some(profile) = learning_center.user_profiles.get_mut(username) {
+    if let Some(profile) = _learningcenter.user_profiles.get_mut(username) {
         let completed_count = profile.completed_modules.len();
 
         // Check for completion milestones
@@ -1479,14 +1479,14 @@ fn check_for_achievements(
 
 #[allow(dead_code)]
 fn check_certification_eligibility(
-    learning_center: &LearningCenter,
+    _learningcenter: &LearningCenter,
     track: &LearningTrack,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎓 CERTIFICATION STATUS: {}", track.title);
     println!("{}", "=".repeat(track.title.len() + 22));
 
-    if let Some(username) = &learning_center.current_user {
-        if let Some(profile) = learning_center.user_profiles.get(username) {
+    if let Some(username) = &_learningcenter.current_user {
+        if let Some(profile) = _learningcenter.user_profiles.get(username) {
             let completed_modules = track
                 .learning_modules
                 .iter()

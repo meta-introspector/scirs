@@ -307,7 +307,6 @@ impl PersonalizedFL {
         client_ids: &[usize],
         // Simple k-means on label distributions
         use rand::prelude::*;
-use rand::rng;
 use ndarray::ArrayView1;
         let mut rng = rng();
         // Initialize cluster assignments randomly

@@ -101,7 +101,7 @@ impl ActivationFunction {
             ActivationFunction::Tanh => x.tanh(),
             ActivationFunction::Swish => x * (1.0 / (1.0 + (-x).exp())),
             ActivationFunction::GELU => {
-                0.5 * x * (1.0 + ((2.0 / PI).sqrt() * (x + 0.044715 * x.powi(3))).tanh())
+                0.5 * x * (1.0 + ((2.0_f64 / PI).sqrt() * (x + 0.044715 * x.powi(3))).tanh())
             }
         }
     }
@@ -133,7 +133,7 @@ impl ActivationFunction {
                 sigmoid_x + x * sigmoid_x * (1.0 - sigmoid_x)
             }
             ActivationFunction::GELU => {
-                let sqrt_2_pi = (2.0 / PI).sqrt();
+                let sqrt_2_pi = (2.0_f64 / PI).sqrt();
                 let tanh_input = sqrt_2_pi * (x + 0.044715 * x.powi(3));
                 let tanh_val = tanh_input.tanh();
                 0.5 * (1.0 + tanh_val)
@@ -580,7 +580,7 @@ impl NeuralSpatialOptimizer {
                 let mut rng = rand::rng();
                 let mut selected = Vec::new();
                 for _ in 0..params.num_clusters {
-                    let idx = rng.random_range(0..n_points);
+                    let idx = rng.random_range(0, n_points);
                     selected.push(idx);
                 }
 

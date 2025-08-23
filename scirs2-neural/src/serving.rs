@@ -18,7 +18,6 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::path::PathBuf;
 /// Model package format for deployment
 #[derive(Debug, Clone, PartialEq)]
 pub enum PackageFormat {

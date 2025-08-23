@@ -370,7 +370,6 @@ impl MultiObjectiveOptimizer {
     /// Tournament selection for parent selection
     fn tournament_selection(&self) -> Result<&MultiObjectiveSolution> {
         use rand::prelude::*;
-use rand::rng;
         let mut rng = rng();
         let tournament_size = 3;
         let mut best_idx = rng.random_range(0..self.population.len());

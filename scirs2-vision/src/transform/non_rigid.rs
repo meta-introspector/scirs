@@ -10,8 +10,9 @@ use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 use ndarray::{Array1, Array2};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-// use scirs2__linalg::solve;
+use scirs2_core::rng;
 use std::f64::consts::PI;
+// use scirs2__linalg::solve;
 
 /// Non-rigid transformation interface
 pub trait NonRigidTransform {
@@ -287,7 +288,6 @@ impl ElasticDeformation {
             StdRng::seed_from_u64(seed_value)
         } else {
             // For rand 0.9.0+, we need to create a seeded RNG for reproducibility
-            use rand::rng;
             let mut rng = rng();
             StdRng::from_rng(&mut rng)
         };

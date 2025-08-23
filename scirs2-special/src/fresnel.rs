@@ -344,7 +344,7 @@ fn fresnel_asymptotic(x: f64) -> SpecialResult<(f64, f64)> {
 
         // Avoid direct power calculation which could overflow
         // Instead, build up the power by multiplication
-        let mut z2_pow_k = z2_inv; // Start with (1/z2)
+        let mut z2_pow_k: f64 = z2_inv; // Start with (1/z2)
         for _ in 1..k {
             z2_pow_k *= z2_inv; // Multiply by (1/z2) k-1 more times
 

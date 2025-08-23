@@ -7,7 +7,6 @@ use ndarray::Array2;
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rand::Rng;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 #[allow(unused_imports)]
@@ -35,7 +34,6 @@ use std::fmt::Debug;
 ///
 /// ```
 /// use scirs2_signal::multitaper::coherence;
-/// use std::f64::consts::PI;
 ///
 /// // Generate two related signals
 /// let n = 1024;
@@ -257,7 +255,6 @@ where
 /// ```
 /// use scirs2_signal::multitaper::multitaper_filtfilt;
 /// use scirs2_signal::filter::butter;
-/// use std::f64::consts::PI;
 ///
 /// // Generate a test signal (sinusoid with noise)
 /// let n = 1000;

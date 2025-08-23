@@ -318,7 +318,7 @@ impl<T: Float + Default + Clone> BayesianArchitectureOptimizer<T> {
     /// Generate random architecture for initial sampling
     fn generate_random_architecture(&self) -> Result<ArchitectureRepresentation<T>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Generate random feature vector
         let features = Array1::from_shape_fn(self.architecture_encoder.encoding_dim, |_| {
@@ -390,7 +390,7 @@ impl<T: Float + Default + Clone> BayesianArchitectureOptimizer<T> {
     /// Single restart of acquisition function optimization
     fn optimize_acquisition_single_restart(&self) -> Result<ArchitectureRepresentation<T>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Start with random point
         let mut current_features = Array1::from_shape_fn(

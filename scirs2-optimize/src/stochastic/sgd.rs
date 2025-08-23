@@ -10,6 +10,7 @@ use crate::stochastic::{
 };
 use crate::unconstrained::result::OptimizeResult;
 use ndarray::Array1;
+use scirs2_core::rng;
 
 /// Options for SGD optimization
 #[derive(Debug, Clone)]
@@ -348,7 +349,6 @@ where
 
         // Shuffle data indices for this epoch
         let mut all_indices: Vec<usize> = (0..num_samples).collect();
-        use rand::rng;
         use rand::seq::SliceRandom;
         all_indices.shuffle(&mut rng());
 

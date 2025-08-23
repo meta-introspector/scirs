@@ -116,7 +116,7 @@ fn test_gamma_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 
 /// Test gamma function with extreme values
 #[allow(dead_code)]
-fn test_gamma_extreme_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
+fn test_gamma_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // Test very large values
@@ -158,7 +158,7 @@ fn test_gamma_extreme_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 
 /// Test gamma function boundary conditions
 #[allow(dead_code)]
-fn test_gamma_boundary_conditions(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
+fn test_gamma_boundary_conditions(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // Test near zero
@@ -200,7 +200,7 @@ fn test_gamma_boundary_conditions(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult
 
 /// Test gamma function with subnormal values
 #[allow(dead_code)]
-fn test_gamma_subnormal_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
+fn test_gamma_subnormal_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // Test with subnormal inputs
@@ -292,7 +292,7 @@ fn test_bessel_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 
 /// Test Bessel functions with extreme values
 #[allow(dead_code)]
-fn test_bessel_extreme_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
+fn test_bessel_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // Test very large arguments
@@ -407,7 +407,7 @@ fn test_erf_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 
 /// Test error functions with extreme values
 #[allow(dead_code)]
-fn test_erf_extreme_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
+fn test_erf_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // Test very large positive values

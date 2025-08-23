@@ -7,7 +7,6 @@
 //! - Spherical geometry operations
 
 use scirs2_spatial::geospatial::*;
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

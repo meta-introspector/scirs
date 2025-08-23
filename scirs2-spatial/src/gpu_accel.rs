@@ -44,7 +44,6 @@
 use crate::error::SpatialResult;
 use crate::memory_pool::DistancePool;
 use ndarray::{Array1, Array2, ArrayView2};
-use std::f64::consts::PI;
 use std::sync::Arc;
 
 // Type alias for complex return types

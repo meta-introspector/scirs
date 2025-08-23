@@ -40,7 +40,6 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, Array3, Axis};
 use rand::Rng;
 use std::cmp;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Configuration for Non-Local Means denoising

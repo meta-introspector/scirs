@@ -83,7 +83,6 @@ fn small_arg_series_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 ///
 /// ```
 /// use scirs2_special::bessel::spherical::spherical_jn;
-/// use std::f64::consts::PI;
 ///
 /// // j₀(x) = sin(x)/x
 /// let x = 1.5f64;
@@ -191,7 +190,6 @@ pub fn spherical_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 ///
 /// ```
 /// use scirs2_special::bessel::spherical::spherical_yn;
-/// use std::f64::consts::PI;
 ///
 /// // y₀(x) = -cos(x)/x
 /// let x = 1.5f64;

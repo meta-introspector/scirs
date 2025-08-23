@@ -11,9 +11,10 @@ use crate::quantum_enhanced_generators::QuantumDatasetGenerator;
 use crate::utils::Dataset;
 use ndarray::{s, Array1, Array2, Array3};
 use rand::{rng, rngs::StdRng, Rng, SeedableRng};
+use rand_distr::Uniform;
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 use std::time::{Duration, Instant};
+use std::f64::consts::PI;
 
 /// Quantum-Neuromorphic Fusion Processor
 /// The ultimate synthesis of quantum computing and biological neural networks
@@ -521,7 +522,7 @@ impl QuantumNeuromorphicFusion {
                 quantum_amplitudes: (amplitude_real, amplitude_imag),
                 quantum_phase,
                 entangled_partner: if rng.random::<f64>() < 0.3 {
-                    Some(rng.random_range(0..n_synapses))
+                    Some(rng.sample(Uniform::new(0, n_synapses).unwrap()))
                 } else {
                     None
                 },
@@ -913,6 +914,7 @@ pub fn create_fusion_with_params(
 mod tests {
     use super::*;
     use ndarray::Array2;
+use rand_distr::Uniform;
 
     #[test]
     fn test_quantum_neuromorphic_fusion_creation() {

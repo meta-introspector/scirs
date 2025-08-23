@@ -4,7 +4,6 @@
 //! scenarios, partially observable environments, and complex control tasks.
 
 use crate::error::{NeuralError, Result};
-use rand::rng;
 use crate::reinforcement::environments::{Action, Environment, Info, Observation, Reward};
 use ndarray::prelude::*;
 use rand::Rng;

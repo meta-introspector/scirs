@@ -8,7 +8,6 @@
 use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -1087,7 +1086,7 @@ fn maxwell_boltzmann_speed(v: f64, mass: f64, temperature: f64) -> f64 {
 fn step_response_characteristics(wn: f64, zeta: f64) -> (f64, f64, f64) {
     // Second-order system step response characteristics
     if zeta < 1.0 {
-        let wd = _wn * (1.0 - zeta * zeta).sqrt();
+        let wd = wn * (1.0 - zeta * zeta).sqrt();
         let overshoot = (-PI * zeta / (1.0 - zeta * zeta).sqrt()).exp();
         let settling_time = 4.0 / (zeta * wn); // 2% settling time
         let peak_time = PI / wd;
@@ -1123,11 +1122,11 @@ fn beam_deflection_distributed(x: f64, l: f64, w: f64, e: f64, i: f64) -> (f64, 
 #[allow(dead_code)]
 fn blasius_velocity_profile(eta: f64) -> f64 {
     // Blasius boundary layer velocity profile (approximation)
-    if _eta >= 5.0 {
+    if eta >= 5.0 {
         1.0
     } else {
         // Approximate solution using polynomial
-        let f_eta = _eta - eta.powi(3) / 6.0 + eta.powi(5) / 120.0;
+        let f_eta = eta - eta.powi(3) / 6.0 + eta.powi(5) / 120.0;
         f_eta.tanh()
     }
 }
@@ -1163,8 +1162,8 @@ fn beta_density(x: f64, alpha: f64, betaparam: f64) -> Result<f64, Box<dyn std::
     if x <= 0.0 || x >= 1.0 {
         Ok(0.0)
     } else {
-        let beta_function = beta(alpha, beta_param);
-        Ok(x.powf(alpha - 1.0) * (1.0 - x).powf(beta_param - 1.0) / beta_function)
+        let beta_function = beta(alpha, betaparam);
+        Ok(x.powf(alpha - 1.0) * (1.0 - x).powf(betaparam - 1.0) / beta_function)
     }
 }
 
@@ -1183,13 +1182,13 @@ fn weibull_hazard_rate(t: f64, k: f64, lambda: f64) -> f64 {
 #[allow(dead_code)]
 fn bessel_filter_response(freq: f64, fc: f64, order: usize) -> (f64, f64, f64) {
     // Bessel filter frequency response (simplified)
-    let _s = Complex64::new(0.0, 2.0 * PI * _freq / fc);
+    let _s = Complex64::new(0.0, 2.0 * PI * freq / fc);
 
     // Bessel polynomial evaluation would go here
     // This is a simplified approximation
-    let magnitude = 1.0 / (1.0 + (_freq / fc).powi(2 * order as i32)).sqrt();
-    let magnitude_db = 20.0 * magnitude.log10();
-    let phase_deg = -(order as f64) * (_freq / fc).atan() * 180.0 / PI;
+    let magnitude: f64 = 1.0 / (1.0 + (freq / fc).powi(2 * order as i32)).sqrt();
+    let magnitude_db = 20.0 * magnitude.log10() as f64;
+    let phase_deg = -(order as f64) * (freq / fc).atan() * 180.0 / PI;
     let group_delay = (order as f64) / (2.0 * PI * fc);
 
     (magnitude_db, phase_deg, group_delay)
@@ -1199,7 +1198,7 @@ fn bessel_filter_response(freq: f64, fc: f64, order: usize) -> (f64, f64, f64) {
 fn radar_detection_probability(snr: f64, pfa: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // Radar detection probability for Swerling I target
     let threshold = ndtri(1.0 - pfa)?; // Detection threshold
-    let pd = 0.5 * (1.0 + erf((_snr - threshold) / (2.0_f64.sqrt())));
+    let pd: f64 = 0.5 * (1.0 + erf((snr - threshold) / (2.0_f64.sqrt())));
     Ok(pd.max(0.0).min(1.0))
 }
 
@@ -1210,7 +1209,7 @@ fn psychoacoustic_masking(_freq: f64, masker_freq: f64, maskerlevel: f64) -> (f6
     let bark_diff = 13.0 * freq_ratio.ln() + 3.5 * (freq_ratio.ln()).atan();
 
     let spread = (-2.5 * bark_diff.abs()).exp();
-    let threshold = masker_level + 10.0 * spread.log10() - 15.0;
+    let threshold = maskerlevel + 10.0 * spread.log10() - 15.0;
 
     (threshold.max(0.0), spread)
 }
@@ -1278,10 +1277,10 @@ fn fractal_noise_2d(x: f64, y: f64, octaves: usize) -> f64 {
 #[allow(dead_code)]
 fn evaluate_cubic_bezier(_controlpoints: &[(f64, f64)], t: f64) -> (f64, f64, f64) {
     // Evaluate cubic Bezier curve and curvature
-    let p0 = control_points[0];
-    let p1 = control_points[1];
-    let p2 = control_points[2];
-    let p3 = control_points[3];
+    let p0 = _controlpoints[0];
+    let p1 = _controlpoints[1];
+    let p2 = _controlpoints[2];
+    let p3 = _controlpoints[3];
 
     let t2 = t * t;
     let t3 = t2 * t;
@@ -1339,7 +1338,7 @@ fn b_spline_basis(i: usize, p: usize, u: f64, knots: &[f64]) -> f64 {
 #[allow(dead_code)]
 fn cosine_weighted_hemisphere_sample(u1: f64, u2: f64) -> (f64, f64, f64) {
     // Cosine-weighted hemisphere sampling for ray tracing
-    let theta = (_u1).sqrt().acos();
+    let theta = (u1).sqrt().acos();
     let phi = 2.0 * PI * u2;
     let pdf = theta.cos() / PI;
     (theta, phi, pdf)

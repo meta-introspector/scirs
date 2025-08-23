@@ -308,7 +308,7 @@ pub mod compat {
     }
 
     /// SciPy-compatible softmax with axis parameter
-    pub fn softmax_axis(x: &ArrayView1<f64>, axis: Option<usize>) -> Vec<f64> {
+    pub fn softmax_axis(x: &ArrayView1<f64>, _axis: Option<usize>) -> Vec<f64> {
         // Note: This is simplified for 1D arrays
         // Full implementation would handle multi-dimensional arrays
         match statistical::softmax(x.view()) {

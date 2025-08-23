@@ -1125,7 +1125,6 @@ pub fn calculate_sha256<P: AsRef<Path>>(path: P) -> Result<String> {
 //
 
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 /// Data type for schema validation
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

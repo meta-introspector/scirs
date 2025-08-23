@@ -1217,7 +1217,7 @@ impl StreamConnection for MqttConnection {
         }
 
         // Simulate realistic MQTT message with proper JSON structure
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let sensor_data = serde_json::json!({
             "client_id": self.client_id,
             "topic": self.topic,

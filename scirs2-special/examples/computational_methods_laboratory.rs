@@ -15,7 +15,6 @@
 
 use ndarray::Array1;
 use scirs2_special::*;
-use std::f64::consts::PI;
 use std::io::{self, Write};
 use std::time::Instant;
 
@@ -67,7 +66,7 @@ fn display_main_menu() {
 
 #[allow(dead_code)]
 fn get_user_input(prompt: &str) -> io::Result<String> {
-    print!("{_prompt}");
+    print!("{prompt}");
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
@@ -1348,7 +1347,7 @@ fn continued_fraction_erfc_approximation(x: f64, nterms: usize) -> f64 {
     let mut cf = 0.0;
 
     // Backward evaluation
-    for i in (1..=n_terms).rev() {
+    for i in (1..=nterms).rev() {
         cf = (i as f64 * 0.5) / (x + cf);
     }
 
@@ -1411,7 +1410,7 @@ fn demonstrate_high_precision_gamma() -> Result<(), Box<dyn std::error::Error>> 
 #[allow(dead_code)]
 fn measure_gamma_performance(data: &[f64]) -> u128 {
     let start = Instant::now();
-    for &x in _data {
+    for &x in data {
         let _ = gamma(x);
     }
     start.elapsed().as_micros()
@@ -1420,7 +1419,7 @@ fn measure_gamma_performance(data: &[f64]) -> u128 {
 #[allow(dead_code)]
 fn measure_erf_performance(data: &[f64]) -> u128 {
     let start = Instant::now();
-    for &x in _data {
+    for &x in data {
         let _ = erf(x);
     }
     start.elapsed().as_micros()
@@ -1429,7 +1428,7 @@ fn measure_erf_performance(data: &[f64]) -> u128 {
 #[allow(dead_code)]
 fn measure_j0_performance(data: &[f64]) -> u128 {
     let start = Instant::now();
-    for &x in _data {
+    for &x in data {
         let _ = bessel::j0(x);
     }
     start.elapsed().as_micros()
@@ -1443,7 +1442,7 @@ fn stirling_approximation(x: f64, nterms: usize) -> f64 {
     let mut term = 1.0 / (12.0 * x);
     result += term;
 
-    if n_terms > 1 {
+    if nterms > 1 {
         term *= -1.0 / (10.0 * x * x);
         result += term;
     }

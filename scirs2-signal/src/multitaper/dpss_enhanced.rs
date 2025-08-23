@@ -9,7 +9,6 @@ use approx::assert_abs_diff_eq;
 use ndarray::{Array1, Array2};
 use rustfft::{num_complex::Complex, FftPlanner};
 use scirs2_core::validation::check_positive;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Enhanced DPSS computation with proper SciPy-compatible implementation

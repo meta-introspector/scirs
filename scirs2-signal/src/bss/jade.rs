@@ -7,7 +7,6 @@ use super::{pca, BssConfig};
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
 use scirs2_linalg::solve_multiple;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Implement JADE algorithm for ICA

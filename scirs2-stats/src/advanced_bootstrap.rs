@@ -8,7 +8,7 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive, NumCast, One, Zero};
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use scirs2_core::{parallel_ops::*, rng, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -268,7 +268,6 @@ where
         let rng = match config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
-                use rand::rng;
                 StdRng::from_rng(&mut rng())
             }
         };
@@ -373,7 +372,6 @@ where
                 .into_par_iter()
                 .map(|_| {
                     let mut local_rng = {
-                        use rand::rng;
                         StdRng::from_rng(&mut rng())
                     };
                     let mut resample = Array1::zeros(n);

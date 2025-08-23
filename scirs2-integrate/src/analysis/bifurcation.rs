@@ -9,7 +9,6 @@ use ndarray::{s, Array1, Array2};
 use num_complex::Complex64;
 use rand::Rng;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 
 /// Bifurcation analyzer for parametric dynamical systems
 pub struct BifurcationAnalyzer {

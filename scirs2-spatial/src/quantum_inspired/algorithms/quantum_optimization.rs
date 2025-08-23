@@ -7,10 +7,10 @@
 
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2};
-use std::f64::consts::PI;
 
 // Import quantum concepts
 use super::super::concepts::QuantumState;
+use std::f64::consts::PI;
 
 /// Quantum Approximate Optimization Algorithm (QAOA) for Spatial Problems
 ///

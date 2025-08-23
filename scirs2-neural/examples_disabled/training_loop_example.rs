@@ -1,5 +1,4 @@
 use ndarray::{Array, IxDyn};
-use rand::rng;
 use scirs2_neural::callbacks::{
     CallbackContext, CallbackTiming, EarlyStopping, ReduceOnPlateau, TensorBoardLogger,
     VisualizationCallback,
@@ -14,7 +13,6 @@ use scirs2_neural::utils::{
     analyze_training_history, ascii_plot, export_history_to_csv, LearningRateSchedule, PlotOptions,
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {

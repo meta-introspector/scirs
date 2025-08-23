@@ -4,7 +4,6 @@
 //! a controller to sample architectures.
 
 use crate::activations::Activation;
-use rand::rng;
 use crate::error::{NeuralError, Result};
 use crate::layers::{Dense, Layer};
 use crate::nas::search__space::{Architecture, LayerType};

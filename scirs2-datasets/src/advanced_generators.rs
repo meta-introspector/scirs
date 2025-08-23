@@ -8,6 +8,7 @@ use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, Axis};
 use rand::{rng, Rng};
+use rand_distr::Uniform;
 
 /// Configuration for adversarial example generation
 #[derive(Debug, Clone)]
@@ -651,14 +652,14 @@ impl AdvancedGenerator {
                 let mut anomalies: Array2<f64> = Array2::zeros((n_anomalies, n_features));
                 for i in 0..n_anomalies {
                     // Pick a random normal sample and permute some _features
-                    let base_idx = rng.random_range(0..normal_data.nrows());
+                    let base_idx = rng.sample(Uniform::new(0, normal_data.nrows()).unwrap());
                     let mut anomaly = normal_data.row(base_idx).to_owned();
 
                     // Permute random _features
                     let n_permute = (n_features as f64 * 0.3) as usize;
                     for _ in 0..n_permute {
-                        let j = rng.random_range(0..n_features);
-                        let k = rng.random_range(0..n_features);
+                        let j = rng.sample(Uniform::new(0, n_features).unwrap());
+                        let k = rng.sample(Uniform::new(0, n_features).unwrap());
                         let temp = anomaly[j];
                         anomaly[j] = anomaly[k];
                         anomaly[k] = temp;
@@ -697,7 +698,7 @@ impl AdvancedGenerator {
 
         // Simple shuffle using Fisher-Yates
         for i in (1..n_samples).rev() {
-            let j = rng.random_range(0..=i);
+            let j = rng.sample(Uniform::new(0, i).unwrap());
             indices.swap(i, j);
         }
 

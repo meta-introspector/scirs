@@ -12,7 +12,6 @@ use scirs2_integrate::{
         VerificationTestCase, VerificationWorkflow,
     },
 };
-use std::f64::consts::PI;
 
 use ndarray::ArrayView1;
 use scirs2_integrate::IntegrateError;

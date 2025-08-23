@@ -27,7 +27,6 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_positive, checkarray_finite};
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 use std::sync::Arc;
 
 #[allow(unused_imports)]

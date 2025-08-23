@@ -7,7 +7,6 @@ use scirs2_signal::median::{
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
     rank_filter_1d, EdgeMode, MedianConfig,
 };
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

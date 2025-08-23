@@ -10,7 +10,6 @@ use crate::error::{SignalError, SignalResult};
 use crate::lti::design::tf as design_tf;
 use crate::lti::TransferFunction;
 use num_complex::Complex64;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Design a notch filter to remove a specific frequency

@@ -38,7 +38,7 @@ impl PolynomialMutation {
 
 impl MutationOperator for PolynomialMutation {
     fn mutate(&self, solution: &mut [f64], bounds: &[(f64, f64)]) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let n = solution.len();
 
         for i in 0..n {
@@ -72,7 +72,7 @@ impl GaussianMutation {
 
 impl MutationOperator for GaussianMutation {
     fn mutate(&self, solution: &mut [f64], bounds: &[(f64, f64)]) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let normal = Normal::new(0.0, self.std_dev).unwrap();
 
         for i in 0..solution.len() {
@@ -103,7 +103,7 @@ impl UniformMutation {
 
 impl MutationOperator for UniformMutation {
     fn mutate(&self, solution: &mut [f64], bounds: &[(f64, f64)]) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for i in 0..solution.len() {
             if rng.gen::<f64>() <= self.mutation_probability {

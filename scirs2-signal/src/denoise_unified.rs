@@ -13,13 +13,11 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
 use serde::{Deserialize, Serialize};
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 use crate::denoise_enhanced::{
     denoise_median_1d, denoise_total_variation_1d, denoise_wiener_1d, WienerConfig,
 };
-// use std::f64::consts::PI;
 
 /// Unified denoising method selector
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

@@ -7,8 +7,8 @@ use crate::error::Result;
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
-use rand::rng;
 use rand::rngs::StdRng;
+use scirs2_core::rng;
 
 /// Generate the classic Iris dataset
 #[allow(dead_code)]

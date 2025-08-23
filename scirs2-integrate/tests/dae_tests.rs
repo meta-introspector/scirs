@@ -5,7 +5,6 @@ use scirs2_integrate::dae::{
 };
 use scirs2_integrate::error::IntegrateResult;
 use scirs2_integrate::ode::ODEMethod;
-use std::f64::consts::PI;
 
 #[test]
 #[allow(dead_code)]

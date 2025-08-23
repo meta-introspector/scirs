@@ -233,7 +233,7 @@ fn benchmark_methods(
                 _q_params = Some(params.clone());
 
                 // Quantize and dequantize
-                let quantized = quantize_matrix(&data.view(), BITS, params.method);
+                let (quantized, _) = quantize_matrix(&data.view(), BITS, params.method);
                 let dequantized = dequantize_matrix(&quantized, &params);
 
                 // Calculate MSE
@@ -278,7 +278,7 @@ fn benchmark_bit_widths(distributions: &[(&str, &Array2<f32>)]) {
         "", "", "", "", ""
     );
 
-    for &(dist_name, data) in _distributions {
+    for &(dist_name, data) in distributions {
         for &bits in &bit_widths {
             // Configure calibration using entropy method (generally robust)
             let config = CalibrationConfig {
@@ -291,7 +291,7 @@ fn benchmark_bit_widths(distributions: &[(&str, &Array2<f32>)]) {
             let params = calibrate_matrix(&data.view(), bits, &config).unwrap();
 
             // Quantize and dequantize
-            let quantized = quantize_matrix(&data.view(), bits, params.method);
+            let (quantized, _) = quantize_matrix(&data.view(), bits, params.method);
             let dequantized = dequantize_matrix(&quantized, &params);
 
             // Calculate MSE
@@ -342,7 +342,7 @@ fn benchmark_hardware_friendly(distributions: &[(&str, &Array2<f32>)]) {
         "", "", "", "", ""
     );
 
-    for &(dist_name, data) in _distributions {
+    for &(dist_name, data) in distributions {
         for &(bits, method, format_name) in &formats {
             // Measure calibration time
             let start = Instant::now();

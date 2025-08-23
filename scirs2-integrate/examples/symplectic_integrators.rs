@@ -9,7 +9,6 @@ use scirs2_integrate::symplectic::{
     position_verlet, velocity_verlet, CompositionMethod, GaussLegendre4, GaussLegendre6,
     HamiltonianFn, SeparableHamiltonian, StormerVerlet, SymplecticIntegrator,
 };
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

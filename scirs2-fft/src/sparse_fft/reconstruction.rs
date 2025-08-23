@@ -297,7 +297,6 @@ where
 mod tests {
     use super::super::algorithms::sparse_fft;
     use super::*;
-    use std::f64::consts::PI;
 
     fn create_test_signal(n: usize) -> Vec<f64> {
         let mut signal = vec![0.0; n];

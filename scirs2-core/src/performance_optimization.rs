@@ -13,7 +13,6 @@
 //! - **Multi-objective optimization**: Balance performance, memory, and energy efficiency
 //! - **Context-Aware Optimization**: Environment and workload-specific adaptations
 
-use rand::Rng;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Cache locality hint for prefetch operations

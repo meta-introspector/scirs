@@ -77,7 +77,7 @@ pub fn detect_and_compute_orb(
     config: &OrbConfig,
 ) -> Result<Vec<OrbDescriptor>> {
     let array = image_to_array(img)?;
-    let (_height_width) = array.dim();
+    let _height_width = array.dim();
 
     // Create image pyramid
     let pyramid = create_pyramid(&array, config.num_levels, config.scalefactor);

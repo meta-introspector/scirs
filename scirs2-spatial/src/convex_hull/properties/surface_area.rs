@@ -304,7 +304,7 @@ pub fn compute_compactness(hull: &ConvexHull) -> SpatialResult<f64> {
 fn tgamma_approx(x: f64) -> f64 {
     // Stirling's approximation for large x
     if x > 10.0 {
-        ((2.0 * std::f64::consts::PI / x).sqrt() * (x / std::f64::consts::E).powf(x))
+        (2.0 * std::f64::consts::PI / x).sqrt() * (x / std::f64::consts::E).powf(x)
     } else {
         // Use simple cases for small values
         match x as i32 {
@@ -350,7 +350,7 @@ pub fn is_surface_area_computation_reliable(hull: &ConvexHull) -> bool {
     }
 
     // For high dimensions, check if we have enough structure
-    if hull.equations.is_some() && nvertices >= ndim + 1 {
+    if hull.equations.is_some() && nvertices > ndim {
         return true;
     }
 

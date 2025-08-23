@@ -6,7 +6,6 @@ use ndarray::ScalarOperand;
 use num_traits::Float;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-use std::path::PathBuf;
 /// Model checkpoint callback that saves the model after every epoch
 /// and optionally only saves the best models based on a monitored metric.
 pub struct ModelCheckpoint<F: Float + Debug + ScalarOperand> {

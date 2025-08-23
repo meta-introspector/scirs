@@ -27,7 +27,6 @@ use ndarray::s;
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, Array3, ArrayView1};
 use num_complex::Complex64;
-use std::f64::consts::PI;
 
 /// Configuration for perfect reconstruction filter banks
 #[derive(Debug, Clone)]

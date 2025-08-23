@@ -354,7 +354,6 @@ where
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use std::f64::consts::PI;
     #[test]
     fn test_chirp_linear() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];

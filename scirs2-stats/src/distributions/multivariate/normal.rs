@@ -6,7 +6,6 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use crate::traits::{Distribution as DistributionTrait, MultivariateDistribution};
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Axis, Data, Ix1, Ix2};
-use rand::rng;
 use rand_distr::{Distribution as RandDistribution, Normal as RandNormal};
 use statrs::statistics::Statistics;
 use std::fmt::Debug;

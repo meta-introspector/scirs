@@ -63,7 +63,6 @@ pub use funding::*;
 use crate::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use chrono::{DateTime, Utc};
 
 /// Main research project coordinator

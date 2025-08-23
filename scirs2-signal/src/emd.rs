@@ -12,7 +12,6 @@ use ndarray::{Array1, Array2};
 use num_traits::{Float, NumCast};
 use rand::Rng;
 use std::cmp::max;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 #[allow(unused_imports)]
@@ -80,7 +79,6 @@ pub struct EmdResult {
 ///
 /// ```
 /// use scirs2_signal::emd::{emd, EmdConfig};
-/// use std::f64::consts::PI;
 ///
 /// // Generate a test signal (sum of two sinusoids)
 /// let n = 1000;
@@ -696,7 +694,6 @@ fn interpolate_envelope(
 ///
 /// ```
 /// use scirs2_signal::emd::{eemd, EmdConfig};
-/// use std::f64::consts::PI;
 ///
 /// // Generate a test signal (sum of two sinusoids)
 /// let n = 1000;

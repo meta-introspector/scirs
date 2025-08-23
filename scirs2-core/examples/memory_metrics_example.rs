@@ -101,7 +101,7 @@ fn main() {
     #[cfg(feature = "memory_metrics")]
     {
         // If memory_metrics feature is enabled, we get a serde_json::Value
-        let json = report.to_json();
+        let json = report.to_json_2();
         println!("\nJSON Report Format (excerpt):");
         println!("{{");
         println!("  \"total_current_usage\": {},", json[total_current_usage]);
@@ -117,7 +117,7 @@ fn main() {
     #[cfg(not(feature = "memory_metrics"))]
     {
         // If memory_metrics feature is disabled, we get a String
-        let json = report.to_json();
+        let json = report.to_json_2();
         println!("\nJSON Report Format (feature disabled):");
         println!("{}", json);
     }
@@ -136,7 +136,7 @@ fn simulatematrix_operations(collector: &MemoryMetricsCollector) {
             matrix_a_size,
             0xa000,
         )
-        .with_context(matrix_multiply)
+        .with_context("matrix_multiply")
         .with_metadata("matrix", "A"),
     );
 
@@ -151,7 +151,7 @@ fn simulatematrix_operations(collector: &MemoryMetricsCollector) {
             matrix_b_size,
             0xb000,
         )
-        .with_context(matrix_multiply)
+        .with_context("matrix_multiply")
         .with_metadata("matrix", "B"),
     );
 
@@ -169,7 +169,7 @@ fn simulatematrix_operations(collector: &MemoryMetricsCollector) {
             matrix_c_size,
             0xc000,
         )
-        .with_context(matrix_multiply)
+        .with_context("matrix_multiply")
         .with_metadata("matrix", "C"),
     );
 
@@ -189,7 +189,7 @@ fn simulatematrix_operations(collector: &MemoryMetricsCollector) {
             matrix_a_size,
             0xa000,
         )
-        .with_context(matrix_multiply)
+        .with_context("matrix_multiply")
         .with_metadata("matrix", "A"),
     );
 
@@ -200,7 +200,7 @@ fn simulatematrix_operations(collector: &MemoryMetricsCollector) {
             matrix_b_size,
             0xb000,
         )
-        .with_context(matrix_multiply)
+        .with_context("matrix_multiply")
         .with_metadata("matrix", "B"),
     );
 

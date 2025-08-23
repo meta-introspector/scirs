@@ -9,7 +9,6 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_linalg::solve;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Filter design specifications

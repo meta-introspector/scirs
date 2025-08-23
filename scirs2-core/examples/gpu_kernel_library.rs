@@ -26,23 +26,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Example 1: Matrix multiplication with GEMM kernel
         println!("\nExample 1: Matrix multiplication (GEMM)");
-        matrix_multiply_example(&ctx)?;
+        demo_gemm_kernel(&ctx)?;
 
         // Example 2: Vector addition with AXPY kernel
         println!("\nExample 2: Vector addition (AXPY)");
-        vector_addition_example(&ctx)?;
+        demo_axpy_kernel(&ctx)?;
 
         // Example 3: Vector sum reduction
         println!("\nExample 3: Vector sum reduction");
-        vector_sum_example(&ctx)?;
+        demo_sum_reduction(&ctx)?;
 
         // Example 4: Using a specialized kernel for L2 norm
         println!("\nExample 4: Vector L2 norm");
-        vector_norm_example(&ctx)?;
+        demo_l2_norm(&ctx)?;
 
         // Example 5: Neural network activation functions
         println!("\nExample 5: Neural network activation functions");
-        activation_functions_example(&ctx)?;
+        demo_activation_functions(&ctx)?;
 
         println!("\nAll examples completed successfully!");
     }
@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Example demonstrating matrix multiplication with the GEMM kernel
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
+fn demo_gemm_kernel(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create two matrices
     let a = Array2::from_shape_vec(
         (3, 4),
@@ -153,7 +153,7 @@ fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
 /// Example demonstrating vector addition with the AXPY kernel
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
+fn demo_axpy_kernel(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create two vectors
     let x = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
     let mut y = Array1::from_vec(vec![5.0f32, 4.0, 3.0, 2.0, 1.0]);
@@ -162,7 +162,7 @@ fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
     println!("Vector y: {:?}", y);
 
     // Get the AXPY kernel
-    let kernel = ctx.get_kernel(axpy)?;
+    let kernel = ctx.get_kernel("axpy")?;
 
     // Create GPU buffers
     let x_buffer = ctx.create_buffer_from_slice(x.as_slice().unwrap());
@@ -201,14 +201,14 @@ fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
 /// Example demonstrating vector sum reduction
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
+fn demo_sum_reduction(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create a vector
     let x = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
 
     println!("Vector: {:?}", x);
 
     // Get the sum reduction kernel
-    let kernel = ctx.get_kernel(sum_reduce)?;
+    let kernel = ctx.get_kernel("sum_reduce")?;
 
     // For simplicity, we'll assume the vector fits in a single workgroup
     // In practice, we'd need to do multiple passes for large vectors
@@ -243,7 +243,7 @@ fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
 /// Example demonstrating vector L2 norm
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
+fn demo_l2_norm(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create a vector
     let x = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
 
@@ -285,14 +285,14 @@ fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
 /// Example demonstrating neural network activation functions
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
+fn demo_activation_functions(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create an input vector
     let x = Array1::from_vec(vec![-2.0f32, -1.0, 0.0, 1.0, 2.0]);
 
     println!("Input: {:?}", x);
 
     // Get the ReLU kernel
-    let relu_kernel = ctx.get_kernel(relu)?;
+    let relu_kernel = ctx.get_kernel("relu")?;
 
     // Create GPU buffers
     let input_buffer = ctx.create_buffer_from_slice(x.as_slice().unwrap());
@@ -312,7 +312,7 @@ fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
     println!("ReLU output: {:?}", relu_result);
 
     // Now try sigmoid
-    let sigmoid_kernel = ctx.get_kernel(sigmoid)?;
+    let sigmoid_kernel = ctx.get_kernel("sigmoid")?;
 
     // Set kernel parameters
     sigmoid_kernel.set_buffer("input", &input_buffer);

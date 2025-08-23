@@ -4,7 +4,6 @@ use super::cwt::{convolve_complex_same_complex, convolve_complex_same_real};
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
 use num_traits::NumCast;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 #[allow(unused_imports)]

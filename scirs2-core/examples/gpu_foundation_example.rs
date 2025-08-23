@@ -175,7 +175,7 @@ fn run_gpu_foundation_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("-----------------");
 
     // Test error conditions
-    match ctx.get_kernel(nonexistent_kernel) {
+    match ctx.get_kernel("nonexistent_kernel") {
         Ok(_) => println!("✗ Unexpected success for nonexistent kernel"),
         Err(e) => println!("✓ Proper error handling: {}", e),
     }

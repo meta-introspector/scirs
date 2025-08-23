@@ -30,7 +30,6 @@ fn rotation_from_euler(x: f64, y: f64, z: f64, convention: &str) -> SpatialResul
 /// ```
 /// use scirs2_spatial::transform::{Rotation, Slerp};
 /// use ndarray::array;
-/// use std::f64::consts::PI;
 ///
 /// // Create two rotations to interpolate between
 /// let rot1 = Rotation::from_euler(&array![0.0, 0.0, 0.0].view(), "xyz").unwrap();
@@ -78,7 +77,6 @@ impl Slerp {
     /// ```
     /// use scirs2_spatial::transform::{Rotation, Slerp};
     /// use ndarray::array;
-    /// use std::f64::consts::PI;
     ///
     /// let rot1 = Rotation::identity();
     /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
@@ -136,7 +134,6 @@ impl Slerp {
     /// ```
     /// use scirs2_spatial::transform::{Rotation, Slerp};
     /// use ndarray::array;
-    /// use std::f64::consts::PI;
     ///
     /// let rot1 = Rotation::identity();
     /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap();
@@ -199,7 +196,6 @@ impl Slerp {
     /// ```
     /// use scirs2_spatial::transform::{Rotation, Slerp};
     /// use ndarray::array;
-    /// use std::f64::consts::PI;
     ///
     /// let rot1 = Rotation::identity();
     /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap();
@@ -227,7 +223,6 @@ impl Slerp {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_slerp_identity() {

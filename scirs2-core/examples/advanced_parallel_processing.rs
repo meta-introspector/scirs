@@ -113,7 +113,7 @@ fn example_work_stealing_scheduler() -> CoreResult<()> {
 
     // Create scheduler configuration
     let config = SchedulerConfigBuilder::new()
-        .num_workers(4)
+        .workers(4)
         .enable_stealing_heuristics(true)
         .enable_priorities(true)
         .adaptive(true)
@@ -246,7 +246,7 @@ fn example_load_balancing() -> CoreResult<()> {
     // Rebalance
     let new_weights = balancer.rebalance();
     println!("\nRebalanced weights:");
-    for (i, weight) in newweights.iter().enumerate() {
+    for (i, weight) in new_weights.iter().enumerate() {
         println!("  Partition {}: {:.2}", i, weight);
     }
 
@@ -338,7 +338,7 @@ fn print_partition_info<T>(partitions: &[Vec<T>]) {
     }
 
     // Calculate load balance
-    if !_partitions.is_empty() {
+    if !partitions.is_empty() {
         let sizes: Vec<usize> = partitions.iter().map(|p| p.len()).collect();
         let minsize = *sizes.iter().min().unwrap_or(&0);
         let maxsize = *sizes.iter().max().unwrap_or(&0);

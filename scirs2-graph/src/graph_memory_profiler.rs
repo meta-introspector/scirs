@@ -1098,7 +1098,7 @@ pub fn generate_profiled_large_graph(
     profiler.record_allocation("graph_generation", num_nodes * 8, "_nodes", true);
 
     let mut graph = crate::base::Graph::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Add _nodes with memory tracking
     const NODE_BATCH_SIZE: usize = 25_000;

@@ -9,7 +9,6 @@ use crate::advanced_clustering::{AdvancedClusteringResult, AdvancedPerformanceMe
 use crate::advanced_visualization::{AdvancedVisualizationOutput, QuantumCoherencePlot, NeuromorphicAdaptationPlot};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use std::collections::HashMap;
-use std::f64::consts::PI;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};

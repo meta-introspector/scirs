@@ -296,7 +296,6 @@ where
 /// ```
 /// use scirs2_special::elliptic_f;
 /// use approx::assert_relative_eq;
-/// use std::f64::consts::PI;
 ///
 /// let phi = PI / 3.0; // 60 degrees
 /// let m = 0.5;
@@ -373,7 +372,6 @@ where
 /// ```
 /// use scirs2_special::elliptic_e_inc;
 /// use approx::assert_relative_eq;
-/// use std::f64::consts::PI;
 ///
 /// let phi = PI / 3.0; // 60 degrees
 /// let m = 0.5;
@@ -448,7 +446,6 @@ where
 /// ```
 /// use scirs2_special::elliptic_pi;
 /// use approx::assert_relative_eq;
-/// use std::f64::consts::PI;
 ///
 /// let n = 0.3;
 /// let phi = PI / 4.0; // 45 degrees
@@ -1001,7 +998,6 @@ where
 ///
 /// ```
 /// use scirs2_special::ellipkinc;
-/// use std::f64::consts::PI;
 /// use approx::assert_relative_eq;
 ///
 /// let result = ellipkinc(PI / 4.0, 0.5);
@@ -1033,7 +1029,6 @@ where
 ///
 /// ```
 /// use scirs2_special::ellipeinc;
-/// use std::f64::consts::PI;
 /// use approx::assert_relative_eq;
 ///
 /// let result = ellipeinc(PI / 4.0, 0.5);
@@ -1076,7 +1071,6 @@ mod tests {
 
     #[test]
     fn test_elliptic_f() {
-        use std::f64::consts::PI;
 
         // Values at φ = 0
         assert_relative_eq!(elliptic_f(0.0, 0.0), 0.0, epsilon = 1e-10);
@@ -1099,7 +1093,6 @@ mod tests {
 
     #[test]
     fn test_elliptic_e_inc() {
-        use std::f64::consts::PI;
 
         // Values at φ = 0
         assert_relative_eq!(elliptic_e_inc(0.0, 0.0), 0.0, epsilon = 1e-10);

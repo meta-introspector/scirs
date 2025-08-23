@@ -4,7 +4,6 @@
 //! as described in "Attention Is All You Need" by Vaswani et al.
 
 use crate::error::{NeuralError, Result};
-use rand::rng;
 use crate::layers::{AttentionConfig, Layer, LayerNorm, ParamLayer, SelfAttention};
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;

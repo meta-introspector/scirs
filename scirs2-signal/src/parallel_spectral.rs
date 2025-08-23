@@ -12,7 +12,6 @@ use ndarray::Array2;
 use num_complex::Complex64;
 use rustfft::{num_complex::Complex, FftPlanner};
 use scirs2_core::parallel_ops::*;
-use std::f64::consts::PI;
 use std::sync::Arc;
 
 #[allow(unused_imports)]

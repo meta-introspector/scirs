@@ -8,8 +8,8 @@
 
 use crate::error::{SpecialError, SpecialResult};
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::sync::Mutex;
+use std::f64::consts::PI;
 
 lazy_static::lazy_static! {
     // Cache for polylogarithm values
@@ -822,7 +822,7 @@ fn gamma_stirling(x: f64) -> f64 {
     }
 
     // Stirling's approximation with correction terms
-    let ln_gamma = (x - 0.5) * x.ln() - x + 0.5 * (2.0 * PI).ln() + 1.0 / (12.0 * x)
+    let ln_gamma = (x - 0.5) * x.ln() - x + 0.5 * (2.0_f64 * PI).ln() + 1.0 / (12.0 * x)
         - 1.0 / (360.0 * x.powi(3))
         + 1.0 / (1260.0 * x.powi(5));
     ln_gamma.exp()

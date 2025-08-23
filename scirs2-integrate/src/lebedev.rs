@@ -161,7 +161,6 @@ pub fn lebedev_rule<F: IntegrateFloat>(order: LebedevOrder) -> IntegrateResult<L
 ///
 /// ```
 /// use scirs2__integrate::lebedev::{lebedev_integrate, LebedevOrder};
-/// use std::f64::consts::PI;
 ///
 /// // Integrate f(x,y,z) = 1 over the unit sphere (should equal 4π)
 /// let result: f64 = lebedev_integrate(|_x_y_z| 1.0, LebedevOrder::Order14).unwrap();

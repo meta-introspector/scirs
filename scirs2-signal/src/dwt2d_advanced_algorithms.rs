@@ -17,7 +17,6 @@ use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
 use statrs::statistics::Statistics;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Advanced 2D DWT decomposition result with multiple representations

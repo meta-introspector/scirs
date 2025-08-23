@@ -4,7 +4,7 @@
 //! commonly used in convex hull algorithms.
 
 use crate::error::SpatialResult;
-use ndarray::{Array2, ArrayView2};
+use ndarray::ArrayView2;
 
 /// Compute the signed volume of a tetrahedron
 ///

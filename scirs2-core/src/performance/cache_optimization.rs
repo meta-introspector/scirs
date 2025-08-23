@@ -4,8 +4,6 @@
 //! optimized for modern CPU cache hierarchies. It includes adaptive algorithms
 //! that choose optimal strategies based on data size and cache characteristics.
 
-use super::*;
-
 /// Cache-aware matrix multiplication with adaptive blocking
 pub fn matrix_multiply_cache_aware<T>(a: &[T], b: &[T], c: &mut [T], m: usize, n: usize, k: usize)
 where

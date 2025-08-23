@@ -4,7 +4,6 @@
 //! needed to customize the C/C++ binding generation process.
 
 use std::collections::HashMap;
-use std::path::PathBuf;
 /// C/C++ binding generation configuration
 #[derive(Debug, Clone)]
 pub struct BindingConfig {

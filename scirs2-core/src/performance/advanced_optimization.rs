@@ -4,12 +4,10 @@
 //! from runtime characteristics and automatically adapt optimization strategies
 //! for maximum performance in scientific computing workloads.
 
-use super::*;
 use crate::performance_optimization::OptimizationStrategy;
-use rand::Rng;
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -76,7 +74,7 @@ impl Default for AdvancedOptimizationConfig {
 }
 
 /// Neural network for performance prediction
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct NeuralPerformancePredictor {
     /// Network layers (simplified neural network)
     layers: Vec<NeuralLayer>,
@@ -286,16 +284,6 @@ impl Default for FeatureNormalizer {
     }
 }
 
-impl Default for NeuralPerformancePredictor {
-    fn default() -> Self {
-        Self {
-            layers: vec![],
-            training_data: Vec::new(),
-            accuracy_metrics: AccuracyMetrics::default(),
-            feature_normalizer: FeatureNormalizer::default(),
-        }
-    }
-}
 
 impl Default for StrategyClassifier {
     fn default() -> Self {
@@ -343,12 +331,12 @@ impl AIOptimizationEngine {
     pub fn with_config(config: AdvancedOptimizationConfig) -> Self {
         Self {
             performance_predictor: Arc::new(RwLock::new(NeuralPerformancePredictor::default())),
-            strategy_classifier: Arc::new(RwLock::new(StrategyClassifier::default())),
-            hyperparameter_tuner: Arc::new(Mutex::new(AdaptiveHyperparameterTuner::default())),
-            multi_objective_optimizer: Arc::new(Mutex::new(MultiObjectiveOptimizer::default())),
-            context_analyzer: Arc::new(RwLock::new(ExecutionContextAnalyzer::default())),
-            learning_history: Arc::new(Mutex::new(LearningHistory::default())),
-            metrics_collector: Arc::new(Mutex::new(RealTimeMetricsCollector::default())),
+            strategy_classifier: Arc::new(RwLock::new(StrategyClassifier)),
+            hyperparameter_tuner: Arc::new(Mutex::new(AdaptiveHyperparameterTuner)),
+            multi_objective_optimizer: Arc::new(Mutex::new(MultiObjectiveOptimizer)),
+            context_analyzer: Arc::new(RwLock::new(ExecutionContextAnalyzer)),
+            learning_history: Arc::new(Mutex::new(LearningHistory)),
+            metrics_collector: Arc::new(Mutex::new(RealTimeMetricsCollector)),
             config,
         }
     }

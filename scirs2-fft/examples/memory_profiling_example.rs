@@ -8,7 +8,6 @@ use ndarray::Array2;
 use num_complex::Complex64;
 use scirs2_fft::memory_efficient::{fft2_efficient, fft_inplace, FftMode};
 use scirs2_fft::{fft, fft2, frft, rfft, PlanCache};
-use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
 /// Memory profiling results

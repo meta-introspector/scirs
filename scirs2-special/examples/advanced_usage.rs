@@ -6,7 +6,6 @@
 
 use ndarray::Array1;
 use scirs2_special::*;
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -75,12 +74,12 @@ fn statistical_computing_demo() -> Result<(), Box<dyn std::error::Error>> {
 
     // Beta distribution density function
     fn beta_pdf(x: f64, alpha: f64, betaparam: f64) -> Result<f64, Box<dyn std::error::Error>> {
-        if !(0.0..=1.0).contains(&x) || alpha <= 0.0 || beta_param <= 0.0 {
+        if !(0.0..=1.0).contains(&x) || alpha <= 0.0 || betaparam <= 0.0 {
             return Ok(0.0);
         }
 
-        let numerator = x.powf(alpha - 1.0) * (1.0 - x).powf(beta_param - 1.0);
-        let denominator = beta(alpha, beta_param);
+        let numerator = x.powf(alpha - 1.0) * (1.0 - x).powf(betaparam - 1.0);
+        let denominator = beta(alpha, betaparam);
         Ok(numerator / denominator)
     }
 

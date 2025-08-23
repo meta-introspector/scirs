@@ -895,7 +895,7 @@ fn complex_gamma_magnitude(a: f64, b: f64) -> f64 {
     // Use the asymptotic expansion for large |z|
     if z_mag > 10.0 {
         // log|Γ(a+ib)| = (a-1/2)ln|z| - |z| + ln(2π)/2 + O(1/|z|)
-        let log_gamma_mag = (a - 0.5) * z_mag.ln() - z_mag + 0.5 * (2.0 * PI).ln();
+        let log_gamma_mag = (a - 0.5) * z_mag.ln() - z_mag + 0.5 * (2.0_f64 * PI).ln();
 
         // Add higher order corrections
         let z_inv = 1.0 / z_mag;
@@ -920,7 +920,7 @@ fn complex_gamma_magnitude(a: f64, b: f64) -> f64 {
         // Now use asymptotic formula
         let final_z_mag = (current_a * current_a + current_b * current_b).sqrt();
         let log_gamma_mag =
-            (current_a - 0.5) * final_z_mag.ln() - final_z_mag + 0.5 * (2.0 * PI).ln();
+            (current_a - 0.5) * final_z_mag.ln() - final_z_mag + 0.5 * (2.0_f64 * PI).ln();
         let asymptotic_result = log_gamma_mag.exp();
 
         asymptotic_result / factor

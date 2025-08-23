@@ -115,7 +115,6 @@
 //! ```
 //! use ndarray::{array, ArrayView1};
 //! use scirs2_integrate::bvp::{solve_bvp, BVPOptions};
-//! use std::f64::consts::PI;
 //!
 //! // Solve a simple linear BVP: y' = -y
 //! // with boundary conditions y(0) = 1, y(1) = exp(-1)

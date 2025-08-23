@@ -17,7 +17,6 @@ use crate::dwt2d_enhanced::{
     enhanced_dwt2d_decompose, enhanced_dwt2d_reconstruct, Dwt2dConfig, EnhancedDwt2dResult,
 };
 // use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-// use std::f64::consts::PI;
 
 /// Texture analysis result using wavelets
 #[derive(Debug, Clone)]

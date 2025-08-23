@@ -51,7 +51,6 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::Array1;
 use num_traits::{cast::NumCast, Float, FloatConst};
-use rand::rng;
 use scirs2_core::Rng;
 use std::cmp;
 
@@ -230,8 +229,8 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
                     break;
                 }
 
-                let p_success = success_remaining as f64 / population_remaining as f64;
-                if rng.gen_range(0.0..1.0) < p_success {
+                let p_success = F::from(success_remaining as f64 / population_remaining as f64).unwrap();
+                if rng.gen_range(F::zero()..F::one()) < p_success {
                     successes += 1;
                     success_remaining -= 1;
                 } else {

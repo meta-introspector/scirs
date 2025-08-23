@@ -2,7 +2,6 @@ use scirs2_integrate::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, SpectralElementOptions,
     SpectralElementPoisson2D,
 };
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

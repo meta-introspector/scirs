@@ -839,7 +839,7 @@ impl<T: Float + Default + Clone> ArchitectureMutator<T> {
     /// Select mutation operator based on strategy
     fn select_mutation_operator(&self, architecture: &ArchitectureGenotype<T>) -> Result<MutationType> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         // Filter applicable operators
         let applicable_ops: Vec<MutationType> = self.config.available_operators
@@ -1013,7 +1013,7 @@ impl<T: Float + Default + Clone> ArchitectureMutator<T> {
 impl<T: Float + Default + Clone> MutationOperator<T> for AddOperationMutator<T> {
     fn mutate(&self, architecture: &ArchitectureGenotype<T>) -> Result<ArchitectureGenotype<T>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         let mut mutated = architecture.clone();
         mutated.id = format!("{}_{}", architecture.id, "add_op");
@@ -1096,7 +1096,7 @@ impl<T: Float + Default + Clone> MutationOperator<T> for AddOperationMutator<T> 
 impl<T: Float + Default + Clone> MutationOperator<T> for RemoveOperationMutator<T> {
     fn mutate(&self, architecture: &ArchitectureGenotype<T>) -> Result<ArchitectureGenotype<T>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         if architecture.operations.len() <= self.min_operations {
             return Err(OptimError::InvalidInput(
@@ -1169,7 +1169,7 @@ impl<T: Float + Default + Clone> MutationOperator<T> for RemoveOperationMutator<
 impl<T: Float + Default + Clone> MutationOperator<T> for ParameterMutator<T> {
     fn mutate(&self, architecture: &ArchitectureGenotype<T>) -> Result<ArchitectureGenotype<T>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         let mut mutated = architecture.clone();
         mutated.id = format!("{}_{}", architecture.id, "param_mut");

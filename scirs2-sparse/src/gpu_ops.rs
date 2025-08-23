@@ -192,8 +192,6 @@ pub struct OptimizedGpuOps {
 // Legacy function names for backward compatibility
 use crate::csr_array::CsrArray;
 use crate::error::SparseResult;
-use crate::sparray::SparseArray;
-use crate::sym_csr::SymCsrMatrix;
 use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;

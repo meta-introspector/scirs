@@ -652,7 +652,7 @@ impl<T: Float + Default + Clone> ArchitectureEncoder<T> {
     /// Initialize embedding matrices
     fn initialize_embeddings(&mut self) -> Result<()> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         for (&encoding_type, &dim) in &self.config.embedding_dimensions {
             let vocab_size = self.config.vocabulary_size;

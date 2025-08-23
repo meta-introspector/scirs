@@ -5,7 +5,6 @@
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
-use rand::rng;
 use rand_distr::{Bernoulli as RandBernoulli, Distribution};
 use scirs2_core::validation::check_probability;
 

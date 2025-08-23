@@ -88,7 +88,7 @@ where
 
     // Initialize with random positions
     let mut positions = vec![Position::new(0.0, 0.0); n];
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for pos in &mut positions {
         pos.x = rng.random::<f64>() * area_width - area_width / 2.0;

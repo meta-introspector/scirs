@@ -12,7 +12,6 @@ use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
 use statrs::distribution::{ChiSquared, ContinuousCDF};
-use std::f64::consts::PI;
 use std::sync::Arc;
 
 #[allow(unused_imports)]

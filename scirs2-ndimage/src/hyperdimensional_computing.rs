@@ -19,7 +19,6 @@
 use ndarray::{s, Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use rand::prelude::*;
-use rand::thread_rng;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::hash::{Hash, Hasher};
@@ -78,7 +77,7 @@ impl Hypervector {
     pub fn random(dim: usize, sparsity: f64) -> Self {
         let num_nonzero = (dim as f64 * sparsity) as usize;
         let mut sparse_data = Vec::new();
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         let mut used_indices = HashSet::new();
 
         while sparse_data.len() < num_nonzero {
@@ -1857,8 +1856,8 @@ mod tests {
 
         let matches = hdc_pattern_matching(image.view(), &patterns, &config).unwrap();
 
-        // Should find some matches
-        assert!(matches.len() >= 0);
+        // Pattern matching completed successfully
+        println!("Found {} matches", matches.len());
     }
 
     #[test]

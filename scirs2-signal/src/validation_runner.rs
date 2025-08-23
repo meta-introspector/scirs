@@ -16,7 +16,6 @@ use ndarray::{Array1, Array2};
 use rand::rngs::StdRng;
 use rand::Rng;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]

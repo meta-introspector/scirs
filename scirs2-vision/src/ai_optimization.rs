@@ -16,8 +16,8 @@
 
 use crate::error::Result;
 use rand::prelude::IndexedRandom;
-use rand::rng;
 use rand::Rng;
+use scirs2_core::rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 

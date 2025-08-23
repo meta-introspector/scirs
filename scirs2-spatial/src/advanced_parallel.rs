@@ -41,7 +41,6 @@ use crate::simd_distance::hardware_specific_simd::HardwareOptimizedDistances;
 use ndarray::{Array1, Array2, ArrayView2};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::VecDeque;
-use std::f64::consts::PI;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};

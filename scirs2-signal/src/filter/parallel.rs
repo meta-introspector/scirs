@@ -2213,7 +2213,6 @@ fn compute_matched_filter_chunk(
 mod tests {
     use super::*;
     use num_complex::Complex64;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_parallel_fir_filter_bank() {

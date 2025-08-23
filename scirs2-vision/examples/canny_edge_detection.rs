@@ -8,7 +8,6 @@
 use image::{DynamicImage, GrayImage};
 use scirs2_vision::feature::{canny, canny_simple, PreprocessMode};
 use std::error::Error;
-use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {

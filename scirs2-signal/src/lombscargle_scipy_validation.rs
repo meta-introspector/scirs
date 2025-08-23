@@ -17,7 +17,6 @@ use num_traits::Float;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Comprehensive SciPy validation configuration
