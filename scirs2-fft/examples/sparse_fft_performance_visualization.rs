@@ -9,6 +9,7 @@ use scirs2_fft::{
     sparse_fft_gpu_memory::{init_global_memory_manager, is_cuda_available, AllocationStrategy},
 };
 use std::time::Instant;
+use std::f64::consts::PI;
 
 /// Create a sparse signal with known frequencies in the spectrum
 #[allow(dead_code)]

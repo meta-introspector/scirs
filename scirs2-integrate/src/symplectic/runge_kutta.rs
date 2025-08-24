@@ -11,6 +11,7 @@ use crate::common::IntegrateFloat;
 use crate::error::IntegrateResult;
 use crate::symplectic::{HamiltonianFn, SymplecticIntegrator};
 use ndarray::{Array1, Array2};
+use std::f64::consts::PI;
 use std::marker::PhantomData;
 
 /// Gauss-Legendre 4th order symplectic Runge-Kutta method

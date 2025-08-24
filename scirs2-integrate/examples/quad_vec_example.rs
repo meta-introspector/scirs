@@ -1,5 +1,6 @@
 use ndarray::arr1;
 use scirs2_integrate::quad_vec::{quad_vec, NormType, QuadRule, QuadVecOptions};
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

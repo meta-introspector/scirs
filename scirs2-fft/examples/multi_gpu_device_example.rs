@@ -7,6 +7,7 @@ use scirs2_fft::{
     sparse_fft_multi_gpu::{MultiGPUConfig, MultiGPUSparseFFT, WorkloadDistribution},
     FFTResult,
 };
+use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

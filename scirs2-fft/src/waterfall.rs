@@ -17,6 +17,7 @@ use crate::spectrogram::{spectrogram, spectrogram_normalized};
 use crate::window::Window;
 use ndarray::{Array1, Array2, Array3};
 use num_traits::NumCast;
+use std::f64::consts::PI;
 
 /// Generate data for a 3D waterfall plot from a time-domain signal.
 ///

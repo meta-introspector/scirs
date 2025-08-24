@@ -5,6 +5,7 @@ use scirs2_fft::{
     fft2, get_global_planner, init_global_planner, FftPlanExecutor, PlanBuilder, PlanningConfig,
     PlanningStrategy,
 };
+use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 // Helper function to create a test array with an impulse

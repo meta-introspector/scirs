@@ -5,6 +5,7 @@
 
 use crate::error::{IntegrateError, IntegrateResult};
 use crate::IntegrateFloat;
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Options for controlling the behavior of the adaptive quadrature algorithm

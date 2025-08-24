@@ -25,8 +25,8 @@ use scirs2_stats::{
     ttest_ind,
     ttest_rel,
     wilcoxon,
-    Alternative,
 };
+use scirs2_stats::tests::ttest::Alternative;
 
 /// Generate random normal data
 #[allow(dead_code)]
@@ -133,7 +133,8 @@ fn bench_nonparametric_tests(c: &mut Criterion) {
                     black_box(mann_whitney(
                         &data1.view(),
                         &data2.view(),
-                        Alternative::TwoSided,
+                        "two-sided",
+                        false,
                     ));
                 });
             },
@@ -142,7 +143,7 @@ fn bench_nonparametric_tests(c: &mut Criterion) {
         // Wilcoxon signed-rank test
         group.bench_with_input(BenchmarkId::new("wilcoxon", n), &data1, |b, data| {
             b.iter(|| {
-                black_box(wilcoxon(&data.view(), 5.0, Alternative::TwoSided));
+                black_box(wilcoxon(&data.view(), &Array1::zeros(data.len()).view(), "wilcox", false));
             });
         });
     }
@@ -293,9 +294,9 @@ fn bench_anova(c: &mut Criterion) {
             &groups,
             |b, groups| {
                 b.iter(|| {
-                    black_box(one_way_anova(
-                        &groups.iter().map(|g| g.view()).collect::<Vec<_>>(),
-                    ));
+                    let group_views: Vec<_> = groups.iter().map(|g| g.view()).collect();
+                    let group_refs: Vec<&_> = group_views.iter().collect();
+                    black_box(one_way_anova(&group_refs));
                 });
             },
         );

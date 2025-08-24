@@ -747,6 +747,7 @@ mod tests {
     use approx::assert_relative_eq;
     use ndarray::array;
     use std::env::temp_dir;
+    use std::path::PathBuf;
 
     // Helper to get a temporary file path
     fn get_temp_file_path(name: &str) -> PathBuf {

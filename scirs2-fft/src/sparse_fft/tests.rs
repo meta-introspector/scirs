@@ -3,6 +3,7 @@
 //! This module contains comprehensive tests for all sparse FFT algorithms and utilities.
 
 use super::*;
+use std::f64::consts::PI;
 
 // Helper function to create a sparse signal
 #[allow(dead_code)]

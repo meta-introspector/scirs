@@ -1,6 +1,7 @@
 use ndarray::{s, Array2};
 use scirs2_integrate::pde::implicit::{ImplicitOptions, ADI2D};
 use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

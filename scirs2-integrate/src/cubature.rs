@@ -7,6 +7,7 @@
 use crate::error::{IntegrateError, IntegrateResult};
 use crate::IntegrateFloat;
 use ndarray::Array1;
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Options for the cubature integration

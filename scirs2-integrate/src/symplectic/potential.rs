@@ -12,6 +12,7 @@ use crate::common::IntegrateFloat;
 use crate::error::IntegrateResult;
 use crate::symplectic::HamiltonianFn;
 use ndarray::Array1;
+use std::f64::consts::PI;
 use std::fmt::{Debug, Formatter};
 
 /// Type alias for energy function
@@ -401,13 +402,13 @@ mod tests {
         let p_final = &result.p[result.p.len() - 1];
 
         assert!(
-            (q_final[0] - q0[0]).abs() < 0.01,
+            (q_final[0] as f64 - q0[0] as f64).abs() < 0.01_f64,
             "q: {} vs {}",
             q_final[0],
             q0[0]
         );
         assert!(
-            (p_final[0] - p0[0]).abs() < 0.01,
+            (p_final[0] as f64 - p0[0] as f64).abs() < 0.01_f64,
             "p: {} vs {}",
             p_final[0],
             p0[0]

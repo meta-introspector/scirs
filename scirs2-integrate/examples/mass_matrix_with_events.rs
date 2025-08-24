@@ -13,6 +13,7 @@ use scirs2_integrate::ode::{
     solve_ivp_with_events, terminal_event, EventAction, EventDirection, EventSpec, MassMatrix,
     ODEMethod, ODEOptions, ODEOptionsWithEvents,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> IntegrateResult<()> {

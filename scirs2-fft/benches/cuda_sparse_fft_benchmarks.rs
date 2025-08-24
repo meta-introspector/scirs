@@ -2,6 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Bencher, Criterion};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use rand_distr::{Distribution, Normal};
+use std::f64::consts::PI;
 use scirs2_fft::{
     sparse_fft::sparse_fft,
     sparse_fft::{SparseFFTAlgorithm, WindowFunction},

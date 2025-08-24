@@ -7,6 +7,7 @@ use crate::error::FFTResult;
 use crate::fft::fft;
 // Complex64 is used through the FFT functions
 use num_traits::NumCast;
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
 use super::config::{SparseFFTConfig, SparsityEstimationMethod};

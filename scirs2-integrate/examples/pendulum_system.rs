@@ -5,6 +5,7 @@
 
 use ndarray::{array, Array1, ArrayView1};
 use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use std::f64::consts::PI;
 
 /// Simple pendulum: θ'' + (g/L)sin(θ) = 0
 /// State vector: [θ, θ']

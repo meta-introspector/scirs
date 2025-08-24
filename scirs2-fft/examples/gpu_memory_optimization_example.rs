@@ -7,6 +7,7 @@ use scirs2_fft::{
     },
 };
 use std::time::Instant;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

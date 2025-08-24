@@ -6,6 +6,7 @@ use approx::assert_relative_eq;
 use ndarray::{array, Array2, ArrayView1};
 use scirs2_integrate::error::IntegrateResult;
 use scirs2_integrate::ode::{solve_ivp, MassMatrix, MassMatrixType, ODEMethod, ODEOptions};
+use std::f64::consts::PI;
 
 /// Test solving an ODE with a constant mass matrix
 #[test]

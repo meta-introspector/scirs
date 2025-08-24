@@ -5,6 +5,7 @@ use scirs2_integrate::{
     quad,
     romberg::{romberg, RombergOptions, RombergResult},
 };
+use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
 // Helper function to measure execution time

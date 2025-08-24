@@ -8,6 +8,7 @@ use scirs2_fft::{
     sparse_fft_gpu_cuda::{cuda_sparse_fft, get_cuda_devices},
     sparse_fft_gpu_memory::{init_global_memory_manager, is_cuda_available},
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

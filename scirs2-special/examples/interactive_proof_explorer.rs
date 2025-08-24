@@ -19,6 +19,7 @@ use scirs2_special::*;
 use std::collections::HashMap;
 use std::io::{self, Write};
 use std::time::{Duration, Instant};
+use std::f64::consts::PI;
 
 #[derive(Debug, Clone)]
 struct ProofExplorer {

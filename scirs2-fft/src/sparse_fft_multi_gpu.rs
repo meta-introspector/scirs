@@ -605,7 +605,7 @@ impl MultiGPUSparseFFT {
         for &chunk_size in chunksizes {
             if offset + chunk_size > signal.len() {
                 return Err(FFTError::ValueError(
-                    "Chunk _sizes exceed signal length".to_string(),
+                    "Chunk sizes exceed signal length".to_string(),
                 ));
             }
 
@@ -732,6 +732,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::f64::consts::PI;
 
     // Helper function to create a sparse signal
     fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {

@@ -9,6 +9,7 @@ use scirs2_fft::{
     GPUBackend, WindowFunction,
 };
 use std::time::Instant;
+use std::f64::consts::PI;
 
 // Helper function to create a sparse signal with specified frequencies
 #[allow(dead_code)]

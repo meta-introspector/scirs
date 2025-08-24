@@ -14,9 +14,9 @@ use tempfile::tempdir;
 /// Generate a test signal of the given size
 #[allow(dead_code)]
 fn generate_test_signal(size: usize) -> Vec<Complex64> {
-    let mut signal = Vec::with_capacity(_size);
-    for i in 0.._size {
-        let phase = 2.0 * std::f64::consts::PI * (i as f64) / (_size as f64);
+    let mut signal = Vec::with_capacity(size);
+    for i in 0..size {
+        let phase = 2.0 * std::f64::consts::PI * (i as f64) / (size as f64);
         signal.push(Complex64::new(phase.cos(), phase.sin()));
     }
     signal

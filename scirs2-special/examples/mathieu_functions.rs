@@ -1,6 +1,7 @@
 use scirs2_special::{
     mathieu_a, mathieu_b, mathieu_cem, mathieu_even_coef, mathieu_odd_coef, mathieu_sem,
 };
+use std::f64::consts::PI;
 
 #[allow(unused_variables)]
 #[allow(dead_code)]

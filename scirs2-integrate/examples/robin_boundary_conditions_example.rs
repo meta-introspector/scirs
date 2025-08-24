@@ -11,6 +11,7 @@ use scirs2_integrate::{
         solve_bvp_extended, BoundaryConditionType, ExtendedBoundaryConditions, RobinBC,
     },
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

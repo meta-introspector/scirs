@@ -9,6 +9,7 @@ use scirs2_core::profiling::coverage::{
 };
 use scirs2_core::profiling::dashboards::MetricTimeSeries;
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 use std::time::SystemTime;
 
 #[allow(dead_code)]

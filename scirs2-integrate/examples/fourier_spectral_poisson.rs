@@ -4,6 +4,7 @@ use scirs2_integrate::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, FourierSpectralSolver1D,
     SpectralBasis, SpectralOptions,
 };
+use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

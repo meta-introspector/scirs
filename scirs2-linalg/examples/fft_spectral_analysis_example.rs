@@ -23,6 +23,7 @@ use scirs2_linalg::fft::{
     irfft_1d, periodogram_psd, rfft_1d, welch_psd, Complex64, FFTAlgorithm, FFTPlan,
     WindowFunction,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

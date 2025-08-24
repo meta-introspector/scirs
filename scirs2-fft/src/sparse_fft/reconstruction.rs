@@ -6,6 +6,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::fft::ifft;
 use num_complex::Complex64;
+use std::f64::consts::PI;
 
 use super::algorithms::SparseFFTResult;
 

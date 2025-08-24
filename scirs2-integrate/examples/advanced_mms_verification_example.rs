@@ -15,6 +15,7 @@ use scirs2_integrate::{
 
 use ndarray::ArrayView1;
 use scirs2_integrate::IntegrateError;
+use std::f64::consts::PI;
 
 type SolverFunction = Box<dyn Fn(&[f64]) -> Result<f64, IntegrateError>>;
 

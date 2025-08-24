@@ -5,6 +5,7 @@
 
 use ndarray::{Array2, ArrayView2};
 use rand_distr::{Distribution, Normal};
+use scirs2_core::rng;
 use scirs2_linalg::prelude::*;
 
 // Simple struct to represent a neural network layer

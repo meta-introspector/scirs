@@ -25,6 +25,7 @@ use scirs2_linalg::matrix_dynamics::{
     lyapunov_solve, matrix_exp_action, matrix_ode_solve, quantum_evolution, riccati_solve,
     stability_analysis, DynamicsConfig,
 };
+use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

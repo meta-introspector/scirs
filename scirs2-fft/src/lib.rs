@@ -563,6 +563,7 @@ pub fn fft_bounds(shape: &[usize]) -> Vec<(i32, i32)> {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_fft_bounds() {

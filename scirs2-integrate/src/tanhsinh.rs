@@ -7,6 +7,7 @@
 //! to (-∞, ∞) and clusters the quadrature points near the endpoints.
 
 use std::fmt;
+use std::f64::consts::PI;
 
 use crate::error::{IntegrateError, IntegrateResult};
 

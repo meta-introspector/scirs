@@ -573,7 +573,7 @@ impl PerformanceManager {
         // Find closest signal _size
         self.best_configs
             .iter()
-            .min_by_key(|&(size___)| (_size as isize - signal_size as isize).abs())
+            .min_by_key(|&(size)| (size as isize - signalsize as isize).abs())
             .map(|&(_, ref config, algorithm, window_function)| (config.clone(), algorithm, window_function))
     }
     
@@ -662,7 +662,7 @@ where
     let signal_size = signal.len();
     let (config, algorithm, window_function) = auto_tune_result.best_configs
         .iter()
-        .min_by_key(|&(size___)| (size as isize - signal_size as isize).abs())
+        .min_by_key(|&(size)| (size as isize - signal_size as isize).abs())
         .map(|&(_, ref config, alg, win)| (config.clone(), alg, win))
         .unwrap_or_else(|| {
             // Default configuration if not found
@@ -670,7 +670,7 @@ where
                 gpu_arch.to_string(),
                 vec![compute_capability],
                 available_memory,
-                48 * 1024, // 48 KB shared _memory
+                48 * 1024, // 48 KB shared memory
                 1024,      // 1024 threads per block
             );
             

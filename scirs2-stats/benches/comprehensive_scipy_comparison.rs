@@ -10,6 +10,8 @@ use ndarray::{Array1, Array2, ArrayView1};
 use rand::prelude::*;
 use rand_distr::{Exp, Gamma as GammaDist, Normal, StandardNormal, Uniform};
 use scirs2_stats::*;
+use scirs2_stats::tests::ttest::Alternative;
+use scirs2_stats::{quantiles_simd, mad_simd, coefficient_of_variation_simd};
 use std::time::Duration;
 
 /// Configuration for benchmark runs
@@ -41,13 +43,13 @@ mod data_generators {
 
     pub fn uniform(n: usize, low: f64, high: f64) -> Array1<f64> {
         let mut rng = rand::rng();
-        let uniform = Uniform::new(low, high);
+        let uniform = Uniform::new(low, high).unwrap();
         Array1::from_shape_fn(n, |_| uniform.sample(&mut rng))
     }
 
     pub fn exponential(n: usize, lambda: f64) -> Array1<f64> {
         let mut rng = rand::rng();
-        let exp = Exponential::new(lambda).unwrap();
+        let exp = Exp::new(lambda).unwrap();
         Array1::from_shape_fn(n, |_| exp.sample(&mut rng))
     }
 
@@ -85,29 +87,29 @@ fn bench_descriptive_stats(c: &mut Criterion) {
 
         // Variance
         group.bench_with_input(BenchmarkId::new("variance", n), &data, |b, data| {
-            b.iter(|| black_box(var(&data.view(), 1)))
+            b.iter(|| black_box(var(&data.view(), 1, None)))
         });
 
         // Standard deviation
         group.bench_with_input(BenchmarkId::new("std", n), &data, |b, data| {
-            b.iter(|| black_box(std(&data.view(), 1)))
+            b.iter(|| black_box(std(&data.view(), 1, None)))
         });
 
         // Skewness
         group.bench_with_input(BenchmarkId::new("skewness", n), &data, |b, data| {
-            b.iter(|| black_box(skew(&data.view(), false)))
+            b.iter(|| black_box(skew(&data.view(), false, None)))
         });
 
         // Kurtosis
         group.bench_with_input(BenchmarkId::new("kurtosis", n), &data, |b, data| {
-            b.iter(|| black_box(kurtosis(&data.view(), false)))
+            b.iter(|| black_box(kurtosis(&data.view(), false, false, None)))
         });
 
         // Median
         group.bench_with_input(BenchmarkId::new("median", n), &data, |b, data| {
             b.iter(|| {
                 let mut data_copy = data.clone();
-                black_box(median(&mut data_copy.view_mut()))
+                black_box(median(&data_copy.view()))
             })
         });
     }
@@ -128,19 +130,19 @@ fn bench_correlation(c: &mut Criterion) {
 
         // Pearson correlation
         group.bench_with_input(BenchmarkId::new("pearson", n), &(&x, &y), |b, (x, y)| {
-            b.iter(|| black_box(pearsonr(&x.view(), &y.view())))
+            b.iter(|| black_box(pearsonr(&x.view(), &y.view(), "propagate")))
         });
 
         // Spearman correlation
         group.bench_with_input(BenchmarkId::new("spearman", n), &(&x, &y), |b, (x, y)| {
-            b.iter(|| black_box(spearmanr(&x.view(), &y.view(), None)))
+            b.iter(|| black_box(spearmanr(&x.view(), &y.view(), "propagate")))
         });
 
         // Kendall tau
         if n <= 1000 {
             // Kendall tau has O(n²) complexity
             group.bench_with_input(BenchmarkId::new("kendalltau", n), &(&x, &y), |b, (x, y)| {
-                b.iter(|| black_box(kendalltau(&x.view(), &y.view(), false)))
+                b.iter(|| black_box(kendalltau(&x.view(), &y.view(), "nan_policy", "method")))
             });
         }
     }
@@ -197,9 +199,8 @@ fn bench_statistical_tests(c: &mut Criterion) {
                     black_box(mann_whitney(
                         &d1.view(),
                         &d2.view(),
-                        true,
-                        Alternative::TwoSided,
                         "auto",
+                        true,
                     ))
                 })
             },
@@ -214,7 +215,7 @@ fn bench_statistical_tests(c: &mut Criterion) {
         }
 
         group.bench_with_input(BenchmarkId::new("anderson_darling", n), &data, |b, data| {
-            b.iter(|| black_box(anderson_darling(&data.view(), "norm")))
+            b.iter(|| black_box(anderson_darling(&data.view())))
         });
     }
 
@@ -253,7 +254,7 @@ fn bench_distributions(c: &mut Criterion) {
         });
 
         // Student's t distribution
-        let t_dist = distributions::StudentT::new(10.0).unwrap();
+        let t_dist = distributions::StudentT::new(10.0, 0.0, 1.0).unwrap();
         group.bench_with_input(BenchmarkId::new("t_pdf", n), &x, |b, x| {
             b.iter(|| {
                 for &xi in x.iter() {
@@ -263,7 +264,7 @@ fn bench_distributions(c: &mut Criterion) {
         });
 
         // Chi-square distribution
-        let chi2 = distributions::ChiSquare::new(5.0).unwrap();
+        let chi2 = distributions::ChiSquare::new(5.0, 0.0, 1.0).unwrap();
         let x_positive = data_generators::uniform(n, 0.1, 10.0);
         group.bench_with_input(BenchmarkId::new("chi2_pdf", n), &x_positive, |b, x| {
             b.iter(|| {
@@ -336,7 +337,7 @@ fn bench_quantiles(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("quantile_50", n), &data, |b, data| {
             b.iter(|| {
                 let mut data_copy = data.clone();
-                black_box(quantile(&mut data_copy.view_mut(), 0.5, "linear"))
+                black_box(quantile(&data_copy.view(), 0.5, QuantileInterpolation::Linear))
             })
         });
 
@@ -348,7 +349,7 @@ fn bench_quantiles(c: &mut Criterion) {
             |b, data| {
                 b.iter(|| {
                     let mut data_copy = data.clone();
-                    black_box(quantiles_array(
+                    black_box(quantiles_simd(
                         &mut data_copy.view_mut(),
                         &quantiles.view(),
                         "linear",
@@ -376,7 +377,7 @@ fn bench_dispersion(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("mad", n), &data, |b, data| {
             b.iter(|| {
                 let mut data_copy = data.clone();
-                black_box(mad(&mut data_copy.view_mut(), 1.0, "propagate"))
+                black_box(mad_simd(&mut data_copy.view_mut(), 1.0, "propagate"))
             })
         });
 
@@ -384,19 +385,19 @@ fn bench_dispersion(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("iqr", n), &data, |b, data| {
             b.iter(|| {
                 let mut data_copy = data.clone();
-                black_box(iqr(&mut data_copy.view_mut(), 1.5, "linear", false))
+                black_box(iqr(&data_copy.view(), Some("linear")))
             })
         });
 
         // Coefficient of Variation
         group.bench_with_input(BenchmarkId::new("cv", n), &data, |b, data| {
-            b.iter(|| black_box(coefficient_of_variation(&data.view(), "propagate")))
+            b.iter(|| black_box(coefficient_of_variation_simd(&data.view(), "propagate")))
         });
 
-        // Gini coefficient
-        group.bench_with_input(BenchmarkId::new("gini", n), &data, |b, data| {
-            b.iter(|| black_box(gini(&data.view())))
-        });
+        // TODO: Gini coefficient - function not yet implemented
+        // group.bench_with_input(BenchmarkId::new("gini", n), &data, |b, data| {
+        //     b.iter(|| black_box(gini(&data.view())))
+        // });
     }
 
     group.finish();
@@ -420,7 +421,7 @@ fn bench_random_sampling(c: &mut Criterion) {
             |b, data| {
                 b.iter(|| {
                     let mut rng = rand::rng();
-                    black_box(random::choice(&data.view(), 100.min(n), true, &mut rng))
+                    black_box(random::choice(&data.view(), 100.min(n), true, None, None).unwrap())
                 })
             },
         );
@@ -433,7 +434,7 @@ fn bench_random_sampling(c: &mut Criterion) {
                 |b, data| {
                     b.iter(|| {
                         let mut rng = rand::rng();
-                        black_box(random::choice(&data.view(), 100.min(n), false, &mut rng))
+                        black_box(random::choice(&data.view(), 100.min(n), false, None, None).unwrap())
                     })
                 },
             );
@@ -443,7 +444,8 @@ fn bench_random_sampling(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("permutation", n), &n, |b, &n| {
             b.iter(|| {
                 let mut rng = rand::rng();
-                black_box(random::permutation(n, &mut rng))
+                let arr = Array1::from_iter(0..n);
+                black_box(random::permutation(&arr.view(), &mut rng))
             })
         });
     }
@@ -456,7 +458,7 @@ criterion_group! {
     name = benches;
     config = Criterion::default()
         .with_plots()
-        .samplesize(100);
+        .sample_size(100);
     targets =
         bench_descriptive_stats,
         bench_correlation,

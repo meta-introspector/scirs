@@ -5,6 +5,7 @@ use scirs2_fft::{
     sparse_fft_gpu::{gpu_sparse_fft, GPUBackend},
     sparse_fft_gpu_cuda::cuda_sparse_fft,
 };
+use std::f64::consts::PI;
 
 // Helper function to create a sparse signal
 #[allow(dead_code)]

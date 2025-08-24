@@ -11,6 +11,7 @@ use rand_distr::uniform::SampleUniform;
 use rand_distr::{Distribution, Uniform};
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::f64::consts::PI;
 
 /// Options for controlling the behavior of Monte Carlo integration
 #[derive(Debug, Clone)]
@@ -476,6 +477,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{importance_sampling, monte_carlo, monte_carlo_parallel, MonteCarloOptions};
+    use std::f64::consts::PI;
     use ndarray::{Array1, ArrayView1};
     use rand::rngs::StdRng;
     use rand_distr::Distribution;
@@ -576,7 +578,7 @@ mod tests {
             for &xi in x.iter() {
                 // Normal density function, but folded to account for our transformation
                 let z = xi;
-                let density = (-0.5 * z * z).exp() / (2.0 * PI).sqrt();
+                let density = (-0.5 * z * z).exp() / (2.0f64 * PI).sqrt();
                 // Fold the negative domain to account for our transformation
                 let folded_density = if xi < 3.0 {
                     2.0 * density // Double density because we folded the distribution

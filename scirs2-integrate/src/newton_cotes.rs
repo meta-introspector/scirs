@@ -9,6 +9,7 @@
 use crate::error::{IntegrateError, IntegrateResult};
 use crate::IntegrateFloat;
 use ndarray::Array1;
+use std::f64::consts::PI;
 // use num_traits::Float;
 
 /// Represents the type of Newton-Cotes formula to generate
@@ -552,7 +553,7 @@ mod tests {
         // Test integration of sin(x) from 0 to pi = 2
         // Simpson's rule gives 2π/3 ≈ 2.094, which has ~5% error
         let (result_, error) =
-            newton_cotes_integrate(|x| x.sin(), 0.0, PI, 3, NewtonCotesType::Closed).unwrap();
+            newton_cotes_integrate(|x: f64| x.sin(), 0.0, PI, 3, NewtonCotesType::Closed).unwrap();
         assert_abs_diff_eq!(result_, 2.0, epsilon = 0.1);
     }
 

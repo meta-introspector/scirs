@@ -4,6 +4,7 @@ use ndarray::{Array1, ArrayView1};
 use scirs2_integrate::error::{IntegrateError, IntegrateResult};
 use scirs2_integrate::gaussian::GaussLegendreQuadrature;
 use std::collections::VecDeque;
+use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Result of adaptive cubature integration
@@ -468,7 +469,7 @@ fn main() {
     // For a 4D Gaussian peak centered at (0.5, 0.5, 0.5, 0.5), the integral is approximately
     // (2π)^(d/2)/(d*k)^(d/2) where d is dimension and k is the coefficient in exponent
     let peak_4d_reference =
-        (2.0 * PI).powf(dim as f64 / 2.0) / (20.0 * dim as f64).powf(dim as f64 / 2.0);
+        (2.0_f64 * PI).powf(dim as f64 / 2.0) / (20.0_f64 * dim as f64).powf(dim as f64 / 2.0);
 
     run_test(
         peak_function,

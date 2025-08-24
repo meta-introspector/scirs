@@ -10,6 +10,7 @@ use crate::IntegrateFloat;
 use ndarray::{Array1, Array2, ArrayView1};
 use rand_distr::{Distribution, Uniform};
 use std::fmt::Debug;
+use std::f64::consts::PI;
 
 /// Options for controlling the behavior of Romberg integration
 #[derive(Debug, Clone)]
@@ -550,7 +551,7 @@ mod tests {
         assert!(result.converged);
 
         // Test integrating sin(x) from 0 to π (exact result: 2)
-        let result = romberg(|x| x.sin(), 0.0, PI, None).unwrap();
+        let result = romberg(|x: f64| x.sin(), 0.0, PI, None).unwrap();
         assert_relative_eq!(result.value, 2.0, epsilon = 1e-10);
         assert!(result.converged);
 

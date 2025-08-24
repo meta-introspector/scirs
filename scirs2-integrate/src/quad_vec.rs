@@ -7,6 +7,7 @@
 use ndarray::Array1;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
+use std::f64::consts::PI;
 use std::fmt;
 
 use crate::error::{IntegrateError, IntegrateResult};

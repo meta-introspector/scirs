@@ -15,6 +15,7 @@
 use scirs2_special::{
     obl_ang1, obl_cv, obl_cv_seq, obl_rad1, pro_ang1, pro_cv, pro_cv_seq, pro_rad1,
 };
+use std::f64::consts::PI;
 
 /// Educational demonstration of characteristic value behavior
 #[allow(dead_code)]
