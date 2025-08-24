@@ -22,8 +22,7 @@ fn bench_memory_usage(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("standard_graph", size), &size, |b, &n| {
             b.iter(|| {
                 let graph =
-                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::rng())
-                        .unwrap();
+                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::rng()).unwrap();
                 let stats = MemoryProfiler::profile_graph(&graph);
                 black_box(stats.total_bytes)
             });
@@ -33,8 +32,7 @@ fn bench_memory_usage(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("csr_graph", size), &size, |b, &n| {
             b.iter(|| {
                 let graph =
-                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::rng())
-                        .unwrap();
+                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::rng()).unwrap();
                 let edges: Vec<_> = (0..graph.node_count())
                     .flat_map(|u| {
                         graph
@@ -54,8 +52,7 @@ fn bench_memory_usage(c: &mut Criterion) {
             b.iter(|| {
                 let mut bitpacked = BitPackedGraph::new(n, false);
                 let graph =
-                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::rng())
-                        .unwrap();
+                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::rng()).unwrap();
 
                 for u in 0..graph.node_count() {
                     for v in graph.neighbors(&u).unwrap() {
@@ -86,7 +83,13 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
 
     // Create different representations
     let edges: Vec<_> = (0..graph.node_count())
-        .flat_map(|u| graph.neighbors(&u).unwrap().into_iter().map(move |v| (u, v, 1.0)))
+        .flat_map(|u| {
+            graph
+                .neighbors(&u)
+                .unwrap()
+                .into_iter()
+                .map(move |v| (u, v, 1.0))
+        })
         .collect();
 
     let csr = CSRGraph::from_edges(n, edges.clone()).unwrap();
@@ -167,8 +170,7 @@ fn bench_edge_queries(c: &mut Criterion) {
     let edge_probability = 0.02;
 
     // Generate test graph
-    let graph =
-        generators::erdos_renyi_graph(n, edge_probability, &mut rand::rng()).unwrap();
+    let graph = generators::erdos_renyi_graph(n, edge_probability, &mut rand::rng()).unwrap();
 
     // Create bit-packed representation
     let mut bitpacked = BitPackedGraph::new(n, false);
@@ -292,8 +294,7 @@ fn bench_fragmentation_analysis(c: &mut Criterion) {
             BenchmarkId::new("analyze_fragmentation", size),
             &size,
             |b, &n| {
-                let graph =
-                    generators::barabasi_albert_graph(n, 5, &mut rand::rng()).unwrap();
+                let graph = generators::barabasi_albert_graph(n, 5, &mut rand::rng()).unwrap();
                 b.iter(|| {
                     let report = MemoryProfiler::analyze_fragmentation(&graph);
                     black_box(report.fragmentation_ratio)

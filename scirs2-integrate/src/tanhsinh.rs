@@ -6,8 +6,8 @@
 //! The method uses a change of variable x = tanh(π/2 · sinh(t)) which transforms the interval [-1, 1]
 //! to (-∞, ∞) and clusters the quadrature points near the endpoints.
 
-use std::fmt;
 use std::f64::consts::PI;
+use std::fmt;
 
 use crate::error::{IntegrateError, IntegrateResult};
 

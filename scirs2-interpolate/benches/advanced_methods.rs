@@ -248,11 +248,15 @@ fn bench_thin_plate_splines(c: &mut Criterion) {
         let queries = generate_query_points_2d(100);
 
         group.throughput(Throughput::Elements(queries.nrows() as u64));
-        group.bench_with_input(BenchmarkId::new("data_size", data_size), data_size, |b, &data_size| {
-            b.iter(|| {
-                let _ = black_box(interpolator.evaluate(black_box(&queries.view())));
-            });
-        });
+        group.bench_with_input(
+            BenchmarkId::new("data_size", data_size),
+            data_size,
+            |b, &data_size| {
+                b.iter(|| {
+                    let _ = black_box(interpolator.evaluate(black_box(&queries.view())));
+                });
+            },
+        );
     }
 
     group.finish();

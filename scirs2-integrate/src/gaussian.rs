@@ -758,7 +758,6 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
 
-
     #[test]
     fn test_gauss_legendre_quadrature() {
         // Test integrating x² from 0 to 1 (exact result: 1/3)

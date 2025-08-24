@@ -937,7 +937,6 @@ mod tests {
 
     #[test]
     fn test_mathieu_cem_sem_zero_q() {
-
         // For q=0, ce₀(x) = 1
         let (ce0, ce0_prime) = mathieu_cem(0, 0.0, PI / 4.0).unwrap();
         assert_relative_eq!(ce0, 1.0, epsilon = 1e-10);

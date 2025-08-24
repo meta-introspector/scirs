@@ -134,9 +134,11 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
         group.throughput(Throughput::Elements((size * (size - 1) / 2) as u64));
 
         // Sequential pdist
-        group.bench_with_input(BenchmarkId::new("sequential_pdist", size), &size, |b_, _| {
-            b_.iter(|| black_box(pdist(&points, euclidean)))
-        });
+        group.bench_with_input(
+            BenchmarkId::new("sequential_pdist", size),
+            &size,
+            |b_, _| b_.iter(|| black_box(pdist(&points, euclidean))),
+        );
 
         // Parallel pdist
         group.bench_with_input(BenchmarkId::new("parallel_pdist", size), &size, |b_, _| {
@@ -150,9 +152,11 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(size as u64));
 
-        group.bench_with_input(BenchmarkId::new("kdtree_construction", size), &size, |b_, _| {
-            b_.iter(|| black_box(KDTree::new(&points).unwrap()))
-        });
+        group.bench_with_input(
+            BenchmarkId::new("kdtree_construction", size),
+            &size,
+            |b_, _| b_.iter(|| black_box(KDTree::new(&points).unwrap())),
+        );
     }
 
     group.finish();
@@ -312,9 +316,11 @@ fn bench_spatial_data_structures(c: &mut Criterion) {
         let query_points = generate_points(100, 3, BENCHMARK_SEED + 1);
 
         // KDTree construction
-        group.bench_with_input(BenchmarkId::new("kdtree_construction", size), &size, |b_, _| {
-            b_.iter(|| black_box(KDTree::new(&points).unwrap()))
-        });
+        group.bench_with_input(
+            BenchmarkId::new("kdtree_construction", size),
+            &size,
+            |b_, _| b_.iter(|| black_box(KDTree::new(&points).unwrap())),
+        );
 
         // BallTree construction
         group.bench_with_input(

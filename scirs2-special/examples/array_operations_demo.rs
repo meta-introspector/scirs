@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Run with: cargo run --example array_operations_demo --features gpu");
         return Ok(());
     }
-    
+
     #[cfg(feature = "gpu")]
     {
         println!("=== SCIRS2-SPECIAL Array Operations Demo ===\n");

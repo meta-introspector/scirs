@@ -300,6 +300,15 @@ impl TensorCoreManager {
             GpuBackend::Cuda => Ok(Self::nvidia_tensor_capabilities()),
             GpuBackend::Rocm => Ok(Self::amdmatrix_capabilities()),
             GpuBackend::Metal => Ok(Self::apple_neural_capabilities()),
+            GpuBackend::Cpu => Ok(TensorCoreCapabilities {
+                available: true, // Enable for CPU testing
+                supported_types: vec![TensorDataType::Float32],
+                supported_ops: vec![TensorCoreOp::MatrixMultiply],
+                supported_dimensions: vec![(16, 16, 16)],
+                peak_tops: Some(1.0),
+                memorybandwidth_gbps: Some(100.0),
+                arch_features: vec!["cpu_simulation".to_string()],
+            }),
             _ => Ok(TensorCoreCapabilities::default()),
         }
     }

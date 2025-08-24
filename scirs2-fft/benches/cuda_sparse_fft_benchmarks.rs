@@ -2,7 +2,6 @@ use criterion::{black_box, criterion_group, criterion_main, Bencher, Criterion};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use rand_distr::{Distribution, Normal};
-use std::f64::consts::PI;
 use scirs2_fft::{
     sparse_fft::sparse_fft,
     sparse_fft::{SparseFFTAlgorithm, WindowFunction},
@@ -10,6 +9,7 @@ use scirs2_fft::{
     sparse_fft_gpu_cuda::cuda_sparse_fft,
     sparse_fft_gpu_memory::{init_global_memory_manager, AllocationStrategy},
 };
+use std::f64::consts::PI;
 
 // Helper function to create a sparse signal
 #[allow(dead_code)]

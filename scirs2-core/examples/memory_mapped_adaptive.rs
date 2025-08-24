@@ -243,7 +243,8 @@ fn benchmark_adaptive_chunks(
         let start = Instant::now();
 
         // Process chunks using adaptive chunking
-        let result = array.process_chunks_adaptive(params, |chunk, _chunk_idx| chunk.iter().sum::<f64>())?;
+        let result =
+            array.process_chunks_adaptive(params, |chunk, _chunk_idx| chunk.iter().sum::<f64>())?;
 
         let elapsed = start.elapsed();
 

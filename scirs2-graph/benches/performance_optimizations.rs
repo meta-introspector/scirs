@@ -5,12 +5,12 @@
 #![allow(dead_code)]
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use ndarray::{Array1, ArrayView1};
 use scirs2_graph::{
     generators,
     memory::{BitPackedGraph, CSRGraph, CompressedAdjacencyList, HybridGraph, MemmapGraph},
@@ -184,7 +184,8 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
                 b.iter(|| {
                     // Simple parallel centrality computation using rayon
                     use scirs2_core::parallel_ops::*;
-                    let result: Vec<f64> = nodes.par_iter()
+                    let result: Vec<f64> = nodes
+                        .par_iter()
                         .map(|&node| g.degree(&node) as f64 / (g.node_count() - 1) as f64)
                         .collect();
                     black_box(result)
@@ -248,7 +249,13 @@ fn bench_memmap_operations(c: &mut Criterion) {
         let graph = generators::barabasi_albert_graph(size, 3, &mut rng).unwrap();
 
         let edges: Vec<(usize, usize, f64)> = (0..graph.node_count())
-            .flat_map(|u| graph.neighbors(&u).unwrap_or_default().into_iter().map(move |v| (u, v, 1.0)))
+            .flat_map(|u| {
+                graph
+                    .neighbors(&u)
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(move |v| (u, v, 1.0))
+            })
             .collect();
 
         let csr_graph = CSRGraph::from_edges(size, edges).unwrap();
@@ -301,7 +308,8 @@ fn bench_memmap_operations(c: &mut Criterion) {
                 let mut edge_count = 0;
                 // Simulate edge streaming
                 for u in 0..size.min(1000) {
-                    for v in 0..3 { // Simulate ~3 edges per node
+                    for v in 0..3 {
+                        // Simulate ~3 edges per node
                         edge_count += 1;
                         if edge_count >= 10000 {
                             break;
@@ -354,9 +362,7 @@ fn bench_lazy_metrics(c: &mut Criterion) {
         group.bench_function("lazy_graph_metric_cached_access", |b| {
             // Simplified benchmark to avoid lifetime issues
             let cached_value = 42.0f64;
-            b.iter(|| {
-                black_box(cached_value)
-            });
+            b.iter(|| black_box(cached_value));
         });
 
         // Benchmark thread-safe access - simplified

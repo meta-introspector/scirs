@@ -241,7 +241,8 @@ fn run_network_quantized(
         ..CalibrationConfig::default()
     };
     let hidden_params = calibrate_matrix(&hidden_activated.view(), 8, &hidden_config).unwrap();
-    let (q_hidden, q_hidden_params) = quantize_matrix(&hidden_activated.view(), 8, hidden_params.method);
+    let (q_hidden, q_hidden_params) =
+        quantize_matrix(&hidden_activated.view(), 8, hidden_params.method);
 
     // Second layer
     let (q_weights2, q_biases2) = &quantized_network[1];
@@ -417,7 +418,8 @@ fn mixed_precision_quantization(network: &[SimpleLayer], input: &Array2<f32>) {
     };
     let hidden_params =
         calibrate_matrix(&hidden_activated.view(), a_bits1, &hidden_config).unwrap();
-    let (q_hidden, q_hidden_params) = quantize_matrix(&hidden_activated.view(), a_bits1, hidden_params.method);
+    let (q_hidden, q_hidden_params) =
+        quantize_matrix(&hidden_activated.view(), a_bits1, hidden_params.method);
 
     // Second layer forward pass
     let (q_weights1, q_biases1) = &quantized_layers[1];

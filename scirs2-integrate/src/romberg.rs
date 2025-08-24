@@ -9,8 +9,8 @@ use crate::quad::trapezoid;
 use crate::IntegrateFloat;
 use ndarray::{Array1, Array2, ArrayView1};
 use rand_distr::{Distribution, Uniform};
-use std::fmt::Debug;
 use std::f64::consts::PI;
+use std::fmt::Debug;
 
 /// Options for controlling the behavior of Romberg integration
 #[derive(Debug, Clone)]
@@ -541,7 +541,6 @@ where
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-
 
     #[test]
     fn test_romberg_integration() {

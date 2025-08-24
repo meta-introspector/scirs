@@ -6,8 +6,8 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Axis, Data, Ix1, Ix2};
 use rand_distr::{ChiSquared, Distribution, Normal as RandNormal};
-use std::fmt::Debug;
 use scirs2_core::rng;
+use std::fmt::Debug;
 
 // Import the helper functions used by MultivariateNormal
 use super::normal::{compute_cholesky, compute_inverse_from_cholesky};

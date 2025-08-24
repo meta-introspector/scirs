@@ -660,14 +660,14 @@ fn create_sample_metrics() -> MetricTimeSeries {
 fn simulate_test_execution(analyzer: &CoverageAnalyzer) -> Result<(), Box<dyn std::error::Error>> {
     // Simulate recording coverage for a few functions and files
     println!("🏃 Simulating test execution...");
-    
+
     // This is a simplified simulation - in a real scenario, the coverage
     // would be recorded automatically during actual test execution
     std::thread::sleep(std::time::Duration::from_millis(100));
-    
+
     println!("   • Executed test suite with coverage instrumentation");
     println!("   • Recorded line, branch, and condition coverage");
     println!("   • Coverage data collection completed");
-    
+
     Ok(())
 }

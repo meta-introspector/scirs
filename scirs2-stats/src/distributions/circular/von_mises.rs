@@ -10,9 +10,9 @@ use ndarray::Array1;
 use num_traits::Float;
 use rand_distr::uniform::SampleUniform;
 use rand_distr::Distribution as RandDistribution;
+use scirs2_core::rng;
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use scirs2_core::rng;
 // Use simple approximations for bessel functions
 use statrs::statistics::Statistics;
 use std::f64::consts::PI;

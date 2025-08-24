@@ -9,9 +9,9 @@ use criterion::{
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::prelude::*;
 use rand_distr::{Exp, Gamma as GammaDist, Normal, StandardNormal, Uniform};
-use scirs2_stats::*;
 use scirs2_stats::tests::ttest::Alternative;
-use scirs2_stats::{quantiles_simd, mad_simd, coefficient_of_variation_simd};
+use scirs2_stats::*;
+use scirs2_stats::{coefficient_of_variation_simd, mad_simd, quantiles_simd};
 use std::time::Duration;
 
 /// Configuration for benchmark runs
@@ -194,16 +194,7 @@ fn bench_statistical_tests(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("mann_whitney", n),
             &(&data, &data2),
-            |b, (d1, d2)| {
-                b.iter(|| {
-                    black_box(mann_whitney(
-                        &d1.view(),
-                        &d2.view(),
-                        "auto",
-                        true,
-                    ))
-                })
-            },
+            |b, (d1, d2)| b.iter(|| black_box(mann_whitney(&d1.view(), &d2.view(), "auto", true))),
         );
 
         // Normality tests
@@ -337,7 +328,11 @@ fn bench_quantiles(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("quantile_50", n), &data, |b, data| {
             b.iter(|| {
                 let mut data_copy = data.clone();
-                black_box(quantile(&data_copy.view(), 0.5, QuantileInterpolation::Linear))
+                black_box(quantile(
+                    &data_copy.view(),
+                    0.5,
+                    QuantileInterpolation::Linear,
+                ))
             })
         });
 
@@ -434,7 +429,9 @@ fn bench_random_sampling(c: &mut Criterion) {
                 |b, data| {
                     b.iter(|| {
                         let mut rng = rand::rng();
-                        black_box(random::choice(&data.view(), 100.min(n), false, None, None).unwrap())
+                        black_box(
+                            random::choice(&data.view(), 100.min(n), false, None, None).unwrap(),
+                        )
                     })
                 },
             );

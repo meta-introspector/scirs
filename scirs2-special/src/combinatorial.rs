@@ -638,7 +638,6 @@ fn euler_number_asymptotic(n: i32) -> SpecialResult<f64> {
     // For large even n, use the asymptotic formula:
     // |E_n| ~ 8 * sqrt(2/π) * (2^{n+2} * n! / π^{n+1}) * [1 + O(1/n)]
 
-
     let n_f = n as f64;
 
     // Use Stirling's approximation for n!

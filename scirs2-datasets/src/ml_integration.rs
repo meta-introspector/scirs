@@ -886,8 +886,8 @@ pub mod convenience {
 #[cfg(test)]
 mod tests {
     use super::*;
-use rand_distr::Uniform;
     use crate::generators::make_classification;
+    use rand_distr::Uniform;
 
     #[test]
     fn test_ml_pipeline_creation() {

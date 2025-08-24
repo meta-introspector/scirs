@@ -135,12 +135,16 @@ fn bench_decompositions(c: &mut Criterion) {
         // SVD decomposition
         if size <= 200 {
             // SVD is expensive, limit to smaller matrices
-            group.bench_with_input(BenchmarkId::new("svd_decomposition", size), &size, |b, _| {
-                b.iter(|| {
-                    let result = svd(&matrix.view(), false, None);
-                    black_box(result)
-                })
-            });
+            group.bench_with_input(
+                BenchmarkId::new("svd_decomposition", size),
+                &size,
+                |b, _| {
+                    b.iter(|| {
+                        let result = svd(&matrix.view(), false, None);
+                        black_box(result)
+                    })
+                },
+            );
         }
 
         // Cholesky decomposition (for SPD matrices)

@@ -7,6 +7,7 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use rand_distr::{Normal, StandardNormal};
+use scirs2_stats::tests::ttest::Alternative;
 use scirs2_stats::{
     anderson_darling,
     dagostino_k2,
@@ -26,7 +27,6 @@ use scirs2_stats::{
     ttest_rel,
     wilcoxon,
 };
-use scirs2_stats::tests::ttest::Alternative;
 
 /// Generate random normal data
 #[allow(dead_code)]
@@ -143,7 +143,12 @@ fn bench_nonparametric_tests(c: &mut Criterion) {
         // Wilcoxon signed-rank test
         group.bench_with_input(BenchmarkId::new("wilcoxon", n), &data1, |b, data| {
             b.iter(|| {
-                black_box(wilcoxon(&data.view(), &Array1::zeros(data.len()).view(), "wilcox", false));
+                black_box(wilcoxon(
+                    &data.view(),
+                    &Array1::zeros(data.len()).view(),
+                    "wilcox",
+                    false,
+                ));
             });
         });
     }

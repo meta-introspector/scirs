@@ -11,8 +11,8 @@ use scirs2_fft::{
     sparse_fft_gpu_cuda::{cuda_sparse_fft, get_cuda_devices},
     sparse_fft_gpu_memory::{init_global_memory_manager, is_cuda_available, AllocationStrategy},
 };
-use std::time::Instant;
 use std::f64::consts::PI;
+use std::time::Instant;
 
 /// Create a sparse signal with known frequencies in the spectrum
 #[allow(dead_code)]
@@ -401,7 +401,9 @@ fn analyze_scaling_behavior() {
     // Set layout
     scaling_plot.set_layout(
         Layout::new()
-            .title(Title::with_text("<b>Algorithm Scaling with Signal Size</b>"))
+            .title(Title::with_text(
+                "<b>Algorithm Scaling with Signal Size</b>",
+            ))
             .x_axis(
                 plotly::layout::Axis::new()
                     .title(Title::with_text("Signal Size (samples)"))

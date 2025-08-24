@@ -279,9 +279,8 @@ fn generate_social_network(num_nodes: usize) -> Graph<usize, f64> {
                 // 5 inter-cluster connections per cluster
                 let source = rng.gen_range(cluster_start..cluster_end);
                 let target_cluster = rng.gen_range(0..cluster_id);
-                let target = rng.gen_range(
-                    target_cluster * CLUSTER_SIZE..(target_cluster + 1) * CLUSTER_SIZE
-                );
+                let target = rng
+                    .gen_range(target_cluster * CLUSTER_SIZE..(target_cluster + 1) * CLUSTER_SIZE);
                 let weight = rng.random::<f64>() * 0.3 + 0.2; // Weaker inter-cluster weights
                 let _ = graph.add_edge(source, target, weight);
             }
@@ -387,10 +386,7 @@ fn stress_test_algorithms(
         let elapsed = start.elapsed();
         results.insert(format!("{}_shortest_paths", test_name), elapsed);
         match result {
-            Ok(distances) => println!(
-                "    Computed shortest paths in {:?}",
-                elapsed
-            ),
+            Ok(distances) => println!("    Computed shortest paths in {:?}", elapsed),
             Err(e) => println!("    Error: {:?}", e),
         }
     } else {
@@ -1120,7 +1116,8 @@ fn bench_memory_usage_analysis(c: &mut Criterion) {
                             }
 
                             Ok(memory_data.len())
-                        });
+                        },
+                    );
                     black_box(result);
                 }
                 start.elapsed()

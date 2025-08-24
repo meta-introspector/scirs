@@ -34,44 +34,56 @@ fn bench_sparse_construction(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(data.len() as u64));
 
-        group.bench_with_input(BenchmarkId::new("csr_from_triplets", size), size, |b, &size| {
-            b.iter(|| {
-                CsrArray::from_triplets(
-                    black_box(&rows),
-                    black_box(&cols),
-                    black_box(&data),
-                    black_box(shape),
-                    false,
-                )
-                .unwrap()
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::new("csr_from_triplets", size),
+            size,
+            |b, &size| {
+                b.iter(|| {
+                    CsrArray::from_triplets(
+                        black_box(&rows),
+                        black_box(&cols),
+                        black_box(&data),
+                        black_box(shape),
+                        false,
+                    )
+                    .unwrap()
+                })
+            },
+        );
 
-        group.bench_with_input(BenchmarkId::new("csc_from_triplets", size), size, |b, &size| {
-            b.iter(|| {
-                CscArray::from_triplets(
-                    black_box(&rows),
-                    black_box(&cols),
-                    black_box(&data),
-                    black_box(shape),
-                    false,
-                )
-                .unwrap()
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::new("csc_from_triplets", size),
+            size,
+            |b, &size| {
+                b.iter(|| {
+                    CscArray::from_triplets(
+                        black_box(&rows),
+                        black_box(&cols),
+                        black_box(&data),
+                        black_box(shape),
+                        false,
+                    )
+                    .unwrap()
+                })
+            },
+        );
 
-        group.bench_with_input(BenchmarkId::new("coo_from_triplets", size), size, |b, &size| {
-            b.iter(|| {
-                CooArray::from_triplets(
-                    black_box(&rows),
-                    black_box(&cols),
-                    black_box(&data),
-                    black_box(shape),
-                    false,
-                )
-                .unwrap()
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::new("coo_from_triplets", size),
+            size,
+            |b, &size| {
+                b.iter(|| {
+                    CooArray::from_triplets(
+                        black_box(&rows),
+                        black_box(&cols),
+                        black_box(&data),
+                        black_box(shape),
+                        false,
+                    )
+                    .unwrap()
+                })
+            },
+        );
     }
 
     group.finish();
@@ -196,19 +208,23 @@ fn bench_linear_solvers(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(*size as u64));
 
-        group.bench_with_input(BenchmarkId::new("conjugate_gradient", size), size, |b, &size| {
-            b.iter(|| {
-                let _options = CGOptions {
-                    max_iter: 100,
-                    rtol: 1e-6,
-                    atol: 1e-12,
-                    x0: None,
-                    preconditioner: None,
-                };
-                // Skip CG for now - needs LinearOperator trait implementation
-                black_box(0.0)
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::new("conjugate_gradient", size),
+            size,
+            |b, &size| {
+                b.iter(|| {
+                    let _options = CGOptions {
+                        max_iter: 100,
+                        rtol: 1e-6,
+                        atol: 1e-12,
+                        x0: None,
+                        preconditioner: None,
+                    };
+                    // Skip CG for now - needs LinearOperator trait implementation
+                    black_box(0.0)
+                })
+            },
+        );
     }
 
     group.finish();
@@ -243,9 +259,11 @@ fn bench_symmetric_operations(c: &mut Criterion) {
         group.throughput(Throughput::Elements(data.len() as u64));
 
         // Symmetric matrix-vector multiplication
-        group.bench_with_input(BenchmarkId::new("sym_csr_matvec", size), size, |b, &size| {
-            b.iter(|| sym_csr.dot_vector(&vector.view()).unwrap())
-        });
+        group.bench_with_input(
+            BenchmarkId::new("sym_csr_matvec", size),
+            size,
+            |b, &size| b.iter(|| sym_csr.dot_vector(&vector.view()).unwrap()),
+        );
     }
 
     group.finish();
@@ -291,34 +309,42 @@ fn bench_dok_lil_operations(c: &mut Criterion) {
         let shape = (*size, *size);
 
         // DOK operations
-        group.bench_with_input(BenchmarkId::new("dok_construction", size), size, |b, &size| {
-            b.iter(|| {
-                let mut dok = DokArray::new(shape);
-                for i in 0..size {
-                    for j in 0..size {
-                        if (i + j) % 20 == 0 {
-                            dok.set(i, j, (i + j) as f64).unwrap();
+        group.bench_with_input(
+            BenchmarkId::new("dok_construction", size),
+            size,
+            |b, &size| {
+                b.iter(|| {
+                    let mut dok = DokArray::new(shape);
+                    for i in 0..size {
+                        for j in 0..size {
+                            if (i + j) % 20 == 0 {
+                                dok.set(i, j, (i + j) as f64).unwrap();
+                            }
                         }
                     }
-                }
-                black_box(dok)
-            })
-        });
+                    black_box(dok)
+                })
+            },
+        );
 
         // LIL operations
-        group.bench_with_input(BenchmarkId::new("lil_construction", size), size, |b, &size| {
-            b.iter(|| {
-                let mut lil = LilArray::new(shape);
-                for i in 0..size {
-                    for j in 0..size {
-                        if (i + j) % 20 == 0 {
-                            lil.set(i, j, (i + j) as f64).unwrap();
+        group.bench_with_input(
+            BenchmarkId::new("lil_construction", size),
+            size,
+            |b, &size| {
+                b.iter(|| {
+                    let mut lil = LilArray::new(shape);
+                    for i in 0..size {
+                        for j in 0..size {
+                            if (i + j) % 20 == 0 {
+                                lil.set(i, j, (i + j) as f64).unwrap();
+                            }
                         }
                     }
-                }
-                black_box(lil)
-            })
-        });
+                    black_box(lil)
+                })
+            },
+        );
     }
 
     group.finish();

@@ -1606,8 +1606,10 @@ impl NeuralArchitectureSearch {
         let mut rng = rng();
 
         for i in 0..numcandidates {
-            let depth =
-                rng.random_range(self._searchspace.depth_range.0, self._searchspace.depth_range.1 + 1);
+            let depth = rng.random_range(
+                self._searchspace.depth_range.0,
+                self._searchspace.depth_range.1 + 1,
+            );
             let mut layers = Vec::new();
             let mut connections = Vec::new();
 

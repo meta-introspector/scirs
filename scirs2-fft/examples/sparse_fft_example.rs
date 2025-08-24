@@ -261,7 +261,12 @@ fn main() {
 
     // 8. Create visualization
     println!("\nCreating visualization...");
-    create_plots(&signal, &full_magnitudes, &pruning_result, &sparse_2d_result);
+    create_plots(
+        &signal,
+        &full_magnitudes,
+        &pruning_result,
+        &sparse_2d_result,
+    );
 
     println!("\nExample completed successfully!");
 }

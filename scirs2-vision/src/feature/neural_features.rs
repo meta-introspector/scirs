@@ -590,10 +590,9 @@ impl SuperPointNet {
     /// Create synthetic descriptor weights for demonstration
     fn create_descriptor_weights(config: &NeuralFeatureConfig) -> Result<ModelWeights> {
         // Descriptor head weights
-        let fc_weights = vec![Array2::from_shape_fn(
-            (config.descriptor_dim, 128),
-            |_| rand::random::<f32>() * 0.1,
-        )];
+        let fc_weights = vec![Array2::from_shape_fn((config.descriptor_dim, 128), |_| {
+            rand::random::<f32>() * 0.1
+        })];
 
         let fc_biases = vec![Array1::zeros(config.descriptor_dim)];
 

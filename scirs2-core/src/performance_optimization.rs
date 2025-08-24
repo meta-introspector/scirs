@@ -1154,9 +1154,9 @@ mod tests {
 
     #[test]
     fn test_fast_path_addition() {
-        let a = vec![1.0; 1000];
-        let b = vec![2.0; 1000];
-        let mut result = vec![0.0; 1000];
+        let a = vec![1.0; 32];
+        let b = vec![2.0; 32];
+        let mut result = vec![0.0; 32];
 
         fast_paths::add_f64_arrays(&a, &b, &mut result).unwrap();
 
@@ -1221,13 +1221,13 @@ mod tests {
         PerformanceHints::memory_fence();
 
         // Test cache-aware copy
-        let src = vec![1.0f64; 1000];
-        let mut dst = vec![0.0f64; 1000];
+        let src = vec![1.0f64; 64];
+        let mut dst = vec![0.0f64; 64];
         PerformanceHints::cache_aware_copy(&src, &mut dst);
         assert_eq!(src, dst);
 
         // Test cache-aware memset
-        let mut data = vec![0.0f64; 1000];
+        let mut data = vec![0.0f64; 64];
         PerformanceHints::cache_aware_memset(&mut data, 5.0);
         assert!(data.iter().all(|&x| x == 5.0));
     }

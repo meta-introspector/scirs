@@ -5,11 +5,11 @@
 //! properties and comparing the accuracy of different methods.
 
 use ndarray::{array, Array1};
-use std::f64::consts::PI;
 use scirs2_integrate::symplectic::{
     position_verlet, velocity_verlet, CompositionMethod, GaussLegendre4, GaussLegendre6,
     HamiltonianFn, SeparableHamiltonian, StormerVerlet, SymplecticIntegrator,
 };
+use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

@@ -825,9 +825,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn create_new_user(
-    _learningcenter: &mut LearningCenter,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn create_new_user(_learningcenter: &mut LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🆕 Creating new user profile...");
 
     let username = get_user_input("Choose a username: ")?;

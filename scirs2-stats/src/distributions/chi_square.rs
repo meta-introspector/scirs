@@ -8,8 +8,8 @@ use crate::traits::{ContinuousCDF, ContinuousDistribution, Distribution as Scirs
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand_distr::{ChiSquared as RandChiSquared, Distribution};
-use std::f64::consts::PI;
 use scirs2_core::rng;
+use std::f64::consts::PI;
 
 /// Chi-square distribution structure
 pub struct ChiSquare<F: Float + Send + Sync> {

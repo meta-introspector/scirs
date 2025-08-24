@@ -4426,6 +4426,32 @@ mod gpu_implementation {
         #[test]
         fn test_quantum_state_evolution() {
             let mut optimizer = QuantumInspiredOptimizer::new(4).unwrap();
+
+            // Set up initial non-uniform amplitudes
+            optimizer.quantum_state.amplitudes = vec![0.7, 0.5, 0.3, 0.1];
+            // Normalize them
+            let norm: f64 = optimizer
+                .quantum_state
+                .amplitudes
+                .iter()
+                .map(|a| a * a)
+                .sum();
+            for amplitude in &mut optimizer.quantum_state.amplitudes {
+                *amplitude /= norm.sqrt();
+            }
+
+            // Increase decoherence rate to make evolution more visible
+            optimizer.quantum_state.decoherence_rate = 100.0;
+
+            // Add some optimization history to trigger phase evolution
+            optimizer.optimization_history.push(OptimizationStep {
+                step: 1,
+                parameters: vec![0.1, 0.2, 0.3, 0.4],
+                objective_value: 1.0,
+                gradient: vec![0.5, -0.3, 0.2, -0.1],
+                uncertainty: 0.1,
+            });
+
             let initial_amplitudes = optimizer.quantum_state.amplitudes.clone();
 
             // Perform state evolution
@@ -4434,6 +4460,7 @@ mod gpu_implementation {
 
             // Check that amplitudes have evolved (with decoherence)
             let final_amplitudes = optimizer.quantum_state.amplitudes.clone();
+            // With non-uniform initial amplitudes and strong decoherence, they should change
             assert_ne!(initial_amplitudes, final_amplitudes);
 
             // Check normalization

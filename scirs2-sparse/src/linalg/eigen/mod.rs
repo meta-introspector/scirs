@@ -11,9 +11,7 @@ pub mod symmetric;
 
 // Re-export main types and functions for convenience
 pub use general::eigs;
-pub use generalized::{
-    eigsh_generalized, eigsh_generalized_enhanced,
-};
+pub use generalized::{eigsh_generalized, eigsh_generalized_enhanced};
 pub use lanczos::{lanczos, EigenResult, LanczosOptions};
 pub use power_iteration::{power_iteration, PowerIterationOptions};
 pub use symmetric::{eigsh, eigsh_shift_invert, eigsh_shift_invert_enhanced};

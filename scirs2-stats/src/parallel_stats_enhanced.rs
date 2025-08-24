@@ -237,7 +237,6 @@ where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
     D: Data<Elem = F> + Sync,
 {
-
     if data.is_empty() || eval_points.is_empty() {
         return Err(StatsError::InvalidArgument("Empty input data".to_string()));
     }

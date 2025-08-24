@@ -136,8 +136,11 @@ fn demo_basic_workload_analysis() -> CoreResult<()> {
     // Simulate matrix operations
     simulatematrix_operations();
 
-    let report = profiler
-        .finish_workload_analysis("matrix_operations", WorkloadType::ComputeIntensive, start_time)?;
+    let report = profiler.finish_workload_analysis(
+        "matrix_operations",
+        WorkloadType::ComputeIntensive,
+        start_time,
+    )?;
 
     println!("📊 Analysis Results:");
     println!("  - Workload ID: {}", report.workload_id);
@@ -284,8 +287,11 @@ fn demo_bottleneck_identification() -> CoreResult<()> {
     // Simulate work with bottlenecks
     simulate_bottleneck_workload();
 
-    let report = profiler
-        .finish_workload_analysis("bottleneck_demo", WorkloadType::ComputeIntensive, start_time)?;
+    let report = profiler.finish_workload_analysis(
+        "bottleneck_demo",
+        WorkloadType::ComputeIntensive,
+        start_time,
+    )?;
 
     if report.has_bottlenecks() {
         println!("\n🚨 Bottleneck Analysis Results:");
@@ -331,11 +337,31 @@ fn demo_regression_detection() -> CoreResult<()> {
 
     // Record baseline performance
     println!("📊 Recording baseline performance...");
-    profiler.record_performance_data("regression_test", "baseline_function", Duration::from_millis(100))?;
-    profiler.record_performance_data("regression_test", "baseline_function", Duration::from_millis(95))?;
-    profiler.record_performance_data("regression_test", "baseline_function", Duration::from_millis(105))?;
-    profiler.record_performance_data("regression_test", "baseline_function", Duration::from_millis(98))?;
-    profiler.record_performance_data("regression_test", "baseline_function", Duration::from_millis(102))?;
+    profiler.record_performance_data(
+        "regression_test",
+        "baseline_function",
+        Duration::from_millis(100),
+    )?;
+    profiler.record_performance_data(
+        "regression_test",
+        "baseline_function",
+        Duration::from_millis(95),
+    )?;
+    profiler.record_performance_data(
+        "regression_test",
+        "baseline_function",
+        Duration::from_millis(105),
+    )?;
+    profiler.record_performance_data(
+        "regression_test",
+        "baseline_function",
+        Duration::from_millis(98),
+    )?;
+    profiler.record_performance_data(
+        "regression_test",
+        "baseline_function",
+        Duration::from_millis(102),
+    )?;
 
     println!("⏱️  Baseline established: ~100ms average");
 
@@ -347,8 +373,11 @@ fn demo_regression_detection() -> CoreResult<()> {
     // Simulate slower performance
     thread::sleep(Duration::from_millis(120)); // Simulate 20% performance regression
 
-    let report = profiler
-        .finish_workload_analysis("regression_test", WorkloadType::ComputeIntensive, start_time)?;
+    let report = profiler.finish_workload_analysis(
+        "regression_test",
+        WorkloadType::ComputeIntensive,
+        start_time,
+    )?;
 
     if report.has_regressions() {
         println!("\n⚠️  Performance Regression Detected!");

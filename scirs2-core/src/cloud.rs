@@ -392,7 +392,11 @@ pub struct ListResult {
 #[async_trait]
 pub trait CloudStorageBackend: Send + Sync {
     /// Upload a file to cloud storage
-    async fn upload_file(&self, key: &str, options: TransferOptions) -> Result<CloudObjectMetadata, CloudError>;
+    async fn upload_file(
+        &self,
+        key: &str,
+        options: TransferOptions,
+    ) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Download a file from cloud storage
     async fn download_file(
@@ -402,7 +406,12 @@ pub trait CloudStorageBackend: Send + Sync {
     ) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Upload data from memory
-    async fn upload_data(&self, data: &[u8], key: &str, options: TransferOptions) -> Result<CloudObjectMetadata, CloudError>;
+    async fn upload_data(
+        &self,
+        data: &[u8],
+        key: &str,
+        options: TransferOptions,
+    ) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Download data to memory
     async fn get_object(&self, key: &str) -> Result<Vec<u8>, CloudError>;
@@ -424,7 +433,12 @@ pub trait CloudStorageBackend: Send + Sync {
     ) -> Result<ListResult, CloudError>;
 
     /// Copy an object within the same bucket
-    async fn copy_object(&self, source_key: &str, dest_key: &str, options: TransferOptions) -> Result<CloudObjectMetadata, CloudError>;
+    async fn copy_object(
+        &self,
+        source_key: &str,
+        dest_key: &str,
+        options: TransferOptions,
+    ) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Generate a presigned URL for temporary access
     async fn generate_presigned_url(

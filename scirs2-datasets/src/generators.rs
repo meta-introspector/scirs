@@ -6,16 +6,16 @@ use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use rand_distr::Uniform;
 use rand_distr::Distribution;
+use rand_distr::Uniform;
 // Use local GPU implementation instead of core to avoid feature flag issues
 use crate::gpu::GpuBackend as LocalGpuBackend;
 // Parallel operations will be added as needed
 // #[cfg(feature = "parallel")]
 // use scirs2_core::parallel_ops::*;
 use rand::seq::SliceRandom;
-use std::f64::consts::PI;
 use scirs2_core::rng;
+use std::f64::consts::PI;
 
 /// Generate a random classification dataset with clusters
 #[allow(dead_code)]
@@ -1158,7 +1158,8 @@ pub fn inject_missing_data(
 
             for _ in 0..n_blocks {
                 let start_row = rng.sample(Uniform::new(0, n_samples).unwrap());
-                let start_col = rng.sample(Uniform::new(0, n_features.saturating_sub(block_size)).unwrap());
+                let start_col =
+                    rng.sample(Uniform::new(0, n_features.saturating_sub(block_size)).unwrap());
 
                 for i in start_row..n_samples.min(start_row + block_size) {
                     for j in start_col..n_features.min(start_col + block_size) {
@@ -1252,7 +1253,8 @@ pub fn inject_outliers(
                 outlier_mask[outlier_idx] = true;
 
                 // Only modify a subset of features to create contextual anomaly
-                let n_features_to_modify = rng.sample(Uniform::new(1, (n_features / 2).max(1)).unwrap());
+                let n_features_to_modify =
+                    rng.sample(Uniform::new(1, (n_features / 2).max(1)).unwrap());
                 let mut features_to_modify: Vec<usize> = (0..n_features).collect();
                 features_to_modify.shuffle(&mut rng);
                 features_to_modify.truncate(n_features_to_modify);
@@ -2972,7 +2974,7 @@ pub fn make_manifold(config: ManifoldConfig) -> Result<Dataset> {
 #[cfg(test)]
 mod tests {
     use super::*;
-use rand_distr::Uniform;
+    use rand_distr::Uniform;
 
     #[test]
     fn test_make_classification_invalid_params() {

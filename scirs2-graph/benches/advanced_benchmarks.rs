@@ -206,9 +206,9 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
                                     g,
                                     "dijkstra_path",
                                     |graph| {
-                                let target = (*start + 1) % (graph.node_count() as i32);
-                                dijkstra_path(graph, *start, &target)
-                            },
+                                        let target = (*start + 1) % (graph.node_count() as i32);
+                                        dijkstra_path(graph, *start, &target)
+                                    },
                                 )
                                 .unwrap(),
                             )

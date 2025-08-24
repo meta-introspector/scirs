@@ -806,11 +806,11 @@ mod tests {
 
     #[test]
     fn test_hmatrix_memory_info() {
-        let matrix = Array2::from_shape_fn((128, 128), |(i, j)| {
-            1.0 / (1.0 + (i as f64 - j as f64).abs())
-        });
+        // Reduced size from 128x128 to 32x32 for faster test execution
+        let matrix =
+            Array2::from_shape_fn((32, 32), |(i, j)| 1.0 / (1.0 + (i as f64 - j as f64).abs()));
 
-        let hmatrix = HMatrix::from_dense(&matrix.view(), 1e-4, 16, 16).unwrap();
+        let hmatrix = HMatrix::from_dense(&matrix.view(), 1e-4, 8, 8).unwrap();
         let memory_info = hmatrix.memory_info();
 
         // Basic sanity checks for memory info

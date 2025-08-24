@@ -347,7 +347,8 @@ fn bench_data_structures(c: &mut Criterion) {
                         ds.find(&i);
                     }
                 })
-            });
+            },
+        );
     }
 
     // Benchmark condensed matrix operations

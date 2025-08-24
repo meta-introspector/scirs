@@ -2417,7 +2417,7 @@ pub fn list_real_world_datasets() -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-use rand_distr::Uniform;
+    use rand_distr::Uniform;
 
     #[test]
     fn test_load_titanic() {

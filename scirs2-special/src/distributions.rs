@@ -9,9 +9,9 @@ use crate::incomplete_gamma::{gammainc, gammaincc};
 use crate::validation::{check_finite, check_probability};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive};
+use std::f64::consts::PI;
 use std::fmt::{Debug, Display};
 use std::ops::{AddAssign, MulAssign, SubAssign};
-use std::f64::consts::PI;
 
 // Normal distribution functions
 

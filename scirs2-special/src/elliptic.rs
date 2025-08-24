@@ -1072,7 +1072,6 @@ mod tests {
 
     #[test]
     fn test_elliptic_f() {
-
         // Values at φ = 0
         assert_relative_eq!(elliptic_f(0.0, 0.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(elliptic_f(0.0, 0.5), 0.0, epsilon = 1e-10);
@@ -1094,7 +1093,6 @@ mod tests {
 
     #[test]
     fn test_elliptic_e_inc() {
-
         // Values at φ = 0
         assert_relative_eq!(elliptic_e_inc(0.0, 0.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(elliptic_e_inc(0.0, 0.5), 0.0, epsilon = 1e-10);

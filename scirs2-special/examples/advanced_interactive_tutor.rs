@@ -880,9 +880,7 @@ fn stirling_approximation_proof(
 }
 
 #[allow(dead_code)]
-fn bessel_orthogonality_proof(
-    profile: &mut UserProfile,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn bessel_orthogonality_proof(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Bessel Function Orthogonality");
     println!("=================================\n");
 
@@ -979,9 +977,7 @@ fn error_function_series_proof(
 }
 
 #[allow(dead_code)]
-fn interactive_problem_solver(
-    profile: &mut UserProfile,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn interactive_problem_solver(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎯 Interactive Problem Solver");
     println!("=============================\n");
 
@@ -1008,9 +1004,7 @@ fn interactive_problem_solver(
 }
 
 #[allow(dead_code)]
-fn solve_probability_problems(
-    profile: &mut UserProfile,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn solve_probability_problems(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Probability Problem Solver");
     println!("==============================\n");
 
@@ -1121,9 +1115,7 @@ fn solve_physics_problems(profile: &mut UserProfile) -> Result<(), Box<dyn std::
 }
 
 #[allow(dead_code)]
-fn solve_engineering_problems(
-    profile: &mut UserProfile,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn solve_engineering_problems(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 Engineering Problem Solver");
     println!("==============================\n");
 
@@ -1963,9 +1955,7 @@ fn intermediate_mastery_challenge(
 }
 
 #[allow(dead_code)]
-fn advanced_mastery_challenge(
-    profile: &mut UserProfile,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn advanced_mastery_challenge(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Advanced Mastery Challenge");
     println!("=============================\n");
 

@@ -8,8 +8,8 @@ use scirs2_fft::{
     batch_sparse_fft, gpu_batch_sparse_fft, spectral_flatness_batch_sparse_fft, BatchConfig,
     GPUBackend, WindowFunction,
 };
-use std::time::Instant;
 use std::f64::consts::PI;
+use std::time::Instant;
 
 // Helper function to create a sparse signal with specified frequencies
 #[allow(dead_code)]

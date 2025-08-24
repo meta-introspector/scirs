@@ -1152,7 +1152,7 @@ mod tests {
         let buffer = GpuBuffer::<f32>::new(inner, 2);
 
         let data = vec![1.0f32, 2.0, 3.0]; // 3 elements > 2 buffer size
-        buffer.copy_from_host(&data);
+        buffer.copy_from_host(&data).unwrap();
     }
 
     #[test]
@@ -1162,7 +1162,7 @@ mod tests {
         let buffer = GpuBuffer::<f32>::new(inner, 2);
 
         let mut data = vec![0.0f32; 3]; // 3 elements > 2 buffer size
-        buffer.copy_to_host(&mut data);
+        buffer.copy_to_host(&mut data).unwrap();
     }
 
     #[test]

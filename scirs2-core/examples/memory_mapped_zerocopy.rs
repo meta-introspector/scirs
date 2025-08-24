@@ -298,7 +298,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let strategy = ChunkingStrategy::Fixed(chunk_size);
 
         // Process chunks
-        let chunk_sums = bench_array.process_chunks(strategy, |chunk, _idx| chunk.iter().sum::<f64>());
+        let chunk_sums =
+            bench_array.process_chunks(strategy, |chunk, _idx| chunk.iter().sum::<f64>());
 
         // Calculate final sum
         result = chunk_sums.iter().sum();
@@ -323,8 +324,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let strategy = ChunkingStrategy::Fixed(chunk_size);
 
             // Process chunks in parallel
-            let chunk_sums =
-                bench_array.process_chunks_parallel(strategy, |chunk, _idx| chunk.iter().sum::<f64>());
+            let chunk_sums = bench_array
+                .process_chunks_parallel(strategy, |chunk, _idx| chunk.iter().sum::<f64>());
 
             // Calculate final sum
             result = chunk_sums.iter().sum();

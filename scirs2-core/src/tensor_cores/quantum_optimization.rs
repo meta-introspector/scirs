@@ -127,7 +127,11 @@ impl QuantumInspiredOptimizer {
         }
 
         // Update quantum state (simulate decoherence)
-        for (i, grad) in gradient.iter().enumerate().take(self.quantum_state.amplitudes.len()) {
+        for (i, grad) in gradient
+            .iter()
+            .enumerate()
+            .take(self.quantum_state.amplitudes.len())
+        {
             self.quantum_state.amplitudes[i] *= (1.0 - self.decoherence_rate() * 0.01).max(0.1f64);
             self.quantum_state.phases[i] += 0.01 * grad; // Phase evolution
         }

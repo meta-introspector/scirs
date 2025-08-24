@@ -309,7 +309,8 @@ fn bench_large_scale_performance(c: &mut Criterion) {
         // B-spline interpolation
         if n_points <= 100_000 {
             group.bench_with_input(BenchmarkId::new("bspline", n_points), &n_points, |b, _| {
-                let bspline = BSpline::new(&x.view(), &y.view(), 3, ExtrapolateMode::Extrapolate).unwrap();
+                let bspline =
+                    BSpline::new(&x.view(), &y.view(), 3, ExtrapolateMode::Extrapolate).unwrap();
                 b.iter(|| black_box(bspline.evaluate_array(&queries.view())));
             });
         }
@@ -331,13 +332,21 @@ fn bench_simd_effectiveness(c: &mut Criterion) {
         let queries = generate_query_points_1d(query_size);
 
         group.throughput(Throughput::Elements(query_size as u64));
-        group.bench_with_input(BenchmarkId::new("linear", query_size), &query_size, |b, _| {
-            b.iter(|| black_box(linear_interpolate(&x.view(), &y.view(), &queries.view())));
-        });
+        group.bench_with_input(
+            BenchmarkId::new("linear", query_size),
+            &query_size,
+            |b, _| {
+                b.iter(|| black_box(linear_interpolate(&x.view(), &y.view(), &queries.view())));
+            },
+        );
 
-        group.bench_with_input(BenchmarkId::new("cubic", query_size), &query_size, |b, _| {
-            b.iter(|| black_box(cubic_interpolate(&x.view(), &y.view(), &queries.view())));
-        });
+        group.bench_with_input(
+            BenchmarkId::new("cubic", query_size),
+            &query_size,
+            |b, _| {
+                b.iter(|| black_box(cubic_interpolate(&x.view(), &y.view(), &queries.view())));
+            },
+        );
     }
 
     group.finish();

@@ -422,7 +422,10 @@ fn test_algorithm(
                     }
                 }
             }
-            format!("Avg clustering (sampled): {:.4}", sum / config.sample_size as f64)
+            format!(
+                "Avg clustering (sampled): {:.4}",
+                sum / config.sample_size as f64
+            )
         }
         _ => return None,
     };

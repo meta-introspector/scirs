@@ -982,7 +982,7 @@ pub mod convenience {
 #[cfg(test)]
 mod tests {
     use super::convenience::*;
-use rand_distr::Uniform;
+    use rand_distr::Uniform;
 
     #[test]
     fn test_load_stellar_classification() {

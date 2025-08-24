@@ -51,8 +51,8 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::Array1;
 use num_traits::{cast::NumCast, Float, FloatConst};
-use scirs2_core::Rng;
 use scirs2_core::rng;
+use scirs2_core::Rng;
 use std::cmp;
 
 /// Hypergeometric distribution

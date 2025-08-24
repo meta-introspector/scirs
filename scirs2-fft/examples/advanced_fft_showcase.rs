@@ -15,13 +15,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a test signal
     let signal = create_test_signal(1024);
-    
+
     // Perform basic FFT
     let result = fft(&signal, None)?;
-    
+
     println!("FFT completed successfully on {} samples", signal.len());
     println!("Result has {} frequency components", result.len());
-    
+
     Ok(())
 }
 

@@ -9,8 +9,8 @@ use scirs2_fft::{
     fft,
     memory_efficient::{fft2_efficient, fft_inplace, fft_streaming, process_in_chunks, FftMode},
 };
-use std::time::Instant;
 use std::f64::consts::PI;
+use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() {

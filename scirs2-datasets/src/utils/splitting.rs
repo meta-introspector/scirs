@@ -10,8 +10,8 @@ use ndarray::Array1;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
-use std::collections::HashMap;
 use scirs2_core::rng;
+use std::collections::HashMap;
 
 /// Cross-validation fold indices
 ///

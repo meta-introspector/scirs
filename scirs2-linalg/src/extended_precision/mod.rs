@@ -277,16 +277,16 @@ where
         return Ok(det.demote());
     }
 
-    // For larger matrices, use the LU decomposition
-    let (_, u, _) = factorizations::extended_lu::<A, I>(a)?;
+    // For larger matrices, use the LU decomposition with high precision matrices
+    let (_, _, u) = factorizations::extended_lu_internal::<A, I>(a)?;
 
-    // Compute determinant as the product of diagonal elements of U
+    // Compute determinant as the product of diagonal elements of U (in high precision)
     let n = u.nrows();
     let mut det = I::one();
 
     for i in 0..n {
-        // Convert the element to higher precision before multiplication
-        let elem = u[[i, i]].promote();
+        // Use the element from U (already in high precision I)
+        let elem = u[[i, i]];
         det = det * elem;
     }
 

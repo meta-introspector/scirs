@@ -13,8 +13,8 @@ use ndarray::{s, Array1, Array2, Array3};
 use rand::{rng, rngs::StdRng, Rng, SeedableRng};
 use rand_distr::Uniform;
 use statrs::statistics::Statistics;
-use std::time::{Duration, Instant};
 use std::f64::consts::PI;
+use std::time::{Duration, Instant};
 
 /// Quantum-Neuromorphic Fusion Processor
 /// The ultimate synthesis of quantum computing and biological neural networks
@@ -914,7 +914,7 @@ pub fn create_fusion_with_params(
 mod tests {
     use super::*;
     use ndarray::Array2;
-use rand_distr::Uniform;
+    use rand_distr::Uniform;
 
     #[test]
     fn test_quantum_neuromorphic_fusion_creation() {

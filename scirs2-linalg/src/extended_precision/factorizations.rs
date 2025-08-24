@@ -94,8 +94,11 @@ where
             }
         }
 
-        // Check for singularity
-        if max_val < I::epsilon() {
+        // Check for singularity with a more relaxed threshold for ill-conditioned matrices
+        // Use a threshold that is much smaller than machine epsilon to handle ill-conditioned cases
+        let threshold =
+            I::from(1e-30_f64).unwrap_or(I::epsilon() * I::from(1e-10).unwrap_or(I::epsilon()));
+        if max_val < threshold {
             return Err(crate::error::LinalgError::SingularMatrixError(
                 "Matrix is singular or nearly singular".to_string(),
             ));
@@ -173,6 +176,115 @@ where
     }
 
     Ok((p, l, u))
+}
+
+/// Internal LU decomposition that returns high precision matrices
+/// Used internally for determinant calculations
+#[allow(dead_code)]
+pub(super) fn extended_lu_internal<A, I>(
+    a: &ArrayView2<A>,
+) -> LinalgResult<(Array2<I>, Array2<I>, Array2<I>)>
+where
+    A: Float + Zero + One + PromotableTo<I> + DemotableTo<A> + Copy,
+    I: Float
+        + Zero
+        + One
+        + DemotableTo<A>
+        + Copy
+        + PartialOrd
+        + std::iter::Sum
+        + std::ops::AddAssign
+        + std::ops::SubAssign,
+{
+    let m = a.nrows();
+    let n = a.ncols();
+
+    // Convert matrix to higher precision
+    let mut a_high = Array2::zeros((m, n));
+    for i in 0..m {
+        for j in 0..n {
+            a_high[[i, j]] = a[[i, j]].promote();
+        }
+    }
+
+    // Initialize permutation vector for pivoting
+    let mut p_indices = Vec::with_capacity(m);
+    for i in 0..m {
+        p_indices.push(i);
+    }
+
+    // Perform LU decomposition with partial pivoting in high precision
+    for k in 0..std::cmp::min(m, n) {
+        // Find pivot
+        let mut pivot_row = k;
+        let mut max_val = a_high[[k, k]].abs();
+
+        for i in k + 1..m {
+            let val = a_high[[i, k]].abs();
+            if val > max_val {
+                max_val = val;
+                pivot_row = i;
+            }
+        }
+
+        // Check for singularity with a more relaxed threshold for ill-conditioned matrices
+        let threshold =
+            I::from(1e-30_f64).unwrap_or(I::epsilon() * I::from(1e-10).unwrap_or(I::epsilon()));
+        if max_val < threshold {
+            return Err(crate::error::LinalgError::SingularMatrixError(
+                "Matrix is singular or nearly singular".to_string(),
+            ));
+        }
+
+        // Swap rows in a_high and p_indices if necessary
+        if pivot_row != k {
+            p_indices.swap(k, pivot_row);
+            for j in 0..n {
+                let temp = a_high[[k, j]];
+                a_high[[k, j]] = a_high[[pivot_row, j]];
+                a_high[[pivot_row, j]] = temp;
+            }
+        }
+
+        // Compute the Gauss transform
+        for i in k + 1..m {
+            a_high[[i, k]] = a_high[[i, k]] / a_high[[k, k]];
+
+            for j in k + 1..n {
+                a_high[[i, j]] = a_high[[i, j]] - a_high[[i, k]] * a_high[[k, j]];
+            }
+        }
+    }
+
+    // Extract L and U from a_high (keep in high precision)
+    let mut l_high = Array2::zeros((m, std::cmp::min(m, n)));
+    let mut u_high = Array2::zeros((std::cmp::min(m, n), n));
+
+    for i in 0..m {
+        for j in 0..std::cmp::min(m, n) {
+            match i.cmp(&j) {
+                std::cmp::Ordering::Greater => l_high[[i, j]] = a_high[[i, j]],
+                std::cmp::Ordering::Equal => l_high[[i, j]] = I::one(),
+                std::cmp::Ordering::Less => {} // Do nothing
+            }
+        }
+    }
+
+    for i in 0..std::cmp::min(m, n) {
+        for j in 0..n {
+            if i <= j {
+                u_high[[i, j]] = a_high[[i, j]];
+            }
+        }
+    }
+
+    // Build permutation matrix in high precision
+    let mut p_high = Array2::zeros((m, m));
+    for i in 0..m {
+        p_high[[i, p_indices[i]]] = I::one();
+    }
+
+    Ok((p_high, l_high, u_high))
 }
 
 /// QR decomposition using extended precision

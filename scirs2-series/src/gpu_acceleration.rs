@@ -5,8 +5,8 @@
 
 use ndarray::{s, Array1};
 use num_traits::Float;
-use std::fmt::Debug;
 use std::f64::consts::PI;
+use std::fmt::Debug;
 
 use crate::error::{Result, TimeSeriesError};
 

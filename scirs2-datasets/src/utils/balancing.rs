@@ -10,8 +10,8 @@ use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
 use rand_distr::Uniform;
-use std::collections::HashMap;
 use scirs2_core::rng;
+use std::collections::HashMap;
 
 /// Balancing strategies for handling imbalanced datasets
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
@@ -412,7 +412,7 @@ pub fn create_balanced_dataset(
 #[cfg(test)]
 mod tests {
     use super::*;
-use rand_distr::Uniform;
+    use rand_distr::Uniform;
 
     #[test]
     fn test_random_oversample() {

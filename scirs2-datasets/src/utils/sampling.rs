@@ -11,8 +11,8 @@ use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
 use rand_distr::Uniform;
-use std::collections::HashMap;
 use scirs2_core::rng;
+use std::collections::HashMap;
 
 /// Performs random sampling with or without replacement
 ///
@@ -442,8 +442,8 @@ pub fn multiple_bootstrap_samples(
 mod tests {
     use super::*;
     use ndarray::array;
+    use rand_distr::Uniform;
     use std::collections::HashSet;
-use rand_distr::Uniform;
 
     #[test]
     fn test_random_sample_without_replacement() {

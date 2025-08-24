@@ -192,8 +192,7 @@ fn bench_community_detection(c: &mut Criterion) {
                 &graph,
                 |b, g| {
                     b.iter(|| {
-                        modularity_optimization_result(black_box(g), 0.5, 100.0, 1000)
-                            .communities
+                        modularity_optimization_result(black_box(g), 0.5, 100.0, 1000).communities
                     })
                 },
             );
@@ -433,7 +432,12 @@ fn bench_memory_operations(c: &mut Criterion) {
         );
 
         // Subgraph creation
-        let nodes: std::collections::HashSet<_> = graph.nodes().into_iter().take(graph.node_count() / 2).cloned().collect();
+        let nodes: std::collections::HashSet<_> = graph
+            .nodes()
+            .into_iter()
+            .take(graph.node_count() / 2)
+            .cloned()
+            .collect();
         group.bench_with_input(
             BenchmarkId::new("subgraph_creation", graph_name),
             &(graph, &nodes),
@@ -444,11 +448,7 @@ fn bench_memory_operations(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("memory_profiling", graph_name),
             &graph,
-            |b, g| {
-                b.iter(|| {
-                    black_box(MemoryProfiler::profile_graph(g))
-                })
-            },
+            |b, g| b.iter(|| black_box(MemoryProfiler::profile_graph(g))),
         );
     }
 

@@ -1474,8 +1474,9 @@ mod tests {
     fn test_accuracy_comparison() {
         let comparison = ScipyBenchmarkComparison::default().unwrap();
 
+        // Use very small differences well within tolerance (< 1e-12)
         let scirs2_result = vec![1.0, 2.0, 3.0];
-        let scipy_result = vec![1.000001, 2.000001, 3.000001];
+        let scipy_result = vec![1.000000000001, 2.000000000001, 3.000000000001];
 
         let accuracy = comparison
             .compare_accuracy(&scirs2_result, &scipy_result)

@@ -5,8 +5,8 @@
 
 use num_complex::Complex64;
 use scirs2_fft::{fft_adaptive, fftfreq, ifft_adaptive, simd_support_available, window};
-use std::time::Instant;
 use std::f64::consts::PI;
+use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() {
@@ -240,12 +240,7 @@ fn find_peak_frequencies(_freqs: &[f64], power: &[f64], thresholdfactor: f64) ->
 
 // Apply a bandpass filter in the frequency domain
 #[allow(dead_code)]
-fn bandpass_filter(
-    signal: &[f64],
-    samplerate: f64,
-    low_cutoff: f64,
-    high_cutoff: f64,
-) -> Vec<f64> {
+fn bandpass_filter(signal: &[f64], samplerate: f64, low_cutoff: f64, high_cutoff: f64) -> Vec<f64> {
     // Compute FFT with adaptive SIMD acceleration
     let mut spectrum = fft_adaptive(signal, None).unwrap();
 

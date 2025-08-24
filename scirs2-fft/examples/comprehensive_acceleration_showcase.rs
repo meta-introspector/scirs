@@ -27,8 +27,8 @@ use scirs2_fft::{
 
     WorkloadDistribution,
 };
-use std::time::Instant;
 use std::f64::consts::PI;
+use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> FFTResult<()> {

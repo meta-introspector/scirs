@@ -867,7 +867,6 @@ mod tests {
 
     #[test]
     fn test_reduce_angle() {
-
         // Test angle reduction
         assert_relative_eq!(reduce_angle(3.0 * PI), -PI, epsilon = 1e-10);
         assert_relative_eq!(reduce_angle(5.0 * PI), -PI, epsilon = 1e-10);

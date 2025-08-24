@@ -286,7 +286,9 @@ fn bench_edge_detection(c: &mut Criterion) {
             BenchmarkId::new("laplace_standard", format!("{}x{}", size, size)),
             &input,
             |b, input| {
-                b.iter(|| laplace(black_box(input), Some(BorderMode::Reflect), Some(false)).unwrap())
+                b.iter(|| {
+                    laplace(black_box(input), Some(BorderMode::Reflect), Some(false)).unwrap()
+                })
             },
         );
 
@@ -309,10 +311,12 @@ fn bench_edge_detection(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("gradient_magnitude_standard", format!("{}x{}", size, size)),
             &(&grad_x, &grad_y),
-            |b, (gx, gy)| b.iter(|| {
-                let result = (&(**gx) * &(**gx) + &(**gy) * &(**gy)).mapv(|x| x.sqrt());
-                black_box(result)
-            }),
+            |b, (gx, gy)| {
+                b.iter(|| {
+                    let result = (&(**gx) * &(**gx) + &(**gy) * &(**gy)).mapv(|x| x.sqrt());
+                    black_box(result)
+                })
+            },
         );
 
         group.bench_with_input(
@@ -496,7 +500,6 @@ criterion_group!(
     bench_performance_characteristics,
     bench_memory_computation_tradeoffs,
     bench_data_type_performance,
-    bench_cache_efficiency
-    /* bench_parallel_performance - conditionally compiled */
+    bench_cache_efficiency /* bench_parallel_performance - conditionally compiled */
 );
 criterion_main!(benches);

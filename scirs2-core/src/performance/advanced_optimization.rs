@@ -284,7 +284,6 @@ impl Default for FeatureNormalizer {
     }
 }
 
-
 impl Default for StrategyClassifier {
     fn default() -> Self {
         Self

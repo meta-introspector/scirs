@@ -9,9 +9,9 @@ use ndarray::Array1;
 use num_traits::Float;
 use rand::{rng, Rng};
 use rand_distr::uniform::SampleUniform;
+use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use std::f64::consts::PI;
 
 /// Wrapped Cauchy distribution
 ///

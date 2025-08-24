@@ -250,11 +250,11 @@ pub use crate::array::{
 #[cfg(feature = "memory_metrics")]
 pub use crate::memory::metrics::{
     clear_snapshots,
+    clear_snapshots,
     compare_snapshots,
     // Utility functions
     format_bytes,
     format_duration,
-    clear_snapshots,
     take_snapshot,
     MemoryEvent,
     MemoryEventType,

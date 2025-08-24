@@ -6,8 +6,8 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand_distr::Distribution;
-use scirs2_core::Rng;
 use scirs2_core::rng;
+use scirs2_core::Rng;
 use statrs::function::gamma::ln_gamma;
 
 /// Negative Binomial distribution structure

@@ -8,8 +8,8 @@
 
 use crate::error::{SpecialError, SpecialResult};
 use std::collections::HashMap;
-use std::sync::Mutex;
 use std::f64::consts::PI;
+use std::sync::Mutex;
 
 lazy_static::lazy_static! {
     // Cache for polylogarithm values

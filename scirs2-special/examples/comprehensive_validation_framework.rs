@@ -16,8 +16,8 @@
 use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
-use std::time::Instant;
 use std::f64::consts::PI;
+use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

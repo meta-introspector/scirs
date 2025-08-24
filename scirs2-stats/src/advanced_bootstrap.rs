@@ -267,9 +267,7 @@ where
     pub fn new(config: AdvancedBootstrapConfig) -> Self {
         let rng = match config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => {
-                StdRng::from_rng(&mut rng())
-            }
+            None => StdRng::from_rng(&mut rng()),
         };
 
         Self {
@@ -371,9 +369,7 @@ where
             let samples: Result<Vec<_>, _> = (0..self.config.n_bootstrap)
                 .into_par_iter()
                 .map(|_| {
-                    let mut local_rng = {
-                        StdRng::from_rng(&mut rng())
-                    };
+                    let mut local_rng = { StdRng::from_rng(&mut rng()) };
                     let mut resample = Array1::zeros(n);
 
                     for i in 0..n {

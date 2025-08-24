@@ -7,7 +7,8 @@
 //! Run with: cargo run --example comprehensive_performance_benchmark --features gpu,simd,parallel
 
 use scirs2_special::performance_benchmarks::{
-    comprehensive_benchmark, quick_benchmark, BenchmarkConfig, BenchmarkResult, BenchmarkSuite, GammaBenchmarks,
+    comprehensive_benchmark, quick_benchmark, BenchmarkConfig, BenchmarkResult, BenchmarkSuite,
+    GammaBenchmarks,
 };
 use std::env;
 use std::fs;

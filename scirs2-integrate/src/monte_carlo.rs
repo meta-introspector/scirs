@@ -9,9 +9,9 @@ use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
 use rand_distr::uniform::SampleUniform;
 use rand_distr::{Distribution, Uniform};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use std::f64::consts::PI;
 
 /// Options for controlling the behavior of Monte Carlo integration
 #[derive(Debug, Clone)]
@@ -477,10 +477,10 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{importance_sampling, monte_carlo, monte_carlo_parallel, MonteCarloOptions};
-    use std::f64::consts::PI;
     use ndarray::{Array1, ArrayView1};
     use rand::rngs::StdRng;
     use rand_distr::Distribution;
+    use std::f64::consts::PI;
     use std::marker::PhantomData;
 
     // Helper function to check if result is within expected error margin

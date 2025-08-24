@@ -50,7 +50,9 @@ fn bench_wavelets_single_level(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(format!("{}_reconstruct", name), size),
                 &size,
-                |b, &size| b.iter(|| black_box(dwt_reconstruct(&approx, &detail, *wavelet).unwrap())),
+                |b, &size| {
+                    b.iter(|| black_box(dwt_reconstruct(&approx, &detail, *wavelet).unwrap()))
+                },
             );
         }
     }
@@ -169,7 +171,9 @@ fn bench_stationary_wavelet_transform(c: &mut Criterion) {
                     group.bench_with_input(
                         BenchmarkId::new(format!("{}_full_swt", level_name), size),
                         &size,
-                        |b, &size| b.iter(|| black_box(swt(&signal, *wavelet, level, None).unwrap())),
+                        |b, &size| {
+                            b.iter(|| black_box(swt(&signal, *wavelet, level, None).unwrap()))
+                        },
                     );
 
                     // Get coefficients for multi-level reconstruction benchmark
@@ -218,7 +222,7 @@ fn bench_wavelet_packet_transform(c: &mut Criterion) {
                 let level_name = format!("{}_level{}", name, level);
 
                 // WPT functions not available - commented out
-                // 
+                //
                 // // Benchmark WPT decomposition
                 // group.bench_with_input(
                 //     BenchmarkId::new(format!("{}_wp_decompose", level_name), size),

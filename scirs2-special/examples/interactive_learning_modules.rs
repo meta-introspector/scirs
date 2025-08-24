@@ -44,10 +44,7 @@ impl LearningProgress {
     }
 
     fn complete_exercise(&mut self, exercisename: &str) {
-        if !self
-            .exercises_completed
-            .contains(&exercisename.to_string())
-        {
+        if !self.exercises_completed.contains(&exercisename.to_string()) {
             self.exercises_completed.push(exercisename.to_string());
         }
     }

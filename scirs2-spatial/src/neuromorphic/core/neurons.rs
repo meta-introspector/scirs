@@ -4,7 +4,6 @@
 //! computing, including the leaky integrate-and-fire model and more sophisticated
 //! neuron types with adaptive behaviors.
 
-
 /// Spiking neuron model using leaky integrate-and-fire dynamics
 ///
 /// This neuron model integrates input currents over time and generates spikes

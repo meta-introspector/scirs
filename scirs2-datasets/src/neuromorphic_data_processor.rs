@@ -715,7 +715,7 @@ pub fn create_neuromorphic_processor_with_topology(
 mod tests {
     use super::*;
     use ndarray::Array2;
-use rand_distr::Uniform;
+    use rand_distr::Uniform;
 
     #[test]
     fn test_neuromorphic_dataset_transformation() {

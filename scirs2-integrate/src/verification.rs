@@ -32,8 +32,8 @@
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
 use ndarray::{ArrayView1, ArrayView2};
-use std::fmt;
 use std::f64::consts::PI;
+use std::fmt;
 
 /// Trait for exact solutions in MMS problems
 pub trait ExactSolution<F: IntegrateFloat> {

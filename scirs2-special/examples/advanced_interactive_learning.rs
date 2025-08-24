@@ -1293,9 +1293,7 @@ fn run_assessment_question(
 }
 
 #[allow(dead_code)]
-fn offer_hints_and_retry(
-    question: &AssessmentQuestion,
-) -> Result<f64, Box<dyn std::error::Error>> {
+fn offer_hints_and_retry(question: &AssessmentQuestion) -> Result<f64, Box<dyn std::error::Error>> {
     if !question.hints.is_empty() {
         let want_hint = get_user_input("Would you like a hint? (y/n): ")?;
         if want_hint.to_lowercase() == "y" {
@@ -1310,9 +1308,7 @@ fn offer_hints_and_retry(
 }
 
 #[allow(dead_code)]
-fn explore_topics(
-    session: &mut AdaptiveLearningSession,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn explore_topics(session: &mut AdaptiveLearningSession) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔍 Topic Explorer");
     println!("=================\n");
 
@@ -1479,9 +1475,7 @@ fn run_comprehensive_assessment(
 }
 
 #[allow(dead_code)]
-fn display_learning_analytics(
-    profile: &LearningProfile,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn display_learning_analytics(profile: &LearningProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Learning Analytics Dashboard");
     println!("===============================\n");
 

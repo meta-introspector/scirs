@@ -959,7 +959,7 @@ fn spherical_harmonics_tutorial() -> Result<(), Box<dyn std::error::Error>> {
                     "Y₀⁰={:.3}, Y₁⁰={:.3}, Y₁¹={:.3}, Y₂⁰={:.3}",
                     y_00, y_10, y_11, y_20
                 );
-            },
+            }
             _ => println!("Error computing spherical harmonics"),
         }
     }
@@ -988,7 +988,7 @@ fn spherical_harmonics_tutorial() -> Result<(), Box<dyn std::error::Error>> {
             let y_lminus_m_complex = Complex64::new(y_lminus_m_re, y_lminus_m_im);
             println!("Expected: {:.4} + {:.4}i", expected.re, expected.im);
             println!("Match: {}", (y_lminus_m_complex - expected).norm() < 1e-10);
-        },
+        }
         _ => println!("Error computing complex spherical harmonics"),
     }
 

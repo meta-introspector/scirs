@@ -126,9 +126,9 @@ fn bench_motif_finding(c: &mut Criterion) {
             |b, g| {
                 b.iter(|| {
                     let frequencies = count_motif_frequencies(g);
-                    let result = frequencies.get(&MotifType::Square).unwrap_or(&0) + 
-                                frequencies.get(&MotifType::Clique4).unwrap_or(&0) + 
-                                frequencies.get(&MotifType::Path3).unwrap_or(&0);
+                    let result = frequencies.get(&MotifType::Square).unwrap_or(&0)
+                        + frequencies.get(&MotifType::Clique4).unwrap_or(&0)
+                        + frequencies.get(&MotifType::Path3).unwrap_or(&0);
                     black_box(result)
                 });
             },
