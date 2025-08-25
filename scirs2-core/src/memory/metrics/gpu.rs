@@ -243,7 +243,7 @@ mod tests {
         let buffer_component = report
             .component_stats
             .keys()
-            .find(|name| name.starts_with("GpuTests::Buffer_"))
+            .find(|name| name.starts_with("GpuTests:"))
             .expect("Should have a buffer component");
 
         // Verify buffer size

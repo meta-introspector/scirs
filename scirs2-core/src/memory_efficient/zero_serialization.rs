@@ -1285,8 +1285,8 @@ mod tests {
         let loaded_array = loaded.readonlyarray::<ndarray::Ix1>().unwrap();
         assert_eq!(loaded_array.shape(), data.shape());
 
-        for (_, &val) in loaded_array.iter().enumerate() {
-            assert_eq!(val, data[0]);
+        for (i, &val) in loaded_array.iter().enumerate() {
+            assert_eq!(val, data[i]);
         }
 
         // Read metadata
@@ -1584,8 +1584,8 @@ mod tests {
             MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
         let loaded_array = loaded.readonlyarray::<ndarray::Ix1>().unwrap();
 
-        for (_, &val) in loaded_array.iter().enumerate() {
-            assert_eq!(val, data[0]);
+        for (i, &val) in loaded_array.iter().enumerate() {
+            assert_eq!(val, data[i]);
         }
     }
 
@@ -1653,7 +1653,7 @@ mod tests {
             let mut array_view = cow_mmap.as_array_mut::<ndarray::Ix2>().unwrap();
             // Set diagonal to 100
             for i in 0..10 {
-                array_view[[0, 0]] = 100.0;
+                array_view[[i, i]] = 100.0;
             }
         }
 
@@ -1665,7 +1665,7 @@ mod tests {
         // Check original values weren't changed on disk
         for i in 0..10 {
             for j in 0..10 {
-                assert_eq!(original_array[[0, j]], data[[0, j]]);
+                assert_eq!(original_array[[i, j]], data[[i, j]]);
             }
         }
 
@@ -1674,9 +1674,9 @@ mod tests {
         for i in 0..10 {
             for j in 0..10 {
                 if i == j {
-                    assert_eq!(cow_array[[0, j]], 100.0);
+                    assert_eq!(cow_array[[i, j]], 100.0);
                 } else {
-                    assert_eq!(cow_array[[0, j]], data[[0, j]]);
+                    assert_eq!(cow_array[[i, j]], data[[i, j]]);
                 }
             }
         }

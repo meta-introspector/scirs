@@ -1021,7 +1021,7 @@ where
     D2: Dimension,
 {
     // Reuse lift_chart function to get the data
-    let (percentiles, cum_gains, _lift_values) = lift_chart(y_true, y_score, n_bins)?;
+    let (percentiles, _lift_values, cum_gains) = lift_chart(y_true, y_score, n_bins)?;
     Ok((percentiles, cum_gains))
 }
 

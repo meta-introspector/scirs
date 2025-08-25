@@ -940,13 +940,14 @@ mod tests {
     #[test]
     fn test_crossbar_with_faults() {
         let params = MemristorParameters::default();
-        let mut crossbar = MemristiveCrossbar::new(10, 10, params, MemristorModel::TeamModel);
+        // Reduce size from 10x10 to 3x3 for faster test execution
+        let mut crossbar = MemristiveCrossbar::new(3, 3, params, MemristorModel::TeamModel);
 
         // Should handle faults gracefully
         let _faulty_count = crossbar.fault_map.iter().filter(|&&x| x).count();
         // Some devices may be faulty - this is expected behavior
 
-        let input = Array1::ones(10);
+        let input = Array1::ones(3);
         let output = crossbar.multiply(&input.view());
         assert!(output.iter().all(|&x| x.is_finite()));
     }

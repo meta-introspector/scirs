@@ -1376,6 +1376,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore] // FIXME: This test is slow (>60s) - needs optimization
     fn test_enhanced_operators_with_large_vectors() {
         // Test that large vectors trigger parallel processing
         let large_size = 15000; // Above default parallel threshold

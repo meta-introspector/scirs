@@ -1230,15 +1230,13 @@ pub fn parallel_median_filter(
 
     let n = signal.len();
     let half_kernel = kernel_size / 2;
-    let chunk = chunk_size.unwrap_or(1024.min(n / num_cpus::get()));
+    let chunk = chunk_size.unwrap_or(1024.min((n / num_cpus::get()).max(n / 4).max(1)));
     let overlap = half_kernel;
 
     // Process signal in overlapping chunks (safe arithmetic to prevent overflow)
     let effective_chunk = chunk.saturating_sub(overlap).max(1); // Ensure at least size 1
     let n_chunks = (n + effective_chunk - 1) / effective_chunk;
-    let mut results = vec![Vec::<f64>::new(); n_chunks];
-
-    par_iter_with_setup(
+    let results = par_iter_with_setup(
         0..n_chunks,
         || {},
         |_, i| {
@@ -1311,15 +1309,14 @@ pub fn parallel_morphological_filter(
     let n = signal.len();
     let se_len = structuring_element.len();
     let half_se = se_len / 2;
-    let chunk = chunk_size.unwrap_or(1024.min(n / num_cpus::get()));
+    let chunk = chunk_size.unwrap_or(1024.min((n / num_cpus::get()).max(n / 4).max(1)));
     let overlap = half_se;
 
     // Process signal in overlapping chunks (safe arithmetic to prevent overflow)
     let effective_chunk = chunk.saturating_sub(overlap).max(1); // Ensure at least size 1
     let n_chunks = (n + effective_chunk - 1) / effective_chunk;
-    let mut results = vec![Vec::<f64>::new(); n_chunks];
 
-    par_iter_with_setup(
+    let results = par_iter_with_setup(
         0..n_chunks,
         || {},
         |_, i| {
@@ -1462,15 +1459,14 @@ pub fn parallel_rank_order_filter(
 
     let n = signal.len();
     let half_window = window_size / 2;
-    let chunk = chunk_size.unwrap_or(1024.min(n / num_cpus::get()));
+    let chunk = chunk_size.unwrap_or(1024.min((n / num_cpus::get()).max(n / 4).max(1)));
     let overlap = half_window;
 
     // Process signal in overlapping chunks (safe arithmetic to prevent overflow)
     let effective_chunk = chunk.saturating_sub(overlap).max(1); // Ensure at least size 1
     let n_chunks = (n + effective_chunk - 1) / effective_chunk;
-    let mut results = vec![Vec::<f64>::new(); n_chunks];
 
-    par_iter_with_setup(
+    let results = par_iter_with_setup(
         0..n_chunks,
         || {},
         |_, i| {

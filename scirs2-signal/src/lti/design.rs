@@ -901,8 +901,8 @@ mod tests {
     #[test]
     fn test_system_interconnection_errors() {
         // Test error when connecting continuous and discrete-time systems
-        let g_ct = tf(vec![1.0], vec![1.0, 1.0]);
-        let g_dt = tf(vec![1.0], vec![1.0, 1.0]);
+        let g_ct = TransferFunction::new(vec![1.0], vec![1.0, 1.0], Some(false)).unwrap(); // Continuous-time
+        let g_dt = TransferFunction::new(vec![1.0], vec![1.0, 1.0], Some(true)).unwrap(); // Discrete-time
 
         let result = series(&g_ct, &g_dt);
         assert!(result.is_err());
