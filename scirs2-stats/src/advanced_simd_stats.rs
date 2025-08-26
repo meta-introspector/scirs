@@ -1637,7 +1637,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_advanced_simd_optimizer_creation() {
         let config = AdvancedSimdConfig::default();
         let optimizer = AdvancedSimdOptimizer::new(config);

@@ -999,7 +999,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_adaptive_pattern_detection_sequential() {
         let config = PrefetchConfig {
             min_pattern_length: 4,
@@ -1010,7 +1009,7 @@ mod tests {
 
         // Record sequential access
         for i in 0..10 {
-            tracker.record_access(0);
+            tracker.record_access(i);
         }
 
         // Check that the pattern was detected correctly
@@ -1025,7 +1024,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_adaptive_pattern_detection_strided() {
         let config = PrefetchConfig {
             min_pattern_length: 4,
@@ -1036,7 +1034,7 @@ mod tests {
 
         // Record strided access with stride 3
         for i in (0..30).step_by(3) {
-            tracker.record_access(0);
+            tracker.record_access(i);
         }
 
         // Check that the pattern was detected correctly
@@ -1095,7 +1093,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_dimensional_pattern_detection() {
         let config = PrefetchConfig {
             min_pattern_length: 4,
@@ -1111,7 +1108,7 @@ mod tests {
         // Record row-major traversal
         for i in 0..5 {
             for j in 0..5 {
-                tracker.record_access(0 * 5 + j);
+                tracker.record_access(i * 5 + j);
             }
         }
 
@@ -1127,7 +1124,7 @@ mod tests {
         // Record column-major traversal
         for j in 0..5 {
             for i in 0..5 {
-                tracker.record_access(0 * 5 + j);
+                tracker.record_access(i * 5 + j);
             }
         }
 

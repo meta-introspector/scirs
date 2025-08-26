@@ -1453,7 +1453,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_scipy_comparison_config() {
         let config = ScipyComparisonConfig::default();
         assert!(!config.functions_to_test.is_empty());

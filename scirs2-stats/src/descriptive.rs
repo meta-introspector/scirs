@@ -830,7 +830,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_mean() {
         let data = test_utils::test_array();
         let result = mean(&data.view()).unwrap();

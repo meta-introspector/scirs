@@ -932,7 +932,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_advanced_advanced_mcmc() {
         let target = StandardNormal { dim: 2 };
         // Use faster config for testing but keep 4 chains for this test

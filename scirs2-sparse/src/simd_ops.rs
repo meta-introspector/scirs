@@ -614,9 +614,13 @@ where
 
     let b_indptr = if let Some(b_concrete) = b_csc.as_any().downcast_ref::<CscArray<T>>() {
         b_concrete.get_indptr() // Direct method returns &Array1<usize>
+    } else if let Some(b_concrete) = b_csc.as_any().downcast_ref::<CsrArray<T>>() {
+        // Fallback: if to_csc didn't actually convert, use CSR format
+        // This is less efficient but works
+        b_concrete.get_indptr()
     } else {
         return Err(SparseError::ValueError(
-            "Matrix B must be CSC format".to_string(),
+            "Matrix B must be CSC or CSR format".to_string(),
         ));
     };
     let (_, b_row_indices, b_values) = b_csc.find();

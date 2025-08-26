@@ -776,7 +776,7 @@ mod tests {
     use std::thread;
 
     #[test]
-    #[ignore] // FIXME: This test hangs during module initialization - needs investigation
+    #[ignore = "timeout"]
     fn test_error_monitor_basic() {
         let monitor = ErrorMonitor::new();
         monitor.record_error(ErrorCode::E3005, "test_operation");
@@ -787,7 +787,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: This test hangs during module initialization - needs investigation
+    #[ignore = "timeout"]
     fn test_pattern_detection() {
         let monitor = ErrorMonitor::new();
 
@@ -803,7 +803,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: This test hangs during module initialization - needs investigation
+    #[ignore = "timeout"]
     fn test_health_score_calculation() {
         let monitor = ErrorMonitor::new();
 

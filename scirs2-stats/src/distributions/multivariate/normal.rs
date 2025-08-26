@@ -499,7 +499,7 @@ mod tests {
     use ndarray::{array, Axis};
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_mvn_creation() {
         // 2D standard multivariate normal
         let mean = array![0.0, 0.0];

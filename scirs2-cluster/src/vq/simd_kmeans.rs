@@ -589,7 +589,7 @@ mod tests {
     use ndarray::Array2;
 
     #[test]
-    #[ignore = "slow SIMD test - run with cargo test --ignored"]
+    #[ignore = "timeout"]
     fn test_kmeans_simd() {
         let data =
             Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 3.7, 4.2, 3.9, 3.9]).unwrap();
@@ -616,7 +616,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "slow SIMD test - run with cargo test --ignored"]
+    #[ignore = "timeout"]
     fn test_mini_batch_kmeans_simd() {
         let data = Array2::from_shape_vec((8, 2), (0..16).map(|x| x as f64).collect()).unwrap();
 
@@ -642,7 +642,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "slow SIMD test - run with cargo test --ignored"]
+    #[ignore = "timeout"]
     fn test_kmeans_plus_plus_simd() {
         let data = Array2::from_shape_vec((6, 2), (0..12).map(|x| x as f64).collect()).unwrap();
 
@@ -662,7 +662,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "slow SIMD test - run with cargo test --ignored"]
+    #[ignore = "timeout"]
     fn test_compute_centroid_shift_simd() {
         let oldcentroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
 

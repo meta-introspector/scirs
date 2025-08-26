@@ -307,7 +307,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_normal_creation() {
         // Standard normal
         let norm = Normal::new(0.0, 1.0).unwrap();

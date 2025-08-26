@@ -385,7 +385,7 @@ mod tests {
     use approx::assert_relative_eq;
     
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_student_t_creation() {
         // Standard t-distribution
         let t = StudentT::new(10.0, 0.0, 1.0).unwrap();

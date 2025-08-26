@@ -43,7 +43,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_diagonal_view_non_square() {
         let data = Array2::from_shape_fn((3, 4), |(i, j)| i * 10 + j);
 

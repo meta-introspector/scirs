@@ -41,7 +41,6 @@ fn test_single_elementdata() {
     let mean_result = mean(&singledata.view()).unwrap();
     assert!((mean_result - 42.0).abs() < 1e-10);
 
-    // Variance should be 0 for single element
-    let var_result = var(&singledata.view(), 1, None).unwrap();
-    assert!(var_result.abs() < 1e-10);
+    // Variance should return an error for single element (needs at least 2 elements)
+    assert!(var(&singledata.view(), 1, None).is_err());
 }

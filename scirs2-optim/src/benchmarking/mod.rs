@@ -1469,7 +1469,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_quadratic() {
         let mut benchmark = OptimizerBenchmark::new();
         benchmark.add_standard_test_functions();
@@ -1524,7 +1524,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_report() {
         let mut benchmark = OptimizerBenchmark::new();
         benchmark.add_test_function(TestFunction {

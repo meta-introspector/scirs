@@ -383,7 +383,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_f_creation() {
         // F with 2,10 degrees of freedom
         let f_dist = F::new(2.0, 10.0, 0.0, 1.0).unwrap();

@@ -950,7 +950,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmarkconfig_creation() {
         let config = BenchmarkConfig::default();
         assert!(!config.array_sizes.is_empty());
@@ -958,7 +958,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_suite_creation() {
         let config = BenchmarkConfig::default();
         let result = SciPyBenchmarkSuite::new(config);

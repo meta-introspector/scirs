@@ -892,7 +892,7 @@ mod tests {
     use ndarray::{array, Array1};
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_advanced_simd_basic() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let processor = AdvancedSimdProcessor::<f64>::new();
@@ -904,7 +904,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test hangs - needs investigation
+    #[ignore = "timeout"]
     fn test_largedataset_performance() {
         let data: Array1<f64> = Array1::from_shape_fn(10000, |i| i as f64);
         let processor = AdvancedSimdProcessor::<f64>::new();
@@ -915,7 +915,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test hangs - needs investigation
+    #[ignore = "timeout"]
     fn test_different_vector_strategies() {
         let data: Array1<f64> = Array1::from_shape_fn(1000, |i| (i as f64).sin());
 

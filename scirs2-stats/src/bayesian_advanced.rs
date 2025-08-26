@@ -1265,7 +1265,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_model_comparison() {
         let mut comparison = BayesianModelComparison::<f64>::new();
 

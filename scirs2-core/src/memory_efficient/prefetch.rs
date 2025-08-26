@@ -1064,7 +1064,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_prefetching_state() {
         let config = PrefetchConfig {
             prefetch_count: 3,
@@ -1073,9 +1072,9 @@ mod tests {
 
         let mut state = PrefetchingState::new(config);
 
-        // Record sequential access
+        // Record sequential access (these will be misses since nothing is prefetched yet)
         for i in 0..5 {
-            state.tracker.record_access(i);
+            state.idx(i);
         }
 
         // Get blocks to prefetch
@@ -1089,12 +1088,11 @@ mod tests {
         }
 
         // Mark block 5 as prefetched
-        // Mark block as prefetched
         state.prefetched.insert(5);
         state.prefetching.remove(&5);
 
         // Access block 5 (should be a hit)
-        state.tracker.record_access(5);
+        state.idx(5);
 
         // Check stats
         let stats = state.stats();

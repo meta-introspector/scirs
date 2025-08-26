@@ -451,7 +451,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_logistic_creation() {
         // Standard Logistic (loc=0, scale=1)
         let logistic = Logistic::new(0.0, 1.0).unwrap();

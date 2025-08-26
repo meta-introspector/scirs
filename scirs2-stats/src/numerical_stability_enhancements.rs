@@ -284,7 +284,7 @@ impl AdvancedNumericalStabilityTester {
     }
 
     /// Test edge case stability
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_edge_case_stability<F, D, R>(
         &self,
         _function_name: &str,

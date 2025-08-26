@@ -672,7 +672,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_beta_creation() {
         // Uniform beta distribution (alpha=beta=1)
         let uniform = Beta::new(1.0, 1.0, 0.0, 1.0).unwrap();

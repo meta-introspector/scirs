@@ -1146,7 +1146,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_quantum_analyzer_creation() {
         let config = QuantumConfig::default();
         let analyzer = AdvancedQuantumAnalyzer::<f64>::new(config);

@@ -263,7 +263,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
+    #[ignore = "timeout"]
     fn test_simd_frobenius_norm_f32() {
         let matrix = array![[3.0f32, 4.0, 0.0], [0.0, 0.0, 12.0], [5.0, 0.0, 0.0]];
 
@@ -277,7 +277,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
+    #[ignore = "timeout"]
     fn test_simd_vector_norm_f32() {
         let vector = array![3.0f32, 4.0, 0.0, 12.0, 5.0];
 
@@ -291,7 +291,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
+    #[ignore = "timeout"]
     fn test_simd_vector_norm1_f32() {
         let vector = array![3.0f32, -4.0, 0.0, 12.0, -5.0];
 
@@ -305,7 +305,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
+    #[ignore = "timeout"]
     fn test_simd_vector_norm_inf_f32() {
         let vector = array![3.0f32, -4.0, 0.0, 12.0, -5.0];
 
@@ -319,7 +319,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
+    #[ignore = "timeout"]
     fn test_simdmatrix_norm1_f32() {
         let matrix = array![[1.0f32, -2.0, 3.0], [-4.0, 5.0, -6.0], [7.0, -8.0, 9.0]];
 
@@ -334,7 +334,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
+    #[ignore = "timeout"]
     fn test_simdmatrix_norm_inf_f32() {
         let matrix = array![[1.0f32, -2.0, 3.0], [-4.0, 5.0, -6.0], [7.0, -8.0, 9.0]];
 
@@ -349,7 +349,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
+    #[ignore = "timeout"]
     fn test_simd_frobenius_norm_f64() {
         let matrix = array![[3.0f64, 4.0], [0.0, 12.0]];
 
@@ -363,7 +363,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
+    #[ignore = "timeout"]
     fn test_simd_large_vector() {
         // Test with larger vector to exercise SIMD processing
         let size = 100;

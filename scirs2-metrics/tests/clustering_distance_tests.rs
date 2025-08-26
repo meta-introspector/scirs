@@ -6,7 +6,7 @@ mod cluster_distance_tests {
     };
 
     #[test]
-    #[ignore] // FIXME: This test is slow (>480s) - needs optimization
+    #[ignore = "timeout"]
     fn test_inter_cluster_distances() {
         // Create a simple dataset with two well-separated clusters
         let x = Array2::from_shape_vec(
@@ -37,7 +37,7 @@ mod cluster_distance_tests {
     }
 
     #[test]
-    #[ignore] // FIXME: This test is slow (>240s) - needs optimization
+    #[ignore = "timeout"]
     fn test_intra_cluster_distances() {
         // Create a simple dataset with two clusters
         let x = Array2::from_shape_vec(
@@ -68,7 +68,7 @@ mod cluster_distance_tests {
     }
 
     #[test]
-    #[ignore] // FIXME: This test is slow (>480s) - needs optimization
+    #[ignore = "timeout"]
     fn test_distance_ratio_index() {
         // Create a dataset with well-separated clusters
         let well_separated = Array2::from_shape_vec(
@@ -98,7 +98,7 @@ mod cluster_distance_tests {
     }
 
     #[test]
-    #[ignore] // FIXME: This test is slow (>240s) - needs optimization
+    #[ignore = "timeout"]
     fn test_isolation_index() {
         // Create a dataset with well-isolated clusters
         let well_isolated = Array2::from_shape_vec(

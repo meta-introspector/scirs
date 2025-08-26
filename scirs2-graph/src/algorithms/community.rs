@@ -1741,7 +1741,12 @@ where
 {
     #[allow(deprecated)]
     let structure = fluid_communities(graph, num_communities, max_iterations);
-    CommunityResult::from_node_map(structure.node_communities)
+    let mut result = CommunityResult::from_node_map(structure.node_communities.clone());
+
+    // Calculate and set the quality score (modularity)
+    let mod_score = modularity(graph, &structure.node_communities);
+    result.quality_score = Some(mod_score);
+    result
 }
 
 /// Hierarchical community structure with standardized CommunityResult return type

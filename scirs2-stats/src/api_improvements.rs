@@ -282,7 +282,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_correlation_method_from_str() {
         assert_eq!(
             CorrelationMethod::from_str("pearson").unwrap(),

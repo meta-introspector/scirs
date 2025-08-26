@@ -1092,7 +1092,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_advanced_simd_processor_creation() {
         let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         assert!(processor.config.f64_lanes >= 1);
@@ -1100,7 +1100,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test hangs - needs investigation
+    #[ignore = "timeout"]
     fn test_comprehensive_stats_computation() {
         let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];

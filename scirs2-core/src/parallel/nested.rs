@@ -358,10 +358,13 @@ where
     F: FnOnce(&NestedScope) -> CoreResult<R>,
 {
     // Check if we're already in a nested context
-    let context = PARENT_CONTEXT
-        .with(|ctx| ctx.borrow().as_ref().map(|parent| parent.create_child()))
-        .transpose()?
-        .unwrap_or_else(|| Arc::new(NestedContext::new(limits)));
+    let context = match PARENT_CONTEXT.with(|ctx| ctx.borrow().as_ref().map(|parent| parent.create_child())) {
+        Some(child_result) => child_result?,
+        None => {
+            // No parent context, create a new root context with level 0
+            Arc::new(NestedContext::new(limits.clone()))
+        }
+    };
 
     // Try to acquire threads
     let requested_threads = context.max_threads_at_level();
@@ -610,7 +613,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_deny_policy() {
         let config = NestedConfig {
             policy: NestedPolicy::Deny,
@@ -621,8 +623,12 @@ mod tests {
         let result = with_nested_policy(config.clone(), || Ok(1));
         assert!(result.is_ok());
 
-        // Nested should fail
-        let result = nested_scope(|_scope| with_nested_policy(config, || Ok(2)));
+        // Nested should fail - first establish a nested context, then try to use deny policy
+        let result = nested_scope(|_scope| {
+            // Now we're at nesting level 1
+            // This should fail because deny policy forbids nested parallelism
+            with_nested_policy(config, || Ok(2))
+        });
 
         assert!(result.is_err());
     }

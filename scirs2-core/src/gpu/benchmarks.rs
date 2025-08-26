@@ -894,7 +894,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_operation_name() {
         assert_eq!(
             BenchmarkOperation::MatrixMultiply.name(),
@@ -927,7 +927,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_config_default() {
         let config = BenchmarkConfig::default();
         assert!(!config.operations.is_empty());
@@ -936,7 +936,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_suite_creation() {
         let config = BenchmarkConfig::default();
         let suite = BenchmarkSuite::new(config);

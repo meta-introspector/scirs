@@ -1679,7 +1679,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: This test hangs during execution - needs investigation
+    #[ignore = "timeout"]
     fn test_classical_fallback_correlation() {
         let fallback = ClassicalFallback::<f64>::new().unwrap();
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -1706,7 +1706,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_quantum_benchmark_results() {
         let mut results = QuantumBenchmarkResults::new();
 

@@ -1141,7 +1141,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_advanced_qmc_sobol() {
         let mut generator =
             AdvancedQMCGenerator::new(QMCSequenceType::Sobol, 2, false, Some(42)).unwrap();
@@ -1158,7 +1158,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_stratified_sampler() {
         let config = StratifiedSamplingConfig {
             strata_per_dimension: 3,
@@ -1180,7 +1180,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_niederreiter_sequence() {
         let mut generator =
             AdvancedQMCGenerator::new(QMCSequenceType::Niederreiter, 3, false, Some(42)).unwrap();

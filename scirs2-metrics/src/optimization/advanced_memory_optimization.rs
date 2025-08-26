@@ -800,7 +800,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_strategy_benchmarking() {
         let pool = AdvancedMemoryPool::new(MemoryPoolConfig::default());
 

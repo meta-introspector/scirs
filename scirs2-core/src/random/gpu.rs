@@ -872,7 +872,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_results() {
         use std::time::Duration;
 

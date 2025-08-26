@@ -1581,7 +1581,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_suite_creation() {
         let config = BenchmarkConfig::default();
         let suite = InterpolationBenchmarkSuite::<f64>::new(config);

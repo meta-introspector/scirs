@@ -912,7 +912,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_parallel_filtering_benchmark() {
         let signal_lengths = vec![1000, 5000];
         let filter_lengths = vec![10, 50];

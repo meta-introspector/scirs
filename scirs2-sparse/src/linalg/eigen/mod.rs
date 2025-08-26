@@ -252,10 +252,11 @@ mod tests {
     #[test]
     fn test_unified_solver_auto() {
         // Create a simple 2x2 symmetric matrix
+        // Matrix: [[2, 1], [1, 2]] stored as lower: [[2], [1, 2]]
         let data = vec![2.0, 1.0, 2.0];
-        let indices = vec![0, 1, 1];
-        let indptr = vec![0, 2, 3];
-        let matrix = SymCsrMatrix::new(data, indices, indptr, (2, 2)).unwrap();
+        let indptr = vec![0, 1, 3];
+        let indices = vec![0, 0, 1];
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
 
         let config = EigenSolverConfig::new().with_num_eigenvalues(1);
         let result = solve_eigenvalues(&matrix, &config, EigenSolverStrategy::Auto).unwrap();
@@ -266,10 +267,11 @@ mod tests {
 
     #[test]
     fn test_unified_solver_power_iteration() {
+        // Matrix: [[3, 1], [1, 2]] stored as lower: [[3], [1, 2]]
         let data = vec![3.0, 1.0, 2.0];
-        let indices = vec![0, 1, 1];
-        let indptr = vec![0, 2, 3];
-        let matrix = SymCsrMatrix::new(data, indices, indptr, (2, 2)).unwrap();
+        let indptr = vec![0, 1, 3];
+        let indices = vec![0, 0, 1];
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
 
         let config = EigenSolverConfig::new().with_num_eigenvalues(1);
         let result =
@@ -281,10 +283,11 @@ mod tests {
 
     #[test]
     fn test_unified_solver_lanczos() {
+        // Matrix: [[4, 2], [2, 3]] stored as lower: [[4], [2, 3]]
         let data = vec![4.0, 2.0, 3.0];
-        let indices = vec![0, 1, 1];
-        let indptr = vec![0, 2, 3];
-        let matrix = SymCsrMatrix::new(data, indices, indptr, (2, 2)).unwrap();
+        let indptr = vec![0, 1, 3];
+        let indices = vec![0, 0, 1];
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
 
         let config = EigenSolverConfig::new().with_num_eigenvalues(2);
         let result = solve_eigenvalues(&matrix, &config, EigenSolverStrategy::Lanczos).unwrap();

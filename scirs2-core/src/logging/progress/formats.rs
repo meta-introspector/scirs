@@ -273,6 +273,22 @@ impl ColorScheme {
             text.to_string()
         }
     }
+
+    /// Apply color to text (alias for format_with_color)
+    ///
+    /// This method applies ANSI color codes to text based on the specified color type.
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - The text to colorize
+    /// * `color_type` - The type of color to apply
+    ///
+    /// # Returns
+    ///
+    /// Colored text with ANSI escape sequences
+    pub fn apply_color(&self, text: &str, color_type: ColorType) -> String {
+        self.format_with_color(text, color_type)
+    }
 }
 
 /// Color type for applying colors
@@ -374,6 +390,38 @@ impl ProgressFormatter {
             stats.elapsed.as_secs()
         )
     }
+
+    /// JSON output (alias for format_json)
+    ///
+    /// Returns progress information formatted as JSON string.
+    ///
+    /// # Arguments
+    ///
+    /// * `description` - Description of the progress task
+    /// * `stats` - Progress statistics
+    ///
+    /// # Returns
+    ///
+    /// JSON formatted string containing progress data
+    pub fn json(description: &str, stats: &ProgressStats) -> String {
+        Self::format_json(description, stats)
+    }
+
+    /// CSV output (alias for format_csv)
+    ///
+    /// Returns progress information formatted as CSV string.
+    ///
+    /// # Arguments
+    ///
+    /// * `description` - Description of the progress task  
+    /// * `stats` - Progress statistics
+    ///
+    /// # Returns
+    ///
+    /// CSV formatted string containing progress data
+    pub fn csv(description: &str, stats: &ProgressStats) -> String {
+        Self::format_csv(description, stats)
+    }
 }
 
 #[cfg(test)]
@@ -402,32 +450,29 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "apply_color method not yet implemented"]
     fn test_color_scheme_apply() {
         let colors = ColorScheme::colorful();
-        // let colored = colors.apply_color("test", ColorType::Fill);
-        // assert!(colored.contains("\x1b[32m")); // Green
-        // assert!(colored.contains("\x1b[0m")); // Reset
+        let colored = colors.apply_color("test", ColorType::Fill);
+        assert!(colored.contains("\x1b[32m")); // Green
+        assert!(colored.contains("\x1b[0m")); // Reset
         assert!(colors.fill_color.is_some());
     }
 
     #[test]
-    #[ignore = "ProgressFormatter::json method not yet implemented"]
     fn test_progress_formatter_json() {
         let stats = ProgressStats::new(100);
-        // let json_output = ProgressFormatter::json("Test", &stats);
-        // assert!(json_output.contains("\"description\":\"Test\""));
-        // assert!(json_output.contains("\"total\":100"));
+        let json_output = ProgressFormatter::json("Test", &stats);
+        assert!(json_output.contains("\"_description\":\"Test\""));
+        assert!(json_output.contains("\"total\":100"));
         assert_eq!(stats.total, 100);
     }
 
     #[test]
-    #[ignore = "ProgressFormatter::csv method not yet implemented"]
     fn test_progress_formatter_csv() {
         let stats = ProgressStats::new(100);
-        // let csv_output = ProgressFormatter::csv("Test", &stats);
-        // assert!(csv_output.starts_with("Test,"));
-        // assert!(csv_output.contains(",100,"));
+        let csv_output = ProgressFormatter::csv("Test", &stats);
+        assert!(csv_output.starts_with("Test,"));
+        assert!(csv_output.contains(",100,"));
         assert_eq!(stats.total, 100);
     }
 }

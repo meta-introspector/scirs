@@ -169,18 +169,25 @@ impl QuantumSparseProcessor {
         let qubit_count = config.qubit_count;
         let state_size = 1 << qubit_count; // 2^n states
 
-        let logical_qubit_count = config.logical_qubits;
+        let logical_qubit_count = config.logical_qubits.min(qubit_count / 4);  // Ensure we have enough physical qubits
         let mut logical_qubits = Vec::new();
 
         // Initialize logical qubits with error correction
-        for i in 0..logical_qubit_count {
-            let physical_start = i * 3; // 3 physical qubits per logical (simplified)
-            logical_qubits.push(LogicalQubit {
-                physical_qubits: (physical_start..physical_start + 3).collect(),
-                syndrome_qubits: vec![qubit_count - logical_qubit_count + i],
-                encoding_type: QuantumCode::Repetition3,
-                fidelity: 1.0,
-            });
+        if logical_qubit_count > 0 && qubit_count > logical_qubit_count {
+            for i in 0..logical_qubit_count {
+                let physical_start = i * 3; // 3 physical qubits per logical (simplified)
+                let syndrome_idx = if qubit_count > logical_qubit_count {
+                    qubit_count - logical_qubit_count + i
+                } else {
+                    i  // Use lower indices if not enough qubits
+                };
+                logical_qubits.push(LogicalQubit {
+                    physical_qubits: (physical_start..physical_start.saturating_add(3).min(qubit_count)).collect(),
+                    syndrome_qubits: vec![syndrome_idx.min(qubit_count.saturating_sub(1))],
+                    encoding_type: QuantumCode::Repetition3,
+                    fidelity: 1.0,
+                });
+            }
         }
 
         let quantum_state = QuantumState {

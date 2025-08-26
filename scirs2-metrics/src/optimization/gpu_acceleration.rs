@@ -1684,7 +1684,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: This test hangs during execution - needs investigation
+    #[ignore = "timeout"]
     fn test_cpu_mse() {
         let computer = GpuMetricsComputer::new(GpuAccelConfig::default()).unwrap();
         let y_true = array![1.0, 2.0, 3.0, 4.0];

@@ -1099,7 +1099,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_advanced_parallel_processor_creation() {
         let processor = create_advanced_parallel_processor();
         assert!(processor.config.max_threads > 0);

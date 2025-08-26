@@ -85,8 +85,11 @@ where
 
     if shape[0] != shape[1] {
         return Err(CoreError::ValidationError(
-            ErrorContext::new(format!("{shape:?}"))
-                .with_location(ErrorLocation::new(file!(), line!())),
+            ErrorContext::new(format!(
+                "Array must be square, got shape {:?} ({}x{})",
+                shape, shape[0], shape[1]
+            ))
+            .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
 

@@ -274,7 +274,7 @@ mod tests {
 
     /*
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_validation_demo_components() {
         // Test that our validation components can be created
         let _benchmark_framework = ScipyBenchmarkFramework::default();
@@ -288,7 +288,7 @@ mod tests {
     */
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_mean_basic_validation() {
         let testdata = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let result = mean(&testdata.view()).unwrap();

@@ -27,7 +27,7 @@
 //!
 //! // Enhanced error with recovery suggestions
 //! let error = CoreError::MemoryError(error_context!("Out of memory"));
-//! let recoverable = RecoverableError::new(error);
+//! let recoverable = RecoverableError::error(error);
 //! println!("{}", recoverable.recovery_report());
 //! ```
 //!
@@ -101,14 +101,14 @@
 //! ### Error Diagnostics
 //!
 //! ```rust
-//! use scirs2_core::error::diagnostics::diagnoseerror;
+//! use scirs2_core::error::diagnostics::error;
 //! use scirs2_core::error::{CoreError, ErrorContext, ErrorLocation};
 //!
-//! let error = CoreError::ConvergenceError(
+//! let err = CoreError::ConvergenceError(
 //!     ErrorContext::new("Failed to converge")
 //!         .with_location(ErrorLocation::new(file!(), line!()))
 //! );
-//! let diagnostics = diagnoseerror(&error);
+//! let diagnostics = error(&err);
 //!
 //! println!("{}", diagnostics); // Comprehensive diagnostic report
 //! ```

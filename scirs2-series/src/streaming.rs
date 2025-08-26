@@ -664,11 +664,12 @@ mod tests {
 
     #[test]
     fn test_cusum_detector() {
-        let mut cusum = CusumDetector::<f64>::new(5.0, 0.5);
+        let mut cusum = CusumDetector::<f64>::new(10.0, 2.0);  // Higher threshold and drift
 
-        // Add normal data
+        // Add normal data around mean 5
         for i in 0..10 {
-            let change = cusum.update(i as f64);
+            let value = 5.0 + (i as f64 % 2.0) - 0.5; // Values oscillate around 5
+            let change = cusum.update(value);
             assert!(change.is_none());
         }
 

@@ -1050,7 +1050,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_advanced_multivariate_analysis() {
         // Use faster config for testing
         let mut config = AdvancedMultivariateConfig::default();
@@ -1075,7 +1075,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_advanced_pca() {
         // Use faster config for testing
         let mut config = AdvancedMultivariateConfig::default();

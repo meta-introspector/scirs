@@ -697,7 +697,7 @@ pub mod alpha6_api {
         /// ```
         /// use scirs2_core::{CoreResult, CoreError};
         /// use scirs2_core::error::{
-        ///     diagnoseerror_advanced, get_domain_recovery_strategies, RecoverableError
+        ///     diagnoseerror_advanced, get_recovery_strategies, RecoverableError
         /// };
         ///
         /// /// Robust computation with automatic error recovery
@@ -717,7 +717,7 @@ pub mod alpha6_api {
         ///             );
         ///             
         ///             // Get domain-specific recovery strategies
-        ///             let strategies = get_domain_recovery_strategies(&error, domain);
+        ///             let strategies = get_recovery_strategies(&error, domain);
         ///             
         ///             // Try recovery strategies
         ///             for strategy in &strategies {

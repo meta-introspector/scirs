@@ -569,7 +569,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_functionality() {
         let lengths = vec![64, 128];
         let result = benchmark_lookup_table("hann", &lengths, &[], 5).unwrap();

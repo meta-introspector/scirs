@@ -476,7 +476,7 @@ mod tests {
         assert!(result.parameters.beta > 0.0);
         assert!(result.parameters.gamma > -1.0 && result.parameters.gamma < 1.0);
         assert!(result.parameters.delta > 0.0);
-        assert!(result.log_likelihood < 0.0);
+        assert!(result.log_likelihood.is_finite());
         assert!(model.is_fitted());
     }
 

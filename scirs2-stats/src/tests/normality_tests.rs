@@ -6,7 +6,7 @@ mod tests {
     use crate::tests::normality::ks_2samp;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_ks_2samp_same_distribution() {
         // Two samples from the same uniform distribution
         let x = array![0.1, 0.2, 0.3, 0.4, 0.5];

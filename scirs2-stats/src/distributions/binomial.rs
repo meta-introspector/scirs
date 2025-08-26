@@ -601,7 +601,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_binomial_creation() {
         // Valid parameters
         let binom1 = Binomial::new(10, 0.3).unwrap();

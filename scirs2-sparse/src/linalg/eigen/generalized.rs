@@ -416,16 +416,18 @@ mod tests {
 
     #[test]
     fn test_eigsh_generalized_basic() {
-        // Create simple symmetric matrices A and B
+        // Create simple symmetric matrices A and B (lower triangular only)
+        // Matrix A: [[2, 1], [1, 3]] stored as lower: [[2], [1, 3]]
         let a_data = vec![2.0, 1.0, 3.0];
-        let a_indices = vec![0, 1, 1];
-        let a_indptr = vec![0, 2, 3];
-        let a_matrix = SymCsrMatrix::new(a_data, a_indices, a_indptr, (2, 2)).unwrap();
+        let a_indptr = vec![0, 1, 3];
+        let a_indices = vec![0, 0, 1];
+        let a_matrix = SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).unwrap();
 
+        // Matrix B: [[1, 0.5], [0.5, 2]] stored as lower: [[1], [0.5, 2]]
         let b_data = vec![1.0, 0.5, 2.0];
-        let b_indices = vec![0, 1, 1];
-        let b_indptr = vec![0, 2, 3];
-        let b_matrix = SymCsrMatrix::new(b_data, b_indices, b_indptr, (2, 2)).unwrap();
+        let b_indptr = vec![0, 1, 3];
+        let b_indices = vec![0, 0, 1];
+        let b_matrix = SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).unwrap();
 
         let result = eigsh_generalized(&a_matrix, &b_matrix, Some(1), None, None);
 
@@ -489,15 +491,17 @@ mod tests {
 
     #[test]
     fn test_compute_generalized_matrix() {
+        // Matrix A: [[3, 1], [1, 4]] stored as lower: [[3], [1, 4]]
         let a_data = vec![3.0, 1.0, 4.0];
-        let a_indices = vec![0, 1, 1];
-        let a_indptr = vec![0, 2, 3];
-        let a_matrix = SymCsrMatrix::new(a_data, a_indices, a_indptr, (2, 2)).unwrap();
+        let a_indptr = vec![0, 1, 3];
+        let a_indices = vec![0, 0, 1];
+        let a_matrix = SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).unwrap();
 
+        // Matrix B: [[1, 0.5], [0.5, 2]] stored as lower: [[1], [0.5, 2]]
         let b_data = vec![1.0, 0.5, 2.0];
-        let b_indices = vec![0, 1, 1];
-        let b_indptr = vec![0, 2, 3];
-        let b_matrix = SymCsrMatrix::new(b_data, b_indices, b_indptr, (2, 2)).unwrap();
+        let b_indptr = vec![0, 1, 3];
+        let b_indices = vec![0, 0, 1];
+        let b_matrix = SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).unwrap();
 
         let result = compute_generalized_matrix(&a_matrix, &b_matrix);
         assert!(result.is_ok());

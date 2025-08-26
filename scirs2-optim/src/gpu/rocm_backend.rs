@@ -720,7 +720,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_rocm_kernel_benchmark() {
         let config = RocmConfig::default();
         if let Ok(backend) = RocmBackend::<f32>::new(config) {

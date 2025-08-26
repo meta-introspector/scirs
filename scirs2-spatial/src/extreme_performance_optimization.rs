@@ -1775,7 +1775,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     async fn test_extreme_performance_benchmark() {
         // Use a very small dataset for fast testing
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];

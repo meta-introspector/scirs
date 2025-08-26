@@ -318,7 +318,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_poisson_creation() {
         // Poisson with rate (mean) 3.0
         let poisson = Poisson::new(3.0, 0.0).unwrap();

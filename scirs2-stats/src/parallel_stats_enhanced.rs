@@ -921,7 +921,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_parallel_histogram() {
         let data = Array1::from_vec((0..10000).map(|i| i as f64 / 100.0).collect());
         let hist = ParallelHistogram::new(&data.view(), 10).unwrap();

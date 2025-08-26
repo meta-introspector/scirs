@@ -360,7 +360,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test hangs - needs investigation
+    #[ignore = "timeout"]
     fn test_flux_computation_dimensions() {
         use crate::specialized::fluid_dynamics::compressible::state::CompressibleState;
 

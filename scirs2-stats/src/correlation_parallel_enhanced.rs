@@ -522,7 +522,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_corrcoef_parallel_enhanced_consistency() {
         let data = array![
             [1.0, 5.0, 10.0],

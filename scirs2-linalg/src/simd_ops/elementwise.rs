@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
+    #[ignore = "timeout"]
     fn test_simdmatrix_add_f32() {
         let a = array![[1.0f32, 2.0], [3.0, 4.0]];
         let b = array![[5.0f32, 6.0], [7.0, 8.0]];
@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
+    #[ignore = "timeout"]
     fn test_simdmatrix_scale_f32() {
         let a = array![[1.0f32, 2.0], [3.0, 4.0]];
         let scalar = 2.5f32;
@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "SIMD tests are slow due to performance issues in core implementation"]
+    #[ignore = "timeout"]
     fn test_simdmatrix_mul_elementwise_f32() {
         let a = array![[1.0f32, 2.0], [3.0, 4.0]];
         let b = array![[2.0f32, 3.0], [4.0, 5.0]];

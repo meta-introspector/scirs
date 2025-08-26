@@ -458,7 +458,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             // Apply the binary operation
             let mut result_chunk = Vec::with_capacity(len);
             for i in 0..len {
-                result_chunk.push(f(self_chunk[0], other_chunk[0]));
+                result_chunk.push(f(self_chunk[i], other_chunk[i]));
             }
 
             // Write the result to the output array
@@ -932,7 +932,7 @@ mod tests {
         // Verify the result (each element should be 3*i)
         let result_array = result.readonlyarray::<ndarray::Ix1>().unwrap();
         for i in 0..1000 {
-            assert_eq!(result_array[0], (0 as f64) * 3.0);
+            assert_eq!(result_array[i], (i as f64) * 3.0);
         }
     }
 
@@ -964,7 +964,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_arithmetic_ops() {
         // Create a temporary directory for our test files
         let dir = tempdir().unwrap();
@@ -988,14 +987,14 @@ mod tests {
         let add_result = mmap1.add(&mmap2).unwrap();
         let add_array = add_result.readonlyarray::<ndarray::Ix1>().unwrap();
         for i in 0..100 {
-            assert_eq!(add_array[0], (0 as f64) + ((0 + 5) as f64));
+            assert_eq!(add_array[i], (i as f64) + ((i + 5) as f64));
         }
 
         // Test subtraction
         let sub_result = mmap1.sub(&mmap2).unwrap();
         let sub_array = sub_result.readonlyarray::<ndarray::Ix1>().unwrap();
         for i in 0..100 {
-            assert_eq!(sub_array[0], (0 as f64) - ((0 + 5) as f64));
+            assert_eq!(sub_array[i], (i as f64) - ((i + 5) as f64));
         }
 
         // Test multiplication

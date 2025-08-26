@@ -606,7 +606,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_gamma_creation() {
         // Basic gamma distribution
         let gamma = Gamma::new(2.0, 1.0, 0.0).unwrap();

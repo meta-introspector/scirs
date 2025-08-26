@@ -1304,7 +1304,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_creation() {
         let config = BenchmarkConfig::default();
         let benchmark = GpuOptimizerBenchmark::new(config);
@@ -1336,7 +1336,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_config_default() {
         let config = BenchmarkConfig::default();
         assert!(!config.backends.is_empty());

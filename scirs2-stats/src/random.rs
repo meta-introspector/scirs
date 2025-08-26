@@ -735,7 +735,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_random_sample() {
         // Test with uniform distribution
         let uniform_dist = rand_distr::Uniform::new(0.0, 1.0).unwrap();
@@ -751,7 +751,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_uniform() {
         // Generate uniform samples
         let samples = uniform(10.0, 20.0, 50, Some(42)).unwrap();
@@ -768,7 +768,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_randint() {
         // Generate integer samples
         let samples = randint(1, 101, 100, Some(42)).unwrap();
@@ -785,7 +785,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_randn() {
         // Generate normal samples
         let samples = randn(1000, Some(42)).unwrap();
@@ -811,7 +811,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_choice() {
         let options = array![10, 20, 30, 40, 50];
 
@@ -859,7 +859,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_permutation() {
         let arr = array![1, 2, 3, 4, 5];
 
@@ -880,7 +880,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_permutation_int() {
         // Generate a permutation of integers
         let perm = permutation_int(10, Some(42)).unwrap();
@@ -898,7 +898,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_random_binary_matrix() {
         // Generate a binary matrix
         let matrix = random_binary_matrix(5, 5, 0.5, Some(42)).unwrap();
@@ -926,7 +926,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_bootstrap_sample() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 

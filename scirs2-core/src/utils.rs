@@ -913,6 +913,36 @@ pub fn generate_window(
     Ok(window)
 }
 
+/// Get window function compatible with SciPy API
+///
+/// This is a wrapper around `generate_window` that returns `CoreResult` for
+/// consistency with other SciRS2 functions.
+///
+/// # Arguments
+///
+/// * `window_type` - Type of window function ("hamming", "hann", "rectangular", etc.)
+/// * `length` - Length of the window
+/// * `periodic` - Whether the window should be periodic (default: false)
+///
+/// # Returns
+///
+/// * Window function values as a vector wrapped in `CoreResult`
+///
+/// # Examples
+///
+/// ```rust
+/// use scirs2_core::utils::get_window;
+///
+/// let hamming = get_window("hamming", 5, false).unwrap();
+/// assert_eq!(hamming.len(), 5);
+/// ```
+#[allow(dead_code)]
+pub fn get_window(window_type: &str, length: usize, periodic: bool) -> CoreResult<Vec<f64>> {
+    generate_window(window_type, length, periodic).map_err(|e| {
+        CoreError::ValueError(ErrorContext::new(e))
+    })
+}
+
 /// Differentiate a function using central difference method.
 ///
 /// # Arguments
@@ -1238,27 +1268,26 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "get_window function not yet implemented"]
     fn test_get_window() {
         // Test Hamming window
-        // let window = get_window("hamming", 5, false).unwrap();
+        let window = get_window("hamming", 5, false).unwrap();
 
-        // assert_eq!(window.len(), 5);
-        // assert!(window[0] > 0.0 && window[0] < 0.6); // First value around 0.54
-        // assert!(window[2] > 0.9); // Middle value close to 1.0
+        assert_eq!(window.len(), 5);
+        assert!(window[0] > 0.0 && window[0] < 0.6); // First value around 0.54
+        assert!(window[2] > 0.9); // Middle value close to 1.0
 
         // Test Hann window
-        // let window = get_window("hann", 5, false).unwrap();
+        let window = get_window("hann", 5, false).unwrap();
 
-        // assert_eq!(window.len(), 5);
-        // assert_relative_eq!(window[0], 0.0, epsilon = 1e-10);
-        // assert!(window[2] > 0.9); // Middle value close to 1.0
+        assert_eq!(window.len(), 5);
+        assert!((window[0] - 0.0).abs() < 1e-10);
+        assert!(window[2] > 0.9); // Middle value close to 1.0
 
         // Test rectangular window
-        // let window = get_window("rectangular", 5, false).unwrap();
+        let window = get_window("rectangular", 5, false).unwrap();
 
-        // assert_eq!(window.len(), 5);
-        // assert!(window.iter().all(|&x| (x - 1.0).abs() < 1e-10));
+        assert_eq!(window.len(), 5);
+        assert!(window.iter().all(|&x| (x - 1.0).abs() < 1e-10));
     }
 
     #[test]

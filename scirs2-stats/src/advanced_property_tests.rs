@@ -556,7 +556,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_property_tester_creation() {
         let tester = create_advanced_property_tester();
         assert!(tester.numerical_tolerance > 0.0);
@@ -564,7 +564,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_mathematical_invariants() {
         let tester = create_advanced_property_tester();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -579,7 +579,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_correlation_properties() {
         let tester = create_advanced_property_tester();
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -595,7 +595,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_comprehensive_report() {
         let tester = create_advanced_property_tester();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];

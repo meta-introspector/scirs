@@ -645,7 +645,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_ttest_1samp() {
         let data = array![5.1f64, 4.9, 6.2, 5.7, 5.5, 5.1, 5.2, 5.0];
         let null_mean = 5.0;

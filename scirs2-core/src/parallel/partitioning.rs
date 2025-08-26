@@ -196,14 +196,17 @@ where
         };
 
         // Determine distribution type based on statistics
-        if skewness.abs() < 0.5 && kurtosis.abs() < 1.0 {
+        if skewness.abs() < 0.5 && kurtosis > -1.5 && kurtosis < -0.8 {
+            // Uniform distribution has kurtosis around -1.2
+            DataDistribution::Uniform
+        } else if skewness.abs() < 0.5 && kurtosis.abs() < 1.0 {
             // Approximately normal
             DataDistribution::Gaussian { mean, std_dev }
         } else if skewness.abs() > 2.0 {
             // Heavily skewed
             DataDistribution::Skewed { skewness }
-        } else if kurtosis < -1.0 {
-            // Negative kurtosis may indicate bimodality
+        } else if kurtosis < -1.5 {
+            // Very negative kurtosis may indicate bimodality
             // Simple bimodal detection - in practice would use more sophisticated methods
             DataDistribution::Bimodal {
                 mean1: mean - std_dev,
@@ -665,7 +668,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_uniform_distribution_detection() {
         let partitioner = DataPartitioner::<f64>::with_defaultconfig();
         let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();

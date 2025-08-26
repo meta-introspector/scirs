@@ -1130,7 +1130,7 @@ mod tests {
     use super::*;
     
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_suite_creation() {
         let suite = AcademicBenchmarkSuite::standard_ml_suite();
         
@@ -1140,7 +1140,7 @@ mod tests {
     }
     
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_problem_creation() {
         let problem = AcademicBenchmarkSuite::create_quadratic_problem();
         
@@ -1151,7 +1151,7 @@ mod tests {
     }
     
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_settings() {
         let settings = BenchmarkSettings::default();
         

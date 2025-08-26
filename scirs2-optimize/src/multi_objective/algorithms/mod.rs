@@ -267,8 +267,8 @@ pub mod utils {
             .map(|sol| (sol.objectives[0], sol.objectives[1]))
             .collect();
 
-        // Sort by first objective
-        points.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        // Sort by first objective in descending order for correct hypervolume calculation
+        points.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
 
         let mut hypervolume = 0.0;
         let mut prev_x = reference_point[0];

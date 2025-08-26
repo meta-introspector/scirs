@@ -930,7 +930,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_fluent_stats_creation() {
         let _stats: FluentStats<f64> = stats();
         assert!(true); // Just test compilation

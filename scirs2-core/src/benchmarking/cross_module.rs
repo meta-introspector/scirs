@@ -1473,7 +1473,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_config_creation() {
         let config = CrossModuleBenchConfig::default();
         assert_eq!(config.iterations, 100);
@@ -1495,7 +1495,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_runner_creation() {
         let config = CrossModuleBenchConfig::default();
         let runner = CrossModuleBenchmarkRunner::new(config);
@@ -1505,7 +1505,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_quick_benchmarks() {
         // This test should run quickly
         match run_quick_benchmarks() {

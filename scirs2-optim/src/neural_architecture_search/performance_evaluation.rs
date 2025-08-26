@@ -1937,7 +1937,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_suite_creation() {
         let suite = BenchmarkSuite::<f64>::new();
         assert!(suite.is_ok());

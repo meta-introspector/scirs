@@ -25,9 +25,9 @@
 //! let tracing = TracingSystem::new(config)?;
 //!
 //! // Create a traced operation using SpanBuilder
-//! let span = SpanBuilder::new(matrix_multiplication)
+//! let span = SpanBuilder::new("matrix_multiplication")
 //!     .with_attribute("size", "1000x1000")
-//!     .with_component(linalg)
+//!     .with_component("linalg")
 //!     .start(&tracing)?;
 //!
 //! // Perform operation with automatic performance tracking

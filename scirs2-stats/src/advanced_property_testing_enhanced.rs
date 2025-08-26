@@ -516,7 +516,7 @@ impl AdvancedPropertyTester {
 
     // Helper methods for test execution and analysis
 
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_single_mathematical_property<F>(
         &self,
         property: &MathematicalProperty,

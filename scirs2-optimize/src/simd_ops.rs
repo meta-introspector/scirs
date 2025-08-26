@@ -256,7 +256,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: This test is slow (>60s) - needs optimization
+    #[ignore = "timeout"]
     fn test_large_vectors() {
         let ops = SimdVectorOps::new();
         // Reduce size from 1000 to 100 for faster test execution

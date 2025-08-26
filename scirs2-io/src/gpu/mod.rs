@@ -395,7 +395,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_performance_benchmarking() {
         let processor = UnifiedGpuProcessor::default();
         let benchmark = utils::benchmark_gpu_performance(&processor);

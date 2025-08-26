@@ -871,7 +871,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "slow SIMD test - run with cargo test --ignored"]
+    #[ignore = "timeout"]
     fn test_vq_simd() {
         let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
 
@@ -896,7 +896,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "slow SIMD test - run with cargo test --ignored"]
+    #[ignore = "timeout"]
     fn test_compute_centroids_simd() {
         let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
 
@@ -923,7 +923,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "slow SIMD test - run with cargo test --ignored"]
+    #[ignore = "timeout"]
     fn test_calculate_distortion_simd() {
         let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
 

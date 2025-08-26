@@ -928,7 +928,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_advanced_advanced_simd_config() {
         let config = AdvancedAdvancedSimdConfig::default();
         assert!(config.vector_width.f64_lanes > 0);

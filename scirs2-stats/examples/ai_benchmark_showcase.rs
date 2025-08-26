@@ -338,7 +338,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_enhanced_benchmark_configuration() {
         let config = EnhancedBenchmarkConfig::default();
         assert!(config.enable_ai_analysis);
@@ -349,7 +349,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_platform_target_creation() {
         let linux_target = PlatformTarget::x86_64_linux();
         assert_eq!(linux_target.arch, "x86_64");
@@ -362,7 +362,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_ml_model_config() {
         let config = MLModelConfig::default();
         assert_eq!(

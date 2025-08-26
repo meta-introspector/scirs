@@ -1829,7 +1829,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_production_config_creation() {
         let config = ProductionConfig::default();
         assert_eq!(config.performance_requirements.max_latency_ms, 1000.0);
@@ -1839,7 +1839,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test hangs - needs investigation
+    #[ignore = "timeout"]
     fn test_deployment_validator() {
         let config = ProductionConfig::default();
         let validator = ProductionDeploymentValidator::new(config);

@@ -3025,7 +3025,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test takes >13 minutes - too slow for CI
+    #[ignore = "timeout"]
     fn test_molecular_properties_evaluation() {
         let mut metrics = GraphNeuralNetworkMetrics::new();
         let y_true = array![1.0, 2.0, 3.0, 4.0];

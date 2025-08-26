@@ -501,7 +501,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_validation_config_default() {
         let config = ValidationConfig::default();
         assert_eq!(config.numerical_tolerance, 1e-12);

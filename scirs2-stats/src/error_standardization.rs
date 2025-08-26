@@ -866,7 +866,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_error_messages() {
         let err = ErrorMessages::length_mismatch("x", 5, "y", 3);
         assert!(err.to_string().contains("Array length mismatch"));

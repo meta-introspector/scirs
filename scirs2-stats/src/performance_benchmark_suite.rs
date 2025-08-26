@@ -1580,7 +1580,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_advanced_benchmark_creation() {
         let config = AdvancedBenchmarkConfig::default();
         let suite = AdvancedBenchmarkSuite::new(config);
@@ -1605,7 +1605,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_performance_model_building() {
         let config = AdvancedBenchmarkConfig::default();
         let suite = AdvancedBenchmarkSuite::new(config);

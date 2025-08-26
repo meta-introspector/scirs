@@ -430,7 +430,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_weibull_creation() {
         // Standard Weibull with shape=1 (equivalent to exponential)
         let weibull1 = Weibull::new(1.0, 1.0, 0.0).unwrap();

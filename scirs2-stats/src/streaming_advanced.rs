@@ -957,7 +957,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_streaming_processor_creation() {
         let processor = create_advanced_streaming_processor::<f64>();
         let config = &processor.config;
@@ -966,7 +966,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_singledata_point_processing() {
         let mut processor = create_advanced_streaming_processor::<f64>();
         let result = processor.processdata_point(5.0);
@@ -978,7 +978,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_batch_processing() {
         let mut processor = create_advanced_streaming_processor::<f64>();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -991,7 +991,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_analytics_results() {
         let mut processor = create_advanced_streaming_processor::<f64>();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 100.0]; // Include an outlier
@@ -1003,7 +1003,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_change_point_detector() {
         let mut detector = ChangePointDetector::<f64>::new();
 
@@ -1018,7 +1018,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_anomaly_detector() {
         let mut detector = AnomalyDetector::<f64>::new();
 
@@ -1033,7 +1033,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_compression_engine() {
         let mut engine = CompressionEngine::<f64>::new();
         let timestamp = Instant::now();
@@ -1043,7 +1043,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_windowing_strategies() {
         let config = AdvancedStreamingConfig::default();
         let processor = AdvancedAdvancedStreamingProcessor::<f64>::new(config);

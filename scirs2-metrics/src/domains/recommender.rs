@@ -754,7 +754,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: This test hangs during execution - needs investigation
+    #[ignore = "timeout"]
     fn test_rating_prediction_metrics() {
         let metrics = RatingPredictionMetrics::new();
 

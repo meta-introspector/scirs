@@ -1577,7 +1577,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_advanced_think_parallel_processor_creation() {
         let processor = create_advanced_think_parallel_processor();
         assert!(processor.config.enable_ml_optimization);
@@ -1594,7 +1594,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_batchsize_variance_calculation() {
         let processor = create_advanced_think_parallel_processor();
         let batch1 = Array1::from_vec(vec![1.0, 2.0, 3.0]);
@@ -1608,7 +1608,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_memory_hierarchy_detection() {
         let hierarchy = detect_memory_hierarchy();
         assert!(hierarchy.l1_cache_kb > 0);
@@ -1617,7 +1617,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_numa_topology_detection() {
         let topology = detect_numa_topology();
         assert!(!topology.nodes.is_empty());
@@ -1640,7 +1640,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_cache_efficiency_estimation() {
         let processor = create_advanced_think_parallel_processor();
 
@@ -1654,7 +1654,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_streaming_buffer() {
         let mut buffer = StreamingBuffer::new(3);
         assert!(!buffer.is_ready());
@@ -1672,7 +1672,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_specialized_processor_creation() {
         let largedataset_processor = create_largedataset_parallel_processor();
         assert_eq!(

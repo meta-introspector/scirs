@@ -780,7 +780,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_optimized_lda() {
         // Create non-degenerate data with proper variance in multiple dimensions
         let x = array![

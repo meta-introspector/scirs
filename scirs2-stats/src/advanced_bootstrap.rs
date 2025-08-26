@@ -1318,7 +1318,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_basicbootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
@@ -1338,7 +1338,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_stratifiedbootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let strata = vec![0, 0, 1, 1, 2, 2]; // Three strata
@@ -1361,7 +1361,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_moving_blockbootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
@@ -1379,7 +1379,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_circular_blockbootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
@@ -1390,7 +1390,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_confidence_intervals() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
@@ -1411,7 +1411,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_bootstrap_diagnostics() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
         let var_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> {

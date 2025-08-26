@@ -583,7 +583,7 @@ mod tests {
     use ndarray::{array, Array2};
 
     #[test]
-    #[ignore] // FIXME: Test takes >13 minutes - too slow for CI
+    #[ignore = "timeout"]
     fn test_inter_cluster_distances_euclidean() {
         // Create a simple dataset with 2 clearly separated clusters
         let x = Array2::from_shape_vec(
@@ -606,7 +606,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test takes >13 minutes - too slow for CI
+    #[ignore = "timeout"]
     fn test_intra_cluster_distances_euclidean() {
         // Create a simple dataset with 2 compact clusters
         let x = Array2::from_shape_vec(
@@ -629,7 +629,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test takes >13 minutes - too slow for CI
+    #[ignore = "timeout"]
     fn test_distance_ratio_index() {
         // Create a dataset with well-separated clusters
         let x = Array2::from_shape_vec(
@@ -647,7 +647,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test takes >13 minutes - too slow for CI
+    #[ignore = "timeout"]
     fn test_isolation_index() {
         // Create a dataset with well-separated clusters
         let x = Array2::from_shape_vec(

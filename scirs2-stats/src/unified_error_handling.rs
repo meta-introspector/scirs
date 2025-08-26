@@ -324,7 +324,7 @@ mod tests {
     use crate::error_handling_v2::ErrorCode;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_unified_error_handler() {
         let handler = UnifiedErrorHandler::new();
 

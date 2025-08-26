@@ -941,7 +941,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark_suite_creation() {
         let suite = BenchmarkSuite::new();
         assert_eq!(suite.config.datasizes.len(), 5);
@@ -949,7 +949,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_testdata_generation() {
         let suite = BenchmarkSuite::new();
         let data = suite.generate_testdata(1000).unwrap();
@@ -957,7 +957,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_correlateddata_generation() {
         let suite = BenchmarkSuite::new();
         let basedata = suite.generate_testdata(100).unwrap();
@@ -966,7 +966,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_complexity_classification() {
         let suite = BenchmarkSuite::new();
 

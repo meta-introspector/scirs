@@ -340,7 +340,7 @@ mod simd_acceleration_tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test hangs - needs investigation
+    #[ignore = "timeout"]
     fn test_advanced_reduce_sum() {
         let accelerator = match AdvancedSimdAccelerator::<f64>::new() {
             Ok(acc) => acc,
@@ -366,7 +366,7 @@ mod simd_acceleration_tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test hangs - needs investigation
+    #[ignore = "timeout"]
     fn test_advanced_rk4_vectorized() {
         let accelerator = match AdvancedSimdAccelerator::<f64>::new() {
             Ok(acc) => acc,
@@ -503,7 +503,7 @@ mod integration_tests {
     use std::time::Duration;
 
     #[test]
-    #[ignore] // FIXME: Test hangs - needs investigation
+    #[ignore = "timeout"]
     pub fn test_full_advanced_mode_integration() {
         // Create all Advanced mode components
         let _gpu_accelerator = match AdvancedGPUAccelerator::<f64>::new() {
@@ -566,7 +566,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test hangs - needs investigation
+    #[ignore = "timeout"]
     fn test_performance_comparison() {
         // Compare performance with and without Advanced mode optimizations
         let simd_accelerator = match AdvancedSimdAccelerator::<f64>::new() {

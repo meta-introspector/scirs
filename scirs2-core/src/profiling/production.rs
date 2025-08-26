@@ -979,9 +979,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_workload_analysis_lifecycle() {
-        let config = ProfileConfig::development();
+        let config = ProfileConfig::development().with_samplingrate(1.0); // Ensure 100% sampling for test
         let mut profiler = ProductionProfiler::new(config).unwrap();
 
         // Start workload analysis

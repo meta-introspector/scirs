@@ -1531,9 +1531,12 @@ impl FeatureExtractor {
 
         // Apply extraction layers
         for layer in &self.extraction_layers {
-            let mut new_features = Array1::zeros(features.len());
-            for i in 0..new_features.len() {
-                for j in 0..features.len().min(layer.ncols()) {
+            let output_dim = layer.nrows().min(features.len());
+            let input_dim = layer.ncols().min(features.len());
+            let mut new_features = Array1::zeros(output_dim);
+
+            for i in 0..output_dim {
+                for j in 0..input_dim {
                     new_features[i] += layer[[i, j]] * features[j];
                 }
             }

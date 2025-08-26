@@ -351,7 +351,7 @@ where
 /// let data = array![1.0, 3.0, 5.0, 7.0, 9.0];
 ///
 /// // Median (50th percentile)
-/// let median = quantile(data.view(), array![0.5].view(), Some(linear)).unwrap();
+/// let median = quantile(data.view(), array![0.5].view(), Some("linear")).unwrap();
 /// assert_eq!(median[0], 5.0);
 ///
 /// // Multiple quantiles

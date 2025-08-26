@@ -108,10 +108,10 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_core::ndarray_ext::matrix::diag;
+/// use scirs2_core::ndarray_ext::matrix::_diag;
 ///
 /// let values = array![1, 2, 3];
-/// let diagmatrix = diag(values.view());
+/// let diagmatrix = _diag(values.view());
 /// assert_eq!(diagmatrix.shape(), &[3, 3]);
 /// assert_eq!(diagmatrix[[0, 0]], 1);
 /// assert_eq!(diagmatrix[[1, 1]], 2);
@@ -741,18 +741,18 @@ where
             // Decreasing powers (last column is x^0)
             // Calculate highest power first: x^(n-1)
             for _p in 0..n - 1 {
-                power = power.clone() * x[0].clone();
+                power = power.clone() * x[i].clone();
             }
 
             for j in 0..n {
-                result[[0, j]] = power.clone();
+                result[[i, j]] = power.clone();
 
                 if j < n - 1 {
                     // For non-increasing powers, we need Div trait for T to handle division
                     // power = power.clone() / x[i].clone(); // This requires Div trait
 
                     // Use multiplication by reciprocal instead as a safer approach
-                    power = power.clone() * (T::one() / x[0].clone());
+                    power = power.clone() * (T::one() / x[i].clone());
                 }
             }
         }

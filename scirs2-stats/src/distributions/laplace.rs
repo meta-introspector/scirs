@@ -491,7 +491,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_laplace_creation() {
         // Standard Laplace (loc=0, scale=1)
         let laplace = Laplace::new(0.0, 1.0).unwrap();

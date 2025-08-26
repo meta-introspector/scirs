@@ -1844,7 +1844,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: This test is slow (>60s) - needs optimization
+    #[ignore = "timeout"]
     fn test_hdc_pattern_matching() {
         let config = HDCConfig::default();
 

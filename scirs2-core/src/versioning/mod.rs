@@ -54,7 +54,7 @@
 //! // Negotiate version with client capabilities
 //! let client_caps = ClientCapabilities::new("test_client".to_string(), Version::parse("1.0.5")?);
 //! let negotiated = version_manager.negotiateversion(&client_caps)?;
-//! assert!(negotiated.negotiatedversion.major() >= 1);
+//! assert!(negotiated.negotiated_version.major() >= 1);
 //! # Ok(())
 //! # }
 //! ```

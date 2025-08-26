@@ -536,7 +536,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_suggestion_engine() {
         let engine = SuggestionEngine::new();
 
@@ -548,7 +548,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_error_diagnosis() {
         let dim_error = StatsError::dimension_mismatch("Arrays must have same length");
         let diagnosis = diagnose_error(&dim_error);
@@ -557,7 +557,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_error_formatter() {
         let formatter = ErrorFormatter::new();
         let error = StatsError::invalid_argument("Array contains NaN values");

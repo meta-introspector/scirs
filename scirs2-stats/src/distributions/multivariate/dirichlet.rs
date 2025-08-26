@@ -373,7 +373,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_dirichlet_creation() {
         // Uniform Dirichlet
         let alpha = array![1.0, 1.0, 1.0];

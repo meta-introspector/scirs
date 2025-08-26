@@ -1057,15 +1057,11 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // This test has inherent thread safety issues due to global state - use test_thread_safety_isolated instead
     fn test_thread_safety() {
-        // Reset metrics
-        reset_memory_metrics();
-
-        // Clear existing snapshots
-        clear_snapshots();
-
-        // Take snapshots from multiple threads
+        // Test thread safety using separate collectors per thread to avoid global state interference
+        use crate::memory::metrics::{
+            MemoryEvent, MemoryEventType, MemoryMetricsCollector, MemoryMetricsConfig,
+        };
         use std::sync::{Arc, Barrier};
         use std::thread;
 
@@ -1073,62 +1069,73 @@ mod tests {
         let barrier1 = Arc::clone(&barrier);
         let barrier2 = Arc::clone(&barrier);
 
-        // Thread 1: Take a snapshot and allocate memory
+        // Thread 1: Use separate collector to avoid global state interference
         let thread1 = thread::spawn(move || {
-            // Reset metrics at the start of thread
-            reset_memory_metrics();
+            // Create a dedicated collector for this thread
+            let collector = Arc::new(MemoryMetricsCollector::new(MemoryMetricsConfig::default()));
 
-            // Take a snapshot
-            let snapshot = MemorySnapshot::new("thread1", "Snapshot from thread 1");
+            // Take initial snapshot from this collector
+            let initial_report = collector.generate_report();
+            let snapshot =
+                MemorySnapshot::from_report("thread1", "Initial snapshot", initial_report);
 
             // Wait for all threads to reach this point
             barrier1.wait();
 
-            // Allocate some memory
-            track_allocation("Thread1Component", 2048, 0x1000);
+            // Record allocation in this thread's collector
+            collector.record_event(MemoryEvent::new(
+                MemoryEventType::Allocation,
+                "Thread1Component",
+                2048,
+                0x1000,
+            ));
 
-            // Take another snapshot directly (not using global manager)
-            let snapshot2 = MemorySnapshot::new("thread1_after", "After allocation in thread 1");
+            // Take snapshot after allocation
+            let after_report = collector.generate_report();
+            let snapshot2 =
+                MemorySnapshot::from_report("thread1_after", "After allocation", after_report);
 
-            // Get the diff directly in this thread to verify
+            // Verify the diff shows the expected allocation
             let diff = snapshot.compare(&snapshot2);
             assert_eq!(diff.current_usage_delta, 2048);
         });
 
-        // Thread 2: Take a snapshot and allocate different memory
+        // Thread 2: Use separate collector to avoid global state interference
         let thread2 = thread::spawn(move || {
-            // Reset metrics at the start of thread
-            reset_memory_metrics();
+            // Create a dedicated collector for this thread
+            let collector = Arc::new(MemoryMetricsCollector::new(MemoryMetricsConfig::default()));
 
-            // Take a snapshot directly
-            let snapshot = MemorySnapshot::new("thread2", "Snapshot from thread 2");
+            // Take initial snapshot from this collector
+            let initial_report = collector.generate_report();
+            let snapshot =
+                MemorySnapshot::from_report("thread2", "Initial snapshot", initial_report);
 
             // Wait for all threads to reach this point
             barrier2.wait();
 
-            // Allocate some memory
-            track_allocation("Thread2Component", 4096, 0x2000);
+            // Record allocation in this thread's collector
+            collector.record_event(MemoryEvent::new(
+                MemoryEventType::Allocation,
+                "Thread2Component",
+                4096,
+                0x2000,
+            ));
 
-            // Take another snapshot directly
-            let snapshot2 = MemorySnapshot::new("thread2_after", "After allocation in thread 2");
+            // Take snapshot after allocation
+            let after_report = collector.generate_report();
+            let snapshot2 =
+                MemorySnapshot::from_report("thread2_after", "After allocation", after_report);
 
-            // Get the diff directly in this thread to verify
+            // Verify the diff shows the expected allocation
             let diff = snapshot.compare(&snapshot2);
             assert_eq!(diff.current_usage_delta, 4096);
         });
 
-        // Main thread: Wait for other threads to take snapshots
+        // Main thread: Wait for other threads to complete
         barrier.wait();
 
-        // Join threads
         thread1.join().unwrap();
         thread2.join().unwrap();
-
-        // In our test implementation, we don't need to verify global snapshots
-        // since we're doing direct snapshot comparison in each thread
-
-        // Clear snapshots
-        clear_snapshots();
     }
 
     #[test]

@@ -1178,7 +1178,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Potentially slow or hanging test - needs investigation
+    #[ignore = "timeout"]
     fn test_benchmark() {
         let mut bench = Benchmark::new("array_operations");
 

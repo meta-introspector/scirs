@@ -1150,7 +1150,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Module has hanging tests - marking all as ignored for now
+    #[ignore = "timeout"]
     fn test_advanced_survival_analysis() {
         let config = AdvancedSurvivalConfig::default();
         let mut analyzer = AdvancedSurvivalAnalysis::new(config);
