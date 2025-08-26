@@ -408,9 +408,10 @@ mod tests {
     #[test]
     fn test_eigs_basic() {
         // Create a simple 2x2 matrix
-        let data = vec![2.0, 1.0, 0.0, 1.0];
-        let indices = vec![0, 1, 1];
-        let indptr = vec![0, 2, 3];
+        // CSR format: data and indices must have same length
+        let data = vec![2.0, 1.0, 1.0]; // 3 non-zero elements
+        let indices = vec![0, 1, 1]; // Column indices for each element
+        let indptr = vec![0, 2, 3]; // Row pointers: row 0 has 2 elements, row 1 has 1 element
         let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2)).unwrap();
 
         let result = eigs(&matrix, Some(1), Some("LM"), None);

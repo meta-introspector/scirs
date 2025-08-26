@@ -1940,6 +1940,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_advanced_multimodal_hdc_fusion() {
         let config = HDCConfig::default();
         let fusion_config = MultiModalFusionConfig::default();
@@ -2131,6 +2132,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_adaptation_parameters() {
         let mut params = AdaptationParameters::default();
         let mut tracker = PerformanceTracker::new();

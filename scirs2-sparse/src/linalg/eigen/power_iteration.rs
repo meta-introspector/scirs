@@ -240,10 +240,11 @@ mod tests {
     #[test]
     fn test_power_iteration_simple() {
         // Create a simple 2x2 symmetric matrix [[2, 1], [1, 2]]
+        // For symmetric matrix, store lower triangle: (0,0)=2, (1,0)=1, (1,1)=2
         let data = vec![2.0, 1.0, 2.0];
-        let indices = vec![0, 1, 1];
-        let indptr = vec![0, 2, 3];
-        let matrix = SymCsrMatrix::new(data, indices, indptr, (2, 2)).unwrap();
+        let indices = vec![0, 0, 1]; // Column indices: row 0 has col 0, row 1 has cols 0,1
+        let indptr = vec![0, 1, 3]; // Row 0 has 1 element, row 1 has 2 elements
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
 
         let options = PowerIterationOptions::default();
         let result = power_iteration(&matrix, &options, None).unwrap();

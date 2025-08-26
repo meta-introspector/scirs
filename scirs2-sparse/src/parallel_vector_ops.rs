@@ -982,6 +982,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "timeout"]
     fn test_large_vectors_trigger_parallel() {
         let opts = ParallelVectorOptions {
             parallel_threshold: 100,

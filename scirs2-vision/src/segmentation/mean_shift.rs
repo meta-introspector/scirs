@@ -455,7 +455,7 @@ mod tests {
         assert!(b.abs() < 5.0);
 
         // Test black
-        let (l_a_b) = rgb_to_lab(0, 0, 0);
+        let (l, a, b) = rgb_to_lab(0, 0, 0);
         assert!(l < 5.0);
     }
 

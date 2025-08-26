@@ -595,7 +595,11 @@ where
         edge_strength = edge_strength + quantum_sum;
 
         // Move according to quantum probability
-        let prob_up = image[((y - 1), x)].to_f64().unwrap_or(0.0);
+        let prob_up = if y > 0 {
+            image[(y - 1, x)].to_f64().unwrap_or(0.0)
+        } else {
+            0.0
+        };
         let prob_right = image[(y, (x + 1).min(width - 1))].to_f64().unwrap_or(0.0);
         let total_prob = prob_up + prob_right;
 
@@ -1133,7 +1137,7 @@ where
     T: Float + FromPrimitive + Copy,
 {
     let (height, width) = outputshape;
-    let (_, bond_dim, _) = tensor_network.dim();
+    let (_, _, bond_dim) = tensor_network.dim();
     let mut image = Array2::zeros((height, width));
 
     // Contract tensor _network back to image

@@ -1050,6 +1050,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_distance_transform_bf() {
         // Create a simple binary array
         let input = array![

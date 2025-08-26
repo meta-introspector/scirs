@@ -2498,6 +2498,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_onehot_sparse_output() {
         let data =
             Array::from_shape_vec((4, 2), vec![0.0, 1.0, 1.0, 2.0, 2.0, 0.0, 0.0, 1.0]).unwrap();

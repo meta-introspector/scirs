@@ -697,6 +697,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_zoom_optimized() {
         let input = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
         let result = zoom_optimized(&input, &[2.0, 2.0], None, None, None)

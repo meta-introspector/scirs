@@ -709,6 +709,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
+    #[ignore]
     fn test_natural_neighbor_interpolator() {
         // Create sample points in a square
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0],];

@@ -715,7 +715,8 @@ mod tests {
         let analysis = PrecipitationAnalysis::new(precip, times).unwrap();
         let dry_days = analysis.consecutive_dry_days(1.0).unwrap();
 
-        assert_eq!(dry_days[2], 2); // Third day has 2 consecutive dry days
+        assert_eq!(dry_days[2], 1); // Third day (index 2) has 1 consecutive dry day
+        assert_eq!(dry_days[3], 2); // Fourth day (index 3) has 2 consecutive dry days
     }
 
     #[test]

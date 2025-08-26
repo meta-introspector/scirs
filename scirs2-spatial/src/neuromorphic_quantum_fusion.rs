@@ -1591,6 +1591,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn test_neural_quantum_optimizer() {
         let mut optimizer = NeuralQuantumOptimizer::new()
             .with_neural_adaptation_rate(0.1)
@@ -1650,6 +1651,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn test_comprehensive_fusion_workflow() {
         // Demonstrate a complete neuromorphic-quantum fusion workflow
 

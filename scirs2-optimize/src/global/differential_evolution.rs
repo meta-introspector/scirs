@@ -14,6 +14,7 @@ use rand::distr::Uniform;
 use rand::prelude::SliceRandom;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
+use scirs2_core::random::Random;
 
 /// Simplified Sobol sequence generator
 /// For production use, a full Sobol implementation with proper generating matrices would be preferred
@@ -179,7 +180,7 @@ where
     energies: Array1<f64>,
     best_energy: f64,
     best_idx: usize,
-    rng: StdRng,
+    rng: Random<StdRng>,
     nfev: usize,
 }
 
@@ -204,7 +205,7 @@ where
         };
 
         let seed = options.seed.unwrap_or_else(|| rand::rng().random());
-        let rng = StdRng::seed_from_u64(seed);
+        let rng = Random::seed(seed);
 
         let strategy_enum = Strategy::from_str(strategy).unwrap_or(Strategy::Best1Bin);
 
@@ -418,7 +419,7 @@ where
                 lb + excess
             } else {
                 // If reflection goes beyond upper bound, use random value in range
-                self.rng.random_range(lb..=ub)
+                self.rng.random_range(lb, ub)
             }
         } else {
             // val > ub..reflect around upper bound
@@ -428,7 +429,7 @@ where
                 ub - excess
             } else {
                 // If reflection goes beyond lower bound, use random value in range
-                self.rng.random_range(lb..=ub)
+                self.rng.random_range(lb, ub)
             }
         }
     }
@@ -441,7 +442,7 @@ where
         // Select indices for mutation
         let mut indices: Vec<usize> = Vec::with_capacity(5);
         while indices.len() < 5 {
-            let idx = self.rng.random_range(0..popsize);
+            let idx = self.rng.random_range(0, popsize);
             if idx != candidate_idx && !indices.contains(&idx) {
                 indices.push(idx);
             }
@@ -451,7 +452,7 @@ where
             self.options.mutation.0
         } else {
             self.rng
-                .random_range(self.options.mutation.0..self.options.mutation.1)
+                .random_range(self.options.mutation.0, self.options.mutation.1)
         };
 
         match self.strategy {
@@ -533,9 +534,9 @@ where
             | Strategy::Rand2Bin
             | Strategy::CurrentToBest1Bin => {
                 // Binomial crossover
-                let randn = self.rng.random_range(0..self.ndim);
+                let randn = self.rng.random_range(0, self.ndim);
                 for i in 0..self.ndim {
-                    if i == randn || self.rng.random_range(0.0..1.0) < self.options.recombination {
+                    if i == randn || self.rng.random_range(0.0, 1.0) < self.options.recombination {
                         trial[i] = mutant[i];
                     }
                 }
@@ -546,12 +547,12 @@ where
             | Strategy::Rand2Exp
             | Strategy::CurrentToBest1Exp => {
                 // Exponential crossover
-                let randn = self.rng.random_range(0..self.ndim);
+                let randn = self.rng.random_range(0, self.ndim);
                 let mut i = randn;
                 loop {
                     trial[i] = mutant[i];
                     i = (i + 1) % self.ndim;
-                    if i == randn || self.rng.random_range(0.0..1.0) >= self.options.recombination {
+                    if i == randn || self.rng.random_range(0.0, 1.0) >= self.options.recombination {
                         break;
                     }
                 }
@@ -697,10 +698,20 @@ where
             )
             .unwrap();
             if local_result.success && local_result.fun < result.fun {
-                result.x = local_result.x;
-                result.fun = local_result.fun;
-                result.nfev += local_result.nfev;
-                result.func_evals = result.nfev;
+                // Ensure polished result respects bounds
+                let mut polished_x = local_result.x;
+                for (i, &(lb, ub)) in self.bounds.iter().enumerate() {
+                    polished_x[i] = polished_x[i].max(lb).min(ub);
+                }
+
+                // Only accept if still better after bounds enforcement
+                let polished_fun = (self.func)(&polished_x.view());
+                if polished_fun < result.fun {
+                    result.x = polished_x;
+                    result.fun = polished_fun;
+                    result.nfev += local_result.nfev + 1; // +1 for our re-evaluation
+                    result.func_evals = result.nfev;
+                }
             }
         }
 

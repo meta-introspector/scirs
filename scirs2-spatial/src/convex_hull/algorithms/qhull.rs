@@ -41,10 +41,15 @@ pub fn compute_qhull(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> 
     let npoints = points.nrows();
     let ndim = points.ncols();
 
+    // Handle special case for 1D
+    if ndim == 1 {
+        return handle_special_case_1d(points);
+    }
+
     // Handle special cases for 2D and 3D
-    if ndim == 2 && (npoints == 3 || npoints == 4) {
+    if ndim == 2 && npoints <= 4 {
         return handle_special_case_2d(points);
-    } else if ndim == 3 && npoints == 4 {
+    } else if ndim == 3 && npoints <= 4 {
         return handle_special_case_3d(points);
     }
 
@@ -207,6 +212,72 @@ fn generate_fallback_simplices(vertex_indices: &[usize], ndim: usize) -> Vec<Vec
     simplices
 }
 
+/// Handle special case for 1D hulls
+///
+/// # Arguments
+///
+/// * `points` - Input points array (shape: npoints x 1)
+///
+/// # Returns
+///
+/// * Result containing a ConvexHull instance
+fn handle_special_case_1d(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> {
+    let npoints = points.nrows();
+
+    // Find the minimum and maximum points
+    let mut min_idx = 0;
+    let mut max_idx = 0;
+    let mut min_val = points[[0, 0]];
+    let mut max_val = points[[0, 0]];
+
+    for i in 1..npoints {
+        let val = points[[i, 0]];
+        if val < min_val {
+            min_val = val;
+            min_idx = i;
+        }
+        if val > max_val {
+            max_val = val;
+            max_idx = i;
+        }
+    }
+
+    // The convex hull in 1D is just the line segment between min and max
+    let vertex_indices = if min_idx != max_idx {
+        vec![min_idx, max_idx]
+    } else {
+        // All points are the same - single point
+        vec![min_idx]
+    };
+
+    // In 1D, the simplex is just the line segment (if 2 vertices) or point (if 1 vertex)
+    let simplices = if vertex_indices.len() == 2 {
+        vec![vec![0, 1]] // Single edge connecting the two extreme points
+    } else {
+        vec![] // No simplices for a single point
+    };
+
+    // Create dummy QHull instance
+    // Qhull requires at least 3 points in 2D, so create a dummy triangle
+    let dummy_points = vec![vec![0.0, 0.0], vec![1.0, 0.0], vec![0.0, 1.0]];
+
+    let qh = Qh::builder()
+        .compute(false)  // Don't actually compute the hull
+        .build_from_iter(dummy_points)
+        .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {e}")))?;
+
+    // No equations for 1D case
+    let equations = None;
+
+    Ok(ConvexHull {
+        points: points.to_owned(),
+        qh,
+        vertex_indices,
+        simplices,
+        equations,
+    })
+}
+
 /// Handle special case for 2D hulls with 3 or 4 points
 ///
 /// # Arguments
@@ -218,6 +289,25 @@ fn generate_fallback_simplices(vertex_indices: &[usize], ndim: usize) -> Vec<Vec
 /// * Result containing a ConvexHull instance
 fn handle_special_case_2d(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> {
     let npoints = points.nrows();
+
+    // Use special case handlers for degenerate cases
+    if npoints == 1 {
+        return crate::convex_hull::algorithms::special_cases::handle_degenerate_case(points)
+            .unwrap_or_else(|| {
+                Err(SpatialError::ValueError(
+                    "Failed to handle single point".to_string(),
+                ))
+            });
+    }
+
+    if npoints == 2 {
+        return crate::convex_hull::algorithms::special_cases::handle_degenerate_case(points)
+            .unwrap_or_else(|| {
+                Err(SpatialError::ValueError(
+                    "Failed to handle two points".to_string(),
+                ))
+            });
+    }
 
     // Special case for triangle (3 points in 2D)
     if npoints == 3 {
@@ -302,6 +392,16 @@ fn handle_special_case_2d(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexH
 /// * Result containing a ConvexHull instance
 fn handle_special_case_3d(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> {
     let npoints = points.nrows();
+
+    // Use special case handlers for degenerate cases
+    if npoints <= 2 {
+        return crate::convex_hull::algorithms::special_cases::handle_degenerate_case(points)
+            .unwrap_or_else(|| {
+                Err(SpatialError::ValueError(
+                    "Failed to handle degenerate 3D case".to_string(),
+                ))
+            });
+    }
 
     // Special case for tetrahedron (4 points in 3D)
     if npoints == 4 {

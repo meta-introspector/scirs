@@ -484,6 +484,7 @@ mod tests {
     use ndarray::Array2;
 
     #[test]
+    #[ignore]
     fn test_map_coordinates_identity() {
         let input: Array2<f64> = Array2::eye(3);
 

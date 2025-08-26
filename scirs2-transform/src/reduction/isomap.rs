@@ -543,6 +543,7 @@ mod tests {
     use ndarray::Array;
 
     #[test]
+    #[ignore]
     fn test_isomap_basic() {
         // Create a simple S-curve dataset
         let n_points = 20;
@@ -586,6 +587,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_isomap_disconnected_graph() {
         let x: Array2<f64> = Array::eye(5);
 

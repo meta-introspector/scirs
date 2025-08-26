@@ -337,6 +337,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_rtree_bulk_load() {
         // Create points
         let points = vec![

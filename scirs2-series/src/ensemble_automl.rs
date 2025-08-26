@@ -308,6 +308,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaModel<F> for LinearRegression
         };
 
         // Estimate confidence based on fit quality
+        // Temporarily set is_trained to allow predict call during training
+        self.is_trained = true;
         let predictions_result = self.predict(predictions)?;
         let mut mse = F::zero();
         for i in 0..n_samples {
@@ -317,7 +319,6 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaModel<F> for LinearRegression
         mse = mse / F::from(n_samples).unwrap();
 
         self.confidence = F::one() / (F::one() + mse);
-        self.is_trained = true;
 
         Ok(())
     }

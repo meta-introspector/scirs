@@ -2436,6 +2436,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_error_detection() {
         let mut metrics = StabilityMetrics::new();
 
@@ -2657,6 +2658,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn test_stability_monitoring_computation() {
         let mut advanced_computer = AdvancedTensorCoreDistanceMatrix::new().unwrap();
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];

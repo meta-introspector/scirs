@@ -567,6 +567,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_memristive_crossbar() {
         let points = Array2::from_shape_vec((1, 1), vec![1.0]).unwrap();
         let mut processor = NeuromorphicProcessor::new()

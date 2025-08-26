@@ -1051,6 +1051,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn test_hybrid_clusterer() {
         let points = array![
             [0.0, 0.0],

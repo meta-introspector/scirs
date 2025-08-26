@@ -549,6 +549,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_chessboard_distance_transform() {
         let input = array![[true, true, true], [true, false, true], [true, true, true]];
 

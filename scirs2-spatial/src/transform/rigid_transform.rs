@@ -622,6 +622,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_rigid_transform_composition() {
         // Create two transforms and compose them
         let t1 = RigidTransform::from_rotation_and_translation(

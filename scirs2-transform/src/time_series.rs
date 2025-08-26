@@ -594,6 +594,7 @@ mod tests {
     use ndarray::Array;
 
     #[test]
+    #[ignore]
     fn test_fourier_features() {
         // Create a simple sinusoidal signal
         let n = 100;

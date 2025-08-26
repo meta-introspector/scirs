@@ -92,10 +92,12 @@ fn handle_single_point(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull
     let simplices = vec![]; // No simplices for a single point
 
     // Create dummy QHull instance
-    let points_vec: Vec<Vec<f64>> = vec![points.row(0).to_vec()];
+    // Qhull requires at least 3 points in 2D, so create a dummy triangle
+    let dummy_points = vec![vec![0.0, 0.0], vec![1.0, 0.0], vec![0.0, 1.0]];
+
     let qh = Qh::builder()
         .compute(false)
-        .build_from_iter(points_vec)
+        .build_from_iter(dummy_points)
         .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {e}")))?;
 
     Ok(ConvexHull {
@@ -129,10 +131,12 @@ fn handle_two_points(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> 
     let simplices = vec![vec![0, 1]]; // Single line segment
 
     // Create dummy QHull instance
-    let points_vec: Vec<Vec<f64>> = (0..2).map(|i| points.row(i).to_vec()).collect();
+    // Qhull requires at least 3 points in 2D, so create a dummy triangle
+    let dummy_points = vec![vec![0.0, 0.0], vec![1.0, 0.0], vec![0.0, 1.0]];
+
     let qh = Qh::builder()
         .compute(false)
-        .build_from_iter(points_vec)
+        .build_from_iter(dummy_points)
         .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {e}")))?;
 
     Ok(ConvexHull {

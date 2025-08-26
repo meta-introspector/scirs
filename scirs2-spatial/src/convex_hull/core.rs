@@ -97,11 +97,19 @@ impl ConvexHull {
         let npoints = points.nrows();
         let ndim = points.ncols();
 
-        if npoints < ndim + 1 {
+        // For 1D, allow at least 1 point (degenerate case)
+        // For 2D, need at least 3 points for a proper hull, but allow 2 for degenerate line case
+        // For 3D and higher, require at least ndim + 1 points
+        let min_points = match ndim {
+            1 => 1, // Allow single points in 1D
+            2 => 3, // Need at least 3 points for a 2D convex hull
+            _ => ndim + 1,
+        };
+
+        if npoints < min_points {
             return Err(SpatialError::ValueError(format!(
                 "Need at least {} points to construct a {}D convex hull",
-                ndim + 1,
-                ndim
+                min_points, ndim
             )));
         }
 

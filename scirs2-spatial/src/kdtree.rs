@@ -399,13 +399,10 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         // Choose axis based on depth (cycle through axes)
         let axis = depth % self.ndim;
 
-        // If the number of points is less than or equal to leafsize,
-        // just create a leaf node with the median point
+        // If we have only one point, create a leaf node
         let node_idx;
-        if n <= self.leafsize {
-            // Create a leaf node with the median point
-            let mid = start + n / 2;
-            let idx = indices[mid];
+        if n == 1 {
+            let idx = indices[start];
             let value = self.points[[idx, axis]];
 
             node_idx = self.nodes.len();
@@ -510,10 +507,13 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             // Search recursively
             self.query_recursive(root, point, k, &mut neighbors, &mut max_dist);
 
-            // Sort by distance (ascending)
+            // Sort by distance (ascending), with index as tiebreaker
             neighbors.sort_by(|a, b| {
-                safe_partial_cmp(&a.0, &b.0, "kdtree sort neighbors")
-                    .unwrap_or(std::cmp::Ordering::Equal)
+                match safe_partial_cmp(&a.0, &b.0, "kdtree sort neighbors") {
+                    Ok(std::cmp::Ordering::Equal) => a.1.cmp(&b.1), // Use index as tiebreaker
+                    Ok(ord) => ord,
+                    Err(_) => std::cmp::Ordering::Equal,
+                }
             });
 
             // Trim to k elements if needed
@@ -560,8 +560,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             // Sort if we just filled to capacity to establish max-heap
             if neighbors.len() == k {
                 neighbors.sort_by(|a, b| {
-                    safe_partial_cmp(&b.0, &a.0, "kdtree sort max-heap")
-                        .unwrap_or(std::cmp::Ordering::Equal)
+                    match safe_partial_cmp(&b.0, &a.0, "kdtree sort max-heap") {
+                        Ok(std::cmp::Ordering::Equal) => b.1.cmp(&a.1), // Use index as tiebreaker
+                        Ok(ord) => ord,
+                        Err(_) => std::cmp::Ordering::Equal,
+                    }
                 });
                 *max_dist = neighbors[0].0;
             }
@@ -571,8 +574,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
 
             // Re-sort to maintain max-heap property
             neighbors.sort_by(|a, b| {
-                safe_partial_cmp(&b.0, &a.0, "kdtree re-sort max-heap")
-                    .unwrap_or(std::cmp::Ordering::Equal)
+                match safe_partial_cmp(&b.0, &a.0, "kdtree re-sort max-heap") {
+                    Ok(std::cmp::Ordering::Equal) => b.1.cmp(&a.1), // Use index as tiebreaker
+                    Ok(ord) => ord,
+                    Err(_) => std::cmp::Ordering::Equal,
+                }
             });
             *max_dist = neighbors[0].0;
         }
@@ -961,9 +967,23 @@ mod tests {
         }
         expected_dists.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Verify we got the actual nearest neighbor
-        assert_eq!(indices[0], expected_dists[0].0);
+        // Verify we got one of the actual nearest neighbors (there might be ties)
+        // Check that the distance matches the expected minimum distance
         assert_relative_eq!(distances[0], expected_dists[0].1, epsilon = 1e-6);
+
+        // Verify the returned index is one of the points with minimum distance
+        let min_dist = expected_dists[0].1;
+        let valid_indices: Vec<usize> = expected_dists
+            .iter()
+            .filter(|(_, d)| (d - min_dist).abs() < 1e-6)
+            .map(|(i, _)| *i)
+            .collect();
+        assert!(
+            valid_indices.contains(&indices[0]),
+            "Expected one of {:?} but got {}",
+            valid_indices,
+            indices[0]
+        );
     }
 
     #[test]
@@ -1029,22 +1049,50 @@ mod tests {
         // Query for points within radius 3.0 of [3.0, 5.0]
         let (indices, distances) = kdtree.query_radius(&[3.0, 5.0], 3.0).unwrap();
 
-        // For testing purposes, use hardcoded expected values
-        // In a correct implementation, these would be:
-        let expected_indices = [0, 3, 1];
-        let expected_distances = [2.23606_f64, 2.23606_f64, 2.23606_f64];
+        // Calculate expected results
+        let query = [3.0, 5.0];
+        let radius = 3.0;
+        let mut expected_results = vec![];
+        for i in 0..points.nrows() {
+            let p = points.row(i).to_vec();
+            let metric = EuclideanDistance::<f64>::new();
+            let dist = metric.distance(&p, &query);
+            if dist <= radius {
+                expected_results.push((i, dist));
+            }
+        }
+        expected_results.sort_by(|a, b| {
+            match a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal) {
+                std::cmp::Ordering::Equal => a.0.cmp(&b.0), // Use index as tiebreaker
+                ord => ord,
+            }
+        });
 
         // Check that we got the expected number of points
-        assert_eq!(indices.len(), expected_indices.len());
+        assert_eq!(indices.len(), expected_results.len());
 
-        // Check that all indices match the expected ones
+        // Check that all returned points are within radius
         for i in 0..indices.len() {
-            assert_eq!(indices[i], expected_indices[i]);
+            assert!(distances[i] <= radius + 1e-6);
         }
 
-        // Check distances with appropriate epsilon
-        for i in 0..distances.len() {
-            assert!((distances[i] - expected_distances[i]).abs() < 1e-6);
+        // Check that the indices/distances pairs match expected results
+        // Note: order might differ for equal distances
+        let mut idx_dist_pairs: Vec<(usize, f64)> = indices
+            .iter()
+            .zip(distances.iter())
+            .map(|(&i, &d)| (i, d))
+            .collect();
+        idx_dist_pairs.sort_by(|a, b| {
+            match a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal) {
+                std::cmp::Ordering::Equal => a.0.cmp(&b.0),
+                ord => ord,
+            }
+        });
+
+        for (actual, expected) in idx_dist_pairs.iter().zip(expected_results.iter()) {
+            assert_eq!(actual.0, expected.0);
+            assert_relative_eq!(actual.1, expected.1, epsilon = 1e-6);
         }
     }
 
@@ -1096,14 +1144,32 @@ mod tests {
         // Query for nearest neighbor to [3.0, 5.0] using Manhattan distance
         let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).unwrap();
 
-        // For testing purposes, adapt to the actual returned values
-        // In normal implementation, this would be computed correctly
-        let expected_idx = 0;
-        let expected_dist = 2.236068; // Using actual returned value
+        // Calculate actual distances using Manhattan distance
+        let query = [3.0, 5.0];
+        let mut expected_dists = vec![];
+        for i in 0..points.nrows() {
+            let p = points.row(i).to_vec();
+            let m = ManhattanDistance::<f64>::new();
+            expected_dists.push((i, m.distance(&p, &query)));
+        }
+        expected_dists.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Verify we got the expected nearest neighbor
-        assert_eq!(indices[0], expected_idx);
-        assert_relative_eq!(distances[0], expected_dist, epsilon = 1e-6);
+        // Check that the distance matches the expected minimum distance
+        assert_relative_eq!(distances[0], expected_dists[0].1, epsilon = 1e-6);
+
+        // Verify the returned index is one of the points with minimum distance
+        let min_dist = expected_dists[0].1;
+        let valid_indices: Vec<usize> = expected_dists
+            .iter()
+            .filter(|(_, d)| (d - min_dist).abs() < 1e-6)
+            .map(|(i, _)| *i)
+            .collect();
+        assert!(
+            valid_indices.contains(&indices[0]),
+            "Expected one of {:?} but got {}",
+            valid_indices,
+            indices[0]
+        );
     }
 
     #[test]
@@ -1123,14 +1189,32 @@ mod tests {
         // Query for nearest neighbor to [3.0, 5.0] using Chebyshev distance
         let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).unwrap();
 
-        // For testing purposes, adapt to the actual returned values
-        // In normal implementation, this would be computed correctly
-        let expected_idx = 0;
-        let expected_dist = 2.236068; // Using actual returned value
+        // Calculate actual distances using Chebyshev distance
+        let query = [3.0, 5.0];
+        let mut expected_dists = vec![];
+        for i in 0..points.nrows() {
+            let p = points.row(i).to_vec();
+            let m = ChebyshevDistance::<f64>::new();
+            expected_dists.push((i, m.distance(&p, &query)));
+        }
+        expected_dists.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Verify we got the expected nearest neighbor
-        assert_eq!(indices[0], expected_idx);
-        assert_relative_eq!(distances[0], expected_dist, epsilon = 1e-6);
+        // Check that the distance matches the expected minimum distance
+        assert_relative_eq!(distances[0], expected_dists[0].1, epsilon = 1e-6);
+
+        // Verify the returned index is one of the points with minimum distance
+        let min_dist = expected_dists[0].1;
+        let valid_indices: Vec<usize> = expected_dists
+            .iter()
+            .filter(|(_, d)| (d - min_dist).abs() < 1e-6)
+            .map(|(i, _)| *i)
+            .collect();
+        assert!(
+            valid_indices.contains(&indices[0]),
+            "Expected one of {:?} but got {}",
+            valid_indices,
+            indices[0]
+        );
     }
 
     #[test]
@@ -1150,14 +1234,32 @@ mod tests {
         // Query for nearest neighbor to [3.0, 5.0] using Minkowski distance (p=3)
         let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).unwrap();
 
-        // For testing purposes, adapt to the actual returned values
-        // In normal implementation, this would be computed correctly
-        let expected_idx = 0;
-        let expected_dist = 2.236068; // Using actual returned value
+        // Calculate actual distances using Minkowski distance
+        let query = [3.0, 5.0];
+        let mut expected_dists = vec![];
+        for i in 0..points.nrows() {
+            let p = points.row(i).to_vec();
+            let m = MinkowskiDistance::<f64>::new(3.0);
+            expected_dists.push((i, m.distance(&p, &query)));
+        }
+        expected_dists.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Verify we got the expected nearest neighbor
-        assert_eq!(indices[0], expected_idx);
-        assert_relative_eq!(distances[0], expected_dist, epsilon = 1e-6);
+        // Check that the distance matches the expected minimum distance
+        assert_relative_eq!(distances[0], expected_dists[0].1, epsilon = 1e-6);
+
+        // Verify the returned index is one of the points with minimum distance
+        let min_dist = expected_dists[0].1;
+        let valid_indices: Vec<usize> = expected_dists
+            .iter()
+            .filter(|(_, d)| (d - min_dist).abs() < 1e-6)
+            .map(|(i, _)| *i)
+            .collect();
+        assert!(
+            valid_indices.contains(&indices[0]),
+            "Expected one of {:?} but got {}",
+            valid_indices,
+            indices[0]
+        );
     }
 
     #[test]
@@ -1190,8 +1292,22 @@ mod tests {
         }
         expected_dists.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Verify we got the actual nearest neighbor, even with tiny leaf size
-        assert_eq!(indices[0], expected_dists[0].0);
+        // Verify we got one of the actual nearest neighbors (there might be ties)
+        // Check that the distance matches the expected minimum distance
         assert_relative_eq!(distances[0], expected_dists[0].1, epsilon = 1e-6);
+
+        // Verify the returned index is one of the points with minimum distance
+        let min_dist = expected_dists[0].1;
+        let valid_indices: Vec<usize> = expected_dists
+            .iter()
+            .filter(|(_, d)| (d - min_dist).abs() < 1e-6)
+            .map(|(i, _)| *i)
+            .collect();
+        assert!(
+            valid_indices.contains(&indices[0]),
+            "Expected one of {:?} but got {}",
+            valid_indices,
+            indices[0]
+        );
     }
 }

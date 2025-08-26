@@ -95,8 +95,9 @@ fn test_differential_evolution_bounds() {
     let bounds = vec![(0.0, 2.0), (0.0, 2.0)];
 
     let options = DifferentialEvolutionOptions {
-        maxiter: 50,
+        maxiter: 100,
         seed: Some(42),
+        polish: true, // Re-enable polishing with bounds fix
         ..Default::default()
     };
 
@@ -105,7 +106,11 @@ fn test_differential_evolution_bounds() {
     // Constrained minimum should be at (0, 0)
     assert!(result.success);
     // The bounds handling is working correctly - minimum should be near (0, 0)
-    assert!((result.fun - 2.0).abs() < 0.2);
+    assert!(
+        (result.fun - 2.0).abs() < 0.1,
+        "Expected fun ≈ 2.0, got {}",
+        result.fun
+    );
 }
 
 #[test]

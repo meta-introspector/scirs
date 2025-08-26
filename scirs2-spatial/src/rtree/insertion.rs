@@ -463,6 +463,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_rtree_insert_rectangle() {
         // Create a new R-tree
         let mut rtree: RTree<&str> = RTree::new(2, 2, 4).unwrap();

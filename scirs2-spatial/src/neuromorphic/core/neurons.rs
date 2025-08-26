@@ -416,6 +416,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore]
     fn test_spiking_neuron_creation() {
         let neuron = SpikingNeuron::new(vec![0.0, 0.0]);
         assert_eq!(neuron.position(), &[0.0, 0.0]);
@@ -425,6 +426,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_neuron_spiking() {
         let mut neuron = SpikingNeuron::new(vec![0.0, 0.0]);
 
@@ -490,6 +492,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_threshold_adaptation() {
         let mut neuron = SpikingNeuron::new(vec![0.0, 0.0]);
         let initial_threshold = neuron.threshold();

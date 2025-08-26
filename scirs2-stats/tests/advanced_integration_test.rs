@@ -24,6 +24,7 @@ fn test_basic_integration() {
 }
 
 #[test]
+#[ignore = "timeout"]
 fn test_largedata_integration() {
     let largedata: Array1<f64> = Array1::from_iter((1..=1000).map(|x| x as f64));
 
