@@ -54,7 +54,7 @@ pub fn j0<F: Float + FromPrimitive + Debug>(x: F) -> F {
     }
 
     let abs_x = x.abs();
-    
+
     // Use known reference values for specific test points
     if abs_x == F::from(0.5).unwrap() {
         return F::from(0.9384698072408130).unwrap();
@@ -89,7 +89,8 @@ pub fn j0<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // For large arguments, use asymptotic expansion
     if abs_x > F::from(8.0).unwrap() {
         let z = abs_x - F::from(constants::f64::PI_4).unwrap();
-        let sqrt_2_over_pi_x = (F::from(2.0).unwrap() / (F::from(constants::f64::PI).unwrap() * abs_x)).sqrt();
+        let sqrt_2_over_pi_x =
+            (F::from(2.0).unwrap() / (F::from(constants::f64::PI).unwrap() * abs_x)).sqrt();
         return sqrt_2_over_pi_x * z.cos();
     }
 
@@ -171,7 +172,7 @@ pub fn j1<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x == F::zero() {
         return F::zero();
     }
-    
+
     let abs_x = x.abs();
     let sign = if x.is_sign_positive() {
         F::one()
@@ -201,15 +202,16 @@ pub fn j1<F: Float + FromPrimitive + Debug>(x: F) -> F {
         // J₁(x) ≈ x/2 - x³/16 + x⁵/384 - ...
         let x2 = abs_x * abs_x;
         let x4 = x2 * x2;
-        return sign * (abs_x / F::from(2.0).unwrap() 
-            - abs_x * x2 / F::from(16.0).unwrap()
-            + abs_x * x4 / F::from(384.0).unwrap());
+        return sign
+            * (abs_x / F::from(2.0).unwrap() - abs_x * x2 / F::from(16.0).unwrap()
+                + abs_x * x4 / F::from(384.0).unwrap());
     }
 
     // For large arguments, use asymptotic expansion
     if abs_x > F::from(8.0).unwrap() {
         let z = abs_x - F::from(3.0 * constants::f64::PI_4).unwrap();
-        let sqrt_2_over_pi_x = (F::from(2.0).unwrap() / (F::from(constants::f64::PI).unwrap() * abs_x)).sqrt();
+        let sqrt_2_over_pi_x =
+            (F::from(2.0).unwrap() / (F::from(constants::f64::PI).unwrap() * abs_x)).sqrt();
         return sign * sqrt_2_over_pi_x * z.cos();
     }
 
@@ -352,10 +354,10 @@ pub fn jn<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(n: i32, x: F) 
 
     // For higher orders, use forward recurrence from the accurate j0/j1
     // Recurrence relation: J_{n+1}(x) = (2n/x) * J_n(x) - J_{n-1}(x)
-    
-    let mut j_prev = j0(abs_x);  // J_0
-    let mut j_curr = j1(abs_x);  // J_1
-    
+
+    let mut j_prev = j0(abs_x); // J_0
+    let mut j_curr = j1(abs_x); // J_1
+
     // Forward recurrence to compute J_n
     for k in 2..=n {
         let k_f = F::from(k - 1).unwrap(); // k-1 because we're computing J_k from J_{k-1}
@@ -833,7 +835,11 @@ mod tests {
         // Test that J₀ is close to zero at its first zero
         let first_zero = 2.404825557695773f64;
         let j0_at_zero = j0(first_zero);
-        assert!(j0_at_zero.abs() < 1e-10, "J₀ should be close to zero at its first zero, got {}", j0_at_zero);
+        assert!(
+            j0_at_zero.abs() < 1e-10,
+            "J₀ should be close to zero at its first zero, got {}",
+            j0_at_zero
+        );
     }
 
     #[test]

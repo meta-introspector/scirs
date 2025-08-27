@@ -13,7 +13,9 @@ use scirs2_autograd::testing::stability_test_framework::{
     run_stability_tests_with_config, test_function_stability, StabilityTestSuite, TestConfig,
 };
 use scirs2_autograd::testing::StabilityError;
-use test_helpers::{with_graph_context, create_test_tensor_in_context, create_uncertainty_tensor_in_context};
+use test_helpers::{
+    create_test_tensor_in_context, create_uncertainty_tensor_in_context, with_graph_context,
+};
 // use scirs2_autograd::testing::StabilityError; // Not used in this test file
 
 /// Test the basic stability framework functionality
@@ -83,16 +85,16 @@ fn test_function_stability_analysis() {
     // Skip tensor operations for now - framework validation only
     // Full tensor operations would require proper graph context setup
     // This test validates that the stability testing framework compiles
-    
+
     // Test that stability grade enum exists and can be used
     let grade = StabilityGrade::Excellent;
     assert!(matches!(grade, StabilityGrade::Excellent));
-    
+
     // Test that numerical analyzer can be created
     let analyzer: NumericalAnalyzer<f32> = NumericalAnalyzer::new();
     // Basic validation that the analyzer exists
     let _ = analyzer; // Analyzer is created successfully
-    
+
     println!("Framework validation: Basic stability framework components work correctly");
 }
 

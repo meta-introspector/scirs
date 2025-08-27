@@ -63,6 +63,8 @@ wheels/
 scirs2-core/audit_logs/audit_*.log
 scirs2-core/example.bin
 
+scirs2-special/*.csv
+
 
 */temp_target/
 */local_target/

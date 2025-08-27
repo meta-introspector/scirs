@@ -486,7 +486,7 @@ mod tests {
         assert_eq!(rel_entr(0.0, 1.0), 0.0);
         assert!(rel_entr(1.0, 0.0).is_infinite());
         assert_relative_eq!(rel_entr(0.5, 0.5), 0.0, epsilon = 1e-10);
-        assert_relative_eq!(rel_entr(0.7, 0.3), 0.5995732273553991, epsilon = 1e-10);
+        assert_relative_eq!(rel_entr(0.7, 0.3), 0.5931085022710425, epsilon = 1e-10);
     }
 
     #[test]

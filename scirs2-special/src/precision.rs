@@ -365,7 +365,7 @@ pub mod extreme {
         // Evaluate denominator Q(x)
         let mut q_value = 0.0;
         x_power = 1.0;
-        for &coeff in p_coeffs {
+        for &coeff in _qcoeffs {
             q_value += coeff * x_power;
             x_power *= x;
         }

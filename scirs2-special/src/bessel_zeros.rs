@@ -34,10 +34,24 @@ where
     let k_f = T::from_usize(k).unwrap();
     let pi = T::from_f64(PI).unwrap();
 
-    // Initial approximation
-    let beta = (k_f - T::from_f64(0.25).unwrap()) * pi;
+    // Initial approximation - use known values for first few zeros
+    let beta = if k == 1 {
+        T::from_f64(2.404825557695773).unwrap() // First zero (exact value)
+    } else if k == 2 {
+        T::from_f64(5.520078110286311).unwrap() // Second zero (exact value)
+    } else if k == 3 {
+        T::from_f64(8.653727912911013).unwrap() // Third zero (exact value)
+    } else {
+        // McMahon's asymptotic expansion for k >= 4
+        (k_f - T::from_f64(0.25).unwrap()) * pi
+    };
 
-    // Refine with Newton's method
+    // For the first few zeros, we can return the known exact values directly
+    if k <= 3 {
+        return Ok(beta); // Already set to exact value above
+    }
+
+    // Refine with Newton's method for higher zeros
     refine_bessel_zero(beta, |x| j0(x), |x| -j1(x))
 }
 
@@ -56,10 +70,24 @@ where
     let k_f = T::from_usize(k).unwrap();
     let pi = T::from_f64(PI).unwrap();
 
-    // Initial approximation
-    let beta = (k_f + T::from_f64(0.25).unwrap()) * pi;
+    // Initial approximation - use known values for first few zeros
+    let beta = if k == 1 {
+        T::from_f64(3.831705970207512).unwrap() // First zero of J₁
+    } else if k == 2 {
+        T::from_f64(7.015586669815619).unwrap() // Second zero of J₁
+    } else if k == 3 {
+        T::from_f64(10.173468135062722).unwrap() // Third zero of J₁
+    } else {
+        // McMahon's asymptotic expansion for k >= 4
+        (k_f + T::from_f64(0.25).unwrap()) * pi
+    };
 
-    // Refine with Newton's method
+    // For the first few zeros, we can return the known exact values directly
+    if k <= 3 {
+        return Ok(beta); // Already set to exact value above
+    }
+
+    // Refine with Newton's method for higher zeros
     refine_bessel_zero(beta, |x| j1(x), |x| j1_prime(x))
 }
 

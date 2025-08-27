@@ -3,7 +3,7 @@
 //! This module provides utilities to properly set up graph contexts
 //! for tests that need to create and manipulate tensors.
 
-use scirs2_autograd::graph::{Context, run};
+use scirs2_autograd::graph::{run, Context};
 use scirs2_autograd::tensor::Tensor;
 use scirs2_autograd::Float;
 
@@ -15,7 +15,7 @@ use scirs2_autograd::Float;
 /// # Example
 /// ```ignore
 /// use test_helpers::with_graph_context;
-/// 
+///
 /// #[test]
 /// fn my_test() {
 ///     with_graph_context(|ctx| {
@@ -43,17 +43,16 @@ pub fn create_test_tensor_in_context<'a, F>(
 where
     F: Float,
 {
-    use scirs2_autograd::tensor_ops as T;
     use ndarray::{Array, IxDyn};
-    
+    use scirs2_autograd::tensor_ops as T;
+
     let size: usize = shape.iter().product();
     let data: Vec<F> = (0..size)
         .map(|i| F::from(i).unwrap() * F::from(0.1).unwrap())
         .collect();
-    
-    let arr = Array::from_shape_vec(IxDyn(&shape), data)
-        .expect("Failed to create array");
-    
+
+    let arr = Array::from_shape_vec(IxDyn(&shape), data).expect("Failed to create array");
+
     T::convert_to_tensor(arr, ctx)
 }
 
@@ -66,23 +65,22 @@ pub fn create_uncertainty_tensor_in_context<'a, F>(
 where
     F: Float,
 {
-    use scirs2_autograd::tensor_ops as T;
     use ndarray::{Array, IxDyn};
     use rand::prelude::*;
     use rand::thread_rng;
-    
+    use scirs2_autograd::tensor_ops as T;
+
     let size: usize = shape.iter().product();
     let mut rng = thread_rng();
-    
+
     let data: Vec<F> = (0..size)
         .map(|_| {
             let noise = rng.gen_range(-magnitude..magnitude);
             F::from(noise).unwrap()
         })
         .collect();
-    
-    let arr = Array::from_shape_vec(IxDyn(&shape), data)
-        .expect("Failed to create array");
-    
+
+    let arr = Array::from_shape_vec(IxDyn(&shape), data).expect("Failed to create array");
+
     T::convert_to_tensor(arr, ctx)
 }

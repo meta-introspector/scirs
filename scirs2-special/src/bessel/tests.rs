@@ -19,7 +19,11 @@ mod bessel_tests {
         // Test that J₀ is close to zero at its first zero
         let first_zero = 2.404825557695773f64;
         let j0_at_zero = j0(first_zero);
-        assert!(j0_at_zero.abs() < 1e-10, "J₀ should be close to zero at its first zero, got {}", j0_at_zero);
+        assert!(
+            j0_at_zero.abs() < 1e-10,
+            "J₀ should be close to zero at its first zero, got {}",
+            j0_at_zero
+        );
     }
 
     #[test]
@@ -155,5 +159,4 @@ mod bessel_tests {
         assert_relative_eq!(iv(0.5, 1.0), 0.937_674_888_245_488, epsilon = 1e-10);
         assert_relative_eq!(iv(1.5, 2.0), 1.0994731886331095, epsilon = 1e-10);
     }
-
 }

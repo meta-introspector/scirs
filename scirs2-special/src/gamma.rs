@@ -3059,9 +3059,9 @@ mod tests {
         assert_relative_eq!(gamma(0.1), 9.51350769866873, epsilon = 1e-10);
         assert_relative_eq!(gamma(2.6), 1.5112296023228, epsilon = 1e-10);
 
-        // Test small positive values with updated implementation
-        assert_relative_eq!(gamma(1e-5), 4009018.7682966692, epsilon = 1e-6);
-        assert_relative_eq!(gamma(1e-7), 400902596.2412748, epsilon = 1e-6);
+        // Test small positive values - SciPy verified
+        assert_relative_eq!(gamma(1e-5), 99999.4227942256, epsilon = 1e-8);
+        assert_relative_eq!(gamma(1e-7), 9999999.422784427, epsilon = 1e-8);
 
         // Test large values using Stirling's approximation
         // Comparing with pre-computed values from the improved implementation
@@ -3095,8 +3095,8 @@ mod tests {
         // For gamma(0.5) = sqrt(π), gammaln(0.5) = ln(sqrt(π))
         assert_relative_eq!(gammaln(0.5), -0.12078223763524522, epsilon = 1e-10);
 
-        // Test small positive values
-        assert_relative_eq!(gammaln(1e-5), 15.204057073154388, epsilon = 1e-6);
+        // Test small positive values - SciPy verified
+        assert_relative_eq!(gammaln(1e-5), 11.512919692895828, epsilon = 1e-8);
 
         // Test large values using Stirling's approximation
         assert_relative_eq!(gammaln(100.0), 359.1342053695754, epsilon = 1e-8);

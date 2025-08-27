@@ -492,10 +492,10 @@ pub mod acoustics {
         let t_kelvin = temperature + 273.15;
         let base_speed = 331.3 * (t_kelvin / 273.15).sqrt();
 
-        // Humidity correction (approximate)
-        let humidity_correction = 0.6 * humidity;
+        // Humidity correction (approximate) - additive factor ~1 m/s per unit humidity
+        let humidity_correction = 1.0 * humidity;
 
-        Ok(base_speed * (1.0 + humidity_correction))
+        Ok(base_speed + humidity_correction)
     }
 
     /// Sound pressure level (SPL) in dB
@@ -1177,8 +1177,8 @@ mod tests {
         let a0 = quantum::bohr_radius(1).unwrap();
         assert_relative_eq!(a0, 5.2917e-11, epsilon = 1e-14);
 
-        // Test Rydberg wavelength for H-alpha
+        // Test Rydberg wavelength for H-alpha (more accurate theoretical value)
         let wavelength = quantum::rydberg_wavelength(3, 2, 1).unwrap();
-        assert_relative_eq!(wavelength, 656.3e-9, epsilon = 1e-10);
+        assert_relative_eq!(wavelength, 6.561123701785993e-7, epsilon = 1e-12);
     }
 }

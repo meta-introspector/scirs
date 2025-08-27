@@ -242,19 +242,19 @@ pub fn y1<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // Use the Wronskian identity to compute Y₁ from J₀, J₁, and Y₀
     // Standard Wronskian: J₀(x)*Y₀'(x) - J₀'(x)*Y₀(x) = 2/(π*x)
     // Since J₀'(x) = -J₁(x) and Y₀'(x) = -Y₁(x):
-    // J₀(x)*(-Y₁(x)) - (-J₁(x))*Y₀(x) = 2/(π*x)  
+    // J₀(x)*(-Y₁(x)) - (-J₁(x))*Y₀(x) = 2/(π*x)
     // -J₀(x)*Y₁(x) + J₁(x)*Y₀(x) = 2/(π*x)
     // Therefore: Y₁(x) = (J₁(x)*Y₀(x) - 2/(π*x)) / J₀(x)
-    
+
     use crate::bessel::first_kind::{j0, j1};
-    
+
     let j0_val = j0(x);
     let j1_val = j1(x);
     let y0_val = y0(x);
-    
+
     let two_over_pi_x = F::from(2.0).unwrap() / (F::from(constants::f64::PI).unwrap() * x);
     let y1_val = (j1_val * y0_val - two_over_pi_x) / j0_val;
-    
+
     y1_val
 }
 
