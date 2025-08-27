@@ -125,6 +125,9 @@ pub mod design;
 pub mod robust_analysis;
 pub mod systems;
 
+// Time-domain response analysis module
+pub mod response;
+
 // Re-export core system types for convenience
 pub use systems::{LtiSystem, StateSpace, TransferFunction, ZerosPoleGain};
 
@@ -154,6 +157,9 @@ pub use design::{
     feedback, multiply_polynomials, parallel, polynomial_derivative, sensitivity, series, ss,
     subtract_polynomials, tf as design_tf, zpk,
 };
+
+// Re-export response functions for convenience
+pub use response::{impulse_response, lsim, step_response};
 
 // Keep the system module for backward compatibility
 /// Functions for creating and manipulating LTI systems

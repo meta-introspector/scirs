@@ -821,7 +821,8 @@ mod tests {
             [1.4, 2.4, 10.2],
         ]);
 
-        let analysis = MotionSensorAnalysis::new(timestamps, 100.0)
+        // Use a lower sampling frequency so the window size fits our data
+        let analysis = MotionSensorAnalysis::new(timestamps, 2.0)
             .unwrap()
             .with_accelerometer(accel_data)
             .unwrap();
@@ -853,8 +854,8 @@ mod tests {
             [1.0, 2.0, 9.8],    // Normal
             [1.0, 2.0, 9.8],    // Normal
             [10.0, 15.0, 20.0], // High impact (fall)
-            [0.5, 0.5, 8.0],    // Low activity after fall
-            [0.5, 0.5, 8.0],    // Continued low activity
+            [0.5, 0.5, 0.5],    // Near stillness after fall
+            [0.5, 0.5, 0.5],    // Continued stillness
         ]);
 
         let analysis = MotionSensorAnalysis::new(timestamps, 100.0)

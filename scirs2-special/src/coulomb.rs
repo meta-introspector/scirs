@@ -644,7 +644,7 @@ pub fn coulomb_g(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
 fn coulomb_g_eta_zero(l: f64, rho: f64) -> SpecialResult<f64> {
     // G_L(0,ρ) = -ρ y_L(ρ) where y_L is the spherical Neumann function
     match l as i32 {
-        0 => Ok(-rho.cos()),
+        0 => Ok(rho.cos()),
         1 => Ok(-rho.cos() / rho - rho.sin()),
         2 => Ok(-(3.0 / rho + rho) * rho.cos() - 3.0 * rho.sin()),
         _ => {

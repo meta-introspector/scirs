@@ -161,9 +161,10 @@ where
     let mut x_norm = T::zero();
     let mut dd_norm = T::zero();
     let mut res2 = beta;
-    let mut cs2 = T::from(-1.0).unwrap();
-    let mut sn2 = T::zero();
-    let mut z = T::zero();
+
+    // Variables for QR factorization of bidiagonal matrix
+    let mut rho_bar = alpha;
+    let mut phi_bar = beta;
 
     // Tolerances
     let atol = T::from(options.atol).unwrap();
@@ -209,48 +210,45 @@ where
             }
         }
 
-        // Construct and apply next orthogonal transformation
-        let rho = (alpha * alpha + beta_new * beta_new).sqrt();
-        let c = alpha / rho;
+        // QR factorization of the bidiagonal matrix
+        let rho = (rho_bar * rho_bar + beta_new * beta_new).sqrt();
+        let c = rho_bar / rho;
         let s = beta_new / rho;
         let theta = s * alpha_new;
-        alpha = c * alpha_new;
+        let rho_bar_new = -c * alpha_new;
+        let phi = c * phi_bar;
+        let phi_bar_new = s * phi_bar;
 
-        // Update x and w
+        // Update solution
         for i in 0..n {
-            x[i] = x[i] + (c * z / rho) * w[i];
-            w[i] = v[i] - (s * z / rho) * w[i];
+            x[i] = x[i] + (phi / rho) * w[i];
+            w[i] = v[i] - (theta / rho) * w[i];
         }
 
-        // Update norms and residual
-        x_norm = (x_norm * x_norm + (z * c / rho) * (z * c / rho)).sqrt();
-        dd_norm = dd_norm + (z / rho) * (z / rho);
-
-        let delta = sn2 * rho;
-        let gamma_bar = -cs2 * rho;
-        let rhs = z - delta * z;
-        let z_bar = rhs / gamma_bar;
-
-        x_norm = (x_norm * x_norm + z_bar * z_bar).sqrt();
-        let gamma = (gamma_bar * gamma_bar + theta * theta).sqrt();
-        cs2 = gamma_bar / gamma;
-        sn2 = theta / gamma;
-        z = rhs / gamma;
-
-        // Update residual norm
-        res2 = sn2 * res2;
+        // Update norms and residual estimate
+        x_norm = (x_norm * x_norm + (phi / rho) * (phi / rho)).sqrt();
+        dd_norm = dd_norm + (T::one() / rho) * (T::one() / rho);
+        res2 = phi_bar_new.abs();
 
         if let Some(ref mut history) = residual_history {
-            history.push(res2.abs());
+            history.push(res2);
         }
 
         // Check convergence
-        let r1_norm = res2.abs();
-        let r2_norm = alpha.abs() * x_norm;
+        let r1_norm = res2;
+        let r2_norm = if x_norm > T::zero() {
+            alpha_new.abs() * x_norm
+        } else {
+            alpha_new.abs()
+        };
 
         let test1 = r1_norm / (atol + btol * beta);
-        let test2 = alpha.abs() / (atol + btol * x_norm);
-        let test3 = T::one() / (atol + T::one() / conlim);
+        let test2 = if x_norm > T::zero() {
+            alpha_new.abs() / (atol + btol * x_norm)
+        } else {
+            alpha_new.abs() / atol
+        };
+        let test3 = T::one() / conlim;
 
         if test1 <= T::one() {
             converged = true;
@@ -264,7 +262,14 @@ where
             break;
         }
 
-        if test3 <= T::one() {
+        // Condition number estimate should be compared to limit, not x_norm to test3
+        let condition_estimate = if dd_norm > T::zero() {
+            x_norm / dd_norm.sqrt()
+        } else {
+            T::one()
+        };
+
+        if condition_estimate > conlim {
             converged = true;
             convergence_reason = "Condition number limit reached".to_string();
             break;
@@ -272,6 +277,8 @@ where
 
         // Update for next iteration
         alpha = alpha_new;
+        rho_bar = rho_bar_new;
+        phi_bar = phi_bar_new;
     }
 
     if !converged {
@@ -398,7 +405,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // TODO: Fix LSQR algorithm - currently not converging correctly
     fn test_lsqr_square_system() {
         // Create a simple 3x3 system
         let rows = vec![0, 0, 1, 1, 2, 2];
@@ -420,7 +426,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix LSQR algorithm - currently not converging correctly
     fn test_lsqr_overdetermined_system() {
         // Create an overdetermined 3x2 system
         let rows = vec![0, 0, 1, 1, 2, 2];
@@ -439,7 +444,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix LSQR algorithm - currently not converging correctly
     fn test_lsqr_diagonal_system() {
         // Create a diagonal system
         let rows = vec![0, 1, 2];

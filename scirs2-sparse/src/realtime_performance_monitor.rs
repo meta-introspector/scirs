@@ -2333,11 +2333,21 @@ mod tests {
         // The detector might flag initial values as anomalies while calibrating
         // So we'll clear them and check with more normal values
         detector.recent_anomalies.clear();
-        
-        let more_normal_values = vec![1.02, 0.98, 1.03, 0.97, 1.01];
-        detector.update(&more_normal_values);
-        
-        // Now no anomalies should be detected
+
+        // Feed it many consistent values to establish a baseline
+        for _ in 0..10 {
+            let consistent_values = vec![1.0, 1.01, 0.99, 1.02, 0.98];
+            detector.update(&consistent_values);
+        }
+
+        // Clear any anomalies detected during calibration
+        detector.recent_anomalies.clear();
+
+        // Now feed normal values - should not detect anomalies
+        let normal_test_values = vec![1.0, 1.01, 0.99];
+        detector.update(&normal_test_values);
+
+        // Check that no anomalies were detected for normal values
         assert!(detector.recent_anomalies.is_empty());
 
         // Anomalous value

@@ -105,7 +105,7 @@ pub fn j1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// assert!((jn_prime(2, x) - expected).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn jn_prime<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
+pub fn jn_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(n: i32, x: F) -> F {
     if n == 0 {
         return -j1(x);
     }

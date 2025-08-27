@@ -299,7 +299,7 @@ where
         }
     }
 
-    SymCsrMatrix::new(new_data, new_indices, new_indptr, (n, n))
+    SymCsrMatrix::new(new_data, new_indptr, new_indices, (n, n))
 }
 
 /// Solve generalized eigenvalue problem using shift-invert transformation
@@ -437,11 +437,11 @@ mod tests {
 
     #[test]
     fn test_is_positive_definite_diagonal() {
-        // Create a positive definite matrix (diagonal elements > 0)
+        // Create a positive definite matrix: [[2, 1], [1, 3]] stored as lower: [[2], [1, 3]]
         let data = vec![2.0, 1.0, 3.0];
-        let indices = vec![0, 1, 1];
-        let indptr = vec![0, 2, 3];
-        let matrix = SymCsrMatrix::new(data, indices, indptr, (2, 2)).unwrap();
+        let indptr = vec![0, 1, 3];
+        let indices = vec![0, 0, 1];
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
 
         let result = is_positive_definite_diagonal(&matrix).unwrap();
         assert!(result);
@@ -465,15 +465,17 @@ mod tests {
 
     #[test]
     fn test_eigsh_generalized_enhanced() {
+        // Matrix A: [[4, 1], [1, 2]] stored as lower: [[4], [1, 2]]
         let a_data = vec![4.0, 1.0, 2.0];
-        let a_indices = vec![0, 1, 1];
-        let a_indptr = vec![0, 2, 3];
-        let a_matrix = SymCsrMatrix::new(a_data, a_indices, a_indptr, (2, 2)).unwrap();
+        let a_indptr = vec![0, 1, 3];
+        let a_indices = vec![0, 0, 1];
+        let a_matrix = SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).unwrap();
 
+        // Matrix B: [[2, 0.5], [0.5, 1]] stored as lower: [[2], [0.5, 1]]
         let b_data = vec![2.0, 0.5, 1.0];
-        let b_indices = vec![0, 1, 1];
-        let b_indptr = vec![0, 2, 3];
-        let b_matrix = SymCsrMatrix::new(b_data, b_indices, b_indptr, (2, 2)).unwrap();
+        let b_indptr = vec![0, 1, 3];
+        let b_indices = vec![0, 0, 1];
+        let b_matrix = SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).unwrap();
 
         let result = eigsh_generalized_enhanced(
             &a_matrix,

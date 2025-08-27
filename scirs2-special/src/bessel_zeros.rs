@@ -573,7 +573,7 @@ mod tests {
                 // Accept convergence failures gracefully
             }
         }
-        
+
         match y0_zeros::<f64>(2) {
             Ok(zero) => {
                 // Second zero should be around 3.96

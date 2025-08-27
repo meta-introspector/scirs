@@ -13,6 +13,7 @@ use crate::sparse_fft_gpu_memory::{
 use num_complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::parallel_ops::*;
+use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
@@ -749,7 +750,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Ignored for alpha-4 release - multi-GPU dependent test"]
     fn test_multi_gpu_initialization() {
         let mut processor = MultiGPUSparseFFT::new(MultiGPUConfig::default());
         let result = processor.initialize();
@@ -757,10 +757,19 @@ mod tests {
         // Should succeed even if no GPU devices available (CPU fallback)
         assert!(result.is_ok());
         assert!(!processor.get_devices().is_empty());
+
+        // Check if GPU is available
+        let caps = PlatformCapabilities::detect();
+        if !caps.cuda_available && !caps.gpu_available {
+            eprintln!("GPU not available, verifying CPU fallback is present");
+            assert!(processor
+                .get_devices()
+                .iter()
+                .any(|d| d.backend == GPUBackend::CPUFallback));
+        }
     }
 
     #[test]
-    #[ignore = "Ignored for alpha-4 release - multi-GPU dependent test"]
     fn test_device_enumeration() {
         let mut processor = MultiGPUSparseFFT::new(MultiGPUConfig::default());
         processor.initialize().unwrap();
@@ -770,13 +779,32 @@ mod tests {
 
         // Should have at least CPU fallback
         assert!(devices.iter().any(|d| d.backend == GPUBackend::CPUFallback));
+
+        // Check if GPU is available
+        let caps = PlatformCapabilities::detect();
+        if caps.cuda_available || caps.gpu_available {
+            eprintln!("GPU available, checking for GPU devices in enumeration");
+            // May have GPU devices
+            assert!(devices.len() >= 1);
+        } else {
+            eprintln!("GPU not available, verifying only CPU fallback present");
+            assert_eq!(devices.len(), 1);
+            assert_eq!(devices[0].backend, GPUBackend::CPUFallback);
+        }
     }
 
     #[test]
-    #[ignore = "Ignored for alpha-4 release - multi-GPU dependent test"]
     fn test_multi_gpu_sparse_fft() {
-        let n = 8192; // Large enough to trigger multi-GPU
-        let frequencies = vec![(100, 1.0), (500, 0.5), (1000, 0.25)];
+        // Check if GPU is available
+        let caps = PlatformCapabilities::detect();
+        let n = if caps.cuda_available || caps.gpu_available {
+            8192 // Large size for multi-GPU if available
+        } else {
+            eprintln!("GPU not available, using smaller size for CPU fallback");
+            1024 // Smaller size for CPU fallback
+        };
+
+        let frequencies = vec![(10, 1.0), (50, 0.5), (100, 0.25)];
         let signal = create_sparse_signal(n, &frequencies);
 
         let result = multi_gpu_sparse_fft(

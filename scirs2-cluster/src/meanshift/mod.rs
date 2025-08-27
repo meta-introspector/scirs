@@ -491,6 +491,21 @@ impl<
             })
         });
 
+        // If cluster_all is false, filter out centers with low intensity
+        // A center with intensity 1 means only the seed point itself is within bandwidth
+        // which indicates it's likely an outlier
+        if !self.options.cluster_all {
+            let min_density_threshold = 2; // Require at least 2 points for a valid cluster
+            sorted_by_intensity.retain(|(_, intensity)| *intensity >= min_density_threshold);
+
+            if sorted_by_intensity.is_empty() {
+                return Err(ClusteringError::ComputationError(
+                    "No clusters found with sufficient density. All points appear to be outliers."
+                        .to_string(),
+                ));
+            }
+        }
+
         // Debug: print number of centers before deduplication
         #[cfg(debug_assertions)]
         if sorted_by_intensity.len() > 1 {
@@ -571,7 +586,7 @@ impl<
 
                 if !indices.is_empty() {
                     let idx = indices[0];
-                    let distance = distances[0];
+                    let distance = T::from(distances[0]).unwrap();
 
                     if self.options.cluster_all || (distance <= bandwidth) {
                         labels[point_idx] = T::to_i32(&T::from(idx).unwrap()).unwrap();
@@ -803,7 +818,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix cluster_all=false behavior to properly mark outliers as noise
     fn test_mean_shift_no_cluster_all() {
         let data = array![
             [1.0, 1.0],

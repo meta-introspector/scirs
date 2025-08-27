@@ -149,13 +149,30 @@ pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<
     let mut x = vec![0.0; ss.n_states];
     let mut y = vec![0.0; t.len()];
 
-    // For continuous-time systems, use numerical integration
+    // For continuous-time systems, use RK4 numerical integration
     if !ss.dt {
         // Calculate time step (assuming uniform spacing)
         let dt = if t.len() > 1 { t[1] - t[0] } else { 0.001 };
 
-        // Simulate the system using improved forward Euler integration
-        // Initialize state to zero
+        // Helper function to compute state derivative: x_dot = Ax + Bu
+        let compute_xdot = |x_state: &[f64], u_input: f64| -> Vec<f64> {
+            let mut x_dot = vec![0.0; ss.n_states];
+
+            for (i, x_dot_i) in x_dot.iter_mut().enumerate().take(ss.n_states) {
+                // Ax term
+                for (j, &x_val) in x_state.iter().enumerate().take(ss.n_states) {
+                    *x_dot_i += ss.a[i * ss.n_states + j] * x_val;
+                }
+
+                // Bu term if inputs are available
+                if !u.is_empty() && !ss.b.is_empty() && ss.n_inputs > 0 {
+                    *x_dot_i += ss.b[i * ss.n_inputs] * u_input;
+                }
+            }
+            x_dot
+        };
+
+        // Simulate using RK4 integration
         for k in 0..t.len() {
             // Calculate output: y = Cx + Du
             for i in 0..ss.n_outputs {
@@ -167,10 +184,8 @@ pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<
                 }
 
                 // Add the Du term if we have inputs and D matrix
-                if !u.is_empty() && !ss.d.is_empty() {
-                    for j in 0..ss.n_inputs {
-                        output += ss.d[i * ss.n_inputs + j] * u[k];
-                    }
+                if !u.is_empty() && !ss.d.is_empty() && ss.n_inputs > 0 {
+                    output += ss.d[i * ss.n_inputs] * u[k];
                 }
 
                 // For single output case
@@ -179,28 +194,38 @@ pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<
                 }
             }
 
-            // Update state using forward Euler: dx/dt = Ax + Bu
+            // Update state using RK4: dx/dt = Ax + Bu
             if k < t.len() - 1 {
-                let mut x_dot = vec![0.0; ss.n_states];
+                let u_curr = if !u.is_empty() { u[k] } else { 0.0 };
+                let u_next = if !u.is_empty() && k + 1 < u.len() {
+                    u[k + 1]
+                } else {
+                    u_curr
+                };
+                let u_mid = (u_curr + u_next) / 2.0;
 
-                // Calculate x_dot = Ax + Bu
-                for (i, x_dot_i) in x_dot.iter_mut().enumerate().take(ss.n_states) {
-                    // First the Ax term
-                    for (j, &x_val) in x.iter().enumerate().take(ss.n_states) {
-                        *x_dot_i += ss.a[i * ss.n_states + j] * x_val;
-                    }
+                // RK4 coefficients
+                let k1 = compute_xdot(&x, u_curr);
 
-                    // Then add the Bu term if inputs are available and B matrix exists
-                    if !u.is_empty() && !ss.b.is_empty() {
-                        for j in 0..ss.n_inputs {
-                            *x_dot_i += ss.b[i * ss.n_inputs + j] * u[k];
-                        }
-                    }
+                let mut x_temp = vec![0.0; ss.n_states];
+                for (i, &x_val) in x.iter().enumerate() {
+                    x_temp[i] = x_val + k1[i] * dt / 2.0;
                 }
+                let k2 = compute_xdot(&x_temp, u_mid);
 
-                // Update x = x + x_dot * dt
-                for (i, x_val) in x.iter_mut().enumerate().take(ss.n_states) {
-                    *x_val += x_dot[i] * dt;
+                for (i, &x_val) in x.iter().enumerate() {
+                    x_temp[i] = x_val + k2[i] * dt / 2.0;
+                }
+                let k3 = compute_xdot(&x_temp, u_mid);
+
+                for (i, &x_val) in x.iter().enumerate() {
+                    x_temp[i] = x_val + k3[i] * dt;
+                }
+                let k4 = compute_xdot(&x_temp, u_next);
+
+                // Update state: x = x + (k1 + 2*k2 + 2*k3 + k4) * dt / 6
+                for (i, x_val) in x.iter_mut().enumerate() {
+                    *x_val += (k1[i] + 2.0 * k2[i] + 2.0 * k3[i] + k4[i]) * dt / 6.0;
                 }
             }
         }
@@ -261,7 +286,6 @@ pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<
 mod tests {
     use super::*;
     #[test]
-    #[ignore = "Implementation needs more work on numerical integration"]
     fn test_first_order_impulse_response() {
         // Create a first-order system: H(s) = 1 / (s + 1)
         let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
@@ -288,7 +312,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Implementation needs more work on numerical integration"]
     fn test_first_order_step_response() {
         // Create a first-order system: H(s) = 1 / (s + 1)
         let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
@@ -315,7 +338,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Implementation needs more work on arbitrary input handling"]
     fn test_sine_input_response() {
         // Create a first-order system: H(s) = 1 / (s + 1)
         let tf = TransferFunction::new(

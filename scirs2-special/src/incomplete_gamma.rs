@@ -382,20 +382,20 @@ mod tests {
 
     #[test]
     fn test_gammainc_lower() {
-        // Test values verified against SciPy
+        // Test values verified against SciPy (non-regularized incomplete gamma)
         assert_relative_eq!(
             gammainc_lower(1.0, 1.0).unwrap(),
-            0.6321205588285577,
+            0.6321205588285577, // γ(1,1) = P(1,1) * Γ(1) = 0.6321205588285577 * 1
             epsilon = 1e-10
         );
         assert_relative_eq!(
             gammainc_lower(2.0, 1.0).unwrap(),
-            0.2642411176571153,
+            0.264241117657115, // γ(2,1) = P(2,1) * Γ(2) = 0.2642411176571153 * 1
             epsilon = 1e-10
         );
         assert_relative_eq!(
             gammainc_lower(3.0, 2.0).unwrap(),
-            0.32332358381693654,
+            0.646647167633873, // γ(3,2) = P(3,2) * Γ(3) = 0.32332358381693654 * 2
             epsilon = 1e-10
         );
 

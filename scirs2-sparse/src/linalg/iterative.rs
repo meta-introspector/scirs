@@ -1502,13 +1502,19 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix LSQR algorithm - currently not converging correctly
+    #[ignore] // TODO: Fix iterative LSQR implementation - different algorithm issues
     fn test_lsqr_identity() {
         // Test LSQR on identity matrix
         let identity = crate::linalg::interface::IdentityOperator::<f64>::new(3);
         let b = vec![1.0, 2.0, 3.0];
         let options = LSQROptions::default();
         let result = lsqr(&identity, &b, options).unwrap();
+
+        println!("Identity test - Expected: {:?}, Got: {:?}", b, result.x);
+        println!(
+            "Converged: {}, Iterations: {}",
+            result.converged, result.iterations
+        );
 
         assert!(result.converged);
         for (xi, bi) in result.x.iter().zip(&b) {
@@ -1517,7 +1523,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix LSQR algorithm - currently not converging correctly
+    #[ignore] // TODO: Fix iterative LSQR implementation - different algorithm issues
     fn test_lsqr_diagonal() {
         // Test LSQR on diagonal matrix
         let diag = crate::linalg::interface::DiagonalOperator::new(vec![2.0, 3.0, 4.0]);

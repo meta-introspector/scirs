@@ -56,6 +56,7 @@ pub enum InterpolationType {
 /// ```
 /// use scirs2_fft::nufft::{nufft_type1, InterpolationType};
 /// use num_complex::Complex64;
+/// use std::f64::consts::PI;
 ///
 /// // Create non-uniform sample points in [-π, π]
 /// let n = 100;
@@ -204,6 +205,7 @@ pub fn nufft_type1(
 /// ```
 /// use scirs2_fft::nufft::{nufft_type2, InterpolationType};
 /// use num_complex::Complex64;
+/// use std::f64::consts::PI;
 ///
 /// // Create a spectrum on a uniform grid
 /// let m = 128;

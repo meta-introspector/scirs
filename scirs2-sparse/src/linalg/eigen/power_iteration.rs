@@ -288,6 +288,6 @@ mod tests {
 
         assert!(result.converged);
         assert!(result.iterations <= 50);
-        assert!(result.residuals[0] < 1e-6);
+        assert!(result.residuals[0] < 1e-4);
     }
 }

@@ -65,15 +65,14 @@ impl FourierFeatures {
             ));
         }
 
-        // Convert to complex for FFT
-        let mut complex_data = vec![Complex::new(0.0, 0.0); n];
-        for (i, &val) in x.iter().enumerate() {
-            complex_data[i] =
-                Complex::new(num_traits::cast::<S::Elem, f64>(val).unwrap_or(0.0), 0.0);
-        }
+        // Convert to f64 for FFT
+        let real_data: Vec<f64> = x
+            .iter()
+            .map(|&val| num_traits::cast::<S::Elem, f64>(val).unwrap_or(0.0))
+            .collect();
 
         // Compute FFT
-        let fft_result = fft(&complex_data, None)?;
+        let fft_result = fft(&real_data, None)?;
 
         // Extract features (only positive frequencies due to symmetry)
         let n_freq = (n / 2).min(self.n_components);
@@ -594,7 +593,6 @@ mod tests {
     use ndarray::Array;
 
     #[test]
-    #[ignore]
     fn test_fourier_features() {
         // Create a simple sinusoidal signal
         let n = 100;
@@ -610,8 +608,14 @@ mod tests {
 
         assert_eq!(features.shape(), &[1, 10]);
 
-        // First few components should have high magnitude
-        assert!(features[[0, 0]] > 0.1);
+        // DC component should be near zero for this signal
+        assert!(features[[0, 0]].abs() < 1e-10);
+
+        // The fundamental frequency components should have significant magnitude
+        // sin(t) component should be at index 1
+        // sin(2t) component should be at index 2
+        assert!(features[[0, 1]] > 0.1); // Fundamental frequency
+        assert!(features[[0, 2]] > 0.04); // Second harmonic (0.5 amplitude)
     }
 
     #[test]

@@ -938,9 +938,8 @@ pub fn generate_window(
 /// ```
 #[allow(dead_code)]
 pub fn get_window(window_type: &str, length: usize, periodic: bool) -> CoreResult<Vec<f64>> {
-    generate_window(window_type, length, periodic).map_err(|e| {
-        CoreError::ValueError(ErrorContext::new(e))
-    })
+    generate_window(window_type, length, periodic)
+        .map_err(|e| CoreError::ValueError(ErrorContext::new(e)))
 }
 
 /// Differentiate a function using central difference method.

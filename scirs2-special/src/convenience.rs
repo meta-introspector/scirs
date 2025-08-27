@@ -602,8 +602,20 @@ mod tests {
         let x = Array1::linspace(0.0, 1.0, 100);
         let psi = physics::particle_in_box_wavefunction(1, &x.view(), true).unwrap();
 
-        // Check normalization
-        let norm: f64 = psi.iter().map(|&p| p * p).sum::<f64>() / 100.0;
+        // Check normalization using trapezoidal rule
+        let dx = 1.0 / (100.0 - 1.0); // spacing between points
+        let norm: f64 = psi
+            .iter()
+            .enumerate()
+            .map(|(i, &p)| {
+                let weight = if i == 0 || i == psi.len() - 1 {
+                    0.5
+                } else {
+                    1.0
+                };
+                weight * p * p * dx
+            })
+            .sum();
         assert!((norm - 1.0).abs() < 0.01);
     }
 

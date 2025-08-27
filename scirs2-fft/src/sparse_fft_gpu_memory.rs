@@ -831,15 +831,17 @@ impl GPUMemoryManager {
 
     /// Release a buffer
     pub fn release_buffer(&mut self, descriptor: BufferDescriptor) -> FFTResult<()> {
-        // If using cache strategy, add to cache
+        let buffer_size = descriptor.size * descriptor.element_size;
+
+        // If using cache strategy, add to cache but don't decrement memory (it's still allocated)
         if self.allocation_strategy == AllocationStrategy::CacheBySize {
             self.buffer_cache
                 .entry(descriptor.size)
                 .or_default()
                 .push(descriptor);
         } else {
-            // Actually free the buffer (in a real implementation, this would call the GPU API)
-            self.current_memory -= descriptor.size * descriptor.element_size;
+            // Actually free the buffer and decrement memory usage
+            self.current_memory = self.current_memory.saturating_sub(buffer_size);
         }
 
         Ok(())
@@ -847,10 +849,12 @@ impl GPUMemoryManager {
 
     /// Clear the buffer cache
     pub fn clear_cache(&mut self) -> FFTResult<()> {
-        // Free all cached buffers
+        // Free all cached buffers and update memory usage
         for (_, buffers) in self.buffer_cache.drain() {
             for descriptor in buffers {
-                self.current_memory -= descriptor.size * descriptor.element_size;
+                let buffer_size = descriptor.size * descriptor.element_size;
+                self.current_memory = self.current_memory.saturating_sub(buffer_size);
+                // The BufferDescriptor's Drop implementation will handle actual memory cleanup
             }
         }
 
@@ -969,7 +973,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Ignored for alpha-4 release - experiencing issues with memory manager caching"]
     fn test_memory_manager_cache() {
         let mut manager = GPUMemoryManager::new(
             GPUBackend::CPUFallback,
@@ -995,20 +998,25 @@ mod tests {
         assert_eq!(manager.current_memory_usage(), 1024 * 8);
 
         // Allocate same size buffer, should get from cache
-        let _buffer2 = manager
+        let buffer2 = manager
             .allocate_buffer(1024, 8, BufferLocation::Host, BufferType::Input)
             .unwrap();
 
         // Memory should not increase since we're reusing
         assert_eq!(manager.current_memory_usage(), 1024 * 8);
 
-        // Clear cache
+        // Release the second buffer back to cache
+        manager.release_buffer(buffer2).unwrap();
+
+        // Memory should still be allocated (cached)
+        assert_eq!(manager.current_memory_usage(), 1024 * 8);
+
+        // Clear cache - now this should free the cached memory
         manager.clear_cache().unwrap();
         assert_eq!(manager.current_memory_usage(), 0);
     }
 
     #[test]
-    #[ignore = "Ignored for alpha-4 release - experiencing issues with global memory manager"]
     fn test_global_memory_manager() {
         // Initialize global memory manager
         init_global_memory_manager(

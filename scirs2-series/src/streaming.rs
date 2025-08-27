@@ -664,7 +664,7 @@ mod tests {
 
     #[test]
     fn test_cusum_detector() {
-        let mut cusum = CusumDetector::<f64>::new(10.0, 2.0);  // Higher threshold and drift
+        let mut cusum = CusumDetector::<f64>::new(10.0, 2.0); // Higher threshold and drift
 
         // Add normal data around mean 5
         for i in 0..10 {

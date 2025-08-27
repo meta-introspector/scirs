@@ -9,6 +9,7 @@ use crate::error::{FFTError, FFTResult};
 use crate::sparse_fft::{SparseFFTAlgorithm, WindowFunction};
 use num_complex::Complex64;
 use num_traits::NumCast;
+use scirs2_core::simd_ops::PlatformCapabilities;
 use std::fmt::Debug;
 
 /// GPU kernel configuration
@@ -711,8 +712,24 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Ignored for alpha-4 release - GPU-dependent test"]
     fn test_kernel_factory() {
+        // Check if GPU is available
+        let caps = PlatformCapabilities::detect();
+        if !caps.cuda_available && !caps.gpu_available {
+            // Mock test for CPU-only environments
+            eprintln!("GPU not available, using mock kernel factory test");
+            // Test factory creation still works
+            let factory = KernelFactory::new(
+                "Mock Device".to_string(),
+                vec![(1, 1)],
+                1024 * 1024, // 1 MB
+                16 * 1024,   // 16 KB
+                32,          // 32 threads
+            );
+            assert!(factory.arch.contains("Mock"));
+            return;
+        }
+
         let factory = KernelFactory::new(
             "NVIDIA GeForce RTX 3080".to_string(),
             vec![(8, 6)],
@@ -750,8 +767,25 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Ignored for alpha-4 release - GPU-dependent test"]
     fn test_kernel_launcher() {
+        // Check if GPU is available
+        let caps = PlatformCapabilities::detect();
+        if !caps.cuda_available && !caps.gpu_available {
+            // Mock test for CPU-only environments
+            eprintln!("GPU not available, using mock kernel launcher test");
+            let factory = KernelFactory::new(
+                "Mock Device".to_string(),
+                vec![(1, 1)],
+                1024 * 1024,
+                16 * 1024,
+                32,
+            );
+            let launcher = KernelLauncher::new(factory);
+            // Test that launcher is created successfully
+            assert_eq!(launcher.get_total_memory_allocated(), 0);
+            return;
+        }
+
         let factory = KernelFactory::new(
             "NVIDIA GeForce RTX 3080".to_string(),
             vec![(8, 6)],
@@ -783,14 +817,36 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Ignored for alpha-4 release - GPU-dependent test"]
     fn test_execute_sparse_fft_kernel() {
         // Create a sparse signal
         let n = 1024;
         let frequencies = vec![(3, 1.0), (7, 0.5), (15, 0.25)];
         let signal = create_sparse_signal(n, &frequencies);
 
-        // Execute sparse FFT kernel
+        // Check if GPU is available
+        let caps = PlatformCapabilities::detect();
+        if !caps.cuda_available && !caps.gpu_available {
+            // Mock test for CPU-only environments
+            eprintln!("GPU not available, using mock sparse FFT kernel test");
+            // Test with mock device
+            let result = execute_sparse_fft_kernel(
+                &signal,
+                6,
+                SparseFFTAlgorithm::Sublinear,
+                WindowFunction::Hann,
+                "Mock Device",
+                (1, 1),
+                1024 * 1024, // 1 MB
+            );
+            // In mock mode, this should still return valid dummy data
+            let (values, indices, stats) = result.unwrap();
+            assert_eq!(values.len(), 6);
+            assert_eq!(indices.len(), 6);
+            assert!(stats.execution_time_ms >= 0.0);
+            return;
+        }
+
+        // Execute sparse FFT kernel with GPU
         let (values, indices, stats) = execute_sparse_fft_kernel(
             &signal,
             6,

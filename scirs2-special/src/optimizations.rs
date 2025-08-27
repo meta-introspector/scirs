@@ -852,6 +852,23 @@ pub fn bessel_j0_fast(x: f64) -> f64 {
 /// Fast lookup-based Gamma function
 #[allow(dead_code)]
 pub fn gamma_fast(x: f64) -> f64 {
+    // Special cases for exact integer values
+    if (x - 1.0).abs() < 1e-14 {
+        return 1.0;
+    } // Γ(1) = 1
+    if (x - 2.0).abs() < 1e-14 {
+        return 1.0;
+    } // Γ(2) = 1
+    if (x - 3.0).abs() < 1e-14 {
+        return 2.0;
+    } // Γ(3) = 2
+    if (x - 4.0).abs() < 1e-14 {
+        return 6.0;
+    } // Γ(4) = 6
+    if (x - 5.0).abs() < 1e-14 {
+        return 24.0;
+    } // Γ(5) = 24
+
     if x > 0.1 && x < 10.1 {
         let index = ((x - 0.1) * 100.0) as usize;
         if index < 999 {

@@ -60,7 +60,6 @@ fn test_global_optimization_on_rosenbrock() {
 }
 
 #[test]
-#[ignore] // FIXME: Differential evolution algorithm does not properly respect bounds
 fn test_global_optimization_with_constraints() {
     // Test global optimization on a function with bounded constraints
     let func = |x: &ndarray::ArrayView1<f64>| (x[0] + 1.0).powi(2) + (x[1] + 1.0).powi(2);
@@ -80,9 +79,11 @@ fn test_global_optimization_with_constraints() {
 
     assert!(result.success);
 
-    // BUG: The differential evolution implementation does not respect bounds
-    // Result: x = [-0.999..., -0.999...] which is outside bounds [0, 2] × [0, 2]
-    // Expected: x should be constrained to [0, 2] × [0, 2] with minimum at (0, 0)
+    // Print the actual result for verification
+    println!(
+        "Differential Evolution result: x = {:?}, f(x) = {}",
+        result.x, result.fun
+    );
 
     // Check that the result respects the bounds
     for (i, &val) in result.x.iter().enumerate() {
@@ -96,7 +97,11 @@ fn test_global_optimization_with_constraints() {
         );
     }
 
-    // Since bounds handling might not be perfect, just check that we got a reasonable optimization
+    // The constrained minimum should be near (0, 0) with function value near 2.0
+    // f(0,0) = (0+1)^2 + (0+1)^2 = 2
+    assert!(result.x[0] >= 0.0 && result.x[0] <= 2.0);
+    assert!(result.x[1] >= 0.0 && result.x[1] <= 2.0);
+    assert!(result.fun >= 1.8); // Should be close to the constrained minimum value
     assert!(result.fun < 10.0); // Should be better than a random point
 }
 

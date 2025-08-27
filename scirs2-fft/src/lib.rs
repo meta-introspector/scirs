@@ -327,6 +327,7 @@ pub use padding::{
 ///
 /// ```
 /// use scirs2_fft::{stft, window::Window};
+/// use std::f64::consts::PI;
 ///
 /// // Generate a simple sine wave
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -400,6 +401,7 @@ where
 ///
 /// ```
 /// use scirs2_fft::hilbert;
+/// use std::f64::consts::PI;
 ///
 /// // Generate a cosine signal
 /// let n = 100;

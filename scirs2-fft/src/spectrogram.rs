@@ -46,8 +46,9 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::spectrogram_stft;
+/// use scirs2_fft::spectrogram::stft;
 /// use scirs2_fft::window::Window;
+/// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -55,7 +56,7 @@ use std::f64::consts::PI;
 /// let chirp = time.iter().map(|&ti| (2.0 * PI * (10.0 + 10.0 * ti) * ti).sin()).collect::<Vec<_>>();
 ///
 /// // Compute STFT
-/// let (f, t, zxx) = spectrogram_stft(
+/// let (f, t, zxx) = stft(
 ///     &chirp,
 ///     Window::Hann,
 ///     256,
@@ -284,6 +285,7 @@ where
 /// ```
 /// use scirs2_fft::spectrogram;
 /// use scirs2_fft::window::Window;
+/// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -432,6 +434,7 @@ where
 ///
 /// ```
 /// use scirs2_fft::spectrogram_normalized;
+/// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
 /// let fs = 1000.0; // 1 kHz sampling rate

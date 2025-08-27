@@ -1254,7 +1254,7 @@ pub fn inject_outliers(
 
                 // Only modify a subset of features to create contextual anomaly
                 let n_features_to_modify =
-                    rng.sample(Uniform::new(1, (n_features / 2).max(1)).unwrap());
+                    rng.sample(Uniform::new(1, (n_features / 2).max(1) + 1).unwrap());
                 let mut features_to_modify: Vec<usize> = (0..n_features).collect();
                 features_to_modify.shuffle(&mut rng);
                 features_to_modify.truncate(n_features_to_modify);
@@ -3445,7 +3445,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_outlier_types() {
         let data = Array2::ones((30, 3));
 

@@ -436,9 +436,9 @@ mod tests {
     #[test]
     fn test_eigsh_different_which() {
         // Create 2x2 matrix storing only lower triangular part
-        let data = vec![2.0, 1.0, 2.0];  // diagonal and lower elements
-        let indptr = vec![0, 1, 3];      // row pointers
-        let indices = vec![0, 0, 1];     // column indices
+        let data = vec![2.0, 1.0, 2.0]; // diagonal and lower elements
+        let indptr = vec![0, 1, 3]; // row pointers
+        let indices = vec![0, 0, 1]; // column indices
         let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
 
         // Test largest algebraic
@@ -455,9 +455,9 @@ mod tests {
     #[test]
     fn test_eigsh_shift_invert() {
         // Create 2x2 symmetric matrix, lower triangular storage
-        let data = vec![4.0, 1.0, 3.0];  // diagonal and lower elements  
-        let indptr = vec![0, 1, 3];      // row pointers
-        let indices = vec![0, 0, 1];     // column indices
+        let data = vec![4.0, 1.0, 3.0]; // diagonal and lower elements
+        let indptr = vec![0, 1, 3]; // row pointers
+        let indices = vec![0, 0, 1]; // column indices
         let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
 
         let result = eigsh_shift_invert(&matrix, 2.0, Some(1), None, None).unwrap();

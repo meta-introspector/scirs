@@ -358,7 +358,9 @@ where
     F: FnOnce(&NestedScope) -> CoreResult<R>,
 {
     // Check if we're already in a nested context
-    let context = match PARENT_CONTEXT.with(|ctx| ctx.borrow().as_ref().map(|parent| parent.create_child())) {
+    let context = match PARENT_CONTEXT
+        .with(|ctx| ctx.borrow().as_ref().map(|parent| parent.create_child()))
+    {
         Some(child_result) => child_result?,
         None => {
             // No parent context, create a new root context with level 0

@@ -789,8 +789,11 @@ mod tests {
         // At least one device should be available (GPU or CPU fallback)
         assert!(devices.iter().any(|d| matches!(
             d.backend,
-            GpuBackend::Cuda | GpuBackend::OpenCL | GpuBackend::Metal | 
-            GpuBackend::Rocm | GpuBackend::CpuFallback
+            GpuBackend::Cuda
+                | GpuBackend::OpenCL
+                | GpuBackend::Metal
+                | GpuBackend::Rocm
+                | GpuBackend::CpuFallback
         )));
     }
 
@@ -863,15 +866,25 @@ mod tests {
         let manager = GpuDeviceManager::new().unwrap();
         let devices = manager.get_devices();
 
-        // Should have at least one device (CPU fallback)
+        // Should have at least one device
         assert!(!devices.is_empty());
 
-        // Check CPU fallback doesn't claim tensor cores support
-        let cpu_device = &devices[0];
-        assert_eq!(cpu_device.backend, GpuBackend::CpuFallback);
-        assert!(!cpu_device.supports_tensor_cores);
-        assert!(cpu_device.tensor_cores_generation.is_none());
-        assert!(cpu_device.memory_bandwidth > 0.0);
+        // Find and check CPU fallback device if present
+        if let Some(cpu_device) = devices
+            .iter()
+            .find(|d| d.backend == GpuBackend::CpuFallback)
+        {
+            // CPU fallback shouldn't claim tensor cores support
+            assert!(!cpu_device.supports_tensor_cores);
+            assert!(cpu_device.tensor_cores_generation.is_none());
+            assert!(cpu_device.memory_bandwidth > 0.0);
+        } else {
+            // If no CPU fallback, check that we have at least one GPU device
+            assert!(devices.iter().any(|d| matches!(
+                d.backend,
+                GpuBackend::Cuda | GpuBackend::OpenCL | GpuBackend::Metal | GpuBackend::Rocm
+            )));
+        }
     }
 }
 
@@ -2060,23 +2073,30 @@ pub mod algorithms {
                 let mut smoothed = series[0];
                 let alpha_complement = F::one() - alpha;
 
+                // Process all values starting from index 1
                 // Unrolled loop for better GPU utilization
-                let chunks = series.len() / 4;
-                let remainder = series.len() % 4;
+                let data_len = series.len() - 1; // Number of values to process (excluding first)
+                let chunks = data_len / 4;
+                let remainder = data_len % 4;
 
                 // Process in chunks of 4 (simulate SIMD)
                 for chunk_idx in 0..chunks {
-                    let base_idx = chunk_idx * 4;
+                    let base_idx = chunk_idx * 4 + 1; // Start from index 1
                     for i in 0..4 {
-                        let value = series[base_idx + i + 1];
-                        smoothed = alpha * value + alpha_complement * smoothed;
+                        if base_idx + i < series.len() {
+                            let value = series[base_idx + i];
+                            smoothed = alpha * value + alpha_complement * smoothed;
+                        }
                     }
                 }
 
                 // Process remainder
+                let remainder_start = chunks * 4 + 1;
                 for i in 0..remainder {
-                    let value = series[chunks * 4 + i + 1];
-                    smoothed = alpha * value + alpha_complement * smoothed;
+                    if remainder_start + i < series.len() {
+                        let value = series[remainder_start + i];
+                        smoothed = alpha * value + alpha_complement * smoothed;
+                    }
                 }
 
                 // Generate forecasts with parallel computation

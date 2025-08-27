@@ -538,6 +538,35 @@ Initial benchmarks on core operations show performance comparable to or exceedin
 
 *Note: Performance may vary based on hardware, compiler optimization, and specific workloads.*
 
+## Known Limitations (Beta Release)
+
+This is the first beta release (0.1.0-beta.1) of SciRS2. While the core functionality is stable and well-tested, there are some known limitations:
+
+### Autograd Module
+- **Gradient Shape Propagation**: Some complex operations may have limitations in gradient shape inference (Issue #1). Complex computation graphs may require manual shape specification in certain cases.
+- **Graph Context Requirements**: Some stability tests require proper graph context initialization. Helper functions are provided in test utilities.
+
+### Unimplemented Features
+The following features are planned for future releases:
+- **Cholesky decomposition** - Planned for 0.2.0
+- **Thin Plate Spline solver** - Planned for 0.2.0
+- Some advanced linear algebra decompositions
+
+### Performance Tests
+- Benchmark and performance tests are excluded from regular CI runs (404 tests marked as ignored) to optimize build times. Run with `cargo test -- --ignored` to execute full test suite including benchmarks.
+
+### Hardware-Dependent Features
+- GPU acceleration features require compatible hardware and drivers
+- Tests automatically fall back to CPU implementations when GPU is unavailable
+- Specialized hardware support (FPGA, ASIC) uses mock implementations when hardware is not present
+
+### Test Coverage
+- Total tests: ~6,500+ across all modules
+- Regular CI tests: All passing ✅
+- Ignored tests: ~600 (mostly benchmarks and hardware-dependent tests)
+
+For the most up-to-date information on limitations and ongoing development, please check our [GitHub Issues](https://github.com/cool-japan/scirs/issues).
+
 ## Contributing
 
 Contributions are welcome! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

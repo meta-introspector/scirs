@@ -413,7 +413,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "CZT zoom_fft implementation needs investigation - may have numerical issues"]
     fn test_zoom_fft() {
         // Create a simple signal with a clear frequency peak
         let n = 64;

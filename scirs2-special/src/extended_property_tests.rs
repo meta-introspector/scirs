@@ -18,7 +18,9 @@ struct Positive(f64);
 impl Arbitrary for Positive {
     fn arbitrary(g: &mut Gen) -> Self {
         let val: f64 = Arbitrary::arbitrary(g);
-        Positive((val.abs() % 50.0) + 0.1)
+        // Filter out NaN and infinite values
+        let finite_val = if val.is_finite() { val } else { 1.0 };
+        Positive((finite_val.abs() % 50.0) + 0.1)
     }
 }
 
@@ -29,18 +31,22 @@ struct SmallPositive(f64);
 impl Arbitrary for SmallPositive {
     fn arbitrary(g: &mut Gen) -> Self {
         let val: f64 = Arbitrary::arbitrary(g);
-        SmallPositive((val.abs() % 2.0) + 0.1)
+        // Filter out NaN and infinite values
+        let finite_val = if val.is_finite() { val } else { 1.0 };
+        SmallPositive((finite_val.abs() % 2.0) + 0.1)
     }
 }
 
-/// Real number in [-1, 1]
+/// Real number in [0, 1]
 #[derive(Clone, Debug)]
 struct UnitInterval(f64);
 
 impl Arbitrary for UnitInterval {
     fn arbitrary(g: &mut Gen) -> Self {
         let val: f64 = Arbitrary::arbitrary(g);
-        UnitInterval((val % 2.0 - 1.0).clamp(-1.0, 1.0))
+        // Filter out NaN and infinite values, then map to [0, 1]
+        let finite_val = if val.is_finite() { val } else { 0.5 };
+        UnitInterval((finite_val.abs() % 1.0).clamp(0.0, 1.0))
     }
 }
 
@@ -63,9 +69,12 @@ impl Arbitrary for ReasonableComplex {
     fn arbitrary(g: &mut Gen) -> Self {
         let re: f64 = Arbitrary::arbitrary(g);
         let im: f64 = Arbitrary::arbitrary(g);
+        // Filter out NaN and infinite values
+        let finite_re = if re.is_finite() { re } else { 1.0 };
+        let finite_im = if im.is_finite() { im } else { 0.0 };
         ReasonableComplex(Complex64::new(
-            (re % 10.0).clamp(-10.0, 10.0),
-            (im % 10.0).clamp(-10.0, 10.0),
+            (finite_re % 10.0).clamp(-10.0, 10.0),
+            (finite_im % 10.0).clamp(-10.0, 10.0),
         ))
     }
 }
@@ -95,7 +104,8 @@ mod gamma_properties {
     #[quickcheck]
     fn gamma_reflection_formula(x: f64) -> TestResult {
         // Gamma(x) * Gamma(1-x) = π / sin(πx)
-        if x <= 0.0 || x >= 1.0 || (x - 0.5).abs() < 0.1 {
+        // Filter out NaN and invalid domain
+        if !x.is_finite() || x <= 0.0 || x >= 1.0 || (x - 0.5).abs() < 0.1 {
             return TestResult::discard();
         }
 
@@ -269,7 +279,8 @@ mod error_function_properties {
     #[quickcheck]
     fn erf_odd_function(x: f64) -> TestResult {
         // erf(-x) = -erf(x)
-        if x.abs() > 10.0 {
+        // Filter out NaN and extreme values
+        if !x.is_finite() || x.abs() > 10.0 {
             return TestResult::discard();
         }
 
@@ -351,7 +362,8 @@ mod orthogonal_polynomial_properties {
         // H_n(-x) = (-1)^n * H_n(x)
         let n = n.0 as usize;
 
-        if x.abs() > 5.0 || n > 10 {
+        // Filter out NaN and extreme values
+        if !x.is_finite() || x.abs() > 5.0 || n > 10 {
             return TestResult::discard();
         }
 
@@ -548,7 +560,8 @@ mod cross_function_properties {
     #[quickcheck]
     fn erf_probability_connection(x: f64) -> TestResult {
         // erf(x/sqrt(2)) relates to normal CDF
-        if x.abs() > 5.0 {
+        // Filter out NaN and extreme values
+        if !x.is_finite() || x.abs() > 5.0 {
             return TestResult::discard();
         }
 

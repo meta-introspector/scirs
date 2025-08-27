@@ -627,7 +627,7 @@ mod tests {
     // Imports for potential future color image support
 
     #[test]
-    #[ignore] // TODO: Fix numerical precision issues
+    #[ignore] // TODO: Enable when linear solver is implemented (currently returns zeros)
     fn test_thin_plate_spline_identity() {
         // Create control points in a grid (identity mapping)
         let source_points = vec![
@@ -657,7 +657,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix numerical precision issues
+    #[ignore] // TODO: Enable when linear solver is implemented (currently returns zeros)
     fn test_thin_plate_spline_interpolation() {
         // Create control points
         let source_points = vec![

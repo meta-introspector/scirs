@@ -190,8 +190,11 @@ impl Isomap {
             }
         }
 
+        // Ensure symmetry by averaging with transpose (fixes floating point errors)
+        let gram_symmetric = 0.5 * (&gram + &gram.t());
+
         // Eigendecomposition
-        let (eigenvalues, eigenvectors) = match eigh(&gram.view(), None) {
+        let (eigenvalues, eigenvectors) = match eigh(&gram_symmetric.view(), None) {
             Ok(result) => result,
             Err(e) => return Err(TransformError::LinalgError(e)),
         };
@@ -543,7 +546,6 @@ mod tests {
     use ndarray::Array;
 
     #[test]
-    #[ignore]
     fn test_isomap_basic() {
         // Create a simple S-curve dataset
         let n_points = 20;
@@ -587,15 +589,29 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_isomap_disconnected_graph() {
-        let x: Array2<f64> = Array::eye(5);
+        // Create clearly disconnected data: two separate clusters
+        let x = ndarray::array![
+            [0.0, 0.0],   // Cluster 1
+            [0.1, 0.1],   // Cluster 1
+            [10.0, 10.0], // Cluster 2 (far away)
+            [10.1, 10.1], // Cluster 2
+        ];
 
-        // With only 1 neighbor and identity matrix, graph will be disconnected
+        // With only 1 neighbor, the two clusters won't connect
         let mut isomap = Isomap::new(1, 2);
         let result = isomap.fit(&x);
 
         // Should fail due to disconnected graph
         assert!(result.is_err());
+        if let Err(e) = result {
+            // Verify it's specifically a connectivity error
+            match e {
+                TransformError::InvalidInput(msg) => {
+                    assert!(msg.contains("Graph is not connected"));
+                }
+                _ => panic!("Expected InvalidInput error for disconnected graph"),
+            }
+        }
     }
 }

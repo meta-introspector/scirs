@@ -26,6 +26,21 @@ use tokio::io::{AsyncRead, AsyncWrite};
 #[cfg(feature = "async")]
 use async__trait::async_trait;
 
+// AWS environment variable constants
+const AWS_ACCESS_KEY_ID: &str = "AWS_ACCESS_KEY_ID";
+const AWS_SECRET_ACCESS_KEY: &str = "AWS_SECRET_ACCESS_KEY";
+const AWS_SESSION_TOKEN: &str = "AWS_SESSION_TOKEN";
+const AWS_REGION: &str = "AWS_REGION";
+
+// Google Cloud environment variable constants
+const GOOGLE_APPLICATION_CREDENTIALS: &str = "GOOGLE_APPLICATION_CREDENTIALS";
+const GOOGLE_CLOUD_PROJECT: &str = "GOOGLE_CLOUD_PROJECT";
+
+// Azure environment variable constants
+const AZURE_STORAGE_ACCOUNT: &str = "AZURE_STORAGE_ACCOUNT";
+const AZURE_STORAGE_KEY: &str = "AZURE_STORAGE_KEY";
+const AZURE_STORAGE_SAS_TOKEN: &str = "AZURE_STORAGE_SAS_TOKEN";
+
 /// Cloud storage error types
 #[derive(Error, Debug)]
 pub enum CloudError {

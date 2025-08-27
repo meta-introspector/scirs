@@ -65,6 +65,7 @@ use std::f64::consts::PI;
 ///
 /// ```
 /// use scirs2_fft::frft;
+/// use std::f64::consts::PI;
 ///
 /// // Create a simple signal
 /// let n = 64;
@@ -82,6 +83,7 @@ use std::f64::consts::PI;
 /// ```
 /// use scirs2_fft::frft_complex;
 /// use num_complex::Complex64;
+/// use std::f64::consts::PI;
 ///
 /// // Create a complex signal
 /// let n = 64;
@@ -284,6 +286,7 @@ fn frft_near_special_case(x: &[Complex64], alpha: f64, _d: f64) -> FFTResult<Vec
 /// ```
 /// use scirs2_fft::frft_complex;
 /// use num_complex::Complex64;
+/// use std::f64::consts::PI;
 ///
 /// // Create a complex signal
 /// let n = 64;

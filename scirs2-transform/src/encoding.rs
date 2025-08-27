@@ -2498,7 +2498,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_onehot_sparse_output() {
         let data =
             Array::from_shape_vec((4, 2), vec![0.0, 1.0, 1.0, 2.0, 2.0, 0.0, 0.0, 1.0]).unwrap();
@@ -2509,13 +2508,13 @@ mod tests {
 
         match &result_sparse {
             EncodedOutput::Sparse(sparse) => {
-                assert_eq!(sparse.shape, (4, 5)); // 3 categories + 2 categories = 5 features
+                assert_eq!(sparse.shape, (4, 6)); // 3 categories + 3 categories = 6 features
                 assert_eq!(sparse.nnz(), 8); // 4 samples * 2 features = 8 non-zeros
 
                 // Convert to dense for comparison
                 let dense = sparse.to_dense();
 
-                // First sample [0, 1] should have [1,0,0,0,1]
+                // First sample [0, 1] should have [1,0,0,0,1,0] (category 0 in col0, category 1 in col1)
                 assert_eq!(dense[[0, 0]], 1.0); // category 0 in feature 0
                 assert_eq!(dense[[0, 4]], 1.0); // category 1 in feature 1
                 assert_eq!(dense[[0, 1]], 0.0); // not category 1 in feature 0
@@ -2529,11 +2528,11 @@ mod tests {
 
         match result_dense {
             EncodedOutput::Dense(dense) => {
-                assert_eq!(dense.shape(), &[4, 5]);
+                assert_eq!(dense.shape(), &[4, 6]);
                 // Verify dense and sparse produce same results
                 let sparse_as_dense = result_sparse.to_dense();
                 for i in 0..4 {
-                    for j in 0..5 {
+                    for j in 0..6 {
                         assert_abs_diff_eq!(
                             dense[[i, j]],
                             sparse_as_dense[[i, j]],

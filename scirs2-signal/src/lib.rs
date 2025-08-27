@@ -84,7 +84,7 @@ pub use measurements::{peak_to_peak, peak_to_rms, rms, snr, thd};
 pub use filter::{analyze_filter, butter, filtfilt, firwin, FilterType};
 
 // Re-export key LTI functionality
-pub use lti::{design_tf, TransferFunction};
+pub use lti::{design_tf, impulse_response, lsim, step_response, TransferFunction};
 
 // Re-export key spectral analysis functionality
 pub use spectral::{periodogram, spectrogram, stft, welch};

@@ -57,7 +57,7 @@ impl Default for ParallelCorrelationConfig {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::correlation_parallel_enhanced::{corrcoef_parallel_enhanced, ParallelCorrelationConfig};
+/// use scirs2_stats::{corrcoef_parallel_enhanced, ParallelCorrelationConfig};
 ///
 /// let data = array![
 ///     [1.0, 5.0, 10.0],

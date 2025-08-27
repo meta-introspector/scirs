@@ -65,8 +65,9 @@ struct PositiveF64(f64);
 impl Arbitrary for PositiveF64 {
     fn arbitrary(g: &mut Gen) -> Self {
         let val: f64 = Arbitrary::arbitrary(g);
-        // Use smaller range for faster convergence in mathematical functions
-        PositiveF64((val.abs() % 20.0) + f64::EPSILON)
+        // Filter out NaN and infinite values, use smaller range for convergence
+        let finite_val = if val.is_finite() { val } else { 1.0 };
+        PositiveF64((finite_val.abs() % 20.0) + f64::EPSILON)
     }
 }
 
@@ -89,9 +90,12 @@ impl Arbitrary for ReasonableComplex {
     fn arbitrary(g: &mut Gen) -> Self {
         let re: f64 = Arbitrary::arbitrary(g);
         let im: f64 = Arbitrary::arbitrary(g);
+        // Filter out NaN and infinite values
+        let finite_re = if re.is_finite() { re } else { 1.0 };
+        let finite_im = if im.is_finite() { im } else { 0.0 };
         ReasonableComplex(Complex64::new(
-            (re % 5.0).clamp(-5.0, 5.0),
-            (im % 5.0).clamp(-5.0, 5.0),
+            (finite_re % 5.0).clamp(-5.0, 5.0),
+            (finite_im % 5.0).clamp(-5.0, 5.0),
         ))
     }
 }
@@ -284,8 +288,9 @@ mod error_function_properties {
 
     #[quickcheck]
     fn erf_odd_function(x: f64) -> bool {
-        if x.abs() > 10.0 {
-            return true; // Skip extreme values
+        // Filter out NaN and extreme values
+        if !x.is_finite() || x.abs() > 10.0 {
+            return true; // Skip invalid/extreme values
         }
 
         let erf_x = crate::erf::erf(x);
@@ -296,7 +301,8 @@ mod error_function_properties {
 
     #[quickcheck]
     fn erf_erfc_complement(x: f64) -> bool {
-        if x.abs() > 10.0 {
+        // Filter out NaN and extreme values
+        if !x.is_finite() || x.abs() > 10.0 {
             return true;
         }
 

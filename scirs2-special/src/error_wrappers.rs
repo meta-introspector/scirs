@@ -67,14 +67,17 @@ where
 
     /// Evaluate the function with full error handling
     pub fn evaluate(&self, x: T) -> SpecialResult<T> {
-        // Validate input
-        validation::check_finite(x, "x")
-            .with_context(|| ErrorContext::new(self.name, "input validation").with_param("x", x))?;
-
         // Check for special cases that might cause issues
         if x.is_nan() {
             return Ok(T::nan());
         }
+        if x.is_infinite() {
+            return Ok(T::infinity()); // Return positive infinity for gamma(∞)
+        }
+
+        // Validate input (after handling NaN and infinity)
+        validation::check_finite(x, "x")
+            .with_context(|| ErrorContext::new(self.name, "input validation").with_param("x", x))?;
 
         // Compute the result
         let result = (self.func)(x);

@@ -49,6 +49,7 @@ use std::f64::consts::PI;
 ///
 /// ```
 /// use scirs2_fft::waterfall_3d;
+/// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -161,6 +162,7 @@ where
 ///
 /// ```
 /// use scirs2_fft::waterfall_mesh;
+/// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -273,6 +275,7 @@ where
 ///
 /// ```
 /// use scirs2_fft::waterfall_lines;
+/// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -411,6 +414,7 @@ where
 ///
 /// ```
 /// use scirs2_fft::waterfall_mesh_colored;
+/// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
 /// let fs = 1000.0; // 1 kHz sampling rate

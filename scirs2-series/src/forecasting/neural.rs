@@ -1675,8 +1675,14 @@ pub mod advanced {
             self.data_buffer.push_back(observation);
             self.observation_count += 1;
 
-            // Check if we need to retrain
-            if self.data_buffer.len() >= self.config.initial_window
+            // Check if we need to retrain - ensure we have enough data for lookback window
+            if self.data_buffer.len()
+                >= self
+                    .base_model
+                    .config
+                    .base
+                    .lookback_window
+                    .max(self.config.initial_window)
                 && self.observation_count % self.config.update_frequency == 0
             {
                 let current_data: Array1<F> = Array1::from_iter(self.data_buffer.iter().cloned());
@@ -2702,7 +2708,16 @@ pub mod advanced {
 
         #[test]
         fn test_multiscale_forecaster() {
-            let mut forecaster = MultiScaleNeuralForecaster::<f64>::with_default_config();
+            // Use a configuration appropriate for test data size
+            let config = MultiScaleConfig {
+                short_term_window: 10,
+                medium_term_window: 30,
+                long_term_window: 100,
+                forecast_horizon: 5,
+                learning_rate: 0.001,
+                meta_epochs: 10,
+            };
+            let mut forecaster = MultiScaleNeuralForecaster::<f64>::new(config);
 
             // Generate synthetic data with multiple patterns
             let data: Array1<f64> = Array1::from_iter((0..200).map(|i| {

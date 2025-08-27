@@ -486,11 +486,29 @@ where
                 }
 
                 for i in 0..pad_width[0].1 {
-                    let src_i = input_rows - 2 - i;
-                    if src_i < input_rows {
-                        for j in 0..input_cols {
-                            output_array2[[start_i + input_rows + i, start_j + j]] =
-                                input_array2[[src_i, j]];
+                    // Handle reflection for bottom padding
+                    // For small inputs, need to check bounds to avoid underflow
+                    if input_rows >= 2 && input_rows > 2 + i {
+                        let src_i = input_rows - 2 - i;
+                        if src_i < input_rows {
+                            for j in 0..input_cols {
+                                output_array2[[start_i + input_rows + i, start_j + j]] =
+                                    input_array2[[src_i, j]];
+                            }
+                        }
+                    } else {
+                        // For small inputs or when reflection would go out of bounds,
+                        // use the closest available row
+                        let src_i = if input_rows > 0 {
+                            (input_rows - 1).saturating_sub(i % input_rows)
+                        } else {
+                            0
+                        };
+                        if src_i < input_rows {
+                            for j in 0..input_cols {
+                                output_array2[[start_i + input_rows + i, start_j + j]] =
+                                    input_array2[[src_i, j]];
+                            }
                         }
                     }
                 }
@@ -506,11 +524,29 @@ where
                 }
 
                 for j in 0..pad_width[1].1 {
-                    let src_j = input_cols - 2 - j;
-                    if src_j < input_cols {
-                        for i in 0..input_rows {
-                            output_array2[[start_i + i, start_j + input_cols + j]] =
-                                input_array2[[i, src_j]];
+                    // Handle reflection for right padding
+                    // For small inputs, need to check bounds to avoid underflow
+                    if input_cols >= 2 && input_cols > 2 + j {
+                        let src_j = input_cols - 2 - j;
+                        if src_j < input_cols {
+                            for i in 0..input_rows {
+                                output_array2[[start_i + i, start_j + input_cols + j]] =
+                                    input_array2[[i, src_j]];
+                            }
+                        }
+                    } else {
+                        // For small inputs or when reflection would go out of bounds,
+                        // use the closest available column
+                        let src_j = if input_cols > 0 {
+                            (input_cols - 1).saturating_sub(j % input_cols)
+                        } else {
+                            0
+                        };
+                        if src_j < input_cols {
+                            for i in 0..input_rows {
+                                output_array2[[start_i + i, start_j + input_cols + j]] =
+                                    input_array2[[i, src_j]];
+                            }
                         }
                     }
                 }

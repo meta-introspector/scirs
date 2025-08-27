@@ -10,7 +10,7 @@
 
 use crate::bspline::{BSpline, ExtrapolateMode};
 use crate::error::{InterpolateError, InterpolateResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{array, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
 use std::ops::{Add, Div, Mul, Sub};
@@ -2520,93 +2520,104 @@ pub fn make_nurbs_circle<
     }
 
     let angle_span = end - start;
-
-    // Determine the number of segments needed based on the _angle span
     let full_circle = T::from(2.0 * std::f64::consts::PI).unwrap();
-    let num_segments = if (angle_span - full_circle).abs() < T::epsilon() {
-        // Full circle: use 4 segments (quadratic NURBS)
-        4
+    let is_full_circle = (angle_span - full_circle).abs() < T::epsilon();
+
+    let degree = 2;
+
+    if is_full_circle {
+        // Standard NURBS circle using 9 control points and degree 2
+        // This is the exact method used in CAD systems for representing circles
+
+        let w1 = T::one();
+        let w2 = T::from(1.0 / 2.0_f64.sqrt()).unwrap(); // sqrt(2)/2
+
+        // Standard NURBS circle control points (on unit circle)
+        let control_data = [
+            (T::one(), T::zero(), w1),  // P0: (1, 0)
+            (T::one(), T::one(), w2),   // P1: (1, 1)
+            (T::zero(), T::one(), w1),  // P2: (0, 1)
+            (-T::one(), T::one(), w2),  // P3: (-1, 1)
+            (-T::one(), T::zero(), w1), // P4: (-1, 0)
+            (-T::one(), -T::one(), w2), // P5: (-1, -1)
+            (T::zero(), -T::one(), w1), // P6: (0, -1)
+            (T::one(), -T::one(), w2),  // P7: (1, -1)
+            (T::one(), T::zero(), w1),  // P8: (1, 0) - repeated
+        ];
+
+        let mut control_points = Array2::zeros((9, 2));
+        let mut weights = Array1::zeros(9);
+
+        for (i, &(x, y, weight)) in control_data.iter().enumerate() {
+            control_points[[i, 0]] = center[0] + radius * x;
+            control_points[[i, 1]] = center[1] + radius * y;
+            weights[i] = weight;
+        }
+
+        // Standard knot vector for NURBS circle: [0,0,0,1/4,1/4,1/2,1/2,3/4,3/4,1,1,1]
+        let knots = array![
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::from(0.25).unwrap(),
+            T::from(0.25).unwrap(),
+            T::from(0.5).unwrap(),
+            T::from(0.5).unwrap(),
+            T::from(0.75).unwrap(),
+            T::from(0.75).unwrap(),
+            T::one(),
+            T::one(),
+            T::one()
+        ];
+
+        NurbsCurve::new(
+            &control_points.view(),
+            &weights.view(),
+            &knots.view(),
+            degree,
+            ExtrapolateMode::Extrapolate,
+        )
     } else {
-        // Arc: use at least 1 segment, more for larger arcs
-        let ratio = angle_span / full_circle;
-        let min_segments = (ratio * T::from(4.0).unwrap()).ceil();
-        // Convert to usize safely
-        let min_segments_f64 = min_segments.to_f64().unwrap_or(1.0);
-        std::cmp::max(1, min_segments_f64 as usize)
-    };
+        // Simple arc with 3 control points
+        let mut control_points = Array2::zeros((3, 2));
+        let mut weights = Array1::zeros(3);
 
-    // Generate control points and weights for a NURBS circle/arc
-    let degree = 2; // Quadratic NURBS
+        // Start point
+        control_points[[0, 0]] = center[0] + radius * start.cos();
+        control_points[[0, 1]] = center[1] + radius * start.sin();
+        weights[0] = T::one();
 
-    // For a full circle with 4 segments, we need 9 control points (with repeats at the start/end)
-    // For an arc, we adjust based on the number of segments
-    let num_ctrl_points = num_segments * 2 + 1;
-
-    let mut control_points = Array2::zeros((num_ctrl_points, 2));
-    let mut weights = Array1::zeros(num_ctrl_points);
-
-    // Compute the _angle increment per segment
-    let angle_inc = angle_span / T::from(num_segments).unwrap();
-
-    // Weight factor for the middle control points
-    let w = T::from(1.0 / 2.0_f64.sqrt()).unwrap();
-
-    for i in 0..num_segments {
-        // Start _angle for this segment
-        let theta1 = start + T::from(i).unwrap() * angle_inc;
-        let theta2 = theta1 + angle_inc;
-
-        // Start point of the segment
-        let idx_start = i * 2;
-        control_points[[idx_start, 0]] = center[0] + radius * theta1.cos();
-        control_points[[idx_start, 1]] = center[1] + radius * theta1.sin();
-        weights[idx_start] = T::one();
+        // End point
+        control_points[[2, 0]] = center[0] + radius * end.cos();
+        control_points[[2, 1]] = center[1] + radius * end.sin();
+        weights[2] = T::one();
 
         // Middle control point
-        let idx_mid = idx_start + 1;
-        let mid_angle = (theta1 + theta2) / T::from(2.0).unwrap();
-        control_points[[idx_mid, 0]] = center[0] + radius / w * mid_angle.cos();
-        control_points[[idx_mid, 1]] = center[1] + radius / w * mid_angle.sin();
-        weights[idx_mid] = w;
+        let mid_angle = (start + end) / T::from(2.0).unwrap();
+        let half_span = angle_span / T::from(2.0).unwrap();
+        let w = half_span.cos();
+        control_points[[1, 0]] = center[0] + radius / w * mid_angle.cos();
+        control_points[[1, 1]] = center[1] + radius / w * mid_angle.sin();
+        weights[1] = w;
 
-        // End point (which becomes the start point of the next segment)
-        if i == num_segments - 1 {
-            let idx_end = idx_mid + 1;
-            control_points[[idx_end, 0]] = center[0] + radius * theta2.cos();
-            control_points[[idx_end, 1]] = center[1] + radius * theta2.sin();
-            weights[idx_end] = T::one();
-        }
+        // Clamped uniform knot vector: [0,0,0, 1,1,1]
+        let knots = array![
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::one(),
+            T::one(),
+            T::one()
+        ];
+
+        NurbsCurve::new(
+            &control_points.view(),
+            &weights.view(),
+            &knots.view(),
+            degree,
+            ExtrapolateMode::Extrapolate,
+        )
     }
-
-    // Create the knot vector
-    // For a circle/arc with degree 2, we need num_ctrl_points + degree + 1 knots
-    let num_knots = num_ctrl_points + degree + 1;
-    let mut knots = Array1::zeros(num_knots);
-
-    // Set up the knot vector with appropriate multiplicities
-    // Start with degree+1 copies of 0
-    for i in 0..=degree {
-        knots[i] = T::zero();
-    }
-
-    // Internal knots
-    for i in 1..num_segments {
-        knots[degree + i] = T::from(i).unwrap() / T::from(num_segments).unwrap();
-    }
-
-    // End with degree+1 copies of 1
-    for i in 0..=degree {
-        knots[num_knots - 1 - i] = T::one();
-    }
-
-    // Create the NURBS curve
-    NurbsCurve::new(
-        &control_points.view(),
-        &weights.view(),
-        &knots.view(),
-        degree,
-        ExtrapolateMode::Extrapolate,
-    )
 }
 
 /// Create a NURBS sphere
@@ -2937,7 +2948,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "make_nurbs_circle creates invalid knot vector"]
     fn test_nurbs_circle() {
         // Create a NURBS circle with radius 1 centered at origin
         let center = array![0.0, 0.0];

@@ -242,7 +242,6 @@ impl<
         new_knots = Array1::from_vec(new_knots_vec);
 
         // Create a new refined B-spline with the expanded knot vector
-        let coeffs = current_spline.coefficients().to_owned();
 
         // Convert our ExtrapolateMode to BSpline's ExtrapolateMode
         use crate::bspline::ExtrapolateMode as BSplineExtrapolateMode;
@@ -252,10 +251,14 @@ impl<
             ExtrapolateMode::Nan => BSplineExtrapolateMode::Nan,
         };
 
-        let refined_spline = BSpline::new(
+        // Instead of using the same coefficients with more knots (which breaks the constraint),
+        // create a new spline by fitting the original data with the refined knot vector
+        let refined_spline = crate::bspline::make_lsq_bspline(
+            &self.x.view(),
+            &self.y.view(),
             &new_knots.view(),
-            &coeffs.view(),
             self.order,
+            None, // No weights
             bspline_extrapolate,
         )?;
 
@@ -613,7 +616,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Knot vector size mismatch in refinement"]
     fn test_multiscale_bspline_refinement() {
         // Use a larger domain for meaningful refinement
         let x = Array::linspace(0.0, 10.0, 101);
@@ -729,7 +731,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Knot vector size mismatch in refinement"]
     fn test_multiscale_bspline_level_switching() {
         // Use a domain that will fit within the B-spline constraints
         let x = Array::linspace(0.0, 10.0, 101);
