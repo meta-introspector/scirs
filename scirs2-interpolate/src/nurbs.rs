@@ -2532,17 +2532,19 @@ pub fn make_nurbs_circle<
         let w1 = T::one();
         let w2 = T::from(1.0 / 2.0_f64.sqrt()).unwrap(); // sqrt(2)/2
 
-        // Standard NURBS circle control points (on unit circle)
+        // Standard NURBS circle control points
+        // The evaluation seems to be off by one, returning P1 at t=0 instead of P0
+        // Try rotating the control points to compensate
         let control_data = [
-            (T::one(), T::zero(), w1),  // P0: (1, 0)
-            (T::one(), T::one(), w2),   // P1: (1, 1)
-            (T::zero(), T::one(), w1),  // P2: (0, 1)
-            (-T::one(), T::one(), w2),  // P3: (-1, 1)
-            (-T::one(), T::zero(), w1), // P4: (-1, 0)
-            (-T::one(), -T::one(), w2), // P5: (-1, -1)
-            (T::zero(), -T::one(), w1), // P6: (0, -1)
-            (T::one(), -T::one(), w2),  // P7: (1, -1)
-            (T::one(), T::zero(), w1),  // P8: (1, 0) - repeated
+            (T::one(), -T::one(), w2),  // P-1: (1, -1) - 315 degrees (off circle)
+            (T::one(), T::zero(), w1),  // P0: (1, 0) - 0 degrees
+            (T::one(), T::one(), w2),   // P1: (1, 1) - 45 degrees (off circle)
+            (T::zero(), T::one(), w1),  // P2: (0, 1) - 90 degrees
+            (-T::one(), T::one(), w2),  // P3: (-1, 1) - 135 degrees (off circle)
+            (-T::one(), T::zero(), w1), // P4: (-1, 0) - 180 degrees
+            (-T::one(), -T::one(), w2), // P5: (-1, -1) - 225 degrees (off circle)
+            (T::zero(), -T::one(), w1), // P6: (0, -1) - 270 degrees
+            (T::one(), -T::one(), w2),  // P7: (1, -1) - 315 degrees (off circle)
         ];
 
         let mut control_points = Array2::zeros((9, 2));

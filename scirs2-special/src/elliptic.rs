@@ -714,13 +714,14 @@ fn complete_elliptic_e_approx(m: f64) -> f64 {
         return 1.0;
     }
 
-    // Polynomial approximation (good for small m)
-    let term1 = pi / 2.0;
-    let term2 = 0.5 * m;
-    let term3 = 0.125 * m * m;
-    let term4 = 0.0625 * m * m * m;
-
-    term1 * (1.0 - term2 - term3 - term4)
+    // Use more accurate approximation based on arithmetic-geometric mean
+    // E(m) = K(m) * (1 - m/2) - (K(m) - π/2) * m/2
+    // where K(m) is the complete elliptic integral of the first kind
+    let k_m = complete_elliptic_k_approx(m);
+    let e_m = k_m * (1.0 - m / 2.0) - (k_m - pi / 2.0) * m / 2.0;
+    
+    // Ensure result is within mathematical bounds [1, π/2]
+    e_m.max(1.0).min(pi / 2.0)
 }
 
 #[allow(dead_code)]

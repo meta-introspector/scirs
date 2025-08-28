@@ -517,7 +517,9 @@ where
             f()
         }
         NestedPolicy::Deny => {
-            if current_nesting_level() > 0 {
+            // Check if we're inside any nested scope (even level 0)
+            let is_nested = PARENT_CONTEXT.with(|ctx| ctx.borrow().is_some());
+            if is_nested {
                 Err(CoreError::ConfigError(
                     ErrorContext::new("Nested parallelism not allowed".to_string())
                         .with_location(ErrorLocation::new(file!(), line!())),

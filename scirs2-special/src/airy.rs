@@ -1060,7 +1060,19 @@ pub fn ai_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
         ));
     }
 
-    // Asymptotic approximation for the k-th zero
+    // Use known values for the first few zeros for better accuracy
+    if let Some(known_zero) = match k {
+        1 => Some(-2.33810741045976703849),
+        2 => Some(-4.08794944413097061664),
+        3 => Some(-5.52055982809555105913),
+        4 => Some(-6.78670809007175899878),
+        5 => Some(-7.94413358712085312314),
+        _ => None,
+    } {
+        return Ok(F::from_f64(known_zero).unwrap());
+    }
+
+    // For k > 5, use asymptotic approximation
     let k_f = F::from_usize(k).unwrap();
     let pi = F::from_f64(std::f64::consts::PI).unwrap();
     let three_fourths = F::from_f64(0.75).unwrap();
@@ -1072,7 +1084,7 @@ pub fn ai_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
 
     // Refine with Newton's method
     let mut zero = initial_guess;
-    for _ in 0..10 {
+    for _ in 0..20 {
         let f_val = ai(zero);
         let fp_val = aip(zero);
 
@@ -1083,9 +1095,16 @@ pub fn ai_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
         let correction = f_val / fp_val;
         zero = zero - correction;
 
-        if correction.abs() < F::epsilon() {
+        if correction.abs() < F::from_f64(1e-12).unwrap() {
             break;
         }
+    }
+
+    // Ensure the result is negative
+    if zero > F::zero() {
+        return Err(SpecialError::ValueError(
+            "ai_zeros: failed to converge to negative zero".to_string(),
+        ));
     }
 
     Ok(zero)
@@ -1104,7 +1123,19 @@ pub fn bi_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
         ));
     }
 
-    // Asymptotic approximation for the k-th zero
+    // Use known values for the first few zeros for better accuracy
+    if let Some(known_zero) = match k {
+        1 => Some(-1.17371322270912792491),
+        2 => Some(-3.27109330283635271568),
+        3 => Some(-4.83073784166201593267),
+        4 => Some(-6.16985212831289398589),
+        5 => Some(-7.37676207936776371359),
+        _ => None,
+    } {
+        return Ok(F::from_f64(known_zero).unwrap());
+    }
+
+    // For k > 5, use asymptotic approximation
     let k_f = F::from_usize(k).unwrap();
     let pi = F::from_f64(std::f64::consts::PI).unwrap();
     let three_fourths = F::from_f64(0.75).unwrap();
@@ -1116,7 +1147,7 @@ pub fn bi_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
 
     // Refine with Newton's method
     let mut zero = initial_guess;
-    for _ in 0..10 {
+    for _ in 0..20 {
         let f_val = bi(zero);
         let fp_val = bip(zero);
 
@@ -1127,9 +1158,16 @@ pub fn bi_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
         let correction = f_val / fp_val;
         zero = zero - correction;
 
-        if correction.abs() < F::epsilon() {
+        if correction.abs() < F::from_f64(1e-12).unwrap() {
             break;
         }
+    }
+
+    // Ensure the result is negative
+    if zero > F::zero() {
+        return Err(SpecialError::ValueError(
+            "bi_zeros: failed to converge to negative zero".to_string(),
+        ));
     }
 
     Ok(zero)

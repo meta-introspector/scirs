@@ -881,7 +881,7 @@ impl EnhancedPCA {
     /// This implements the randomized SVD algorithm for efficient PCA on large datasets
     /// Based on "Finding structure with randomness" by Halko, Martinsson & Tropp (2011)
     fn fit_randomized_pca(&mut self, x: &ArrayView2<f64>) -> Result<()> {
-        let (_n_samples_n_features) = x.dim();
+        let _n_samples_n_features = x.dim();
 
         // Center the data if requested
         let mean = if self.center {
@@ -950,7 +950,7 @@ impl EnhancedPCA {
 
         // Store components (V^T transposed to get V, then take first k columns)
         let components = vt.slice(ndarray::s![..k, ..]).t().to_owned();
-        self.components = Some(components);
+        self.components = Some(components.t().to_owned());
 
         // Calculate explained variance ratios
         let total_variance = sigma.iter().take(k).map(|&s| s * s).sum::<f64>();
@@ -1059,7 +1059,7 @@ impl EnhancedPCA {
             components.row_mut(i).assign(eigenvec);
         }
 
-        self.components = Some(components);
+        self.components = Some(components.t().to_owned());
         self.explained_variance = Some(explained_variance);
 
         Ok(())
@@ -2094,7 +2094,7 @@ impl AdvancedPCA {
             .slice(ndarray::s![..self.n_components])
             .mapv(|x| x * x / (n_samples - 1) as f64);
 
-        self.components = Some(components);
+        self.components = Some(components.t().to_owned());
         self.mean = Some(mean);
         self.explained_variance_ratio = Some(&explained_variance / explained_variance.sum());
 
@@ -2147,7 +2147,7 @@ impl AdvancedPCA {
             components.row_mut(i).assign(eigenvec);
         }
 
-        self.components = Some(components);
+        self.components = Some(components.t().to_owned());
         self.mean = Some(mean);
         self.explained_variance_ratio = Some(&explained_variance / explained_variance.sum());
 
@@ -2184,7 +2184,7 @@ impl AdvancedPCA {
             components.row_mut(i).assign(eigenvec);
         }
 
-        self.components = Some(components);
+        self.components = Some(components.t().to_owned());
         self.mean = Some(mean);
         self.explained_variance_ratio = Some(&explained_variance / explained_variance.sum());
 
@@ -2240,7 +2240,7 @@ impl AdvancedPCA {
             components.row_mut(i).assign(eigenvec);
         }
 
-        self.components = Some(components);
+        self.components = Some(components.t().to_owned());
         self.mean = Some(mean);
         self.explained_variance_ratio = Some(&explained_variance / explained_variance.sum());
 

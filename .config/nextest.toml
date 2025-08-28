@@ -4,7 +4,7 @@
 slow-timeout = { period = "30s", terminate-after = 4, grace-period = "5s" }
 
 # Global upper limit (safety)
-global-timeout = "2h"
+# global-timeout = "2h"
 
 # Stop at the first failure (to identify the cause quickly)
 fail-fast = true

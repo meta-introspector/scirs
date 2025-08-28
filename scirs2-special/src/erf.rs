@@ -89,7 +89,7 @@
 //! - **Engineering**: Signal processing, communications theory
 //! - **Mathematics**: Solutions to the heat equation
 
-use num_traits::{Float, FromPrimitive};
+use num_traits::{Float, FromPrimitive, ToPrimitive};
 
 /// Error function.
 ///
@@ -248,7 +248,7 @@ pub fn erfc<F: Float + FromPrimitive>(x: F) -> F {
 /// assert!((erf_x - y).abs() < 0.2);
 /// ```
 #[allow(dead_code)]
-pub fn erfinv<F: Float + FromPrimitive>(y: F) -> F {
+pub fn erfinv<F: Float + FromPrimitive + ToPrimitive>(y: F) -> F {
     // Special cases
     if y == F::zero() {
         return F::zero();
@@ -267,27 +267,118 @@ pub fn erfinv<F: Float + FromPrimitive>(y: F) -> F {
         return -erfinv(-y);
     }
 
-    // Use a simpler approximation that matches test expectations
-    // Based on the approximation by Winitzki
-    let w = -((F::one() - y) * (F::one() + y)).ln();
-    let p = F::from(2.81022636e-08).unwrap();
-    let p = F::from(3.43273939e-07).unwrap() + p * w;
-    let p = F::from(-3.5233877e-06).unwrap() + p * w;
-    let p = F::from(-4.39150654e-06).unwrap() + p * w;
-    let p = F::from(0.00021858087).unwrap() + p * w;
-    let p = F::from(-0.00125372503).unwrap() + p * w;
-    let p = F::from(-0.00417768164).unwrap() + p * w;
-    let p = F::from(0.246640727).unwrap() + p * w;
-    let p = F::from(1.50140941).unwrap() + p * w;
+    // Use a robust implementation of erfinv based on various approximations
+    // For the central region, use a simple rational approximation
+    // For tail regions, use asymptotic expansions
 
-    let x = y * p;
+    let abs_y = y.abs();
 
-    // Apply a single step of Newton-Raphson to refine the result
-    let e = erf(x) - y;
-    let pi_sqrt = F::from(std::f64::consts::PI).unwrap().sqrt();
-    let u = e * pi_sqrt * F::from(0.5).unwrap() * (-x * x).exp();
+    let mut x = if abs_y <= F::from(0.9).unwrap() {
+        // Central region - use Winitzki approximation with correction
+        // This is robust and well-tested
+        let two = F::from(2.0).unwrap();
+        let three = F::from(3.0).unwrap();
+        let four = F::from(4.0).unwrap();
+        let eight = F::from(8.0).unwrap();
+        let pi = F::from(std::f64::consts::PI).unwrap();
 
-    x - u
+        let numerator = eight * (pi - three);
+        let denominator = three * pi * (four - pi);
+        let a = numerator / denominator;
+
+        let y_squared = y * y;
+        let one_minus_y_squared = F::one() - y_squared;
+
+        if one_minus_y_squared <= F::zero() {
+            return F::nan();
+        }
+
+        let ln_term = (one_minus_y_squared.ln()).abs();
+        let term1 = two / (pi * a) + ln_term / two;
+        let term2 = ln_term / a;
+
+        let discriminant = term1 * term1 - term2;
+
+        if discriminant < F::zero() {
+            return F::nan();
+        }
+
+        let sqrt_term = discriminant.sqrt();
+        let inner_term = term1 - sqrt_term;
+
+        if inner_term < F::zero() {
+            return F::nan();
+        }
+
+        let result = inner_term.sqrt();
+
+        if y > F::zero() {
+            result
+        } else {
+            -result
+        }
+    } else {
+        // Tail region - use asymptotic expansion
+        let one = F::one();
+
+        // Use the asymptotic expansion for large |x|
+        // erfinv(y) ≈ sign(y) * sqrt(-ln(1-|y|)) for |y| close to 1
+        if abs_y >= one {
+            return if abs_y == one {
+                if y > F::zero() {
+                    F::infinity()
+                } else {
+                    -F::infinity()
+                }
+            } else {
+                F::nan()
+            };
+        }
+
+        let sqrt_ln = (-(one - abs_y).ln()).sqrt();
+        let correction = F::from(0.5).unwrap()
+            * (sqrt_ln.ln() + F::from(std::f64::consts::LN_2).unwrap())
+            / sqrt_ln;
+        let result = sqrt_ln - correction;
+
+        if y > F::zero() {
+            result
+        } else {
+            -result
+        }
+    };
+
+    // Apply Newton-Raphson refinement for better accuracy
+    // Limit to 2 iterations to prevent divergence
+    for _ in 0..2 {
+        let erf_x = erf(x);
+        let f = erf_x - y;
+
+        // Check if we're already close enough
+        if f.abs() < F::from(1e-15).unwrap() {
+            break;
+        }
+
+        let two = F::from(2.0).unwrap();
+        let pi = F::from(std::f64::consts::PI).unwrap();
+        let sqrt_pi = pi.sqrt();
+        let fprime = (two / sqrt_pi) * (-x * x).exp();
+
+        // Only apply correction if fprime is not too small and correction is reasonable
+        if fprime.abs() > F::from(1e-15).unwrap() {
+            let correction = f / fprime;
+            // Limit the correction to prevent overshooting
+            let max_correction = x.abs() * F::from(0.5).unwrap();
+            let limited_correction = if correction.abs() > max_correction {
+                max_correction * correction.signum()
+            } else {
+                correction
+            };
+            x = x - limited_correction;
+        }
+    }
+
+    x
 }
 
 /// Inverse complementary error function.
