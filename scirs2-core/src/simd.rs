@@ -76,7 +76,12 @@ where
 /// * Element-wise maximum array
 #[allow(dead_code)]
 pub fn simd_maximum_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
-    f32::simd_max(a, b)
+    // Direct implementation to avoid circular dependency
+    let mut result = Array1::zeros(a.len());
+    for i in 0..a.len() {
+        result[i] = a[i].max(b[i]);
+    }
+    result
 }
 
 /// Compute element-wise maximum of two f64 arrays using unified SIMD operations
@@ -94,7 +99,12 @@ pub fn simd_maximum_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32>
 /// * Element-wise maximum array
 #[allow(dead_code)]
 pub fn simd_maximum_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
-    f64::simd_max(a, b)
+    // Direct implementation to avoid circular dependency
+    let mut result = Array1::zeros(a.len());
+    for i in 0..a.len() {
+        result[i] = a[i].max(b[i]);
+    }
+    result
 }
 
 /// Compute element-wise minimum of two f32 arrays using unified SIMD operations
@@ -112,7 +122,12 @@ pub fn simd_maximum_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64>
 /// * Element-wise minimum array
 #[allow(dead_code)]
 pub fn simd_minimum_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
-    f32::simd_min(a, b)
+    // Direct implementation to avoid circular dependency
+    let mut result = Array1::zeros(a.len());
+    for i in 0..a.len() {
+        result[i] = a[i].min(b[i]);
+    }
+    result
 }
 
 /// Compute element-wise minimum of two f64 arrays using unified SIMD operations
@@ -130,7 +145,12 @@ pub fn simd_minimum_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32>
 /// * Element-wise minimum array
 #[allow(dead_code)]
 pub fn simd_minimum_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
-    f64::simd_min(a, b)
+    // Direct implementation to avoid circular dependency
+    let mut result = Array1::zeros(a.len());
+    for i in 0..a.len() {
+        result[i] = a[i].min(b[i]);
+    }
+    result
 }
 
 /// Compute element-wise addition of two f32 arrays using unified SIMD operations
@@ -148,73 +168,85 @@ pub fn simd_minimum_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64>
 /// * Element-wise sum array
 #[allow(dead_code)]
 pub fn simd_add_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
-    f32::simd_add(a, b)
+    // Direct implementation to avoid circular dependency
+    (a + b).to_owned()
 }
 
 /// Compute element-wise addition of two f64 arrays using unified SIMD operations
 #[allow(dead_code)]
 pub fn simd_add_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
-    f64::simd_add(a, b)
+    // Direct implementation to avoid circular dependency
+    (a + b).to_owned()
 }
 
 /// Compute element-wise subtraction of two f32 arrays using unified SIMD operations
 #[allow(dead_code)]
 pub fn simd_sub_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
-    f32::simd_sub(a, b)
+    // Direct implementation to avoid circular dependency
+    (a - b).to_owned()
 }
 
 /// Compute element-wise subtraction of two f64 arrays using unified SIMD operations
 #[allow(dead_code)]
 pub fn simd_sub_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
-    f64::simd_sub(a, b)
+    // Direct implementation to avoid circular dependency
+    (a - b).to_owned()
 }
 
 /// Compute element-wise multiplication of two f32 arrays using unified SIMD operations
 #[allow(dead_code)]
 pub fn simd_mul_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
-    f32::simd_mul(a, b)
+    // Direct implementation to avoid circular dependency
+    (a * b).to_owned()
 }
 
 /// Compute element-wise multiplication of two f64 arrays using unified SIMD operations
 #[allow(dead_code)]
 pub fn simd_mul_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
-    f64::simd_mul(a, b)
+    // Direct implementation to avoid circular dependency
+    (a * b).to_owned()
 }
 
 /// Compute element-wise division of two f32 arrays using unified SIMD operations
 #[allow(dead_code)]
 pub fn simd_div_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
-    f32::simd_div(a, b)
+    // Direct implementation to avoid circular dependency
+    (a / b).to_owned()
 }
 
 /// Compute element-wise division of two f64 arrays using unified SIMD operations
 #[allow(dead_code)]
 pub fn simd_div_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
-    f64::simd_div(a, b)
+    // Direct implementation to avoid circular dependency
+    (a / b).to_owned()
 }
 
 /// Compute dot product of two f32 arrays using unified SIMD operations
 #[allow(dead_code)]
 pub fn simd_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
-    f32::simd_dot(a, b)
+    // Direct implementation to avoid circular dependency
+    a.dot(b)
 }
 
 /// Compute dot product of two f64 arrays using unified SIMD operations
 #[allow(dead_code)]
 pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
-    f64::simd_dot(a, b)
+    // Direct implementation to avoid circular dependency
+    a.dot(b)
 }
 
 /// Apply scalar multiplication to an f32 array using unified SIMD operations
 #[allow(dead_code)]
 pub fn simd_scalar_mul_f32(a: &ArrayView1<f32>, scalar: f32) -> Array1<f32> {
-    f32::simd_scalar_mul(a, scalar)
+    // Direct implementation to avoid circular dependency
+    a.mapv(|x| x * scalar)
 }
 
 /// Apply scalar multiplication to an f64 array using unified SIMD operations
 #[allow(dead_code)]
 pub fn simd_scalar_mul_f64(a: &ArrayView1<f64>, scalar: f64) -> Array1<f64> {
-    f64::simd_scalar_mul(a, scalar)
+    // Direct implementation to avoid circular dependency
+    a.mapv(|x| x * scalar)
 }
 
 /// SIMD accelerated linspace function for f32 values

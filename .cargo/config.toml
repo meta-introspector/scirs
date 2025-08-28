@@ -1,0 +1,32 @@
+[target.'cfg(target_os = "macos")']
+rustflags = ["-C", "link-args=-framework Accelerate"]
+
+[target.'cfg(target_os = "macos")'.env]
+DEP_LAPACK_SRC = "accelerate"
+LAPACK_SRC = "accelerate"
+BLAS_SRC = "accelerate"
+
+[target.'cfg(target_os = "linux")'.env]
+DEP_LAPACK_SRC = "openblas"
+LAPACK_SRC = "openblas"
+BLAS_SRC = "openblas"
+
+[target.'cfg(target_os = "windows")'.env]
+DEP_LAPACK_SRC = "intel-mkl"
+LAPACK_SRC = "intel-mkl"
+BLAS_SRC = "intel-mkl"
+
+[target.'cfg(target_os = "freebsd")'.env]
+DEP_LAPACK_SRC = "openblas"
+LAPACK_SRC = "openblas"
+BLAS_SRC = "openblas"
+
+[target.'cfg(target_os = "netbsd")'.env]
+DEP_LAPACK_SRC = "netlib"
+LAPACK_SRC = "netlib"
+BLAS_SRC = "netlib"
+
+[target.'cfg(target_os = "openbsd")'.env]
+DEP_LAPACK_SRC = "openblas"
+LAPACK_SRC = "openblas"
+BLAS_SRC = "openblas"

@@ -833,7 +833,7 @@ mod tests {
 
     #[test]
     fn test_config_operations() {
-        let mut config = ProductionConfig::new();
+        let config = ProductionConfig::new();
 
         // Test setting and getting
         config.set("test_key", "test_value").unwrap();

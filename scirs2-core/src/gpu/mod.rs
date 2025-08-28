@@ -1125,10 +1125,10 @@ mod tests {
         let buffer = GpuBuffer::<f32>::new(inner, 4);
 
         let data = vec![1.0f32, 2.0, 3.0, 4.0];
-        buffer.copy_from_host(&data);
+        let _ = buffer.copy_from_host(&data);
 
         let mut result = vec![0.0f32; 4];
-        buffer.copy_to_host(&mut result);
+        let _ = buffer.copy_to_host(&mut result);
 
         assert_eq!(result, data);
     }
@@ -1139,7 +1139,7 @@ mod tests {
         let buffer = GpuBuffer::<f32>::new(inner, 3);
 
         let data = vec![5.0f32, 6.0, 7.0];
-        buffer.copy_from_host(&data);
+        let _ = buffer.copy_from_host(&data);
 
         let result = buffer.to_vec();
         assert_eq!(result, data);
