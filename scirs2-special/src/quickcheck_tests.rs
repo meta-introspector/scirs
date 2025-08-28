@@ -354,12 +354,12 @@ mod orthogonal_polynomial_properties {
     #[quickcheck]
     fn legendre_symmetry(n: SmallInt, x: f64) -> bool {
         let n = n.0;
-        
+
         // Handle NaN input
         if x.is_nan() {
             return true;
         }
-        
+
         let x = x.clamp(-1.0, 1.0);
 
         let p_n_x = crate::orthogonal::legendre(n, x);

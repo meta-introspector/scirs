@@ -1091,7 +1091,20 @@ impl EnhancedPCA {
         };
 
         // Project onto principal components
-        let transformed = x_processed.dot(components);
+        // Components may be stored in different formats depending on the fit method used
+        let transformed = if components.shape()[1] == x_processed.shape()[1] {
+            // Components are stored in correct format: (n_components, n_features)
+            x_processed.dot(&components.t())
+        } else if components.shape()[0] == x_processed.shape()[1] {
+            // Components are stored transposed: (n_features, n_components)
+            x_processed.dot(components)
+        } else {
+            return Err(crate::error::TransformError::InvalidInput(format!(
+                "Component dimensions {:?} are incompatible with data dimensions {:?}",
+                components.shape(),
+                x_processed.shape()
+            )));
+        };
 
         Ok(transformed)
     }

@@ -719,7 +719,7 @@ fn complete_elliptic_e_approx(m: f64) -> f64 {
     // where K(m) is the complete elliptic integral of the first kind
     let k_m = complete_elliptic_k_approx(m);
     let e_m = k_m * (1.0 - m / 2.0) - (k_m - pi / 2.0) * m / 2.0;
-    
+
     // Ensure result is within mathematical bounds [1, π/2]
     e_m.max(1.0).min(pi / 2.0)
 }

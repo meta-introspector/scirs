@@ -307,10 +307,17 @@ pub mod utils {
         let convergence_metrics = if let Some(prev) = prev_state {
             let relative_change = (prev.objective_value - objective_value).abs()
                 / (prev.objective_value.abs() + 1e-12);
-            let param_change = (&parameters - &prev.parameters)
-                .mapv(|x| x * x)
-                .sum()
-                .sqrt();
+
+            // Ensure parameter arrays have the same shape before computing difference
+            let param_change = if parameters.len() == prev.parameters.len() {
+                (&parameters - &prev.parameters)
+                    .mapv(|x| x * x)
+                    .sum()
+                    .sqrt()
+            } else {
+                // If shapes don't match, use parameter norm as fallback
+                parameters.mapv(|x| x * x).sum().sqrt()
+            };
             let steps_since_improvement = if objective_value < prev.objective_value {
                 0
             } else {
