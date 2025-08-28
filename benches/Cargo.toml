@@ -27,6 +27,9 @@ name = "numerical_stability"
 path = "numerical_stability.rs"
 harness = false
 
+[lints]
+workspace = true
+
 [dependencies]
 # SciRS2 modules
 scirs2-core = { workspace = true, features = ["parallel", "simd", "profiling", "memory_management"] }

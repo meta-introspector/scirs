@@ -729,7 +729,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
                         use std::arch::x86_64::_MM_HINT_T0;
                         unsafe {
                             let ptr = data.as_ptr().add(prefetch_idx);
-                            _mm_prefetch(ptr as *const i8, MM_HINT_T0);
+                            _mm_prefetch(ptr as *const i8, _MM_HINT_T0);
                         }
                     }
                     #[cfg(not(target_arch = "x86_64"))]

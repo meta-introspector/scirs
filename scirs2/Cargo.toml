@@ -9,6 +9,9 @@ repository.workspace = true
 keywords = ["scientific", "mathematics", "science", "scipy", "ai"]
 categories = ["science", "mathematics", "algorithms"]
 
+[lints]
+workspace = true
+
 [dependencies]
 # Core module - always included
 scirs2-core = { workspace = true, features = ["cache", "logging", "profiling", "memory_management"] }

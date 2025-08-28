@@ -176,7 +176,7 @@ impl CounterType {
 #[derive(Debug, Clone)]
 pub struct CounterValue {
     /// Counter type
-    pub counter_type: CounterType,
+    pub countertype: CounterType,
     /// Raw counter value
     pub value: u64,
     /// Timestamp when value was read
@@ -191,7 +191,7 @@ impl CounterValue {
     /// Create a new counter value
     pub fn new(countertype: CounterType, value: u64) -> Self {
         Self {
-            counter_type: countertype,
+            countertype: countertype,
             value,
             timestamp: Instant::now(),
             enabled: true,
@@ -249,7 +249,7 @@ impl LinuxPerfCounter {
 
     /// Convert counter type to perf event type and config
     fn counter_to_perf_config(&self, countertype: &CounterType) -> Option<(u32, u64)> {
-        match counter_type {
+        match countertype {
             CounterType::CpuCycles => Some((0, 0)), // PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES
             CounterType::Instructions => Some((0, 1)), // PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS
             CounterType::CacheReferences => Some((0, 2)), // PERF_COUNT_HW_CACHE_REFERENCES
@@ -288,11 +288,11 @@ impl PerformanceCounter for LinuxPerfCounter {
     }
 
     fn is_available(&self, countertype: &CounterType) -> bool {
-        self.counter_to_perf_config(counter_type).is_some()
+        self.counter_to_perf_config(countertype).is_some()
     }
 
     fn start_counter(&self, countertype: &CounterType) -> CoreResult<()> {
-        if let Some(_event_type_config) = self.counter_to_perf_config(counter_type) {
+        if let Some(_event_type_config) = self.counter_to_perf_config(countertype) {
             // In a real implementation, we would:
             // 1. Create perf_event_attr structure
             // 2. Call perf_event_open syscall
@@ -302,58 +302,75 @@ impl PerformanceCounter for LinuxPerfCounter {
             let fd = 42; // Would be actual fd from perf_event_open
 
             let mut counters = self.active_counters.write().unwrap();
-            counters.insert(counter_type.clone(), fd);
+            counters.insert(countertype.clone(), fd);
 
             Ok(())
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{countertype:?}")).into())
         }
     }
 
     fn stop_counter(&self, countertype: &CounterType) -> CoreResult<()> {
         let mut counters = self.active_counters.write().unwrap();
-        if let Some(fd) = counters.remove(counter_type) {
+        if let Some(fd) = counters.remove(countertype) {
             // In real implementation: close(fd)
             let _ = fd;
             Ok(())
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{countertype:?}")).into())
         }
     }
 
     fn read_counter(&self, countertype: &CounterType) -> CoreResult<CounterValue> {
         let counters = self.active_counters.read().unwrap();
-        if let Some(_fd) = counters.get(counter_type) {
+        if let Some(_fd) = counters.get(countertype) {
             // In real implementation: read() from fd
             // For now, return a mock value
-            let mock_value = match counter_type {
+            let mock_value = match countertype {
                 CounterType::CpuCycles => 1_000_000,
                 CounterType::Instructions => 500_000,
                 CounterType::CacheReferences => 10_000,
                 CounterType::CacheMisses => 1_000,
+                CounterType::BranchInstructions => 100_000,
+                CounterType::BranchMisses => 5_000,
+                CounterType::BusCycles => 50_000,
+                CounterType::StalledCyclesFrontend => 10_000,
+                CounterType::StalledCyclesBackend => 20_000,
+                _ => 0,
             };
 
-            Ok(CounterValue::new(counter_type.clone(), mock_value))
+            Ok(CounterValue::new(countertype.clone(), mock_value))
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{countertype:?}")).into())
         }
     }
 
     fn read_counters(&self, countertypes: &[CounterType]) -> CoreResult<Vec<CounterValue>> {
         let mut results = Vec::new();
-        for counter_type in counter_types {
-            results.push(self.read_counter(counter_type)?);
+        for countertype in countertypes {
+            results.push(self.read_counter(countertype)?);
         }
         Ok(results)
     }
 
     fn reset_counter(&self, countertype: &CounterType) -> CoreResult<()> {
         let counters = self.active_counters.read().unwrap();
-        if counters.contains_key(counter_type) {
+        if counters.contains_key(countertype) {
             // In real implementation: ioctl(fd, PERF_EVENT_IOC_RESET, 0)
             Ok(())
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{countertype:?}")).into())
+        }
+    }
+
+    fn is_overflowed(&self, countertype: &CounterType) -> CoreResult<bool> {
+        let counters = self.active_counters.read().unwrap();
+        if counters.contains_key(countertype) {
+            // In real implementation: check overflow bit from perf_event read
+            // For now, always return false (not overflowed)
+            Ok(false)
+        } else {
+            Err(HardwareCounterError::CounterNotFound(format!("{countertype:?}")).into())
         }
     }
 }
@@ -375,7 +392,7 @@ impl WindowsPdhCounter {
 
     /// Convert counter type to PDH counter path
     fn counter_to_path(countertype: &CounterType) -> Option<String> {
-        match counter_type {
+        match countertype {
             CounterType::CpuCycles => Some("\\Processor(_Total)\\% Processor Time".to_string()),
             CounterType::CpuFrequency => {
                 Some("\\Processor Information(_Total)\\Processor Frequency".to_string())
@@ -403,51 +420,51 @@ impl PerformanceCounter for WindowsPdhCounter {
         ]
     }
 
-    fn is_counter_supported(&self, countertype: &CounterType) -> bool {
-        Self::counter_to_path(counter_type).is_some()
+    fn is_available(&self, countertype: &CounterType) -> bool {
+        Self::counter_to_path(countertype).is_some()
     }
 
     fn start_counter(&self, countertype: &CounterType) -> CoreResult<()> {
-        if let Some(path) = Self::counter_to_path(counter_type) {
+        if let Some(path) = Self::counter_to_path(countertype) {
             // In real implementation: PDH API calls
             let mut counters = self.active_counters.write().unwrap();
-            counters.insert(counter_type.clone(), path);
+            counters.insert(countertype.clone(), path);
             Ok(())
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{countertype:?}")).into())
         }
     }
 
     fn stop_counter(&self, countertype: &CounterType) -> CoreResult<()> {
         let mut counters = self.active_counters.write().unwrap();
-        if counters.remove(counter_type).is_some() {
+        if counters.remove(countertype).is_some() {
             Ok(())
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{countertype:?}")).into())
         }
     }
 
     fn read_counter(&self, countertype: &CounterType) -> CoreResult<CounterValue> {
         let counters = self.active_counters.read().unwrap();
-        if counters.contains_key(counter_type) {
+        if counters.contains_key(countertype) {
             // Mock values for Windows
-            let mock_value = match counter_type {
+            let mock_value = match countertype {
                 CounterType::CpuCycles => 85,               // CPU usage percentage
                 CounterType::CpuFrequency => 2_400_000_000, // 2.4 GHz
                 CounterType::CpuPower => 45,                // 45 watts
                 _ => 0,
             };
 
-            Ok(CounterValue::new(counter_type.clone(), mock_value))
+            Ok(CounterValue::new(countertype.clone(), mock_value))
         } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
+            Err(HardwareCounterError::CounterNotFound(format!("{countertype:?}")).into())
         }
     }
 
     fn read_counters(&self, countertypes: &[CounterType]) -> CoreResult<Vec<CounterValue>> {
         let mut results = Vec::new();
-        for counter_type in counter_types {
-            results.push(self.read_counter(counter_type)?);
+        for countertype in countertypes {
+            results.push(self.read_counter(countertype)?);
         }
         Ok(results)
     }
@@ -458,6 +475,11 @@ impl PerformanceCounter for WindowsPdhCounter {
             HardwareCounterError::InvalidConfiguration("PDH counters cannot be reset".to_string())
                 .into(),
         )
+    }
+
+    fn is_overflowed(&self, _countertype: &CounterType) -> CoreResult<bool> {
+        // PDH counters don't typically overflow in our implementation
+        Ok(false)
     }
 }
 
@@ -544,8 +566,8 @@ impl PerformanceCounter for MacOSCounter {
 
     fn read_counters(&self, countertypes: &[CounterType]) -> CoreResult<Vec<CounterValue>> {
         let mut results = Vec::new();
-        for counter_type in countertypes {
-            results.push(self.read_counter(counter_type)?);
+        for countertype in countertypes {
+            results.push(self.read_counter(countertype)?);
         }
         Ok(results)
     }
@@ -657,7 +679,7 @@ impl HardwareCounterManager {
         // Store in history
         let mut history = self.counter_history.write().unwrap();
         for value in &values {
-            let counter_history = history.entry(value.counter_type.clone()).or_default();
+            let counter_history = history.entry(value.countertype.clone()).or_default();
 
             counter_history.push(value.clone());
 
@@ -670,7 +692,7 @@ impl HardwareCounterManager {
         // Convert to HashMap
         let result = values
             .into_iter()
-            .map(|value| (value.counter_type.clone(), value))
+            .map(|value| (value.countertype.clone(), value))
             .collect();
 
         Ok(result)
@@ -842,12 +864,12 @@ impl PerformanceReport {
         output.push_str(&format!("Timestamp: {:?}\n\n", self.timestamp));
 
         output.push_str("Raw Counters:\n");
-        for (counter_type, value) in &self.counter_values {
+        for (countertype, value) in &self.counter_values {
             output.push_str(&format!(
                 "  {}: {} {}\n",
-                counter_type.description(),
+                countertype.description(),
                 value.scaled_value(),
-                counter_type.unit()
+                countertype.unit()
             ));
         }
 
@@ -955,7 +977,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_counter_type_properties() {
+    fn test_countertype_properties() {
         let counter = CounterType::CpuCycles;
         assert_eq!(counter.description(), "CPU cycles");
         assert_eq!(counter.unit(), "count");
@@ -970,7 +992,7 @@ mod tests {
         let counter = CounterType::Instructions;
         let value = CounterValue::new(counter.clone(), 1000);
 
-        assert_eq!(value.counter_type, counter);
+        assert_eq!(value.countertype, counter);
         assert_eq!(value.value, 1000);
         assert_eq!(value.scaled_value(), 1000.0);
         assert!(value.enabled);

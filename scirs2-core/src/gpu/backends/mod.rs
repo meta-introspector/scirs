@@ -10,7 +10,7 @@ use std::process::Command;
 use serde_json;
 
 #[cfg(feature = "validation")]
-use regex;
+use regex::Regex;
 
 // Backend implementation modules
 #[cfg(feature = "cuda")]
@@ -284,7 +284,7 @@ fn detect_metal_devices() -> Result<Vec<GpuInfo>, GpuError> {
                 {
                     // Pre-compile regex outside loop for performance
                     #[cfg(feature = "validation")]
-                    let vram_regex = regex::Regex::new(r"(\d+)\s*(GB|MB)").ok();
+                    let vram_regex = Regex::new(r"(\d+)\s*(GB|MB)").ok();
 
                     for display in displays {
                         // Extract GPU information from each display

@@ -463,7 +463,7 @@ impl MemoryPrefetch {
     pub fn prefetch_read<T>(ptr: *const T) {
         #[cfg(target_arch = "x86_64")]
         unsafe {
-            std::arch::x86_64::_mm_prefetch(_ptr as *const i8, std::arch::x86_64::_MM_HINT_T0);
+            std::arch::x86_64::_mm_prefetch(ptr as *const i8, std::arch::x86_64::_MM_HINT_T0);
         }
 
         #[cfg(not(target_arch = "x86_64"))]
@@ -478,7 +478,7 @@ impl MemoryPrefetch {
     pub fn prefetch_write<T>(ptr: *const T) {
         #[cfg(target_arch = "x86_64")]
         unsafe {
-            std::arch::x86_64::_mm_prefetch(_ptr as *const i8, std::arch::x86_64::_MM_HINT_T0);
+            std::arch::x86_64::_mm_prefetch(ptr as *const i8, std::arch::x86_64::_MM_HINT_T0);
         }
 
         #[cfg(not(target_arch = "x86_64"))]
@@ -493,7 +493,7 @@ impl MemoryPrefetch {
     pub fn prefetch_stream<T>(ptr: *const T) {
         #[cfg(target_arch = "x86_64")]
         unsafe {
-            std::arch::x86_64::_mm_prefetch(_ptr as *const i8, std::arch::x86_64::_MM_HINT_NTA);
+            std::arch::x86_64::_mm_prefetch(ptr as *const i8, std::arch::x86_64::_MM_HINT_NTA);
         }
 
         #[cfg(not(target_arch = "x86_64"))]

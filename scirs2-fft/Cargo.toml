@@ -21,6 +21,9 @@ hip = [] # Optional ROCm/HIP support for AMD GPU acceleration
 sycl = [] # Optional SYCL support for cross-platform GPU acceleration
 never = [] # Used to conditionally disable tests during development
 
+[lints]
+workspace = true
+
 [dependencies]
 # Core dependencies
 ndarray = { workspace = true }

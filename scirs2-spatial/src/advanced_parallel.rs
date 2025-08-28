@@ -569,8 +569,8 @@ impl WorkStealingPool {
                 // Set affinity to NUMA node
                 #[cfg(target_os = "linux")]
                 {
-                    if let Err(e) = Self::set_numa_affinity_linux(numa_node) {
-                        eprintln!("Warning: Failed to set NUMA affinity for node {numa_node}: {e}");
+                    if let Err(e) = Self::set_numa_affinity_linux(numanode) {
+                        eprintln!("Warning: Failed to set NUMA affinity for node {}: {}", numanode, e);
                     }
                 }
                 #[cfg(target_os = "windows")]
@@ -615,7 +615,7 @@ impl WorkStealingPool {
     fn set_cpu_affinity_linux(_cpuid: usize) -> Result<(), Box<dyn std::error::Error>> {
         unsafe {
             let mut cpu_set: libc::cpu_set_t = std::mem::zeroed();
-            libc::CPU_SET(_cpu_id, &mut cpu_set);
+            libc::CPU_SET(_cpuid, &mut cpu_set);
 
             let result = libc::sched_setaffinity(
                 0, // Current thread
@@ -637,9 +637,9 @@ impl WorkStealingPool {
         use std::fs;
 
         // Read the CPU list for this NUMA node
-        let cpulist_path = format!("/sys/devices/system/node/node{_numa_node}/cpulist");
+        let cpulist_path = format!("/sys/devices/system/node/node{}/cpulist", _numanode);
         let cpulist = fs::read_to_string(&cpulist_path)
-            .map_err(|_| format!("Failed to read NUMA node {numa_node} CPU list"))?;
+            .map_err(|_| format!("Failed to read NUMA node {} CPU list", _numanode))?;
 
         unsafe {
             let mut cpu_set: libc::cpu_set_t = std::mem::zeroed();
@@ -675,7 +675,7 @@ impl WorkStealingPool {
     #[cfg(target_os = "linux")]
     fn set_custom_cpu_affinity_linux(_cpuid: usize) -> Result<(), Box<dyn std::error::Error>> {
         // Same implementation as set_cpu_affinity_linux
-        Self::set_cpu_affinity_linux(_cpu_id)
+        Self::set_cpu_affinity_linux(_cpuid)
     }
 
     /// Set CPU affinity on Windows

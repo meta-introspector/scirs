@@ -355,11 +355,11 @@ impl DistancePool {
     pub fn bind_thread_to_numa_node(node: u32) -> Result<(), Box<dyn std::error::Error>> {
         #[cfg(target_os = "linux")]
         {
-            Self::bind_thread_to_numa_node_linux(_node)
+            Self::bind_thread_to_numa_node_linux(node)
         }
         #[cfg(target_os = "windows")]
         {
-            Self::bind_thread_to_numa_node_windows(_node)
+            Self::bind_thread_to_numa_node_windows(node)
         }
         #[cfg(not(any(target_os = "linux", target_os = "windows")))]
         {
@@ -373,11 +373,11 @@ impl DistancePool {
         // Still attempt CPU affinity for performance
 
         // Try to set CPU affinity to CPUs on this NUMA _node
-        if let Some(_cpu_count) = Self::get_node_cpu_count(_node) {
+        if let Some(_cpu_count) = Self::get_node_cpu_count(node) {
             let mut cpu_set: libc::cpu_set_t = unsafe { std::mem::zeroed() };
 
             // Read the CPU list for this NUMA _node
-            let cpulist_path = format!("/sys/devices/system/_node/_node{_node}/cpulist");
+            let cpulist_path = format!("/sys/devices/system/node/node{}/cpulist", node);
             if let Ok(cpulist) = fs::read_to_string(&cpulist_path) {
                 for range in cpulist.trim().split(',') {
                     if let Some((start, end)) = range.split_once('-') {
@@ -462,7 +462,7 @@ impl DistancePool {
     }
 
     #[cfg(target_os = "linux")]
-    fn get_current_numa_node_linux(&self) -> Result<i32, Box<dyn std::error::Error>> {
+    fn get_current_numa_node_linux() -> Result<i32, Box<dyn std::error::Error>> {
         // Use getcpu syscall to get current CPU and NUMA node
         let mut cpu: u32 = 0;
         let mut node: u32 = 0;
@@ -484,7 +484,7 @@ impl DistancePool {
     }
 
     #[cfg(target_os = "linux")]
-    fn detect_numa_from_cpu_linux(&self) -> Option<i32> {
+    fn detect_numa_from_cpu_linux() -> Option<i32> {
         // Try to read NUMA topology from /sys/devices/system/node/
         if let Ok(entries) = fs::read_dir("/sys/devices/system/node") {
             for entry in entries.flatten() {
@@ -565,8 +565,7 @@ impl DistancePool {
                     .unwrap_or(8 * 1024 * 1024 * 1024), // 8GB default
                 available_memory_bytes: Self::get_available_system_memory()
                     .unwrap_or(4 * 1024 * 1024 * 1024), // 4GB default
-                cpu_count: num,
-                _cpus: get() as u32,
+                cpu_count: num_cpus::get() as u32,
             });
         }
 
@@ -588,7 +587,7 @@ impl DistancePool {
 
     #[cfg(target_os = "linux")]
     fn get_node_cpu_count(_nodeid: u32) -> Option<u32> {
-        let cpulist_path = format!("/sys/devices/system/node/node{_node_id}/cpulist");
+        let cpulist_path = format!("/sys/devices/system/node/node{}/cpulist", _nodeid);
         if let Ok(cpulist) = fs::read_to_string(&cpulist_path) {
             // Parse CPU list (e.g., "0-3,8-11" -> 8 CPUs)
             let mut count = 0;
@@ -608,7 +607,7 @@ impl DistancePool {
     }
 
     #[cfg(target_os = "linux")]
-    fn get_total_system_memory(&self) -> Option<u64> {
+    fn get_total_system_memory() -> Option<u64> {
         if let Ok(meminfo) = fs::read_to_string("/proc/meminfo") {
             for line in meminfo.lines() {
                 if line.starts_with("MemTotal:") {
@@ -623,7 +622,7 @@ impl DistancePool {
     }
 
     #[cfg(target_os = "linux")]
-    fn get_available_system_memory(&self) -> Option<u64> {
+    fn get_available_system_memory() -> Option<u64> {
         if let Ok(meminfo) = fs::read_to_string("/proc/meminfo") {
             for line in meminfo.lines() {
                 if line.starts_with("MemAvailable:") {

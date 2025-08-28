@@ -593,7 +593,7 @@ pub mod matrix_simd {
                                     let ptr = data.as_ptr().add(ii * cols + jj);
                                     #[cfg(target_arch = "x86_64")]
                                     {
-                                        _mm_prefetch(ptr as *const i8_MM_HINT_T0);
+                                        _mm_prefetch(ptr as *const i8, _MM_HINT_T0);
                                     }
                                     // For non-x86 architectures, just touch the memory
                                     #[cfg(not(target_arch = "x86_64"))]
@@ -1144,12 +1144,12 @@ impl AdvancedSimdProcessor {
             while i < simd_end {
                 // Prefetch next cache line
                 if i + 64 < len {
-                    _mm_prefetch(src.as_ptr().add(i + 64) as *const i8_MM_HINT_T0);
+                    _mm_prefetch(src.as_ptr().add(i + 64) as *const i8, _MM_HINT_T0);
                 }
 
                 // Load, copy, and store 32 bytes
-                let data = _mm256_loadu_si256(src.as_ptr().add(i) as *const _m256i);
-                _mm256_storeu_si256(dst.as_mut_ptr().add(i) as *mut _m256i, data);
+                let data = _mm256_loadu_si256(src.as_ptr().add(i) as *const __m256i);
+                _mm256_storeu_si256(dst.as_mut_ptr().add(i) as *mut __m256i, data);
 
                 i += 32;
             }
@@ -1172,12 +1172,12 @@ impl AdvancedSimdProcessor {
             while i < simd_end {
                 // Prefetch next cache line
                 if i + 64 < len {
-                    _mm_prefetch(src.as_ptr().add(i + 64) as *const i8_MM_HINT_T0);
+                    _mm_prefetch(src.as_ptr().add(i + 64) as *const i8, _MM_HINT_T0);
                 }
 
                 // Load, copy, and store 16 bytes
-                let data = _mm_loadu_si128(src.as_ptr().add(i) as *const _m128i);
-                _mm_storeu_si128(dst.as_mut_ptr().add(i) as *mut _m128i, data);
+                let data = _mm_loadu_si128(src.as_ptr().add(i) as *const __m128i);
+                _mm_storeu_si128(dst.as_mut_ptr().add(i) as *mut __m128i, data);
 
                 i += 16;
             }

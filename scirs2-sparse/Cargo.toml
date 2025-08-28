@@ -16,6 +16,9 @@ simd = ["scirs2-core/simd"]
 gpu = ["scirs2-core/gpu"]
 random = ["scirs2-core/random"]
 
+[lints]
+workspace = true
+
 [dependencies]
 # Core dependencies
 scirs2-core = { workspace = true }

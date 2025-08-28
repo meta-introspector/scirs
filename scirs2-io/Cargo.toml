@@ -9,6 +9,9 @@ repository.workspace = true
 keywords = ["io", "serialization", "data", "scientific", "scipy"]
 categories = ["science", "encoding"]
 
+[lints]
+workspace = true
+
 [dependencies]
 ndarray = { workspace = true }
 scirs2-core = { workspace = true, features = ["parallel", "simd", "gpu"] }

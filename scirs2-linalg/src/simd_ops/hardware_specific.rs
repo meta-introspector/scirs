@@ -448,7 +448,7 @@ unsafe fn avx2_dot_f64(_x_ptr: *const f64, yptr: *const f64, n: usize) -> Linalg
     let mut i = 0;
     while i + BLOCK_SIZE <= n {
         let x_vec = _mm256_loadu_pd(_x_ptr.add(i));
-        let y_vec = _mm256_loadu_pd(y_ptr.add(i));
+        let y_vec = _mm256_loadu_pd(yptr.add(i));
         sum = _mm256_fmadd_pd(x_vec, y_vec, sum);
         i += BLOCK_SIZE;
     }
@@ -482,7 +482,7 @@ unsafe fn avx2_dot_f32(_x_ptr: *const f32, yptr: *const f32, n: usize) -> Linalg
     let mut i = 0;
     while i + BLOCK_SIZE <= n {
         let x_vec = _mm256_loadu_ps(_x_ptr.add(i));
-        let y_vec = _mm256_loadu_ps(y_ptr.add(i));
+        let y_vec = _mm256_loadu_ps(yptr.add(i));
         sum = _mm256_fmadd_ps(x_vec, y_vec, sum);
         i += BLOCK_SIZE;
     }

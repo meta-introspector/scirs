@@ -9,6 +9,9 @@ repository.workspace = true
 keywords = ["linear-algebra", "matrix", "scientific", "scipy", "numerical"]
 categories = ["science", "mathematics", "algorithms"]
 
+[lints]
+workspace = true
+
 [dependencies]
 # Core dependencies
 scirs2-core = { workspace = true, features = ["linalg", "parallel", "simd", "random"] }

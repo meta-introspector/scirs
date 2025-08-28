@@ -9,6 +9,9 @@ repository.workspace = true
 keywords = ["autograd", "machine-learning", "scientific", "ai", "ml"]
 categories = ["science", "mathematics", "algorithms"]
 
+[lints]
+workspace = true
+
 [dependencies]
 ndarray = { workspace = true }
 num-traits = { workspace = true }

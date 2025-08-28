@@ -13,6 +13,9 @@ categories = ["science", "mathematics", "algorithms"]
 name = "transform_bench"
 harness = false
 
+[lints]
+workspace = true
+
 [dependencies]
 # Core dependencies
 scirs2-core = { workspace = true, features = ["validation", "parallel", "simd"] }

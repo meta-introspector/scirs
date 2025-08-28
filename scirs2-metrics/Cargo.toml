@@ -10,6 +10,9 @@ keywords = ["metrics", "evaluation", "scientific", "ai", "machine-learning"]
 categories = ["science", "mathematics", "algorithms"]
 build = "build.rs"
 
+[lints]
+workspace = true
+
 [dependencies]
 # Core dependencies
 scirs2-core = { workspace = true, features = ["parallel", "simd"] }

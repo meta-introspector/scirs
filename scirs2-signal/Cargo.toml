@@ -9,6 +9,9 @@ repository.workspace = true
 keywords = ["signal-processing", "filter", "scientific", "scipy", "numerical"]
 categories = ["science", "mathematics", "algorithms"]
 
+[lints]
+workspace = true
+
 [dependencies]
 # Core dependencies
 scirs2-core = { workspace = true, features = ["parallel"] }

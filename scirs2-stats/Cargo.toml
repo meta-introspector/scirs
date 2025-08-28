@@ -9,6 +9,9 @@ repository.workspace = true
 keywords = ["statistics", "probability", "scientific", "scipy", "numerical"]
 categories = ["science", "mathematics", "algorithms"]
 
+[lints]
+workspace = true
+
 [dependencies]
 # Core dependencies
 ndarray = { workspace = true }

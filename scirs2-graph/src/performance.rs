@@ -325,7 +325,7 @@ pub mod simd_ops {
     /// SIMD-optimized vector normalization
     #[allow(dead_code)]
     pub fn simd_normalize(vector: &mut [f64]) {
-        let vector_view = ndarray::ArrayView1::from(&*_vector);
+        let vector_view = ndarray::ArrayView1::from(&*vector);
         let norm = f64::simd_norm(&vector_view);
         if norm > 0.0 {
             for val in vector.iter_mut() {

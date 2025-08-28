@@ -1,7 +1,0 @@
-[build]
-rustflags = ["-framework", "Accelerate"]
-
-[env]
-DEP_LAPACK_SRC = "accelerate"
-LAPACK_SRC = "accelerate"
-BLAS_SRC = "accelerate"

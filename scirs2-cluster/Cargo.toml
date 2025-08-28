@@ -9,6 +9,9 @@ repository = "https://github.com/cool-japan/scirs"
 keywords = ["clustering", "scientific", "scipy", "numerical", "kmeans"]
 categories = ["science", "mathematics", "algorithms"]
 
+[lints]
+workspace = true
+
 [dependencies]
 # Core dependencies
 scirs2-core = { workspace = true, features = ["parallel", "simd"] }

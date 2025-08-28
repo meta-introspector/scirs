@@ -344,7 +344,7 @@ impl ClusterManager {
                 .arg("-t")  // Terminate after cache is exhausted
                 .arg("-r")  // Resolve found services
                 .arg("-p")  // Parseable output
-                .arg(_service_name)
+                .arg(_servicename)
                 .output()
             {
                 Ok(output) => {
@@ -393,7 +393,7 @@ impl ClusterManager {
                     // avahi-browse not available, try nslookup for basic SRV record resolution
                     match Command::new("nslookup")
                         .arg("-type=SRV")
-                        .arg(_service_name)
+                        .arg(_servicename)
                         .output()
                     {
                         Ok(output) => {
@@ -456,7 +456,7 @@ impl ClusterManager {
             // On Windows, try to use dns-sd command if available
             match Command::new("dns-sd")
                 .arg("-B")  // Browse for services
-                .arg(_service_name)
+                .arg(_servicename)
                 .output()
             {
                 Ok(output) => {
@@ -468,7 +468,7 @@ impl ClusterManager {
 
                     // Parse dns-sd output (simplified implementation)
                     for line in output_str.lines() {
-                        if line.contains(_service_name) {
+                        if line.contains(_servicename) {
                             // Extract service information
                             // This is a simplified parser - real implementation would be more robust
                             let parts: Vec<&str> = line.split_whitespace().collect();

@@ -477,7 +477,7 @@ impl ErrorRecoverySystem {
 
     /// Detect SIMD capabilities
     fn detect_simd_capabilities(&self) -> Vec<String> {
-        let capabilities = Vec::new();
+        let mut capabilities = Vec::new();
 
         #[cfg(target_arch = "x86_64")]
         {

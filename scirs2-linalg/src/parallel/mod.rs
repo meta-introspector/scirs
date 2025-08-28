@@ -2279,12 +2279,12 @@ pub mod affinity {
 
             #[cfg(target_os = "linux")]
             {
-                self.apply_linux_affinity(affinity)
+                self.apply_linux_affinity(_affinity)
             }
 
             #[cfg(target_os = "windows")]
             {
-                self.apply_windows_affinity(affinity)
+                self.apply_windows_affinity(_affinity)
             }
 
             #[cfg(not(any(target_os = "linux", target_os = "windows")))]

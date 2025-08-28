@@ -373,6 +373,7 @@ impl AdvancedParallelConfig {
                                             (1, "Instruction") => l1_instruction = size,
                                             (2, "Unified") => l2_unified = size,
                                             (3, "Unified") => l3_shared = size,
+                                            _ => {} // Ignore other cache levels or types
                                         }
                                     }
                                 }

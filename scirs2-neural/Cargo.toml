@@ -9,6 +9,9 @@ repository.workspace = true
 keywords = ["neural-network", "deep-learning", "scientific", "ai", "machine-learning"]
 categories = ["science", "mathematics", "algorithms"]
 
+[lints]
+workspace = true
+
 [dependencies]
 # Essential dependencies only
 ndarray = { workspace = true, features = ["serde", "rayon"] }

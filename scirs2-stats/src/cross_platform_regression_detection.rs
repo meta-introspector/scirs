@@ -152,7 +152,7 @@ impl PlatformInfo {
     }
 
     fn detect_simd_capabilities() -> Vec<String> {
-        let capabilities = Vec::new();
+        let mut capabilities = Vec::new();
 
         #[cfg(target_arch = "x86_64")]
         {

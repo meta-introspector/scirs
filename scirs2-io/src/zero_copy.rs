@@ -805,7 +805,7 @@ impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
                 }
                 NumaMemoryPolicy::Local => {
                     // Use local NUMA _node
-                    eprintln!("Using local NUMA _node {numa_node}");
+                    eprintln!("Using local NUMA _node {numanode}");
                 }
                 NumaMemoryPolicy::Default => {
                     // Use system default

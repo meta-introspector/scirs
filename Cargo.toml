@@ -36,6 +36,10 @@ resolver = "2"
 [workspace.metadata.nox]
 bench_crates = ["scirs2-ndimage"]
 
+[workspace.lints.rust]
+unused_variables = "allow"
+unused_imports = "allow"
+
 [workspace.package]
 version = "0.1.0-beta.1"
 edition = "2021"
