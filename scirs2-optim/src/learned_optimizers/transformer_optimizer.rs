@@ -3134,7 +3134,7 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerNetwork<T> {
     }
 
     fn forward(&mut self, input: &Array2<T>) -> Result<Array2<T>> {
-        let (_seq_len_) = input.dim();
+        let _seq_len_ = input.dim();
 
         // Input embedding
         let mut x = self.input_embedding.forward(input)?;

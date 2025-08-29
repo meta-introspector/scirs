@@ -4918,7 +4918,7 @@ impl<T: Float + Send + Sync> ArchitecturePerformancePredictor<T> for HistoryBase
 
         // Confidence based on similarity to historical data
         let mut max_similarity = T::zero();
-        for (hist_features_) in &self.performance_history {
+        for hist_features_ in &self.performance_history {
             let similarity = self.calculate_similarity(&features, &hist_features_.0);
             max_similarity = max_similarity.max(similarity);
         }
@@ -5037,7 +5037,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> EnsembleUncertaintyEstimator<T> {
 
         let variance: T = predictions
             .iter()
-            .map(|(p_)| {
+            .map(|p_| {
                 let diff = p_.0 - mean;
                 diff * diff
             })

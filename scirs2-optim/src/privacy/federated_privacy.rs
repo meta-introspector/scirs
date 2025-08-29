@@ -3151,7 +3151,7 @@ impl<
         let mut selected = Vec::new();
         let mut rng = scirs2_core::random::rng();
 
-        for (clients) in device_groups {
+        for clients in device_groups {
             if clients.1.is_empty() {
                 continue;
             }
