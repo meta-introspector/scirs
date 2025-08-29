@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 // Spatial algorithms module
 //
 // This module provides implementations of various spatial algorithms,

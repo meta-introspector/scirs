@@ -4019,7 +4019,7 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
 
         if rng.random_f64() < epsilon {
             // Explore: choose randomly
-            Ok(rng.random_range(0, self.strategies.len()))
+            Ok(rng.gen_range(0..self.strategies.len()))
         } else {
             // Exploit: use performance-weighted selection
             let mut weighted_scores = strategy_scores.clone();

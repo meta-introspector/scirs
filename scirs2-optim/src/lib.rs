@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 //! Machine Learning optimization module for SciRS2
 //!
 //! This module provides optimization algorithms specifically designed for machine learning,

@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 //! Optimization module for SciRS
 //!
 //! This module provides implementations of various optimization algorithms,

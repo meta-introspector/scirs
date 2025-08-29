@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 #![allow(clippy::approx_constant)]
 
 //! Statistical functions module

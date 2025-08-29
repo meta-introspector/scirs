@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 //! # Text Processing Module for SciRS2
 //!
 //! This module provides comprehensive text processing functionality for scientific computing

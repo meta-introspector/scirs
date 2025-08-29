@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 //! Signal Processing Module - Phase 3 Complete: Comprehensive Signal Processing
 //!
 //! This version provides comprehensive signal processing capabilities including time-domain,

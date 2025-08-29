@@ -108,7 +108,7 @@ impl MutationOperator for UniformMutation {
         for i in 0..solution.len() {
             if rng.random::<f64>() <= self.mutation_probability {
                 let (lower, upper) = bounds[i];
-                solution[i] = rng.random_range(lower..upper);
+                solution[i] = rng.gen_range(lower..upper);
             }
         }
     }

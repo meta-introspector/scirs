@@ -977,8 +977,8 @@ impl EnhancedPCA {
         for i in 0..rows {
             for j in 0..cols {
                 // Box-Muller transform to generate Gaussian from uniform
-                let u1 = rng.random_range(0.0..1.0);
-                let u2 = rng.random_range(0.0..1.0);
+                let u1 = rng.gen_range(0.0..1.0);
+                let u2 = rng.gen_range(0.0..1.0);
 
                 // Ensure u1 is not zero to avoid log(0)
                 let u1 = if u1 == 0.0 { f64::EPSILON } else { u1 };
@@ -1179,7 +1179,7 @@ impl EnhancedPCA {
         use rand::Rng;
         let mut rng = rand::rng();
         let mut vector: Array1<f64> =
-            Array1::from_shape_fn(n, |_| rng.random_range(0.0..1.0) - 0.5);
+            Array1::from_shape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
 
         // Normalize the initial vector
         let norm = vector.dot(&vector).sqrt();
@@ -2082,7 +2082,7 @@ impl AdvancedPCA {
         // Use SIMD-friendly initialization
         for mut column in omega.columns_mut() {
             for val in column.iter_mut() {
-                *val = rng.random_range(0.0..1.0) - 0.5;
+                *val = rng.gen_range(0.0..1.0) - 0.5;
             }
         }
 
@@ -2483,7 +2483,7 @@ impl AdvancedPCA {
         // Initialize with normalized random vector
         use rand::Rng;
         let mut rng = rand::rng();
-        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(0.0..1.0) - 0.5);
+        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
 
         // Initial normalization
         let initial_norm = vector.dot(&vector).sqrt();
@@ -2852,7 +2852,7 @@ impl CacheOptimizedAlgorithms {
         // Initialize random vector
         use rand::Rng;
         let mut rng = rand::rng();
-        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(0.0..1.0) - 0.5);
+        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
 
         // Normalize
         let norm = Self::blocked_norm(&vector..block_size)?;

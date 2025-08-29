@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 //! N-dimensional image processing module
 //!
 //! This module provides functions for processing and analyzing n-dimensional arrays as images.

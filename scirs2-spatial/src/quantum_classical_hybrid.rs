@@ -212,7 +212,7 @@ impl HybridSpatialOptimizer {
     }
 
     /// Enable variational quantum component
-    pub fn with_variational_quantum_component(mut self, enabled: bool) -> Self {
+    pub fn with_variational_quantum_component(self, enabled: bool) -> Self {
         if enabled {
             // self.vqe = Some(VariationalQuantumEigensolver::new(8)); // Default 8 qubits // VQE disabled
         } else {

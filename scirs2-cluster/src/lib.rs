@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 //! Clustering algorithms module for SciRS2
 //!
 //! This module provides implementations of various clustering algorithms such as:

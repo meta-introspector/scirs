@@ -25,8 +25,8 @@ impl TournamentSelection {
 
     fn binary_tournament(&self, population: &[Solution]) -> Solution {
         let mut rng = rand::rng();
-        let idx1 = rng.random_range(0..population.len());
-        let idx2 = rng.random_range(0..population.len());
+        let idx1 = rng.gen_range(0..population.len());
+        let idx2 = rng.gen_range(0..population.len());
 
         let sol1 = &population[idx1];
         let sol2 = &population[idx2];
@@ -74,7 +74,7 @@ impl SelectionOperator for RandomSelection {
         let mut rng = rand::rng();
         let mut selected = Vec::with_capacity(n_select);
         for _ in 0..n_select.min(population.len()) {
-            let idx = rng.random_range(0..population.len());
+            let idx = rng.gen_range(0..population.len());
             selected.push(population[idx].clone());
         }
         selected

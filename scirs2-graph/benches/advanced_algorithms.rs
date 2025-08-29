@@ -225,10 +225,10 @@ fn bench_flow_algorithms(c: &mut Criterion) {
 
         // Add edges with random capacities
         for _ in 0..(size * 2) {
-            let u = rng.random_range(0..size);
-            let v = rng.random_range(0..size);
+            let u = rng.gen_range(0..size);
+            let v = rng.gen_range(0..size);
             if u != v {
-                let capacity = rng.random_range(1.0..10.0);
+                let capacity = rng.gen_range(1.0..10.0);
                 let _ = digraph.add_edge(u, v, capacity);
             }
         }
@@ -353,8 +353,8 @@ fn bench_similarity_measures(c: &mut Criterion) {
         // Jaccard similarity for random node pairs
         let node_pairs: Vec<(usize, usize)> = (0..100)
             .map(|_| {
-                let u = rng.random_range(0..size);
-                let v = rng.random_range(0..size);
+                let u = rng.gen_range(0..size);
+                let v = rng.gen_range(0..size);
                 (u, v)
             })
             .collect();
@@ -444,7 +444,7 @@ fn bench_random_walks(c: &mut Criterion) {
                 b.iter(|| {
                     let mut walks = Vec::new();
                     for _ in 0..100 {
-                        let start = rng.random_range(0..g.node_count());
+                        let start = rng.gen_range(0..g.node_count());
                         if let Ok(walk) = random_walk(g, &start, 50, 0.15) {
                             walks.push(walk);
                         }
@@ -462,7 +462,7 @@ fn bench_random_walks(c: &mut Criterion) {
                 b.iter(|| {
                     let mut walks = Vec::new();
                     for _ in 0..100 {
-                        let start = rng.random_range(0..g.node_count());
+                        let start = rng.gen_range(0..g.node_count());
                         if let Ok(walk) = random_walk(g, &start, 50, 0.5) {
                             walks.push(walk);
                         }
@@ -489,7 +489,7 @@ fn bench_random_walks(c: &mut Criterion) {
             b.iter(|| {
                 let mut walks = Vec::new();
                 for _ in 0..100 {
-                    let start = rng.random_range(0..g.node_count());
+                    let start = rng.gen_range(0..g.node_count());
                     if let Ok(walk) = random_walk(g, &start, 50, 0.15) {
                         walks.push(walk);
                     }

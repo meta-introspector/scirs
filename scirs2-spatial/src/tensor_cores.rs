@@ -1082,6 +1082,7 @@ impl TensorCoreDistanceMatrix {
     }
 
     /// Tensor core GEMM operation in INT8
+    #[allow(dead_code)]
     async fn tensor_core_gemm_int8(
         &self,
         a: &Array2<i8>,
@@ -1355,7 +1356,7 @@ impl TensorCoreClustering {
         let mut rng = rand::rng();
 
         // Choose first centroid randomly
-        let first_idx = rng.random_range(0..npoints);
+        let first_idx = rng.gen_range(0..npoints);
         centroids.row_mut(0).assign(&points.row(first_idx));
 
         // Choose remaining centroids with probability proportional to distance

@@ -52,7 +52,7 @@ pub use rand::{Rng, RngCore};
 
 /// Compatibility wrapper for updated rand API
 /// In rand 0.9, provides a convenient alias for rng() wrapped in Random
-/// This allows usage like: scirs2, core: random::rng().random_range(0..100)
+/// This allows usage like: scirs2, core: random::rng().gen_range(0..100)
 #[allow(dead_code)]
 pub fn rng() -> Random<rand::rngs::ThreadRng> {
     Random { rng: rand::rng() }
@@ -94,6 +94,16 @@ impl<R: Rng> Random<R> {
         max: T,
     ) -> T {
         self.sample(rand_distr::Uniform::new(min, max).unwrap())
+    }
+    
+    /// Generate a random value within the given range (using range syntax)
+    #[allow(deprecated)]
+    pub fn gen_range<T, RNG>(&mut self, range: RNG) -> T
+    where
+        T: rand_distr::uniform::SampleUniform,
+        RNG: rand_distr::uniform::SampleRange<T>,
+    {
+        self.rng.gen_range(range)
     }
 
     /// Generate a random f64 value between 0.0 and 1.0

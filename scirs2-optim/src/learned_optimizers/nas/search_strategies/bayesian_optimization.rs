@@ -325,11 +325,11 @@ impl<T: Float + Default + Clone> BayesianArchitectureOptimizer<T> {
             T::from(rng.random::<f64>()).unwrap()
         });
 
-        let complexity = T::from(rng.random_range(0.1..1.0)).unwrap();
+        let complexity = T::from(rng.gen_range(0.1..1.0)).unwrap();
 
         let metadata = ArchitectureMetadata {
-            num_layers: rng.random_range(2..10),
-            num_parameters: rng.random_range(1000..100000),
+            num_layers: rng.gen_range(2..10),
+            num_parameters: rng.gen_range(1000..100000),
             architecture_type: "random".to_string(),
             layer_types: vec!["dense".to_string(), "lstm".to_string()],
         };

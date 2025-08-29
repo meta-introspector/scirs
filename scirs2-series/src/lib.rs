@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 //! Time series analysis module for SciRS2
 //!
 //! This module provides functionality for time series analysis, including:
