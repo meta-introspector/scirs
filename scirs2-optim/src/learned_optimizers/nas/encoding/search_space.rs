@@ -1199,13 +1199,13 @@ impl<T: Float + Default + Clone> SearchSpace<T> {
         use rand::Rng;
         let mut rng = rand::rng();
         
-        let num_ops = rng.gen_range(1..=self.config.max_depth);
+        let num_ops = rng.random_range(1..=self.config.max_depth);
         let mut architecture = Vec::new();
         let mut parameters = HashMap::new();
         
         for i in 0..num_ops {
             let op_names: Vec<&String> = self.operations.keys().collect();
-            let op_name = op_names[rng.gen_range(0..op_names.len())];
+            let op_name = op_names[rng.random_range(0..op_names.len())];
             architecture.push(op_name.clone());
             
             // Sample parameters for this operation
@@ -1214,7 +1214,7 @@ impl<T: Float + Default + Clone> SearchSpace<T> {
                     let value = match continuous_param.distribution {
                         DistributionType::Uniform => {
                             let range = continuous_param.max_value - continuous_param.min_value;
-                            continuous_param.min_value + T::from(rng.gen::<f64>()).unwrap() * range
+                            continuous_param.min_value + T::from(rng.random::<f64>()).unwrap() * range
                         }
                         _ => continuous_param.default_value,
                     };

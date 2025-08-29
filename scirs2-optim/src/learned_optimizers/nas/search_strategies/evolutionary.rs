@@ -362,7 +362,7 @@ impl<T: Float + Default + Clone> EvolutionarySearcher<T> {
         let mut rng = rand::rng();
         
         // Random number of layers (between 2 and max_depth)
-        let num_layers = rng.gen_range(2..=self.config.max_depth.min(10));
+        let num_layers = rng.random_range(2..=self.config.max_depth.min(10));
         let mut layers = Vec::new();
         
         for i in 0..num_layers {
@@ -403,24 +403,24 @@ impl<T: Float + Default + Clone> EvolutionarySearcher<T> {
             LayerType::BatchNorm,
         ];
         
-        let layer_type = layer_types[rng.gen_range(0..layer_types.len())];
+        let layer_type = layer_types[rng.random_range(0..layer_types.len())];
         let mut parameters = HashMap::new();
         
         match layer_type {
             LayerType::Dense => {
-                let input_size = if layer_id == 0 { 128 } else { rng.gen_range(32..512) };
-                let output_size = rng.gen_range(32..512);
+                let input_size = if layer_id == 0 { 128 } else { rng.random_range(32..512) };
+                let output_size = rng.random_range(32..512);
                 parameters.insert("input_size".to_string(), LayerParameter::Integer(input_size));
                 parameters.insert("output_size".to_string(), LayerParameter::Integer(output_size));
             }
             LayerType::LSTM => {
-                let hidden_size = rng.gen_range(64..256);
+                let hidden_size = rng.random_range(64..256);
                 parameters.insert("hidden_size".to_string(), LayerParameter::Integer(hidden_size));
                 parameters.insert("num_layers".to_string(), LayerParameter::Integer(1));
             }
             LayerType::Attention => {
-                let hidden_dim = rng.gen_range(64..256);
-                let num_heads = rng.gen_range(4..16);
+                let hidden_dim = rng.random_range(64..256);
+                let num_heads = rng.random_range(4..16);
                 parameters.insert("hidden_dim".to_string(), LayerParameter::Integer(hidden_dim));
                 parameters.insert("num_heads".to_string(), LayerParameter::Integer(num_heads));
             }
@@ -452,10 +452,10 @@ impl<T: Float + Default + Clone> EvolutionarySearcher<T> {
         }
         
         // Random skip connections
-        let num_skip = rng.gen_range(0..num_layers/2);
+        let num_skip = rng.random_range(0..num_layers/2);
         for _ in 0..num_skip {
-            let from = rng.gen_range(0..num_layers-2);
-            let to = rng.gen_range(from+2..num_layers);
+            let from = rng.random_range(0..num_layers-2);
+            let to = rng.random_range(from+2..num_layers);
             if adjacency_matrix[[from, to]] == 0.0 {
                 adjacency_matrix[[from, to]] = 1.0;
                 connection_types.insert((from, to), ConnectionType::Residual);
@@ -530,7 +530,7 @@ impl<T: Float + Default + Clone> EvolutionarySearcher<T> {
         for _ in 0..self.config.population_size {
             let mut tournament = Vec::new();
             for _ in 0..self.config.tournament_size {
-                let idx = rng.gen_range(0..self.population.len());
+                let idx = rng.random_range(0..self.population.len());
                 tournament.push(&self.population[idx]);
             }
             
@@ -571,17 +571,17 @@ impl<T: Float + Default + Clone> EvolutionarySearcher<T> {
             let parent1 = &selected[i];
             let parent2 = if i + 1 < selected.len() { &selected[i + 1] } else { &selected[0] };
             
-            let (mut child1, mut child2) = if rng.gen::<f64>() < self.config.crossover_rate.to_f64().unwrap_or(0.7) {
+            let (mut child1, mut child2) = if rng.random::<f64>() < self.config.crossover_rate.to_f64().unwrap_or(0.7) {
                 self.crossover(parent1, parent2)?
             } else {
                 (parent1.clone(), parent2.clone())
             };
             
             // Mutation
-            if rng.gen::<f64>() < self.config.mutation_rate.to_f64().unwrap_or(0.1) {
+            if rng.random::<f64>() < self.config.mutation_rate.to_f64().unwrap_or(0.1) {
                 self.mutate(&mut child1)?;
             }
-            if rng.gen::<f64>() < self.config.mutation_rate.to_f64().unwrap_or(0.1) {
+            if rng.random::<f64>() < self.config.mutation_rate.to_f64().unwrap_or(0.1) {
                 self.mutate(&mut child2)?;
             }
             
@@ -605,7 +605,7 @@ impl<T: Float + Default + Clone> EvolutionarySearcher<T> {
         // Simple single-point crossover on layers
         let min_layers = parent1.architecture.layers.len().min(parent2.architecture.layers.len());
         if min_layers > 1 {
-            let crossover_point = rng.gen_range(1..min_layers);
+            let crossover_point = rng.random_range(1..min_layers);
             
             // Swap layer segments
             for i in crossover_point..min_layers {
@@ -626,7 +626,7 @@ impl<T: Float + Default + Clone> EvolutionarySearcher<T> {
         use rand::Rng;
         let mut rng = rand::rng();
         
-        let mutation_op = self.mutation_operators[rng.gen_range(0..self.mutation_operators.len())];
+        let mutation_op = self.mutation_operators[rng.random_range(0..self.mutation_operators.len())];
         
         match mutation_op {
             MutationOperator::AddLayer => {
@@ -637,13 +637,13 @@ impl<T: Float + Default + Clone> EvolutionarySearcher<T> {
             }
             MutationOperator::RemoveLayer => {
                 if individual.architecture.layers.len() > 2 {
-                    let idx = rng.gen_range(1..individual.architecture.layers.len()-1);
+                    let idx = rng.random_range(1..individual.architecture.layers.len()-1);
                     individual.architecture.layers.remove(idx);
                 }
             }
             MutationOperator::ModifyParameters => {
                 if !individual.architecture.layers.is_empty() {
-                    let layer_idx = rng.gen_range(0..individual.architecture.layers.len());
+                    let layer_idx = rng.random_range(0..individual.architecture.layers.len());
                     self.mutate_layer_parameters(&mut individual.architecture.layers[layer_idx])?;
                 }
             }
@@ -662,17 +662,17 @@ impl<T: Float + Default + Clone> EvolutionarySearcher<T> {
         match layer.layer_type {
             LayerType::Dense => {
                 if let Some(LayerParameter::Integer(ref mut size)) = layer.parameters.get_mut("output_size") {
-                    *size = rng.gen_range(32..512);
+                    *size = rng.random_range(32..512);
                 }
             }
             LayerType::LSTM => {
                 if let Some(LayerParameter::Integer(ref mut hidden)) = layer.parameters.get_mut("hidden_size") {
-                    *hidden = rng.gen_range(64..256);
+                    *hidden = rng.random_range(64..256);
                 }
             }
             LayerType::Attention => {
                 if let Some(LayerParameter::Integer(ref mut heads)) = layer.parameters.get_mut("num_heads") {
-                    *heads = rng.gen_range(4..16);
+                    *heads = rng.random_range(4..16);
                 }
             }
             _ => {}

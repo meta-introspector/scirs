@@ -401,7 +401,7 @@ impl<T: Float + Default + Clone> RLArchitectureAgent<T> {
         let mut rng = rand::rng();
         
         // Epsilon-greedy exploration
-        if rng.gen::<f64>() < self.config.exploration_rate.to_f64().unwrap_or(0.1) {
+        if rng.random::<f64>() < self.config.exploration_rate.to_f64().unwrap_or(0.1) {
             // Random action
             self.select_random_action(state)
         } else {
@@ -416,27 +416,27 @@ impl<T: Float + Default + Clone> RLArchitectureAgent<T> {
         let mut rng = rand::rng();
         
         // Randomly choose action type
-        let action_type = rng.gen_range(0..3);
+        let action_type = rng.random_range(0..3);
         
         match action_type {
             0 => {
                 // Layer action
                 let layer_types = vec![
-                    LayerTypeAction::AddDense { units: rng.gen_range(32..512) },
-                    LayerTypeAction::AddLSTM { units: rng.gen_range(64..256) },
-                    LayerTypeAction::AddAttention { heads: rng.gen_range(4..16), dim: rng.gen_range(64..256) },
+                    LayerTypeAction::AddDense { units: rng.random_range(32..512) },
+                    LayerTypeAction::AddLSTM { units: rng.random_range(64..256) },
+                    LayerTypeAction::AddAttention { heads: rng.random_range(4..16), dim: rng.random_range(64..256) },
                     LayerTypeAction::AddBatchNorm,
-                    LayerTypeAction::AddDropout { rate: rng.gen_range(0.1..0.5) },
+                    LayerTypeAction::AddDropout { rate: rng.random_range(0.1..0.5) },
                 ];
-                let layer_action = layer_types[rng.gen_range(0..layer_types.len())];
+                let layer_action = layer_types[rng.random_range(0..layer_types.len())];
                 Ok(Action::LayerAction(layer_action))
             }
             1 => {
                 // Connection action
                 let conn_action = if state.current_layers.len() > 1 {
                     ConnectionAction::SkipConnection { 
-                        from_layer: rng.gen_range(0..state.current_layers.len()-1),
-                        to_layer: rng.gen_range(1..state.current_layers.len())
+                        from_layer: rng.random_range(0..state.current_layers.len()-1),
+                        to_layer: rng.random_range(1..state.current_layers.len())
                     }
                 } else {
                     ConnectionAction::SequentialConnection
@@ -447,7 +447,7 @@ impl<T: Float + Default + Clone> RLArchitectureAgent<T> {
                 // Parameter action
                 Ok(Action::ParameterAction { 
                     parameter: "learning_rate".to_string(),
-                    value: rng.gen_range(0.0001..0.01)
+                    value: rng.random_range(0.0001..0.01)
                 })
             }
         }
@@ -673,7 +673,7 @@ impl<T: Float + Default + Clone> ReplayBuffer<T> {
         let mut batch = Vec::with_capacity(batch_size);
         
         for _ in 0..batch_size {
-            let idx = rng.gen_range(0..self.experiences.len());
+            let idx = rng.random_range(0..self.experiences.len());
             batch.push(self.experiences[idx].clone());
         }
         

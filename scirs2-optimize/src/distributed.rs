@@ -583,7 +583,7 @@ pub mod algorithms {
                 // Mutation and crossover
                 let j_rand = rng.random_range(0..dims);
                 for j in 0..dims {
-                    if rng.gen::<f64>() < self.crossover_rate || j == j_rand {
+                    if rng.random::<f64>() < self.crossover_rate || j == j_rand {
                         trial_population[[i, j]] = population[[a, j]]
                             + self.f_scale * (population[[b, j]] - population[[c, j]]);
                     } else {

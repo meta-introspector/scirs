@@ -310,7 +310,7 @@ pub fn importance_sample(
         }
 
         // Generate random number between 0 and current_sum
-        let random_value = rng.gen_range(0.0..current_sum);
+        let random_value = rng.random_range(0.0..current_sum);
 
         // Find the index corresponding to this random value
         let mut cumulative_weight = 0.0;

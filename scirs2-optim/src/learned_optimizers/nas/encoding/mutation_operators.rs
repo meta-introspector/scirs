@@ -868,7 +868,7 @@ impl<T: Float + Default + Clone> ArchitectureMutator<T> {
                 .fold(T::zero(), |acc, w| acc + w);
             
             let mut cumulative_weight = T::zero();
-            let random_weight = T::from(rng.gen::<f64>()).unwrap() * total_weight;
+            let random_weight = T::from(rng.random::<f64>()).unwrap() * total_weight;
             
             for &op_type in &applicable_ops {
                 let weight = self.config.operator_weights.get(&op_type).unwrap_or(&T::one());
@@ -880,7 +880,7 @@ impl<T: Float + Default + Clone> ArchitectureMutator<T> {
         }
         
         // Fallback to random selection
-        let selected_idx = rng.gen_range(0..applicable_ops.len());
+        let selected_idx = rng.random_range(0..applicable_ops.len());
         Ok(applicable_ops[selected_idx])
     }
     
@@ -1024,7 +1024,7 @@ impl<T: Float + Default + Clone> MutationOperator<T> for AddOperationMutator<T> 
             return Err(OptimError::SearchFailed("No operations available to add".to_string()));
         }
         
-        let selected_op = &op_types[rng.gen_range(0..op_types.len())];
+        let selected_op = &op_types[rng.random_range(0..op_types.len())];
         
         // Create new operation gene
         let new_op = OperationGene {
@@ -1032,7 +1032,7 @@ impl<T: Float + Default + Clone> MutationOperator<T> for AddOperationMutator<T> 
             operation_type: selected_op.id.clone(),
             parameters: HashMap::new(), // Would be populated from template
             position: Position {
-                layer: rng.gen_range(0..mutated.operations.len() + 1),
+                layer: rng.random_range(0..mutated.operations.len() + 1),
                 index: 0,
                 depth: 0,
             },
@@ -1050,7 +1050,7 @@ impl<T: Float + Default + Clone> MutationOperator<T> for AddOperationMutator<T> 
         // Insert operation
         match self.insertion_strategy {
             InsertionStrategy::Random => {
-                let pos = rng.gen_range(0..=mutated.operations.len());
+                let pos = rng.random_range(0..=mutated.operations.len());
                 mutated.operations.insert(pos, new_op);
             }
             InsertionStrategy::Append => {
@@ -1110,11 +1110,11 @@ impl<T: Float + Default + Clone> MutationOperator<T> for RemoveOperationMutator<
         // Select operation to remove
         let removal_idx = match self.removal_strategy {
             RemovalStrategy::Random => {
-                rng.gen_range(0..mutated.operations.len())
+                rng.random_range(0..mutated.operations.len())
             }
             _ => {
                 // Fallback to random
-                rng.gen_range(0..mutated.operations.len())
+                rng.random_range(0..mutated.operations.len())
             }
         };
         
@@ -1179,7 +1179,7 @@ impl<T: Float + Default + Clone> MutationOperator<T> for ParameterMutator<T> {
             return Ok(mutated);
         }
         
-        let op_idx = rng.gen_range(0..mutated.operations.len());
+        let op_idx = rng.random_range(0..mutated.operations.len());
         let operation = &mut mutated.operations[op_idx];
         
         // Select parameter to mutate
@@ -1188,17 +1188,17 @@ impl<T: Float + Default + Clone> MutationOperator<T> for ParameterMutator<T> {
             return Ok(mutated);
         }
         
-        let param_key = &param_keys[rng.gen_range(0..param_keys.len())];
+        let param_key = &param_keys[rng.random_range(0..param_keys.len())];
         
         // Apply mutation based on distribution
         if let Some(current_value) = operation.parameters.get(param_key) {
             let new_value = match &self.distribution {
                 ParameterDistribution::Gaussian { std } => {
-                    let noise = T::from(rng.gen::<f64>() - 0.5).unwrap() * *std * T::from(2.0).unwrap();
+                    let noise = T::from(rng.random::<f64>() - 0.5).unwrap() * *std * T::from(2.0).unwrap();
                     *current_value + noise
                 }
                 ParameterDistribution::Uniform { range } => {
-                    let noise = T::from(rng.gen::<f64>() - 0.5).unwrap() * *range * T::from(2.0).unwrap();
+                    let noise = T::from(rng.random::<f64>() - 0.5).unwrap() * *range * T::from(2.0).unwrap();
                     *current_value + noise
                 }
                 _ => *current_value, // Fallback

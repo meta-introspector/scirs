@@ -754,7 +754,7 @@ impl<T: Float + Default + Clone> DARTSSearcher<T> {
         let mut rng = rand::rng();
         
         let noise = Array1::from_shape_fn(size, |_| {
-            let u: f64 = rng.gen_range(1e-10..1.0);
+            let u: f64 = rng.random_range(1e-10..1.0);
             let gumbel = -(-u.ln()).ln();
             T::from(gumbel).unwrap()
         });

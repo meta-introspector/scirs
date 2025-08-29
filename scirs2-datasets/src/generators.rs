@@ -80,7 +80,7 @@ pub fn make_classification(
 
     for i in 0..n_centroids {
         for j in 0..n_informative {
-            centroids[[i, j]] = scale * rng.gen_range(-1.0f64..1.0f64);
+            centroids[[i, j]] = scale * rng.random_range(-1.0f64..1.0f64);
         }
     }
 
@@ -294,18 +294,18 @@ pub fn make_time_series(
 
     for feature in 0..n_features {
         let trend_coef = if trend {
-            rng.gen_range(0.01f64..0.1f64)
+            rng.random_range(0.01f64..0.1f64)
         } else {
             0.0
         };
         let seasonality_period = rng.sample(Uniform::new(10, 50).unwrap()) as f64;
         let seasonality_amplitude = if seasonality {
-            rng.gen_range(1.0f64..5.0f64)
+            rng.random_range(1.0f64..5.0f64)
         } else {
             0.0
         };
 
-        let base_value = rng.gen_range(-10.0f64..10.0f64);
+        let base_value = rng.random_range(-10.0f64..10.0f64);
 
         for i in 0..n_samples {
             let t = i as f64;
@@ -402,7 +402,7 @@ pub fn make_blobs(
 
     for i in 0..centers {
         for j in 0..n_features {
-            cluster_centers[[i, j]] = rng.gen_range(-center_box..center_box);
+            cluster_centers[[i, j]] = rng.random_range(-center_box..center_box);
         }
     }
 
@@ -848,7 +848,7 @@ pub fn make_anisotropic_blobs(
 
     for i in 0..centers {
         for j in 0..n_features {
-            cluster_centers[[i, j]] = rng.gen_range(-center_box..center_box);
+            cluster_centers[[i, j]] = rng.random_range(-center_box..center_box);
         }
     }
 
@@ -871,7 +871,7 @@ pub fn make_anisotropic_blobs(
         };
 
         // Generate a random rotation angle for this cluster
-        let rotation_angle = rng.gen_range(0.0..(2.0 * PI));
+        let rotation_angle = rng.random_range(0.0..(2.0 * PI));
 
         for _ in 0..n_samples_center {
             // Generate point with anisotropic distribution (elongated along first axis)
@@ -986,7 +986,7 @@ pub fn make_hierarchical_clusters(
 
     for i in 0..n_main_clusters {
         for j in 0..n_features {
-            main_centers[[i, j]] = rng.gen_range(-center_box..center_box);
+            main_centers[[i, j]] = rng.random_range(-center_box..center_box);
         }
     }
 
@@ -1113,7 +1113,7 @@ pub fn inject_missing_data(
             // Missing Completely at Random - uniform probability
             for i in 0..n_samples {
                 for j in 0..n_features {
-                    if rng.gen_range(0.0f64..1.0) < missing_rate {
+                    if rng.random_range(0.0f64..1.0) < missing_rate {
                         missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
@@ -1129,7 +1129,7 @@ pub fn inject_missing_data(
 
                 for j in 1..n_features {
                     // Skip first feature
-                    if rng.gen_range(0.0f64..1.0) < adjusted_rate {
+                    if rng.random_range(0.0f64..1.0) < adjusted_rate {
                         missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
@@ -1144,7 +1144,7 @@ pub fn inject_missing_data(
                     let normalized_val = (value + 10.0) / 20.0; // Normalize roughly to [0,1]
                     let adjusted_rate = missing_rate * normalized_val.clamp(0.1, 3.0);
 
-                    if rng.gen_range(0.0f64..1.0) < adjusted_rate {
+                    if rng.random_range(0.0f64..1.0) < adjusted_rate {
                         missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
@@ -1236,7 +1236,7 @@ pub fn inject_outliers(
 
                 // Modify each feature to be an outlier
                 for j in 0..n_features {
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -1260,7 +1260,7 @@ pub fn inject_outliers(
                 features_to_modify.truncate(n_features_to_modify);
 
                 for &j in &features_to_modify {
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -1279,7 +1279,7 @@ pub fn inject_outliers(
                 // Generate cluster center for this collective outlier
                 let mut outlier_center = vec![0.0; n_features];
                 for j in 0..n_features {
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -1294,7 +1294,7 @@ pub fn inject_outliers(
                     outlier_mask[outlier_idx] = true;
 
                     for j in 0..n_features {
-                        let noise = rng.gen_range(-0.5f64..0.5f64) * feature_stds[j];
+                        let noise = rng.random_range(-0.5f64..0.5f64) * feature_stds[j];
                         data[[outlier_idx, j]] = outlier_center[j] + noise;
                     }
                 }
@@ -1339,8 +1339,8 @@ pub fn add_time_series_noise(
                 for _ in 0..n_spikes {
                     let spike_idx = rng.sample(Uniform::new(0, n_samples).unwrap());
                     let feature_idx = rng.sample(Uniform::new(0, n_features).unwrap());
-                    let spike_magnitude = rng.gen_range(5.0..=15.0) * strength;
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let spike_magnitude = rng.random_range(5.0..=15.0) * strength;
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -1691,7 +1691,7 @@ fn generate_classification_chunk_gpu(
 
     for i in 0..n_centroids {
         for j in 0..n_informative {
-            centroids[i * n_informative + j] = 2.0 * rng.gen_range(-1.0f64..1.0f64);
+            centroids[i * n_informative + j] = 2.0 * rng.random_range(-1.0f64..1.0f64);
         }
     }
 
@@ -1901,7 +1901,7 @@ fn make_regression_gpu_impl(
     // Generate coefficient matrix on GPU
     let mut coefficients = vec![0.0; n_informative];
     for coeff in coefficients.iter_mut().take(n_informative) {
-        *coeff = rng.gen_range(-2.0f64..2.0f64);
+        *coeff = rng.random_range(-2.0f64..2.0f64);
     }
 
     // Generate data matrix in chunks
@@ -2237,7 +2237,7 @@ fn generate_blobs_center_gpu(
     let _data_buffer = (); // gpu_context.create_buffer::<f64>(n_samples_center * n_features);
 
     // Generate random seeds for each sample
-    let seeds: Vec<u64> = (0..n_samples_center).map(|_| rng.gen::<u64>()).collect();
+    let seeds: Vec<u64> = (0..n_samples_center).map(|_| rng.random::<u64>()).collect();
     let seeds_buffer = gpu_context.create_buffer_from_slice(&seeds);
 
     // Use GPU kernel for parallel sample generation around _center

@@ -327,17 +327,17 @@ pub mod astronomy {
                 // Host galaxy mass (log M_sun)
                 data.push(host_mass + host_noise.sample(&mut rng));
                 // Redshift
-                data.push(rng.gen_range(0.01..0.3));
+                data.push(rng.random_range(0.01..0.3));
                 // Duration (days)
-                data.push(rng.gen_range(20.0..200.0));
+                data.push(rng.random_range(20.0..200.0));
                 // Stretch factor
-                data.push(rng.gen_range(0.7..1.3));
+                data.push(rng.random_range(0.7..1.3));
                 // Color excess E(B-V)
-                data.push(rng.gen_range(0.0..0.5));
+                data.push(rng.random_range(0.0..0.5));
                 // Discovery magnitude
-                data.push(rng.gen_range(15.0..22.0));
+                data.push(rng.random_range(15.0..22.0));
                 // Galactic latitude
-                data.push(rng.gen_range(-90.0..90.0));
+                data.push(rng.random_range(-90.0..90.0));
 
                 sn_types.push(sn_type as f64);
             }
@@ -722,7 +722,7 @@ pub mod climate {
 
                     let precip = if rng.random::<f64>() < 0.3 {
                         // 30% chance of precipitation
-                        rng.gen_range(0.0..20.0) * seasonal_precip_factor
+                        rng.random_range(0.0..20.0) * seasonal_precip_factor
                     } else {
                         0.0
                     };
@@ -742,7 +742,7 @@ pub mod climate {
 
                 // Generate additional climate variables
                 let avg_humidity = humidity + Normal::new(0.0, 5.0).unwrap().sample(&mut rng);
-                let wind_speed = rng.gen_range(2.0..15.0);
+                let wind_speed = rng.random_range(2.0..15.0);
 
                 data.extend(vec![
                     mean_temp,
@@ -809,13 +809,13 @@ pub mod climate {
 
             for _ in 0..nmeasurements {
                 // Generate correlated atmospheric _measurements
-                let base_pollution = rng.gen_range(0.0..1.0);
+                let base_pollution = rng.random_range(0.0..1.0);
 
                 // Major pollutants (concentrations in µg/m³)
                 let pm25: f64 = LogNormal::new(2.0 + base_pollution, 0.5)
                     .unwrap()
                     .sample(&mut rng);
-                let pm10 = pm25 * rng.gen_range(1.5..2.5);
+                let pm10 = pm25 * rng.random_range(1.5..2.5);
                 let no2 = LogNormal::new(3.0 + base_pollution * 0.5, 0.3)
                     .unwrap()
                     .sample(&mut rng);
@@ -831,13 +831,13 @@ pub mod climate {
 
                 // Meteorological factors
                 let temperature = Normal::new(20.0, 10.0).unwrap().sample(&mut rng);
-                let humidity = rng.gen_range(30.0..90.0);
-                let wind_speed = rng.gen_range(0.5..12.0);
+                let humidity = rng.random_range(30.0..90.0);
+                let wind_speed = rng.random_range(0.5..12.0);
                 let pressure = Normal::new(1013.0, 15.0).unwrap().sample(&mut rng);
 
                 // Derived _measurements
                 let visibility = (50.0 - pm25.ln() * 5.0).max(1.0);
-                let uv_index = rng.gen_range(0.0..12.0);
+                let uv_index = rng.random_range(0.0..12.0);
 
                 data.extend(vec![
                     pm25,

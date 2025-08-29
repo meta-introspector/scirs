@@ -661,7 +661,7 @@ impl<T: Float + Default + Clone> ArchitectureEncoder<T> {
             // Initialize with random values
             for i in 0..vocab_size {
                 for j in 0..dim {
-                    embedding[[i, j]] = T::from(rng.gen_range(-0.1..0.1)).unwrap();
+                    embedding[[i, j]] = T::from(rng.random_range(-0.1..0.1)).unwrap();
                 }
             }
             

@@ -427,7 +427,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                 centroids.row_mut(k).assign(&data.row(random_idx));
             } else {
                 let mut cumulative = 0.0;
-                let threshold = rng.gen::<f64>() * total_dist;
+                let threshold = rng.random::<f64>() * total_dist;
 
                 let mut selected_idx = 0;
                 for (i, &dist) in distances.iter().enumerate() {

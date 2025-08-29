@@ -1211,10 +1211,10 @@ impl QuantumOptimizationState {
         let config_superposition = (0..4)
             .map(|_| ConfigurationAmplitude {
                 config: OptimizationConfig {
-                    optimal_batch_size: rng().gen_range(500..2000),
-                    optimal_buffer_size: rng().gen_range(5000..20000),
-                    num_workers: rng().gen_range(1..9),
-                    memory_strategy: match rng().gen_range(0..4) {
+                    optimal_batch_size: rng().random_range(500..2000),
+                    optimal_buffer_size: rng().random_range(5000..20000),
+                    num_workers: rng().random_range(1..9),
+                    memory_strategy: match rng().random_range(0..4) {
                         0 => MemoryStrategy::Conservative,
                         1 => MemoryStrategy::Balanced,
                         2 => MemoryStrategy::Aggressive,
@@ -1229,7 +1229,7 @@ impl QuantumOptimizationState {
         Self {
             config_superposition,
             energy: rng().random::<f64>() * 10.0,
-            coherence_time: Duration::from_millis(rng().gen_range(100..1000)),
+            coherence_time: Duration::from_millis(rng().random_range(100..1000)),
             entanglement_degree: rng().random::<f64>(),
         }
     }
@@ -1558,7 +1558,7 @@ impl NeuralAdaptiveSystem {
             }
             ChangeType::ModifyLayerSize => {
                 if !self.neural_network.layers.is_empty() {
-                    let layer_idx = rng().gen_range(0..self.neural_network.layers.len());
+                    let layer_idx = rng().random_range(0..self.neural_network.layers.len());
                     self.neural_network.modify_layer_size(layer_idx, 32);
                 }
             }

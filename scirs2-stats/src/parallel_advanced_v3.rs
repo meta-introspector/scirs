@@ -387,7 +387,7 @@ where
 
                 for i in 0..n {
                     use rand::Rng;
-                    let idx = rng.gen_range(0..n);
+                    let idx = rng.random_range(0..n);
                     bootstrap_sample[i] = data_arc[idx];
                 }
 

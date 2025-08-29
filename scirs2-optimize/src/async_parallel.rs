@@ -363,13 +363,13 @@ impl AsyncDifferentialEvolution {
         if let Some((ref lower, ref upper)) = self.bounds {
             for mut individual in population.outer_iter_mut() {
                 for (j, gene) in individual.iter_mut().enumerate() {
-                    *gene = lower[j] + rng.gen::<f64>() * (upper[j] - lower[j]);
+                    *gene = lower[j] + rng.random::<f64>() * (upper[j] - lower[j]);
                 }
             }
         } else {
             for mut individual in population.outer_iter_mut() {
                 for gene in individual.iter_mut() {
-                    *gene = rng.gen::<f64>() * 2.0 - 1.0; // [-1, 1]
+                    *gene = rng.random::<f64>() * 2.0 - 1.0; // [-1, 1]
                 }
             }
         }
@@ -608,7 +608,7 @@ impl AsyncDifferentialEvolution {
             let r = rng.random_range(0..self.dimensions);
 
             for j in 0..self.dimensions {
-                if j == r || rng.gen::<f64>() < self.crossover_probability {
+                if j == r || rng.random::<f64>() < self.crossover_probability {
                     trial[j] = mutant[j];
                 }
             }
@@ -717,7 +717,7 @@ mod tests {
         // Function that sometimes takes too long
         let objective = |x: Array1<f64>| async move {
             // 50% chance of taking too long
-            if rand::rng().gen::<f64>() < 0.5 {
+            if rand::rng().random::<f64>() < 0.5 {
                 sleep(Duration::from_secs(1)).await; // Too long
             } else {
                 sleep(Duration::from_millis(10)).await; // Normal

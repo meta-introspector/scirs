@@ -305,7 +305,7 @@ pub mod utils {
             // Generate random point
             let mut point = Array1::zeros(n_objectives);
             for i in 0..n_objectives {
-                point[i] = rng.gen_range(min_bounds[i]..reference_point[i]);
+                point[i] = rng.random_range(min_bounds[i]..reference_point[i]);
             }
 
             // Check if point is dominated by any solution in Pareto front
@@ -399,7 +399,7 @@ pub mod utils {
         for _ in 0..size {
             let mut individual = Array1::zeros(n_variables);
             for j in 0..n_variables {
-                individual[j] = rng.gen_range(lower[j]..upper[j]);
+                individual[j] = rng.random_range(lower[j]..upper[j]);
             }
             population.push(individual);
         }

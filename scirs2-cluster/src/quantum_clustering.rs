@@ -1260,7 +1260,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
             rand::rngs::StdRng::seed_from_u64(seed)
         } else {
             use rand::SeedableRng;
-            rand::rngs::StdRng::seed_from_u64(rand::rng().gen::<u64>())
+            rand::rngs::StdRng::seed_from_u64(rand::rng().random::<u64>())
         };
 
         let mut spins = Array1::zeros(total_qubits);
@@ -1321,7 +1321,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
             rand::rngs::StdRng::seed_from_u64(seed)
         } else {
             use rand::SeedableRng;
-            rand::rngs::StdRng::seed_from_u64(rand::rng().gen::<u64>())
+            rand::rngs::StdRng::seed_from_u64(rand::rng().random::<u64>())
         };
 
         let n_qubits = self.spin_configuration.as_ref().unwrap().len();

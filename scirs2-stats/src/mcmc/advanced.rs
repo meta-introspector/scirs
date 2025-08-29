@@ -596,7 +596,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
         for i in start..end {
             // Select random walker from complementary ensemble
             let compsize = comp_end - comp_start;
-            let j = comp_start + rng.gen_range(0..compsize);
+            let j = comp_start + rng.random_range(0..compsize);
 
             // Generate stretch parameter
             let z = ((self.scale - 1.0) * rng.random::<f64>() + 1.0).powf(2.0) / self.scale;
