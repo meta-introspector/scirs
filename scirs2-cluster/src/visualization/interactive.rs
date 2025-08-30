@@ -9,7 +9,7 @@ use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-#[cfg(feature = "serde")]
+
 use serde::{Deserialize, Serialize};
 
 use super::{ColorScheme, ScatterPlot3D, VisualizationConfig};
@@ -17,7 +17,7 @@ use crate::error::{ClusteringError, Result};
 
 /// Configuration for interactive 3D visualizations
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct InteractiveConfig {
     /// Enable camera controls (rotation, zoom, pan)
     pub enable_camera_controls: bool,
@@ -75,7 +75,7 @@ impl Default for InteractiveConfig {
 
 /// Camera state for 3D visualization
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct CameraState {
     /// Camera position (x, y, z)
     pub position: (f64, f64, f64),
@@ -219,7 +219,7 @@ pub enum ViewMode {
 
 /// Real-time cluster statistics for interactive display
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct ClusterStats {
     /// Cluster ID
     pub cluster_id: i32,
@@ -434,7 +434,7 @@ impl InteractiveVisualizer {
 
     /// Generate export data for current view
     pub fn export_view_state(&self) -> Result<String> {
-        #[cfg(feature = "serde")]
+        
         {
             let export_data = InteractiveViewExport {
                 camera: self.state.camera.clone(),
@@ -769,7 +769,7 @@ pub struct BoundingBox3D {
 
 /// Export format for interactive view state
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 struct InteractiveViewExport {
     camera: CameraState,
     view_mode: ViewMode,

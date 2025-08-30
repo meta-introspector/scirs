@@ -74,8 +74,8 @@ pub mod kaiser {
     }
 
     /// Kaiser-Bessel derived window - implementation in kaiser.rs
-    pub fn kaiser_bessel_derived(m: usize, beta: f64, sym: bool) -> SignalResult<Vec<f64>> {
-        crate::window::kaiser::kaiser_bessel_derived(m, beta, sym)
+    pub fn kaiser_bessel_derived_wrapper(m: usize, beta: f64, sym: bool) -> SignalResult<Vec<f64>> {
+        kaiser::kaiser_bessel_derived(m, beta, sym)
     }
 }
 

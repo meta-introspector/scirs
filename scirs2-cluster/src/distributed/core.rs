@@ -12,7 +12,7 @@ use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-#[cfg(feature = "serde")]
+
 use serde::{Deserialize, Serialize};
 
 use crate::error::{ClusteringError, Result};
@@ -102,7 +102,7 @@ pub enum InitializationMethod {
 
 /// Convergence information
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct ConvergenceInfo {
     pub iteration: usize,
     pub inertia: f64,

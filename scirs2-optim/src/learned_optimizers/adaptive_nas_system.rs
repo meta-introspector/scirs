@@ -4188,7 +4188,7 @@ impl<T: Float + Send + Sync + std::cmp::Eq + std::hash::Hash + std::iter::Sum>
         quality_metrics.push(QualityMetric::Performance);
         quality_metrics.push(QualityMetric::Efficiency);
         quality_metrics.push(QualityMetric::Complexity);
-        quality_metrics.push(QualityMetric::Robustness_Phantom(std::marker::PhantomData));
+        quality_metrics.push(QualityMetric::RobustnessPhantom(std::marker::PhantomData));
 
         Ok(Self {
             quality_metrics,
@@ -4270,7 +4270,7 @@ impl<T: Float + Send + Sync + std::cmp::Eq + std::hash::Hash + std::iter::Sum>
                         .unwrap());
                 (layer_complexity + connection_complexity) / T::from(2.0).unwrap()
             }
-            QualityMetric::Robustness_Phantom(_) => {
+            QualityMetric::RobustnessPhantom(_) => {
                 // Simplified robustness score based on architecture diversity
                 match candidate.generation_method {
                     GenerationMethod::Random => T::from(0.3).unwrap(),
@@ -4279,7 +4279,7 @@ impl<T: Float + Send + Sync + std::cmp::Eq + std::hash::Hash + std::iter::Sum>
                     _ => T::from(0.5).unwrap(),
                 }
             }
-            QualityMetric::Robustness_Phantom(_) => {
+            QualityMetric::RobustnessPhantom(_) => {
                 // Phantom variant should not be used
                 T::zero()
             }
@@ -5100,7 +5100,7 @@ pub enum QualityMetric<T: Float> {
     Performance,
     Efficiency,
     Complexity,
-    Robustness_Phantom(std::marker::PhantomData<T>),
+    RobustnessPhantom(std::marker::PhantomData<T>),
 }
 
 #[derive(Debug, Clone, Copy)]

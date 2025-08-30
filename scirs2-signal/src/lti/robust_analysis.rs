@@ -633,8 +633,8 @@ fn svd_controllability_analysis(
 
     // Simplified SVD computation (placeholder for full implementation)
     let mut singular_values = Array1::zeros(m.min(n));
-    let mut left_singular_vectors = Array2::eye(m);
-    let mut right_singular_vectors = Array2::eye(n);
+    let left_singular_vectors = Array2::eye(m);
+    let right_singular_vectors = Array2::eye(n);
 
     // Compute singular values (simplified implementation)
     // In practice, would use sophisticated SVD algorithms
@@ -706,8 +706,8 @@ fn svd_observability_analysis(
 
     // Simplified SVD computation (placeholder for full implementation)
     let mut singular_values = Array1::zeros(m.min(n));
-    let mut left_singular_vectors = Array2::eye(m);
-    let mut right_singular_vectors = Array2::eye(n);
+    let left_singular_vectors = Array2::eye(m);
+    let right_singular_vectors = Array2::eye(n);
 
     // Compute singular values (simplified implementation)
     for i in 0..m.min(n) {

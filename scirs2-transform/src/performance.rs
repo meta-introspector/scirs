@@ -788,7 +788,7 @@ impl EnhancedPCA {
         // For small matrices, use a simplified Jacobi-like method
         // This is a basic implementation without external dependencies
 
-        let mut a = matrix.clone(); // Working copy
+        let a = matrix.clone(); // Working copy
         let mut eigenvals = Array1::zeros(n);
         let mut eigenvecs = Array2::eye(n);
 

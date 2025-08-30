@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
-#[cfg(feature = "serde")]
+
 use serde::{Deserialize, Serialize};
 
 use crate::error::{ClusteringError, Result};
@@ -21,7 +21,7 @@ use crate::vq::euclidean_distance;
 
 /// Configuration for QAOA clustering algorithm
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct QAOAConfig {
     /// Number of QAOA layers (depth)
     pub p_layers: usize,
@@ -43,7 +43,7 @@ pub struct QAOAConfig {
 
 /// Cost function types for QAOA clustering
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub enum QAOACostFunction {
     /// K-means objective (minimize within-cluster distances)
     KMeans,
@@ -72,7 +72,7 @@ impl Default for QAOAConfig {
 
 /// Configuration for VQE clustering algorithm
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct VQEConfig {
     /// Variational ansatz type
     pub ansatz: VQEAnsatz,
@@ -94,7 +94,7 @@ pub struct VQEConfig {
 
 /// Variational ansatz types for VQE
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub enum VQEAnsatz {
     /// Hardware-efficient ansatz
     HardwareEfficient,
@@ -108,7 +108,7 @@ pub enum VQEAnsatz {
 
 /// VQE optimization methods
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub enum VQEOptimizer {
     /// Gradient descent
     GradientDescent,
@@ -1113,7 +1113,7 @@ pub fn vqe_clustering<F: Float + FromPrimitive + Debug>(
 
 /// Configuration for quantum annealing clustering
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct QuantumAnnealingConfig {
     /// Initial temperature for annealing
     pub initial_temperature: f64,
@@ -1131,7 +1131,7 @@ pub struct QuantumAnnealingConfig {
 
 /// Cooling schedule types for quantum annealing
 #[derive(Debug, Clone, Copy, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub enum CoolingSchedule {
     /// Linear cooling schedule
     Linear,

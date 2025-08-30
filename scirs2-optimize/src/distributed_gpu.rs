@@ -149,8 +149,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
         // Initialize population on GPU
         let dims = bounds.len();
-        let mut local_population = self.initialize_gpu_population(local_pop_size, bounds)?;
-        let mut local_fitness = self.evaluate_population_gpu(&function, &local_population)?;
+        let local_population = self.initialize_gpu_population(local_pop_size, bounds)?;
+        let local_fitness = self.evaluate_population_gpu(&function, &local_population)?;
 
         // GPU kernels for evolution operations
         // TODO: Fix GpuContext type mismatch between local alias and scirs2_core::GpuContext

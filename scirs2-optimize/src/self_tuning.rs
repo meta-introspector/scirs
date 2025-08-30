@@ -1161,7 +1161,7 @@ impl BayesianParameterOptimizer {
                 .iter()
                 .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-            if let Some((best_params)) = best_observation {
+            if let Some(best_params) = best_observation {
                 // Suggest parameter modifications based on best observation
                 for (name, value) in current_params {
                     if let Some(best_value) = best_params.0.get(name) {

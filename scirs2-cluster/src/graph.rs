@@ -10,14 +10,14 @@ use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::Debug;
 
-#[cfg(feature = "serde")]
+
 use serde::{Deserialize, Serialize};
 
 use crate::error::{ClusteringError, Result};
 
 /// Graph representation for clustering algorithms
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct Graph<F: Float> {
     /// Number of nodes in the graph
     pub n_nodes: usize,
@@ -755,7 +755,7 @@ where
 
 /// Configuration for graph clustering algorithms
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct GraphClusteringConfig {
     /// Algorithm to use for clustering
     pub algorithm: GraphClusteringAlgorithm,
@@ -771,7 +771,7 @@ pub struct GraphClusteringConfig {
 
 /// Available graph clustering algorithms
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub enum GraphClusteringAlgorithm {
     /// Louvain community detection
     Louvain,
