@@ -2077,6 +2077,7 @@ impl PerformanceAccuracyAnalyzer {
     }
 
     /// Compute weighted score for balanced optimization
+    #[allow(dead_code)]
     fn compute_weighted_score(&mut self, performance: f64, accuracy: f64) -> f64 {
         // Performance score (inverse of time - higher is better)
         let perf_score = 1.0 / (performance + 1e-9);

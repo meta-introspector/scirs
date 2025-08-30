@@ -290,7 +290,7 @@ impl IterativeAnimationRecorder {
 
     /// Export animation to JSON format
     pub fn export_to_json(&self) -> Result<String> {
-        
+        #[cfg(feature = "serde")]
         {
             let frames = if self.config.interpolate_frames {
                 self.generate_interpolated_frames()
@@ -298,9 +298,9 @@ impl IterativeAnimationRecorder {
                 self.frames.clone()
             };
 
-            serde_json::to_string_pretty(&frames).map_err(|e| {
+            return serde_json::to_string_pretty(&frames).map_err(|e| {
                 ClusteringError::ComputationError(format!("JSON export failed: {}", e))
-            })
+            });
         }
 
         #[cfg(not(feature = "serde"))]

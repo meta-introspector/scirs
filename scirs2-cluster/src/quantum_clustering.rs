@@ -343,16 +343,13 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
         let w1 = 0.7; // K-means weight
         let w2 = 0.3; // Modularity weight
 
-        let mut kmeans_hamiltonian = self.cost_hamiltonian.clone();
-        let mut modularity_hamiltonian = self.cost_hamiltonian.clone();
-
         // Temporarily set up each Hamiltonian
         self.setup_kmeans_hamiltonian(data)?;
-        kmeans_hamiltonian = self.cost_hamiltonian.clone();
+        let kmeans_hamiltonian = self.cost_hamiltonian.clone();
 
         self.cost_hamiltonian.fill(0.0);
         self.setup_modularity_hamiltonian(data)?;
-        modularity_hamiltonian = self.cost_hamiltonian.clone();
+        let modularity_hamiltonian = self.cost_hamiltonian.clone();
 
         // Combine with weights
         self.cost_hamiltonian = &kmeans_hamiltonian * w1 + &modularity_hamiltonian * w2;

@@ -2007,7 +2007,7 @@ pub mod export {
     fn export_to_json<F: Float + FromPrimitive + Debug>(
         plot: &DendrogramPlot<F>,
     ) -> Result<String> {
-        
+        #[cfg(feature = "serde")]
         {
             #[derive(serde::Serialize)]
             struct JsonBranch {
@@ -2048,9 +2048,9 @@ pub mod export {
                 ),
             };
 
-            serde_json::to_string_pretty(&jsonplot).map_err(|e| {
+            return serde_json::to_string_pretty(&jsonplot).map_err(|e| {
                 ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e))
-            })
+            });
         }
 
         #[cfg(not(feature = "serde"))]

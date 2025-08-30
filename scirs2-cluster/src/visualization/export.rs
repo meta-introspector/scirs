@@ -219,7 +219,7 @@ pub fn export_scatter_2d_to_json<P: AsRef<Path>>(
     output_path: P,
     config: &ExportConfig,
 ) -> Result<()> {
-    
+    #[cfg(feature = "serde")]
     {
         let export_data = Scatter2DExport {
             format_version: "1.0".to_string(),
@@ -235,7 +235,7 @@ pub fn export_scatter_2d_to_json<P: AsRef<Path>>(
         std::fs::write(output_path, json_string)
             .map_err(|e| ClusteringError::ComputationError(format!("File write failed: {}", e)))?;
 
-        Ok(())
+        return Ok(())
     }
 
     #[cfg(not(feature = "serde"))]
@@ -254,7 +254,7 @@ pub fn export_scatter_3d_to_json<P: AsRef<Path>>(
     output_path: P,
     config: &ExportConfig,
 ) -> Result<()> {
-    
+    #[cfg(feature = "serde")]
     {
         let export_data = Scatter3DExport {
             format_version: "1.0".to_string(),
@@ -270,7 +270,7 @@ pub fn export_scatter_3d_to_json<P: AsRef<Path>>(
         std::fs::write(output_path, json_string)
             .map_err(|e| ClusteringError::ComputationError(format!("File write failed: {}", e)))?;
 
-        Ok(())
+        return Ok(())
     }
 
     #[cfg(not(feature = "serde"))]
@@ -881,7 +881,7 @@ fn export_animation_to_json<P: AsRef<Path>>(
     output_path: P,
     _config: &ExportConfig,
 ) -> Result<()> {
-    
+    #[cfg(feature = "serde")]
     {
         let json_string = serde_json::to_string_pretty(frames).map_err(|e| {
             ClusteringError::ComputationError(format!("JSON serialization failed: {}", e))
@@ -890,7 +890,7 @@ fn export_animation_to_json<P: AsRef<Path>>(
         std::fs::write(output_path, json_string)
             .map_err(|e| ClusteringError::ComputationError(format!("File write failed: {}", e)))?;
 
-        Ok(())
+        return Ok(())
     }
 
     #[cfg(not(feature = "serde"))]

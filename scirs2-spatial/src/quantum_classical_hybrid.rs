@@ -515,6 +515,7 @@ impl HybridSpatialOptimizer {
     }
 
     /// Extract optimization parameters from quantum state
+    #[allow(dead_code)]
     fn extract_parameters_from_quantum_state(
         &self,
         quantumstate: &QuantumState,
@@ -539,6 +540,7 @@ impl HybridSpatialOptimizer {
     }
 
     /// Calculate quantum variance for convergence assessment
+    #[allow(dead_code)]
     fn calculate_quantum_variance(quantumstate: &QuantumState) -> f64 {
         let mut variance = 0.0;
         let mean_amplitude = quantumstate

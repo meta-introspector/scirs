@@ -768,9 +768,9 @@ impl AdvancedVisualizer {
     /// Create comprehensive JSON export data
     
     fn create_json_export_data(&self, output: &AdvancedVisualizationOutput) -> serde_json::Value {
-        use serde__json::_json;
+        use serde_json::json;
 
-        _json!({
+        json!({
             "advanced_visualization": {
                 "metadata": {
                     "export_timestamp": std::time::SystemTime::now()
@@ -787,19 +787,19 @@ impl AdvancedVisualizer {
                     "quantum_enhancement": output.cluster_plot.quantum_enhancement,
                     "confidence_levels": output.cluster_plot.confidence_levels
                 },
-                "quantum_coherence": output.quantum_plot.as_ref().map(|qp| _json!({
+                "quantum_coherence": output.quantum_plot.as_ref().map(|qp| json!({
                     "time_points": qp.time_points.len(),
                     "coherence_evolution": format!("{}x{} matrix", qp.coherence_values.nrows(), qp.coherence_values.ncols()),
                     "phase_evolution": format!("{}x{} matrix", qp.phase_evolution.nrows(), qp.phase_evolution.ncols()),
                     "entanglement_connections": qp.entanglement_network.len()
                 })),
-                "neuromorphic_adaptation": output.neuromorphic_plot.as_ref().map(|np| _json!({
+                "neuromorphic_adaptation": output.neuromorphic_plot.as_ref().map(|np| json!({
                     "neuron_activity": format!("{}x{} matrix", np.neuron_activity.nrows(), np.neuron_activity.ncols()),
                     "spike_patterns": format!("{}x{} matrix", np.spike_patterns.nrows(), np.spike_patterns.ncols()),
                     "weight_evolution_steps": np.weight_evolution.len(),
                     "learning_curve_length": np.learning_curve.len()
                 })),
-                "ai_selection": output.ai_selection_plot.as_ref().map(|ap| _json!({
+                "ai_selection": output.ai_selection_plot.as_ref().map(|ap| json!({
                     "algorithms_evaluated": ap.algorithm_scores.len(),
                     "selected_algorithm": ap.selected_algorithm,
                     "selection_timeline_steps": ap.selection_timeline.len(),

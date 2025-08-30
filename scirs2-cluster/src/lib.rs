@@ -56,8 +56,6 @@
 //! println!("Cluster assignments: {:?}", labels);
 //! ```
 
-#![warn(missing_docs)]
-
 /// Cutting-edge clustering algorithms including quantum-inspired methods and advanced online learning.
 ///
 /// This module provides state-of-the-art clustering algorithms that push the boundaries

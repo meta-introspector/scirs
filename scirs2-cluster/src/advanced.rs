@@ -68,7 +68,7 @@ pub struct QuantumKMeans<F: Float> {
 
 /// Represents a quantum state in the clustering algorithm
 #[derive(Debug, Clone)]
-struct QuantumState<F: Float> {
+pub struct QuantumState<F: Float> {
     /// Amplitude of this quantum state
     amplitude: F,
     /// Phase of this quantum state

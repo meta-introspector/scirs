@@ -195,7 +195,7 @@ pub struct GestureState {
 }
 
 /// 3D view modes
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ViewMode {
     /// Standard perspective view
     Perspective,
@@ -434,7 +434,7 @@ impl InteractiveVisualizer {
 
     /// Generate export data for current view
     pub fn export_view_state(&self) -> Result<String> {
-        
+        #[cfg(feature = "serde")]
         {
             let export_data = InteractiveViewExport {
                 camera: self.state.camera.clone(),
@@ -444,8 +444,8 @@ impl InteractiveVisualizer {
                 current_time: self.state.current_time,
             };
 
-            serde_json::to_string_pretty(&export_data)
-                .map_err(|e| ClusteringError::ComputationError(format!("Export failed: {}", e)))
+            return serde_json::to_string_pretty(&export_data)
+                .map_err(|e| ClusteringError::ComputationError(format!("Export failed: {}", e)));
         }
 
         #[cfg(not(feature = "serde"))]

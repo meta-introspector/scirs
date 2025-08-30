@@ -4279,10 +4279,6 @@ impl<T: Float + Send + Sync + std::cmp::Eq + std::hash::Hash + std::iter::Sum>
                     _ => T::from(0.5).unwrap(),
                 }
             }
-            QualityMetric::RobustnessPhantom(_) => {
-                // Phantom variant should not be used
-                T::zero()
-            }
         })
     }
 
