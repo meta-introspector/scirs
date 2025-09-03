@@ -1,6 +1,6 @@
 [package]
 name = "scirs2-core"
-version.workspace = true
+version = "0.1.0"
 edition = "2021"
 authors = ["SciRS2 Team"]
 description = "Core utilities and common functionality for SciRS2"
@@ -11,45 +11,45 @@ categories = ["science", "mathematics", "algorithms"]
 
 [dependencies]
 # Core dependencies
-ndarray = { workspace = true }
-num-traits = { workspace = true }
-num-complex = { workspace = true }
-thiserror = { workspace = true }
-once_cell.workspace = true
-cached = { workspace = true, optional = true }  # Memoization and caching
-chrono = { workspace = true, features = ["serde"] }
+ndarray = { version = "0.16.1", features = ["serde", "rayon"] }
+num-traits = "0.2.19"
+num-complex = "0.4.6"
+thiserror = "2.0.12"
+once_cell = "1.21.3"
+cached = { version = "0.48.1", optional = true }  # Memoization and caching
+chrono = { version = "0.4", features = ["serde"] }
 rand = { workspace = true }
-rand_distr = { workspace = true }
-serde = { workspace = true, optional = true }  # Serialization
-serde_json = { workspace = true, optional = true }  # JSON serialization
-uuid = { workspace = true, features = ["serde"] }  # Used for unique identifiers
-tempfile = { workspace = true, optional = true }  # For temporary files in memory_efficient
-bincode = { workspace = true, optional = true }  # For serialization in memory_efficient
-memmap2 = { workspace = true, optional = true }  # For memory-mapped arrays
-regex = { workspace = true, optional = true }  # For string pattern validation
+rand_distr = "0.5.1"
+serde = { version = "1.0.219", features = ["derive"], optional = true }  # Serialization
+serde_json = { version = "1.0", optional = true }  # JSON serialization
+uuid = { version = "1.17.0", features = ["v4", "serde"] }  # Used for unique identifiers
+tempfile = { version = "3.20.0", optional = true }  # For temporary files in memory_efficient
+bincode = { version = "1.3.3", optional = true }  # For serialization in memory_efficient
+memmap2 = { version = "0.9.5", optional = true }  # For memory-mapped arrays
+regex = { version = "1.11.1", optional = true }  # For string pattern validation
 
 # Feature-gated dependencies
-wide = { workspace = true, optional = true }  # SIMD acceleration
-rayon = { workspace = true, optional = true }  # Parallel processing
-crossbeam = { workspace = true, optional = true }  # Used in parallel scheduler for channels
-crossbeam-utils = { workspace = true, optional = true }  # Used in parallel scheduler
-crossbeam-deque = { workspace = true, optional = true }  # Used in parallel scheduler
-num_cpus = { workspace = true, optional = true }  # CPU count detection
+wide = { version = "0.7.32", optional = true }  # SIMD acceleration
+rayon = { version = "1.10.0", optional = true }  # Parallel processing
+crossbeam = { version = "0.8.4", optional = true }  # Used in parallel scheduler for channels
+crossbeam-utils = { version = "0.8.19", optional = true }  # Used in parallel scheduler
+crossbeam-deque = { version = "0.8.3", optional = true }  # Used in parallel scheduler
+num_cpus = { version = "1.16.0", optional = true }  # CPU count detection
 
 # Compression libraries
-lz4 = { workspace = true, optional = true }   # LZ4 compression
-zstd = { workspace = true, optional = true }  # Zstandard compression
-snap = { workspace = true, optional = true }   # Snappy compression
-flate2 = { workspace = true, optional = true }  # DEFLATE compression
-bytemuck = { workspace = true, optional = true }  # Zero-copy type casting
+lz4 = { version = "1.24", optional = true }   # LZ4 compression
+zstd = { version = "0.13.3", optional = true }  # Zstandard compression
+snap = { version = "1.1.0", optional = true }   # Snappy compression
+flate2 = { version = "1.0", optional = true }  # DEFLATE compression
+bytemuck = { version = "1.16", features = ["derive"], optional = true }  # Zero-copy type casting
 
 # System monitoring for resource-aware prefetching
-libc = { workspace = true, optional = true }  # System calls for resource monitoring
-sysinfo = { workspace = true, optional = true }  # System information gathering
+libc = { version = "0.2.174", optional = true }  # System calls for resource monitoring
+sysinfo = { version = "0.35.2", optional = true }  # System information gathering
 
 # BLAS/LAPACK dependencies for linear algebra operations
 # Note: BLAS backend selection is now handled at workspace level with platform-specific defaults
-ndarray-linalg = { workspace = true, optional = true, default-features = false }  # LAPACK bindings for ndarray
+ndarray-linalg = { version = "0.17.0", optional = true, default-features = false }  # LAPACK bindings for ndarray
 
 # BLAS backend dependencies - optional and feature-gated
 openblas-src = { workspace = true, optional = true }
