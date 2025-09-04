@@ -52,25 +52,13 @@ sysinfo = { version = "0.35.2", optional = true }  # System information gatherin
 ndarray-linalg = { version = "0.17.0", optional = true, default-features = false }  # LAPACK bindings for ndarray
 
 # BLAS backend dependencies - optional and feature-gated
-openblas-src = { workspace = true, optional = true }
-blas-src = { workspace = true, optional = true }
-intel-mkl-src = { workspace = true, optional = true }
+
 
 # JIT compilation for Array Protocol
-cranelift-module = { workspace = true, optional = true }  # JIT compilation module
-cranelift-jit = { workspace = true, optional = true }  # JIT compiler (previously simplejit)
-cranelift-frontend = { workspace = true, optional = true }  # JIT compiler frontend
+
 
 # Async runtime for async error handling
-tokio = { workspace = true, optional = true }  # Async runtime for async error handling
 
-# GPU backend dependencies
-metal = { workspace = true, optional = true }  # Metal GPU backend for macOS
-objc2-metal-performance-shaders = { workspace = true, optional = true }  # MPS integration for Metal
-
-# Production-level feature dependencies
-reqwest = { workspace = true, optional = true }  # HTTP client for tracing export
-sha2 = { workspace = true, optional = true }  # Cryptographic hash functions
 
 # Platform-specific BLAS backend configuration
 # macOS: Use Accelerate framework by default (when linalg feature is enabled)
@@ -88,10 +76,7 @@ openblas-src = { workspace = true, optional = true }
 blas-src = { workspace = true, optional = true }
 
 [dev-dependencies]
-approx = { workspace = true }
-criterion = { workspace = true }
-tempfile = { workspace = true }
-ndarray-rand = { workspace = true }
+
 
 [features]
 default = ["array", "serialization"]  # Enable array module by default
@@ -100,11 +85,11 @@ parallel = ["rayon", "ndarray/rayon", "crossbeam", "crossbeam-utils", "crossbeam
 cache = ["cached"]  # Caching and memoization functionality
 validation = ["regex"]  # Validation utilities
 logging = []  # Structured logging and diagnostics
-async = ["tokio"]  # Async error handling and recovery mechanisms
+async = []  # Async error handling and recovery mechanisms
 gpu = []  # GPU acceleration abstractions
 cuda = ["gpu"]  # CUDA-specific GPU acceleration
 opencl = ["gpu"]  # OpenCL-specific GPU acceleration
-metal = ["gpu", "dep:metal", "dep:objc2-metal-performance-shaders"]  # Metal-specific GPU acceleration (Apple)
+
 wgpu = ["gpu"]  # WebGPU-specific GPU acceleration
 rocm = ["gpu"]  # ROCm-specific GPU acceleration (AMD)
 memory_management = ["bincode", "tempfile"]  # Advanced memory management
@@ -132,9 +117,9 @@ testing = ["tempfile", "serde", "serde_json"]  # Testing framework for productio
 benchmarking = ["testing", "serde", "serde_json"]  # Comprehensive benchmarking system
 linalg = ["ndarray-linalg"]  # Linear algebra with BLAS/LAPACK bindings
 # LAPACK backends - Note: On macOS, use system Accelerate; on Linux/Windows, use OpenBLAS
-openblas = ["linalg", "dep:openblas-src", "dep:blas-src"]  # Force OpenBLAS (Linux/Windows)
-intel-mkl = ["linalg", "dep:intel-mkl-src"]  # Force Intel MKL
-netlib = ["linalg", "dep:blas-src"]  # Force Reference Netlib
+openblas = ["linalg"]  # Force OpenBLAS (Linux/Windows)
+intel-mkl = ["linalg"]  # Force Intel MKL
+netlib = ["linalg"]  # Force Reference Netlib
 accelerate = ["linalg"]  # Use system BLAS (typically Accelerate on macOS)
 array_protocol = []  # Array Protocol for third-party array implementations
 array_protocol_jit = ["array_protocol", "cranelift-module", "cranelift-jit", "cranelift-frontend"]  # JIT compilation for Array Protocol
